@@ -1,0 +1,41 @@
+import { IUserRequestInterface } from "./interfaces/schema.interface";
+
+export interface SchemaSearchCriteria {
+    schemaLedgerId: string;
+    credentialDefinitionId: string;
+    user : IUserRequestInterface
+}
+
+export interface CreateSchemaAgentRedirection {
+    tenantId?: string;
+    attributes?: string[];
+    version?: string;
+    name?: string;
+    issuerId?: string;
+    payload?: ITenantSchemaDto;
+    method?: string;
+    agentType?: number;
+    apiKey?: string;
+    agentEndPoint?: string;
+}
+
+export interface ITenantSchemaDto {
+    attributes: string[];
+    version: string;
+    name: string;
+    issuerId: string;
+}
+
+export interface GetSchemaAgentRedirection {
+    schemaId?: string;
+    tenantId?: string;
+    payload?: GetSchemaFromTenantPayload;
+    apiKey?: string;
+    agentEndPoint?: string;
+    agentType?: number;
+    method?: string;
+}
+
+export interface GetSchemaFromTenantPayload {
+    schemaId: string;
+}

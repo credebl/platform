@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id                  Int               @id(map: "PK_cace4a159ff9f2512dd42373760") @default(autoincrement())
+  createDateTime      DateTime          @default(now()) @db.Timestamptz(6)
+  createdBy           Int               @default(1)
+  lastChangedDateTime DateTime          @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int               @default(1)
+  firstName           String?           @db.VarChar(500)
+  lastName            String?           @db.VarChar(500)
+  email               String?           @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar(500)
+  username            String?           @db.VarChar(500)
+  password            String?           @db.VarChar(500)
+  verificationCode    String?           @db.VarChar(500)
+  isEmailVerified     Boolean           @default(false)
+  keycloakUserId      String?           @db.VarChar(500)
+  clientId            String?           @db.VarChar(500)
+  clientSecret        String?           @db.VarChar(500)
+  profileImg          String?           @db.VarChar(1000)
+  fidoUserId          String?           @db.VarChar(1000)
+  isFidoVerified      Boolean           @default(false)
+  userOrgRoles        user_org_roles[]
+  userDevices         user_devices[]
+  orgInvitations      org_invitations[]
+}
+
+model org_roles {
+  id                  Int              @id @default(autoincrement())
+  name                String           @unique
+  description         String
+  userOrgRoles        user_org_roles[]
+  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
+  createdBy           Int              @default(1)
+  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int              @default(1)
+  deletedAt           DateTime?        @db.Timestamp(6)
+}
+
+model user_org_roles {
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  orgRoleId    Int
+  orgId        Int?
+  organisation organisation? @relation(fields: [orgId], references: [id])
+  orgRole      org_roles     @relation(fields: [orgRoleId], references: [id])
+  user         user          @relation(fields: [userId], references: [id])
+}
+
+model organisation {
+  id                  Int               @id @default(autoincrement())
+  createDateTime      DateTime          @default(now()) @db.Timestamptz(6)
+  createdBy           Int               @default(1)
+  lastChangedDateTime DateTime          @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int               @default(1)
+  name                String?           @db.VarChar(500)
+  description         String?           @db.VarChar(500)
+  logoUrl             String?
+  website             String?           @db.VarChar
+  userOrgRoles        user_org_roles[]
+  orgInvitations      org_invitations[]
+  org_agents          org_agents[]
+  connections         connections[]
+  credentials         credentials[]
+  presentations       presentations[]
+  schema              schema[]
+}
+
+model org_invitations {
+  id                  Int          @id @default(autoincrement())
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           Int          @default(1)
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int          @default(1)
+  deletedAt           DateTime?    @db.Timestamp(6)
+  userId              Int
+  orgId               Int
+  status              String
+  user                user         @relation(fields: [userId], references: [id])
+  organisation        organisation @relation(fields: [orgId], references: [id])
+  orgRoles            Int[]
+  email               String?
+}
+
+model user_devices {
+  id                  Int       @id(map: "PK_c9e7e648903a9e537347aba4371") @default(autoincrement())
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           Int       @default(1)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int       @default(1)
+  devices             Json?     @default("[]")
+  credentialId        String?   @unique(map: "UQ_7c903f5e362fe8fd3d3edba17b5") @db.VarChar
+  deviceFriendlyName  String?   @db.VarChar
+  userId              Int?
+  deletedAt           DateTime? @db.Timestamp(6)
+  authCounter         Int       @default(0)
+  user                user?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_e12ac4f8016243ac71fd2e415af")
+}
+
+model platform_config {
+  id                  Int       @id @default(autoincrement())
+  externalIp          String    @db.VarChar
+  lastInternalId      String    @db.VarChar
+  username            String    @db.VarChar
+  sgApiKey            String    @db.VarChar
+  emailFrom           String    @db.VarChar
+  apiEndpoint         String    @db.VarChar
+  tailsFileServer     String    @db.VarChar
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           Int       @default(1)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int       @default(1)
+  deletedAt           DateTime? @db.Timestamp(6)
+}
+
+model org_agents {
+  id                  Int                 @unique @default(autoincrement())
+  createDateTime      DateTime            @default(now()) @db.Timestamptz(6)
+  createdBy           Int                 @default(1)
+  lastChangedDateTime DateTime            @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int                 @default(1)
+  orgDid              String              @db.VarChar
+  verkey              String              @db.VarChar
+  agentEndPoint       String              @db.VarChar
+  agentId             Int?
+  isDidPublic         Boolean
+  agentSpinUpStatus   Int
+  agentOptions        Bytes?
+  walletName          String?             @db.VarChar
+  tenantId            String?
+  apiKey              String?
+  agentsTypeId        Int
+  orgId               Int
+  orgAgentTypeId      Int
+  agents_type         agents_type?        @relation(fields: [agentsTypeId], references: [id])
+  org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
+  organisation        organisation?       @relation(fields: [orgId], references: [id])
+  agents              agents?             @relation(fields: [agentId], references: [id])
+  agent_invitations   agent_invitations[]
+}
+
+model org_agents_type {
+  id                  Int          @id @default(autoincrement())
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           Int          @default(1)
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int          @default(1)
+  agent               String       @db.VarChar(500)
+  org_agents          org_agents[]
+}
+
+model agents_type {
+  id                  Int          @id @default(autoincrement())
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           Int          @default(1)
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int          @default(1)
+  agent               String       @db.VarChar(500)
+  org_agents          org_agents[]
+}
+
+model ledgers {
+  id                  Int      @unique @default(autoincrement())
+  createDateTime      DateTime @default(now()) @db.Timestamptz(6)
+  createdBy           Int      @default(1)
+  lastChangedDateTime DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int      @default(1)
+  name                String   @db.VarChar
+  networkType         String   @db.VarChar
+  poolConfig          String   @db.VarChar
+  isActive            Boolean
+  networkString       String   @db.VarChar
+  registerDIDEndpoint String   @db.VarChar
+  registerDIDPayload  Json?
+}
+
+model agents {
+  id                  Int          @unique @default(autoincrement())
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           Int          @default(1)
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int          @default(1)
+  name                String
+  org_agents          org_agents[]
+}
+
+model schema {
+  id                  Int      @id(map: "PK_c9e7e648903a9e537347aba4372") @default(autoincrement())
+  createDateTime      DateTime @default(now()) @db.Timestamptz(6)
+  createdBy           Int      @default(1)
+  lastChangedDateTime DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int      @default(1)
+  name                String   @db.VarChar
+  version             String   @db.VarChar
+  attributes          String[]
+  schemaLedgerId      String   @db.VarChar
+  publisherDid        String   @db.VarChar
+  ledgerId            Int      @default(1)
+  issuerId            String   @db.VarChar
+  orgId               Int      
+  organisation         organisation? @relation(fields: [orgId], references: [id])
+}
+
+model credential_definition {
+  id                     Int      @id(map: "PK_c9e7e648903a9e537347aba4373") @default(autoincrement())
+  createDateTime         DateTime @default(now()) @db.Timestamptz(6)
+  createdBy              Int      @default(1)
+  lastChangedDateTime    DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedBy          Int      @default(1)
+  credentialDefinitionId String   @db.VarChar
+  tag                    String   @db.VarChar
+  schemaLedgerId         String   @db.VarChar
+  schemaId               Int      @default(1)
+  orgId                  Int      @default(1)
+  revocable              Boolean  @default(false)
+}
+
+model shortening_url {
+  id          Int     @id @default(autoincrement())
+  referenceId String? @db.VarChar(50)
+  url         String?
+  type        String?
+}
+
+model agent_invitations {
+  id                   Int         @unique @default(autoincrement())
+  orgId                Int         @default(1)
+  agentId              Int         @default(1)
+  connectionInvitation String
+  multiUse             Boolean
+  createDateTime       DateTime    @default(now()) @db.Timestamptz(6)
+  createdBy            Int         @default(1)
+  lastChangedDateTime  DateTime    @default(now()) @db.Timestamptz(6)
+  lastChangedBy        Int         @default(1)
+  org_agents           org_agents? @relation(fields: [agentId], references: [id])
+}
+
+model connections {
+  id                   Int           @id @default(autoincrement())
+  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy            Int           @default(1)
+  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy        Int           @default(1)
+  connectionId         String        @unique
+  state                String
+  orgDid               String
+  theirLabel           String
+  autoAcceptConnection Boolean
+  outOfBandId          String
+  orgId                Int
+  organisation         organisation? @relation(fields: [orgId], references: [id])
+}
+
+model credentials {
+  id                   Int           @id @default(autoincrement())
+  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy            Int           @default(1)
+  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy        Int           @default(1)
+  connectionId         String        @unique
+  threadId             String
+  protocolVersion      String
+  credentialAttributes Json[]
+  orgId                Int
+  organisation         organisation? @relation(fields: [orgId], references: [id])
+}
+model presentations {
+  id                  Int          @unique @default(autoincrement())
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           Int          @default(1)
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int          @default(1)
+  connectionId        String       @unique
+  state               String?
+  threadId            String?
+  isVerified          Boolean?
+  orgId               Int
+  organisation        organisation @relation(fields: [orgId], references: [id])
+}

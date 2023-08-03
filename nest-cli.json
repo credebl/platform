@@ -1,0 +1,219 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/api-gateway/src",
+  "monorepo": true,
+  "root": "apps/api-gateway",
+  "compilerOptions": {
+    "webpack": true,
+    "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
+  },
+  "projects": {
+    "api-gateway": {
+      "type": "application",
+      "root": "apps/api-gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/api-gateway/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
+      }
+    },
+    "platform-service": {
+      "type": "application",
+      "root": "apps/platform-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/platform-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/platform-service/tsconfig.app.json"
+      }
+    },
+    "response": {
+      "type": "library",
+      "root": "libs/response",
+      "entryFile": "index",
+      "sourceRoot": "libs/response/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/response/tsconfig.lib.json"
+      }
+    },
+    "common": {
+      "type": "library",
+      "root": "libs/common",
+      "entryFile": "index",
+      "sourceRoot": "libs/common/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/common/tsconfig.lib.json"
+      }
+    },
+    "push-notifications": {
+      "type": "library",
+      "root": "libs/push-notifications",
+      "entryFile": "index",
+      "sourceRoot": "libs/push-notifications/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/push-notifications/tsconfig.lib.json"
+      }
+    },
+    "keycloak-url": {
+      "type": "library",
+      "root": "libs/keycloak-url",
+      "entryFile": "index",
+      "sourceRoot": "libs/keycloak-url/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/keycloak-url/tsconfig.lib.json"
+      }
+    },
+    "client-registration": {
+      "type": "library",
+      "root": "libs/client-registration",
+      "entryFile": "index",
+      "sourceRoot": "libs/client-registration/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/client-registration/tsconfig.lib.json"
+      }
+    },
+    "connection": {
+      "type": "application",
+      "root": "apps/connection",
+      "entryFile": "main",
+      "sourceRoot": "apps/connection/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/connection/tsconfig.app.json"
+      }
+    },
+    "prisma": {
+      "type": "library",
+      "root": "libs/prisma",
+      "entryFile": "index",
+      "sourceRoot": "libs/prisma/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/prisma/tsconfig.lib.json"
+      }
+    },
+    "repositories": {
+      "type": "library",
+      "root": "libs/repositories",
+      "entryFile": "index",
+      "sourceRoot": "libs/repositories/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/repositories/tsconfig.lib.json"
+      }
+    },
+    "user-request": {
+      "type": "library",
+      "root": "libs/user-request",
+      "entryFile": "index",
+      "sourceRoot": "libs/user-request/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/user-request/tsconfig.lib.json"
+      }
+    },
+    "logger": {
+      "type": "library",
+      "root": "libs/logger",
+      "entryFile": "index",
+      "sourceRoot": "libs/logger/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/logger/tsconfig.lib.json"
+      }
+    },
+    "enum": {
+      "type": "library",
+      "root": "libs/enum",
+      "entryFile": "index",
+      "sourceRoot": "libs/enum/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/enum/tsconfig.lib.json"
+      }
+    },
+    "prisma-service": {
+      "type": "library",
+      "root": "libs/prisma-service",
+      "entryFile": "index",
+      "sourceRoot": "libs/prisma-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/prisma-service/tsconfig.lib.json"
+      }
+    },
+    "organization": {
+      "type": "application",
+      "root": "apps/organization",
+      "entryFile": "main",
+      "sourceRoot": "apps/organization/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/organization/tsconfig.app.json"
+      }
+    },
+    "user": {
+      "type": "application",
+      "root": "apps/user",
+      "entryFile": "main",
+      "sourceRoot": "apps/user/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/user/tsconfig.app.json"
+      }
+    },
+    "org-roles": {
+      "type": "library",
+      "root": "libs/org-roles",
+      "entryFile": "index",
+      "sourceRoot": "libs/org-roles/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/org-roles/tsconfig.lib.json"
+      }
+    },
+    "user-org-roles": {
+      "type": "library",
+      "root": "libs/user-org-roles",
+      "entryFile": "index",
+      "sourceRoot": "libs/user-org-roles/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/user-org-roles/tsconfig.lib.json"
+      }
+    },
+    "ledger": {
+      "type": "application",
+      "root": "apps/ledger",
+      "entryFile": "main",
+      "sourceRoot": "apps/ledger/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ledger/tsconfig.app.json"
+      }
+    },
+    "agent-service": {
+      "type": "application",
+      "root": "apps/agent-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/agent-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/agent-service/tsconfig.app.json"
+      }
+    },
+    "agent-provisioning": {
+      "type": "application",
+      "root": "apps/agent-provisioning",
+      "entryFile": "main",
+      "sourceRoot": "apps/agent-provisioning/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/agent-provisioning/tsconfig.app.json"
+      }
+    },
+    "issuance": {
+      "type": "application",
+      "root": "apps/issuance",
+      "entryFile": "main",
+      "sourceRoot": "apps/issuance/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/issuance/tsconfig.app.json"
+      }
+    },
+    "verification": {
+      "type": "application",
+      "root": "apps/verification",
+      "entryFile": "main",
+      "sourceRoot": "apps/verification/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/verification/tsconfig.app.json"
+      }
+    }
+  }
+}

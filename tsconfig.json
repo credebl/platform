@@ -1,0 +1,98 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2017",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "paths": {
+      "@credebl/response": [
+        "libs/response/src"
+      ],
+      "@credebl/response/*": [
+        "libs/response/src/*"
+      ],
+      "@credebl/common": [
+        "libs/common/src"
+      ],
+      "@credebl/common/*": [
+        "libs/common/src/*"
+      ],
+      "@credebl/push-notifications": [
+        "libs/push-notifications/src"
+      ],
+      "@credebl/push-notifications/*": [
+        "libs/push-notifications/src/*"
+      ],
+      "@credebl/keycloak-url": [
+        "libs/keycloak-url/src"
+      ],
+      "@credebl/keycloak-url/*": [
+        "libs/keycloak-url/src/*"
+      ],
+      "@credebl/client-registration": [
+        "libs/client-registration/src"
+      ],
+      "@credebl/client-registration/*": [
+        "libs/client-registration/src/*"
+      ],
+      "@credebl/prisma": [
+        "libs/prisma/src"
+      ],
+      "@credebl/prisma/*": [
+        "libs/prisma/src/*"
+      ],
+      "@credebl/repositories": [
+        "libs/repositories/src"
+      ],
+      "@credebl/repositories/*": [
+        "libs/repositories/src/*"
+      ],
+      "@credebl/user-request": [
+        "libs/user-request/src"
+      ],
+      "@credebl/user-request/*": [
+        "libs/user-request/src/*"
+      ],
+      "@credebl/logger": [
+        "libs/logger/src"
+      ],
+      "@credebl/logger/*": [
+        "libs/logger/src/*"
+      ],
+      "@credebl/enum": [
+        "libs/enum/src"
+      ],
+      "@credebl/enum/*": [
+        "libs/enum/src/*"
+      ],
+      "@credebl/prisma-service": [
+        "libs/prisma-service/src"
+      ],
+      "@credebl/prisma-service/*": [
+        "libs/prisma-service/src/*"
+      ],
+      "@credebl/org-roles": [
+        "libs/org-roles/src"
+      ],
+      "@credebl/org-roles/*": [
+        "libs/org-roles/src/*"
+      ],
+      "@credebl/user-org-roles": [
+        "libs/user-org-roles/src"
+      ],
+      "@credebl/user-org-roles/*": [
+        "libs/user-org-roles/src/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

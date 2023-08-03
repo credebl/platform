@@ -1,0 +1,16 @@
+{
+  "projects": {
+    "keycloak-url": {
+      "type": "library",
+      "root": "libs/keycloak-url",
+      "entryFile": "index",
+      "sourceRoot": "libs/keycloak-url/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/keycloak-url/tsconfig.lib.json"
+      }
+    }
+  },
+  "compilerOptions": {
+    "webpack": true
+  }
+}

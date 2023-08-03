@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  nats:
+    container_name: nats
+    entrypoint: '/nats-server -c nats-server.conf -DV'
+    image: nats
+    ports:
+      - '4222:4222'
+      - '6222:6222'
+      - '8222:8222'
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - cache:/data
+
+volumes:
+  cache:
+    driver: local

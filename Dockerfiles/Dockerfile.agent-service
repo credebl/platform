@@ -15,7 +15,7 @@ COPY . .
 RUN cd libs/prisma-service && npx prisma generate
 
 # Build the user service
-RUN npm run build agent-service
+RUN pnpm run build agent-service
 
 # Stage 2: Create the final image
 FROM node:18-alpine

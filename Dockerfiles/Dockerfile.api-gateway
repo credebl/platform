@@ -15,7 +15,7 @@ COPY . .
 RUN cd libs/prisma-service && npx prisma generate
 
 # Build the api-gateway service
-RUN npm run build api-gateway
+RUN pnpm run build api-gateway
 
 # Stage 2: Create the final image
 FROM node:18-alpine
@@ -31,8 +31,6 @@ COPY --from=build /app/libs/ ./libs/
 #COPY --from=build /app/package.json ./  
 COPY --from=build /app/node_modules  ./node_modules
 
-# Install production dependencies for the final image
-#RUN npm i --only=production
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate && cd ../.. && node dist/apps/api-gateway/main.js"]

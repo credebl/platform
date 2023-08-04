@@ -1,6 +1,6 @@
 # Stage 1: Build the application
-FROM node:16-alpine as build
-
+FROM node:18-alpine as build
+RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
 
@@ -9,18 +9,18 @@ COPY package.json ./
 #COPY package-lock.json ./
 
 # Install dependencies
-RUN npm i
+RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate"]
+RUN cd libs/prisma-service && npx prisma generate
 
-# Build the user service
+# Build the issuance service
 RUN npm run build issuance
 
 # Stage 2: Create the final image
-FROM node:16-alpine
-
+FROM node:18-alpine
+RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
 
@@ -38,6 +38,6 @@ COPY --from=build /app/node_modules  ./node_modules
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate && cd ../.. && node dist/apps/issuance/main.js"]
 
-# docker build -t issuance -f apps/issuance/Dockerfile .
+# docker build -t issuance -f Dockerfiles/Dockerfile.issuance .
 # docker run -d --env-file .env --name issuance docker.io/library/issuance
 # docker logs -f issuance

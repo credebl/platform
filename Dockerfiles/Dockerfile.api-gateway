@@ -1,31 +1,30 @@
 # Stage 1: Build the application
-FROM node:16-alpine as build
-
+FROM node:18-alpine as build
+RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json ./
-#COPY package-lock.json ./
 
 # Install dependencies
-RUN npm i
+RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate"]
+RUN cd libs/prisma-service && npx prisma generate
 
-# Build the user service
-RUN npm run build agent-service
+# Build the api-gateway service
+RUN npm run build api-gateway
 
 # Stage 2: Create the final image
-FROM node:16-alpine
-
+FROM node:18-alpine
+RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
 
 # Copy the compiled code from the build stage
-COPY --from=build /app/dist/apps/agent-service/ ./dist/apps/agent-service/
+COPY --from=build /app/dist/apps/api-gateway/ ./dist/apps/api-gateway/
 
 # Copy the libs folder from the build stage
 COPY --from=build /app/libs/ ./libs/
@@ -36,8 +35,7 @@ COPY --from=build /app/node_modules  ./node_modules
 #RUN npm i --only=production
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate && cd ../.. && node dist/apps/agent-service/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate && cd ../.. && node dist/apps/api-gateway/main.js"]
 
-# docker build -t agent-service -f apps/agent-service/Dockerfile .
-# docker run -d --env-file .env --name agent-service docker.io/library/agent-service
-# docker logs -f agent-service
+# docker build -t api-gateway -f Dockerfiles/Dockerfile.api-gateway .
+# docker run -d --env-file .env --name api-gateway docker.io/library/api-gateway

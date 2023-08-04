@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
 import { CommonConstants } from '@credebl/common/common.constant';
 import {
@@ -20,6 +21,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { v4 as uuid } from 'uuid';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
+import { platform_config } from '@prisma/client';
 
 
 @Injectable()
@@ -43,6 +45,7 @@ export class ConnectionService {
   ): Promise<object> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+      const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
@@ -59,7 +62,7 @@ export class ConnectionService {
 
       const url = await this.getAgentUrl(agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
 
-      const apiKey = user?.apiKey;
+      const apiKey = platformConfig?.sgApiKey;
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
 

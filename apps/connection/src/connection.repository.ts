@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { agent_invitations, connections, org_agents, shortening_url } from '@prisma/client';
+import { agent_invitations, connections, org_agents, platform_config, shortening_url } from '@prisma/client';
 @Injectable()
 export class ConnectionRepository {
 
@@ -67,7 +67,7 @@ export class ConnectionRepository {
     * @returns Get connection details
     */
     // eslint-disable-next-line camelcase
-    async saveConnectionWebhook(createDateTime:string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection:boolean, outOfBandId: string, orgId: number): Promise<connections> {
+    async saveConnectionWebhook(createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: number): Promise<connections> {
         try {
             const agentDetails = await this.prisma.connections.upsert({
                 where: {
@@ -144,6 +144,22 @@ export class ConnectionRepository {
         } catch (error) {
             this.logger.error(`Error in getShorteningUrl in connection repository: ${error.message} `);
             throw error;
+        }
+    }
+
+    /**
+    * Get platform config details
+    * @returns 
+    */
+    // eslint-disable-next-line camelcase
+    async getPlatformConfigDetails(): Promise<platform_config> {
+        try {
+
+            return this.prisma.platform_config.findFirst();
+
+        } catch (error) {
+            this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`);
+            throw new InternalServerErrorException(error);
         }
     }
 }

@@ -16,7 +16,7 @@ COPY . .
 RUN cd libs/prisma-service && npx prisma generate
 
 # Build the connection service
-RUN npm run build connection
+RUN pnpm run build connection
 
 # Stage 2: Create the final image
 FROM node:18-alpine

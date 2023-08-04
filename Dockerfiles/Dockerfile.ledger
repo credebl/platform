@@ -1,6 +1,6 @@
 # Stage 1: Build the application
-FROM node:16-alpine as build
-
+FROM node:18-alpine as build
+RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
 
@@ -9,18 +9,19 @@ COPY package.json ./
 #COPY package-lock.json ./
 
 # Install dependencies
-RUN npm i
+RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate"]
+RUN cd libs/prisma-service && npx prisma generate
 
-# Build the user service
+# Build the ledger service
 RUN npm run build ledger
 
-# Stage 2: Create the final image
-FROM node:16-alpine
 
+# Stage 2: Create the final image
+FROM node:18-alpine
+RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
 
@@ -32,12 +33,9 @@ COPY --from=build /app/libs/ ./libs/
 #COPY --from=build /app/package.json ./  
 COPY --from=build /app/node_modules  ./node_modules
 
-# Install production dependencies for the final image
-#RUN npm i --only=production
-
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate && cd ../.. && node dist/apps/ledger/main.js"]
 
-# docker build -t ledger -f apps/ledger/Dockerfile .
+# docker build -t ledger -f Dockerfiles/Dockerfile.ledger .
 # docker run -d --env-file .env --name ledger docker.io/library/ledger
 # docker logs -f ledger

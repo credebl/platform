@@ -160,11 +160,11 @@ export class IssuanceController {
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentials(user, threadId, connectionId, state, orgId);
 
     const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.fetch,
       data: getCredentialDetails.response
     };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
 
@@ -197,11 +197,11 @@ export class IssuanceController {
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
 
     const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.fetch,
       data: getCredentialDetails.response
     };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
 }

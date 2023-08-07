@@ -103,11 +103,11 @@ export class ConnectionController {
         const connectionDetails = await this.connectionService.getConnections(user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId);
 
         const finalResponse: IResponseType = {
-            statusCode: HttpStatus.CREATED,
+            statusCode: HttpStatus.OK,
             message: ResponseMessages.connection.success.fetch,
             data: connectionDetails.response
         };
-        return res.status(HttpStatus.CREATED).json(finalResponse);
+        return res.status(HttpStatus.OK).json(finalResponse);
     }
 
 
@@ -190,10 +190,10 @@ export class ConnectionController {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
 
         const finalResponse: IResponseType = {
-            statusCode: HttpStatus.CREATED,
+            statusCode: HttpStatus.OK,
             message: ResponseMessages.connection.success.fetch,
             data: connectionsDetails.response
         };
-        return res.status(HttpStatus.CREATED).json(finalResponse);
+        return res.status(HttpStatus.OK).json(finalResponse);
     }
 }

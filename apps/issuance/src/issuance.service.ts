@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
 import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
@@ -8,6 +9,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { ICredentialAttributesInterface } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
+import { platform_config } from '@prisma/client';
 
 
 @Injectable()
@@ -24,6 +26,8 @@ export class IssuanceService {
   async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -32,7 +36,7 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
 
-      const apiKey = user?.apiKey;
+      const apiKey = platformConfig?.sgApiKey;
       const issueData = {
         connectionId,
         credentialFormats: {
@@ -58,6 +62,9 @@ export class IssuanceService {
   async sendCredentialOutOfBand(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      // eslint-disable-next-line camelcase
+      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -66,7 +73,7 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
 
-      const apiKey = user?.apiKey;
+      const apiKey = platformConfig?.sgApiKey;
       const issueData = {
         connectionId,
         credentialFormats: {
@@ -117,6 +124,8 @@ export class IssuanceService {
   async getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: number): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -137,7 +146,7 @@ export class IssuanceService {
           url = `${url + appendParams + element}=${params[element]}`;
         }
       });
-      const apiKey = user?.apiKey;
+      const apiKey = platformConfig?.sgApiKey;
       const issueCredentialsDetails = await this._getIssueCredentials(url, apiKey);
       return issueCredentialsDetails?.response;
     } catch (error) {
@@ -178,6 +187,8 @@ export class IssuanceService {
     try {
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -186,7 +197,7 @@ export class IssuanceService {
       const issuanceMethodLabel = 'get-issue-credential-by-credential-id';
       const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
 
-      const apiKey = user?.apiKey;
+      const apiKey = platformConfig?.sgApiKey;
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
       return createConnectionInvitation?.response;
     } catch (error) {

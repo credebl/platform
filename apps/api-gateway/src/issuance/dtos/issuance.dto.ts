@@ -21,6 +21,7 @@ export class IssueCredentialDto {
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid comment' })
     @IsString({ message: 'comment should be string' })
+    @IsOptional()
     comment: string;
 
     @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })

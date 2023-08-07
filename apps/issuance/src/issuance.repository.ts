@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { agent_invitations, credentials, org_agents, shortening_url } from '@prisma/client';
+import { agent_invitations, credentials, org_agents, platform_config, shortening_url } from '@prisma/client';
 @Injectable()
 export class IssuanceRepository {
 
@@ -33,11 +33,11 @@ export class IssuanceRepository {
     }
 
 
-        /**
-     * Description: save credentials 
-     * @param connectionId 
-     * @returns Get saved credential details
-     */
+    /**
+ * Description: save credentials 
+ * @param connectionId 
+ * @returns Get saved credential details
+ */
     // eslint-disable-next-line camelcase
     async saveIssuedCredentialDetails(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: object[], orgId: number): Promise<credentials> {
         try {
@@ -99,21 +99,21 @@ export class IssuanceRepository {
         }
     }
 
-     /**
-       * Description: Save ShorteningUrl details
-       * @param referenceId
-       * @param connectionInvitationUrl
-       * @returns Get storeShorteningUrl details
-       */
+    /**
+      * Description: Save ShorteningUrl details
+      * @param referenceId
+      * @param connectionInvitationUrl
+      * @returns Get storeShorteningUrl details
+      */
     // eslint-disable-next-line camelcase
     async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<shortening_url> {
         try {
 
             return this.prisma.shortening_url.create({
                 data: {
-                   referenceId,
-                   url: connectionInvitationUrl,
-                   type: null
+                    referenceId,
+                    url: connectionInvitationUrl,
+                    type: null
                 }
             });
 
@@ -123,4 +123,19 @@ export class IssuanceRepository {
         }
     }
 
+    /**
+   * Get platform config details
+   * @returns 
+   */
+    // eslint-disable-next-line camelcase
+    async getPlatformConfigDetails(): Promise<platform_config> {
+        try {
+
+            return this.prisma.platform_config.findFirst();
+
+        } catch (error) {
+            this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`);
+            throw new InternalServerErrorException(error);
+        }
+    }
 }

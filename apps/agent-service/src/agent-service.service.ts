@@ -287,7 +287,7 @@ export class AgentServiceService {
               if (agentSpinupDto.clientSocketId) {
                 socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
               }
-              await this._createLegacyConnectionInvitation(orgData.id, user);
+              await this._createLegacyConnectionInvitation(orgData.id, user, agentPayload.walletName);
               if (agentSpinupDto.clientSocketId) {
                 socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
               }
@@ -370,14 +370,14 @@ export class AgentServiceService {
     }
   }
 
-  async _createLegacyConnectionInvitation(orgId: number, user: IUserRequestInterface): Promise<{
+  async _createLegacyConnectionInvitation(orgId: number, user: IUserRequestInterface, label: string): Promise<{
     response;
   }> {
     try {
       const pattern = {
         cmd: 'create-connection'
       };
-      const payload = { orgId, user };
+      const payload = { orgId, user, label };
       return this.agentServiceProxy
         .send<string>(pattern, payload)
         .pipe(
@@ -467,7 +467,7 @@ export class AgentServiceService {
       };
 
       const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
-      await this._createLegacyConnectionInvitation(payload.orgId, user);
+      await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
       return saveTenant;
 
     } catch (error) {

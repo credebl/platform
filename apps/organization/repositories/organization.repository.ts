@@ -6,12 +6,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
+import { IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
-import { IUpdateOrganization } from '../interfaces/organization.interface';
 
 @Injectable()
 export class OrganizationRepository {
@@ -19,7 +19,7 @@ export class OrganizationRepository {
     private readonly prisma: PrismaService,
     private readonly logger: Logger,
     private readonly userOrgRoleService: UserOrgRolesService
-  ) {}
+  ) { }
 
   /**
    *
@@ -81,7 +81,7 @@ export class OrganizationRepository {
           website: updateOrgDto.website
         }
       });
-      
+
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -275,9 +275,17 @@ export class OrganizationRepository {
 
     try {
 
-      const usersCount = await this.prisma.user_org_roles.count({
-        ...query
-      });
+      const usersCount = await this.prisma.user.count(
+        {
+          where: {
+            userOrgRoles: {
+              some: {
+                orgId
+              }
+            }
+          }
+        }
+      );
 
       const schemasCount = await this.prisma.schema.count({
         ...query
@@ -297,7 +305,7 @@ export class OrganizationRepository {
         credentialsCount,
         presentationsCount
       };
-     
+
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

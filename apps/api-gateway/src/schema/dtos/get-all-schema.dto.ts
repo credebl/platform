@@ -9,8 +9,6 @@ import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 export class GetAllSchemaDto {
     @ApiProperty({ required: false })
     @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => trim(value))
     pageNumber: number = 1;
 
     @ApiProperty({ required: false })
@@ -21,8 +19,6 @@ export class GetAllSchemaDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => trim(value))
     pageSize: number = 10;
 
     @ApiProperty({ required: false })

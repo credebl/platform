@@ -231,8 +231,7 @@ export class SchemaService extends BaseService {
         };
         schemaResponse = await this._getSchemaById(getSchemaPayload);
       }
-
-      return schemaResponse;
+      return schemaResponse.response;
 
     } catch (error) {
       this.logger.error(`Error in getting schema by id: ${error}`);

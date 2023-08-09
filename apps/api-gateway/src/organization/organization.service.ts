@@ -38,9 +38,9 @@ export class OrganizationService extends BaseService {
  * @param updateOrgDto 
  * @returns Organization update Success
  */
-    async updateOrganization(updateOrgDto: UpdateOrganizationDto): Promise<object> {
+    async updateOrganization(updateOrgDto: UpdateOrganizationDto, userId: number): Promise<object> {
         try {
-            const payload = { updateOrgDto };
+            const payload = { updateOrgDto, userId };
             return this.sendNats(this.serviceProxy, 'update-organization', payload);
         } catch (error) {
             this.logger.error(`In service Error: ${error}`);

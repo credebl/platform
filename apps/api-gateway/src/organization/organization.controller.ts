@@ -196,9 +196,9 @@ export class OrganizationController {
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Res() res: Response): Promise<Response> {
+  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
-    await this.organizationService.updateOrganization(updateOrgDto);
+    await this.organizationService.updateOrganization(updateOrgDto, reqUser.id);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

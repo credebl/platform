@@ -214,6 +214,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/verification/tsconfig.app.json"
       }
+    },
+    "user-activity": {
+      "type": "library",
+      "root": "libs/user-activity",
+      "entryFile": "index",
+      "sourceRoot": "libs/user-activity/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/user-activity/tsconfig.lib.json"
+      }
     }
   }
 }

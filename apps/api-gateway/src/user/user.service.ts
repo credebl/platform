@@ -93,4 +93,9 @@ export class UserService extends BaseService {
     const payload = { userEmail, userInfo };
     return this.sendNats(this.serviceProxy, 'add-user', payload);
   }
+
+  async getUserActivities(userId: number, limit: number): Promise<{ response: object }> {
+    const payload = { userId, limit };
+    return this.sendNats(this.serviceProxy, 'get-user-activity', payload);
+  }
 }

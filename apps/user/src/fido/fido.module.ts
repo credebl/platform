@@ -1,21 +1,23 @@
-import { CommonModule } from '@credebl/common';
-import { HttpModule } from '@nestjs/axios';
-import { Module, Logger } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { UserDevicesRepository } from '../../repositories/user-device.repository';
-import { UserRepository } from '../../repositories/user.repository';
+import { Logger, Module } from '@nestjs/common';
+
+import { ClientRegistrationService } from '@credebl/client-registration';
+import { CommonModule } from '@credebl/common';
 import { FidoController } from './fido.controller';
 import { FidoService } from './fido.service';
-import { PrismaService } from '@credebl/prisma-service';
-import { UserService } from '../user.service';
-import { ClientRegistrationService } from '@credebl/client-registration';
-import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { FidoUserRepository } from '../../repositories/fido-user.repository';
-import { OrgRolesService } from '@credebl/org-roles';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
+import { HttpModule } from '@nestjs/axios';
+import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { OrgRolesRepository } from 'libs/org-roles/repositories';
+import { OrgRolesService } from '@credebl/org-roles';
+import { PrismaService } from '@credebl/prisma-service';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityService } from '@credebl/user-activity';
+import { UserDevicesRepository } from '../../repositories/user-device.repository';
 import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
-
+import { UserOrgRolesService } from '@credebl/user-org-roles';
+import { UserRepository } from '../../repositories/user.repository';
+import { UserService } from '../user.service';
 
 @Module({
   imports: [
@@ -45,7 +47,9 @@ import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
     OrgRolesService,
     UserOrgRolesService,
     OrgRolesRepository,
-    UserOrgRolesRepository
+    UserOrgRolesRepository,
+    UserActivityService,
+    UserActivityRepository
 ]
 })
 export class FidoModule { }

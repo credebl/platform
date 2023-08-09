@@ -19,6 +19,7 @@ import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation } from '@credebl/enum/enum';
 import { IUpdateOrganization } from '../interfaces/organization.interface';
+import { UserActivityService } from '@credebl/user-activity';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -28,6 +29,7 @@ export class OrganizationService {
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
+    private readonly userActivityService: UserActivityService,
     private readonly logger: Logger
   ) { }
 
@@ -51,6 +53,7 @@ export class OrganizationService {
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
+      await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
       return organizationDetails;
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
@@ -65,9 +68,10 @@ export class OrganizationService {
    */
 
   // eslint-disable-next-line camelcase
-  async updateOrganization(updateOrgDto: IUpdateOrganization): Promise<organisation> {
+  async updateOrganization(updateOrgDto: IUpdateOrganization, userId: number): Promise<organisation> {
     try {   
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
+      await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
     } catch (error) {
       this.logger.error(`In update organization : ${JSON.stringify(error)}`);
@@ -224,7 +228,7 @@ export class OrganizationService {
         }
 
       }
-
+      await this.userActivityService.createActivity(userId, organizationDetails.id, `Invitations sent for ${organizationDetails.name}`, 'Get started with user role management once invitations accepted');
       return ResponseMessages.organisation.success.createInvitation;
     } catch (error) {
       this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);

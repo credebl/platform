@@ -88,6 +88,12 @@
       ],
       "@credebl/user-org-roles/*": [
         "libs/user-org-roles/src/*"
+      ],
+      "@credebl/user-activity": [
+        "libs/user-activity/src"
+      ],
+      "@credebl/user-activity/*": [
+        "libs/user-activity/src/*"
       ]
     }
   },

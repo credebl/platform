@@ -31,8 +31,8 @@ export class OrganizationController {
    */
 
     @MessagePattern({ cmd: 'update-organization' })
-    async updateOrganization(payload: {updateOrgDto: IUpdateOrganization }): Promise<object> {
-      return this.organizationService.updateOrganization(payload.updateOrgDto);
+    async updateOrganization(payload: {updateOrgDto: IUpdateOrganization, userId: number }): Promise<object> {
+      return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId);
     }
   
 

@@ -50,4 +50,5 @@ export class ConnectionController {
     const { user, connectionId, orgId } = payload;
     return this.connectionService.getConnectionsById(user, connectionId, orgId);
   }
+
 }

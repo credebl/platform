@@ -24,6 +24,7 @@ export enum CommonConstants {
   URL_CONN_REMOVE_CONNECTION_BY_ID = '/connections/#/remove',
   URL_CONN_METADATA = '/connections/#/metadata',
   URL_CONN_LEGACY_INVITE = '/oob/create-legacy-invitation',
+  URL_CONN_INVITATION = '/url',
 
   // WALLET SERVICES
   URL_WALLET_CREATE_DID = '/wallet/did/create',

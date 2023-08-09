@@ -80,3 +80,15 @@ export interface IFetchConnectionById {
   connectionId: string;
   orgId: number;
 }
+
+export interface IFetchConnectionUrlById {
+  user: IUserRequest;
+  invitationId: string;
+  orgId: number;
+}
+
+export interface ConnectionInvitationResponse {
+  message: {
+    invitation: object;
+  };
+}

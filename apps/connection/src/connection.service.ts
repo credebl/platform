@@ -67,7 +67,7 @@ export class ConnectionService {
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
       const invitationObject = createConnectionInvitation.message.invitation['@id'];
 
-      const shortenedUrl = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/url/${invitationObject}`;
+      const shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
 
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(shortenedUrl, agentId, orgId);
       return saveConnectionDetails;

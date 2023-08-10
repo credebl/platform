@@ -9,7 +9,7 @@
     "build": "nest build",
     "build:all": "rimraf dist && nest build api-gateway && nest build platform-service && nest build agent-service && nest build connection",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
-    "start": "nest start",
+    "start": "npx prisma migrate deploy --schema=./libs/prisma-service/prisma/schema.prisma & nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/api-gateway/main",
@@ -163,7 +163,8 @@
       "^@credebl/enum(|/.*)$": "<rootDir>/libs/enum/src/$1",
       "^@credebl/prisma-service(|/.*)$": "<rootDir>/libs/prisma-service/src/$1",
       "^@credebl/org-roles(|/.*)$": "<rootDir>/libs/org-roles/src/$1",
-      "^@credebl/user-org-roles(|/.*)$": "<rootDir>/libs/user-org-roles/src/$1"
+      "^@credebl/user-org-roles(|/.*)$": "<rootDir>/libs/user-org-roles/src/$1",
+      "^y/user-activity(|/.*)$": "<rootDir>/libs/user-activity/src/$1"
     }
   }
 }

@@ -30,6 +30,7 @@ import { Inject } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
 import { InvitationsI, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
+import { UserActivityService } from '@credebl/user-activity';
 
 
 @Injectable()
@@ -40,6 +41,7 @@ export class UserService {
     private readonly commonService: CommonService,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
+    private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
@@ -510,6 +512,18 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`In check User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+
+  async getUserActivity(userId: number, limit: number): Promise<object[]> {
+    try {
+
+      return this.userActivityService.getUserActivity(userId, limit);   
+
+    } catch (error) {
+      this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }

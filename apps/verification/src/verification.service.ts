@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IWebhookProofPresentation } from './interfaces/verification.interface';
@@ -171,70 +171,73 @@ export class VerificationService {
         autoAcceptProof: ''
       };
 
-      requestedAttributes = requestProof.attributes.reduce((acc, attribute, index) => {
-        const attributeElement = attribute.attributeName;
-        const attributeReferent = `additionalProp${index + 1}`;
+      const attributeWithSchemaIdExists = requestProof.attributes.some(attribute => attribute.schemaId);
+      if (attributeWithSchemaIdExists) {
+        requestedAttributes = Object.fromEntries(requestProof.attributes.map((attribute, index) => {
 
-        if (!attribute.condition && !attribute.value) {
+          const attributeElement = attribute.attributeName;
+          const attributeReferent = `additionalProp${index + 1}`;
 
-          const keys = Object.keys(acc);
-          if (0 < keys.length) {
+          if (!attribute.condition && !attribute.value) {
+            const keys = Object.keys(requestedAttributes);
+            
+            if (0 < keys.length) {
+              let attributeFound = false;
 
-            let attributeFound = false;
-            for (const attr in keys) {
-
-              if (keys.hasOwnProperty(attr)) {
-
+              for (const attr of keys) {
                 if (
-                  requestedAttributes[attr].restrictions[0].cred_def_id ===
-                  requestProof.attributes[index].credDefId
+                  requestedAttributes[attr].restrictions.some(res => res.schema_id) ===
+                  requestProof.attributes[index].schemaId
                 ) {
-
                   requestedAttributes[attr].name.push(attributeElement);
                   attributeFound = true;
                 }
-                if (
-                  attr === Object.keys(keys)[Object.keys(keys).length - 1] &&
-                  !attributeFound
-                ) {
 
+                if (attr === keys[keys.length - 1] && !attributeFound) {
                   requestedAttributes[attributeReferent] = {
                     name: attributeElement,
                     restrictions: [
                       {
-                        cred_def_id: requestProof.attributes[index].credDefId
+                        cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
+                        schema_id: requestProof.attributes[index].schemaId
                       }
                     ]
                   };
                 }
               }
+            } else {
+              return [
+                attributeReferent,
+                {
+                  name: attributeElement,
+                  restrictions: [
+                    {
+                      cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
+                      schema_id: requestProof.attributes[index].schemaId
+                    }
+                  ]
+                }
+              ];
             }
           } else {
-
-            acc[attributeReferent] = {
-              name: attributeElement,
+            requestedPredicates[attributeReferent] = {
+              p_type: attribute.condition,
               restrictions: [
                 {
-                  cred_def_id: attribute.credDefId
+                  cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
+                  schema_id: requestProof.attributes[index].schemaId
                 }
-              ]
+              ],
+              name: attributeElement,
+              p_value: parseInt(attribute.value)
             };
           }
-        } else {
-          requestedPredicates[attributeReferent] = {
-            p_type: attribute.condition,
-            restrictions: [
-              {
-                cred_def_id: attribute.credDefId
-              }
-            ],
-            name: attributeElement,
-            p_value: parseInt(attribute.value)
-          };
-        }
 
-        return acc;
-      }, {});
+          return [attributeReferent, null];
+        }));
+      } else {
+        throw new BadRequestException(ResponseMessages.verification.error.schemaIdNotFound);
+      }
 
       proofRequestPayload = {
         protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
@@ -437,7 +440,7 @@ export class VerificationService {
       }
 
       if (!url) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
+        throw new NotFoundException(ResponseMessages.verification.error.agentUrlNotFound);
       }
 
       return url;

@@ -2,7 +2,24 @@ import { IsArray, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, MaxLengt
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IProofRequestAttribute } from '../interfaces/verification.interface';
+// import { IProofRequestAttribute } from '../interfaces/verification.interface';
+
+class IProofRequestAttribute {
+    @IsString()
+    attributeName: string;
+  
+    @IsString()
+    condition?: string;
+  
+    @IsString()
+    value?: string; 
+  
+    @IsString()
+    credDefId?: string;
+  
+    @IsString()
+    schemaId: string;
+  }
 
 export class RequestProof {
     @ApiProperty()
@@ -18,7 +35,8 @@ export class RequestProof {
                 attributeName: 'attributeName',
                 condition: '>=',
                 value: 'predicates',
-                credDefId: ''
+                credDefId: '',
+                schemaId: ''
             }
         ]
     })

@@ -3,7 +3,8 @@ interface IProofRequestAttribute {
     attributeName: string;
     condition?: string;
     value?: string;
-    credDefId: string;
+    credDefId?: string;
+    schemaId: string;
     credentialName: string;
 }
 

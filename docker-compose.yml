@@ -3,12 +3,14 @@ version: '3'
 services:
   nats:
     container_name: nats
-    entrypoint: '/nats-server -c nats-server.conf -DV'
+    entrypoint: '/nats-server -c /nats-server.conf -DV'  # Corrected the path to nats-server.conf
     image: nats
     ports:
       - '4222:4222'
       - '6222:6222'
       - '8222:8222'
+    volumes:
+      - ./nats-server.conf:/nats-server.conf  # Mount the config file
   redis:
     image: redis:6.2-alpine
     restart: always
@@ -17,6 +19,17 @@ services:
     command: redis-server --save 20 1 --loglevel warning
     volumes: 
       - cache:/data
+  api-gateway:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - redis
+    build:
+      context: ./Dockerfiles
+      dockerfile: Dockerfile.api-gateway
+    ports:
+      - '5000:5000'
+    env_file:
+      - ./.env
 
 volumes:
   cache:

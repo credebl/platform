@@ -1,15 +1,15 @@
+import { UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
 import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
-
 
 @Controller()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   /**
    * Description: Registers new user
@@ -79,12 +79,18 @@ export class UserController {
     return this.userService.get(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
   }
   @MessagePattern({ cmd: 'check-user-exist' })
-  async checkUserExist(payload: { userEmail: string }): Promise<string|object> {
+  async checkUserExist(payload: { userEmail: string }): Promise<string | object> {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userEmail: string, userInfo:userInfo }): Promise<string|object> {
-    return this.userService.createUserInKeyCloak(payload.userEmail,  payload.userInfo);
+  async addUserDetailsInKeyCloak(payload: { userEmail: string, userInfo: userInfo }): Promise<string | object> {
+    return this.userService.createUserInKeyCloak(payload.userEmail, payload.userInfo);
+  }
+
+  // Fetch Users recent activities
+  @MessagePattern({ cmd: 'get-user-activity' })
+  async getUserActivity(payload: { userId: number, limit: number }): Promise<object[]> {
+    return this.userService.getUserActivity(payload.userId, payload.limit);
   }
 
 }

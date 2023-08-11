@@ -38,6 +38,7 @@ export class IssuanceService {
 
       const apiKey = platformConfig?.sgApiKey;
       const issueData = {
+        protocolVersion: 'v1',
         connectionId,
         credentialFormats: {
           indy: {

@@ -22,8 +22,8 @@ export class IssuanceController {
 
   @MessagePattern({ cmd: 'get-all-issued-credentials' })
   async getIssueCredentials(payload: IIssueCredentials): Promise<string> {
-      const { user, threadId, connectionId, state, orgId } = payload;
-      return this.issuanceService.getIssueCredentials(user, threadId, connectionId, state, orgId);
+    const { user, threadId, connectionId, state, orgId } = payload;
+    return this.issuanceService.getIssueCredentials(user, threadId, connectionId, state, orgId);
   }
 
   @MessagePattern({ cmd: 'get-issued-credentials-by-credentialDefinitionId' })

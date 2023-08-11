@@ -29,6 +29,12 @@ export class IssueCredentialDto {
     @IsString({ message: 'connectionId should be string' })
     connectionId: string;
 
+    @ApiProperty({ example: 'v1' })
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid protocol-version' })
+    @IsString({ message: 'protocol-version should be string' })
+    protocolVersion?: string;
+
     @ApiProperty()
     @IsNumber()
     @IsNotEmpty({ message: 'please provide orgId' })

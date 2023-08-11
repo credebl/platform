@@ -361,7 +361,7 @@ export class UserRepository {
    * @param filterOptions 
    * @returns users list
    */
-    async findUsers(queryOptions: object, pageNumber: number, pageSize: number, filterOptions?: object): Promise<object> {
+    async findUsers(queryOptions: object, pageNumber: number, pageSize: number): Promise<object> {
 
       const result = await this.prisma.$transaction([
         this.prisma.user.findMany({
@@ -377,31 +377,9 @@ export class UserRepository {
             firstName: true,
             lastName: true,
             isEmailVerified: true,
-            clientId: true,
-            clientSecret: true,
-            keycloakUserId: true,
-            userOrgRoles: {
-              where: {
-                ...filterOptions
-                // Additional filtering conditions if needed
-              },
-              include: {
-                orgRole: true,
-                organisation: {
-                  select:{
-                    id: true,
-                    name: true,
-                    description: true,
-                    orgSlug: true,
-                    website: true
-                  },
-                  where:{
-                     publicProfile: true
-                  }
-
-                }
-              }
-            }
+            clientId: false,
+            clientSecret: false,
+            keycloakUserId: false
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,

@@ -21,12 +21,19 @@ export class IssueCredentialDto {
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid comment' })
     @IsString({ message: 'comment should be string' })
+    @IsOptional()
     comment: string;
 
     @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
     @IsNotEmpty({ message: 'Please provide valid connectionId' })
     @IsString({ message: 'connectionId should be string' })
     connectionId: string;
+
+    @ApiProperty({ example: 'v1' })
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid protocol-version' })
+    @IsString({ message: 'protocol-version should be string' })
+    protocolVersion?: string;
 
     @ApiProperty()
     @IsNumber()

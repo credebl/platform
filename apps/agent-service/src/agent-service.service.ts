@@ -29,6 +29,7 @@ import { ConnectionService } from 'apps/connection/src/connection.service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
+import * as retry from 'async-retry';
 
 @Injectable()
 @WebSocketGateway()
@@ -287,7 +288,7 @@ export class AgentServiceService {
               if (agentSpinupDto.clientSocketId) {
                 socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
               }
-              await this._createLegacyConnectionInvitation(orgData.id, user);
+              await this._createLegacyConnectionInvitation(orgData.id, user, agentPayload.walletName);
               if (agentSpinupDto.clientSocketId) {
                 socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
               }
@@ -320,38 +321,38 @@ export class AgentServiceService {
     try {
 
 
-        const agentDidWriteUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-        const agentDid = await this.commonService
-          .httpPost(agentDidWriteUrl, { seed: payload.seed }, { headers: { 'x-api-key': payload.apiKey } })
-          .then(async response => response);
+      const agentDidWriteUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
+      const { seed } = payload;
+      const { apiKey } = payload;
+      const writeDid = 'write-did';
+      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed);
+      if (agentDid) {
 
-        if (agentDid) {
-
-          const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DIDS}`;
-          const getDidMethod = await this.commonService
-            .httpGet(getDidMethodUrl, { headers: { 'x-api-key': payload.apiKey } })
-            .then(async response => response);
-
-          const storeOrgAgentData: IStoreOrgAgentDetails = {
-            did: getDidMethod[0]?.did,
-            verkey: getDidMethod[0]?.didDocument?.verificationMethod[0]?.publicKeyBase58,
-            isDidPublic: true,
-            agentSpinUpStatus: 2,
-            walletName: payload.walletName,
-            agentsTypeId: AgentType.AFJ,
-            orgId: payload.orgId,
-            agentEndPoint: payload.agentEndPoint,
-            agentId: payload.agentId,
-            orgAgentTypeId: OrgAgentType.DEDICATED
-          };
+        const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DIDS}`;
+        const getDidDic = 'get-did-doc';
+        const getDidMethod = await this._retryAgentSpinup(getDidMethodUrl, apiKey, getDidDic);
 
 
-          const storeAgentDid = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
-          return storeAgentDid;
+        const storeOrgAgentData: IStoreOrgAgentDetails = {
+          did: getDidMethod[0]?.did,
+          verkey: getDidMethod[0]?.didDocument?.verificationMethod[0]?.publicKeyBase58,
+          isDidPublic: true,
+          agentSpinUpStatus: 2,
+          walletName: payload.walletName,
+          agentsTypeId: AgentType.AFJ,
+          orgId: payload.orgId,
+          agentEndPoint: payload.agentEndPoint,
+          agentId: payload.agentId,
+          orgAgentTypeId: OrgAgentType.DEDICATED
+        };
 
-        } else {
-          throw new InternalServerErrorException('DID is not registered on the ledger');
-        }
+
+        const storeAgentDid = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
+        return storeAgentDid;
+
+      } else {
+        throw new InternalServerErrorException('DID is not registered on the ledger');
+      }
 
 
     } catch (error) {
@@ -370,14 +371,38 @@ export class AgentServiceService {
     }
   }
 
-  async _createLegacyConnectionInvitation(orgId: number, user: IUserRequestInterface): Promise<{
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string): Promise<object> {
+    return retry(
+      async () => {
+
+        if ('write-did' === agentApiState) {
+
+          const agentDid = await this.commonService
+            .httpPost(agentUrl, { seed }, { headers: { 'x-api-key': apiKey } })
+            .then(async response => response);
+          return agentDid;
+        } else if ('get-did-doc' === agentApiState) {
+
+          const getDidMethod = await this.commonService
+            .httpGet(agentUrl, { headers: { 'x-api-key': apiKey } })
+            .then(async response => response);
+          return getDidMethod;
+        }
+      },
+      {
+        retries: 5
+      }
+    );
+  }
+
+  async _createLegacyConnectionInvitation(orgId: number, user: IUserRequestInterface, label: string): Promise<{
     response;
   }> {
     try {
       const pattern = {
         cmd: 'create-connection'
       };
-      const payload = { orgId, user };
+      const payload = { orgId, user, label };
       return this.agentServiceProxy
         .send<string>(pattern, payload)
         .pipe(
@@ -467,7 +492,7 @@ export class AgentServiceService {
       };
 
       const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
-      await this._createLegacyConnectionInvitation(payload.orgId, user);
+      await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
       return saveTenant;
 
     } catch (error) {

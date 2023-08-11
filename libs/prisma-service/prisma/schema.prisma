@@ -29,6 +29,22 @@ model user {
   userOrgRoles        user_org_roles[]
   userDevices         user_devices[]
   orgInvitations      org_invitations[]
+  user_activities     user_activity[]
+}
+
+model user_activity {
+  id                  Int             @id @default(autoincrement())
+  userId              Int
+  user                user            @relation(fields: [userId], references: [id])
+  orgId               Int
+  organisation        organisation?   @relation(fields: [orgId], references: [id])
+  action              String
+  details             String
+  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
+  createdBy           Int              @default(1)
+  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int              @default(1)
+  deletedAt           DateTime?        @db.Timestamp(6)
 }
 
 model org_roles {
@@ -61,6 +77,7 @@ model organisation {
   lastChangedBy       Int               @default(1)
   name                String?           @db.VarChar(500)
   description         String?           @db.VarChar(500)
+  orgSlug             String?           @unique
   logoUrl             String?
   website             String?           @db.VarChar
   userOrgRoles        user_org_roles[]
@@ -70,6 +87,8 @@ model organisation {
   credentials         credentials[]
   presentations       presentations[]
   schema              schema[]
+  user_activities     user_activity[]
+
 }
 
 model org_invitations {

@@ -9,7 +9,7 @@
     "build": "nest build",
     "build:all": "rimraf dist && nest build api-gateway && nest build platform-service && nest build agent-service && nest build connection",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
-    "start": "nest start",
+    "start": "npx prisma migrate deploy --schema=./libs/prisma-service/prisma/schema.prisma & nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/api-gateway/main",
@@ -42,8 +42,10 @@
     "@nestjs/websockets": "^10.1.3",
     "@prisma/client": "^5.1.1",
     "@sendgrid/mail": "^7.7.0",
+    "@types/async-retry": "^1.4.5",
     "@types/crypto-js": "^4.1.1",
     "@types/pdfkit": "^0.12.6",
+    "async-retry": "^1.3.3",
     "auth0-js": "^9.22.1",
     "bcrypt": "^5.1.0",
     "blob-stream": "^0.1.3",
@@ -161,7 +163,8 @@
       "^@credebl/enum(|/.*)$": "<rootDir>/libs/enum/src/$1",
       "^@credebl/prisma-service(|/.*)$": "<rootDir>/libs/prisma-service/src/$1",
       "^@credebl/org-roles(|/.*)$": "<rootDir>/libs/org-roles/src/$1",
-      "^@credebl/user-org-roles(|/.*)$": "<rootDir>/libs/user-org-roles/src/$1"
+      "^@credebl/user-org-roles(|/.*)$": "<rootDir>/libs/user-org-roles/src/$1",
+      "^y/user-activity(|/.*)$": "<rootDir>/libs/user-activity/src/$1"
     }
   }
 }

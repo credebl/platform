@@ -13,6 +13,7 @@ export interface IIssuance {
     connectionId: string;
     attributes: IAttributes[];
     orgId: number;
+    protocolVersion: string;
 }
 
 export interface IIssueCredentials {

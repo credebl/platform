@@ -24,6 +24,7 @@ export enum CommonConstants {
   URL_CONN_REMOVE_CONNECTION_BY_ID = '/connections/#/remove',
   URL_CONN_METADATA = '/connections/#/metadata',
   URL_CONN_LEGACY_INVITE = '/oob/create-legacy-invitation',
+  URL_CONN_INVITATION = '/url',
 
   // WALLET SERVICES
   URL_WALLET_CREATE_DID = '/wallet/did/create',
@@ -52,6 +53,7 @@ export enum CommonConstants {
   URL_ISSUE_GET_CREDEX_RECS = '/issue-credential/records',
   URL_ISSUE_GET_CRED_REC_BY_ID = '/credentials/#',
   URL_ISSUE_SEND_CRED = '/credentials/offer-credential',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_SEND_CRED_OFFER = '/credentials/offer-credential',
   URL_ISSUE_CREATE_SEND_PROPOSAL = '/issue-credential/send-proposal',
   URL_ISSUE_CREATE_CRED_OFFER = '/issue-credential/send-offer',
@@ -66,6 +68,7 @@ export enum CommonConstants {
   URL_CREATE_ISSUE_CREDENTIAL_OUT_OF_BAND = '/issue-credential/create',
   URL_CREATE_OUT_OF_BAND_INVITATION = '/out-of-band/create-invitation',
   URL_ISSUE_CREATE_CRED_OFFER_AFJ= '/credentials/create-offer',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_GET_CREDS_AFJ= '/credentials',
   URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID= '/credentials',
 

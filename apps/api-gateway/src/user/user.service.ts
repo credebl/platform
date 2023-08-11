@@ -51,15 +51,15 @@ export class UserService extends BaseService {
     }
   }
 
-  async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<{ response: object }> {
-    const payload = {updateUserProfileDto };
+  async getPublicProfile(id: number): Promise<{ response: object }> {
+    const payload = { id };
     try {
-      return this.sendNats(this.serviceProxy, 'update-user-profile', payload);
+      return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
     } catch (error) {
-      throw new RpcException(error.response);
+      this.logger.error(`Error in get user:${JSON.stringify(error)}`);
     }
   }
-  
+
   async findUserByKeycloakId(id: string): Promise<{ response: object }> {
     const payload = { id };
 
@@ -84,13 +84,21 @@ export class UserService extends BaseService {
     return this.sendNats(this.serviceProxy, 'accept-reject-invitations', payload);
   }
 
-  async get(
+  async getOrgUsers(
     orgId: number,
     getAllUsersDto: GetAllUsersDto
   ): Promise<{ response: object }> {
     const {pageNumber, pageSize, search} = getAllUsersDto;
     const payload = { orgId, pageNumber, pageSize, search };
     return this.sendNats(this.serviceProxy, 'fetch-organization-users', payload);
+  }
+
+  async get(
+    getAllUsersDto: GetAllUsersDto
+  ): Promise<{ response: object }> {
+    const {pageNumber, pageSize, search} = getAllUsersDto;
+    const payload = { pageNumber, pageSize, search };
+    return this.sendNats(this.serviceProxy, 'fetch-users', payload);
   }
   
   async checkUserExist(userEmail: string): Promise<{ response: string }> {

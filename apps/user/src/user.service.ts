@@ -139,7 +139,7 @@ export class UserService {
       if (param.verificationCode === userDetails.verificationCode) {
         await this.userRepository.verifyUser(param.email);
         return {
-          message: "User Verified sucessfully"
+          message: 'User Verified sucessfully'
         };
       }
     } catch (error) {
@@ -190,7 +190,7 @@ export class UserService {
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
 
-      return "User created successfully";
+      return 'User created successfully';
     } catch (error) {
       this.logger.error(`error in create keycloak user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
@@ -314,6 +314,15 @@ export class UserService {
   async getProfile(payload: { id }): Promise<object> {
     try {
       return this.userRepository.getUserById(payload.id);
+    } catch (error) {
+      this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async getPublicProfile(payload: { id }): Promise<object> {
+    try {
+      return this.userRepository.getUserPublicProfile(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
@@ -468,7 +477,7 @@ export class UserService {
    * @param orgId 
    * @returns users list
    */
-  async get(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getOrgUsers(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
       const query = {
         userOrgRoles: {
@@ -484,7 +493,29 @@ export class UserService {
       const filterOptions = {
         orgId
       };
-      return this.userRepository.findUsers(query, pageNumber, pageSize, filterOptions);
+      return this.userRepository.findOrgUsers(query, pageNumber, pageSize, filterOptions);
+    } catch (error) {
+      this.logger.error(`get Org Users: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+   /**
+   * 
+   * @param orgId 
+   * @returns users list
+   */
+   async get(pageNumber: number, pageSize: number, search: string): Promise<object> {
+    try {
+      const query = {
+        OR: [
+          { firstName: { contains: search } },
+          { lastName: { contains: search } },
+          { email: { contains: search } }
+        ]
+      };
+
+      return this.userRepository.findUsers(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`get Users: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);

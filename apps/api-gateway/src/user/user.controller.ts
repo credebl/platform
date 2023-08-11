@@ -73,24 +73,80 @@ export class UserController {
    * @param res 
    * @returns Users list of organization
    */
-  @Get()
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
-  async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Query('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+@Get()
+@Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+@ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+@ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
+@ApiQuery({
+  name: 'pageNumber',
+  type: Number,
+  required: false
+})
+@ApiQuery({
+  name: 'pageSize',
+  type: Number,
+  required: false
+})
+@ApiQuery({
+  name: 'search',
+  type: String,
+  required: false
+})
+async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Query('orgId') orgId: number, @Res() res: Response): Promise<Response> {
 
-    const org = user.selectedOrg?.orgId;
-    const users = await this.userService.get(org, getAllUsersDto);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.fetchUsers,
-      data: users.response
-    };
+  const org = user.selectedOrg?.orgId;
+  const users = await this.userService.getOrgUsers(org, getAllUsersDto);
+  const finalResponse: IResponseType = {
+    statusCode: HttpStatus.OK,
+    message: ResponseMessages.user.success.fetchUsers,
+    data: users.response
+  };
 
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
+  return res.status(HttpStatus.OK).json(finalResponse);
+}
+
+
+/**
+ * 
+ * @param user 
+ * @param orgId 
+ * @param res 
+ * @returns Users list of organization
+ */
+@Get('/public-users')
+@Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
+@ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+@ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
+@ApiQuery({
+  name: 'pageNumber',
+  type: Number,
+  required: false
+})
+@ApiQuery({
+  name: 'pageSize',
+  type: Number,
+  required: false
+})
+@ApiQuery({
+  name: 'search',
+  type: String,
+  required: false
+})
+async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Res() res: Response): Promise<Response> {
+ 
+ const users = await this.userService.get(getAllUsersDto);
+ const finalResponse: IResponseType = {
+   statusCode: HttpStatus.OK,
+   message: ResponseMessages.user.success.fetchUsers,
+   data: users.response
+ };
+
+ return res.status(HttpStatus.OK).json(finalResponse);
+}
 
 
   /**
@@ -155,6 +211,31 @@ export class UserController {
   async getProfile(@User() reqUser: user, @Res() res: Response): Promise<object> {
 
     const userData = await this.userService.getProfile(reqUser.id);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchProfile,
+      data: userData.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
+  @Get('public-profile')
+  @ApiOperation({
+    summary: 'Fetch user details',
+    description: 'Fetch user details'
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'id',
+    type: Number,
+    required: false
+  })
+  async getPublicProfile(@User() reqUser: user, @Query('id') id: number, @Res() res: Response): Promise<object> {
+    const userData = await this.userService.getPublicProfile(id);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

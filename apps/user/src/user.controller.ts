@@ -41,6 +41,11 @@ export class UserController {
     return this.userService.getProfile(payload);
   }
 
+  @MessagePattern({ cmd: 'get-user-public-profile' })
+  async getPublicProfile(payload: { id }): Promise<object> {
+    return this.userService.getPublicProfile(payload);
+  }
+
   @MessagePattern({ cmd: 'get-user-by-keycloak-id' })
   async findByKeycloakId(payload: { id }): Promise<object> {
     return this.userService.findByKeycloakId(payload);
@@ -75,9 +80,21 @@ export class UserController {
    * @returns organization users list
    */
   @MessagePattern({ cmd: 'fetch-organization-users' })
-  async get(payload: { orgId: number, pageNumber: number, pageSize: number, search: string }): Promise<object> {
-    return this.userService.get(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
+  async getOrganizationUsers(payload: { orgId: number, pageNumber: number, pageSize: number, search: string }): Promise<object> {
+    return this.userService.getOrgUsers(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
   }
+
+    /**
+   *
+   * @param payload
+   * @returns organization users list
+   */
+    @MessagePattern({ cmd: 'fetch-users' })
+    async get(payload: { pageNumber: number, pageSize: number, search: string }): Promise<object> {
+      const users =  this.userService.get(payload.pageNumber, payload.pageSize, payload.search);
+      return users;
+    }
+
   @MessagePattern({ cmd: 'check-user-exist' })
   async checkUserExist(payload: { userEmail: string }): Promise<string | object> {
     return this.userService.checkUserExist(payload.userEmail);

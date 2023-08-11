@@ -5,6 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 
 export class GetAllUsersDto {
+
     @ApiProperty({ required: false })
     @IsOptional()
     @Type(() => Number)

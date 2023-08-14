@@ -28,7 +28,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import { Inject } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
-import { InvitationsI, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+import { InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 
@@ -139,7 +139,7 @@ export class UserService {
       if (param.verificationCode === userDetails.verificationCode) {
         await this.userRepository.verifyUser(param.email);
         return {
-          message: "User Verified sucessfully"
+          message: 'User Verified sucessfully'
         };
       }
     } catch (error) {
@@ -190,7 +190,7 @@ export class UserService {
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
 
-      return "User created successfully";
+      return 'User created successfully';
     } catch (error) {
       this.logger.error(`error in create keycloak user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
@@ -316,6 +316,15 @@ export class UserService {
       return this.userRepository.getUserById(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async updateUserProfile(updateUserProfileDto: UpdateUserProfile): Promise<object> {
+    try {
+      return this.userRepository.updateUserProfile(updateUserProfileDto);
+    } catch (error) {
+      this.logger.error(`update user profile: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }

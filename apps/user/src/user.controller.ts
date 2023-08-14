@@ -1,11 +1,11 @@
-import { UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
-
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
 import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
+import { UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+
 
 @Controller()
 export class UserController {
@@ -39,6 +39,11 @@ export class UserController {
   @MessagePattern({ cmd: 'get-user-profile' })
   async getProfile(payload: { id }): Promise<object> {
     return this.userService.getProfile(payload);
+  }
+
+  @MessagePattern({ cmd: 'update-user-profile' })
+  async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<object> {
+    return this.userService.updateUserProfile(payload.updateUserProfileDto);
   }
 
   @MessagePattern({ cmd: 'get-user-by-keycloak-id' })

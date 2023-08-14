@@ -3,6 +3,7 @@ export const ResponseMessages = {
     user: {
         success: {
             create: 'User registered successfully',
+            update: 'User details updated successfully',
             emaiVerified: 'Email verified successfully',
             login: 'User login successfully',
             fetchProfile: 'User fetched successfully',
@@ -142,7 +143,7 @@ export const ResponseMessages = {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
-            agentUrlNotFound: 'agent url not found',
+            agentUrlNotFound: 'agent url not found'
         }
     },
     verification: {

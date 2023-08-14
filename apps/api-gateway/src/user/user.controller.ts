@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Put, Body, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserEmailVerificationDto } from './dto/create-user.dto';
 import {
@@ -40,6 +40,7 @@ import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { AddUserDetails } from './dto/add-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -264,6 +265,27 @@ export class UserController {
     } else {
       throw new BadRequestException('Password name must be between 8 to 50 Characters');
     }
+
+  }
+
+  @Put('/')
+  @ApiOperation({
+    summary: 'Update user profile',
+    description: 'Update user profile'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @Res() res: Response): Promise<Response> {
+
+    const UpdatedUserProfile = await this.userService.updateUserProfile(updateUserProfileDto);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.update,
+      data: UpdatedUserProfile.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
 
   }
 

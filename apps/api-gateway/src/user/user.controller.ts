@@ -74,77 +74,21 @@ export class UserController {
    * @param res 
    * @returns Users list of organization
    */
-@Get()
-@Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-@ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-@ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
-@ApiQuery({
-  name: 'pageNumber',
-  type: Number,
-  required: false
-})
-@ApiQuery({
-  name: 'pageSize',
-  type: Number,
-  required: false
-})
-@ApiQuery({
-  name: 'search',
-  type: String,
-  required: false
-})
-async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Query('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  @Get()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
+  async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Query('orgId') orgId: number, @Res() res: Response): Promise<Response> {
 
-  const org = user.selectedOrg?.orgId;
-  const users = await this.userService.getOrgUsers(org, getAllUsersDto);
-  const finalResponse: IResponseType = {
-    statusCode: HttpStatus.OK,
-    message: ResponseMessages.user.success.fetchUsers,
-    data: users.response
-  };
-
-  return res.status(HttpStatus.OK).json(finalResponse);
-}
-
-
-/**
- * 
- * @param user 
- * @param orgId 
- * @param res 
- * @returns Users list of organization
- */
-@Get('/public-users')
-@Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
-@ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-@ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
-@ApiQuery({
-  name: 'pageNumber',
-  type: Number,
-  required: false
-})
-@ApiQuery({
-  name: 'pageSize',
-  type: Number,
-  required: false
-})
-@ApiQuery({
-  name: 'search',
-  type: String,
-  required: false
-})
-async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Res() res: Response): Promise<Response> {
- 
- const users = await this.userService.get(getAllUsersDto);
- const finalResponse: IResponseType = {
-   statusCode: HttpStatus.OK,
-   message: ResponseMessages.user.success.fetchUsers,
-   data: users.response
- };
+    const org = user.selectedOrg?.orgId;
+    const users = await this.userService.get(org, getAllUsersDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchUsers,
+      data: users.response
+    };
 
  return res.status(HttpStatus.OK).json(finalResponse);
 }
@@ -359,35 +303,12 @@ async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUs
   @UseGuards(AuthGuard('jwt'))
   async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @Res() res: Response): Promise<Response> {
 
-    const UpdatedUserProfile = await this.userService.updateUserProfile(updateUserProfileDto);
+    await this.userService.updateUserProfile(updateUserProfileDto);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.update,
-      data: UpdatedUserProfile.response
+      message: ResponseMessages.user.success.update
     };
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
-  @Get('/activity')
-  @ApiOperation({
-    summary: 'organization invitations',
-    description: 'Fetch organization invitations'
-  })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  @ApiQuery({ name: 'limit', required: true })
-  async getUserActivities(@Query('limit') limit: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-
-    const userDetails = await this.userService.getUserActivities(reqUser.id, limit);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: 'User activities fetched successfully',
-      data: userDetails.response
-    };
-
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

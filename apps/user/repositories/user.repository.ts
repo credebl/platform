@@ -97,6 +97,30 @@ export class UserRepository {
 
   /**
    *
+   * @Body updateUserProfile
+   * @returns Update user profile data
+   */
+  async updateUserProfile(updateUserProfile: UserI): Promise<object> {
+    try {
+      return this.prisma.user.update({
+        where: {
+          id: Number(updateUserProfile.id)
+        },
+        data: {
+          firstName: updateUserProfile.firstName,
+          lastName: updateUserProfile.lastName,
+          email: updateUserProfile.email
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  /**
+   *
    * @param id
    * @returns User data
    */

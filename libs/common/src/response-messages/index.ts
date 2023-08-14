@@ -3,6 +3,7 @@ export const ResponseMessages = {
     user: {
         success: {
             create: 'User registered successfully',
+            update: 'User details updated successfully',
             emaiVerified: 'Email verified successfully',
             login: 'User login successfully',
             fetchProfile: 'User fetched successfully',

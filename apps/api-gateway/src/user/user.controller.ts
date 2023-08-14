@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Put, Body, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserEmailVerificationDto } from './dto/create-user.dto';
 import {
@@ -39,6 +39,7 @@ import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { AddUserDetails } from './dto/add-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -57,12 +58,12 @@ export class UserController {
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Send verification email', description: 'Send verification email to new user' })
   async create(@Body() userEmailVerificationDto: UserEmailVerificationDto, @Res() res: Response): Promise<Response> {
-      await this.userService.sendVerificationMail(userEmailVerificationDto);
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.OK,
-        message: ResponseMessages.user.success.sendVerificationCode
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
+    await this.userService.sendVerificationMail(userEmailVerificationDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.sendVerificationCode
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**
@@ -79,7 +80,7 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
   async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Query('orgId') orgId: number, @Res() res: Response): Promise<Response> {
- 
+
     const org = user.selectedOrg?.orgId;
     const users = await this.userService.get(org, getAllUsersDto);
     const finalResponse: IResponseType = {
@@ -101,7 +102,7 @@ export class UserController {
   @Get('/verify')
   @ApiOperation({ summary: 'Verify new users email', description: 'Email verification for new users' })
   async verifyEmail(@Query() query: EmailVerificationDto, @Res() res: Response): Promise<Response> {
-     await this.userService.verifyEmail(query);
+    await this.userService.verifyEmail(query);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.emaiVerified
@@ -249,7 +250,7 @@ export class UserController {
   @ApiOperation({ summary: 'Add user information', description: 'Add user information' })
   async addUserDetailsInKeyCloak(@Body() userInfo: AddUserDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
     const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
-    if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) { 
+    if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
       this.commonService.passwordValidation(decryptedPassword);
       userInfo.password = decryptedPassword;
       const userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
@@ -264,5 +265,24 @@ export class UserController {
       throw new BadRequestException('Password name must be between 8 to 50 Characters');
     }
 
+  }
+
+  @Put('/')
+  @ApiOperation({
+    summary: 'Update user profile',
+    description: 'Update user profile'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @Res() res: Response): Promise<Response> {
+
+    await this.userService.updateUserProfile(updateUserProfileDto);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.update
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

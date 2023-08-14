@@ -30,6 +30,7 @@ import { Inject } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
 import { InvitationsI, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
+import { UpdateUserProfileDto } from 'apps/api-gateway/src/user/dto/update-user-profile.dto';
 
 
 @Injectable()
@@ -314,6 +315,15 @@ export class UserService {
       return this.userRepository.getUserById(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<object> {
+    try {
+      return this.userRepository.updateUserProfile(updateUserProfileDto);
+    } catch (error) {
+      this.logger.error(`update user profile: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }

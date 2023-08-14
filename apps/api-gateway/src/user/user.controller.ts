@@ -6,6 +6,7 @@ import {
   ApiBody,
   ApiForbiddenResponse,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse
@@ -283,6 +284,28 @@ export class UserController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.update
     };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
+  @Get('/activity')
+  @ApiOperation({
+    summary: 'organization invitations',
+    description: 'Fetch organization invitations'
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiQuery({ name: 'limit', required: true })
+  async getUserActivities(@Query('limit') limit: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+
+    const userDetails = await this.userService.getUserActivities(reqUser.id, limit);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: 'User activities fetched successfully',
+      data: userDetails.response
+    };
+
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

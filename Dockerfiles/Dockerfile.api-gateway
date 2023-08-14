@@ -6,13 +6,14 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json ./
+# COPY package-lock.json ./
 
 # Install dependencies
 RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .
-RUN cd libs/prisma-service && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
 
 # Build the api-gateway service
 RUN pnpm run build api-gateway
@@ -28,12 +29,7 @@ COPY --from=build /app/dist/apps/api-gateway/ ./dist/apps/api-gateway/
 
 # Copy the libs folder from the build stage
 COPY --from=build /app/libs/ ./libs/
-#COPY --from=build /app/package.json ./  
 COPY --from=build /app/node_modules  ./node_modules
 
-
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate && cd ../.. && node dist/apps/api-gateway/main.js"]
-
-# docker build -t api-gateway -f Dockerfiles/Dockerfile.api-gateway .
-# docker run -d --env-file .env --name api-gateway docker.io/library/api-gateway
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/api-gateway/main.js"]

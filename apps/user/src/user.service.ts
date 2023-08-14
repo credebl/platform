@@ -31,6 +31,7 @@ import { HttpException } from '@nestjs/common';
 import { InvitationsI, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UpdateUserProfileDto } from 'apps/api-gateway/src/user/dto/update-user-profile.dto';
+import { UserActivityService } from '@credebl/user-activity';
 
 
 @Injectable()
@@ -41,6 +42,7 @@ export class UserService {
     private readonly commonService: CommonService,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
+    private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
@@ -138,7 +140,7 @@ export class UserService {
       if (param.verificationCode === userDetails.verificationCode) {
         await this.userRepository.verifyUser(param.email);
         return {
-          message: "User Verified sucessfully"
+          message: 'User Verified sucessfully'
         };
       }
     } catch (error) {
@@ -189,7 +191,7 @@ export class UserService {
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
 
-      return "User created successfully";
+      return 'User created successfully';
     } catch (error) {
       this.logger.error(`error in create keycloak user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
@@ -520,6 +522,18 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`In check User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+
+  async getUserActivity(userId: number, limit: number): Promise<object[]> {
+    try {
+
+      return this.userActivityService.getUserActivity(userId, limit);   
+
+    } catch (error) {
+      this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }

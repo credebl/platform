@@ -14,11 +14,11 @@ import {
 } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
+  ConnectionInvitationResponse,
   IUserRequestInterface
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { v4 as uuid } from 'uuid';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
@@ -65,11 +65,10 @@ export class ConnectionService {
       const apiKey = platformConfig?.sgApiKey;
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
+      const invitationObject = createConnectionInvitation.message.invitation['@id'];
 
-      const connectionInvitationUrl = createConnectionInvitation.message.invitationUrl;
-      const referenceId: string = uuid();
-      await this.storeShorteningUrl(referenceId, connectionInvitationUrl);
-      const shortenedUrl = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/connections/url/${referenceId}`;
+      const shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
+
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(shortenedUrl, agentId, orgId);
       return saveConnectionDetails;
     } catch (error) {
@@ -104,26 +103,23 @@ export class ConnectionService {
    * @param url 
    * @returns connection invitation URL
    */
-  async _createConnectionInvitation(connectionPayload: object, url: string, apiKey: string): Promise<{
-    message: {
-      invitationUrl: string;
-    };
-  }> {
+  async _createConnectionInvitation(connectionPayload: object, url: string, apiKey: string): Promise<ConnectionInvitationResponse> {
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
     const payload = { connectionPayload, url, apiKey };
-    return this.connectionServiceProxy
-      .send<{ invitationUrl: string }>(pattern, payload)
-      .pipe(
-        map((message) => ({ message }))
-      ).toPromise()
-      .catch(error => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException({
-          status: error.status,
-          error: error.message
-        }, error.status);
-      });
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
+      return { message };
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
   }
+
 
   async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<object> {
     try {

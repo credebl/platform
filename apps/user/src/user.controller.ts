@@ -4,7 +4,8 @@ import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+import { UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+import { UpdateUserProfileDto } from 'apps/api-gateway/src/user/dto/update-user-profile.dto';
 
 
 @Controller()
@@ -41,9 +42,14 @@ export class UserController {
     return this.userService.getProfile(payload);
   }
 
-  @MessagePattern({ cmd: 'get-user-public-profile' })
-  async getPublicProfile(payload: { id }): Promise<object> {
-    return this.userService.getPublicProfile(payload);
+  @MessagePattern({ cmd: 'update-user-profile' })
+  async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfileDto }): Promise<object> {
+    return this.userService.updateUserProfile(payload.updateUserProfileDto);
+  }
+
+  @MessagePattern({ cmd: 'get-user-by-keycloak-id' })
+  async findByKeycloakId(payload: { id }): Promise<object> {
+    return this.userService.findByKeycloakId(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-by-supabase' }) 

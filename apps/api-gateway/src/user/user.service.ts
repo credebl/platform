@@ -51,15 +51,6 @@ export class UserService extends BaseService {
     }
   }
 
-  async getPublicProfile(id: number): Promise<{ response: object }> {
-    const payload = { id };
-    try {
-      return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
-    } catch (error) {
-      this.logger.error(`Error in get user:${JSON.stringify(error)}`);
-    }
-  }
-
   async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<{ response: object }> {
     const payload = {updateUserProfileDto };
     try {
@@ -69,7 +60,7 @@ export class UserService extends BaseService {
     }
   }
   
-  async findUserinSupabase(id: string): Promise<{ response: object }> {
+  async findUserByKeycloakId(id: string): Promise<{ response: object }> {
     const payload = { id };
 
     try {

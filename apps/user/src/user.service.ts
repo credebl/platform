@@ -31,8 +31,7 @@ import { Inject } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
 import { InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
-import { UserActivityService } from '@credebl/user-activity';
-import { SupabaseService } from '@credebl/supabase';
+import { UpdateUserProfileDto } from 'apps/api-gateway/src/user/dto/update-user-profile.dto';
 
 
 @Injectable()
@@ -345,11 +344,11 @@ export class UserService {
     }
   }
 
-  async getPublicProfile(payload: { id }): Promise<object> {
+  async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<object> {
     try {
-      return this.userRepository.getUserPublicProfile(payload.id);
+      return this.userRepository.updateUserProfile(updateUserProfileDto);
     } catch (error) {
-      this.logger.error(`get user: ${JSON.stringify(error)}`);
+      this.logger.error(`update user profile: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }

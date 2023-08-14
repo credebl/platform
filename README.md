@@ -12,7 +12,7 @@ Install Node: >= 18.17.0
 
 **Install NestJS**
 ```bash
-$ npm i @nestjs/cli@latest 
+npm i @nestjs/cli@latest 
 ```
 
 **Setup & run postgres**
@@ -25,16 +25,16 @@ docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=<secretpasswor
 **Run prisma to generate db schema**
 
 ```bash
-$ cd ./libs/prisma-servie/prisma
-$ npx prisma generate
-$ npx prisma db push
+cd ./libs/prisma-servie/prisma
+npx prisma generate
+npx prisma db push
 ```
 
 **Seed initial data**
 
 ```bash
-$ cd ./libs/prisma-servie
-$ npx prisma db seed
+cd ./libs/prisma-servie
+npx prisma db seed
 ```
 
 # Install NATS Message Broker
@@ -50,14 +50,14 @@ docker pull nats:latest
 The `docker-compose.yml` file is available in the root folder.
 
 ```
-> docker-compose up
+docker-compose up
 ```
 
 
 ## Run CREDEBL Micro-services
 
 ```bash
-$ npm install
+npm install
 ```
 
 ## Configure environment variables in `.env` before you start the API Gateway
@@ -66,7 +66,7 @@ $ npm install
 You can optionally use the `--watch` flag during development / testing.
 
 ```bash
-$ nest start [--watch]
+nest start [--watch]
 ```
 
 ## Starting the individual Micro-services
@@ -74,19 +74,19 @@ $ nest start [--watch]
 ### e.g. for starting `organization service` micro-service run below command in a separate terminal window
 
 ```bash
-$ nest start organization [--watch]
+nest start organization [--watch]
 ```
 
 ### Likewise you can start all the micro-services one after another in separate terminal window
 
 ```bash
-$ nest start user [--watch]
-$ nest start ledger [--watch]
-$ nest start connection [--watch]
-$ nest start issuance [--watch]
-$ nest start verification [--watch]
-$ nest start agent-provisioning [--watch]
-$ nest start agent-service [--watch]
+nest start user [--watch]
+nest start ledger [--watch]
+nest start connection [--watch]
+nest start issuance [--watch]
+nest start verification [--watch]
+nest start agent-provisioning [--watch]
+nest start agent-service [--watch]
 ```
 
 ## To access micro-service endpoints using the API Gateway. Navigate to

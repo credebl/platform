@@ -31,7 +31,7 @@ import { Inject } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
 import { InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
-import { UpdateUserProfileDto } from 'apps/api-gateway/src/user/dto/update-user-profile.dto';
+import { UserActivityService } from '@credebl/user-activity';
 
 
 @Injectable()

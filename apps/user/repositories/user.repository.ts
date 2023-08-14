@@ -138,9 +138,9 @@ export class UserRepository {
    * @Body updateUserProfile
    * @returns Update user profile data
    */
-  async updateUserProfile(updateUserProfile: UserI): Promise<object> {
+  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<UpdateUserProfile> {
     try {
-      return this.prisma.user.update({
+      const userdetails = await this.prisma.user.update({
         where: {
           id: Number(updateUserProfile.id)
         },
@@ -150,6 +150,7 @@ export class UserRepository {
           email: updateUserProfile.email
         }
       });
+      return userdetails;
 
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);

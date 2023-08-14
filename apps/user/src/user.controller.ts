@@ -4,8 +4,7 @@ import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
-import { UpdateUserProfileDto } from 'apps/api-gateway/src/user/dto/update-user-profile.dto';
+import { UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 
 
 @Controller()
@@ -43,7 +42,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'update-user-profile' })
-  async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfileDto }): Promise<object> {
+  async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<object> {
     return this.userService.updateUserProfile(payload.updateUserProfileDto);
   }
 

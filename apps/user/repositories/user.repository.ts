@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 // eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -100,9 +100,9 @@ export class UserRepository {
    * @Body updateUserProfile
    * @returns Update user profile data
    */
-  async updateUserProfile(updateUserProfile: UserI): Promise<object> {
+  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<UpdateUserProfile> {
     try {
-      return this.prisma.user.update({
+      const userdetails = await this.prisma.user.update({
         where: {
           id: Number(updateUserProfile.id)
         },
@@ -112,6 +112,7 @@ export class UserRepository {
           email: updateUserProfile.email
         }
       });
+      return userdetails;
 
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);

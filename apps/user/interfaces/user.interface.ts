@@ -42,3 +42,10 @@ export interface UserWhereUniqueInput{
 export interface UserWhereInput{
     email?: string
 }
+
+export interface UpdateUserProfile {
+    id: number,
+    firstName: string,
+    lastName: string,
+    email: string   
+}

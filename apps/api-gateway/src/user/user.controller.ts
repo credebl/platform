@@ -278,11 +278,12 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @Res() res: Response): Promise<Response> {
 
-    await this.userService.updateUserProfile(updateUserProfileDto);
+    const UpdatedUserProfile = await this.userService.updateUserProfile(updateUserProfileDto);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.update
+      message: ResponseMessages.user.success.update,
+      data: UpdatedUserProfile.response
     };
     return res.status(HttpStatus.OK).json(finalResponse);
 

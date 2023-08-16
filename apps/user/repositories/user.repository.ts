@@ -87,13 +87,24 @@ export class UserRepository {
    * @returns User profile data
    */
   async getUserById(id: number): Promise<UserI> {
-
     const queryOptions: UserQueryOptions = {
       id
     };
 
     return this.findUser(queryOptions);
   }
+
+    /**
+   *
+   * @param id
+   * @returns User profile data
+   */
+    async getUserPublicProfile(id: number): Promise<UserI> {
+          const queryOptions: UserQueryOptions = {
+            id
+          };
+          return this.findUserForPublicProfile(queryOptions);
+        }
 
   /**
    *
@@ -212,6 +223,49 @@ export class UserRepository {
     });
   }
 
+  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<UserI> {
+    return this.prisma.user.findFirst({
+      where: {       
+        publicProfile: true,
+        OR: [
+          {
+            id: queryOptions.id
+          },
+          {
+            email: queryOptions.email
+          }
+        ]
+      },
+      select: {
+        id: true,
+        username: true,
+        password: false,
+        email: true,
+        firstName: true,
+        lastName: true,
+        isEmailVerified: true,
+        publicProfile: true,
+        userOrgRoles: {
+          include: {
+            orgRole: true,
+            organisation: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                logoUrl: true,
+                website: true
+              },
+              where:{
+                publicProfile: true
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
   /**
    *
    * @param tenantDetails
@@ -267,7 +321,7 @@ export class UserRepository {
    * @param filterOptions 
    * @returns users list
    */
-  async findUsers(queryOptions: object, pageNumber: number, pageSize: number, filterOptions?: object): Promise<object> {
+  async findOrgUsers(queryOptions: object, pageNumber: number, pageSize: number, filterOptions?: object): Promise<object> {
 
     const result = await this.prisma.$transaction([
       this.prisma.user.findMany({
@@ -325,6 +379,52 @@ export class UserRepository {
 
     return { totalPages, users };
   }
+
+    /**
+   * 
+   * @param queryOptions 
+   * @param filterOptions 
+   * @returns users list
+   */
+    async findUsers(queryOptions: object, pageNumber: number, pageSize: number): Promise<object> {
+
+      const result = await this.prisma.$transaction([
+        this.prisma.user.findMany({
+          where: {
+            ...queryOptions, // Spread the dynamic condition object
+            publicProfile: true
+          },
+          select: {
+            id: true,
+            username: true,
+            password: false,
+            email: true,
+            firstName: true,
+            lastName: true,
+            isEmailVerified: true,
+            clientId: false,
+            clientSecret: false,
+            keycloakUserId: false
+          },
+          take: pageSize,
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        }),
+        this.prisma.user.count({
+          where: {
+            ...queryOptions
+          }
+        })
+      ]);
+  
+      const users = result[0];
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+  
+      return { totalPages, users };
+    }
 
   async checkUniqueUserExist(email: string): Promise<user> {
     try {

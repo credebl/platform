@@ -30,6 +30,7 @@ model user {
   userDevices         user_devices[]
   orgInvitations      org_invitations[]
   user_activities     user_activity[]
+  publicProfile      Boolean           @default(false)
 }
 
 model user_activity {
@@ -88,6 +89,7 @@ model organisation {
   presentations       presentations[]
   schema              schema[]
   user_activities     user_activity[]
+  publicProfile      Boolean           @default(false)
 
 }
 

@@ -115,6 +115,37 @@ export class OrganizationService {
     }
   }
 
+  /**
+  * Description: get public organizations
+  * @param 
+  * @returns Get public organizations details
+  */
+  // eslint-disable-next-line camelcase
+  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<object> {
+    try {
+
+      const query = {
+        publicProfile: true,
+        OR: [
+          { name: { contains: search } },
+          { description: { contains: search } }
+        ]
+      };
+
+      const filterOptions = {};
+
+      return this.organizationRepository.getOrganizations(
+        query,
+        filterOptions,
+        pageNumber,
+        pageSize
+      );      
+
+    } catch (error) {
+      this.logger.error(`In fetch getPublicOrganizations : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
 
   /**
      * Description: get organization

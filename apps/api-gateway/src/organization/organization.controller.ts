@@ -70,6 +70,44 @@ export class OrganizationController {
 
   }
 
+  /**
+ * 
+ * @param user 
+ * @param orgId 
+ * @param res 
+ * @returns Users list of organization
+ */
+  @Get('/public')
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get public organization list', description: 'Get users list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async get(@Query() getAllUsersDto: GetAllOrganizationsDto, @Res() res: Response): Promise<Response> {
+
+    const users = await this.organizationService.getPublicOrganizations(getAllUsersDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getOrganizations,
+      data: users.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+
   @Get('/roles')
   @ApiOperation({
     summary: 'Fetch org-roles details',

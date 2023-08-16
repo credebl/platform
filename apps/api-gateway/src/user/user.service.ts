@@ -8,6 +8,7 @@ import { EmailVerificationDto } from './dto/email-verify.dto';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { AddUserDetails } from './dto/login-user.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -32,7 +33,6 @@ export class UserService extends BaseService {
       throw new RpcException(error.response);
     }
   }
-
   async verifyEmail(param: EmailVerificationDto): Promise<object> {
     try {
       const payload = { param };
@@ -60,6 +60,15 @@ export class UserService extends BaseService {
     }
   }
 
+  async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<{ response: object }> {
+    const payload = {updateUserProfileDto };
+    try {
+      return this.sendNats(this.serviceProxy, 'update-user-profile', payload);
+    } catch (error) {
+      throw new RpcException(error.response);
+    }
+  }
+  
   async findUserByKeycloakId(id: string): Promise<{ response: object }> {
     const payload = { id };
 

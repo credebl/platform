@@ -33,18 +33,18 @@ model user {
 }
 
 model user_activity {
-  id                  Int             @id @default(autoincrement())
+  id                  Int           @id @default(autoincrement())
   userId              Int
-  user                user            @relation(fields: [userId], references: [id])
+  user                user          @relation(fields: [userId], references: [id])
   orgId               Int
-  organisation        organisation?   @relation(fields: [orgId], references: [id])
+  organisation        organisation? @relation(fields: [orgId], references: [id])
   action              String
   details             String
-  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
-  createdBy           Int              @default(1)
-  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int              @default(1)
-  deletedAt           DateTime?        @db.Timestamp(6)
+  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy           Int           @default(1)
+  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int           @default(1)
+  deletedAt           DateTime?     @db.Timestamp(6)
 }
 
 model org_roles {
@@ -88,7 +88,6 @@ model organisation {
   presentations       presentations[]
   schema              schema[]
   user_activities     user_activity[]
-
 }
 
 model org_invitations {
@@ -157,6 +156,8 @@ model org_agents {
   agentsTypeId        Int
   orgId               Int
   orgAgentTypeId      Int
+  ledgerId            Int
+  ledgers             ledgers?            @relation(fields: [ledgerId], references: [id])
   agents_type         agents_type?        @relation(fields: [agentsTypeId], references: [id])
   org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
   organisation        organisation?       @relation(fields: [orgId], references: [id])
@@ -185,18 +186,19 @@ model agents_type {
 }
 
 model ledgers {
-  id                  Int      @unique @default(autoincrement())
-  createDateTime      DateTime @default(now()) @db.Timestamptz(6)
-  createdBy           Int      @default(1)
-  lastChangedDateTime DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int      @default(1)
-  name                String   @db.VarChar
-  networkType         String   @db.VarChar
-  poolConfig          String   @db.VarChar
+  id                  Int          @unique @default(autoincrement())
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           Int          @default(1)
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int          @default(1)
+  name                String       @db.VarChar
+  networkType         String       @db.VarChar
+  poolConfig          String       @db.VarChar
   isActive            Boolean
-  networkString       String   @db.VarChar
-  registerDIDEndpoint String   @db.VarChar
+  networkString       String       @db.VarChar
+  registerDIDEndpoint String       @db.VarChar
   registerDIDPayload  Json?
+  org_agents          org_agents[]
 }
 
 model agents {
@@ -210,20 +212,20 @@ model agents {
 }
 
 model schema {
-  id                  Int      @id(map: "PK_c9e7e648903a9e537347aba4372") @default(autoincrement())
-  createDateTime      DateTime @default(now()) @db.Timestamptz(6)
-  createdBy           Int      @default(1)
-  lastChangedDateTime DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int      @default(1)
-  name                String   @db.VarChar
-  version             String   @db.VarChar
+  id                  Int           @id(map: "PK_c9e7e648903a9e537347aba4372") @default(autoincrement())
+  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy           Int           @default(1)
+  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int           @default(1)
+  name                String        @db.VarChar
+  version             String        @db.VarChar
   attributes          String[]
-  schemaLedgerId      String   @db.VarChar
-  publisherDid        String   @db.VarChar
-  ledgerId            Int      @default(1)
-  issuerId            String   @db.VarChar
-  orgId               Int      
-  organisation         organisation? @relation(fields: [orgId], references: [id])
+  schemaLedgerId      String        @db.VarChar
+  publisherDid        String        @db.VarChar
+  ledgerId            Int           @default(1)
+  issuerId            String        @db.VarChar
+  orgId               Int
+  organisation        organisation? @relation(fields: [orgId], references: [id])
 }
 
 model credential_definition {
@@ -289,6 +291,7 @@ model credentials {
   orgId                Int
   organisation         organisation? @relation(fields: [orgId], references: [id])
 }
+
 model presentations {
   id                  Int          @unique @default(autoincrement())
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)

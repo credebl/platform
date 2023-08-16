@@ -254,7 +254,8 @@ export class OrganizationRepository {
             include: {
               agents_type: true,
               agent_invitations: true,
-              org_agent_type: true
+              org_agent_type: true,
+              ledgers: true
             }
           }
         }

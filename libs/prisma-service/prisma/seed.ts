@@ -100,6 +100,19 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
     }
 };
 
+const createLedger = async (): Promise<void> => {
+    try {
+        const { ledgerData } = JSON.parse(configData);
+        const createLedger = await prisma.ledgers.create({
+            data: ledgerData
+        });
+
+        logger.log(createLedger);
+    } catch (e) {
+        logger.error('An error occurred seeding createLedger:', e);
+    }
+};
+
 async function main(): Promise<void> {
 
     await createPlatformConfig();
@@ -109,6 +122,7 @@ async function main(): Promise<void> {
     await createPlatformUser();
     await createPlatformUserOrgRoles();
     await createOrgAgentTypes();
+    await createLedger();
 }
 
 

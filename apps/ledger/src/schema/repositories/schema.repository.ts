@@ -30,7 +30,7 @@ export class SchemaRepository {
           data: {
             name: schemaResult.schema.schemaName,
             version: schemaResult.schema.schemaVersion,
-            attributes: schemaResult.schema.attributes,
+            attributes: JSON.stringify(schemaResult.schema.attributes),
             schemaLedgerId: schemaResult.schema.id,
             issuerId: schemaResult.issuerId,
             createdBy: schemaResult.createdBy,
@@ -73,11 +73,11 @@ export class SchemaRepository {
     createdBy: number;
     name: string;
     version: string;
-    attributes: string[];
+    attributes: string;
     schemaLedgerId: string;
     publisherDid: string;
-    orgId: number;
     issuerId: string;
+    orgId: number;
   }[]> {
     try {
       const schemasResult = await this.prisma.schema.findMany({
@@ -162,35 +162,35 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: number, schemaId:string): Promise<{
+  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: number, schemaId: string): Promise<{
     tag: string;
     credentialDefinitionId: string;
     schemaLedgerId: string;
     revocable: boolean;
-}[]> {
+  }[]> {
     try {
-        const schemasResult = await this.prisma.credential_definition.findMany({
-            where: {
-                AND:[
-                    {orgId},
-                    {schemaLedgerId:schemaId}
-                ]
-            },
-            select: {
-                tag: true,
-                credentialDefinitionId: true,
-                schemaLedgerId: true,
-                revocable: true,
-                createDateTime: true
-            },
-            orderBy: {
-                [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
-            }
-        });
-        return schemasResult;
+      const schemasResult = await this.prisma.credential_definition.findMany({
+        where: {
+          AND: [
+            { orgId },
+            { schemaLedgerId: schemaId }
+          ]
+        },
+        select: {
+          tag: true,
+          credentialDefinitionId: true,
+          schemaLedgerId: true,
+          revocable: true,
+          createDateTime: true
+        },
+        orderBy: {
+          [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
+        }
+      });
+      return schemasResult;
     } catch (error) {
-        this.logger.error(`Error in getting agent DID: ${error}`);
-        throw error;
+      this.logger.error(`Error in getting agent DID: ${error}`);
+      throw error;
     }
-}
+  }
 }

@@ -34,11 +34,11 @@ export class SchemaController {
             createdBy: number;
             name: string;
             version: string;
-            attributes: string[];
+            attributes: string;
             schemaLedgerId: string;
             publisherDid: string;
-            orgId: number;
             issuerId: string;
+            orgId: number;
         }[];
     }> {
         const { schemaSearchCriteria, user, orgId } = schemaSearch;
@@ -60,8 +60,8 @@ export class SchemaController {
             revocable: boolean;
         }[];
     }> {
-        const {schemaId, schemaSearchCriteria, user, orgId } = payload;
+        const { schemaId, schemaSearchCriteria, user, orgId } = payload;
         return this.schemaService.getcredDeffListBySchemaId(schemaId, schemaSearchCriteria, user, orgId);
     }
-    
+
 }

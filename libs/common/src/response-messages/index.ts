@@ -17,6 +17,7 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'User already exists',
+            profileNotFound: 'User public profile not found',
             verificationAlreadySent: 'The verification link has already been sent to your email address',
             emailSend: 'Unable to send email to the user',
             invalidEmailUrl: 'Invalid token or EmailId!',
@@ -37,6 +38,7 @@ export const ResponseMessages = {
         success: {
             create: 'Organization created successfully',
             update: 'Organization updated successfully',
+            fetchProfile: 'Organization profile fetched successfully',
             fetchOrgRoles: 'Organization roles fetched successfully',
             createInvitation: 'Organization invitations sent successfully',
             getInvitation: 'Organization invitations fetched successfully',
@@ -47,6 +49,7 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'An organization name is already exist',
+            profileNotFound: 'Organization public profile not found',
             rolesNotExist: 'Provided roles not exists in the platform',
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles'

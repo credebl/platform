@@ -107,6 +107,28 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  @Get('public-profile')
+  @ApiOperation({
+    summary: 'Fetch user details',
+    description: 'Fetch user details'
+  })
+  @ApiQuery({
+    name: 'id',
+    type: Number,
+    required: false
+  })
+  async getPublicProfile(@User() reqUser: user, @Query('id') id: number, @Res() res: Response): Promise<object> {
+    const userData = await this.organizationService.getPublicProfile(id);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.fetchProfile,
+      data: userData.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
 
   @Get('/roles')
   @ApiOperation({

@@ -71,6 +71,11 @@ export class OrganizationController {
     return this.organizationService.getOrganization(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'get-organization-public-profile' })
+  async getPublicProfile(payload: { id }): Promise<object> {
+    return this.organizationService.getPublicProfile(payload);
+  }
+
   /**
    * Description: get invitations
    * @param orgId

@@ -225,8 +225,6 @@ async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUs
     summary: 'Fetch user details',
     description: 'Fetch user details'
   })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
   @ApiQuery({
     name: 'id',
     type: Number,

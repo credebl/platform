@@ -320,6 +320,15 @@ export class UserService {
     }
   }
 
+  async getPublicProfile(payload: { id }): Promise<object> {
+    try {
+      return this.userRepository.getUserPublicProfile(payload.id);
+    } catch (error) {
+      this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
   async updateUserProfile(updateUserProfileDto: UpdateUserProfile): Promise<object> {
     try {
       return this.userRepository.updateUserProfile(updateUserProfileDto);
@@ -477,7 +486,7 @@ export class UserService {
    * @param orgId 
    * @returns users list
    */
-  async get(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getOrgUsers(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
       const query = {
         userOrgRoles: {
@@ -493,7 +502,29 @@ export class UserService {
       const filterOptions = {
         orgId
       };
-      return this.userRepository.findUsers(query, pageNumber, pageSize, filterOptions);
+      return this.userRepository.findOrgUsers(query, pageNumber, pageSize, filterOptions);
+    } catch (error) {
+      this.logger.error(`get Org Users: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+   /**
+   * 
+   * @param orgId 
+   * @returns users list
+   */
+   async get(pageNumber: number, pageSize: number, search: string): Promise<object> {
+    try {
+      const query = {
+        OR: [
+          { firstName: { contains: search } },
+          { lastName: { contains: search } },
+          { email: { contains: search } }
+        ]
+      };
+
+      return this.userRepository.findUsers(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`get Users: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);

@@ -243,11 +243,11 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrganization(orgId: number): Promise<object> {
+  async getOrganization(queryObject: object): Promise<object> {
     try {
-      return this.prisma.organisation.findUnique({
+      return this.prisma.organisation.findFirst({
         where: {
-          id: orgId
+          ...queryObject
         },
         include: {
           org_agents: {

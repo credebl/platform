@@ -70,6 +70,66 @@ export class OrganizationController {
 
   }
 
+  /**
+ * 
+ * @param user 
+ * @param orgId 
+ * @param res 
+ * @returns Users list of organization
+ */
+  @Get('/public')
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get public organization list', description: 'Get users list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async get(@Query() getAllUsersDto: GetAllOrganizationsDto, @Res() res: Response): Promise<Response> {
+
+    const users = await this.organizationService.getPublicOrganizations(getAllUsersDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getOrganizations,
+      data: users.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('public-profile')
+  @ApiOperation({
+    summary: 'Fetch user details',
+    description: 'Fetch user details'
+  })
+  @ApiQuery({
+    name: 'id',
+    type: Number,
+    required: false
+  })
+  async getPublicProfile(@User() reqUser: user, @Query('id') id: number, @Res() res: Response): Promise<object> {
+    const userData = await this.organizationService.getPublicProfile(id);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.fetchProfile,
+      data: userData.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
   @Get('/roles')
   @ApiOperation({
     summary: 'Fetch org-roles details',

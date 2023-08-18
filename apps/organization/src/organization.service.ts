@@ -61,15 +61,15 @@ export class OrganizationService {
     }
   }
 
-    /**
-   *
-   * @param registerOrgDto
-   * @returns
-   */
+  /**
+ *
+ * @param registerOrgDto
+ * @returns
+ */
 
   // eslint-disable-next-line camelcase
   async updateOrganization(updateOrgDto: IUpdateOrganization, userId: number): Promise<organisation> {
-    try {   
+    try {
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
@@ -93,8 +93,8 @@ export class OrganizationService {
           some: { userId }
         },
         OR: [
-          { name: { contains: search } },
-          { description: { contains: search } }
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
         ]
       };
 
@@ -104,10 +104,10 @@ export class OrganizationService {
 
       return this.organizationRepository.getOrganizations(
         query,
-         filterOptions,
-         pageNumber,
-         pageSize
-         );
+        filterOptions,
+        pageNumber,
+        pageSize
+      );
 
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
@@ -115,6 +115,57 @@ export class OrganizationService {
     }
   }
 
+  /**
+  * Description: get public organizations
+  * @param 
+  * @returns Get public organizations details
+  */
+  // eslint-disable-next-line camelcase
+  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<object> {
+    try {
+
+      const query = {
+        publicProfile: true,
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
+        ]
+      };
+
+      const filterOptions = {};
+
+      return this.organizationRepository.getOrganizations(
+        query,
+        filterOptions,
+        pageNumber,
+        pageSize
+      );
+
+    } catch (error) {
+      this.logger.error(`In fetch getPublicOrganizations : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async getPublicProfile(payload: { id }): Promise<object> {
+    try {
+
+      const query = {
+        id: payload.id,
+        publicProfile: true
+      };
+
+      const organizationDetails = await this.organizationRepository.getOrganization(query);
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
+      }
+      return organizationDetails;
+
+    } catch (error) {
+      this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
 
   /**
      * Description: get organization
@@ -124,8 +175,13 @@ export class OrganizationService {
   // eslint-disable-next-line camelcase
   async getOrganization(orgId: number): Promise<object> {
     try {
-      const getOrganization = await this.organizationRepository.getOrganization(orgId);
-      return getOrganization;
+
+      const query = {
+        id: orgId
+      };
+
+      const organizationDetails = await this.organizationRepository.getOrganization(query);
+      return organizationDetails;
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
@@ -183,7 +239,7 @@ export class OrganizationService {
         email,
         orgId
       };
-     
+
       const invitations = await this.organizationRepository.getOrgInvitations(query);
 
       if (0 < invitations.length) {
@@ -218,7 +274,7 @@ export class OrganizationService {
 
         if (!isInvitationExist) {
           await this.organizationRepository.createSendInvitation(email, orgId, userId, orgRoleId);
-  
+
           const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
           try {
             await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, isUserExist);
@@ -335,13 +391,13 @@ export class OrganizationService {
     }
   }
 
-/**
- * 
- * @param orgId 
- * @param roleIds 
- * @param userId 
- * @returns 
- */
+  /**
+   * 
+   * @param orgId 
+   * @param roleIds 
+   * @param userId 
+   * @returns 
+   */
   async updateUserRoles(orgId: number, roleIds: number[], userId: number): Promise<boolean> {
     try {
 
@@ -351,7 +407,7 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.userNotFound);
       }
 
-      const isRolesExist = await this.orgRoleService.getOrgRolesByIds(roleIds);      
+      const isRolesExist = await this.orgRoleService.getOrgRolesByIds(roleIds);
 
       if (isRolesExist && 0 === isRolesExist.length) {
         throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist);
@@ -379,5 +435,5 @@ export class OrganizationService {
       throw new RpcException(error.response);
     }
   }
-  
+
 }

@@ -1,4 +1,3 @@
-import { UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -6,6 +5,8 @@ import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
+import { UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+
 
 @Controller()
 export class UserController {

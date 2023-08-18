@@ -19,7 +19,6 @@ export class CreateSchemaDto {
 
     @ApiProperty()
     @IsArray({ message: 'attributes must be an array' })
-    @IsString({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
     attributes: IAttributeValue[];
 

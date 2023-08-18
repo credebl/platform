@@ -10,7 +10,7 @@ import { IUpdateOrganization } from '../interfaces/organization.interface';
 
 @Controller()
 export class OrganizationController {
-  constructor(private readonly organizationService: OrganizationService) { }
+  constructor(private readonly organizationService: OrganizationService) {}
   private readonly logger = new Logger('OrganizationController');
 
   /**
@@ -24,17 +24,16 @@ export class OrganizationController {
     return this.organizationService.createOrganization(payload.createOrgDto, payload.userId);
   }
 
-    /**
+  /**
    * Description: update organization
    * @param payload Registration Details
    * @returns Get updated organization details
    */
 
-    @MessagePattern({ cmd: 'update-organization' })
-    async updateOrganization(payload: {updateOrgDto: IUpdateOrganization, userId: number }): Promise<object> {
-      return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId);
-    }
-  
+  @MessagePattern({ cmd: 'update-organization' })
+  async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: number }): Promise<object> {
+    return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId);
+  }
 
   /**
    * Description: get organizations
@@ -42,9 +41,24 @@ export class OrganizationController {
    * @returns Get created organization details
    */
   @MessagePattern({ cmd: 'get-organizations' })
-  async getOrganizations(@Body() payload: { userId: number, pageNumber: number, pageSize: number, search: string }): Promise<object> {
+  async getOrganizations(
+    @Body() payload: { userId: number; pageNumber: number; pageSize: number; search: string }
+  ): Promise<object> {
     const { userId, pageNumber, pageSize, search } = payload;
     return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search);
+  }
+
+  /**
+   * Description: get organizations
+   * @param
+   * @returns Get created organization details
+   */
+  @MessagePattern({ cmd: 'get-public-organizations' })
+  async getPublicOrganizations(
+    @Body() payload: { pageNumber: number; pageSize: number; search: string }
+  ): Promise<object> {
+    const { pageNumber, pageSize, search } = payload;
+    return this.organizationService.getPublicOrganizations(pageNumber, pageSize, search);
   }
 
   /**
@@ -57,14 +71,26 @@ export class OrganizationController {
     return this.organizationService.getOrganization(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'get-organization-public-profile' })
+  async getPublicProfile(payload: { id }): Promise<object> {
+    return this.organizationService.getPublicProfile(payload);
+  }
+
   /**
    * Description: get invitations
    * @param orgId
    * @returns Get created invitation details
    */
   @MessagePattern({ cmd: 'get-invitations-by-orgId' })
-  async getInvitationsByOrgId(@Body() payload: { orgId: number, pageNumber: number, pageSize: number, search: string }): Promise<object> {
-    return this.organizationService.getInvitationsByOrgId(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
+  async getInvitationsByOrgId(
+    @Body() payload: { orgId: number; pageNumber: number; pageSize: number; search: string }
+  ): Promise<object> {
+    return this.organizationService.getInvitationsByOrgId(
+      payload.orgId,
+      payload.pageNumber,
+      payload.pageSize,
+      payload.search
+    );
   }
 
   /**
@@ -90,10 +116,16 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'fetch-user-invitations' })
-  async fetchUserInvitation(@Body() payload: {
-    email: string; status: string, pageNumber: number, pageSize: number, search: string
-  }): Promise<object> {
-    return this.organizationService.fetchUserInvitation(payload.email, payload.status, payload.pageNumber, payload.pageSize, payload.search);
+  async fetchUserInvitation(
+    @Body() payload: { email: string; status: string; pageNumber: number; pageSize: number; search: string }
+  ): Promise<object> {
+    return this.organizationService.fetchUserInvitation(
+      payload.email,
+      payload.status,
+      payload.pageNumber,
+      payload.pageSize,
+      payload.search
+    );
   }
 
   /**
@@ -107,8 +139,8 @@ export class OrganizationController {
   }
 
   /**
-   * 
-   * @param payload 
+   *
+   * @param payload
    * @returns Update user roles response
    */
 
@@ -121,6 +153,4 @@ export class OrganizationController {
   async getOrgDashboard(payload: { orgId: number; userId: number }): Promise<object> {
     return this.organizationService.getOrgDashboard(payload.orgId);
   }
-
-
 }

@@ -12,7 +12,6 @@ export class URLUserEmailTemplate {
         } else {
             apiUrl = url.parse(`${endpoint}/verify-email-success?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`);
         }
-
         const validUrl = apiUrl.href.replace('/:', ':');
         try {
             return `<!DOCTYPE html>
@@ -45,10 +44,10 @@ export class URLUserEmailTemplate {
                         <ul style="color:#005EFF; padding-left:10px; font-family: Montserrat;font-style: normal;
                         font-weight: normal;font-size: 14px;line-height: 21px;">
                             <li>Username/Email: ${email}</li>
-                            <li>Verification Link: <a href="${validUrl}">${validUrl}</a></li>
+                            <li>Verification Link: <a clicktracking=off href="${validUrl}">${validUrl}</a></li>
                         </ul>
                         <div style="text-align: center; padding-bottom: 20px;">
-                            <a href="${validUrl}"
+                            <a clicktracking=off href="${validUrl}"
                                 style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
                                 VERIFY
                             </a>

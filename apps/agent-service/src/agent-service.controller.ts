@@ -15,7 +15,9 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'create-tenant' })
-  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<object> {
+  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<{
+    agentSpinupStatus: number;
+  }> {
     return this.agentServiceService.createTenant(payload.createTenantDto, payload.user);
   }
 

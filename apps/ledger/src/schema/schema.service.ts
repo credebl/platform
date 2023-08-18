@@ -136,6 +136,9 @@ export class SchemaService extends BaseService {
             const saveResponse = this.schemaRepository.saveSchema(
               schemaDetails
             );
+
+            const attributesArray = JSON.parse((await saveResponse).attributes);
+            (await saveResponse).attributes = attributesArray;
             return saveResponse;
 
           } else if ('finished' === responseObj.state) {
@@ -150,7 +153,11 @@ export class SchemaService extends BaseService {
             const saveResponse = this.schemaRepository.saveSchema(
               schemaDetails
             );
+
+            const attributesArray = JSON.parse((await saveResponse).attributes);
+            (await saveResponse).attributes = attributesArray;
             return saveResponse;
+
           } else {
             throw new NotFoundException(ResponseMessages.schema.error.notCreated);
           }
@@ -300,6 +307,12 @@ export class SchemaService extends BaseService {
         issuerId: string;
         orgId: number;
       }[] = await this.schemaRepository.getSchemas(schemaSearchCriteria, orgId);
+
+      const schemasDetails = response.map(schemaAttributeItem => {
+        const attributes = JSON.parse(schemaAttributeItem.attributes);
+        return { ...schemaAttributeItem, attributes };
+      });
+
       const schemasResponse = {
         totalItems: response.length,
         hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,
@@ -307,7 +320,7 @@ export class SchemaService extends BaseService {
         nextPage: schemaSearchCriteria.pageNumber + 1,
         previousPage: schemaSearchCriteria.pageNumber - 1,
         lastPage: Math.ceil(response.length / schemaSearchCriteria.pageSize),
-        data: response
+        data: schemasDetails
       };
 
       if (0 !== response.length) {

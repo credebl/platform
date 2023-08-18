@@ -38,10 +38,11 @@ export class SchemaController {
   })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @User() user: IUserRequestInterface): Promise<object> {
+    
     schema.attributes.forEach((attribute) => {
-      if (0 === attribute.length) {
+      if ('' === attribute.attributeName) {
         throw new BadRequestException('Attribute must not be empty');
-      } else if ('' === attribute.trim()) {
+      } else if ('' === attribute.attributeName.trim()) {
         throw new BadRequestException('Attributes should not contain space');
       }
     });

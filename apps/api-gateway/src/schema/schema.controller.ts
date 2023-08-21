@@ -40,10 +40,20 @@ export class SchemaController {
   async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @User() user: IUserRequestInterface): Promise<object> {
 
     schema.attributes.forEach((attribute) => {
-      if ('' === attribute.attributeName) {
-        throw new BadRequestException('Attribute must not be empty');
-      } else if ('' === attribute.attributeName.trim()) {
-        throw new BadRequestException('Attributes should not contain space');
+      if (attribute.hasOwnProperty('attributeName') && attribute.hasOwnProperty('schemaDataType') && attribute.hasOwnProperty('displayName')) {
+        if (attribute.hasOwnProperty('attributeName') && '' === attribute?.attributeName) {
+          throw new BadRequestException('Attribute must not be empty');
+        } else if (attribute.hasOwnProperty('attributeName') && '' === attribute?.attributeName?.trim()) {
+          throw new BadRequestException('Attributes should not contain space');
+        } else if (attribute.hasOwnProperty('schemaDataType') && '' === attribute?.schemaDataType) {
+          throw new BadRequestException('Schema Data Type should not contain space');
+        } else if (attribute.hasOwnProperty('schemaDataType') && '' === attribute?.schemaDataType?.trim()) {
+          throw new BadRequestException('Schema Data Type should not contain space');
+        } else if (attribute.hasOwnProperty('displayName') && '' === attribute?.displayName) {
+          throw new BadRequestException('Display Name Type should not contain space');
+        }
+      } else {
+        throw new BadRequestException('Please provide a valid attributes');
       }
     });
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);

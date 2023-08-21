@@ -60,11 +60,11 @@ export class SchemaService extends BaseService {
     }
   }
 
-  getAllSchema(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface, orgId: number): Promise<{
+  getAllSchema(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface): Promise<{
     response: object;
   }> {
     try {
-      const schemaSearch = { schemaSearchCriteria, user, orgId };
+      const schemaSearch = { schemaSearchCriteria, user };
       return this.sendNats(this.schemaServiceProxy, 'get-all-schemas', schemaSearch);
     } catch (error) {
       throw new RpcException(error.response);

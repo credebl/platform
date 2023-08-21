@@ -76,16 +76,15 @@ export class SchemaController {
             createDateTime: Date;
             createdBy: number;
             name: string;
-            version: string;
-            attributes: string[];
             schemaLedgerId: string;
+            version: string;
+            attributes: string;
             publisherDid: string;
-            orgId: number;
             issuerId: string;
         }[];
     }> {
-        const { schemaSearchCriteria, user, orgId } = schemaSearch;
-        return this.schemaService.getAllSchema(schemaSearchCriteria, user, orgId);
+        const { schemaSearchCriteria } = schemaSearch;
+        return this.schemaService.getAllSchema(schemaSearchCriteria);
     }
-    
+
 }

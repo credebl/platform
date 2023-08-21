@@ -12,7 +12,7 @@ import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
 import { ICredDeffSchemaSearchInterface, ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
+import { GetAllSchemaByPlatformDto, GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
@@ -21,8 +21,6 @@ import { CreateSchemaDto } from '../dtos/create-schema.dto';
 
 @Controller('schemas')
 @ApiTags('schemas')
-@Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
-@UseGuards(AuthGuard('jwt'), OrgRolesGuard)
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
@@ -36,9 +34,11 @@ export class SchemaController {
     summary: 'Sends a schema to the ledger',
     description: 'Create and sends a schema to the ledger.'
   })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @User() user: IUserRequestInterface): Promise<object> {
-    
+
     schema.attributes.forEach((attribute) => {
       if ('' === attribute.attributeName) {
         throw new BadRequestException('Attribute must not be empty');
@@ -61,6 +61,8 @@ export class SchemaController {
     summary: 'Get all schemas by org id.',
     description: 'Get all schemas by org id.'
   })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getSchemas(
     @Query() getAllSchemaDto: GetAllSchemaDto,
@@ -86,6 +88,8 @@ export class SchemaController {
   }
 
   @Get('/id')
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
     summary: 'Get an existing schema by schemaId',
     description: 'Get an existing schema by schemaId'
@@ -126,42 +130,44 @@ export class SchemaController {
     { name: 'orgId', required: true }
   )
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getcredDeffListBySchemaId(
     @Query('schemaId') schemaId: string,
     @Query() GetCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
     @User() user: IUserRequestInterface): Promise<object> {
-      if (!schemaId) {
-        throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
-      }
-      const { orgId, pageSize, pageNumber, sorting, sortByValue } = GetCredentialDefinitionBySchemaIdDto;
-      const schemaSearchCriteria: ICredDeffSchemaSearchInterface = {
-        pageNumber,
-        pageSize,
-        sorting,
-        sortByValue
-      };
-      const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, schemaSearchCriteria, user, orgId);
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.OK,
-        message: ResponseMessages.schema.success.fetch,
-        data: credentialDefinitionList.response
-      };
-      return res.status(HttpStatus.OK).json(finalResponse);
+    if (!schemaId) {
+      throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
+    }
+    const { orgId, pageSize, pageNumber, sorting, sortByValue } = GetCredentialDefinitionBySchemaIdDto;
+    const schemaSearchCriteria: ICredDeffSchemaSearchInterface = {
+      pageNumber,
+      pageSize,
+      sorting,
+      sortByValue
+    };
+    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, schemaSearchCriteria, user, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.fetch,
+      data: credentialDefinitionList.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/all')
+  @Get('/platform')
   @ApiOperation({
-    summary: 'Get all schemas.',
-    description: 'Get all schemas.'
+    summary: 'Get all schemas from platform.',
+    description: 'Get all schemas from platform.'
   })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getAllSchema(
-    @Query() getAllSchemaDto: GetAllSchemaDto,
+    @Query() getAllSchemaDto: GetAllSchemaByPlatformDto,
     @Res() res: Response,
     @User() user: IUserRequestInterface
   ): Promise<object> {
-    const { orgId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
+    const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
     const schemaSearchCriteria: ISchemaSearchInterface = {
       pageNumber,
       searchByText,
@@ -169,7 +175,7 @@ export class SchemaController {
       sorting,
       sortByValue
     };
-    const schemasResponse = await this.appService.getAllSchema(schemaSearchCriteria, user, orgId);
+    const schemasResponse = await this.appService.getAllSchema(schemaSearchCriteria, user);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

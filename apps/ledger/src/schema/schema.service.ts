@@ -386,16 +386,30 @@ export class SchemaService extends BaseService {
       createDateTime: Date;
       createdBy: number;
       name: string;
-      version: string;
-      attributes: string[];
       schemaLedgerId: string;
+      version: string;
+      attributes: string;
       publisherDid: string;
-      orgId: number;
       issuerId: string;
     }[];
   }> {
     try {
-      const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
+      const response: {
+        createDateTime: Date;
+        createdBy: number;
+        name: string;
+        schemaLedgerId: string;
+        version: string;
+        attributes: string;
+        publisherDid: string;
+        issuerId: string;
+      }[] = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
+
+      const schemasDetails = response.map(schemaAttributeItem => {
+        const attributes = JSON.parse(schemaAttributeItem.attributes);
+        return { ...schemaAttributeItem, attributes };
+      });
+
       const schemasResponse = {
         totalItems: response.length,
         hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,
@@ -403,7 +417,7 @@ export class SchemaService extends BaseService {
         nextPage: schemaSearchCriteria.pageNumber + 1,
         previousPage: schemaSearchCriteria.pageNumber - 1,
         lastPage: Math.ceil(response.length / schemaSearchCriteria.pageSize),
-        data: response
+        data: schemasDetails
       };
 
       if (0 !== response.length) {

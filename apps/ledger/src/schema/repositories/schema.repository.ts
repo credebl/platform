@@ -198,11 +198,10 @@ export class SchemaRepository {
     createDateTime: Date;
     createdBy: number;
     name: string;
-    version: string;
-    attributes: string[];
     schemaLedgerId: string;
+    version: string;
+    attributes: string;
     publisherDid: string;
-    orgId: number;
     issuerId: string;
   }[]> {
     try {

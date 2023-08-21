@@ -65,9 +65,14 @@ export class ConnectionService {
       const apiKey = platformConfig?.sgApiKey;
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-      const invitationObject = createConnectionInvitation.message.invitation['@id'];
+      const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
 
-      const shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
+      let shortenedUrl;
+      if (agentDetails?.tenantId) {
+        shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationObject}`;
+      } else {
+        shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
+      }
 
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(shortenedUrl, agentId, orgId);
       return saveConnectionDetails;

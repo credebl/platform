@@ -390,7 +390,7 @@ export class AgentServiceService {
         }
       },
       {
-        retries: 5
+        retries: 10
       }
     );
   }

@@ -62,3 +62,28 @@ export class GetCredentialDefinitionBySchemaIdDto {
     @IsNotEmpty()
     orgId: number;
 }
+
+export class GetAllSchemaByPlatformDto {
+    @ApiProperty({ required: false })
+    @IsOptional()
+    pageNumber: number = 1;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    @Transform(({ value }) => trim(value))
+    searchByText: string = '';
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Transform(({ value }) => trim(value))
+    sorting: string = 'id';
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    sortByValue: string = SortValue.DESC;
+}

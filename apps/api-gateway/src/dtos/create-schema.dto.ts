@@ -2,6 +2,12 @@ import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-valid
 
 import { ApiProperty } from '@nestjs/swagger';
 
+interface IAttributeValue{
+    attributeName: string;
+    schemaDataType: string;
+    displayName: string;
+}
+
 export class CreateSchemaDto {
     @ApiProperty()
     @IsString({ message: 'schema version must be a string' }) @IsNotEmpty({ message: 'please provide valid schema version' })
@@ -13,9 +19,8 @@ export class CreateSchemaDto {
 
     @ApiProperty()
     @IsArray({ message: 'attributes must be an array' })
-    @IsString({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
-    attributes: string[];
+    attributes: IAttributeValue[];
 
     @ApiProperty()
     @IsNumber()

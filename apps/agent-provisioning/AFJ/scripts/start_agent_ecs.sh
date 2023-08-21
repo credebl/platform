@@ -24,7 +24,7 @@ INBOUND_PORT=$((9000 + AGENCY))
 CONTROLLER_PORT=$((3000 + AGENCY))
 POSTGRES_PORT=$((5432 + AGENCY))
 
-SERVICE_NAME="${CONTAINER_NAME}-service"
+SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service"
 CLUSTER_NAME='agent-spinup'
 DESIRED_COUNT=1
 
@@ -74,7 +74,7 @@ CONTAINER_DEFINITIONS=$(
 [
   {
     "name": "$CONTAINER_NAME",
-    "image": "${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/credebl2.0:afg-0.4.0",
+    "image": "${AFJ_IMAGE_URL}",
     "cpu": 154,
     "memory": 307,
     "portMappings": [

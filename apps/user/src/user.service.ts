@@ -322,7 +322,13 @@ export class UserService {
 
   async getPublicProfile(payload: { id }): Promise<object> {
     try {
-      return this.userRepository.getUserPublicProfile(payload.id);
+      const userProfile = await this.userRepository.getUserPublicProfile(payload.id);
+      
+      if (!userProfile) {
+        throw new NotFoundException(ResponseMessages.user.error.profileNotFound);
+      }
+
+      return userProfile;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
@@ -493,9 +499,9 @@ export class UserService {
           some: { orgId }
         },
         OR: [
-          { firstName: { contains: search } },
-          { lastName: { contains: search } },
-          { email: { contains: search } }
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } }
         ]
       };
 
@@ -518,9 +524,9 @@ export class UserService {
     try {
       const query = {
         OR: [
-          { firstName: { contains: search } },
-          { lastName: { contains: search } },
-          { email: { contains: search } }
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } }
         ]
       };
 

@@ -1,7 +1,7 @@
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, Matches, MaxLength, MinLength, IsOptional } from 'class-validator';
 const labelRegex = /^[a-zA-Z0-9 ]*$/;
 export class CreateTenantDto {
     @ApiProperty()
@@ -28,4 +28,8 @@ export class CreateTenantDto {
     @ApiProperty()
     @IsNumber()
     orgId: number;
+
+    @ApiProperty()
+    @IsOptional()
+    clientSocketId?: string;
 }

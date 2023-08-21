@@ -19,6 +19,7 @@ export interface ITenantDto {
     seed: string;
     tenantId?: string;
     orgId: number;
+    clientSocketId?: string;
 }
 
 export interface ITenantSchema {

@@ -62,7 +62,7 @@ export class SchemaService extends BaseService {
             ResponseMessages.schema.error.insufficientAttributes
           );
         } else if (schema.attributes.length > schemaAttributeLength) {
-          const schemaAttibute: string[] = schema.attributes;
+          const schemaAttibute = schema.attributes;
           const findDuplicates: boolean =
             new Set(schemaAttibute).size !== schemaAttibute.length;
           if (true === findDuplicates) {
@@ -78,11 +78,13 @@ export class SchemaService extends BaseService {
           const did = schema.orgDid?.split(':').length >= 4 ? schema.orgDid : orgDid;
 
 
+          const attributeArray = schema.attributes.map(item => item.attributeName);
           let schemaResponseFromAgentService;
           if (1 === getAgentDetails.org_agents[0].orgAgentTypeId) {
             const issuerId = did;
+
             const schemaPayload = {
-              attributes: schema.attributes,
+              attributes: attributeArray,
               version: schema.schemaVersion,
               name: schema.schemaName,
               issuerId,
@@ -99,7 +101,7 @@ export class SchemaService extends BaseService {
               tenantId,
               method: 'registerSchema',
               payload: {
-                attributes: schema.attributes,
+                attributes: attributeArray,
                 version: schema.schemaVersion,
                 name: schema.schemaName,
                 issuerId: did
@@ -124,7 +126,7 @@ export class SchemaService extends BaseService {
 
           if ('finished' === responseObj.schema.state) {
             schemaDetails.schema.schemaName = responseObj.schema.schema.name;
-            schemaDetails.schema.attributes = responseObj.schema.schema.attrNames;
+            schemaDetails.schema.attributes = schema.attributes;
             schemaDetails.schema.schemaVersion = responseObj.schema.schema.version;
             schemaDetails.createdBy = userId;
             schemaDetails.schema.id = responseObj.schema.schemaId;
@@ -134,11 +136,14 @@ export class SchemaService extends BaseService {
             const saveResponse = this.schemaRepository.saveSchema(
               schemaDetails
             );
+
+            const attributesArray = JSON.parse((await saveResponse).attributes);
+            (await saveResponse).attributes = attributesArray;
             return saveResponse;
 
           } else if ('finished' === responseObj.state) {
             schemaDetails.schema.schemaName = responseObj.schema.name;
-            schemaDetails.schema.attributes = responseObj.schema.attrNames;
+            schemaDetails.schema.attributes = schema.attributes;
             schemaDetails.schema.schemaVersion = responseObj.schema.version;
             schemaDetails.createdBy = userId;
             schemaDetails.schema.id = responseObj.schemaId;
@@ -148,7 +153,11 @@ export class SchemaService extends BaseService {
             const saveResponse = this.schemaRepository.saveSchema(
               schemaDetails
             );
+
+            const attributesArray = JSON.parse((await saveResponse).attributes);
+            (await saveResponse).attributes = attributesArray;
             return saveResponse;
+
           } else {
             throw new NotFoundException(ResponseMessages.schema.error.notCreated);
           }
@@ -279,15 +288,31 @@ export class SchemaService extends BaseService {
       createdBy: number;
       name: string;
       version: string;
-      attributes: string[];
+      attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
-      orgId: number;
       issuerId: string;
+      orgId: number;
     }[];
   }> {
     try {
-      const response = await this.schemaRepository.getSchemas(schemaSearchCriteria, orgId);
+      const response: {
+        createDateTime: Date;
+        createdBy: number;
+        name: string;
+        version: string;
+        attributes: string;
+        schemaLedgerId: string;
+        publisherDid: string;
+        issuerId: string;
+        orgId: number;
+      }[] = await this.schemaRepository.getSchemas(schemaSearchCriteria, orgId);
+
+      const schemasDetails = response.map(schemaAttributeItem => {
+        const attributes = JSON.parse(schemaAttributeItem.attributes);
+        return { ...schemaAttributeItem, attributes };
+      });
+
       const schemasResponse = {
         totalItems: response.length,
         hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,
@@ -295,7 +320,7 @@ export class SchemaService extends BaseService {
         nextPage: schemaSearchCriteria.pageNumber + 1,
         previousPage: schemaSearchCriteria.pageNumber - 1,
         lastPage: Math.ceil(response.length / schemaSearchCriteria.pageSize),
-        data: response
+        data: schemasDetails
       };
 
       if (0 !== response.length) {
@@ -361,27 +386,32 @@ export class SchemaService extends BaseService {
       createDateTime: Date;
       createdBy: number;
       name: string;
-      version: string;
-      attributes: string[];
       schemaLedgerId: string;
+      version: string;
+      attributes: string;
       publisherDid: string;
-      orgId: number;
       issuerId: string;
     }[];
   }> {
     try {
       const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
+
+      const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
+        const attributes = JSON.parse(schemaAttributeItem.attributes);
+        return { ...schemaAttributeItem, attributes };
+      });
+
       const schemasResponse = {
-        totalItems: response.length,
-        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,
+        totalItems: response.schemasCount,
+        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.schemasCount,
         hasPreviousPage: 1 < schemaSearchCriteria.pageNumber,
         nextPage: schemaSearchCriteria.pageNumber + 1,
         previousPage: schemaSearchCriteria.pageNumber - 1,
-        lastPage: Math.ceil(response.length / schemaSearchCriteria.pageSize),
-        data: response
+        lastPage: Math.ceil(response.schemasCount / schemaSearchCriteria.pageSize),
+        data: schemasDetails
       };
 
-      if (0 !== response.length) {
+      if (0 !== response.schemasCount) {
         return schemasResponse;
       } else {
         throw new NotFoundException(ResponseMessages.schema.error.notFound);

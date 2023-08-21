@@ -6,6 +6,12 @@ export interface SchemaSearchCriteria {
     user : IUserRequestInterface
 }
 
+export interface IAttributeValue {
+    attributeName: string;
+    schemaDataType: string;
+    displayName: string
+}
+
 export interface CreateSchemaAgentRedirection {
     tenantId?: string;
     attributes?: string[];

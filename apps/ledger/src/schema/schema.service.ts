@@ -394,33 +394,24 @@ export class SchemaService extends BaseService {
     }[];
   }> {
     try {
-      const response: {
-        createDateTime: Date;
-        createdBy: number;
-        name: string;
-        schemaLedgerId: string;
-        version: string;
-        attributes: string;
-        publisherDid: string;
-        issuerId: string;
-      }[] = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
+      const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
 
-      const schemasDetails = response.map(schemaAttributeItem => {
+      const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
       });
 
       const schemasResponse = {
-        totalItems: response.length,
-        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,
+        totalItems: response.schemasCount,
+        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.schemasCount,
         hasPreviousPage: 1 < schemaSearchCriteria.pageNumber,
         nextPage: schemaSearchCriteria.pageNumber + 1,
         previousPage: schemaSearchCriteria.pageNumber - 1,
-        lastPage: Math.ceil(response.length / schemaSearchCriteria.pageSize),
+        lastPage: Math.ceil(response.schemasCount / schemaSearchCriteria.pageSize),
         data: schemasDetails
       };
 
-      if (0 !== response.length) {
+      if (0 !== response.schemasCount) {
         return schemasResponse;
       } else {
         throw new NotFoundException(ResponseMessages.schema.error.notFound);

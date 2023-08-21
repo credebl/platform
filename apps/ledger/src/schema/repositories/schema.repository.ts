@@ -195,15 +195,19 @@ export class SchemaRepository {
   }
 
   async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<{
-    createDateTime: Date;
-    createdBy: number;
-    name: string;
-    schemaLedgerId: string;
-    version: string;
-    attributes: string;
-    publisherDid: string;
-    issuerId: string;
-  }[]> {
+    schemasCount: number;
+    schemasResult: {
+      createDateTime: Date;
+      createdBy: number;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: number;
+    }[];
+  }> {
     try {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
@@ -231,7 +235,9 @@ export class SchemaRepository {
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
       });
-      return schemasResult;
+
+      const schemasCount = await this.prisma.schema.count();
+      return { schemasCount, schemasResult };
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
       throw error;

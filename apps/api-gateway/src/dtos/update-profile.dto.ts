@@ -1,6 +1,8 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
+import { trim } from '@credebl/common/cast.helper';
+import { Transform } from 'class-transformer';
 
 export class UpdateProfileDto {
 
@@ -15,6 +17,7 @@ export class UpdateProfileDto {
     lastName: string;
 
     @ApiProperty()
+    @Transform(({ value }) => trim(value))
     @IsNotEmpty({message:'Please provide valid profileLogoUrl'})
     @IsString({message:'ProfileLogoUrl should be string'})
     profileLogoUrl?: string;

@@ -23,7 +23,7 @@ model user {
   keycloakUserId      String?           @db.VarChar(500)
   clientId            String?           @db.VarChar(500)
   clientSecret        String?           @db.VarChar(500)
-  profileImg          String?           @db.VarChar(1000)
+  profileImg          String?           
   fidoUserId          String?           @db.VarChar(1000)
   isFidoVerified      Boolean           @default(false)
   userOrgRoles        user_org_roles[]

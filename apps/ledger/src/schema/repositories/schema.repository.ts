@@ -169,7 +169,7 @@ export class SchemaRepository {
     revocable: boolean;
   }[]> {
     try {
-      const schemasResult = await this.prisma.credential_definition.findMany({
+      return this.prisma.credential_definition.findMany({
         where: {
           AND: [
             { orgId },
@@ -187,7 +187,6 @@ export class SchemaRepository {
           [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
         }
       });
-      return schemasResult;
     } catch (error) {
       this.logger.error(`Error in getting agent DID: ${error}`);
       throw error;

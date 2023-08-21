@@ -374,4 +374,48 @@ export class SchemaService extends BaseService {
       throw new RpcException(error.response);
     }
   }
+
+  async getAllSchema(schemaSearchCriteria: ISchemaSearchCriteria): Promise<{
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    nextPage: number;
+    previousPage: number;
+    lastPage: number;
+    data: {
+      createDateTime: Date;
+      createdBy: number;
+      name: string;
+      version: string;
+      attributes: string[];
+      schemaLedgerId: string;
+      publisherDid: string;
+      orgId: number;
+      issuerId: string;
+    }[];
+  }> {
+    try {
+      const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
+      const schemasResponse = {
+        totalItems: response.length,
+        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,
+        hasPreviousPage: 1 < schemaSearchCriteria.pageNumber,
+        nextPage: schemaSearchCriteria.pageNumber + 1,
+        previousPage: schemaSearchCriteria.pageNumber - 1,
+        lastPage: Math.ceil(response.length / schemaSearchCriteria.pageSize),
+        data: response
+      };
+
+      if (0 !== response.length) {
+        return schemasResponse;
+      } else {
+        throw new NotFoundException(ResponseMessages.schema.error.notFound);
+      }
+
+
+    } catch (error) {
+      this.logger.error(`Error in retrieving schemas: ${error}`);
+      throw new RpcException(error.response);
+    }
+  }
 }

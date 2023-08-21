@@ -193,4 +193,49 @@ export class SchemaRepository {
       throw error;
     }
   }
+
+  async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<{
+    createDateTime: Date;
+    createdBy: number;
+    name: string;
+    version: string;
+    attributes: string[];
+    schemaLedgerId: string;
+    publisherDid: string;
+    orgId: number;
+    issuerId: string;
+  }[]> {
+    try {
+      const schemasResult = await this.prisma.schema.findMany({
+        where: {
+          OR: [
+            { name: { contains: payload.searchByText, mode: 'insensitive' } },
+            { version: { contains: payload.searchByText, mode: 'insensitive' } },
+            { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } },
+            { issuerId: { contains: payload.searchByText, mode: 'insensitive' } }
+          ]
+        },
+        select: {
+          createDateTime: true,
+          name: true,
+          version: true,
+          attributes: true,
+          schemaLedgerId: true,
+          createdBy: true,
+          publisherDid: true,
+          orgId: true,
+          issuerId: true
+        },
+        orderBy: {
+          [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
+        },
+        take: Number(payload.pageSize),
+        skip: (payload.pageNumber - 1) * payload.pageSize
+      });
+      return schemasResult;
+    } catch (error) {
+      this.logger.error(`Error in getting schemas: ${error}`);
+      throw error;
+    }
+  }
 }

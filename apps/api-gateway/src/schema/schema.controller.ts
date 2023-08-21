@@ -58,8 +58,8 @@ export class SchemaController {
 
   @Get('/')
   @ApiOperation({
-    summary: 'Get all schemas',
-    description: 'Get all schemas.'
+    summary: 'Get all schemas by org id.',
+    description: 'Get all schemas by org id.'
   })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getSchemas(
@@ -148,5 +148,34 @@ export class SchemaController {
         data: credentialDefinitionList.response
       };
       return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/all')
+  @ApiOperation({
+    summary: 'Get all schemas.',
+    description: 'Get all schemas.'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async getAllSchema(
+    @Query() getAllSchemaDto: GetAllSchemaDto,
+    @Res() res: Response,
+    @User() user: IUserRequestInterface
+  ): Promise<object> {
+    const { orgId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
+    const schemaSearchCriteria: ISchemaSearchInterface = {
+      pageNumber,
+      searchByText,
+      pageSize,
+      sorting,
+      sortByValue
+    };
+    const schemasResponse = await this.appService.getAllSchema(schemaSearchCriteria, user, orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.fetch,
+      data: schemasResponse.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

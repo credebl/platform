@@ -64,4 +64,28 @@ export class SchemaController {
         return this.schemaService.getcredDeffListBySchemaId(schemaId, schemaSearchCriteria, user, orgId);
     }
 
+    @MessagePattern({ cmd: 'get-all-schemas' })
+    async getAllSchema(schemaSearch: ISchemaSearchInterface): Promise<{
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        nextPage: number;
+        previousPage: number;
+        lastPage: number;
+        data: {
+            createDateTime: Date;
+            createdBy: number;
+            name: string;
+            version: string;
+            attributes: string[];
+            schemaLedgerId: string;
+            publisherDid: string;
+            orgId: number;
+            issuerId: string;
+        }[];
+    }> {
+        const { schemaSearchCriteria, user, orgId } = schemaSearch;
+        return this.schemaService.getAllSchema(schemaSearchCriteria, user, orgId);
+    }
+    
 }

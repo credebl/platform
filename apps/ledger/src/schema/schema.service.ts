@@ -350,7 +350,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getAllSchema(schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: number): Promise<{
+  async getAllSchema(schemaSearchCriteria: ISchemaSearchCriteria): Promise<{
     totalItems: number;
     hasNextPage: boolean;
     hasPreviousPage: boolean;
@@ -370,7 +370,7 @@ export class SchemaService extends BaseService {
     }[];
   }> {
     try {
-      const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria, orgId);
+      const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
       const schemasResponse = {
         totalItems: response.length,
         hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,

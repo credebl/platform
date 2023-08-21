@@ -221,7 +221,7 @@ model schema {
   lastChangedBy       Int           @default(1)
   name                String        @db.VarChar
   version             String        @db.VarChar
-  attributes          String[]
+  attributes          String
   schemaLedgerId      String        @db.VarChar
   publisherDid        String        @db.VarChar
   ledgerId            Int           @default(1)

@@ -79,6 +79,7 @@ export class SchemaController {
     @Res() res: Response,
     @User() user: IUserRequestInterface
   ): Promise<object> {
+
     const { orgId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
     const schemaSearchCriteria: ISchemaSearchInterface = {
       pageNumber,
@@ -101,8 +102,8 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
-    summary: 'Get an existing schema by schemaId',
-    description: 'Get an existing schema by schemaId'
+    summary: 'Retrieve an existing schema from the ledger using its schemaId',
+    description: 'Retrieve an existing schema from the ledger using its schemaId'
   })
   @ApiQuery(
     { name: 'schemaId', required: true }
@@ -116,10 +117,43 @@ export class SchemaController {
     @Query('schemaId') schemaId: string,
     @Query('orgId') orgId: number,
     @Res() res: Response): Promise<object> {
+
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
     const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.fetch,
+      data: schemaDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/created')
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiOperation({
+    summary: 'Get an existing schema by schemaLedgerId',
+    description: 'Get an existing schema by schemaLedgerId'
+  })
+  @ApiQuery(
+    { name: 'schemaId', required: true }
+  )
+
+  @ApiQuery(
+    { name: 'orgId', required: true }
+  )
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async getSchemaBySchemaId(
+    @Query('schemaId') schemaId: string,
+    @Query('orgId') orgId: number,
+    @Res() res: Response): Promise<object> {
+
+    if (!schemaId) {
+      throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
+    }
+    const schemaDetails = await this.appService.getSchemaBySchemaId(schemaId, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
@@ -147,6 +181,7 @@ export class SchemaController {
     @Query() GetCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
     @User() user: IUserRequestInterface): Promise<object> {
+
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }

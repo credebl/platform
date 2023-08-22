@@ -250,4 +250,21 @@ export class SchemaRepository {
       throw error;
     }
   }
+
+  async getSchemaBySchemaId(schemaId: string, orgId: number): Promise<schema> {
+    try {
+      return this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId: schemaId,
+          organisation: {
+            id: orgId
+          }
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`Error in getting get schema by schema ledger id: ${error}`);
+      throw error;
+    }
+  }
 }

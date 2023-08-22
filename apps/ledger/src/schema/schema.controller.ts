@@ -21,6 +21,12 @@ export class SchemaController {
         return this.schemaService.getSchemaById(schemaId, orgId);
     }
 
+    @MessagePattern({ cmd: 'get-schema-by-schema-id' })
+    async getSchemaBySchemaId(payload: ISchema): Promise<schema> {
+        const { schemaId, orgId } = payload;
+        return this.schemaService.getSchemaBySchemaId(schemaId, orgId);
+    }
+
     @MessagePattern({ cmd: 'get-schemas' })
     async getSchemas(schemaSearch: ISchemaSearchInterface): Promise<{
         totalItems: number;

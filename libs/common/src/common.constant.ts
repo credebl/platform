@@ -84,6 +84,8 @@ export enum CommonConstants {
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',
   URL_SHAGENT_WITH_TENANT_AGENT = '/multi-tenancy/with-tenant-agent',
   URL_SHAGENT_CREATE_INVITATION = '/multi-tenancy/create-legacy-invitation/#',
+  URL_SHAGENT_GET_CREATEED_INVITATIONS = '/multi-tenancy/connections/#',
+  URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID = '/multi-tenancy/connections/#/@',
   URL_SHAGENT_CREATE_OFFER = '/multi-tenancy/credentials/create-offer/#',
   URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND = '/multi-tenancy/credentials/create-offer-oob/#',
   URL_SHAGENT_GET_CREDENTIALS = '/multi-tenancy/credentials/#',

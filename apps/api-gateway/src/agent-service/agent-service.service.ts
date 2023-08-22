@@ -23,4 +23,9 @@ export class AgentService extends BaseService {
         return this.sendNats(this.agentServiceProxy, 'create-tenant', payload);
     }
 
+    async getAgentHealth(user: user, orgId:number): Promise<{ response: object }> {
+        const payload = { user, orgId };
+        return this.sendNats(this.agentServiceProxy, 'agent-health', payload);
+    }
+
 }

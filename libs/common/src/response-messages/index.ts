@@ -114,14 +114,16 @@ export const ResponseMessages = {
     },
     agent: {
         success: {
-            create: 'Agent spin-up up successfully'
+            create: 'Agent spin-up up successfully',
+            health: 'Agent health details retrieved successfully.'
         },
         error: {
             exists: 'An agent name is already exist',
             orgNotFound: 'Organization not found',
             apiEndpointNotFound: 'apiEndpoint not found',
             notAbleToSpinUpAgent: 'Agent not able to spin-up',
-            alreadySpinUp: 'Agent already spin-up'
+            alreadySpinUp: 'Agent already spin-up',
+            agentUrl: 'Agent url not exist'
         }
     },
     connection: {

@@ -110,7 +110,11 @@ export class SchemaRepository {
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
       });
-      const schemasCount = await this.prisma.schema.count();
+      const schemasCount = await this.prisma.schema.count({
+        where: {
+          orgId
+        }
+      });
       return {schemasCount, schemasResult};
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);

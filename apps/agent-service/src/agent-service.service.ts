@@ -30,6 +30,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
+import { user } from '@prisma/client';
 
 @Injectable()
 @WebSocketGateway()
@@ -839,6 +840,23 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async getAgentHealthDetails(orgId: number): Promise<object> {
+    try {
+      const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      if (orgAgentDetails.agentEndPoint) {
+        const data = await this.commonService
+        .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'x-api-key': '' } })
+        .then(async response => response);
+        return data;
+      } else {
+      throw new NotFoundException(ResponseMessages.agent.error.agentUrl);
+     }
+       
+    } catch (error) {
+      this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
     }
   }
 }

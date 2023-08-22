@@ -296,34 +296,24 @@ export class SchemaService extends BaseService {
     }[];
   }> {
     try {
-      const response: {
-        createDateTime: Date;
-        createdBy: number;
-        name: string;
-        version: string;
-        attributes: string;
-        schemaLedgerId: string;
-        publisherDid: string;
-        issuerId: string;
-        orgId: number;
-      }[] = await this.schemaRepository.getSchemas(schemaSearchCriteria, orgId);
+      const response = await this.schemaRepository.getSchemas(schemaSearchCriteria, orgId);
 
-      const schemasDetails = response.map(schemaAttributeItem => {
+      const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
       });
 
       const schemasResponse = {
-        totalItems: response.length,
-        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,
+        totalItems: response.schemasCount,
+        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.schemasCount,
         hasPreviousPage: 1 < schemaSearchCriteria.pageNumber,
         nextPage: schemaSearchCriteria.pageNumber + 1,
         previousPage: schemaSearchCriteria.pageNumber - 1,
-        lastPage: Math.ceil(response.length / schemaSearchCriteria.pageSize),
+        lastPage: Math.ceil(response.schemasCount / schemaSearchCriteria.pageSize),
         data: schemasDetails
       };
 
-      if (0 !== response.length) {
+      if (0 !== response.schemasCount) {
         return schemasResponse;
       } else {
         throw new NotFoundException(ResponseMessages.schema.error.notFound);
@@ -331,7 +321,7 @@ export class SchemaService extends BaseService {
 
 
     } catch (error) {
-      this.logger.error(`Error in retrieving schemas: ${error}`);
+      this.logger.error(`Error in retrieving schemas by org id: ${error}`);
       throw new RpcException(error.response);
     }
   }
@@ -419,7 +409,7 @@ export class SchemaService extends BaseService {
 
 
     } catch (error) {
-      this.logger.error(`Error in retrieving schemas: ${error}`);
+      this.logger.error(`Error in retrieving all schemas: ${error}`);
       throw new RpcException(error.response);
     }
   }

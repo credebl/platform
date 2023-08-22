@@ -69,6 +69,8 @@ export class SchemaRepository {
   }
 
   async getSchemas(payload: ISchemaSearchCriteria, orgId: number): Promise<{
+    schemasCount: number;
+    schemasResult: {
     createDateTime: Date;
     createdBy: number;
     name: string;
@@ -78,7 +80,8 @@ export class SchemaRepository {
     publisherDid: string;
     issuerId: string;
     orgId: number;
-  }[]> {
+  }[];
+}> {
     try {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
@@ -104,10 +107,11 @@ export class SchemaRepository {
         orderBy: {
           [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
         },
-        take: payload.pageSize,
+        take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
       });
-      return schemasResult;
+      const schemasCount = await this.prisma.schema.count();
+      return {schemasCount, schemasResult};
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
       throw error;

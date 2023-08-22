@@ -18,6 +18,6 @@ export class CreateUserDto {
   createdBy?: number;
   clientId?: string;
   clientSecret?: string;
-  keycloakUserId?: string;
+  supabaseUserId?: string;
 
 }

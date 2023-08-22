@@ -11,10 +11,11 @@ import { JwtStrategy } from './jwt.strategy';
 import { MobileJwtStrategy } from './mobile-jwt.strategy';
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
-import { VerificationService } from '../verification/verification.service';
 import { SocketGateway } from './socket.gateway';
+import { SupabaseService } from '@credebl/supabase';
 import { UserModule } from '../user/user.module';
 import { UserService } from '../user/user.service';
+import { VerificationService } from '../verification/verification.service';
 
 //import { WebhookService } from "../../../platform-service/src/webhook/webhook.service";
 
@@ -46,7 +47,8 @@ import { UserService } from '../user/user.service';
     ConnectionService,
     AgentService,
     CommonService,
-    UserService
+    UserService,
+    SupabaseService
   ],
   exports: [
     PassportModule,

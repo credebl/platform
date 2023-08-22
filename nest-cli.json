@@ -223,6 +223,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/user-activity/tsconfig.lib.json"
       }
+    },
+    "supabase": {
+      "type": "library",
+      "root": "libs/supabase",
+      "entryFile": "index",
+      "sourceRoot": "libs/supabase/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/supabase/tsconfig.lib.json"
+      }
     }
   }
 }

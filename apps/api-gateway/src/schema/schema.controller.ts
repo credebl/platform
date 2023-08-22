@@ -102,8 +102,8 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
-    summary: 'Get an existing schema by schemaId on ledger',
-    description: 'Get an existing schema by schemaId on ledger'
+    summary: 'Retrieve an existing schema from the ledger using its schemaId',
+    description: 'Retrieve an existing schema from the ledger using its schemaId'
   })
   @ApiQuery(
     { name: 'schemaId', required: true }

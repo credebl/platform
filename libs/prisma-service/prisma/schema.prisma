@@ -20,7 +20,7 @@ model user {
   password            String?           @db.VarChar(500)
   verificationCode    String?           @db.VarChar(500)
   isEmailVerified     Boolean           @default(false)
-  keycloakUserId      String?           @db.VarChar(500)
+  supabaseUserId      String?           @db.VarChar(500)
   clientId            String?           @db.VarChar(500)
   clientSecret        String?           @db.VarChar(500)
   profileImg          String?           @db.VarChar(1000)

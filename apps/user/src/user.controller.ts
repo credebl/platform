@@ -50,14 +50,15 @@ export class UserController {
     return this.userService.updateUserProfile(payload.updateUserProfileDto);
   }
 
-  @MessagePattern({ cmd: 'get-user-by-keycloak-id' })
-  async findByKeycloakId(payload: { id }): Promise<object> {
-    return this.userService.findByKeycloakId(payload);
+  @MessagePattern({ cmd: 'get-user-by-supabase' }) 
+  async findSupabaseUser(payload: { id }): Promise<object> {
+    return this.userService.findSupabaseUser(payload);
   }
+
 
   @MessagePattern({ cmd: 'get-user-by-mail' })
   async findUserByEmail(payload: { email }): Promise<object> {
-    return this.userService.findUserByEmail(payload);
+    return this.userService.findUserByEmail(payload); 
   }
 
   @MessagePattern({ cmd: 'get-org-invitations' })
@@ -105,7 +106,7 @@ export class UserController {
   }
   @MessagePattern({ cmd: 'add-user' })
   async addUserDetailsInKeyCloak(payload: { userEmail: string, userInfo: userInfo }): Promise<string | object> {
-    return this.userService.createUserInKeyCloak(payload.userEmail, payload.userInfo);
+    return this.userService.createUserForToken(payload.userEmail, payload.userInfo);
   }
 
   // Fetch Users recent activities

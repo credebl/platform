@@ -9,7 +9,7 @@ export interface UserI {
     isEmailVerified?: boolean,
     clientId?: string,
     clientSecret?: string,
-    keycloakUserId?: string,
+    supabaseUserId?: string,
     userOrgRoles?: object
 }
 

@@ -276,6 +276,24 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async getSchemaBySchemaId(schemaId: string, orgId: number): Promise<schema> {
+    try {
+
+      const getSchemaBySchemaId = await this.schemaRepository.getSchemaBySchemaId(schemaId, orgId);
+
+      if (!getSchemaBySchemaId) {
+        throw new NotFoundException('Schema not found.');
+      }
+
+      const attributesArray = JSON.parse((await getSchemaBySchemaId).attributes);
+      (await getSchemaBySchemaId).attributes = attributesArray;
+      return getSchemaBySchemaId;
+    } catch (error) {
+      this.logger.error(`Error in getting schema by id: ${error}`);
+      throw new RpcException(error.response);
+    }
+  }
+
   async getSchemas(schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: number): Promise<{
     totalItems: number;
     hasNextPage: boolean;

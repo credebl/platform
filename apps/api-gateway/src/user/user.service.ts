@@ -73,11 +73,12 @@ export class UserService extends BaseService {
     const payload = { id };
 
     try {
-      return this.sendNats(this.serviceProxy, 'get-user-by-keycloak-id', payload);
+      return this.sendNats(this.serviceProxy, 'get-user-by-supabase', payload);
     } catch (error) {
       this.logger.error(`Error in get user:${JSON.stringify(error)}`);
     }
   }
+
 
   async invitations(id: number, status: string, getAllInvitationsDto: GetAllInvitationsDto): Promise<{ response: object }> {
     const {pageNumber, pageSize, search} = getAllInvitationsDto;

@@ -2,6 +2,7 @@ import * as bcrypt from 'bcrypt';
 
 import {
   BadRequestException,
+  // BadRequestException,
   ConflictException,
   Injectable,
   Logger,
@@ -31,6 +32,7 @@ import { HttpException } from '@nestjs/common';
 import { InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
+import { SupabaseService } from '@credebl/supabase';
 
 
 @Injectable()
@@ -38,6 +40,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly clientRegistrationService: ClientRegistrationService,
+    private readonly supabaseService: SupabaseService,
     private readonly commonService: CommonService,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
@@ -106,7 +109,7 @@ export class UserService {
       }
 
     } catch (error) {
-      this.logger.error(`error in create keycloak user: ${JSON.stringify(error)}`);
+      this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error.message);
     }
   }
@@ -148,13 +151,8 @@ export class UserService {
     }
   }
 
-  /**
-  *
-  * @param param email, verification code
-  * @returns Email verification succcess
-  */
 
-  async createUserInKeyCloak(email: string, userInfo: userInfo): Promise<string> {
+  async createUserForToken(email: string, userInfo: userInfo): Promise<string> {
     try {
       if (!email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
@@ -163,7 +161,7 @@ export class UserService {
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
-      if (checkUserDetails.keycloakUserId) {
+      if (checkUserDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
       if (false === checkUserDetails.isEmailVerified) {
@@ -178,13 +176,21 @@ export class UserService {
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
-      const clientManagementToken = await this.clientRegistrationService.getManagementToken();
+        const supaUser = await this.supabaseService.getClient().auth.signUp({
+          email,
+          password: userInfo.password
+        });
 
-      const keycloakDetails = await this.keycloakUserRegistration(userDetails, clientManagementToken);
+        if (supaUser.error) {
+          throw new InternalServerErrorException(supaUser.error?.message);
+        }
 
-      await this.userRepository.updateUserDetails(
+        
+        const supaId = supaUser.data?.user?.id;
+
+           await this.userRepository.updateUserDetails(
         userDetails.id,
-        keycloakDetails
+        supaId.toString()
       );
 
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
@@ -192,7 +198,7 @@ export class UserService {
 
       return 'User created successfully';
     } catch (error) {
-      this.logger.error(`error in create keycloak user: ${JSON.stringify(error)}`);
+      this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }
@@ -290,9 +296,9 @@ export class UserService {
       }
 
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-        //Get user token from keycloak
-        const token = await this.clientRegistrationService.getUserToken(email, userData.password);
-        return token;
+
+        return this.generateToken(email, password);
+
       }
 
       const comparePassword = await bcrypt.compare(password, userData.password);
@@ -302,14 +308,34 @@ export class UserService {
         throw new BadRequestException(ResponseMessages.user.error.invalidCredentials);
       }
 
-      //Get user token from kelycloak
-      const token = await this.clientRegistrationService.getUserToken(email, userData.password);
-      return token;
+      return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }
+
+  async generateToken(email: string, password: string): Promise<object> {
+    const supaInstance = await this.supabaseService.getClient();
+
+    this.logger.error(`supaInstance::`, supaInstance);
+
+    const { data, error } = await supaInstance.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    this.logger.error(`Supa Login Error::`, error);
+
+    if (error) {
+      throw new BadRequestException(error?.message);
+    }
+
+    const token = data?.session;
+
+    return token;
+  }
+
 
   async getProfile(payload: { id }): Promise<object> {
     try {
@@ -339,9 +365,18 @@ export class UserService {
 
   async findByKeycloakId(payload: { id }): Promise<object> {
     try {
-      return this.userRepository.getUserByKeycloakId(payload.id);
+      return this.userRepository.getUserBySupabaseId(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async findSupabaseUser(payload: { id }): Promise<object> {
+    try {
+      return this.userRepository.getUserBySupabaseId(payload.id);
+    } catch (error) {
+      this.logger.error(`Error in findSupabaseUser: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }
@@ -536,7 +571,7 @@ export class UserService {
       if (userDetails && !userDetails.isEmailVerified) {
 
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
-      } else if (userDetails && userDetails.keycloakUserId) {
+      } else if (userDetails && userDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return 'New User';
@@ -544,7 +579,7 @@ export class UserService {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isKeycloak: null !== userDetails.keycloakUserId && undefined !== userDetails.keycloakUserId
+          isKeycloak: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
         };
         return userVerificationDetails;
       }

@@ -8,6 +8,7 @@ import { FidoModule } from './fido/fido.module';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { OrgRolesRepository } from 'libs/org-roles/repositories';
 import { PrismaService } from '@credebl/prisma-service';
+import { SupabaseService } from '@credebl/supabase';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { UserActivityService } from '@credebl/user-activity';
 import { UserController } from './user.controller';
@@ -30,7 +31,7 @@ import { UserService } from './user.service';
     CommonModule,
     FidoModule,
     OrgRolesModule
-  ],
+],
   controllers: [UserController],
   providers: [
     UserService,
@@ -38,6 +39,7 @@ import { UserService } from './user.service';
     PrismaService,
     Logger,
     ClientRegistrationService,
+    SupabaseService,
     KeycloakUrlService,
     OrgRolesService,
     UserOrgRolesService,

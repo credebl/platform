@@ -94,6 +94,12 @@
       ],
       "@credebl/user-activity/*": [
         "libs/user-activity/src/*"
+      ],
+      "@credebl/supabase": [
+        "libs/supabase/src"
+      ],
+      "@credebl/supabase/*": [
+        "libs/supabase/src/*"
       ]
     }
   },

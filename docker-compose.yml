@@ -6,9 +6,9 @@ services:
     entrypoint: '/nats-server -c /nats-server.conf -DV'  # Corrected the path to nats-server.conf
     image: nats
     ports:
-      - '7222:4222'
-      - '9222:6222'
-      - '5222:8222'
+      - '4222:4222'
+      - '6222:6222'
+      - '8222:8222'
    # volumes:
     #  - ./nats-server.conf:/nats-server.conf  # Mount the config file
   redis:

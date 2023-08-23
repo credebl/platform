@@ -7,7 +7,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { ICredentialAttributesInterface } from '../interfaces/issuance.interfaces';
+import { ICredentialAttributesInterface, OutOfBandCredentialOfferPayload } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 
@@ -52,41 +52,6 @@ export class IssuanceService {
 
       const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
 
-      return credentialCreateOfferDetails?.response;
-    } catch (error) {
-      this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-
-  async sendCredentialOutOfBand(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
-    try {
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      // eslint-disable-next-line camelcase
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
-
-      const { agentEndPoint } = agentDetails;
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-      }
-
-      const issuanceMethodLabel = 'create-offer-oob';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
-
-      const apiKey = platformConfig?.sgApiKey;
-      const issueData = {
-        connectionId,
-        credentialFormats: {
-          indy: {
-            attributes,
-            credentialDefinitionId
-          }
-        },
-        autoAcceptCredential: 'always',
-        comment
-      };
-      const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
       return credentialCreateOfferDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
@@ -245,6 +210,80 @@ export class IssuanceService {
     }
   }
 
+  async outOfBandCredentialOffer(user: IUserRequest, outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<string> {
+    try {
+      const { attributes, comment, credentialDefinitionId, orgId, protocolVersion } = outOfBandCredential;
+      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+
+      const { agentEndPoint } = agentDetails;
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+
+      const issuanceMethodLabel = 'create-offer-oob';
+      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+
+      const apiKey = agentDetails?.apiKey;
+      const outOfBandIssuancePayload = {
+        protocolVersion: protocolVersion ? protocolVersion : 'v1',
+        credentialFormats: {
+          indy: {
+            attributes,
+            credentialDefinitionId
+          }
+        },
+        autoAcceptCredential: 'always',
+        comment
+      };
+
+      const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
+
+      const invitationObject = credentialCreateOfferDetails?.response?.invitation['@id'];
+
+      let shortenedUrl;
+      if (agentDetails?.tenantId) {
+        shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationObject}`;
+      } else {
+        shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
+      }
+
+      return shortenedUrl;
+
+    } catch (error) {
+      this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+  async _outOfBandCredentialOffer(outOfBandIssuancePayload: object, url: string, apiKey: string): Promise<{
+    response;
+  }> {
+    try {
+      const pattern = { cmd: 'agent-out-of-band-credential-offer' };
+      const payload = { outOfBandIssuancePayload, url, apiKey };
+      return this.issuanceServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+
   /**
   * Description: Fetch agent url 
   * @param referenceId 
@@ -294,6 +333,16 @@ export class IssuanceService {
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
             : orgAgentTypeId === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`.replace('#', credentialRecordId).replace('@', tenantId)
+              : null;
+          break;
+        }
+
+        case 'create-offer-oob': {
+
+          url = orgAgentTypeId === OrgAgentType.DEDICATED
+            ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
+            : orgAgentTypeId === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_OUT_OF_BAND_CREDENTIAL}`.replace('#', tenantId)
               : null;
           break;
         }

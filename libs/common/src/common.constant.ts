@@ -67,10 +67,11 @@ export enum CommonConstants {
   URL_PUBLISH_REVOCATION = '/issue-credential/publish-revocations',
   URL_CREATE_ISSUE_CREDENTIAL_OUT_OF_BAND = '/issue-credential/create',
   URL_CREATE_OUT_OF_BAND_INVITATION = '/out-of-band/create-invitation',
-  URL_ISSUE_CREATE_CRED_OFFER_AFJ= '/credentials/create-offer',
+  URL_ISSUE_CREATE_CRED_OFFER_AFJ = '/credentials/create-offer',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  URL_ISSUE_GET_CREDS_AFJ= '/credentials',
-  URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID= '/credentials',
+  URL_ISSUE_GET_CREDS_AFJ = '/credentials',
+  URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
+  URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
 
   // SCHEMA & CRED DEF SERVICES
   URL_SCHM_CREATE_SCHEMA = '/schemas',
@@ -90,6 +91,7 @@ export enum CommonConstants {
   URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND = '/multi-tenancy/credentials/create-offer-oob/#',
   URL_SHAGENT_GET_CREDENTIALS = '/multi-tenancy/credentials/#',
   URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID = '/multi-tenancy/credentials/#/@',
+  URL_SHAGENT_OUT_OF_BAND_CREDENTIAL = '/multi-tenancy/credentials/create-offer-oob/#',
   URL_SHAGENT_GET_PROOFS = '/multi-tenancy/proofs/#',
   URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID = '/multi-tenancy/proofs/#/@',
   URL_SHAGENT_REQUEST_PROOF = '/multi-tenancy/proofs/request-proof/#',

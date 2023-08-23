@@ -38,9 +38,23 @@ export interface IIssuanceWebhookInterface {
     credentialAttributes: ICredentialAttributesInterface[];
     orgId: number;
 }
- 
+
 export interface ICredentialAttributesInterface {
     'mime-type': string;
     name: string;
     value: string;
+}
+
+export interface OutOfBandCredentialOfferPayload {
+    emailId: string;
+    attributes: IAttributes[];
+    credentialDefinitionId: string;
+    comment: string;
+    protocolVersion?: string;
+    orgId: number;
+}
+
+export interface OutOfBandCredentialOffer {
+    user: IUserRequest;
+    outOfBandCredential: OutOfBandCredentialOfferPayload;
 }

@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IssuanceDto, IssueCredentialDto } from './dtos/issuance.dto';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -20,14 +20,6 @@ export class IssuanceService extends BaseService {
         const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, user };
         return this.sendNats(this.issuanceProxy, 'send-credential-create-offer', payload);
     }
-
-    sendCredentialOutOfBand(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<{
-        response: object;
-    }> {
-        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, user };
-        return this.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
-    }
-
 
     getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: number): Promise<{
         response: object;
@@ -48,6 +40,13 @@ export class IssuanceService extends BaseService {
     }> {
         const payload = { createDateTime: issueCredentialDto.createdAt, connectionId: issueCredentialDto.connectionId, threadId: issueCredentialDto.threadId, protocolVersion: issueCredentialDto.protocolVersion, credentialAttributes: issueCredentialDto.credentialAttributes, orgId: id };
         return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
+    }
+
+    outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OutOfBandCredentialDto): Promise<{
+        response: object;
+    }> {
+        const payload = { user, outOfBandCredentialDto };
+        return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
     }
 
 }

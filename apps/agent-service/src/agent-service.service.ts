@@ -16,7 +16,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { catchError, map } from 'rxjs/operators';
 dotenv.config();
-import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer } from './interface/agent-service.interface';
+import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, OutOfBandCredentialOffer } from './interface/agent-service.interface';
 import { AgentType, OrgAgentType } from '@credebl/enum/enum';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -848,15 +848,27 @@ export class AgentServiceService {
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
       if (orgAgentDetails.agentEndPoint) {
         const data = await this.commonService
-        .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'x-api-key': '' } })
-        .then(async response => response);
+          .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'x-api-key': '' } })
+          .then(async response => response);
         return data;
       } else {
-      throw new NotFoundException(ResponseMessages.agent.error.agentUrl);
-     }
-       
+        throw new NotFoundException(ResponseMessages.agent.error.agentUrl);
+      }
+
     } catch (error) {
       this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async outOfBandCredentialOffer(outOfBandIssuancePayload: OutOfBandCredentialOffer, url: string, apiKey: string): Promise<object> {
+    try {
+      const sendOutOfbandCredentialOffer = await this.commonService
+        .httpPost(url, outOfBandIssuancePayload, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
+      return sendOutOfbandCredentialOffer;
+    } catch (error) {
+      this.logger.error(`Error in out-of-band credential in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
     }
   }
 }

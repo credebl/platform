@@ -32,7 +32,7 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { IssuanceDto, IssueCredentialDto } from './dtos/issuance.dto';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -98,7 +98,7 @@ export class IssuanceController {
   * @param issueCredentialDto
   */
   @Post('wh/:id/credentials')
-   @ApiExcludeEndpoint()
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Catch issue credential webhook responses',
     description: 'Callback URL for issue credential'
@@ -195,6 +195,30 @@ export class IssuanceController {
   ): Promise<Response> {
 
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.fetch,
+      data: getCredentialDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('issue-credentials/out-of-band')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: `Create out-of-band credential offer`,
+    description: `Create out-of-band credential offer`
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  async outOfBandCredentialOffer(
+    @User() user: IUserRequest,
+    @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
+    @Res() res: Response
+  ): Promise<Response> {
+
+    const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(user, outOfBandCredentialDto);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

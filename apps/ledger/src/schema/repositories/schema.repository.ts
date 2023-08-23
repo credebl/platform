@@ -112,7 +112,9 @@ export class SchemaRepository {
       });
       const schemasCount = await this.prisma.schema.count({
         where: {
-          orgId
+          organisation: {
+            id: orgId
+          }
         }
       });
       return {schemasCount, schemasResult};

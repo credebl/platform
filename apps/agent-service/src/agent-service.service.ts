@@ -846,6 +846,9 @@ export class AgentServiceService {
   async getAgentHealthDetails(orgId: number): Promise<object> {
     try {
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      if (!orgAgentDetails) {
+        throw new NotFoundException(ResponseMessages.agent.error.agentNotExists);
+      }
       if (orgAgentDetails.agentEndPoint) {
         const data = await this.commonService
         .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'x-api-key': '' } })
@@ -857,6 +860,7 @@ export class AgentServiceService {
        
     } catch (error) {
       this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
     }
   }
 }

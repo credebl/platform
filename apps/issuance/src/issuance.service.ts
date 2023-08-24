@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -10,7 +10,10 @@ import { map } from 'rxjs';
 import { ICredentialAttributesInterface, OutOfBandCredentialOfferPayload } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
-
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import * as QRCode from 'qrcode';
+import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 
 @Injectable()
 export class IssuanceService {
@@ -210,9 +213,9 @@ export class IssuanceService {
     }
   }
 
-  async outOfBandCredentialOffer(user: IUserRequest, outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<string> {
+  async outOfBandCredentialOffer(user: IUserRequest, outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
     try {
-      const { attributes, comment, credentialDefinitionId, orgId, protocolVersion } = outOfBandCredential;
+      const { attributes, comment, credentialDefinitionId, emailId, orgId, protocolVersion } = outOfBandCredential;
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { agentEndPoint } = agentDetails;
@@ -235,19 +238,44 @@ export class IssuanceService {
         autoAcceptCredential: 'always',
         comment
       };
-
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
 
-      const invitationObject = credentialCreateOfferDetails?.response?.invitation['@id'];
+      if (!credentialCreateOfferDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound);
+      }
+
+      const invitationId = credentialCreateOfferDetails?.response?.invitation['@id'];
+
+      if (!invitationId) {
+        throw new NotFoundException(ResponseMessages.issuance.error.invitationNotFound);
+      }
 
       let shortenedUrl;
       if (agentDetails?.tenantId) {
-        shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationObject}`;
+        shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationId}`;
       } else {
-        shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
+        shortenedUrl = `${agentEndPoint}/url/${invitationId}`;
       }
 
-      return shortenedUrl;
+      const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenedUrl);
+      const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
+
+      if (!platformConfigData) {
+        throw new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound);
+      }
+
+      const outOfBandIssuance = new OutOfBandIssuance();
+      const emailData = new EmailDto();
+      emailData.emailFrom = platformConfigData.emailFrom;
+      emailData.emailTo = emailId;
+      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Email Verification`;
+      emailData.emailHtml = await outOfBandIssuance.outOfBandIssuance(emailId, outOfBandIssuanceQrCode);
+      const isEmailSent = await sendEmail(emailData);
+      if (isEmailSent) {
+        return isEmailSent;
+      } else {
+        throw new InternalServerErrorException(ResponseMessages.issuance.error.emailSend);
+      }
 
     } catch (error) {
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials : ${JSON.stringify(error)}`);
@@ -305,15 +333,6 @@ export class IssuanceService {
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
             : orgAgentTypeId === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
-              : null;
-          break;
-        }
-
-        case 'create-offer-oob': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
-            : orgAgentTypeId === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
               : null;
           break;
         }

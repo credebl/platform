@@ -204,7 +204,7 @@ export class IssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('issue-credentials/out-of-band')
+  @Post('issue-credentials/out-of-band')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({

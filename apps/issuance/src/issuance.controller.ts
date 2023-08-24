@@ -33,8 +33,8 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'out-of-band-credential-offer' })
-  async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<string> {
-    const { user, outOfBandCredential } = payload;
-    return this.issuanceService.outOfBandCredentialOffer(user, outOfBandCredential);
+  async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<boolean> {
+    const { user, outOfBandCredentialDto } = payload;
+    return this.issuanceService.outOfBandCredentialOffer(user, outOfBandCredentialDto);
   }
 }

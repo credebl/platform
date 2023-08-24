@@ -148,7 +148,11 @@ export const ResponseMessages = {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
-            agentUrlNotFound: 'agent url not found'
+            agentUrlNotFound: 'agent url not found',
+            emailSend: 'Unable to send email to the user',
+            platformConfigNotFound: "Platform config details not found",
+            invitationNotFound: "Invitation not found",
+            credentialOfferNotFound: "Credential offer not found"
         }
     },
     verification: {

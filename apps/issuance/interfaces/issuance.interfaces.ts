@@ -56,5 +56,5 @@ export interface OutOfBandCredentialOfferPayload {
 
 export interface OutOfBandCredentialOffer {
     user: IUserRequest;
-    outOfBandCredential: OutOfBandCredentialOfferPayload;
+    outOfBandCredentialDto: OutOfBandCredentialOfferPayload;
 }

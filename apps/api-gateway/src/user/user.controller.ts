@@ -41,6 +41,7 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { AddUserDetails } from './dto/add-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -383,5 +384,25 @@ async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUs
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * 
+   * @param forgotPasswordDto 
+   * @param res 
+   * @returns 
+   */
+  @Post('/forgot-password')
+  @ApiOperation({ summary: 'Forgot password', description: 'reset the password with mail verification' })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Res() res: Response): Promise<Response> {
+  
+    await this.userService.forgotPassword(forgotPasswordDto.email);
+
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.OK,
+        message: 'Password reset link sent successfully'
+      };
+      return res.status(HttpStatus.OK).json(finalResponse);
+
   }
 }

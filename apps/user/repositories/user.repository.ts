@@ -1,10 +1,12 @@
 /* eslint-disable prefer-destructuring */
 
 import * as bcrypt from 'bcrypt';
+
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 // eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -454,6 +456,25 @@ export class UserRepository {
       return updateUserDetails;
     } catch (error) {
       this.logger.error(`Error in update isEmailVerified: ${error.message} `);
+      throw error;
+    }
+  }
+
+
+  async updateUser(id: number, data: object): Promise<user> {
+
+    try {
+      const updateUserDetails = await this.prisma.user.update({
+        where: {
+          id
+        },
+        data: {
+          ...data
+        }
+      });
+      return updateUserDetails;
+    } catch (error) {
+      this.logger.error(`Error in resetUserToken: ${error.message} `);
       throw error;
     }
   }

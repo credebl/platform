@@ -31,7 +31,8 @@ import { HttpException } from '@nestjs/common';
 import { InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
-
+import { v4 as uuidv4 } from 'uuid';
+import { UserForgotPasswordTemplate } from '../templates/forgot-password-template';
 
 @Injectable()
 export class UserService {
@@ -562,7 +563,6 @@ export class UserService {
     }
   }
 
-
   async getUserActivity(userId: number, limit: number): Promise<object[]> {
     try {
 
@@ -571,6 +571,66 @@ export class UserService {
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
+    }
+  }
+
+  async forgotPassword(email: string): Promise<object> {
+    try {
+
+      const userDetails = await this.userRepository.checkUniqueUserExist(email);
+      if (!userDetails) {
+        throw new ConflictException(ResponseMessages.user.error.notFound);
+      }
+
+      const newToken = await uuidv4();
+
+      const data = {
+        verificationCode: newToken
+      };
+
+      const updatedUser = await this.userRepository.updateUser(userDetails.id, data);
+
+      if (!updatedUser) {
+        throw new InternalServerErrorException('Error in sending reset mail');
+      }
+
+      try {
+        await this.sendResetEmail(email, newToken);
+      } catch (error) {
+        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+      }
+
+      return updatedUser;
+
+    } catch (error) {
+      this.logger.error(`forgotPassword : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async sendResetEmail(email: string, resetToken: string): Promise<boolean> {
+    // Use your email service to send the reset email
+    // const resetLink = `https://your-app.com/reset-password?token=${resetToken}`;
+    try {
+      const platformConfigData = await this.prisma.platform_config.findMany();
+
+      const urlTemplate = new UserForgotPasswordTemplate();
+      const emailData = new EmailDto();
+      emailData.emailFrom = platformConfigData[0].emailFrom;
+      emailData.emailTo = email;
+      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Forgot Password`;
+
+      emailData.emailHtml = await urlTemplate.getUserForgotPasswordTemplate(email, resetToken);
+      const isEmailSent = await sendEmail(emailData);
+      if (isEmailSent) {
+        return isEmailSent;
+      } else {
+        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+      }
+
+    } catch (error) {
+      this.logger.error(`error in create keycloak user: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error.message);
     }
   }
 }

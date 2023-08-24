@@ -124,4 +124,9 @@ export class UserService extends BaseService {
     const payload = { userId, limit };
     return this.sendNats(this.serviceProxy, 'get-user-activity', payload);
   }
+
+  async forgotPassword(email: string): Promise<{ response: object }> {
+    const payload = { email };
+    return this.sendNats(this.serviceProxy, 'forgot-password', payload);
+  }
 }

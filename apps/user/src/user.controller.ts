@@ -1,3 +1,4 @@
+import { UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -5,8 +6,6 @@ import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
-
 
 @Controller()
 export class UserController {
@@ -109,10 +108,15 @@ export class UserController {
     return this.userService.createUserInKeyCloak(payload.userEmail, payload.userInfo);
   }
 
-  // Fetch Users recent activities
+  // Fetch Users recent activities   
   @MessagePattern({ cmd: 'get-user-activity' })
   async getUserActivity(payload: { userId: number, limit: number }): Promise<object[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
+  }
+
+  @MessagePattern({ cmd: 'forgot-password' })
+  async forgotPassword(payload: { email: string }): Promise<object> {
+    return this.userService.forgotPassword(payload.email);
   }
 
 }

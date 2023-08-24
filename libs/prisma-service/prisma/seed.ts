@@ -103,7 +103,7 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
 const createLedger = async (): Promise<void> => {
     try {
         const { ledgerData } = JSON.parse(configData);
-        const createLedger = await prisma.ledgers.create({
+        const createLedger = await prisma.ledgers.createMany({
             data: ledgerData
         });
 

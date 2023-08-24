@@ -185,7 +185,6 @@ export class UserService {
           throw new InternalServerErrorException(supaUser.error?.message);
         }
 
-        
         const supaId = supaUser.data?.user?.id;
 
            await this.userRepository.updateUserDetails(
@@ -325,7 +324,7 @@ export class UserService {
       password
     });
 
-    this.logger.error(`Supa Login Error::`, error);
+    this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
     if (error) {
       throw new BadRequestException(error?.message);

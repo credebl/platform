@@ -9,17 +9,33 @@ CREATE TABLE "user" (
     "lastName" VARCHAR(500),
     "email" VARCHAR(500),
     "username" VARCHAR(500),
-    "password" VARCHAR(500),
     "verificationCode" VARCHAR(500),
     "isEmailVerified" BOOLEAN NOT NULL DEFAULT false,
-    "keycloakUserId" VARCHAR(500),
+    "supabaseUserId" VARCHAR(500),
     "clientId" VARCHAR(500),
     "clientSecret" VARCHAR(500),
-    "profileImg" VARCHAR(1000),
+    "profileImg" TEXT,
     "fidoUserId" VARCHAR(1000),
     "isFidoVerified" BOOLEAN NOT NULL DEFAULT false,
+    "publicProfile" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_activity" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "orgId" INTEGER NOT NULL,
+    "action" TEXT NOT NULL,
+    "details" TEXT NOT NULL,
+    "createDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdBy" INTEGER NOT NULL DEFAULT 1,
+    "lastChangedDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastChangedBy" INTEGER NOT NULL DEFAULT 1,
+    "deletedAt" TIMESTAMP(6),
+
+    CONSTRAINT "user_activity_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -55,8 +71,10 @@ CREATE TABLE "organisation" (
     "lastChangedBy" INTEGER NOT NULL DEFAULT 1,
     "name" VARCHAR(500),
     "description" VARCHAR(500),
+    "orgSlug" TEXT,
     "logoUrl" TEXT,
     "website" VARCHAR,
+    "publicProfile" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "organisation_pkey" PRIMARY KEY ("id")
 );
@@ -133,7 +151,8 @@ CREATE TABLE "org_agents" (
     "apiKey" TEXT,
     "agentsTypeId" INTEGER NOT NULL,
     "orgId" INTEGER NOT NULL,
-    "orgAgentTypeId" INTEGER NOT NULL
+    "orgAgentTypeId" INTEGER NOT NULL,
+    "ledgerId" INTEGER
 );
 
 -- CreateTable
@@ -195,7 +214,7 @@ CREATE TABLE "schema" (
     "lastChangedBy" INTEGER NOT NULL DEFAULT 1,
     "name" VARCHAR NOT NULL,
     "version" VARCHAR NOT NULL,
-    "attributes" TEXT[],
+    "attributes" TEXT NOT NULL,
     "schemaLedgerId" VARCHAR NOT NULL,
     "publisherDid" VARCHAR NOT NULL,
     "ledgerId" INTEGER NOT NULL DEFAULT 1,
@@ -300,6 +319,9 @@ CREATE UNIQUE INDEX "UQ_e12875dfb3b1d92d7d7c5377e22" ON "user"("email");
 CREATE UNIQUE INDEX "org_roles_name_key" ON "org_roles"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "organisation_orgSlug_key" ON "organisation"("orgSlug");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "UQ_7c903f5e362fe8fd3d3edba17b5" ON "user_devices"("credentialId");
 
 -- CreateIndex
@@ -327,6 +349,12 @@ CREATE UNIQUE INDEX "presentations_id_key" ON "presentations"("id");
 CREATE UNIQUE INDEX "presentations_connectionId_key" ON "presentations"("connectionId");
 
 -- AddForeignKey
+ALTER TABLE "user_activity" ADD CONSTRAINT "user_activity_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_activity" ADD CONSTRAINT "user_activity_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "user_org_roles" ADD CONSTRAINT "user_org_roles_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -343,6 +371,9 @@ ALTER TABLE "org_invitations" ADD CONSTRAINT "org_invitations_orgId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "user_devices" ADD CONSTRAINT "FK_e12ac4f8016243ac71fd2e415af" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "org_agents" ADD CONSTRAINT "org_agents_ledgerId_fkey" FOREIGN KEY ("ledgerId") REFERENCES "ledgers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "org_agents" ADD CONSTRAINT "org_agents_agentsTypeId_fkey" FOREIGN KEY ("agentsTypeId") REFERENCES "agents_type"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -370,4 +401,3 @@ ALTER TABLE "credentials" ADD CONSTRAINT "credentials_orgId_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "presentations" ADD CONSTRAINT "presentations_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-

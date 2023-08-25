@@ -1,5 +1,3 @@
-import * as bcrypt from 'bcrypt';
-
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { InternalServerErrorException } from '@nestjs/common';
@@ -34,7 +32,6 @@ export class FidoUserRepository {
           email: createUserDto.email,
           firstName: createUserDto.firstName,
           lastName: createUserDto.lastName,
-          password: await bcrypt.hash(createUserDto.password, 10),
           verificationCode: verifyCode
         }
       });

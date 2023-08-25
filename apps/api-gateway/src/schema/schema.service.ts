@@ -36,18 +36,6 @@ export class SchemaService extends BaseService {
     }
   }
 
-  getSchemaBySchemaId(schemaId: string, orgId: number): Promise<{
-    response: object;
-  }> {
-    try {
-      const payload = { schemaId, orgId };
-      return this.sendNats(this.schemaServiceProxy, 'get-schema-by-schema-id', payload);
-    } catch (error) {
-      throw new RpcException(error.response);
-
-    }
-  }
-
   getSchemas(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface, orgId: number): Promise<{
     response: object;
   }> {

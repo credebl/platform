@@ -1,10 +1,10 @@
 /* eslint-disable prefer-destructuring */
 
-import * as bcrypt from 'bcrypt';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 // eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -136,23 +136,22 @@ export class UserRepository {
    * @param id
    * @returns User data
    */
-  async getUserByKeycloakId(id: string): Promise<object> {
+  async getUserBySupabaseId(id: string): Promise<object> {
     try {
       return this.prisma.user.findFirst({
         where: {
-          keycloakUserId: id
+          supabaseUserId: id
         },
         select: {
           id: true,
           username: true,
-          password: false,
           email: true,
           firstName: true,
           lastName: true,
           isEmailVerified: true,
           clientId: true,
           clientSecret: true,
-          keycloakUserId: true,
+          supabaseUserId: true,
           userOrgRoles: {
             include: {
               orgRole: true,
@@ -195,7 +194,6 @@ export class UserRepository {
       select: {
         id: true,
         username: true,
-        password: false,
         email: true,
         firstName: true,
         lastName: true,
@@ -204,7 +202,7 @@ export class UserRepository {
         isEmailVerified: true,
         clientId: true,
         clientSecret: true,
-        keycloakUserId: true,
+        supabaseUserId: true,
         userOrgRoles: {
           include: {
             orgRole: true,
@@ -241,7 +239,6 @@ export class UserRepository {
       select: {
         id: true,
         username: true,
-        password: false,
         email: true,
         firstName: true,
         lastName: true,
@@ -274,7 +271,7 @@ export class UserRepository {
    * @returns Updates organization details
    */
   // eslint-disable-next-line camelcase
-  async updateUserDetails(id: number, keycloakUserId: string): Promise<user> {
+  async updateUserDetails(id: number, supabaseUserId: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
@@ -282,7 +279,7 @@ export class UserRepository {
         },
         data: {
           isEmailVerified: true,
-          keycloakUserId
+          supabaseUserId
         }
       });
       return updateUserDetails;
@@ -306,8 +303,7 @@ export class UserRepository {
         },
         data: {
           firstName: userInfo.firstName,
-          lastName: userInfo.lastName,
-          password: await bcrypt.hash(userInfo.password, 10)
+          lastName: userInfo.lastName
         }
       });
       return updateUserDetails;
@@ -333,14 +329,13 @@ export class UserRepository {
         select: {
           id: true,
           username: true,
-          password: false,
           email: true,
           firstName: true,
           lastName: true,
           isEmailVerified: true,
           clientId: true,
           clientSecret: true,
-          keycloakUserId: true,
+          supabaseUserId: true,
           userOrgRoles: {
             where: {
               ...filterOptions
@@ -399,14 +394,13 @@ export class UserRepository {
           select: {
             id: true,
             username: true,
-            password: false,
             email: true,
             firstName: true,
             lastName: true,
             isEmailVerified: true,
             clientId: false,
             clientSecret: false,
-            keycloakUserId: false
+            supabaseUserId: false
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,

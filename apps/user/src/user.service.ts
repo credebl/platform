@@ -1,4 +1,3 @@
-import * as bcrypt from 'bcrypt';
 
 import {
   BadRequestException,
@@ -31,6 +30,7 @@ import { HttpException } from '@nestjs/common';
 import { InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
+import { SupabaseService } from '@credebl/supabase';
 
 
 @Injectable()
@@ -38,6 +38,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly clientRegistrationService: ClientRegistrationService,
+    private readonly supabaseService: SupabaseService,
     private readonly commonService: CommonService,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
@@ -106,7 +107,7 @@ export class UserService {
       }
 
     } catch (error) {
-      this.logger.error(`error in create keycloak user: ${JSON.stringify(error)}`);
+      this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error.message);
     }
   }
@@ -148,13 +149,8 @@ export class UserService {
     }
   }
 
-  /**
-  *
-  * @param param email, verification code
-  * @returns Email verification succcess
-  */
 
-  async createUserInKeyCloak(email: string, userInfo: userInfo): Promise<string> {
+  async createUserForToken(email: string, userInfo: userInfo): Promise<string> {
     try {
       if (!email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
@@ -163,7 +159,7 @@ export class UserService {
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
-      if (checkUserDetails.keycloakUserId) {
+      if (checkUserDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
       if (false === checkUserDetails.isEmailVerified) {
@@ -178,13 +174,20 @@ export class UserService {
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
-      const clientManagementToken = await this.clientRegistrationService.getManagementToken();
+      const supaUser = await this.supabaseService.getClient().auth.signUp({
+        email,
+        password: userInfo.password
+      });
 
-      const keycloakDetails = await this.keycloakUserRegistration(userDetails, clientManagementToken);
+      if (supaUser.error) {
+        throw new InternalServerErrorException(supaUser.error?.message);
+      }
+
+      const supaId = supaUser.data?.user?.id;
 
       await this.userRepository.updateUserDetails(
         userDetails.id,
-        keycloakDetails
+        supaId.toString()
       );
 
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
@@ -192,79 +195,11 @@ export class UserService {
 
       return 'User created successfully';
     } catch (error) {
-      this.logger.error(`error in create keycloak user: ${JSON.stringify(error)}`);
+      this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }
 
-  /**
-   *
-   * @param userName
-   * @param clientToken
-   * @returns Keycloak client details
-   */
-  async keycloakClienGenerate(userName: string, clientToken: string): Promise<{ clientId; clientSecret }> {
-    try {
-      const userClient = await this.clientRegistrationService.createClient(userName, clientToken);
-
-      return userClient;
-    } catch (error) {
-      this.logger.error(`error in keycloakClienGenerate: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  /**
-   *
-   * @param keycloakUserRegestrationDto
-   * @returns Email verification succcess
-   */
-
-  async keycloakUserRegistration(userDetails: user, clientToken: string): Promise<string> {
-    const keycloakRegistrationPayload = {
-      email: userDetails.email,
-      firstName: userDetails.firstName,
-      lastName: userDetails.lastName,
-      username: userDetails.username,
-      enabled: true,
-      totp: true,
-      emailVerified: true,
-      notBefore: 0,
-      credentials: [
-        {
-          type: 'password',
-          value: `${userDetails.password}`,
-          temporary: false
-        }
-      ],
-      access: {
-        manageGroupMembership: true,
-        view: true,
-        mapRoles: true,
-        impersonate: true,
-        manage: true
-      },
-      realmRoles: ['user', 'offline_access'],
-      attributes: {
-        uid: [],
-        homedir: [],
-        shell: []
-      }
-    };
-
-    try {
-      const createUserResponse = await this.clientRegistrationService.registerKeycloakUser(
-        keycloakRegistrationPayload,
-        process.env.KEYCLOAK_CREDEBL_REALM,
-        clientToken
-      );
-
-      return createUserResponse?.keycloakUserId;
-    } catch (error) {
-      this.logger.error(`error in keycloakUserRegistration: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
 
   /**
    *
@@ -290,26 +225,39 @@ export class UserService {
       }
 
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-        //Get user token from keycloak
-        const token = await this.clientRegistrationService.getUserToken(email, userData.password);
-        return token;
+
+        return this.generateToken(email, password);
+
       }
 
-      const comparePassword = await bcrypt.compare(password, userData.password);
-
-      if (!comparePassword) {
-        this.logger.error(`Password Is wrong`);
-        throw new BadRequestException(ResponseMessages.user.error.invalidCredentials);
-      }
-
-      //Get user token from kelycloak
-      const token = await this.clientRegistrationService.getUserToken(email, userData.password);
-      return token;
+      return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }
+
+  async generateToken(email: string, password: string): Promise<object> {
+    const supaInstance = await this.supabaseService.getClient();
+
+    this.logger.error(`supaInstance::`, supaInstance);
+
+    const { data, error } = await supaInstance.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+
+    if (error) {
+      throw new BadRequestException(error?.message);
+    }
+
+    const token = data?.session;
+
+    return token;
+  }
+
 
   async getProfile(payload: { id }): Promise<object> {
     try {
@@ -323,7 +271,7 @@ export class UserService {
   async getPublicProfile(payload: { id }): Promise<object> {
     try {
       const userProfile = await this.userRepository.getUserPublicProfile(payload.id);
-      
+
       if (!userProfile) {
         throw new NotFoundException(ResponseMessages.user.error.profileNotFound);
       }
@@ -346,9 +294,18 @@ export class UserService {
 
   async findByKeycloakId(payload: { id }): Promise<object> {
     try {
-      return this.userRepository.getUserByKeycloakId(payload.id);
+      return this.userRepository.getUserBySupabaseId(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async findSupabaseUser(payload: { id }): Promise<object> {
+    try {
+      return this.userRepository.getUserBySupabaseId(payload.id);
+    } catch (error) {
+      this.logger.error(`Error in findSupabaseUser: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
     }
   }
@@ -515,12 +472,12 @@ export class UserService {
     }
   }
 
-   /**
-   * 
-   * @param orgId 
-   * @returns users list
-   */
-   async get(pageNumber: number, pageSize: number, search: string): Promise<object> {
+  /**
+  * 
+  * @param orgId 
+  * @returns users list
+  */
+  async get(pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
       const query = {
         OR: [
@@ -543,7 +500,7 @@ export class UserService {
       if (userDetails && !userDetails.isEmailVerified) {
 
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
-      } else if (userDetails && userDetails.keycloakUserId) {
+      } else if (userDetails && userDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return 'New User';
@@ -551,7 +508,7 @@ export class UserService {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isKeycloak: null !== userDetails.keycloakUserId && undefined !== userDetails.keycloakUserId
+          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
         };
         return userVerificationDetails;
       }
@@ -566,7 +523,7 @@ export class UserService {
   async getUserActivity(userId: number, limit: number): Promise<object[]> {
     try {
 
-      return this.userActivityService.getUserActivity(userId, limit);   
+      return this.userActivityService.getUserActivity(userId, limit);
 
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);

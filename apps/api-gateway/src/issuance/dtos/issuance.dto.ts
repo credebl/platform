@@ -16,7 +16,7 @@ export class IssueCredentialDto {
     attributes: attribute[];
 
     @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid credentialDefinitionId' })
+    @IsNotEmpty({ message: 'Please provide valid credential definition id' })
     @IsString({ message: 'credentialDefinitionId should be string' })
     credentialDefinitionId: string;
 
@@ -27,19 +27,19 @@ export class IssueCredentialDto {
     comment: string;
 
     @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
-    @IsNotEmpty({ message: 'Please provide valid connectionId' })
+    @IsNotEmpty({ message: 'Please provide valid connection id' })
     @IsString({ message: 'connectionId should be string' })
     connectionId: string;
 
     @ApiProperty({ example: 'v1' })
     @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid protocol-version' })
-    @IsString({ message: 'protocol-version should be string' })
+    @IsNotEmpty({ message: 'Please provide valid protocol version' })
+    @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
 
     @ApiProperty()
     @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
+    @IsNotEmpty({ message: 'please provide org Id' })
     orgId: number;
 }
 
@@ -108,7 +108,7 @@ export class CredentialAttributes {
 export class OutOfBandCredentialDto {
 
     @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid emailId' })
+    @IsNotEmpty({ message: 'Please provide valid email Id' })
     @Transform(({ value }) => trim(value))
     @Transform(({ value }) => toLowerCase(value))
     @IsNotEmpty({ message: 'Email is required.' })
@@ -122,8 +122,8 @@ export class OutOfBandCredentialDto {
     attributes: attribute[];
 
     @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid credentialDefinitionId' })
-    @IsString({ message: 'credentialDefinitionId should be string' })
+    @IsNotEmpty({ message: 'Please provide valid credential definition id' })
+    @IsString({ message: 'credential definition id should be string' })
     credentialDefinitionId: string;
 
     @ApiProperty({ example: 'string' })
@@ -134,12 +134,12 @@ export class OutOfBandCredentialDto {
 
     @ApiProperty({ example: 'v1' })
     @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid protocol-version' })
-    @IsString({ message: 'protocol-version should be string' })
+    @IsNotEmpty({ message: 'Please provide valid protocol version' })
+    @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
 
     @ApiProperty()
     @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
+    @IsNotEmpty({ message: 'please provide org Id' })
     orgId: number;
 }

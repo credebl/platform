@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { BadRequestException, HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IWebhookProofPresentation } from './interfaces/verification.interface';
@@ -8,6 +8,11 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { presentations } from '@prisma/client';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import * as QRCode from 'qrcode';
+import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import * as uuid from 'uuid';
 
 @Injectable()
 export class VerificationService {
@@ -152,8 +157,6 @@ export class VerificationService {
    */
   async sendProofRequest(requestProof: IRequestProof): Promise<string> {
     try {
-      let requestedAttributes = {};
-      const requestedPredicates = {};
       const comment = requestProof.comment ? requestProof.comment : '';
 
       let proofRequestPayload: ISendProofRequestPayload = {
@@ -171,73 +174,7 @@ export class VerificationService {
         autoAcceptProof: ''
       };
 
-      const attributeWithSchemaIdExists = requestProof.attributes.some(attribute => attribute.schemaId);
-      if (attributeWithSchemaIdExists) {
-        requestedAttributes = Object.fromEntries(requestProof.attributes.map((attribute, index) => {
-
-          const attributeElement = attribute.attributeName;
-          const attributeReferent = `additionalProp${index + 1}`;
-
-          if (!attribute.condition && !attribute.value) {
-            const keys = Object.keys(requestedAttributes);
-            
-            if (0 < keys.length) {
-              let attributeFound = false;
-
-              for (const attr of keys) {
-                if (
-                  requestedAttributes[attr].restrictions.some(res => res.schema_id) ===
-                  requestProof.attributes[index].schemaId
-                ) {
-                  requestedAttributes[attr].name.push(attributeElement);
-                  attributeFound = true;
-                }
-
-                if (attr === keys[keys.length - 1] && !attributeFound) {
-                  requestedAttributes[attributeReferent] = {
-                    name: attributeElement,
-                    restrictions: [
-                      {
-                        cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                        schema_id: requestProof.attributes[index].schemaId
-                      }
-                    ]
-                  };
-                }
-              }
-            } else {
-              return [
-                attributeReferent,
-                {
-                  name: attributeElement,
-                  restrictions: [
-                    {
-                      cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                      schema_id: requestProof.attributes[index].schemaId
-                    }
-                  ]
-                }
-              ];
-            }
-          } else {
-            requestedPredicates[attributeReferent] = {
-              p_type: attribute.condition,
-              restrictions: [
-                {
-                  cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                  schema_id: requestProof.attributes[index].schemaId
-                }
-              ],
-              name: attributeElement,
-              p_value: parseInt(attribute.value)
-            };
-          }
-
-          return [attributeReferent, null];
-        }));
-      } else {
-        throw new BadRequestException(ResponseMessages.verification.error.schemaIdNotFound);
-      }
+      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
 
       proofRequestPayload = {
         protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
@@ -302,7 +239,7 @@ export class VerificationService {
             }, error.error);
         });
     } catch (error) {
-      this.logger.error(`[_verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
+      this.logger.error(`[_sendProofRequest] - error in verify presentation : ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -378,6 +315,248 @@ export class VerificationService {
   }
 
   /**
+   * Request out-of-band proof presentation
+   * @param outOfBandRequestProof 
+   * @returns Get requested proof presentation details
+   */
+  async sendOutOfBandPresentationRequest(outOfBandRequestProof: IRequestProof): Promise<boolean> {
+    try {
+      const comment = outOfBandRequestProof.comment ? outOfBandRequestProof.comment : '';
+
+      let proofRequestPayload: ISendProofRequestPayload = {
+        protocolVersion: '',
+        comment: '',
+        proofFormats: {
+          indy: {
+            name: '',
+            requested_attributes: {},
+            requested_predicates: {},
+            version: ''
+          }
+        },
+        autoAcceptProof: ''
+      };
+
+      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
+
+      proofRequestPayload = {
+        protocolVersion: outOfBandRequestProof.protocolVersion ? outOfBandRequestProof.protocolVersion : 'v1',
+        comment,
+        proofFormats: {
+          indy: {
+            name: 'Proof Request',
+            version: '1.0',
+            // eslint-disable-next-line camelcase
+            requested_attributes: requestedAttributes,
+            // eslint-disable-next-line camelcase
+            requested_predicates: requestedPredicates
+          }
+        },
+        autoAcceptProof: outOfBandRequestProof.autoAcceptProof ? outOfBandRequestProof.autoAcceptProof : 'never'
+      };
+
+      const getAgentDetails = await this.verificationRepository.getAgentEndPoint(outOfBandRequestProof.orgId);
+      const organizationDetails = await this.verificationRepository.getOrganization(outOfBandRequestProof.orgId);
+
+      const verificationMethodLabel = 'create-request-out-of-band';
+      const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
+
+      const payload = { apiKey: '', url, proofRequestPayload };
+
+      const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
+
+      if (!getProofPresentation) {
+        throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
+      }
+
+      const invitationId = getProofPresentation?.response?.invitation['@id'];
+
+      if (!invitationId) {
+        throw new NotFoundException(ResponseMessages.verification.error.invitationNotFound);
+      }
+
+      let shortenedUrl;
+      if (getAgentDetails?.tenantId) {
+        shortenedUrl = `${getAgentDetails?.agentEndPoint}/multi-tenancy/url/${getAgentDetails?.tenantId}/${invitationId}`;
+      } else {
+        shortenedUrl = `${getAgentDetails?.agentEndPoint}/url/${invitationId}`;
+      }
+
+      const uniqueCID = uuid.v4();
+
+      const qrCodeOptions: QRCode.QRCodeToDataURLOptions = {
+        type: 'image/png'
+      };
+
+      const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
+      const platformConfigData = await this.verificationRepository.getPlatformConfigDetails();
+
+      if (!platformConfigData) {
+        throw new NotFoundException(ResponseMessages.verification.error.platformConfigNotFound);
+      }
+
+      const outOfBandVerification = new OutOfBandVerification();
+      const emailData = new EmailDto();
+      emailData.emailFrom = platformConfigData.emailFrom;
+      emailData.emailTo = outOfBandRequestProof.emailId;
+      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials Required`;
+      emailData.emailHtml = await outOfBandVerification.outOfBandVerification(outOfBandRequestProof.emailId, uniqueCID, organizationDetails.name);
+      emailData.emailAttachments = [
+        {
+          filename: 'qrcode.png',
+          content: outOfBandIssuanceQrCode.split(';base64,')[1],
+          contentType: 'image/png',
+          disposition: 'attachment'
+        }
+      ];
+      const isEmailSent = await sendEmail(emailData);
+
+      if (isEmailSent) {
+        return isEmailSent;
+      } else {
+        throw new InternalServerErrorException(ResponseMessages.verification.error.emailSend);
+      }
+
+    } catch (error) {
+      this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+  /**
+   * Consume agent API for request out-of-band proof presentation
+   * @param payload 
+   * @returns Get requested proof presentation details
+   */
+  async _sendOutOfBandProofRequest(payload: IProofRequestPayload): Promise<{
+    response;
+  }> {
+    try {
+
+      const pattern = {
+        cmd: 'agent-send-out-of-band-proof-request'
+      };
+
+      return this.verificationServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`[_sendOutOfBandProofRequest] - error in Out Of Band Presentation : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async _proofRequestPayload(proofRequestpayload: IRequestProof): Promise<{
+    requestedAttributes;
+    requestedPredicates;
+  }> {
+    try {
+      let requestedAttributes = {};
+      const requestedPredicates = {};
+
+      const attributeWithSchemaIdExists = proofRequestpayload.attributes.some(attribute => attribute.schemaId);
+      if (attributeWithSchemaIdExists) {
+
+        requestedAttributes = {};
+        for (const [index, attribute] of proofRequestpayload.attributes.entries()) {
+          const attributeElement = attribute.attributeName;
+          const attributeReferent = `additionalProp${index + 1}`;
+
+          if (!attribute.condition && !attribute.value) {
+            const keys = Object.keys(requestedAttributes);
+
+            if (0 < keys.length) {
+              let attributeFound = false;
+
+              for (const attr of keys) {
+                if (
+                  requestedAttributes[attr].restrictions.some(
+                    res => res.schema_id === proofRequestpayload.attributes[index].schemaId
+                  )
+                ) {
+                  requestedAttributes[attr].name.push(attributeElement);
+                  attributeFound = true;
+                }
+
+                if (attr === keys[keys.length - 1] && !attributeFound) {
+                  requestedAttributes[attributeReferent] = {
+                    name: attributeElement,
+                    restrictions: [
+                      {
+                        cred_def_id: proofRequestpayload.attributes[index].credDefId
+                          ? proofRequestpayload.attributes[index].credDefId
+                          : undefined,
+                        schema_id: proofRequestpayload.attributes[index].schemaId
+                      }
+                    ]
+                  };
+                }
+              }
+            } else {
+              requestedAttributes[attributeReferent] = {
+                name: attributeElement,
+                restrictions: [
+                  {
+                    cred_def_id: proofRequestpayload.attributes[index].credDefId
+                      ? proofRequestpayload.attributes[index].credDefId
+                      : undefined,
+                    schema_id: proofRequestpayload.attributes[index].schemaId
+                  }
+                ]
+              };
+            }
+          } else {
+            if (isNaN(parseInt(attribute.value))) {
+              throw new BadRequestException(
+                ResponseMessages.verification.error.predicatesValueNotNumber
+              );
+            }
+
+            requestedPredicates[attributeReferent] = {
+              p_type: attribute.condition,
+              restrictions: [
+                {
+                  cred_def_id: proofRequestpayload.attributes[index].credDefId
+                    ? proofRequestpayload.attributes[index].credDefId
+                    : undefined,
+                  schema_id: proofRequestpayload.attributes[index].schemaId
+                }
+              ],
+              name: attributeElement,
+              p_value: parseInt(attribute.value)
+            };
+          }
+        }
+
+        return {
+          requestedAttributes,
+          requestedPredicates
+        };
+      } else {
+        throw new BadRequestException(
+          ResponseMessages.verification.error.schemaIdNotFound
+        );
+      }
+    } catch (error) {
+      this.logger.error(`[proofRequestPayload] - error in proof request payload : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+  /**
   * Description: Fetch agent url 
   * @param referenceId 
   * @returns agent URL
@@ -430,6 +609,15 @@ export class VerificationService {
             ? `${agentEndPoint}${CommonConstants.URL_VERIFY_PRESENTATION}`.replace('#', proofPresentationId)
             : orgAgentTypeId === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_ACCEPT_PRESENTATION}`.replace('@', proofPresentationId).replace('#', tenantId)
+              : null;
+          break;
+        }
+
+        case 'create-request-out-of-band': {
+          url = orgAgentTypeId === OrgAgentType.DEDICATED
+            ? `${agentEndPoint}${CommonConstants.URL_SEND_OUT_OF_BAND_CREATE_REQUEST}`
+            : orgAgentTypeId === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST}`.replace('#', tenantId)
               : null;
           break;
         }

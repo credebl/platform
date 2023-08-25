@@ -96,4 +96,9 @@ export class AgentServiceController {
   async getAgentHealth(payload: { user: user, orgId: number }): Promise<object> {
     return this.agentServiceService.getAgentHealthDetails(payload.orgId);
   }
+
+  @MessagePattern({ cmd: 'agent-send-out-of-band-proof-request' })
+  async sendOutOfBandProofRequest(payload: { proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string }): Promise<object> {
+    return this.agentServiceService.sendOutOfBandProofRequest(payload.proofRequestPayload, payload.url, payload.apiKey);
+  }
 }

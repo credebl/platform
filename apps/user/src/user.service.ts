@@ -1,8 +1,6 @@
-import * as bcrypt from 'bcrypt';
 
 import {
   BadRequestException,
-  // BadRequestException,
   ConflictException,
   Injectable,
   Logger,
@@ -175,18 +173,18 @@ export class UserService {
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
-        const supaUser = await this.supabaseService.getClient().auth.signUp({
-          email,
-          password: userInfo.password
-        });
+      const supaUser = await this.supabaseService.getClient().auth.signUp({
+        email,
+        password: userInfo.password
+      });
 
-        if (supaUser.error) {
-          throw new InternalServerErrorException(supaUser.error?.message);
-        }
+      if (supaUser.error) {
+        throw new InternalServerErrorException(supaUser.error?.message);
+      }
 
-        const supaId = supaUser.data?.user?.id;
+      const supaId = supaUser.data?.user?.id;
 
-           await this.userRepository.updateUserDetails(
+      await this.userRepository.updateUserDetails(
         userDetails.id,
         supaId.toString()
       );
@@ -201,74 +199,6 @@ export class UserService {
     }
   }
 
-  /**
-   *
-   * @param userName
-   * @param clientToken
-   * @returns Keycloak client details
-   */
-  async keycloakClienGenerate(userName: string, clientToken: string): Promise<{ clientId; clientSecret }> {
-    try {
-      const userClient = await this.clientRegistrationService.createClient(userName, clientToken);
-
-      return userClient;
-    } catch (error) {
-      this.logger.error(`error in keycloakClienGenerate: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  /**
-   *
-   * @param keycloakUserRegestrationDto
-   * @returns Email verification succcess
-   */
-
-  async keycloakUserRegistration(userDetails: user, clientToken: string): Promise<string> {
-    const keycloakRegistrationPayload = {
-      email: userDetails.email,
-      firstName: userDetails.firstName,
-      lastName: userDetails.lastName,
-      username: userDetails.username,
-      enabled: true,
-      totp: true,
-      emailVerified: true,
-      notBefore: 0,
-      credentials: [
-        {
-          type: 'password',
-          value: `${userDetails.password}`,
-          temporary: false
-        }
-      ],
-      access: {
-        manageGroupMembership: true,
-        view: true,
-        mapRoles: true,
-        impersonate: true,
-        manage: true
-      },
-      realmRoles: ['user', 'offline_access'],
-      attributes: {
-        uid: [],
-        homedir: [],
-        shell: []
-      }
-    };
-
-    try {
-      const createUserResponse = await this.clientRegistrationService.registerKeycloakUser(
-        keycloakRegistrationPayload,
-        process.env.KEYCLOAK_CREDEBL_REALM,
-        clientToken
-      );
-
-      return createUserResponse?.keycloakUserId;
-    } catch (error) {
-      this.logger.error(`error in keycloakUserRegistration: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
 
   /**
    *
@@ -297,13 +227,6 @@ export class UserService {
 
         return this.generateToken(email, password);
 
-      }
-
-      const comparePassword = await bcrypt.compare(password, userData.password);
-
-      if (!comparePassword) {
-        this.logger.error(`Password Is wrong`);
-        throw new BadRequestException(ResponseMessages.user.error.invalidCredentials);
       }
 
       return this.generateToken(email, password);
@@ -355,7 +278,7 @@ export class UserService {
   async getPublicProfile(payload: { id }): Promise<object> {
     try {
       const userProfile = await this.userRepository.getUserPublicProfile(payload.id);
-      
+
       if (!userProfile) {
         throw new NotFoundException(ResponseMessages.user.error.profileNotFound);
       }
@@ -547,12 +470,12 @@ export class UserService {
     }
   }
 
-   /**
-   * 
-   * @param orgId 
-   * @returns users list
-   */
-   async get(pageNumber: number, pageSize: number, search: string): Promise<object> {
+  /**
+  * 
+  * @param orgId 
+  * @returns users list
+  */
+  async get(pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
       const query = {
         OR: [
@@ -583,7 +506,7 @@ export class UserService {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isKeycloak: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
+          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
         };
         return userVerificationDetails;
       }
@@ -598,7 +521,7 @@ export class UserService {
   async getUserActivity(userId: number, limit: number): Promise<object[]> {
     try {
 
-      return this.userActivityService.getUserActivity(userId, limit);   
+      return this.userActivityService.getUserActivity(userId, limit);
 
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);

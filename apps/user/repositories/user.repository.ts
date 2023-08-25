@@ -1,7 +1,5 @@
 /* eslint-disable prefer-destructuring */
 
-import * as bcrypt from 'bcrypt';
-
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 
@@ -172,7 +170,6 @@ export class UserRepository {
         select: {
           id: true,
           username: true,
-          password: false,
           email: true,
           firstName: true,
           lastName: true,
@@ -222,7 +219,6 @@ export class UserRepository {
       select: {
         id: true,
         username: true,
-        password: false,
         email: true,
         firstName: true,
         lastName: true,
@@ -267,7 +263,6 @@ export class UserRepository {
       select: {
         id: true,
         username: true,
-        password: false,
         email: true,
         firstName: true,
         lastName: true,
@@ -332,8 +327,7 @@ export class UserRepository {
         },
         data: {
           firstName: userInfo.firstName,
-          lastName: userInfo.lastName,
-          password: await bcrypt.hash(userInfo.password, 10)
+          lastName: userInfo.lastName
         }
       });
       return updateUserDetails;
@@ -359,7 +353,6 @@ export class UserRepository {
         select: {
           id: true,
           username: true,
-          password: false,
           email: true,
           firstName: true,
           lastName: true,
@@ -425,7 +418,6 @@ export class UserRepository {
           select: {
             id: true,
             username: true,
-            password: false,
             email: true,
             firstName: true,
             lastName: true,

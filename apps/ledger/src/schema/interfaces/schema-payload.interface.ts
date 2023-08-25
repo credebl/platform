@@ -60,6 +60,6 @@ export interface ISchemaCredDeffSearchInterface {
     schemaId: string;
     schemaSearchCriteria?: ISchemaSearchCriteria,
     user: IUserRequestInterface,
-    orgId: number
+    orgId?: number
 }
 

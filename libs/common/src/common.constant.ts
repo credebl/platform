@@ -94,12 +94,14 @@ export enum CommonConstants {
   URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID = '/multi-tenancy/proofs/#/@',
   URL_SHAGENT_REQUEST_PROOF = '/multi-tenancy/proofs/request-proof/#',
   URL_SHAGENT_ACCEPT_PRESENTATION = '/multi-tenancy/proofs/@/accept-presentation/#',
+  URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST = '/multi-tenancy/proofs/create-request-oob/#',
 
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',
   URL_GET_PROOF_PRESENTATIONS = '/proofs',
   URL_GET_PROOF_PRESENTATION_BY_ID = '/proofs/#',
   URL_VERIFY_PRESENTATION = '/proofs/#/accept-presentation',
+  URL_SEND_OUT_OF_BAND_CREATE_REQUEST='/proofs/create-request-oob',
 
   // server or agent
   URL_SERVER_STATUS = '/status',

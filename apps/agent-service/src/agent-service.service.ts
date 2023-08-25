@@ -851,15 +851,27 @@ export class AgentServiceService {
       }
       if (orgAgentDetails.agentEndPoint) {
         const data = await this.commonService
-        .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'x-api-key': '' } })
-        .then(async response => response);
+          .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'x-api-key': '' } })
+          .then(async response => response);
         return data;
       } else {
-      throw new NotFoundException(ResponseMessages.agent.error.agentUrl);
-     }
-       
+        throw new NotFoundException(ResponseMessages.agent.error.agentUrl);
+      }
+
     } catch (error) {
       this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+  async sendOutOfBandProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
+    try {
+      const sendProofRequest = await this.commonService
+        .httpPost(url, proofRequestPayload, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
+      return sendProofRequest;
+    } catch (error) {
+      this.logger.error(`Error in send out of band proof request in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error);
     }
   }

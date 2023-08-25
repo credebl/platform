@@ -217,30 +217,30 @@ export class SchemaService extends BaseService {
 
   async getSchemaById(schemaId: string, orgId: number): Promise<schema> {
     try {
-      const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-      const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
-      const apiKey = '';
-      let schemaResponse;
-      if (1 === getAgentDetails.org_agents[0].orgAgentTypeId) {
-        const getSchemaPayload = {
-          schemaId,
-          apiKey,
-          agentEndPoint,
-          agentType: 1
-        };
-        schemaResponse = await this._getSchemaById(getSchemaPayload);
-      } else if (2 === getAgentDetails.org_agents[0].orgAgentTypeId) {
-        const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-        const getSchemaPayload = {
-          tenantId,
-          method: 'getSchemaById',
-          payload: { schemaId },
-          agentType: 2,
-          agentEndPoint
-        };
-        schemaResponse = await this._getSchemaById(getSchemaPayload);
-      }
-      return schemaResponse.response;
+        const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+        const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
+        const apiKey = '';
+        let schemaResponse;
+        if (1 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+          const getSchemaPayload = {
+            schemaId,
+            apiKey,
+            agentEndPoint,
+            agentType: 1
+          };
+          schemaResponse = await this._getSchemaById(getSchemaPayload);
+        } else if (2 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+          const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+          const getSchemaPayload = {
+            tenantId,
+            method: 'getSchemaById',
+            payload: { schemaId },
+            agentType: 2,
+            agentEndPoint
+          };
+          schemaResponse = await this._getSchemaById(getSchemaPayload);
+        }
+        return schemaResponse.response;
 
     } catch (error) {
       this.logger.error(`Error in getting schema by id: ${error}`);
@@ -273,24 +273,6 @@ export class SchemaService extends BaseService {
     } catch (error) {
       this.logger.error(`Error in getting schema : ${JSON.stringify(error)}`);
       throw error;
-    }
-  }
-
-  async getSchemaBySchemaId(schemaId: string, orgId: number): Promise<schema> {
-    try {
-
-      const getSchemaBySchemaId = await this.schemaRepository.getSchemaBySchemaId(schemaId, orgId);
-
-      if (!getSchemaBySchemaId) {
-        throw new NotFoundException('Schema not found.');
-      }
-
-      const attributesArray = JSON.parse((await getSchemaBySchemaId).attributes);
-      (await getSchemaBySchemaId).attributes = attributesArray;
-      return getSchemaBySchemaId;
-    } catch (error) {
-      this.logger.error(`Error in getting schema by id: ${error}`);
-      throw new RpcException(error.response);
     }
   }
 

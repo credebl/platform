@@ -35,7 +35,7 @@ export class GetAllSchemaDto {
     @IsNumber()
     @IsNotEmpty()
     @IsOptional()
-    orgId: number;
+    orgId?: number;
 }
 
 export class GetCredentialDefinitionBySchemaIdDto {

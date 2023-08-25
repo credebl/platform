@@ -54,13 +54,13 @@ export class RequestProof {
     @IsNotEmpty({ message: 'please provide orgId' })
     orgId: number;
 
-    @IsString({ message: 'autoAcceptProof must be in string' })
-    @IsNotEmpty({ message: 'please provide valid autoAcceptProof' })
+    @IsString({ message: 'auto accept proof must be in string' })
+    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()
     autoAcceptProof: string;
 
     @IsString({ message: 'protocolVersion must be in string' })
-    @IsNotEmpty({ message: 'please provide valid protocolVersion' })
+    @IsNotEmpty({ message: 'please provide valid protocol version' })
     @IsOptional()
     protocolVersion: string;
 }
@@ -101,12 +101,12 @@ export class OutOfBandRequestProof {
     orgId: number;
 
     @IsString({ message: 'autoAcceptProof must be in string' })
-    @IsNotEmpty({ message: 'please provide valid autoAcceptProof' })
+    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()
     autoAcceptProof: string;
 
-    @IsString({ message: 'protocolVersion must be in string' })
-    @IsNotEmpty({ message: 'please provide valid protocolVersion' })
+    @IsString({ message: 'protocol version must be in string' })
+    @IsNotEmpty({ message: 'please provide valid protocol version' })
     @IsOptional()
     protocolVersion: string;
 }

@@ -53,4 +53,9 @@ export class VerificationController {
   async webhookProofPresentation(payload: { id: string, proofPresentationPayload: IWebhookProofPresentation }): Promise<presentations> {
     return this.verificationService.webhookProofPresentation(payload.id, payload.proofPresentationPayload);
   }
+
+  @MessagePattern({ cmd: 'send-out-of-band-proof-request' })
+  async sendOutOfBandPresentationRequest(payload: { outOfBandRequestProof: IRequestProof, user: IUserRequest }): Promise<boolean> {
+    return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof);
+  }
 }

@@ -10,11 +10,12 @@ interface IProofRequestAttribute {
 
 export interface IRequestProof {
     orgId: number;
-    connectionId: string;
+    connectionId?: string;
     attributes: IProofRequestAttribute[];
     comment: string;
     autoAcceptProof: string;
     protocolVersion: string;
+    emailId?: string
 }
 
 export interface IGetAllProofPresentations {
@@ -68,7 +69,7 @@ interface IRequestedRestriction {
 export interface ISendProofRequestPayload {
     protocolVersion: string;
     comment: string;
-    connectionId: string;
+    connectionId?: string;
     proofFormats: IProofFormats;
     autoAcceptProof: string;
 }

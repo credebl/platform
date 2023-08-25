@@ -161,7 +161,12 @@ export const ResponseMessages = {
         error: {
             notFound: 'Organization agent not found',
             agentUrlNotFound: 'agent url not found',
-            schemaIdNotFound: 'Schema Id is required'
+            schemaIdNotFound: 'Schema Id is required',
+            predicatesValueNotNumber: 'The attribuite value is not a number',
+            proofPresentationNotFound: 'Proof presentation not found',
+            invitationNotFound: 'Invitation not found',
+            platformConfigNotFound: 'Platform config not found',
+            emailSend: 'Unable to send email to the user'
         }
     }
 };

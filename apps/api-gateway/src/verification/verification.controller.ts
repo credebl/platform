@@ -16,7 +16,7 @@ import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards,
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { RequestProof } from './dto/request-proof.dto';
+import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
 import { GetUser } from '../authz/decorators/get-user.decorator';
 import { VerificationService } from './verification.service';
 import IResponseType from '@credebl/common/interfaces/response.interface';
@@ -202,6 +202,38 @@ export class VerificationController {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.verification.success.fetch,
             data: webhookProofPresentation.response
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+    /**
+     * Out-Of-Band Proof Presentation
+     * @param user 
+     * @param outOfBandRequestProof 
+     * @returns Get out-of-band requested proof presentation details
+     */
+    @Post('/proofs/create-request-oob')
+    @ApiTags('verifications')
+    @ApiOperation({
+        summary: `Sends a out-of-band proof request`,
+        description: `Sends a out-of-band proof request`
+    })
+    @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiBody({ type: OutOfBandRequestProof })
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    async sendOutOfBandPresentationRequest(
+        @Res() res: Response,
+        @GetUser() user: IUserRequest,
+        @Body() outOfBandRequestProof: OutOfBandRequestProof
+    ): Promise<object> {
+        const sendProofRequest = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
+        const finalResponse: IResponseType = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.verification.success.fetch,
+            data: sendProofRequest.response
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

@@ -17,7 +17,6 @@ model user {
   lastName            String?           @db.VarChar(500)
   email               String?           @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar(500)
   username            String?           @db.VarChar(500)
-  password            String?           @db.VarChar(500)
   verificationCode    String?           @db.VarChar(500)
   isEmailVerified     Boolean           @default(false)
   supabaseUserId      String?           @db.VarChar(500)

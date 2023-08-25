@@ -12,7 +12,6 @@ import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-import * as uuid from 'uuid';
 
 @Injectable()
 export class VerificationService {
@@ -382,13 +381,11 @@ export class VerificationService {
         shortenedUrl = `${getAgentDetails?.agentEndPoint}/url/${invitationId}`;
       }
 
-      const uniqueCID = uuid.v4();
-
       const qrCodeOptions: QRCode.QRCodeToDataURLOptions = {
         type: 'image/png'
       };
 
-      const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
+      const outOfBandVerificationQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
       const platformConfigData = await this.verificationRepository.getPlatformConfigDetails();
 
       if (!platformConfigData) {
@@ -400,11 +397,11 @@ export class VerificationService {
       emailData.emailFrom = platformConfigData.emailFrom;
       emailData.emailTo = outOfBandRequestProof.emailId;
       emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials Required`;
-      emailData.emailHtml = await outOfBandVerification.outOfBandVerification(outOfBandRequestProof.emailId, uniqueCID, organizationDetails.name);
+      emailData.emailHtml = await outOfBandVerification.outOfBandVerification(outOfBandRequestProof.emailId, organizationDetails.name);
       emailData.emailAttachments = [
         {
           filename: 'qrcode.png',
-          content: outOfBandIssuanceQrCode.split(';base64,')[1],
+          content: outOfBandVerificationQrCode.split(';base64,')[1],
           contentType: 'image/png',
           disposition: 'attachment'
         }

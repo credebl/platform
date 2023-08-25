@@ -1,7 +1,6 @@
 export class OutOfBandIssuance {
 
-    public outOfBandIssuance(email: string, outOfBandIssuanceQrCode: string): string {
-        const year: number = new Date().getFullYear();
+    public outOfBandIssuance(email: string, orgName: string): string {
         try {
             return `<!DOCTYPE html>
             <html lang="en">
@@ -26,21 +25,17 @@ export class OutOfBandIssuance {
                             Hello ${email} ,
                         </p>
                         <p>
-                        Your user account ${email} has been successfully created on ${process.env.PLATFORM_NAME}. In order to enable access for your account,
-                         we need to verify your email address. Please use the link below or click on the “Verify” button to enable access to your account.
+                        The organization ${orgName} has requested your assistance in issuing your credentials. 
+                        We are delighted to notify you that a credential document has been successfully issued to you. To acknowledge and access the document, kindly proceed with the instructions outlined below:
+                            <ul>
+                                <li>Download the ADHAYA Wallet from the Play Store.</li>
+                                <li>Create an Account.</li>
+                                <li>Scan the QR code provided below.</li>
+                                <li>Accept the Credential Document request.</li>
+                                <li>Check your wallet to access the issued Credential Document.</li>
+                            </ul>
+                            Should you require any assistance or have questions, feel free to contact our dedicated support team.
                          </p>
-                        <p>Your issuance details,</p>
-                        <ul style="color:#005EFF; padding-left:10px; font-family: Montserrat;font-style: normal;
-                        font-weight: normal;font-size: 14px;line-height: 21px;">
-                            <li>Username/Email: ${email}</li>
-                          </p>
-                        </ul>
-                        <p style="display: block; text-align: center">
-                            <img src="${outOfBandIssuanceQrCode}" alt="QR Code">
-                        </p>
-                        <p>In case you need any assistance to access your account, please contact <a href="https://blockster.global"
-                                target="_blank">Blockster Labs</a>
-                        </p>
                         <hr style="border-top:1px solid #e8e8e8" />
                         <footer style="padding-top: 20px;">
                             <div>
@@ -51,7 +46,7 @@ export class OutOfBandIssuance {
                                         width="18" height="18" alt="t" style="color:#cccccc;"></a>
                             </div>
                             <p style="margin-top: 2px;">
-                                &reg; CREDEBL ${year}, Powered by Blockster Labs. All Rights Reserved.
+                                Best Regards,The CREDEBL Team
                             </p>
                         </footer>
                     </div>

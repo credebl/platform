@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { agent_invitations, credentials, org_agents, platform_config, shortening_url } from '@prisma/client';
+import { agent_invitations, credentials, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 @Injectable()
 export class IssuanceRepository {
 
@@ -135,6 +135,21 @@ export class IssuanceRepository {
 
         } catch (error) {
             this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`);
+            throw new InternalServerErrorException(error);
+        }
+    }
+
+    /**
+  * Get organization details
+  * @returns 
+  */
+    async getOrganization(orgId: number): Promise<organisation> {
+        try {
+
+            return this.prisma.organisation.findFirst({ where: { id: orgId } });
+
+        } catch (error) {
+            this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`);
             throw new InternalServerErrorException(error);
         }
     }

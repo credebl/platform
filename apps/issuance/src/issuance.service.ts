@@ -225,6 +225,7 @@ export class IssuanceService {
 
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
 
       const apiKey = agentDetails?.apiKey;
       const outOfBandIssuancePayload = {
@@ -245,7 +246,6 @@ export class IssuanceService {
       }
 
       const invitationId = credentialCreateOfferDetails?.response?.invitation['@id'];
-
       if (!invitationId) {
         throw new NotFoundException(ResponseMessages.issuance.error.invitationNotFound);
       }
@@ -257,7 +257,11 @@ export class IssuanceService {
         shortenedUrl = `${agentEndPoint}/url/${invitationId}`;
       }
 
-      const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenedUrl);
+      const qrCodeOptions: QRCode.QRCodeToDataURLOptions = {
+        type: 'image/png'
+      };
+
+      const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
       const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
 
       if (!platformConfigData) {
@@ -268,8 +272,17 @@ export class IssuanceService {
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData.emailFrom;
       emailData.emailTo = emailId;
-      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Email Verification`;
-      emailData.emailHtml = await outOfBandIssuance.outOfBandIssuance(emailId, outOfBandIssuanceQrCode);
+      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credentials Required`;
+      emailData.emailHtml = await outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name);
+      emailData.emailAttachments = [
+        {
+          filename: 'qrcode.png',
+          content: outOfBandIssuanceQrCode.split(';base64,')[1],
+          contentType: 'image/png',
+          disposition: 'attachment'
+        }
+      ];
+
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;

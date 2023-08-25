@@ -136,7 +136,7 @@ export class VerificationController {
         const sendProofRequest = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.fetch,
+            message: ResponseMessages.verification.success.create,
             data: sendProofRequest.response
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
@@ -232,7 +232,7 @@ export class VerificationController {
         const sendProofRequest = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.fetch,
+            message: ResponseMessages.verification.success.create,
             data: sendProofRequest.response
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);

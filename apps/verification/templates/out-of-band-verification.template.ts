@@ -1,6 +1,6 @@
 export class OutOfBandVerification {
 
-    public outOfBandVerification(email: string, uniqueCID: string, orgName: string): string {
+    public outOfBandVerification(email: string, orgName: string): string {
         try {
             return `<!DOCTYPE html>
             <html lang="en">

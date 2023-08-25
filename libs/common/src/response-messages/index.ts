@@ -17,6 +17,7 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'User already exists',
+            profileNotFound: 'User public profile not found',
             verificationAlreadySent: 'The verification link has already been sent to your email address',
             emailSend: 'Unable to send email to the user',
             invalidEmailUrl: 'Invalid token or EmailId!',
@@ -37,6 +38,7 @@ export const ResponseMessages = {
         success: {
             create: 'Organization created successfully',
             update: 'Organization updated successfully',
+            fetchProfile: 'Organization profile fetched successfully',
             fetchOrgRoles: 'Organization roles fetched successfully',
             createInvitation: 'Organization invitations sent successfully',
             getInvitation: 'Organization invitations fetched successfully',
@@ -47,6 +49,7 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'An organization name is already exist',
+            profileNotFound: 'Organization public profile not found',
             rolesNotExist: 'Provided roles not exists in the platform',
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles'
@@ -111,14 +114,17 @@ export const ResponseMessages = {
     },
     agent: {
         success: {
-            create: 'Agent spin-up up successfully'
+            create: 'Agent spin-up up successfully',
+            health: 'Agent health details retrieved successfully.'
         },
         error: {
             exists: 'An agent name is already exist',
             orgNotFound: 'Organization not found',
             apiEndpointNotFound: 'apiEndpoint not found',
             notAbleToSpinUpAgent: 'Agent not able to spin-up',
-            alreadySpinUp: 'Agent already spin-up'
+            alreadySpinUp: 'Agent already spin-up',
+            agentUrl: 'Agent url not exist',
+            agentNotExists: 'Agent not spinned up for this organization'
         }
     },
     connection: {

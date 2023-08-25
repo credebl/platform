@@ -120,9 +120,9 @@ export class UserRepository {
           id: Number(updateUserProfile.id)
         },
         data: {
+          profileImg: updateUserProfile.profileImg,
           firstName: updateUserProfile.firstName,
-          lastName: updateUserProfile.lastName,
-          email: updateUserProfile.email
+          lastName: updateUserProfile.lastName
         }
       });
       return userdetails;
@@ -201,6 +201,8 @@ export class UserRepository {
         email: true,
         firstName: true,
         lastName: true,
+        profileImg: true,
+        publicProfile:true,
         isEmailVerified: true,
         clientId: true,
         clientSecret: true,

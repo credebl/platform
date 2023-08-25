@@ -36,6 +36,18 @@ export class SchemaService extends BaseService {
     }
   }
 
+  getSchemaBySchemaId(schemaId: string, orgId: number): Promise<{
+    response: object;
+  }> {
+    try {
+      const payload = { schemaId, orgId };
+      return this.sendNats(this.schemaServiceProxy, 'get-schema-by-schema-id', payload);
+    } catch (error) {
+      throw new RpcException(error.response);
+
+    }
+  }
+
   getSchemas(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface, orgId: number): Promise<{
     response: object;
   }> {
@@ -48,7 +60,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  getcredDeffListBySchemaId(schemaId:string, schemaSearchCriteria: ICredDeffSchemaSearchInterface, user: IUserRequestInterface, orgId: number): Promise<{
+  getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ICredDeffSchemaSearchInterface, user: IUserRequestInterface, orgId: number): Promise<{
     response: object;
   }> {
     try {
@@ -59,4 +71,17 @@ export class SchemaService extends BaseService {
 
     }
   }
+
+  getAllSchema(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface): Promise<{
+    response: object;
+  }> {
+    try {
+      const schemaSearch = { schemaSearchCriteria, user };
+      return this.sendNats(this.schemaServiceProxy, 'get-all-schemas', schemaSearch);
+    } catch (error) {
+      throw new RpcException(error.response);
+
+    }
+  }
+
 }

@@ -30,7 +30,7 @@ export class SchemaRepository {
           data: {
             name: schemaResult.schema.schemaName,
             version: schemaResult.schema.schemaVersion,
-            attributes: schemaResult.schema.attributes,
+            attributes: JSON.stringify(schemaResult.schema.attributes),
             schemaLedgerId: schemaResult.schema.id,
             issuerId: schemaResult.issuerId,
             createdBy: schemaResult.createdBy,
@@ -69,16 +69,19 @@ export class SchemaRepository {
   }
 
   async getSchemas(payload: ISchemaSearchCriteria, orgId: number): Promise<{
+    schemasCount: number;
+    schemasResult: {
     createDateTime: Date;
     createdBy: number;
     name: string;
     version: string;
-    attributes: string[];
+    attributes: string;
     schemaLedgerId: string;
     publisherDid: string;
-    orgId: number;
     issuerId: string;
-  }[]> {
+    orgId: number;
+  }[];
+}> {
     try {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
@@ -104,10 +107,17 @@ export class SchemaRepository {
         orderBy: {
           [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
         },
-        take: payload.pageSize,
+        take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
       });
-      return schemasResult;
+      const schemasCount = await this.prisma.schema.count({
+        where: {
+          organisation: {
+            id: orgId
+          }
+        }
+      });
+      return {schemasCount, schemasResult};
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
       throw error;
@@ -162,35 +172,101 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: number, schemaId:string): Promise<{
+  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: number, schemaId: string): Promise<{
     tag: string;
     credentialDefinitionId: string;
     schemaLedgerId: string;
     revocable: boolean;
-}[]> {
+  }[]> {
     try {
-        const schemasResult = await this.prisma.credential_definition.findMany({
-            where: {
-                AND:[
-                    {orgId},
-                    {schemaLedgerId:schemaId}
-                ]
-            },
-            select: {
-                tag: true,
-                credentialDefinitionId: true,
-                schemaLedgerId: true,
-                revocable: true,
-                createDateTime: true
-            },
-            orderBy: {
-                [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
-            }
-        });
-        return schemasResult;
+      return this.prisma.credential_definition.findMany({
+        where: {
+          AND: [
+            { orgId },
+            { schemaLedgerId: schemaId }
+          ]
+        },
+        select: {
+          tag: true,
+          credentialDefinitionId: true,
+          schemaLedgerId: true,
+          revocable: true,
+          createDateTime: true
+        },
+        orderBy: {
+          [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
+        }
+      });
     } catch (error) {
-        this.logger.error(`Error in getting agent DID: ${error}`);
-        throw error;
+      this.logger.error(`Error in getting agent DID: ${error}`);
+      throw error;
     }
-}
+  }
+
+  async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<{
+    schemasCount: number;
+    schemasResult: {
+      createDateTime: Date;
+      createdBy: number;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: number;
+    }[];
+  }> {
+    try {
+      const schemasResult = await this.prisma.schema.findMany({
+        where: {
+          OR: [
+            { name: { contains: payload.searchByText, mode: 'insensitive' } },
+            { version: { contains: payload.searchByText, mode: 'insensitive' } },
+            { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } },
+            { issuerId: { contains: payload.searchByText, mode: 'insensitive' } }
+          ]
+        },
+        select: {
+          createDateTime: true,
+          name: true,
+          version: true,
+          attributes: true,
+          schemaLedgerId: true,
+          createdBy: true,
+          publisherDid: true,
+          orgId: true,
+          issuerId: true
+        },
+        orderBy: {
+          [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
+        },
+        take: Number(payload.pageSize),
+        skip: (payload.pageNumber - 1) * payload.pageSize
+      });
+
+      const schemasCount = await this.prisma.schema.count();
+      return { schemasCount, schemasResult };
+    } catch (error) {
+      this.logger.error(`Error in getting schemas: ${error}`);
+      throw error;
+    }
+  }
+
+  async getSchemaBySchemaId(schemaId: string, orgId: number): Promise<schema> {
+    try {
+      return this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId: schemaId,
+          organisation: {
+            id: orgId
+          }
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`Error in getting get schema by schema ledger id: ${error}`);
+      throw error;
+    }
+  }
 }

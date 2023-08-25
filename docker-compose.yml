@@ -9,8 +9,8 @@ services:
       - '4222:4222'
       - '6222:6222'
       - '8222:8222'
-    volumes:
-      - ./nats-server.conf:/nats-server.conf  # Mount the config file
+   # volumes:
+    #  - ./nats-server.conf:/nats-server.conf  # Mount the config file
   redis:
     image: redis:6.2-alpine
     restart: always
@@ -24,13 +24,119 @@ services:
       - nats  # Use depends_on instead of needs
       - redis
     build:
-      context: ./Dockerfiles
-      dockerfile: Dockerfile.api-gateway
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.api-gateway
     ports:
       - '5000:5000'
     env_file:
       - ./.env
+  user:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.user
+    env_file:
+      - ./.env
+  connection:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.connection
+    env_file:
+      - ./.env
+  issuance:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.issuance
+    env_file:
+      - ./.env
+  ledger:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.ledger
+    env_file:
+      - ./.env
+  organization:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.organization
+    env_file:
+      - ./.env
+  verification:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+      - organization
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.verification
+    env_file:
+      - ./.env
+  agent-provisioning:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+      - organization
+      - verification
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.agnet-provisioning
+    env_file:
+      - ./.env
+  agent-service:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+      - organization
+      - verification
+      - agent-provisioning
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.agent-service
+    env_file:
+      - ./.env
+ 
+  
+  
+  
+  
 
+  
 volumes:
   cache:
     driver: local

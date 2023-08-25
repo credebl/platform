@@ -4,6 +4,7 @@ import { AgentServiceService } from './agent-service.service';
 import { GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema } from './interface/agent-service.interface';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { ISendProofRequestPayload } from './interface/agent-service.interface';
+import { user } from '@prisma/client';
 
 @Controller()
 export class AgentServiceController {
@@ -15,7 +16,9 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'create-tenant' })
-  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<object> {
+  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<{
+    agentSpinupStatus: number;
+  }> {
     return this.agentServiceService.createTenant(payload.createTenantDto, payload.user);
   }
 
@@ -87,5 +90,10 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'agent-get-connections-by-connectionId' })
   async getConnectionsByconnectionId(payload: { url: string, apiKey: string }): Promise<object> {
     return this.agentServiceService.getConnectionsByconnectionId(payload.url, payload.apiKey);
+  }
+
+  @MessagePattern({ cmd: 'agent-health' })
+  async getAgentHealth(payload: { user: user, orgId: number }): Promise<object> {
+    return this.agentServiceService.getAgentHealthDetails(payload.orgId);
   }
 }

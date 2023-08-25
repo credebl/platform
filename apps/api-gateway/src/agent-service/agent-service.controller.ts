@@ -9,9 +9,11 @@ import {
   BadRequestException,
   Body,
   HttpStatus,
-  Res
+  Res,
+  Get,
+  Query
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiOperation, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiOperation, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { GetUser } from '../authz/decorators/get-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -25,6 +27,7 @@ import { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { CreateTenantDto } from './dto/create-tenant.dto';
+import { User } from '../authz/decorators/user.decorator';
 @Controller('agent-service')
 @ApiTags('agents')
 @UseGuards(AuthGuard('jwt'))
@@ -91,6 +94,29 @@ export class AgentController {
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Get('/health')
+  @ApiOperation({
+    summary: 'Fetch agent details',
+    description: 'Fetch agent health details'
+  })
+  @ApiQuery({
+    name: 'orgId',
+    type: Number,
+    required: false
+  })
+  async getAgentHealth(@User() reqUser: user, @Query('orgId') orgId: number, @Res() res: Response): Promise<object> {
+    const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.agent.success.health,
+      data: agentData.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
   }
 
 }

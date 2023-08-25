@@ -21,6 +21,12 @@ export class SchemaController {
         return this.schemaService.getSchemaById(schemaId, orgId);
     }
 
+    @MessagePattern({ cmd: 'get-schema-by-schema-id' })
+    async getSchemaBySchemaId(payload: ISchema): Promise<schema> {
+        const { schemaId, orgId } = payload;
+        return this.schemaService.getSchemaBySchemaId(schemaId, orgId);
+    }
+
     @MessagePattern({ cmd: 'get-schemas' })
     async getSchemas(schemaSearch: ISchemaSearchInterface): Promise<{
         totalItems: number;
@@ -34,11 +40,11 @@ export class SchemaController {
             createdBy: number;
             name: string;
             version: string;
-            attributes: string[];
+            attributes: string;
             schemaLedgerId: string;
             publisherDid: string;
-            orgId: number;
             issuerId: string;
+            orgId: number;
         }[];
     }> {
         const { schemaSearchCriteria, user, orgId } = schemaSearch;
@@ -60,8 +66,31 @@ export class SchemaController {
             revocable: boolean;
         }[];
     }> {
-        const {schemaId, schemaSearchCriteria, user, orgId } = payload;
+        const { schemaId, schemaSearchCriteria, user, orgId } = payload;
         return this.schemaService.getcredDeffListBySchemaId(schemaId, schemaSearchCriteria, user, orgId);
     }
-    
+
+    @MessagePattern({ cmd: 'get-all-schemas' })
+    async getAllSchema(schemaSearch: ISchemaSearchInterface): Promise<{
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        nextPage: number;
+        previousPage: number;
+        lastPage: number;
+        data: {
+            createDateTime: Date;
+            createdBy: number;
+            name: string;
+            schemaLedgerId: string;
+            version: string;
+            attributes: string;
+            publisherDid: string;
+            issuerId: string;
+        }[];
+    }> {
+        const { schemaSearchCriteria } = schemaSearch;
+        return this.schemaService.getAllSchema(schemaSearchCriteria);
+    }
+
 }

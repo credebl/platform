@@ -19,11 +19,17 @@ export interface ISchema {
     orgDid?: string;
 }
 
+export interface IAttributeValue {
+    attributeName: string;
+    schemaDataType: string;
+    displayName: string
+}
+
 export interface ISchemaPayload {
     schemaVersion: string;
     schemaName: string;
     orgDid?: string;
-    attributes: string[];
+    attributes: IAttributeValue[];
     issuerId?: string;
     onLedgerStatus?: string;
     id?: string;

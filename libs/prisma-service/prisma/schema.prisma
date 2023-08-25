@@ -23,14 +23,14 @@ model user {
   supabaseUserId      String?           @db.VarChar(500)
   clientId            String?           @db.VarChar(500)
   clientSecret        String?           @db.VarChar(500)
-  profileImg          String?           @db.VarChar(1000)
+  profileImg          String?           
   fidoUserId          String?           @db.VarChar(1000)
   isFidoVerified      Boolean           @default(false)
   userOrgRoles        user_org_roles[]
   userDevices         user_devices[]
   orgInvitations      org_invitations[]
   user_activities     user_activity[]
-  publicProfile      Boolean           @default(false)
+  publicProfile       Boolean           @default(false)
 }
 
 model user_activity {
@@ -89,8 +89,7 @@ model organisation {
   presentations       presentations[]
   schema              schema[]
   user_activities     user_activity[]
-  publicProfile      Boolean           @default(false)
-
+  publicProfile       Boolean           @default(false)
 }
 
 model org_invitations {
@@ -159,7 +158,7 @@ model org_agents {
   agentsTypeId        Int
   orgId               Int
   orgAgentTypeId      Int
-  ledgerId            Int
+  ledgerId            Int?
   ledgers             ledgers?            @relation(fields: [ledgerId], references: [id])
   agents_type         agents_type?        @relation(fields: [agentsTypeId], references: [id])
   org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
@@ -222,7 +221,7 @@ model schema {
   lastChangedBy       Int           @default(1)
   name                String        @db.VarChar
   version             String        @db.VarChar
-  attributes          String[]
+  attributes          String
   schemaLedgerId      String        @db.VarChar
   publisherDid        String        @db.VarChar
   ledgerId            Int           @default(1)

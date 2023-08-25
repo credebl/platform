@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsOptional, IsString} from 'class-validator';
 
 
 export class UpdateUserProfileDto {
@@ -7,6 +7,11 @@ export class UpdateUserProfileDto {
     @IsNotEmpty({ message: 'userId is required.' })
     @IsNumber()
     id: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({message:'ProfileLogoUrl should be string'})
+    profileImg?: string;
 
     @ApiProperty({ example: 'Alen' })
     @IsString({ message: 'firstName should be string' })
@@ -17,10 +22,4 @@ export class UpdateUserProfileDto {
     @IsString({ message: 'lastName should be string' })
     @IsOptional()
     lastName?: string;
-
-    @ApiProperty({ example: 'awqx@getnada.com' })
-    @IsEmail()
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'email should be string' })
-    email: string;
 }

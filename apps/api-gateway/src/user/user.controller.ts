@@ -116,10 +116,7 @@ async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllU
  * @param res 
  * @returns Users list of organization
  */
-@Get('/public-users')
-@Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@Get('/public')
 @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
 @ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
 @ApiQuery({
@@ -228,8 +225,6 @@ async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUs
     summary: 'Fetch user details',
     description: 'Fetch user details'
   })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
   @ApiQuery({
     name: 'id',
     type: Number,
@@ -359,12 +354,11 @@ async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUs
   @UseGuards(AuthGuard('jwt'))
   async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @Res() res: Response): Promise<Response> {
 
-    const UpdatedUserProfile = await this.userService.updateUserProfile(updateUserProfileDto);
+    await this.userService.updateUserProfile(updateUserProfileDto);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.update,
-      data: UpdatedUserProfile.response
+      message: ResponseMessages.user.success.update
     };
     return res.status(HttpStatus.OK).json(finalResponse);
 

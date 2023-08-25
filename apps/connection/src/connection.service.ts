@@ -65,9 +65,14 @@ export class ConnectionService {
       const apiKey = platformConfig?.sgApiKey;
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-      const invitationObject = createConnectionInvitation.message.invitation['@id'];
+      const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
 
-      const shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
+      let shortenedUrl;
+      if (agentDetails?.tenantId) {
+        shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationObject}`;
+      } else {
+        shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
+      }
 
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(shortenedUrl, agentId, orgId);
       return saveConnectionDetails;
@@ -178,7 +183,20 @@ export class ConnectionService {
         theirDid,
         theirLabel
       };
-      let url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
+
+      let url;
+      if (agentDetails?.orgAgentTypeId === OrgAgentType.DEDICATED) {
+
+        url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
+
+      } else if (agentDetails?.orgAgentTypeId === OrgAgentType.SHARED) {
+
+        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace('#', agentDetails.tenantId);
+      } else {
+
+        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+      }
+
       Object.keys(params).forEach((element: string) => {
         const appendParams: string = url.includes('?') ? '&' : '?';
 
@@ -235,7 +253,19 @@ export class ConnectionService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}/${connectionId}`;
+
+      let url;
+      if (agentDetails?.orgAgentTypeId === OrgAgentType.DEDICATED) {
+
+        url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTION_BY_ID}`.replace('#', connectionId);
+      } else if (agentDetails?.orgAgentTypeId === OrgAgentType.SHARED) {
+
+        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID}`.replace('#', connectionId).replace('@', agentDetails.tenantId);
+      } else {
+
+        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+      }
+
       const apiKey = platformConfig?.sgApiKey;
       const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
       return createConnectionInvitation?.response;

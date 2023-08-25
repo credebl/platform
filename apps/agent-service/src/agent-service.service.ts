@@ -30,6 +30,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
+import { user } from '@prisma/client';
 
 @Injectable()
 @WebSocketGateway()
@@ -390,7 +391,7 @@ export class AgentServiceService {
         }
       },
       {
-        retries: 5
+        retries: 10
       }
     );
   }
@@ -454,49 +455,124 @@ export class AgentServiceService {
     }
   }
 
-  async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<org_agents> {
+  async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<{
+    agentSpinupStatus: number;
+  }> {
+    const agentStatusResponse = {
+      agentSpinupStatus: 1
+    };
+
+    await this._createTenant(payload, user);
+
+    return agentStatusResponse;
+  }
+
+  async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
     try {
-      const { label, seed } = payload;
-      const createTenantOptions = {
-        config: {
-          label
-        },
-        seed
-      };
 
-      const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(parseInt(process.env.PLATFORM_ID));
+      const sharedAgentSpinUpResponse = new Promise(async (resolve, _reject) => {
+        const { label, seed } = payload;
+        const createTenantOptions = {
+          config: {
+            label
+          },
+          seed
+        };
 
-      if (2 !== platformAdminSpinnedUp.org_agents[0].agentSpinUpStatus) {
-        throw new NotFoundException('Platform-admin agent is not spun-up');
-      }
-
-      const apiKey = '';
-      const url = `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`;
-      const tenantDetails = await this.commonService
-        .httpPost(url, createTenantOptions, { headers: { 'x-api-key': apiKey } })
-        .then(async (tenant) => {
-          this.logger.debug(`API Response Data: ${JSON.stringify(tenant)}`);
-          return tenant;
+        const socket = await io(`${process.env.SOCKET_HOST}`, {
+          reconnection: true,
+          reconnectionDelay: 5000,
+          reconnectionAttempts: Infinity,
+          autoConnect: true,
+          transports: ['websocket']
         });
-      const storeOrgAgentData: IStoreOrgAgentDetails = {
-        did: tenantDetails.did,
-        verkey: tenantDetails.verkey,
-        isDidPublic: true,
-        agentSpinUpStatus: 2,
-        agentsTypeId: AgentType.AFJ,
-        orgId: payload.orgId,
-        agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
-        orgAgentTypeId: OrgAgentType.SHARED,
-        tenantId: tenantDetails.tenantRecord.id,
-        walletName: label
-      };
 
-      const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
-      await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
-      return saveTenant;
+        if (payload.clientSocketId) {
+          socket.emit('agent-spinup-process-initiated', { clientId: payload.clientSocketId });
+        }
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(parseInt(process.env.PLATFORM_ID));
 
+        if (!platformAdminSpinnedUp) {
+          throw new InternalServerErrorException('Agent not able to spin-up');
+        } else {
+          resolve(platformAdminSpinnedUp);
+        }
+
+        return sharedAgentSpinUpResponse.then(async (agentDetails) => {
+          if (agentDetails) {
+            if (2 !== platformAdminSpinnedUp.org_agents[0].agentSpinUpStatus) {
+              throw new NotFoundException('Platform-admin agent is not spun-up');
+            }
+
+            const apiKey = '';
+            const url = `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`;
+            const tenantDetails = await this.commonService
+              .httpPost(url, createTenantOptions, { headers: { 'x-api-key': apiKey } })
+              .then(async (tenant) => {
+                this.logger.debug(`API Response Data: ${JSON.stringify(tenant)}`);
+                return tenant;
+              });
+
+            const storeOrgAgentData: IStoreOrgAgentDetails = {
+              did: tenantDetails.did,
+              verkey: tenantDetails.verkey,
+              isDidPublic: true,
+              agentSpinUpStatus: 2,
+              agentsTypeId: AgentType.AFJ,
+              orgId: payload.orgId,
+              agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
+              orgAgentTypeId: OrgAgentType.SHARED,
+              tenantId: tenantDetails.tenantRecord.id,
+              walletName: label
+            };
+
+            if (payload.clientSocketId) {
+              socket.emit('agent-spinup-process-completed', { clientId: payload.clientSocketId });
+            }
+
+            const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
+
+            if (payload.clientSocketId) {
+              socket.emit('invitation-url-creation-started', { clientId: payload.clientSocketId });
+            }
+
+            await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
+
+            if (payload.clientSocketId) {
+              socket.emit('invitation-url-creation-success', { clientId: payload.clientSocketId });
+            }
+
+            resolve(saveTenant);
+          } else {
+            throw new InternalServerErrorException('Agent not able to spin-up');
+          }
+        })
+          .catch(async (error) => {
+            if (payload.clientSocketId) {
+              const socket = await io(`${process.env.SOCKET_HOST}`, {
+                reconnection: true,
+                reconnectionDelay: 5000,
+                reconnectionAttempts: Infinity,
+                autoConnect: true,
+                transports: ['websocket']
+              });
+              socket.emit('error-in-wallet-creation-process', { clientId: payload.clientSocketId, error });
+            }
+            _reject(error);
+          });
+      });
     } catch (error) {
       this.logger.error(`Error in creating tenant: ${error}`);
+      if (payload.clientSocketId) {
+        const socket = await io(`${process.env.SOCKET_HOST}`, {
+          reconnection: true,
+          reconnectionDelay: 5000,
+          reconnectionAttempts: Infinity,
+          autoConnect: true,
+          transports: ['websocket']
+        });
+        socket.emit('error-in-wallet-creation-process', { clientId: payload.clientSocketId, error });
+      }
       throw new RpcException(error.response);
     }
   }
@@ -764,6 +840,27 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async getAgentHealthDetails(orgId: number): Promise<object> {
+    try {
+      const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      if (!orgAgentDetails) {
+        throw new NotFoundException(ResponseMessages.agent.error.agentNotExists);
+      }
+      if (orgAgentDetails.agentEndPoint) {
+        const data = await this.commonService
+        .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'x-api-key': '' } })
+        .then(async response => response);
+        return data;
+      } else {
+      throw new NotFoundException(ResponseMessages.agent.error.agentUrl);
+     }
+       
+    } catch (error) {
+      this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
     }
   }
 }

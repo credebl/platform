@@ -34,7 +34,8 @@ export class GetAllSchemaDto {
     @Type(() => Number)
     @IsNumber()
     @IsNotEmpty()
-    orgId: number;
+    @IsOptional()
+    orgId?: number;
 }
 
 export class GetCredentialDefinitionBySchemaIdDto {
@@ -60,7 +61,8 @@ export class GetCredentialDefinitionBySchemaIdDto {
     @Type(() => Number)
     @IsNumber()
     @IsNotEmpty()
-    orgId: number;
+    @IsOptional()
+    orgId?: number;
 }
 
 export class GetAllSchemaByPlatformDto {

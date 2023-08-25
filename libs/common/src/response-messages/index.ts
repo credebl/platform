@@ -123,7 +123,8 @@ export const ResponseMessages = {
             apiEndpointNotFound: 'apiEndpoint not found',
             notAbleToSpinUpAgent: 'Agent not able to spin-up',
             alreadySpinUp: 'Agent already spin-up',
-            agentUrl: 'Agent url not exist'
+            agentUrl: 'Agent url not exist',
+            agentNotExists: 'Agent not spinned up for this organization'
         }
     },
     connection: {
@@ -164,7 +165,12 @@ export const ResponseMessages = {
         error: {
             notFound: 'Organization agent not found',
             agentUrlNotFound: 'agent url not found',
-            schemaIdNotFound: 'Schema Id is required'
+            schemaIdNotFound: 'Schema Id is required',
+            predicatesValueNotNumber: 'The attribuite value is not a number',
+            proofPresentationNotFound: 'Proof presentation not found',
+            invitationNotFound: 'Invitation not found',
+            platformConfigNotFound: 'Platform config not found',
+            emailSend: 'Unable to send email to the user'
         }
     }
 };

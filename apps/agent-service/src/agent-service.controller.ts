@@ -101,4 +101,9 @@ export class AgentServiceController {
   async outOfBandCredentialOffer(payload: { outOfBandIssuancePayload: OutOfBandCredentialOffer, url: string, apiKey: string }): Promise<object> {
     return this.agentServiceService.outOfBandCredentialOffer(payload.outOfBandIssuancePayload, payload.url, payload.apiKey);
   }
+
+  @MessagePattern({ cmd: 'agent-send-out-of-band-proof-request' })
+  async sendOutOfBandProofRequest(payload: { proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string }): Promise<object> {
+    return this.agentServiceService.sendOutOfBandProofRequest(payload.proofRequestPayload, payload.url, payload.apiKey);
+  }
 }

@@ -246,7 +246,7 @@ export interface IAttributes {
 }
 export interface ISendProofRequestPayload {
     comment: string;
-    connectionId: string;
+    connectionId?: string;
     proofFormats: IProofFormats;
     autoAcceptProof: string;
 }

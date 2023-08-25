@@ -11,6 +11,7 @@ import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { OrgRolesRepository } from 'libs/org-roles/repositories';
 import { OrgRolesService } from '@credebl/org-roles';
 import { PrismaService } from '@credebl/prisma-service';
+import { SupabaseService } from '@credebl/supabase';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { UserActivityService } from '@credebl/user-activity';
 import { UserDevicesRepository } from '../../repositories/user-device.repository';
@@ -32,7 +33,7 @@ import { UserService } from '../user.service';
     ]),
     HttpModule,
     CommonModule
-  ],
+],
   controllers: [FidoController],
   providers: [
     UserService,
@@ -41,6 +42,7 @@ import { UserService } from '../user.service';
     UserRepository,
     UserDevicesRepository,
     ClientRegistrationService,
+    SupabaseService,
     Logger,
     KeycloakUrlService,
     FidoUserRepository,

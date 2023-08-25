@@ -71,22 +71,22 @@ export class SchemaRepository {
   async getSchemas(payload: ISchemaSearchCriteria, orgId: number): Promise<{
     schemasCount: number;
     schemasResult: {
-    createDateTime: Date;
-    createdBy: number;
-    name: string;
-    version: string;
-    attributes: string;
-    schemaLedgerId: string;
-    publisherDid: string;
-    issuerId: string;
-    orgId: number;
-  }[];
-}> {
+      createDateTime: Date;
+      createdBy: number;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: number;
+    }[];
+  }> {
     try {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
-          orgId,
           OR: [
+            { orgId },
             { name: { contains: payload.searchByText, mode: 'insensitive' } },
             { version: { contains: payload.searchByText, mode: 'insensitive' } },
             { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } },
@@ -112,10 +112,12 @@ export class SchemaRepository {
       });
       const schemasCount = await this.prisma.schema.count({
         where: {
-          orgId
+          organisation: {
+            id: orgId
+          }
         }
       });
-      return {schemasCount, schemasResult};
+      return { schemasCount, schemasResult };
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
       throw error;
@@ -179,7 +181,7 @@ export class SchemaRepository {
     try {
       return this.prisma.credential_definition.findMany({
         where: {
-          AND: [
+          OR: [
             { orgId },
             { schemaLedgerId: schemaId }
           ]
@@ -251,14 +253,11 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemaBySchemaId(schemaId: string, orgId: number): Promise<schema> {
+  async getSchemaBySchemaId(schemaId: string): Promise<schema> {
     try {
       return this.prisma.schema.findFirst({
         where: {
-          schemaLedgerId: schemaId,
-          organisation: {
-            id: orgId
-          }
+          schemaLedgerId: schemaId
         }
       });
 

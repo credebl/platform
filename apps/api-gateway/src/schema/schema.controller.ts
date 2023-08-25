@@ -18,6 +18,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
+import { TransformStreamDefaultController } from 'node:stream/web';
 
 @Controller('schemas')
 @ApiTags('schemas')
@@ -114,46 +115,15 @@ export class SchemaController {
   )
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
+    @Res() res: Response,
     @Query('schemaId') schemaId: string,
-    @Query('orgId') orgId: number,
-    @Res() res: Response): Promise<object> {
+    @Query('orgId') orgId: number
+  ): Promise<object> {
 
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
     const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.schema.success.fetch,
-      data: schemaDetails.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
-  @Get('/created')
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiOperation({
-    summary: 'Get an existing schema by schemaLedgerId',
-    description: 'Get an existing schema by schemaLedgerId'
-  })
-  @ApiQuery(
-    { name: 'schemaId', required: true }
-  )
-
-  @ApiQuery(
-    { name: 'orgId', required: true }
-  )
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getSchemaBySchemaId(
-    @Query('schemaId') schemaId: string,
-    @Query('orgId') orgId: number,
-    @Res() res: Response): Promise<object> {
-
-    if (!schemaId) {
-      throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
-    }
-    const schemaDetails = await this.appService.getSchemaBySchemaId(schemaId, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
@@ -171,7 +141,7 @@ export class SchemaController {
     { name: 'schemaId', required: true }
   )
   @ApiQuery(
-    { name: 'orgId', required: true }
+    { name: 'orgId', required: false }
   )
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)

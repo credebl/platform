@@ -85,8 +85,8 @@ export class SchemaRepository {
     try {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
+          organisation: { id: orgId },
           OR: [
-            { orgId },
             { name: { contains: payload.searchByText, mode: 'insensitive' } },
             { version: { contains: payload.searchByText, mode: 'insensitive' } },
             { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } },
@@ -181,7 +181,7 @@ export class SchemaRepository {
     try {
       return this.prisma.credential_definition.findMany({
         where: {
-          OR: [
+          AND: [
             { orgId },
             { schemaLedgerId: schemaId }
           ]

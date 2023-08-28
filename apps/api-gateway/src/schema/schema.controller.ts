@@ -144,8 +144,6 @@ export class SchemaController {
     { name: 'orgId', required: false }
   )
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getcredDeffListBySchemaId(
     @Query('schemaId') schemaId: string,
     @Query() GetCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,

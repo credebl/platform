@@ -37,6 +37,9 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IssueCredential } from './enums/Issuance.enum';
+import { Roles } from '../authz/decorators/roles.decorator';
+import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @Controller()
 @ApiTags('issuances')
@@ -98,7 +101,7 @@ export class IssuanceController {
   * @param issueCredentialDto
   */
   @Post('wh/:id/credentials')
-   @ApiExcludeEndpoint()
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Catch issue credential webhook responses',
     description: 'Callback URL for issue credential'
@@ -147,6 +150,9 @@ export class IssuanceController {
   @ApiQuery(
     { name: 'orgId', required: true }
   )
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getIssueCredentials(
     @User() user: IUserRequest,
     @Query('threadId') threadId: string,

@@ -12,7 +12,8 @@ import {
   Res,
   Query,
   Get,
-  Param
+  Param,
+  UseFilters
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -40,8 +41,10 @@ import { IssueCredential } from './enums/Issuance.enum';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 @Controller()
+@UseFilters(CustomExceptionFilter)
 @ApiTags('issuances')
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })

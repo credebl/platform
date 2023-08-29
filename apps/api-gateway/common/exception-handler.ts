@@ -1,49 +1,27 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-  HttpAdapterHost
-} from '@nestjs/common';
-import { ResponseType } from './interface';
+import { Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import { BaseExceptionFilter } from '@nestjs/core';
 
-interface CustomException {
-  message: string;
-  error?: string;
-  // Add other properties if needed
-}
 @Catch()
-export class ExceptionHandler implements ExceptionFilter {
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) { }
-
-  catch(exception: CustomException, host: ArgumentsHost): void {
-    // In certain situations `httpAdapter` might not be available in the
-    // constructor method, thus we should resolve it here.
-    const { httpAdapter } = this.httpAdapterHost;
-
+export class CustomExceptionFilter extends BaseExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
 
-    let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message =
-      exception.message['error'] ||
-      exception.message ||
-      'Something went wrong!';
-
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
     if (exception instanceof HttpException) {
-      const errorResponse = exception.getResponse();
-
-      statusCode = exception.getStatus();
-      message = errorResponse['error'] || message;
+      status = exception.getStatus();
     }
 
-    const responseBody: ResponseType = {
-      statusCode,
-      message,
+    if ("Cannot read properties of undefined (reading 'response')" === exception.message) {
+      exception.message = 'Oops! Something went wrong. Please try again';
+    }
+
+    const errorResponse = {
+      statusCode: status,
+      message: exception.message || 'Internal server error',
       error: exception.message
     };
 
-    httpAdapter.reply(response, responseBody, statusCode);
+    response.status(status).json(errorResponse);
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res } from '@nestjs/common';
+import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
@@ -19,7 +19,9 @@ import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
 import { TransformStreamDefaultController } from 'node:stream/web';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
+@UseFilters(CustomExceptionFilter)
 @Controller('schemas')
 @ApiTags('schemas')
 @ApiBearerAuth()

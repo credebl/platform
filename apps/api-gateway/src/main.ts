@@ -40,7 +40,7 @@ async function bootstrap(): Promise<void> {
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)
     .setVersion('1.0')
     .addBearerAuth()
-    .addServer('http://localhost:5000')
+    .addServer('http://192.168.1.29:5000')
     .addServer('https://devapi.credebl.id')
     .addServer('https://qa-api.credebl.id')
     .addServer('https://api.credebl.id')
@@ -60,6 +60,7 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('uploadedFiles/tenant-logo'));
   app.use(express.static('uploadedFiles/exports'));
   app.use(express.static('resources'));
+  app.use(express.static('qr-code'));
   app.use(express.static('genesis-file'));
   app.use(express.static('invoice-pdf'));
   app.use(express.static('uploadedFiles/bulk-verification-templates'));

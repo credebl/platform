@@ -12,7 +12,7 @@ import {
     ApiQuery,
     ApiExcludeEndpoint
 } from '@nestjs/swagger';
-import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param } from '@nestjs/common';
+import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
@@ -28,7 +28,9 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { AuthGuard } from '@nestjs/passport';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { WebhookPresentationProof } from './dto/webhook-proof.dto';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
+@UseFilters(CustomExceptionFilter)
 @ApiBearerAuth()
 @Controller()
 export class VerificationController {

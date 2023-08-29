@@ -53,6 +53,9 @@ dependencies:
   '@sendgrid/mail':
     specifier: ^7.7.0
     version: 7.7.0
+  '@supabase/supabase-js':
+    specifier: ^2.32.0
+    version: 2.32.0
   '@types/async-retry':
     specifier: ^1.4.5
     version: 1.4.5
@@ -165,8 +168,8 @@ dependencies:
     specifier: ^8.11.2
     version: 8.11.2
   qrcode:
-    specifier: ^1.5.1
-    version: 1.5.1
+    specifier: ^1.5.3
+    version: 1.5.3
   qs:
     specifier: ^6.11.2
     version: 6.11.2
@@ -7039,8 +7042,8 @@ packages:
     resolution: {integrity: sha512-6Yg0ekpKICSjPswYOuC5sku/TSWaRYlA0qsXqJgM/d/4pLPHPuTxK7Nbf7jFKzAeedUhR8C7K9Uv63FBsSo8xQ==}
     dev: true
 
-  /qrcode@1.5.1:
-    resolution: {integrity: sha512-nS8NJ1Z3md8uTjKtP+SGGhfqmTCs5flU/xR623oI0JX+Wepz9R8UrRVCTBTJm3qGw3rH6jJ6MUHjkDx15cxSSg==}
+  /qrcode@1.5.3:
+    resolution: {integrity: sha512-puyri6ApkEHYiVl4CFzo1tDkAZ+ATcnbJrJ6RiBM1Fhctdn/ix9MTE3hRph33omisEbC/2fcfemsseiKgBPKZg==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dependencies:

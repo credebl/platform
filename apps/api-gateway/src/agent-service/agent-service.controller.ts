@@ -11,7 +11,8 @@ import {
   HttpStatus,
   Res,
   Get,
-  Query
+  Query,
+  UseFilters
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { GetUser } from '../authz/decorators/get-user.decorator';
@@ -28,6 +29,9 @@ import { Response } from 'express';
 import { user } from '@prisma/client';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { User } from '../authz/decorators/user.decorator';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+
+@UseFilters(CustomExceptionFilter)
 @Controller('agent-service')
 @ApiTags('agents')
 @UseGuards(AuthGuard('jwt'))

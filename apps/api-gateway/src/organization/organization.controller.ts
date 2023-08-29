@@ -1,6 +1,6 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
-import { Controller, Get, Put, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, UseFilters } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { Post } from '@nestjs/common';
 import { Body } from '@nestjs/common';
@@ -25,7 +25,9 @@ import { Query } from '@nestjs/common';
 import { GetAllOrganizationsDto } from './dtos/get-all-organizations.dto';
 import { GetAllSentInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
+@UseFilters(CustomExceptionFilter)
 @Controller('organization')
 @ApiTags('organizations')
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })

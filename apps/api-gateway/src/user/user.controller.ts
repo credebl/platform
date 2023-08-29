@@ -1,4 +1,4 @@
-import { Controller, Post, Put, Body, Param } from '@nestjs/common';
+import { Controller, Post, Put, Body, Param, UseFilters } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserEmailVerificationDto } from './dto/create-user.dto';
 import {
@@ -41,7 +41,9 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { AddUserDetails } from './dto/add-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
+@UseFilters(CustomExceptionFilter)
 @Controller('users')
 @ApiTags('users')
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })

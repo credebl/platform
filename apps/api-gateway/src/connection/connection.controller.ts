@@ -1,6 +1,6 @@
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, Query } from '@nestjs/common';
+import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, Query, UseFilters } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
@@ -13,7 +13,9 @@ import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { Connections } from './enums/connections.enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
+@UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })

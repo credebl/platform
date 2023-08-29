@@ -60,7 +60,6 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('uploadedFiles/tenant-logo'));
   app.use(express.static('uploadedFiles/exports'));
   app.use(express.static('resources'));
-  app.use(express.static('qr-code'));
   app.use(express.static('genesis-file'));
   app.use(express.static('invoice-pdf'));
   app.use(express.static('uploadedFiles/bulk-verification-templates'));

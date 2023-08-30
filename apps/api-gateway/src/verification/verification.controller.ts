@@ -38,6 +38,38 @@ export class VerificationController {
 
     private readonly logger = new Logger('VerificationController');
 
+    @Get('/proofs/form-data')
+    @ApiTags('verifications')
+    @ApiOperation({
+        summary: `Get a proof form data`,
+        description: `Get a proof form data`
+    })
+    @ApiQuery(
+        { name: 'id', required: true }
+    )
+    @ApiQuery(
+        { name: 'orgId', required: true }
+    )
+    @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    async getProofFormData(
+        @Res() res: Response,
+        @GetUser() user: IUserRequest,
+        @Query('id') id: string,
+        @Query('orgId') orgId: number
+    ): Promise<object> {
+        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);
+        const finalResponse: IResponseType = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.verification.success.proofFormData,
+            data: sendProofRequest.response
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
+    }
+
     /**
      * Get all proof presentations
      * @param user 
@@ -138,7 +170,7 @@ export class VerificationController {
         const sendProofRequest = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.fetch,
+            message: ResponseMessages.verification.success.send,
             data: sendProofRequest.response
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);

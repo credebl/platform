@@ -67,10 +67,10 @@ export enum CommonConstants {
   URL_PUBLISH_REVOCATION = '/issue-credential/publish-revocations',
   URL_CREATE_ISSUE_CREDENTIAL_OUT_OF_BAND = '/issue-credential/create',
   URL_CREATE_OUT_OF_BAND_INVITATION = '/out-of-band/create-invitation',
-  URL_ISSUE_CREATE_CRED_OFFER_AFJ= '/credentials/create-offer',
+  URL_ISSUE_CREATE_CRED_OFFER_AFJ = '/credentials/create-offer',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  URL_ISSUE_GET_CREDS_AFJ= '/credentials',
-  URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID= '/credentials',
+  URL_ISSUE_GET_CREDS_AFJ = '/credentials',
+  URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
 
   // SCHEMA & CRED DEF SERVICES
   URL_SCHM_CREATE_SCHEMA = '/schemas',
@@ -95,13 +95,16 @@ export enum CommonConstants {
   URL_SHAGENT_REQUEST_PROOF = '/multi-tenancy/proofs/request-proof/#',
   URL_SHAGENT_ACCEPT_PRESENTATION = '/multi-tenancy/proofs/@/accept-presentation/#',
   URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST = '/multi-tenancy/proofs/create-request-oob/#',
+  URL_SHAGENT_PROOF_FORM_DATA = '/multi-tenancy/form-data/#/@',
 
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',
   URL_GET_PROOF_PRESENTATIONS = '/proofs',
   URL_GET_PROOF_PRESENTATION_BY_ID = '/proofs/#',
   URL_VERIFY_PRESENTATION = '/proofs/#/accept-presentation',
-  URL_SEND_OUT_OF_BAND_CREATE_REQUEST='/proofs/create-request-oob',
+  URL_SEND_OUT_OF_BAND_CREATE_REQUEST = '/proofs/create-request-oob',
+  URL_PROOF_FORM_DATA = '/proofs/#/form-data',
+
 
   // server or agent
   URL_SERVER_STATUS = '/status',

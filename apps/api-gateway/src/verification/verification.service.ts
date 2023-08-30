@@ -75,4 +75,11 @@ export class VerificationService extends BaseService {
         const payload = { outOfBandRequestProof, user };
         return this.sendNats(this.verificationServiceProxy, 'send-out-of-band-proof-request', payload);
     }
+
+     
+    getProofFormData(id: string, orgId: number, user: IUserRequest): Promise<{ response: object }> {
+        const payload = { id, orgId, user };
+        return this.sendNats(this.verificationServiceProxy, 'proof-form-data', payload);
+    }
+
 }

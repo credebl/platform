@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IWebhookProofPresentation } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IWebhookProofPresentation, ProofFormDataPayload } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { presentations } from '@prisma/client';
@@ -238,7 +238,7 @@ export class VerificationService {
             };
           }
 
-          return [attributeReferent, null];
+          return [attributeReferent];
         }));
       } else {
         throw new BadRequestException(ResponseMessages.verification.error.schemaIdNotFound);
@@ -534,7 +534,6 @@ export class VerificationService {
     try {
       let requestedAttributes = {};
       const requestedPredicates = {};
-
       const attributeWithSchemaIdExists = proofRequestpayload.attributes.some(attribute => attribute.schemaId);
       if (attributeWithSchemaIdExists) {
 
@@ -690,6 +689,15 @@ export class VerificationService {
           break;
         }
 
+        case 'proof-form-data': {
+          url = orgAgentTypeId === OrgAgentType.DEDICATED
+            ? `${agentEndPoint}${CommonConstants.URL_PROOF_FORM_DATA}`
+            : orgAgentTypeId === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_PROOF_FORM_DATA}`.replace('@', proofPresentationId).replace('#', tenantId)
+              : null;
+          break;
+        }
+
         default: {
           break;
         }
@@ -704,6 +712,141 @@ export class VerificationService {
       this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
       throw error;
 
+    }
+  }
+
+  async getProofFormData(id: string, orgId: number): Promise<object> {
+    try {
+      const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
+      const verificationMethodLabel = 'proof-form-data';
+
+      const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
+
+      const payload = { apiKey: '', url };
+      const getProofPresentationById = await this._getProofFormData(payload);
+
+      if (!getProofPresentationById?.response?.presentation) {
+        throw new NotFoundException("Proof presentation not found!");
+      }
+
+      const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;
+      const requestedPredicates = getProofPresentationById?.response?.request?.indy?.requested_predicates;
+      const revealedAttrs = getProofPresentationById?.response?.presentation?.indy?.requested_proof?.revealed_attrs;
+
+      const extractedDataArray = [];
+
+      if (requestedAttributes && requestedPredicates) {
+
+        for (const key in requestedAttributes) {
+
+          if (requestedAttributes.hasOwnProperty(key)) {
+            const attribute = requestedAttributes[key];
+            const attributeName = attribute.name;
+            const credDefId = attribute?.restrictions[0]?.cred_def_id;
+            const schemaId = attribute?.restrictions[0]?.schema_id;
+
+            if (revealedAttrs.hasOwnProperty(key)) {
+              const extractedData = {
+                [attributeName]: revealedAttrs[key]?.raw,
+                "credDefId": credDefId ? credDefId : null,
+                "schemaId": schemaId ? schemaId : null
+              };
+              extractedDataArray.push(extractedData);
+            }
+          }
+        }
+
+        for (const key in requestedPredicates) {
+          if (requestedPredicates.hasOwnProperty(key)) {
+            const attribute = requestedPredicates[key];
+            const attributeName = attribute?.name;
+            const credDefId = attribute?.restrictions[0]?.cred_def_id;
+            const schemaId = attribute?.restrictions[0]?.schema_id;
+
+            const extractedData = {
+              [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,
+              "credDefId": credDefId ? credDefId : null,
+              "schemaId": schemaId ? schemaId : null
+            };
+            extractedDataArray.push(extractedData);
+          }
+        }
+
+      } else if (requestedAttributes) {
+        for (const key in requestedAttributes) {
+
+          if (requestedAttributes.hasOwnProperty(key)) {
+            const attribute = requestedAttributes[key];
+            const attributeName = attribute.name;
+            const credDefId = attribute?.restrictions[0]?.cred_def_id;
+            const schemaId = attribute?.restrictions[0]?.schema_id;
+
+            if (revealedAttrs.hasOwnProperty(key)) {
+              const extractedData = {
+                [attributeName]: revealedAttrs[key]?.raw,
+                "credDefId": credDefId ? credDefId : null,
+                "schemaId": schemaId ? schemaId : null
+              };
+              extractedDataArray.push(extractedData);
+            }
+          }
+        }
+      } else if (requestedPredicates) {
+        for (const key in requestedPredicates) {
+
+          if (requestedPredicates.hasOwnProperty(key)) {
+            const attribute = requestedPredicates[key];
+            const attributeName = attribute?.name;
+            const credDefId = attribute?.restrictions[0]?.cred_def_id;
+            const schemaId = attribute?.restrictions[0]?.schema_id;
+
+            const extractedData = {
+              [attributeName]: `${requestedPredicates?.p_type}${requestedPredicates?.p_value}`,
+              "credDefId": credDefId ? credDefId : null,
+              "schemaId": schemaId ? schemaId : null
+            };
+            extractedDataArray.push(extractedData);
+          }
+        }
+      } else {
+        throw new InternalServerErrorException('Something went wrong!');
+      }
+
+      return extractedDataArray;
+    } catch (error) {
+      this.logger.error(`[getProofFormData] - error in get proof form data : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+  async _getProofFormData(payload: ProofFormDataPayload): Promise<{
+    response;
+  }> {
+    try {
+
+      const pattern = {
+        cmd: 'agent-proof-form-data'
+      };
+
+      return this.verificationServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`[_getProofFormData] - error in proof form data : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 }

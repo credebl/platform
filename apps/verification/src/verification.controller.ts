@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { IRequestProof, IWebhookProofPresentation } from './interfaces/verification.interface';
+import { IRequestProof, IWebhookProofPresentation, ProofFormData } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { presentations } from '@prisma/client';
 
@@ -57,5 +57,11 @@ export class VerificationController {
   @MessagePattern({ cmd: 'send-out-of-band-proof-request' })
   async sendOutOfBandPresentationRequest(payload: { outOfBandRequestProof: IRequestProof, user: IUserRequest }): Promise<boolean> {
     return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof);
+  }
+
+  @MessagePattern({ cmd: 'proof-form-data' })
+  async getProofFormData(payload: ProofFormData): Promise<object> {
+    const { id, orgId } = payload;
+    return this.verificationService.getProofFormData(id, orgId);
   }
 }

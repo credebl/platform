@@ -106,7 +106,7 @@ export const ResponseMessages = {
         error: {
             NotFound: 'No credential definitions found.',
             NotSaved: 'Error in saving credential definition.',
-            Conflict: 'Tag already exists',
+            Conflict: 'Credential definition already exists',
             schemaIdNotFound: 'SchemaLedgerId not found',
             OrgDidNotFound: 'OrgDid not found',
             credDefIdNotFound: 'Credential Definition Id not found'
@@ -156,7 +156,8 @@ export const ResponseMessages = {
     verification: {
         success: {
             fetch: 'Proof presentation received successfully.',
-            create: 'Proof request created successfully.',
+            proofFormData: 'Proof presentation form data received successfully.',
+            send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'
         },
         error: {

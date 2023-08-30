@@ -1,3 +1,4 @@
+import { IUserRequest } from "@credebl/user-request/user-request.interface";
 
 interface IProofRequestAttribute {
     attributeName: string;
@@ -31,6 +32,17 @@ export interface IGetProofPresentationById {
 export interface IVerifyPresentation {
     url: string;
     apiKey: string;
+}
+
+export interface ProofFormDataPayload {
+    url: string;
+    apiKey: string;
+}
+
+export interface ProofFormData {
+    id: string;
+    orgId: number; 
+    user: IUserRequest;
 }
 
 interface IProofFormats {

@@ -101,4 +101,9 @@ export class AgentServiceController {
   async sendOutOfBandProofRequest(payload: { proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string }): Promise<object> {
     return this.agentServiceService.sendOutOfBandProofRequest(payload.proofRequestPayload, payload.url, payload.apiKey);
   }
+
+  @MessagePattern({ cmd: 'agent-proof-form-data' })
+  async getProofFormData(payload: { url: string, apiKey: string }): Promise<object> {
+    return this.agentServiceService.getProofFormData(payload.url, payload.apiKey);
+  }
 }

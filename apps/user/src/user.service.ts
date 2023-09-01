@@ -33,7 +33,6 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 
-
 @Injectable()
 export class UserService {
   constructor(

@@ -288,4 +288,3 @@ async addCredentialIdAndNameById(id:number, credentialId:string, deviceFriendlyN
 }
 
 }
-

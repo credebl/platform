@@ -31,7 +31,6 @@ import { InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } f
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 
-
 @Injectable()
 export class UserService {
   constructor(
@@ -43,6 +42,7 @@ export class UserService {
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
+    private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
   ) { }
@@ -173,10 +173,35 @@ export class UserService {
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
-      const supaUser = await this.supabaseService.getClient().auth.signUp({
-        email,
-        password: userInfo.password
-      });
+
+      let supaUser;
+
+      if (userInfo.isPasskey) {
+        const password: string = uuidv4();
+
+        supaUser = await this.supabaseService.getClient().auth.signUp({
+          email,
+          password
+        });
+
+        if (supaUser.error) {
+          throw new InternalServerErrorException(supaUser.error?.message);
+        }
+
+        const getUserDetails = await this.userRepository.getUserDetails(userDetails.email);
+        await this.userDevicesRepository.updateUserDeviceDetails(
+          password,
+          getUserDetails.id
+        );
+
+      } else {
+
+
+        supaUser = await this.supabaseService.getClient().auth.signUp({
+          email,
+          password: userInfo.password
+        });
+      }
 
       if (supaUser.error) {
         throw new InternalServerErrorException(supaUser.error?.message);
@@ -224,9 +249,9 @@ export class UserService {
       }
 
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-
-        return this.generateToken(email, password);
-
+        const getUserDetails = await this.userRepository.getUserDetails(userData.email);
+        const getFidoUserPassword = await this.userDevicesRepository.checkUserDevice(getUserDetails.id);
+        return this.generateToken(email, getFidoUserPassword.password);
       }
 
       return this.generateToken(email, password);
@@ -237,6 +262,7 @@ export class UserService {
   }
 
   async generateToken(email: string, password: string): Promise<object> {
+
     const supaInstance = await this.supabaseService.getClient();
 
     this.logger.error(`supaInstance::`, supaInstance);
@@ -245,7 +271,6 @@ export class UserService {
       email,
       password
     });
-
     this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
     if (error) {
@@ -253,10 +278,8 @@ export class UserService {
     }
 
     const token = data?.session;
-
     return token;
   }
-
 
   async getProfile(payload: { id }): Promise<object> {
     try {

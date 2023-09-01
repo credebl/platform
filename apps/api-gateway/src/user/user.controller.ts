@@ -275,21 +275,34 @@ export class UserController {
   @Post('/add/:email')
   @ApiOperation({ summary: 'Add user information', description: 'Add user information' })
   async addUserDetailsInKeyCloak(@Body() userInfo: AddUserDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
-    const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
-    if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
-      this.commonService.passwordValidation(decryptedPassword);
-      userInfo.password = decryptedPassword;
-      const userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
-      const finalResponse: IResponseType = {
+    let finalResponse;
+    let userDetails;
+
+    if (false === userInfo.isPasskey) {
+
+      const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
+      if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
+        this.commonService.passwordValidation(decryptedPassword);
+        userInfo.password = decryptedPassword;
+        userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
+        finalResponse = {
+          statusCode: HttpStatus.CREATED,
+          message: ResponseMessages.user.success.create,
+          data: userDetails.response
+        };
+      } else {
+        throw new BadRequestException('Password name must be between 8 to 50 Characters');
+      }
+    } else {
+
+      userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
+      finalResponse = {
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.user.success.create,
         data: userDetails.response
       };
-      return res.status(HttpStatus.OK).json(finalResponse);
-
-    } else {
-      throw new BadRequestException('Password name must be between 8 to 50 Characters');
     }
+    return res.status(HttpStatus.OK).json(finalResponse);
 
   }
 

@@ -16,6 +16,7 @@ import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { UserService } from './user.service';
+import { UserDevicesRepository } from '../repositories/user-device.repository';
 
 @Module({
   imports: [
@@ -46,7 +47,8 @@ import { UserService } from './user.service';
     OrgRolesRepository,
     UserOrgRolesRepository,
     UserActivityService,
-    UserActivityRepository
+    UserActivityRepository,
+    UserDevicesRepository
   ]
 })
 export class UserModule {}

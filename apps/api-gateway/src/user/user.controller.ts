@@ -51,7 +51,49 @@ export class UserController {
    * @param res 
    * @returns Users list of organization
    */
-  @Get('/public-profiles')
+  @Get()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Query('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+
+    const org = user.selectedOrg?.orgId;
+    const users = await this.userService.getOrgUsers(org, getAllUsersDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchUsers,
+      data: users.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+
+  /**
+   * 
+   * @param user 
+   * @param orgId 
+   * @param res 
+   * @returns Users list of organization
+   */
+  @Get('/public')
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
   @ApiQuery({

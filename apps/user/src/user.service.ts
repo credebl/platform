@@ -208,18 +208,26 @@ export class UserService {
       let supaUser;
 
       if (userInfo.isPasskey) {
-        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
-        const userDetails = await this.userRepository.getUserDetails(email);
-        const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
-        if (!resUser) {
-          throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
-        }
+        const password: string = uuidv4();
+
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
-          password: decryptedPassword
+          password
         });
 
+        if (supaUser.error) {
+          throw new InternalServerErrorException(supaUser.error?.message);
+        }
+
+        const getUserDetails = await this.userRepository.getUserDetails(userDetails.email);
+        await this.userDevicesRepository.updateUserDeviceDetails(
+          password,
+          getUserDetails.id
+        );
+
       } else {
+
+
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
           password: userInfo.password
@@ -300,8 +308,8 @@ export class UserService {
 
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
         const getUserDetails = await this.userRepository.getUserDetails(userData.email);
-        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return this.generateToken(email, decryptedPassword);
+        const getFidoUserPassword = await this.userDevicesRepository.checkUserDevice(getUserDetails.id);
+        return this.generateToken(email, getFidoUserPassword.password);
       }
 
       return this.generateToken(email, password);
@@ -312,28 +320,23 @@ export class UserService {
   }
 
   async generateToken(email: string, password: string): Promise<object> {
-    try {
-      const supaInstance = await this.supabaseService.getClient();
+
+    const supaInstance = await this.supabaseService.getClient();
 
       this.logger.error(`supaInstance::`, supaInstance);
 
-      const { data, error } = await supaInstance.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+    const { data, error } = await supaInstance.auth.signInWithPassword({
+      email,
+      password
+    });
+    this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
       if (error) {
         throw new BadRequestException(error?.message);
       }
 
-      const token = data?.session;
-
-      return token;
-    } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
-    }
+    const token = data?.session;
+    return token;
   }
 
   async getProfile(payload: { id }): Promise<object> {

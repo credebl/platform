@@ -299,4 +299,20 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
+
+  @Post('/password/:email')
+  @ApiOperation({ summary: 'Add user information', description: 'Add user information' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async addPasskey(@Body() userInfo: AddPasskeyDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
+    const userDetails = await this.userService.addPasskey(email, userInfo);
+    const finalResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.user.success.create,
+      data: userDetails.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
 }

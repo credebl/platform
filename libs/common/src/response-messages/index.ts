@@ -115,6 +115,14 @@ export const ResponseMessages = {
             credDefIdNotFound: 'Credential Definition Id not found'
         }
     },
+    ledger: {
+        success: {
+            fetch: 'Ledgers retrieved successfully.'
+        },
+        error: {
+            NotFound: 'No ledgers found.'
+        }
+    },
     agent: {
         success: {
             create: 'Agent spin-up successfully',
@@ -177,9 +185,14 @@ export const ResponseMessages = {
     ecosystem: {
         success: {
             create: 'Ecosystem created successfully',
+            update: 'Ecosystem updated successfully',
+            fetch: 'Ecosystem fetched successfully',
+            createInvitation: 'Ecosystem invitations sent successfully',
+
         },
         error: {
-        
+            notCreated: 'Error while creating ecosystem',
+            update: 'Error while updating ecosystem'
         }
 
     },

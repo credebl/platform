@@ -452,4 +452,27 @@ export class UserRepository {
     }
   }
 
+   /**
+   *
+   * @param userInfo
+   * @returns Updates user credentials
+   */
+  // eslint-disable-next-line camelcase
+  async addUserPassword(email: string, userInfo: string): Promise<user> {
+    try {
+      const updateUserDetails = await this.prisma.user.update({
+        where: {
+          email
+        },
+        data: {
+          password: userInfo
+        }
+      });
+      return updateUserDetails;
+    } catch (error) {
+      this.logger.error(`Error in update isEmailVerified: ${error.message} `);
+      throw error;
+    }
+  }
+
 }

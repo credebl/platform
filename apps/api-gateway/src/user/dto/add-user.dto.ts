@@ -25,3 +25,11 @@ export class AddUserDetails {
     @IsBoolean({ message: 'isPasskey should be boolean' })
     isPasskey?: boolean;
 }
+
+export class AddPasskeyDetails {
+    @ApiProperty()
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'Password is required.' })
+    password: string;
+
+}

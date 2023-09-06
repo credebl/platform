@@ -27,7 +27,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import { Inject } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
-import { InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 
@@ -55,7 +55,7 @@ export class UserService {
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
-
+      
       if (userDetails && userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
@@ -177,26 +177,18 @@ export class UserService {
       let supaUser;
 
       if (userInfo.isPasskey) {
-        const password: string = uuidv4();
-
+        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);  
+        const userDetails = await this.userRepository.getUserDetails(email);
+        const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
+        if (!resUser) {
+          throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+        }
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
-          password
+          password: decryptedPassword
         });
 
-        if (supaUser.error) {
-          throw new InternalServerErrorException(supaUser.error?.message);
-        }
-
-        const getUserDetails = await this.userRepository.getUserDetails(userDetails.email);
-        await this.userDevicesRepository.updateUserDeviceDetails(
-          password,
-          getUserDetails.id
-        );
-
       } else {
-
-
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
           password: userInfo.password
@@ -218,6 +210,33 @@ export class UserService {
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
 
       return 'User created successfully';
+    } catch (error) {
+      this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async addPasskey(email: string, userInfo: AddPasskeyDetails): Promise<string> {
+    try {
+      if (!email) {
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+      }
+      const checkUserDetails = await this.userRepository.getUserDetails(email);
+      if (!checkUserDetails) {
+        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+      }
+      if (!checkUserDetails.supabaseUserId) {
+        throw new ConflictException(ResponseMessages.user.error.notFound);
+      }
+      if (false === checkUserDetails.isEmailVerified) {
+        throw new NotFoundException(ResponseMessages.user.error.emailNotVerified);
+      }
+      const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
+      if (!resUser) {
+        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+      }
+
+      return 'User updated successfully';
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
@@ -250,8 +269,8 @@ export class UserService {
 
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
         const getUserDetails = await this.userRepository.getUserDetails(userData.email);
-        const getFidoUserPassword = await this.userDevicesRepository.checkUserDevice(getUserDetails.id);
-        return this.generateToken(email, getFidoUserPassword.password);
+        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
+        return this.generateToken(email, decryptedPassword);
       }
 
       return this.generateToken(email, password);
@@ -262,23 +281,27 @@ export class UserService {
   }
 
   async generateToken(email: string, password: string): Promise<object> {
+    try {
+      const supaInstance = await this.supabaseService.getClient();
 
-    const supaInstance = await this.supabaseService.getClient();
+      this.logger.error(`supaInstance::`, supaInstance);
 
-    this.logger.error(`supaInstance::`, supaInstance);
+      const { data, error } = await supaInstance.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    const { data, error } = await supaInstance.auth.signInWithPassword({
-      email,
-      password
-    });
-    this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+      if (error) {
+        this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+        throw new BadRequestException(error?.message);
+      }
 
-    if (error) {
-      throw new BadRequestException(error?.message);
+      const token = data?.session;
+      return token;
+    } catch (error) {
+      this.logger.error(`An unexpected error occurred::`, error.message);
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
-
-    const token = data?.session;
-    return token;
   }
 
   async getProfile(payload: { id }): Promise<object> {

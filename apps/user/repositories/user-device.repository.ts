@@ -287,28 +287,5 @@ async addCredentialIdAndNameById(id:number, credentialId:string, deviceFriendlyN
   }
 }
 
-/**
-   * 
-   * @param password 
-   * @param userId
-   * @returns Update password
-   */
-async updateUserDeviceDetails(password: string, userId: number): Promise<Prisma.BatchPayload> {
-  try {
-    return await this.prisma.user_devices.updateMany({
-      where: {
-        userId
-      },
-      data: {
-        password
-      }
-    });
-    
-  } catch (error) {
-    this.logger.error(`Not Found: ${JSON.stringify(error)}`);
-    throw new NotFoundException(error);
-  }
-}
-
 }
 

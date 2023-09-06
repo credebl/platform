@@ -39,7 +39,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
-import { AddUserDetails } from './dto/add-user.dto';
+import { AddPasskeyDetails, AddUserDetails } from './dto/add-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
@@ -323,5 +323,21 @@ export class UserController {
       message: ResponseMessages.user.success.update
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/password/:email')
+  @ApiOperation({ summary: 'Add user information', description: 'Add user information' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async addPasskey(@Body() userInfo: AddPasskeyDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
+    const userDetails = await this.userService.addPasskey(email, userInfo);
+    const finalResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.user.success.create,
+      data: userDetails.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
   }
 }

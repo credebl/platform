@@ -9,6 +9,8 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { AddUserDetails } from './dto/login-user.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { AddPasskeyDetails } from './dto/add-user.dto';
+
 
 @Injectable()
 export class UserService extends BaseService {
@@ -124,5 +126,10 @@ export class UserService extends BaseService {
   async getUserActivities(userId: number, limit: number): Promise<{ response: object }> {
     const payload = { userId, limit };
     return this.sendNats(this.serviceProxy, 'get-user-activity', payload);
+  }
+
+  async addPasskey(userEmail: string, userInfo:AddPasskeyDetails): Promise<{ response: string }> {
+    const payload = { userEmail, userInfo };
+    return this.sendNats(this.serviceProxy, 'add-passkey', payload);
   }
 }

@@ -35,6 +35,10 @@ export interface userInfo{
     isPasskey: boolean
 }
 
+export interface AddPasskeyDetails{
+    password: string,
+}
+
 export interface UserWhereUniqueInput{
     id?: number
 }

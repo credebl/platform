@@ -31,7 +31,8 @@ export const ResponseMessages = {
             invalidKeycloakId: 'keycloakId is invalid',
             invalidEmail: 'Invalid Email Id!',
             adduser: 'Unable to add user details',
-            verifyEmail: 'The verification link has already been sent to your email address. please verify'
+            verifyEmail: 'The verification link has already been sent to your email address. please verify',
+            emailNotVerified: 'The verification link has already been sent to your email address. please verify'
         }
     },
     organisation: {

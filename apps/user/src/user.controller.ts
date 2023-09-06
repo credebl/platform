@@ -4,7 +4,7 @@ import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
 
 
 @Controller()
@@ -114,6 +114,11 @@ export class UserController {
   @MessagePattern({ cmd: 'get-user-activity' })
   async getUserActivity(payload: { userId: number, limit: number }): Promise<object[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
+  }
+
+  @MessagePattern({ cmd: 'add-passkey' })
+  async addPasskey(payload: { userEmail: string, userInfo: AddPasskeyDetails }): Promise<string | object> {
+    return this.userService.addPasskey(payload.userEmail, payload.userInfo);
   }
 
 }

@@ -55,7 +55,7 @@ export class UserService {
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
-
+      
       if (userDetails && userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
@@ -319,6 +319,33 @@ export class UserService {
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async addPasskey(email: string, userInfo: AddPasskeyDetails): Promise<string> {
+    try {
+      if (!email) {
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+      }
+      const checkUserDetails = await this.userRepository.getUserDetails(email);
+      if (!checkUserDetails) {
+        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+      }
+      if (!checkUserDetails.supabaseUserId) {
+        throw new ConflictException(ResponseMessages.user.error.notFound);
+      }
+      if (false === checkUserDetails.isEmailVerified) {
+        throw new NotFoundException(ResponseMessages.user.error.emailNotVerified);
+      }
+      const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
+      if (!resUser) {
+        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+      }
+
+      return 'User updated successfully';
+    } catch (error) {
+      this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response);
     }
   }
 

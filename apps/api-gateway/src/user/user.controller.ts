@@ -39,7 +39,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
-import { AddUserDetails } from './dto/add-user.dto';
+import { AddPasskeyDetails, AddUserDetails } from './dto/add-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
@@ -76,77 +76,77 @@ export class UserController {
    * @param res 
    * @returns Users list of organization
    */
-@Get()
-@Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-@ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-@ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
-@ApiQuery({
-  name: 'pageNumber',
-  type: Number,
-  required: false
-})
-@ApiQuery({
-  name: 'pageSize',
-  type: Number,
-  required: false
-})
-@ApiQuery({
-  name: 'search',
-  type: String,
-  required: false
-})
-async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Query('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  @Get()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Query('orgId') orgId: number, @Res() res: Response): Promise<Response> {
 
-  const org = user.selectedOrg?.orgId;
-  const users = await this.userService.getOrgUsers(org, getAllUsersDto);
-  const finalResponse: IResponseType = {
-    statusCode: HttpStatus.OK,
-    message: ResponseMessages.user.success.fetchUsers,
-    data: users.response
-  };
+    const org = user.selectedOrg?.orgId;
+    const users = await this.userService.getOrgUsers(org, getAllUsersDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchUsers,
+      data: users.response
+    };
 
-  return res.status(HttpStatus.OK).json(finalResponse);
-}
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
 
-/**
- * 
- * @param user 
- * @param orgId 
- * @param res 
- * @returns Users list of organization
- */
-@Get('/public')
-@ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-@ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
-@ApiQuery({
-  name: 'pageNumber',
-  type: Number,
-  required: false
-})
-@ApiQuery({
-  name: 'pageSize',
-  type: Number,
-  required: false
-})
-@ApiQuery({
-  name: 'search',
-  type: String,
-  required: false
-})
-async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Res() res: Response): Promise<Response> {
- 
- const users = await this.userService.get(getAllUsersDto);
- const finalResponse: IResponseType = {
-   statusCode: HttpStatus.OK,
-   message: ResponseMessages.user.success.fetchUsers,
-   data: users.response
- };
+  /**
+   * 
+   * @param user 
+   * @param orgId 
+   * @param res 
+   * @returns Users list of organization
+   */
+  @Get('/public')
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Res() res: Response): Promise<Response> {
 
- return res.status(HttpStatus.OK).json(finalResponse);
-}
+    const users = await this.userService.get(getAllUsersDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchUsers,
+      data: users.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
 
   /**
@@ -328,21 +328,34 @@ async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUs
   @Post('/add/:email')
   @ApiOperation({ summary: 'Add user information', description: 'Add user information' })
   async addUserDetailsInKeyCloak(@Body() userInfo: AddUserDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
-    const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
-    if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
-      this.commonService.passwordValidation(decryptedPassword);
-      userInfo.password = decryptedPassword;
-      const userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
-      const finalResponse: IResponseType = {
+    let finalResponse;
+    let userDetails;
+
+    if (false === userInfo.isPasskey) {
+
+      const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
+      if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
+        this.commonService.passwordValidation(decryptedPassword);
+        userInfo.password = decryptedPassword;
+        userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
+        finalResponse = {
+          statusCode: HttpStatus.CREATED,
+          message: ResponseMessages.user.success.create,
+          data: userDetails.response
+        };
+      } else {
+        throw new BadRequestException('Password name must be between 8 to 50 Characters');
+      }
+    } else {
+
+      userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
+      finalResponse = {
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.user.success.create,
         data: userDetails.response
       };
-      return res.status(HttpStatus.OK).json(finalResponse);
-
-    } else {
-      throw new BadRequestException('Password name must be between 8 to 50 Characters');
     }
+    return res.status(HttpStatus.OK).json(finalResponse);
 
   }
 
@@ -385,5 +398,21 @@ async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUs
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/password/:email')
+  @ApiOperation({ summary: 'Add user information', description: 'Add user information' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async addPasskey(@Body() userInfo: AddPasskeyDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
+    const userDetails = await this.userService.addPasskey(email, userInfo);
+    const finalResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.user.success.create,
+      data: userDetails.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
   }
 }

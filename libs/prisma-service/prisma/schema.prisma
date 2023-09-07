@@ -120,7 +120,6 @@ model user_devices {
   userId              Int?
   deletedAt           DateTime? @db.Timestamp(6)
   authCounter         Int       @default(0)
-  password            String?   @db.VarChar
   user                user?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_e12ac4f8016243ac71fd2e415af")
 }
 

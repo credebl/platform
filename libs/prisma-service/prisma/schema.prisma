@@ -25,38 +25,39 @@ model user {
   profileImg          String?           @db.VarChar(1000)
   fidoUserId          String?           @db.VarChar(1000)
   isFidoVerified      Boolean           @default(false)
-  userOrgRoles        user_org_roles[]
-  userDevices         user_devices[]
+  publicProfile       Boolean           @default(false)
+  password            String?           @db.VarChar
   orgInvitations      org_invitations[]
   user_activities     user_activity[]
-  publicProfile       Boolean           @default(false)
+  userDevices         user_devices[]
+  userOrgRoles        user_org_roles[]
 }
 
 model user_activity {
-  id                  Int           @id @default(autoincrement())
+  id                  Int          @id @default(autoincrement())
   userId              Int
-  user                user          @relation(fields: [userId], references: [id])
   orgId               Int
-  organisation        organisation? @relation(fields: [orgId], references: [id])
   action              String
   details             String
-  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy           Int           @default(1)
-  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int           @default(1)
-  deletedAt           DateTime?     @db.Timestamp(6)
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           Int          @default(1)
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int          @default(1)
+  deletedAt           DateTime?    @db.Timestamp(6)
+  organisation        organisation @relation(fields: [orgId], references: [id])
+  user                user         @relation(fields: [userId], references: [id])
 }
 
 model org_roles {
   id                  Int              @id @default(autoincrement())
   name                String           @unique
   description         String
-  userOrgRoles        user_org_roles[]
   createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
   createdBy           Int              @default(1)
   lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
   lastChangedBy       Int              @default(1)
   deletedAt           DateTime?        @db.Timestamp(6)
+  userOrgRoles        user_org_roles[]
 }
 
 model user_org_roles {
@@ -80,15 +81,15 @@ model organisation {
   orgSlug             String?           @unique
   logoUrl             String?
   website             String?           @db.VarChar
-  userOrgRoles        user_org_roles[]
-  orgInvitations      org_invitations[]
-  org_agents          org_agents[]
+  publicProfile       Boolean           @default(false)
   connections         connections[]
   credentials         credentials[]
+  org_agents          org_agents[]
+  orgInvitations      org_invitations[]
   presentations       presentations[]
   schema              schema[]
   user_activities     user_activity[]
-  publicProfile       Boolean           @default(false)
+  userOrgRoles        user_org_roles[]
 }
 
 model org_invitations {
@@ -101,10 +102,10 @@ model org_invitations {
   userId              Int
   orgId               Int
   status              String
-  user                user         @relation(fields: [userId], references: [id])
-  organisation        organisation @relation(fields: [orgId], references: [id])
   orgRoles            Int[]
   email               String?
+  organisation        organisation @relation(fields: [orgId], references: [id])
+  user                user         @relation(fields: [userId], references: [id])
 }
 
 model user_devices {
@@ -119,7 +120,6 @@ model user_devices {
   userId              Int?
   deletedAt           DateTime? @db.Timestamp(6)
   authCounter         Int       @default(0)
-  password            String?   @db.VarChar
   user                user?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_e12ac4f8016243ac71fd2e415af")
 }
 
@@ -159,12 +159,12 @@ model org_agents {
   orgId               Int
   orgAgentTypeId      Int
   ledgerId            Int?
-  ledgers             ledgers?            @relation(fields: [ledgerId], references: [id])
-  agents_type         agents_type?        @relation(fields: [agentsTypeId], references: [id])
-  org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
-  organisation        organisation?       @relation(fields: [orgId], references: [id])
-  agents              agents?             @relation(fields: [agentId], references: [id])
   agent_invitations   agent_invitations[]
+  agents              agents?             @relation(fields: [agentId], references: [id])
+  agents_type         agents_type         @relation(fields: [agentsTypeId], references: [id])
+  ledgers             ledgers?            @relation(fields: [ledgerId], references: [id])
+  org_agent_type      org_agents_type     @relation(fields: [orgAgentTypeId], references: [id])
+  organisation        organisation        @relation(fields: [orgId], references: [id])
 }
 
 model org_agents_type {
@@ -214,20 +214,20 @@ model agents {
 }
 
 model schema {
-  id                  Int           @id(map: "PK_c9e7e648903a9e537347aba4372") @default(autoincrement())
-  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy           Int           @default(1)
-  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int           @default(1)
-  name                String        @db.VarChar
-  version             String        @db.VarChar
+  id                  Int          @id(map: "PK_c9e7e648903a9e537347aba4372") @default(autoincrement())
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           Int          @default(1)
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int          @default(1)
+  name                String       @db.VarChar
+  version             String       @db.VarChar
   attributes          String
-  schemaLedgerId      String        @db.VarChar
-  publisherDid        String        @db.VarChar
-  ledgerId            Int           @default(1)
-  issuerId            String        @db.VarChar
+  schemaLedgerId      String       @db.VarChar
+  publisherDid        String       @db.VarChar
+  ledgerId            Int          @default(1)
+  issuerId            String       @db.VarChar
   orgId               Int
-  organisation        organisation? @relation(fields: [orgId], references: [id])
+  organisation        organisation @relation(fields: [orgId], references: [id])
 }
 
 model credential_definition {
@@ -252,46 +252,46 @@ model shortening_url {
 }
 
 model agent_invitations {
-  id                   Int         @unique @default(autoincrement())
-  orgId                Int         @default(1)
-  agentId              Int         @default(1)
+  id                   Int        @unique @default(autoincrement())
+  orgId                Int        @default(1)
+  agentId              Int        @default(1)
   connectionInvitation String
   multiUse             Boolean
-  createDateTime       DateTime    @default(now()) @db.Timestamptz(6)
-  createdBy            Int         @default(1)
-  lastChangedDateTime  DateTime    @default(now()) @db.Timestamptz(6)
-  lastChangedBy        Int         @default(1)
-  org_agents           org_agents? @relation(fields: [agentId], references: [id])
+  createDateTime       DateTime   @default(now()) @db.Timestamptz(6)
+  createdBy            Int        @default(1)
+  lastChangedDateTime  DateTime   @default(now()) @db.Timestamptz(6)
+  lastChangedBy        Int        @default(1)
+  org_agents           org_agents @relation(fields: [agentId], references: [id])
 }
 
 model connections {
-  id                   Int           @id @default(autoincrement())
-  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy            Int           @default(1)
-  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy        Int           @default(1)
-  connectionId         String        @unique
+  id                   Int          @id @default(autoincrement())
+  createDateTime       DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy            Int          @default(1)
+  lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy        Int          @default(1)
+  connectionId         String       @unique
   state                String
   orgDid               String
   theirLabel           String
   autoAcceptConnection Boolean
   outOfBandId          String
   orgId                Int
-  organisation         organisation? @relation(fields: [orgId], references: [id])
+  organisation         organisation @relation(fields: [orgId], references: [id])
 }
 
 model credentials {
-  id                   Int           @id @default(autoincrement())
-  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy            Int           @default(1)
-  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy        Int           @default(1)
-  connectionId         String        @unique
+  id                   Int          @id @default(autoincrement())
+  createDateTime       DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy            Int          @default(1)
+  lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy        Int          @default(1)
+  connectionId         String       @unique
   threadId             String
   protocolVersion      String
   credentialAttributes Json[]
   orgId                Int
-  organisation         organisation? @relation(fields: [orgId], references: [id])
+  organisation         organisation @relation(fields: [orgId], references: [id])
 }
 
 model presentations {

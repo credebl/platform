@@ -157,7 +157,7 @@ export class FidoController {
             const fidoUserDetails = await this.fidoService.fetchFidoUserDetails(req.params.userName);
             const finalResponse: IResponseType = {
                 statusCode: HttpStatus.OK,
-                message: ResponseMessages.user.success.login,
+                message: ResponseMessages.user.success.fetchUsers,
                 data: fidoUserDetails.response
             };
             return res.status(HttpStatus.OK).json(finalResponse);

@@ -382,7 +382,7 @@ export class UserService {
         return this.generateToken(email, decryptedPassword);
       }
 
-      return this.generateToken(email, password);
+     return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -390,15 +390,14 @@ export class UserService {
   }
 
   async generateToken(email: string, password: string): Promise<object> {
-    try {
-      const supaInstance = await this.supabaseService.getClient();
+    const supaInstance = await this.supabaseService.getClient();
 
-      this.logger.error(`supaInstance::`, supaInstance);
+    this.logger.error(`supaInstance::`, supaInstance);
 
-      const { data, error } = await supaInstance.auth.signInWithPassword({
-        email,
-        password
-      });
+    const { data, error } = await supaInstance.auth.signInWithPassword({
+      email,
+      password
+    });
 
       this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
@@ -412,6 +411,10 @@ export class UserService {
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
+
+    const token = data?.session;
+
+    return token;
   }
 
   async getProfile(payload: { id }): Promise<object> {

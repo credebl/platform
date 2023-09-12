@@ -1,9 +1,18 @@
-import { trim } from '@credebl/common/cast.helper';
+import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString} from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength} from 'class-validator';
 
 export class AddUserDetails {
+
+    @ApiProperty()
+    @Transform(({ value }) => trim(value))
+    @Transform(({ value }) => toLowerCase(value))
+    @IsNotEmpty({ message: 'Email is required.' })
+    @MaxLength(256, { message: 'Email must be at most 256 character.' })
+    @IsEmail()
+    email: string;
+
     @ApiProperty({ example: 'Alen' })
     @IsString({ message: 'firstName should be string' })
     @IsOptional()

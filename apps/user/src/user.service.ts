@@ -150,12 +150,12 @@ export class UserService {
   }
 
 
-  async createUserForToken(email: string, userInfo: userInfo): Promise<string> {
+  async createUserForToken(userInfo: userInfo): Promise<string> {
     try {
-      if (!email) {
+      if (!userInfo.email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(email);
+      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email);
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
@@ -165,17 +165,17 @@ export class UserService {
       if (false === checkUserDetails.isEmailVerified) {
         throw new NotFoundException(ResponseMessages.user.error.verifyEmail);
       }
-      const resUser = await this.userRepository.updateUserInfo(email, userInfo);
+      const resUser = await this.userRepository.updateUserInfo(userInfo.email, userInfo);
       if (!resUser) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
-      const userDetails = await this.userRepository.getUserDetails(email);
+      const userDetails = await this.userRepository.getUserDetails(userInfo.email);
 
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
       const supaUser = await this.supabaseService.getClient().auth.signUp({
-        email,
+        email: userInfo.email,
         password: userInfo.password
       });
 

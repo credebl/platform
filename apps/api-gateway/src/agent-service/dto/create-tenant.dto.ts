@@ -1,7 +1,7 @@
 import { trim } from '@credebl/common/cast.helper';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString, Matches, MaxLength, MinLength, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, Matches, MaxLength, MinLength, IsOptional } from 'class-validator';
 const labelRegex = /^[a-zA-Z0-9 ]*$/;
 export class CreateTenantDto {
     @ApiProperty()
@@ -24,12 +24,10 @@ export class CreateTenantDto {
         message: 'Spaces are not allowed in seed'
     })
     seed: string;
-
-    @ApiProperty()
-    @IsNumber()
     orgId: number;
 
     @ApiProperty()
     @IsOptional()
+    @ApiPropertyOptional()
     clientSocketId?: string;
 }

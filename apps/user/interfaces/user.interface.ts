@@ -29,6 +29,7 @@ export interface UserEmailVerificationDto{
 }
 
 export interface userInfo{
+    email: string,
     password: string,
     firstName: string,
     lastName: string,

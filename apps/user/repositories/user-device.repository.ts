@@ -286,5 +286,6 @@ async addCredentialIdAndNameById(id:number, credentialId:string, deviceFriendlyN
     throw new InternalServerErrorException(error);
   }
 }
+
 }
 

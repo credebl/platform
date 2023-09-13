@@ -1,7 +1,7 @@
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength} from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength} from 'class-validator';
 
 export class AddUserDetails {
 
@@ -26,6 +26,8 @@ export class AddUserDetails {
     @ApiProperty()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'Password is required.' })
+    @MinLength(8, { message: 'Password must be at least 8 characters.' })
+    @MaxLength(50, { message: 'Password must be at most 50 characters.' })
     @IsOptional()
     password?: string;
 

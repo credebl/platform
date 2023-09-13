@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
-import { AddUserDetails } from '../user/dto/login-user.dto';
+import { AddUserDetails } from '../user/dto/add-user.dto';
 
 
 @Injectable()

@@ -12,7 +12,6 @@ import {
   UseFilters
 } from '@nestjs/common';
 import { AuthzService } from './authz.service';
-// import { CommonService } from "@credebl/common";
 import { CommonService } from '../../../../libs/common/src/common.service';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -22,8 +21,9 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Response } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
-import { AddUserDetails, LoginUserDto } from '../user/dto/login-user.dto';
+import { LoginUserDto } from '../user/dto/login-user.dto';
 import { CustomExceptionFilter } from '@credebl/common/exception-handler';
+import { AddUserDetails } from '../user/dto/add-user.dto';
 
 
 @Controller('auth')

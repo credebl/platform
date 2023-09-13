@@ -106,8 +106,8 @@ export class UserController {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userEmail: string, userInfo: userInfo }): Promise<string | object> {
-    return this.userService.createUserForToken(payload.userEmail, payload.userInfo);
+  async addUserDetailsInKeyCloak(payload: { userInfo: userInfo }): Promise<string | object> {
+    return this.userService.createUserForToken(payload.userInfo);
   }
 
   // Fetch Users recent activities

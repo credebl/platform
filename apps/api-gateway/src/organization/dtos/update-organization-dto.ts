@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
@@ -7,9 +7,7 @@ import { trim } from '@credebl/common/cast.helper';
 @ApiExtraModels()
 export class UpdateOrganizationDto {
 
-    @ApiProperty()
-    @IsNotEmpty({ message: 'orgId is required.' })
-    @IsNumber()
+    
     orgId: number;
 
     @ApiProperty()

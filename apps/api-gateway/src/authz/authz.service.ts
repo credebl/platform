@@ -1,11 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import {
   WebSocketGateway,
   WebSocketServer
 
 } from '@nestjs/websockets';
+import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
+import { EmailVerificationDto } from '../user/dto/email-verify.dto';
+import { AddUserDetails } from '../user/dto/add-user.dto';
 
 
 @Injectable()
@@ -25,4 +28,35 @@ export class AuthzService extends BaseService {
     return this.sendNats(this.authServiceProxy, 'get-user-by-keycloakUserId', keycloakUserId);
   }
 
+  async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<object> {
+    try {
+      const payload = { userEmailVerificationDto };
+      return await this.sendNats(this.authServiceProxy, 'send-verification-mail', payload);
+    } catch (error) {
+      throw new RpcException(error.response);
+    }
+  }
+
+  async verifyEmail(param: EmailVerificationDto): Promise<object> {
+    try {
+      const payload = { param };
+      return await this.sendNats(this.authServiceProxy, 'user-email-verification', payload);
+    } catch (error) {
+      throw new RpcException(error.response);
+    }
+  }
+
+  async login(email: string, password?: string, isPasskey = false): Promise<{ response: object }> {
+    try {
+      const payload = { email, password, isPasskey };
+      return await this.sendNats(this.authServiceProxy, 'user-holder-login', payload);
+    } catch (error) {
+      throw new RpcException(error.response);
+    }
+  }
+
+  async addUserDetailsInKeyCloak(userInfo: AddUserDetails): Promise<{ response: string }> {
+    const payload = { userInfo };
+    return this.sendNats(this.authServiceProxy, 'add-user', payload);
+  }
 }

@@ -58,7 +58,7 @@ export class UserService {
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
-      
+
       if (userDetails && userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
@@ -152,12 +152,13 @@ export class UserService {
   }
 
 
-  async createUserForToken(email: string, userInfo: userInfo): Promise<string> {
+  async createUserForToken(userInfo: userInfo): Promise<string> {
     try {
-      if (!email) {
+      const { email } = userInfo;
+      if (!userInfo.email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(email);
+      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email);
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
@@ -167,11 +168,11 @@ export class UserService {
       if (false === checkUserDetails.isEmailVerified) {
         throw new NotFoundException(ResponseMessages.user.error.verifyEmail);
       }
-      const resUser = await this.userRepository.updateUserInfo(email, userInfo);
+      const resUser = await this.userRepository.updateUserInfo(userInfo.email, userInfo);
       if (!resUser) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
-      const userDetails = await this.userRepository.getUserDetails(email);
+      const userDetails = await this.userRepository.getUserDetails(userInfo.email);
 
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
@@ -180,7 +181,7 @@ export class UserService {
       let supaUser;
 
       if (userInfo.isPasskey) {
-        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);  
+        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email);
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
         if (!resUser) {
@@ -276,7 +277,7 @@ export class UserService {
         return this.generateToken(email, decryptedPassword);
       }
 
-     return this.generateToken(email, password);
+      return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
@@ -284,24 +285,28 @@ export class UserService {
   }
 
   async generateToken(email: string, password: string): Promise<object> {
-    const supaInstance = await this.supabaseService.getClient();
+    try {
+      const supaInstance = await this.supabaseService.getClient();
 
-    this.logger.error(`supaInstance::`, supaInstance);
+      this.logger.error(`supaInstance::`, supaInstance);
 
-    const { data, error } = await supaInstance.auth.signInWithPassword({
-      email,
-      password
-    });
+      const { data, error } = await supaInstance.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+      this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
-    if (error) {
-      throw new BadRequestException(error?.message);
+      if (error) {
+        throw new BadRequestException(error?.message);
+      }
+
+      const token = data?.session;
+
+      return token;
+    } catch (error) {
+      throw new RpcException(error.response);
     }
-
-    const token = data?.session;
-
-    return token;
   }
 
   async getProfile(payload: { id }): Promise<object> {

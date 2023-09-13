@@ -11,10 +11,10 @@ import {
   HttpStatus,
   Res,
   Get,
-  Query,
-  UseFilters
+  UseFilters,
+  Param
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiOperation, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiOperation, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetUser } from '../authz/decorators/get-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -32,7 +32,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)
-@Controller('agent-service')
+@Controller()
 @ApiTags('agents')
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
@@ -43,74 +43,12 @@ export class AgentController {
 
   private readonly logger = new Logger();
 
-  /**
-   * 
-   * @param agentSpinupDto 
-   * @param user 
-   * @returns 
-   */
-  @Post('/spinup')
+  @Get('/orgs/:orgId/agents/health')
   @ApiOperation({
-    summary: 'Agent spinup',
-    description: 'Create a new agent spin up.'
+    summary: 'Get the agent health details',
+    description: 'Get the agent health details'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  async agentSpinup(
-    @Body() agentSpinupDto: AgentSpinupDto,
-    @GetUser() user: user,
-    @Res() res: Response
-  ): Promise<Response<object, Record<string, object>>> {
-
-    const regex = new RegExp('^[a-zA-Z0-9]+$');
-    if (!regex.test(agentSpinupDto.walletName)) {
-      this.logger.error(`Wallet name in wrong format.`);
-      throw new BadRequestException(`Please enter valid wallet name, It allows only alphanumeric values`);
-    }
-    this.logger.log(`**** Spin up the agent...${JSON.stringify(agentSpinupDto)}`);
-    const agentDetails = await this.agentService.agentSpinup(agentSpinupDto, user);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.agent.success.create,
-      data: agentDetails.response
-    };
-
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
-  @Post('/tenant')
-  @ApiOperation({
-    summary: 'Shared Agent',
-    description: 'Create a shared agent.'
-  })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  async createTenant(
-    @Body() createTenantDto: CreateTenantDto,
-    @GetUser() user: user,
-    @Res() res: Response
-  ): Promise<object> {
-    const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.agent.success.create,
-      data: tenantDetails.response
-    };
-
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
-  @Get('/health')
-  @ApiOperation({
-    summary: 'Fetch agent details',
-    description: 'Fetch agent health details'
-  })
-  @ApiQuery({
-    name: 'orgId',
-    type: Number,
-    required: false
-  })
-  async getAgentHealth(@User() reqUser: user, @Query('orgId') orgId: number, @Res() res: Response): Promise<object> {
+  async getAgentHealth(@User() reqUser: user, @Param('orgId') orgId: number, @Res() res: Response): Promise<object> {
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
     const finalResponse: IResponseType = {
@@ -123,4 +61,66 @@ export class AgentController {
 
   }
 
+  /**
+   * 
+   * @param agentSpinupDto 
+   * @param user 
+   * @returns 
+   */
+  @Post('/orgs/:orgId/agents/spinup')
+  @ApiOperation({
+    summary: 'Agent spinup',
+    description: 'Create a new agent spin up.'
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  async agentSpinup(
+    @Body() agentSpinupDto: AgentSpinupDto,
+    @Param('orgId') orgId: number,
+    @GetUser() user: user,
+    @Res() res: Response
+  ): Promise<Response<object, Record<string, object>>> {
+
+    const regex = new RegExp('^[a-zA-Z0-9]+$');
+    if (!regex.test(agentSpinupDto.walletName)) {
+      this.logger.error(`Wallet name in wrong format.`);
+      throw new BadRequestException(`Please enter valid wallet name, It allows only alphanumeric values`);
+    }
+    this.logger.log(`**** Spin up the agent...${JSON.stringify(agentSpinupDto)}`);
+
+    agentSpinupDto.orgId = orgId;
+    const agentDetails = await this.agentService.agentSpinup(agentSpinupDto, user);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.create,
+      data: agentDetails.response
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/agents/wallet')
+  @ApiOperation({
+    summary: 'Shared Agent',
+    description: 'Create a shared agent.'
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  async createTenant(
+    @Param('orgId') orgId: number,
+    @Body() createTenantDto: CreateTenantDto,
+    @GetUser() user: user,
+    @Res() res: Response
+  ): Promise<object> {
+
+    createTenantDto.orgId = orgId;
+    const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.create,
+      data: tenantDetails.response
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
 }

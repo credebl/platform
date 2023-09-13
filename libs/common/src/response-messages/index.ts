@@ -115,7 +115,7 @@ export const ResponseMessages = {
     },
     agent: {
         success: {
-            create: 'Agent spin-up up successfully',
+            create: 'Agent spin-up successfully',
             health: 'Agent health details retrieved successfully.'
         },
         error: {

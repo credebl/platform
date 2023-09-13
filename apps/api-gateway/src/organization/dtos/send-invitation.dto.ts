@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEmail, IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 import { trim } from '@credebl/common/cast.helper';
@@ -29,9 +29,5 @@ export class BulkSendInvitationDto {
     @ValidateNested({ each: true })
     @Type(() => SendInvitationDto)
     invitations: SendInvitationDto[];
-
-    @ApiProperty({ example: 1 })
-    @IsNotEmpty({ message: 'Please provide valid orgId' })
-    @IsNumber()
     orgId: number;
 }

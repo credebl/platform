@@ -279,7 +279,7 @@ export class OrganizationController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-  }
+  } 
 
   @Put('/:orgId')
   @ApiOperation({ summary: 'Update Organization', description: 'Update an organization' })

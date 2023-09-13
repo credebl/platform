@@ -189,6 +189,7 @@ export class ConnectionController {
         @Query('orgId') orgId: number,
         @Res() res: Response
     ): Promise<Response> {
+        this.logger.log(`for testing PR issue`);
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
 
         const finalResponse: IResponseType = {

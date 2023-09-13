@@ -35,6 +35,7 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { AddPasskeyDetails } from './dto/add-user.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -292,6 +293,22 @@ export class UserController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.update
     };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
+  @Post('/password/:email')
+  @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async addPasskey(@Body() userInfo: AddPasskeyDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
+    const userDetails = await this.userService.addPasskey(email, userInfo);
+    const finalResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.user.success.create,
+      data: userDetails.response
+    };
+
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }

@@ -8,7 +8,8 @@ import {
   Post,
   Query,
   Res,
-  UnauthorizedException
+  UnauthorizedException,
+  UseFilters
 } from '@nestjs/common';
 import { AuthzService } from './authz.service';
 // import { CommonService } from "@credebl/common";
@@ -22,10 +23,12 @@ import { Response } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
 import { AddUserDetails, LoginUserDto } from '../user/dto/login-user.dto';
+import { CustomExceptionFilter } from '@credebl/common/exception-handler';
 
 
 @Controller('auth')
 @ApiTags('auth')
+@UseFilters(CustomExceptionFilter)
 export class AuthzController {
   private logger = new Logger('AuthzController');
 

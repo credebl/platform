@@ -180,7 +180,7 @@ export class UserService {
       let supaUser;
 
       if (userInfo.isPasskey) {
-        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
+        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);  
         const userDetails = await this.userRepository.getUserDetails(email);
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
         if (!resUser) {

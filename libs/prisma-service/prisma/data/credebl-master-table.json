@@ -1,0 +1,85 @@
+{
+  "platformConfigData": {
+    "externalIp": "##Machine Ip Address for agent setup##",
+    "lastInternalId": "##Docker Network Ip Address##",
+    "username": "credebl",
+    "sgApiKey": "###Sendgrid Key###",
+    "emailFrom": "##Senders Mail ID##",
+    "apiEndpoint": "## Platform API Ip Address##",
+    "tailsFileServer": "##Machine Ip Address for agent setup##"
+  },
+  "platformAdminData": {
+    "firstName": "CREDEBL",
+    "lastName": "CREDEBL",
+    "email": "platform.admin@yopmail.com",
+    "username": "platform.admin@yopmail.com",
+    "password": "####Please provide encrypted password using crypto-js###",
+    "verificationCode": "",
+    "isEmailVerified": true,
+    "supabaseUserId": "96cef763-e106-46c1-ac78-fadf2803b11f"
+  },
+  "platformAdminOrganizationData": {
+    "name": "Platform-admin",
+    "description": "Platform-admin",
+    "logoUrl": "",
+    "website": ""
+  },
+  "userOrgRoleData": {
+    "userId": 1,
+    "orgRoleId": 1,
+    "orgId": 1
+  },
+  "orgRoleData": [
+    {
+      "name": "owner",
+      "description": "Organization Owner"
+    },
+    {
+      "name": "admin",
+      "description": "Organization Admin"
+    },
+    {
+      "name": "issuer",
+      "description": "Organization Credential Issuer"
+    },
+    {
+      "name": "verifier",
+      "description": "Organization Credential Verifier"
+    },
+    {
+      "name": "holder",
+      "description": "Receives credentials issued by organization"
+    },
+    {
+      "name": "member",
+      "description": "Joins the organization as member"
+    }
+  ],
+  "agentTypeData": [
+    {
+      "agent": "AFJ"
+    },
+    {
+      "agent": "ACAPY"
+    }
+  ],
+  "orgAgentTypeData": [
+    {
+      "agent": "DEDICATED"
+    },
+    {
+      "agent": "SHARED"
+    }
+  ],
+  "ledgerData": [
+    {
+      "name": "Bcovrin Testnet",
+      "networkType": "testnet",
+      "poolConfig": "http://test.bcovrin.vonx.io/genesis",
+      "isActive": true,
+      "networkString": "testnet",
+      "registerDIDEndpoint": "http://test.bcovrin.vonx.io/register",
+      "registerDIDPayload": ""
+    }
+  ]
+}

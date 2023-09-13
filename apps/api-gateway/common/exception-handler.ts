@@ -16,11 +16,20 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
       exception.message = 'Oops! Something went wrong. Please try again';
     }
 
-    const errorResponse = {
-      statusCode: status,
-      message: exception.message || 'Internal server error',
-      error: exception.message
-    };
+    let errorResponse;
+    if (status = HttpStatus.INTERNAL_SERVER_ERROR) {
+      errorResponse = {
+        statusCode: status,
+        message: 'Oops! Something went wrong. Please try again',
+        error: 'Oops! Something went wrong. Please try again'
+      };
+    } else {
+      errorResponse = {
+        statusCode: status,
+        message: exception.message || 'Internal server error',
+        error: exception.message
+      };
+    }
 
     response.status(status).json(errorResponse);
   }

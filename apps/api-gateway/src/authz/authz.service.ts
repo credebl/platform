@@ -47,12 +47,8 @@ export class AuthzService extends BaseService {
   }
 
   async login(email: string, password?: string, isPasskey = false): Promise<{ response: object }> {
-    try {
-      const payload = { email, password, isPasskey };
-      return await this.sendNats(this.authServiceProxy, 'user-holder-login', payload);
-    } catch (error) {
-      throw new RpcException(error.response);
-    }
+    const payload = { email, password, isPasskey };
+    return this.sendNats(this.authServiceProxy, 'user-holder-login', payload);
   }
 
   async addUserDetailsInKeyCloak(userInfo: AddUserDetails): Promise<{ response: string }> {

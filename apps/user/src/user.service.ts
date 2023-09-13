@@ -58,7 +58,7 @@ export class UserService {
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
-
+      
       if (userDetails && userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
@@ -277,7 +277,7 @@ export class UserService {
         return this.generateToken(email, decryptedPassword);
       }
 
-      return this.generateToken(email, password);
+     return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);

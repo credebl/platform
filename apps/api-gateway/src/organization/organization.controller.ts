@@ -176,16 +176,19 @@ export class OrganizationController {
   @ApiBearerAuth()
   @ApiQuery({
     name: 'pageNumber',
+    example: '1',
     type: Number,
     required: false
   })
   @ApiQuery({
     name: 'pageSize',
+    example: '10',
     type: Number,
     required: false
   })
   @ApiQuery({
     name: 'search',
+    example: '',
     type: String,
     required: false
   })

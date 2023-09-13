@@ -33,7 +33,6 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
-import { AddUserDetails } from './dto/add-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
@@ -82,16 +81,13 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/users/profile')
+  @Get('/users/public-profile/:userId')
   @ApiOperation({
-    summary: 'Fetch login user details',
-    description: 'Fetch login user details'
+    summary: 'Fetch user details',
+    description: 'Fetch user details'
   })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  async getProfile(@User() reqUser: user, @Res() res: Response): Promise<object> {
-
-    const userData = await this.userService.getProfile(reqUser.id);
+  async getPublicProfile(@User() reqUser: user, @Param('userId') id: number, @Res() res: Response): Promise<object> {
+    const userData = await this.userService.getPublicProfile(id);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -103,13 +99,16 @@ export class UserController {
 
   }
 
-  @Get('/users/public-profile/:userId')
+  @Get('/users/profile')
   @ApiOperation({
-    summary: 'Fetch user details',
-    description: 'Fetch user details'
+    summary: 'Fetch login user details',
+    description: 'Fetch login user details'
   })
-  async getPublicProfile(@User() reqUser: user, @Param('userId') id: number, @Res() res: Response): Promise<object> {
-    const userData = await this.userService.getPublicProfile(id);
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getProfile(@User() reqUser: user, @Res() res: Response): Promise<object> {
+
+    const userData = await this.userService.getProfile(reqUser.id);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -150,7 +149,27 @@ export class UserController {
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async invitations(@User() reqUser: user, @Query() getAllInvitationsDto: GetAllInvitationsDto, @Res() res: Response): Promise<object> {
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'status',
+    type: String,
+    required: false
+  })
+  async invitations(@Query() getAllInvitationsDto: GetAllInvitationsDto, @User() reqUser: user, @Res() res: Response): Promise<object> {
 
     if (!Object.values(Invitation).includes(getAllInvitationsDto.status)) {
       throw new BadRequestException(ResponseMessages.user.error.invalidInvitationStatus);
@@ -255,33 +274,6 @@ export class UserController {
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
-  }
-  
-  /**
-  *
-  * @param email
-  * @param userInfo
-  * @param res
-  * @returns Add new user
-  */
-  @Post('/users')
-  @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
-  async addUserDetailsInKeyCloak(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
-    const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
-    if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
-      this.commonService.passwordValidation(decryptedPassword);
-      userInfo.password = decryptedPassword;
-      const userDetails = await this.userService.addUserDetailsInKeyCloak(userInfo);
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.create,
-        data: userDetails.response
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
-
-    } else {
-      throw new BadRequestException('Password name must be between 8 to 50 Characters');
-    }
   }
 
   @Put('/users')

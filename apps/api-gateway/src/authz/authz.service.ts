@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
+import { AddUserDetails } from '../user/dto/login-user.dto';
 
 
 @Injectable()
@@ -52,5 +53,10 @@ export class AuthzService extends BaseService {
     } catch (error) {
       throw new RpcException(error.response);
     }
+  }
+
+  async addUserDetailsInKeyCloak(userInfo: AddUserDetails): Promise<{ response: string }> {
+    const payload = { userInfo };
+    return this.sendNats(this.authServiceProxy, 'add-user', payload);
   }
 }

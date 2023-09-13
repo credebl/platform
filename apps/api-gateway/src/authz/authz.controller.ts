@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -20,7 +21,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Response } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
-import { LoginUserDto } from '../user/dto/login-user.dto';
+import { AddUserDetails, LoginUserDto } from '../user/dto/login-user.dto';
 
 
 @Controller('auth')
@@ -70,12 +71,39 @@ export class AuthzController {
   }
 
   /**
+  *
+  * @param email
+  * @param userInfo
+  * @param res
+  * @returns Add new user
+  */
+  @Post('/signup')
+  @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
+  async addUserDetailsInKeyCloak(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
+    const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
+    if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
+      this.commonService.passwordValidation(decryptedPassword);
+      userInfo.password = decryptedPassword;
+      const userDetails = await this.authzService.addUserDetailsInKeyCloak(userInfo);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.user.success.create,
+        data: userDetails.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+
+    } else {
+      throw new BadRequestException('Password name must be between 8 to 50 Characters');
+    }
+  }
+
+  /**
   * 
   * @param loginUserDto 
   * @param res 
   * @returns User access token details
   */
-  @Post('/login')
+  @Post('/signin')
   @ApiOperation({
     summary: 'Authenticate the user for the access',
     description: 'Authenticate the user for the access'

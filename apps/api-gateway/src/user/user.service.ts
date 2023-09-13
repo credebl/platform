@@ -4,7 +4,6 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
-import { AddUserDetails } from './dto/login-user.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
@@ -86,11 +85,6 @@ export class UserService extends BaseService {
   async checkUserExist(userEmail: string): Promise<{ response: string }> {
     const payload = { userEmail };
     return this.sendNats(this.serviceProxy, 'check-user-exist', payload);
-  }
-
-  async addUserDetailsInKeyCloak(userInfo: AddUserDetails): Promise<{ response: string }> {
-    const payload = { userInfo };
-    return this.sendNats(this.serviceProxy, 'add-user', payload);
   }
 
   async getUserActivities(userId: number, limit: number): Promise<{ response: object }> {

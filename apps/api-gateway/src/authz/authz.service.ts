@@ -31,7 +31,7 @@ export class AuthzService extends BaseService {
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<object> {
     try {
       const payload = { userEmailVerificationDto };
-      return this.sendNats(this.authServiceProxy, 'send-verification-mail', payload);
+      return await this.sendNats(this.authServiceProxy, 'send-verification-mail', payload);
     } catch (error) {
       throw new RpcException(error.response);
     }
@@ -40,7 +40,7 @@ export class AuthzService extends BaseService {
   async verifyEmail(param: EmailVerificationDto): Promise<object> {
     try {
       const payload = { param };
-      return this.sendNats(this.authServiceProxy, 'user-email-verification', payload);
+      return await this.sendNats(this.authServiceProxy, 'user-email-verification', payload);
     } catch (error) {
       throw new RpcException(error.response);
     }
@@ -49,7 +49,7 @@ export class AuthzService extends BaseService {
   async login(email: string, password?: string, isPasskey = false): Promise<{ response: object }> {
     try {
       const payload = { email, password, isPasskey };
-      return this.sendNats(this.authServiceProxy, 'user-holder-login', payload);
+      return await this.sendNats(this.authServiceProxy, 'user-holder-login', payload);
     } catch (error) {
       throw new RpcException(error.response);
     }

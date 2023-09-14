@@ -724,5 +724,4 @@ export class UserService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-  
 }

@@ -53,8 +53,8 @@ export class UserService extends BaseService {
     }
   }
 
-  async getPublicProfile(id: number): Promise<{ response: object }> {
-    const payload = { id };
+  async getPublicProfile(username: string): Promise<{ response: object }> {
+    const payload = { username };
     try {
       return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
     } catch (error) {

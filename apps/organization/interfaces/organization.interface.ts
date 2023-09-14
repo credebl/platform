@@ -18,4 +18,6 @@ export interface IUpdateOrganization {
   orgId: string;
   logo?: string;
   website?: string;
+  orgSlug?: string;
+  isPublic?:boolean
 }

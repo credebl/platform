@@ -1,4 +1,4 @@
-import { IsBoolean, IsDefined, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDefined, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -14,9 +14,6 @@ export class CreateCredentialDefinitionDto {
     @IsString({ message: 'Schema id should be string' })
     schemaLedgerId: string;
 
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'Please provide orgId' })
     orgId: number;
 
     @ApiProperty({ required: false })

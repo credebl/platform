@@ -106,6 +106,30 @@ export class UserService {
     }
   }
 
+  async createUsername(email: string, verifyCode: string): Promise<string> {
+
+    try {
+      // eslint-disable-next-line prefer-destructuring
+      const emailTrim = email.split('@')[0];
+
+      // Replace special characters with hyphens
+      const cleanedUsername = emailTrim.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '-');
+
+      // Generate a 5-digit UUID
+      // eslint-disable-next-line prefer-destructuring
+      const uuid = verifyCode.split('-')[0];
+
+      // Combine cleaned username and UUID
+      const uniqueUsername = `${cleanedUsername}-${uuid}`;
+
+      return uniqueUsername;
+
+    } catch (error) {
+      this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
   /**
    *
    * @param email

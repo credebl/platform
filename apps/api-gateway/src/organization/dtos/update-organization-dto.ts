@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
@@ -36,5 +36,10 @@ export class UpdateOrganizationDto {
     @ApiProperty()
     @IsOptional()
     website: string;
+
+    @ApiPropertyOptional({ example: true })
+    @IsBoolean({ message: 'isPublic should be boolean' })
+    @IsOptional()
+    isPublic? = false;
 
 }

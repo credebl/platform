@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SortValue } from '../../enum';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsOptional } from 'class-validator';
 
 export class GetAllSchemaDto {
     @ApiProperty({ required: false })
@@ -29,13 +29,6 @@ export class GetAllSchemaDto {
     @ApiProperty({ required: false })
     @IsOptional()
     sortByValue: string = SortValue.DESC;
-
-    @ApiProperty({ required: true })
-    @Type(() => Number)
-    @IsNumber()
-    @IsNotEmpty()
-    @IsOptional()
-    orgId?: number;
 }
 
 export class GetCredentialDefinitionBySchemaIdDto {
@@ -56,13 +49,6 @@ export class GetCredentialDefinitionBySchemaIdDto {
     @ApiProperty({ required: false })
     @IsOptional()
     sortByValue: string = SortValue.DESC;
-
-    @ApiProperty({ required: true })
-    @Type(() => Number)
-    @IsNumber()
-    @IsNotEmpty()
-    @IsOptional()
-    orgId?: number;
 }
 
 export class GetAllSchemaByPlatformDto {

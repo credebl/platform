@@ -32,6 +32,7 @@ import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto'
 import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
+import { v4 as uuidv4 } from 'uuid';
 
 
 @Injectable()
@@ -67,7 +68,10 @@ export class UserService {
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
       }
 
-      const resUser = await this.userRepository.createUser(userEmailVerificationDto);
+      const verifyCode = uuidv4();
+      const uniqueUsername = await this.createUsername(userEmailVerificationDto.email, verifyCode);
+      userEmailVerificationDto.username = uniqueUsername;
+      const resUser = await this.userRepository.createUser(userEmailVerificationDto, verifyCode);
 
       try {
         await this.sendEmailForVerification(userEmailVerificationDto.email, resUser.verificationCode);
@@ -79,6 +83,30 @@ export class UserService {
     } catch (error) {
       this.logger.error(`In Create User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response);
+    }
+  }
+
+  async createUsername(email: string, verifyCode: string): Promise<string> {
+
+    try {
+      // eslint-disable-next-line prefer-destructuring
+      const emailTrim = email.split('@')[0];
+
+      // Replace special characters with hyphens
+      const cleanedUsername = emailTrim.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '-');
+
+      // Generate a 5-digit UUID
+      // eslint-disable-next-line prefer-destructuring
+      const uuid = verifyCode.split('-')[0];
+
+      // Combine cleaned username and UUID
+      const uniqueUsername = `${cleanedUsername}-${uuid}`;
+
+      return uniqueUsername;
+
+    } catch (error) {
+      this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -313,9 +341,9 @@ export class UserService {
     }
   }
 
-  async getPublicProfile(payload: { id }): Promise<object> {
+  async getPublicProfile(payload: {username }): Promise<object> {
     try {
-      const userProfile = await this.userRepository.getUserPublicProfile(payload.id);
+      const userProfile = await this.userRepository.getUserPublicProfile(payload.username);
 
       if (!userProfile) {
         throw new NotFoundException(ResponseMessages.user.error.profileNotFound);

@@ -8,11 +8,11 @@ import { PrismaService } from '@credebl/prisma-service';
 import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 // eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
 
 interface UserQueryOptions {
   id?: number; // Use the appropriate type based on your data model
   email?: string; // Use the appropriate type based on your data model
+  username?: string
   // Add more properties if needed for other unique identifier fields
 };
 
@@ -25,12 +25,11 @@ export class UserRepository {
    * @param userEmailVerificationDto
    * @returns user email
    */
-  async createUser(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
+  async createUser(userEmailVerificationDto: UserEmailVerificationDto, verifyCode: string): Promise<user> {
     try {
-      const verifyCode = uuidv4();
       const saveResponse = await this.prisma.user.create({
         data: {
-          username: userEmailVerificationDto.email,
+          username: userEmailVerificationDto.username,
           email: userEmailVerificationDto.email,
           verificationCode: verifyCode.toString()
         }
@@ -100,19 +99,26 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-    async getUserPublicProfile(id: number): Promise<UserI> {
-          const queryOptions: UserQueryOptions = {
-            id
-          };
-          return this.findUserForPublicProfile(queryOptions);
-        }
+  async getUserPublicProfile(username: string): Promise<UserI> {
+
+
+    let queryOptions: UserQueryOptions = {};
+    if (username) {
+      queryOptions = {
+        username
+      };
+
+    }
+    return this.findUserForPublicProfile(queryOptions);
+  }
 
   /**
    *
    * @Body updateUserProfile
    * @returns Update user profile data
    */
-  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<UpdateUserProfile> {
+  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<object> {
+        
     try {
       const userdetails = await this.prisma.user.update({
         where: {
@@ -146,7 +152,8 @@ export class UserRepository {
         data: {
           profileImg: updateUserProfile.profileImg,
           firstName: updateUserProfile.firstName,
-          lastName: updateUserProfile.lastName
+          lastName: updateUserProfile.lastName,
+          publicProfile: updateUserProfile?.isPublic
         }
       });
       return userdetails;
@@ -258,6 +265,9 @@ export class UserRepository {
           },
           {
             email: queryOptions.email
+          },
+          {
+            username: queryOptions.username
           }
         ]
       },
@@ -278,7 +288,8 @@ export class UserRepository {
                 name: true,
                 description: true,
                 logoUrl: true,
-                website: true
+                website: true,
+                orgSlug: true
               },
               where:{
                 publicProfile: true
@@ -422,6 +433,7 @@ export class UserRepository {
             email: true,
             firstName: true,
             lastName: true,
+            profileImg: true,
             isEmailVerified: true,
             clientId: false,
             clientSecret: false,

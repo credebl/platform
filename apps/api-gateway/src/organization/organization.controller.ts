@@ -1,4 +1,4 @@
-import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
 import { Controller, Get, Put, Param, UseGuards, UseFilters } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
@@ -109,18 +109,19 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('public-profile')
+  @Get('public-profiles/:orgSlug')
   @ApiOperation({
     summary: 'Fetch user details',
     description: 'Fetch user details'
   })
-  @ApiQuery({
-    name: 'id',
-    type: Number,
+
+  @ApiParam({
+    name: 'orgSlug',
+    type: String,
     required: false
   })
-  async getPublicProfile(@User() reqUser: user, @Query('id') id: number, @Res() res: Response): Promise<object> {
-    const userData = await this.organizationService.getPublicProfile(id);
+  async getPublicProfile(@Param('orgSlug') orgSlug: string, @Res() res: Response): Promise<object> {
+    const userData = await this.organizationService.getPublicProfile(orgSlug);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

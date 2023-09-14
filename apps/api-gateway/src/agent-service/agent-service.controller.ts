@@ -30,6 +30,8 @@ import { user } from '@prisma/client';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { User } from '../authz/decorators/user.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { Roles } from '../authz/decorators/roles.decorator';
+import { OrgRoles } from 'libs/org-roles/enums';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -72,6 +74,7 @@ export class AgentController {
     summary: 'Agent spinup',
     description: 'Create a new agent spin up.'
   })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async agentSpinup(
     @Body() agentSpinupDto: AgentSpinupDto,
@@ -104,6 +107,7 @@ export class AgentController {
     summary: 'Shared Agent',
     description: 'Create a shared agent.'
   })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async createTenant(
     @Param('orgId') orgId: number,

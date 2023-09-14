@@ -156,6 +156,7 @@ export class OrganizationController {
     type: String,
     required: false
   })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   async getInvitationsByOrgId(@Param('orgId') orgId: number, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<Response> {
 
     const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
@@ -192,6 +193,7 @@ export class OrganizationController {
     type: String,
     required: false
   })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   async getOrganizations(@Query() getAllOrgsDto: GetAllOrganizationsDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganizations = await this.organizationService.getOrganizations(getAllOrgsDto, reqUser.id);
@@ -210,6 +212,7 @@ export class OrganizationController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   async getOrganization(@Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganization(orgId, reqUser.id);
@@ -228,6 +231,7 @@ export class OrganizationController {
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
     await this.organizationService.createOrganization(createOrgDto, reqUser.id);
 
@@ -279,7 +283,7 @@ export class OrganizationController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-  } 
+  }
 
   @Put('/:orgId')
   @ApiOperation({ summary: 'Update Organization', description: 'Update an organization' })

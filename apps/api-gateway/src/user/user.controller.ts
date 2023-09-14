@@ -107,6 +107,7 @@ export class UserController {
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   async getProfile(@User() reqUser: user, @Res() res: Response): Promise<object> {
 
     const userData = await this.userService.getProfile(reqUser.id);
@@ -129,6 +130,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiQuery({ name: 'limit', required: true })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   async getUserActivities(@Query('limit') limit: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const userDetails = await this.userService.getUserActivities(reqUser.id, limit);
@@ -170,6 +172,7 @@ export class UserController {
     type: String,
     required: false
   })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   async invitations(@Query() getAllInvitationsDto: GetAllInvitationsDto, @User() reqUser: user, @Res() res: Response): Promise<object> {
 
     if (!Object.values(Invitation).includes(getAllInvitationsDto.status)) {
@@ -196,6 +199,7 @@ export class UserController {
   */
   @Get('/users/:email')
   @ApiOperation({ summary: 'Check user exist', description: 'check user existence' })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   async checkUserExist(@Param('email') email: string, @Res() res: Response): Promise<Response> {
     const userDetails = await this.userService.checkUserExist(email);
 
@@ -264,6 +268,7 @@ export class UserController {
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
   async acceptRejectInvitaion(@Body() acceptRejectInvitation: AcceptRejectInvitationDto, @Param('invitationId') invitationId: string, @User() reqUser: user, @Res() res: Response): Promise<object> {
     acceptRejectInvitation.invitationId = parseInt(invitationId);
     const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);

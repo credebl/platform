@@ -1,11 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString} from 'class-validator';
+import { IsOptional, IsString} from 'class-validator';
 
 
 export class UpdateUserProfileDto {
-    @ApiProperty()
-    @IsNotEmpty({ message: 'userId is required.' })
-    @IsNumber()
     id: number;
 
     @ApiPropertyOptional()

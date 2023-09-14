@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -84,20 +83,15 @@ export class AuthzController {
   @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
   async addUserDetailsInKeyCloak(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
     const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
-    if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
-      this.commonService.passwordValidation(decryptedPassword);
-      userInfo.password = decryptedPassword;
-      const userDetails = await this.authzService.addUserDetailsInKeyCloak(userInfo);
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.create,
-        data: userDetails.response
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
 
-    } else {
-      throw new BadRequestException('Password name must be between 8 to 50 Characters');
-    }
+    userInfo.password = decryptedPassword;
+    const userDetails = await this.authzService.addUserDetailsInKeyCloak(userInfo);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.user.success.create,
+      data: userDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**

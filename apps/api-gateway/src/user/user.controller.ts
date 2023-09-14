@@ -285,8 +285,10 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @Res() res: Response): Promise<Response> {
+  async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @User() reqUser: user, @Res() res: Response): Promise<Response> {
 
+    const userId = reqUser.id;
+    updateUserProfileDto.id = userId;
     await this.userService.updateUserProfile(updateUserProfileDto);
 
     const finalResponse: IResponseType = {

@@ -26,6 +26,7 @@ export interface InvitationsI {
 
 export interface UserEmailVerificationDto{
  email:string
+ username?:string
 }
 
 export interface userInfo{
@@ -51,4 +52,5 @@ export interface UpdateUserProfile {
     profileImg?: string;
     firstName: string,
     lastName: string,
+    isPublic: boolean,
 }

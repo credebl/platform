@@ -1,13 +1,12 @@
 import { Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetails } from './dto/add-user.dto';
-
 
 @Injectable()
 export class UserService extends BaseService {
@@ -17,39 +16,22 @@ export class UserService extends BaseService {
 
   async getProfile(id: number): Promise<{ response: object }> {
     const payload = { id };
-    try {
-      return this.sendNats(this.serviceProxy, 'get-user-profile', payload);
-    } catch (error) {
-      this.logger.error(`Error in get user:${JSON.stringify(error)}`);
-    }
+    return this.sendNats(this.serviceProxy, 'get-user-profile', payload);
   }
 
   async getPublicProfile(id: number): Promise<{ response: object }> {
     const payload = { id };
-    try {
-      return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
-    } catch (error) {
-      this.logger.error(`Error in get user:${JSON.stringify(error)}`);
-    }
+    return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
   }
 
   async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<{ response: object }> {
     const payload = { updateUserProfileDto };
-    try {
-      return this.sendNats(this.serviceProxy, 'update-user-profile', payload);
-    } catch (error) {
-      throw new RpcException(error.response);
-    }
+    return this.sendNats(this.serviceProxy, 'update-user-profile', payload);
   }
 
   async findUserinSupabase(id: string): Promise<{ response: object }> {
     const payload = { id };
-
-    try {
-      return this.sendNats(this.serviceProxy, 'get-user-by-supabase', payload);
-    } catch (error) {
-      this.logger.error(`Error in get user:${JSON.stringify(error)}`);
-    }
+    return this.sendNats(this.serviceProxy, 'get-user-by-supabase', payload);
   }
 
 
@@ -65,15 +47,6 @@ export class UserService extends BaseService {
   ): Promise<{ response: string }> {
     const payload = { acceptRejectInvitation, userId };
     return this.sendNats(this.serviceProxy, 'accept-reject-invitations', payload);
-  }
-
-  async getOrgUsers(
-    orgId: number,
-    getAllUsersDto: GetAllUsersDto
-  ): Promise<{ response: object }> {
-    const { pageNumber, pageSize, search } = getAllUsersDto;
-    const payload = { orgId, pageNumber, pageSize, search };
-    return this.sendNats(this.serviceProxy, 'fetch-organization-users', payload);
   }
 
   async get(
@@ -94,7 +67,7 @@ export class UserService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-user-activity', payload);
   }
 
-  async addPasskey(userEmail: string, userInfo:AddPasskeyDetails): Promise<{ response: string }> {
+  async addPasskey(userEmail: string, userInfo: AddPasskeyDetails): Promise<{ response: string }> {
     const payload = { userEmail, userInfo };
     return this.sendNats(this.serviceProxy, 'add-passkey', payload);
   }

@@ -26,6 +26,8 @@ import { GetAllOrganizationsDto } from './dtos/get-all-organizations.dto';
 import { GetAllSentInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
+import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -224,6 +226,45 @@ export class OrganizationController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
 
+  }
+
+  /**
+  * 
+  * @param user 
+  * @param orgId 
+  * @param res 
+  * @returns Users list of organization
+  */
+  @Get('/:orgId/users')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+    const users = await this.organizationService.getOrgUsers(orgId, getAllUsersDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchUsers,
+      data: users?.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Post('/')

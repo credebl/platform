@@ -27,7 +27,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { Invitation } from '@credebl/enum/enum';
-import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { IUserRequestInterface } from './interfaces';
@@ -36,9 +35,10 @@ import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AddPasskeyDetails } from './dto/add-user.dto';
+import { EmailValidator } from '../dtos/email-validator.dto';
 
 @UseFilters(CustomExceptionFilter)
-@Controller()
+@Controller('users')
 @ApiTags('users')
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
@@ -52,7 +52,7 @@ export class UserController {
    * @param res 
    * @returns Users list of organization
    */
-  @Get('/users/public-profiles')
+  @Get('/public-profiles')
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
   @ApiQuery({
@@ -82,7 +82,7 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/users/public-profile/:userId')
+  @Get('/public-profile/:userId')
   @ApiOperation({
     summary: 'Fetch user details',
     description: 'Fetch user details'
@@ -100,7 +100,7 @@ export class UserController {
 
   }
 
-  @Get('/users/profile')
+  @Get('/profile')
   @ApiOperation({
     summary: 'Fetch login user details',
     description: 'Fetch login user details'
@@ -122,7 +122,7 @@ export class UserController {
 
   }
 
-  @Get('/users/activity')
+  @Get('/activity')
   @ApiOperation({
     summary: 'organization invitations',
     description: 'Fetch organization invitations'
@@ -145,7 +145,7 @@ export class UserController {
   }
 
 
-  @Get('/users/org-invitations')
+  @Get('/org-invitations')
   @ApiOperation({
     summary: 'organization invitations',
     description: 'Fetch organization invitations'
@@ -197,11 +197,10 @@ export class UserController {
   * @param res
   * @returns User email check
   */
-  @Get('/users/:email')
+  @Get('/:email')
   @ApiOperation({ summary: 'Check user exist', description: 'check user existence' })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  async checkUserExist(@Param('email') email: string, @Res() res: Response): Promise<Response> {
-    const userDetails = await this.userService.checkUserExist(email);
+  async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
+    const userDetails = await this.userService.checkUserExist(emailParam.email);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -214,54 +213,13 @@ export class UserController {
   }
 
   /**
-  * 
-  * @param user 
-  * @param orgId 
-  * @param res 
-  * @returns Users list of organization
-  */
-  @Get('/orgs/:orgId/users')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
-  @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'search',
-    type: String,
-    required: false
-  })
-  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
-
-    const org = user.selectedOrg?.orgId;
-    const users = await this.userService.getOrgUsers(org, getAllUsersDto);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.fetchUsers,
-      data: users.response
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
-  /**
    * 
    * @param acceptRejectInvitation 
    * @param reqUser 
    * @param res 
    * @returns Organization invitation status
    */
-  @Post('/users/org-invitations/:invitationId')
+  @Post('/org-invitations/:invitationId')
   @ApiOperation({
     summary: 'accept/reject organization invitation',
     description: 'Accept or Reject organization invitations'
@@ -282,7 +240,7 @@ export class UserController {
 
   }
 
-  @Put('/users')
+  @Put('/')
   @ApiOperation({
     summary: 'Update user profile',
     description: 'Update user profile'
@@ -304,7 +262,7 @@ export class UserController {
 
   }
 
-  @Put('/users/password/:email')
+  @Put('/password/:email')
   @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()

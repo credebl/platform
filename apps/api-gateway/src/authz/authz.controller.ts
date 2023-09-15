@@ -21,8 +21,8 @@ import { Response } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
-import { CustomExceptionFilter } from '@credebl/common/exception-handler';
 import { AddUserDetails } from '../user/dto/add-user.dto';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 
 @Controller('auth')

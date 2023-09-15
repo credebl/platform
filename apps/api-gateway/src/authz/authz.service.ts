@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import {
   WebSocketGateway,
@@ -29,21 +29,14 @@ export class AuthzService extends BaseService {
   }
 
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<object> {
-    try {
-      const payload = { userEmailVerificationDto };
-      return await this.sendNats(this.authServiceProxy, 'send-verification-mail', payload);
-    } catch (error) {
-      throw new RpcException(error.response);
-    }
+    const payload = { userEmailVerificationDto };
+    return this.sendNats(this.authServiceProxy, 'send-verification-mail', payload);
   }
 
   async verifyEmail(param: EmailVerificationDto): Promise<object> {
-    try {
-      const payload = { param };
-      return await this.sendNats(this.authServiceProxy, 'user-email-verification', payload);
-    } catch (error) {
-      throw new RpcException(error.response);
-    }
+    const payload = { param };
+    return this.sendNats(this.authServiceProxy, 'user-email-verification', payload);
+
   }
 
   async login(email: string, password?: string, isPasskey = false): Promise<{ response: object }> {

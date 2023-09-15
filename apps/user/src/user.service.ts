@@ -500,6 +500,7 @@ export class UserService {
    */
   async getOrgUsers(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
+
       const query = {
         userOrgRoles: {
           some: { orgId }
@@ -514,6 +515,7 @@ export class UserService {
       const filterOptions = {
         orgId
       };
+
       return this.userRepository.findOrgUsers(query, pageNumber, pageSize, filterOptions);
     } catch (error) {
       this.logger.error(`get Org Users: ${JSON.stringify(error)}`);
@@ -552,12 +554,15 @@ export class UserService {
       } else if (userDetails && userDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
-        return 'New User';
+        return {
+          isExist: false
+        };
       } else {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
+          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
+          isExist: true
         };
         return userVerificationDetails;
       }

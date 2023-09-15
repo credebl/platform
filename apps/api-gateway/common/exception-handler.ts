@@ -15,9 +15,15 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
     if ("Cannot read properties of undefined (reading 'response')" === exception.message) {
       exception.message = 'Oops! Something went wrong. Please try again';
     }
-
+    
     let errorResponse;
-    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (exception && exception["statusCode"] === HttpStatus.INTERNAL_SERVER_ERROR) {
+      errorResponse = {
+        statusCode: status,
+        message: 'Oops! Something went wrong. Please try again',
+        error: 'Oops! Something went wrong. Please try again'
+      };
+    } else if (exception["statusCode"] === undefined && status === HttpStatus.INTERNAL_SERVER_ERROR) {
       errorResponse = {
         statusCode: status,
         message: 'Oops! Something went wrong. Please try again',
@@ -25,7 +31,7 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
       };
     } else {
       errorResponse = {
-        statusCode: status,
+        statusCode: exception["statusCode"] ? exception["statusCode"] : status,
         message: exception.message || 'Internal server error',
         error: exception.message
       };

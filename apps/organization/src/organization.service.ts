@@ -71,7 +71,7 @@ export class OrganizationService {
    * @returns OrgSlug
    */
   createOrgSlug(orgName: string): string {
-    
+
     return orgName
       .toLowerCase() // Convert the input to lowercase
       .replace(/\s+/g, '-') // Replace spaces with hyphens

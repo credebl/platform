@@ -245,7 +245,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrganization(queryObject: object): Promise<object> {
+  async getOrganization(queryObject: object): Promise<organisation> {
     try {
       return this.prisma.organisation.findFirst({
         where: {

@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -42,7 +42,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-user-public-profile' })
-  async getPublicProfile(payload: { username }): Promise<object> {
+  async getPublicProfile(payload: { username }): Promise<UserI> {
     return this.userService.getPublicProfile(payload);
   }
   @MessagePattern({ cmd: 'update-user-profile' })

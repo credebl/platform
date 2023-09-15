@@ -99,15 +99,11 @@ export class UserRepository {
    * @returns User profile data
    */
   async getUserPublicProfile(username: string): Promise<UserI> {
-
-
-    let queryOptions: UserQueryOptions = {};
-    if (username) {
-      queryOptions = {
+ 
+    const queryOptions: UserQueryOptions = {
         username
       };
 
-    }
     return this.findUserForPublicProfile(queryOptions);
   }
 
@@ -116,7 +112,7 @@ export class UserRepository {
    * @Body updateUserProfile
    * @returns Update user profile data
    */
-  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<object> {
+  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<user> {
         
     try {
       const userdetails = await this.prisma.user.update({

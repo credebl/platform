@@ -6,6 +6,7 @@ import {
   ApiBody,
   ApiForbiddenResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -118,7 +119,7 @@ export class UserController {
    * @param res 
    * @returns Users list of organization
    */
-  @Get('/public')
+  @Get('/public-profiles')
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
   @ApiQuery({
@@ -222,18 +223,18 @@ export class UserController {
 
   }
 
-  @Get('public-profile')
+  @Get('public-profiles/:username')
   @ApiOperation({
     summary: 'Fetch user details',
     description: 'Fetch user details'
   })
-  @ApiQuery({
-    name: 'id',
-    type: Number,
+  @ApiParam({
+    name: 'username',
+    type: String,
     required: false
   })
-  async getPublicProfile(@User() reqUser: user, @Query('id') id: number, @Res() res: Response): Promise<object> {
-    const userData = await this.userService.getPublicProfile(id);
+  async getPublicProfile(@Param('username') username: string, @Res() res: Response): Promise<object> {
+    const userData = await this.userService.getPublicProfile(username);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

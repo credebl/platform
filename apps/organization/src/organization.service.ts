@@ -48,7 +48,7 @@ export class OrganizationService {
         throw new ConflictException(ResponseMessages.organisation.error.exists);
       }
 
-      const orgSlug = await this.createOrgSlug(createOrgDto.name);
+      const orgSlug = this.createOrgSlug(createOrgDto.name);
       createOrgDto.orgSlug = orgSlug;
 
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
@@ -76,7 +76,7 @@ export class OrganizationService {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters except hyphens
     .replace(/--+/g, '-') // Replace multiple consecutive hyphens with a single hyphen
-    .replace(/^-+|-+$/g, ''); // Trim hyphens from the beginning and end of the string
+    .replace(/[^-+|-+$]/g, ''); // Trim hyphens from the beginning and end of the string
 }
 
   /**

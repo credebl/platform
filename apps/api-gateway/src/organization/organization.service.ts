@@ -31,8 +31,8 @@ export class OrganizationService extends BaseService {
    * @param updateOrgDto
    * @returns Organization update Success
    */
-  async updateOrganization(updateOrgDto: UpdateOrganizationDto, userId: number): Promise<object> {
-    const payload = { updateOrgDto, userId };
+  async updateOrganization(updateOrgDto: UpdateOrganizationDto, userId: number, orgId: number): Promise<object> {
+    const payload = { updateOrgDto, userId, orgId };
     return this.sendNats(this.serviceProxy, 'update-organization', payload);
   }
 
@@ -57,7 +57,7 @@ export class OrganizationService extends BaseService {
   }
 
   async getPublicProfile(orgSlug: string): Promise<{ response: object }> {
-    const payload = {orgSlug };
+    const payload = { orgSlug };
     try {
       return this.sendNats(this.serviceProxy, 'get-organization-public-profile', payload);
     } catch (error) {
@@ -100,8 +100,8 @@ export class OrganizationService extends BaseService {
    * @returns get organization roles
    */
   async getOrgRoles(): Promise<object> {
-      const payload = {};
-      return this.sendNats(this.serviceProxy, 'get-org-roles', payload);
+    const payload = {};
+    return this.sendNats(this.serviceProxy, 'get-org-roles', payload);
   }
 
   /**
@@ -110,8 +110,8 @@ export class OrganizationService extends BaseService {
    * @returns Organization invitation creation Success
    */
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number): Promise<object> {
-      const payload = { bulkInvitationDto, userId };
-      return this.sendNats(this.serviceProxy, 'send-invitation', payload);
+    const payload = { bulkInvitationDto, userId };
+    return this.sendNats(this.serviceProxy, 'send-invitation', payload);
   }
 
   /**
@@ -131,7 +131,7 @@ export class OrganizationService extends BaseService {
   ): Promise<{ response: object }> {
     const { pageNumber, pageSize, search } = getAllUsersDto;
     const payload = { orgId, pageNumber, pageSize, search };
-    
+
     return this.sendNats(this.serviceProxy, 'fetch-organization-user', payload);
   }
 }

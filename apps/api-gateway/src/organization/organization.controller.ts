@@ -279,7 +279,6 @@ export class OrganizationController {
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
     await this.organizationService.createOrganization(createOrgDto, reqUser.id);
-
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.create
@@ -339,7 +338,7 @@ export class OrganizationController {
   async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     updateOrgDto.orgId = orgId;
-    await this.organizationService.updateOrganization(updateOrgDto, reqUser.id);
+    await this.organizationService.updateOrganization(updateOrgDto, reqUser.id, orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

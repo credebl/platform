@@ -81,7 +81,7 @@ export class UserService {
       return resUser;
     } catch (error) {
       this.logger.error(`In Create User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -105,7 +105,7 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error.message);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -137,7 +137,7 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error.message);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -174,7 +174,7 @@ export class UserService {
       }
     } catch (error) {
       this.logger.error(`error in verifyEmail: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -243,7 +243,7 @@ export class UserService {
       return 'User created successfully';
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -270,7 +270,7 @@ export class UserService {
       return 'User updated successfully';
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -307,7 +307,7 @@ export class UserService {
       return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -332,7 +332,7 @@ export class UserService {
 
       return token;
     } catch (error) {
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -341,7 +341,7 @@ export class UserService {
       return this.userRepository.getUserById(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -356,7 +356,7 @@ export class UserService {
       return userProfile;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -365,7 +365,7 @@ export class UserService {
       return this.userRepository.updateUserProfile(updateUserProfileDto);
     } catch (error) {
       this.logger.error(`update user profile: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -374,7 +374,7 @@ export class UserService {
       return this.userRepository.getUserBySupabaseId(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -383,7 +383,7 @@ export class UserService {
       return this.userRepository.getUserBySupabaseId(payload.id);
     } catch (error) {
       this.logger.error(`Error in findSupabaseUser: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -392,7 +392,7 @@ export class UserService {
       return this.userRepository.findUserByEmail(payload.email);
     } catch (error) {
       this.logger.error(`findUserByEmail: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -417,7 +417,7 @@ export class UserService {
       return invitationsData;
     } catch (error) {
       this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -477,7 +477,7 @@ export class UserService {
       return this.fetchInvitationsStatus(acceptRejectInvitation, userId, userData.email);
     } catch (error) {
       this.logger.error(`acceptRejectInvitations: ${error}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -517,7 +517,7 @@ export class UserService {
       return invitationsData;
     } catch (error) {
       this.logger.error(`Error In fetchInvitationsStatus: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -547,7 +547,7 @@ export class UserService {
       return this.userRepository.findOrgUsers(query, pageNumber, pageSize, filterOptions);
     } catch (error) {
       this.logger.error(`get Org Users: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -569,7 +569,7 @@ export class UserService {
       return this.userRepository.findUsers(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`get Users: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -597,7 +597,7 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`In check User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -609,7 +609,7 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

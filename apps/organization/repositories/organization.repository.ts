@@ -261,9 +261,9 @@ export class OrganizationRepository {
             }
           },
           userOrgRoles: {
-            include:{
+            include: {
               user: true,
-              orgRole:true
+              orgRole: true
             }
           }
         }
@@ -406,6 +406,26 @@ export class OrganizationRepository {
       const totalPages = Math.ceil(totalCount / pageSize);
 
       return { totalPages, organizations };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  /**
+  *
+  * @param name
+  * @returns Organization exist details
+  */
+
+  async checkOrganizationExist(name: string, orgId: number): Promise<organisation[]> {
+    try {
+      return this.prisma.organisation.findMany({
+        where: {
+          id: orgId,
+          name
+        }
+      });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

@@ -122,7 +122,7 @@ export class AgentServiceService {
       return internalIp;
     } catch (error) {
       this.logger.error(`error in valid internal ip : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -573,7 +573,7 @@ export class AgentServiceService {
         });
         socket.emit('error-in-wallet-creation-process', { clientId: payload.clientSocketId, error });
       }
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -739,7 +739,7 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in connection Invitation in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -761,7 +761,7 @@ export class AgentServiceService {
       return getProofPresentationsData;
     } catch (error) {
       this.logger.error(`Error in proof presentations in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -783,7 +783,7 @@ export class AgentServiceService {
       return getProofPresentationById;
     } catch (error) {
       this.logger.error(`Error in proof presentation by id in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -805,7 +805,7 @@ export class AgentServiceService {
       return sendProofRequest;
     } catch (error) {
       this.logger.error(`Error in send proof request in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -817,7 +817,7 @@ export class AgentServiceService {
       return verifyPresentation;
     } catch (error) {
       this.logger.error(`Error in verify proof presentation in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -860,7 +860,7 @@ export class AgentServiceService {
 
     } catch (error) {
       this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -872,7 +872,7 @@ export class AgentServiceService {
       return sendProofRequest;
     } catch (error) {
       this.logger.error(`Error in send out of band proof request in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -884,7 +884,7 @@ export class AgentServiceService {
       return getProofFormData;
     } catch (error) {
       this.logger.error(`Error in get proof form data in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

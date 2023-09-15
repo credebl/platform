@@ -94,7 +94,7 @@ export class UserController {
    * @param res 
    * @returns Users list of organization
    */
-  @Get('/public')
+  @Get('/public-profiles')
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
   @ApiQuery({

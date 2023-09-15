@@ -89,8 +89,8 @@ export class OrganizationService {
     try {
 
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name);
-
-      if (organizationExist) {
+      
+      if (organizationExist && organizationExist.id !== Number(updateOrgDto.orgId)) {        
         throw new ConflictException(ResponseMessages.organisation.error.exists);
       }
 

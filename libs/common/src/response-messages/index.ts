@@ -13,7 +13,8 @@ export const ResponseMessages = {
             fetchUsers: 'Users fetched successfully',
             newUser: 'User not found',
             checkEmail: 'User email checked successfully.',
-            sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify'
+            sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
+            userActivity: 'User activities fetched successfully'
         },
         error: {
             exists: 'User already exists',

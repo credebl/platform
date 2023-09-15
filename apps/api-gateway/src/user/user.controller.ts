@@ -142,7 +142,7 @@ export class UserController {
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: 'User activities fetched successfully',
+      message: ResponseMessages.user.success.userActivity,
       data: userDetails.response
     };
 

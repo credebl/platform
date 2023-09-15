@@ -30,7 +30,8 @@ export class UserRepository {
         data: {
           username: userEmailVerificationDto.username,
           email: userEmailVerificationDto.email,
-          verificationCode: verifyCode.toString()
+          verificationCode: verifyCode.toString(),
+          publicProfile: true
         }
       });
 

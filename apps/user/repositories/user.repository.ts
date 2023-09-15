@@ -120,31 +120,6 @@ export class UserRepository {
           id: Number(updateUserProfile.id)
         },
         data: {
-          firstName: updateUserProfile.firstName,
-          lastName: updateUserProfile.lastName,
-          email: updateUserProfile.email
-        }
-      });
-      return userdetails;
-
-    } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
-  /**
-   *
-   * @Body updateUserProfile
-   * @returns Update user profile data
-   */
-  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<UpdateUserProfile> {
-    try {
-      const userdetails = await this.prisma.user.update({
-        where: {
-          id: Number(updateUserProfile.id)
-        },
-        data: {
           profileImg: updateUserProfile.profileImg,
           firstName: updateUserProfile.firstName,
           lastName: updateUserProfile.lastName,

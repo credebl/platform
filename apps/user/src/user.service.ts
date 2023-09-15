@@ -27,7 +27,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import { Inject } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
-import { AddPasskeyDetails, InvitationsI, UpdateUserProfile, UserEmailVerificationDto, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, InvitationsI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
@@ -341,7 +341,7 @@ export class UserService {
     }
   }
 
-  async getPublicProfile(payload: {username }): Promise<object> {
+  async getPublicProfile(payload: { username }): Promise<UserI> {
     try {
       const userProfile = await this.userRepository.getUserPublicProfile(payload.username);
 
@@ -356,7 +356,7 @@ export class UserService {
     }
   }
 
-  async updateUserProfile(updateUserProfileDto: UpdateUserProfile): Promise<object> {
+  async updateUserProfile(updateUserProfileDto: UpdateUserProfile): Promise<user> {
     try {
       return this.userRepository.updateUserProfile(updateUserProfileDto);
     } catch (error) {

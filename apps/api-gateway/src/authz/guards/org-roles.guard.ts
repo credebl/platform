@@ -30,7 +30,6 @@ export class OrgRolesGuard implements CanActivate {
     const { user } = req;
 
     if (req.params.orgId || req.query.orgId || req.body.orgId) {
-
       const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
 
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
@@ -45,7 +44,12 @@ export class OrgRolesGuard implements CanActivate {
       }
 
       user.selectedOrg = specificOrg;
-      user.selectedOrg.orgRoles = user.userOrgRoles.map(roleItem => roleItem.orgRole.name);
+      // eslint-disable-next-line array-callback-return
+      user.selectedOrg.orgRoles = user.userOrgRoles.map((orgRoleItem) => {
+        if (orgRoleItem.orgId && orgRoleItem.orgId.toString() === orgId.toString()) {
+          return orgRoleItem.orgRole.name;
+        }
+      });
 
     } else {
       throw new HttpException('organization is required', HttpStatus.BAD_REQUEST);

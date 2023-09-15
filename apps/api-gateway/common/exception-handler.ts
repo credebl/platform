@@ -23,7 +23,7 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
         message: 'Oops! Something went wrong. Please try again',
         error: 'Oops! Something went wrong. Please try again'
       };
-    } else if (exception["statusCode"] === undefined && status === HttpStatus.INTERNAL_SERVER_ERROR) {
+    } else if (exception && exception["statusCode"] === undefined && status === HttpStatus.INTERNAL_SERVER_ERROR) {
       errorResponse = {
         statusCode: status,
         message: 'Oops! Something went wrong. Please try again',

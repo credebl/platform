@@ -32,11 +32,11 @@ import { User } from '../authz/decorators/user.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('agents')
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
@@ -50,6 +50,7 @@ export class AgentController {
     summary: 'Get the agent health details',
     description: 'Get the agent health details'
   })
+  @UseGuards(AuthGuard('jwt'))
   async getAgentHealth(@User() reqUser: user, @Param('orgId') orgId: number, @Res() res: Response): Promise<object> {
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
@@ -74,7 +75,8 @@ export class AgentController {
     summary: 'Agent spinup',
     description: 'Create a new agent spin up.'
   })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async agentSpinup(
     @Body() agentSpinupDto: AgentSpinupDto,
@@ -107,7 +109,8 @@ export class AgentController {
     summary: 'Shared Agent',
     description: 'Create a shared agent.'
   })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async createTenant(
     @Param('orgId') orgId: number,

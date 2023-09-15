@@ -4,6 +4,7 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -83,13 +84,18 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/public-profile/:userId')
+  @Get('public-profiles/:username')
   @ApiOperation({
     summary: 'Fetch user details',
     description: 'Fetch user details'
   })
-  async getPublicProfile(@User() reqUser: user, @Param('userId') id: number, @Res() res: Response): Promise<object> {
-    const userData = await this.userService.getPublicProfile(id);
+  @ApiParam({
+    name: 'username',
+    type: String,
+    required: false
+  })
+  async getPublicProfile(@Param('username') username: string, @Res() res: Response): Promise<object> {
+    const userData = await this.userService.getPublicProfile(username);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

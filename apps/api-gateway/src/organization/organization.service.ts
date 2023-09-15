@@ -56,10 +56,13 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-public-organizations', payload);
   }
 
-  async getPublicProfile(id: number): Promise<{ response: object }> {
-    const payload = { id };
-    return this.sendNats(this.serviceProxy, 'get-organization-public-profile', payload);
-
+  async getPublicProfile(orgSlug: string): Promise<{ response: object }> {
+    const payload = {orgSlug };
+    try {
+      return this.sendNats(this.serviceProxy, 'get-organization-public-profile', payload);
+    } catch (error) {
+      this.logger.error(`Error in get user:${JSON.stringify(error)}`);
+    }
   }
 
   /**

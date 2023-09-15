@@ -22,7 +22,7 @@ import { TransformStreamDefaultController } from 'node:stream/web';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)
-@Controller()
+@Controller('orgs')
 @ApiTags('schemas')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -32,7 +32,7 @@ export class SchemaController {
   ) { }
   private readonly logger = new Logger('SchemaController');
 
-  @Get('/orgs/:orgId/schemas/:schemaId')
+  @Get('/:orgId/schemas/:schemaId')
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
@@ -59,7 +59,7 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/orgs/:orgId/schemas/:schemaId/cred-defs')
+  @Get('/:orgId/schemas/:schemaId/cred-defs')
   @ApiOperation({
     summary: 'Get credential definition list by schema Id',
     description: 'Get credential definition list by schema Id'
@@ -111,7 +111,7 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/orgs/:orgId/schemas')
+  @Get('/:orgId/schemas')
   @ApiOperation({
     summary: 'Get all schemas by org id.',
     description: 'Get all schemas by org id.'
@@ -169,7 +169,7 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Post('/orgs/:orgId/schemas')
+  @Post('/:orgId/schemas')
   @ApiOperation({
     summary: 'Sends a schema to the ledger',
     description: 'Create and sends a schema to the ledger.'

@@ -175,17 +175,14 @@ export class OrganizationService {
     }
   }
 
-  async getPublicProfile(payload: { orgSlug }): Promise<object> {
+  async getPublicProfile(payload: { orgSlug: string }): Promise<organisation> {
+    const {orgSlug} = payload;
     try {
 
-      let query = {};
-
-      if (payload.orgSlug) {
-        query = {
-          orgSlug: payload.orgSlug,
-          publicProfile: true
-        };
-      }
+      const query = {
+        orgSlug,
+        publicProfile: true
+      };
 
       const organizationDetails = await this.organizationRepository.getOrganization(query);
       if (!organizationDetails) {

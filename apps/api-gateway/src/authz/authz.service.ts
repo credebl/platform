@@ -44,7 +44,7 @@ export class AuthzService extends BaseService {
     return this.sendNats(this.authServiceProxy, 'user-holder-login', payload);
   }
 
-  async addUserDetailsInKeyCloak(userInfo: AddUserDetails): Promise<{ response: string }> {
+  async addUserDetails(userInfo: AddUserDetails): Promise<{ response: string }> {
     const payload = { userInfo };
     return this.sendNats(this.authServiceProxy, 'add-user', payload);
   }

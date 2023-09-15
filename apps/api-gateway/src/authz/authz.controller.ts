@@ -81,11 +81,11 @@ export class AuthzController {
   */
   @Post('/signup')
   @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
-  async addUserDetailsInKeyCloak(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
+  async addUserDetails(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
     const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
 
     userInfo.password = decryptedPassword;
-    const userDetails = await this.authzService.addUserDetailsInKeyCloak(userInfo);
+    const userDetails = await this.authzService.addUserDetails(userInfo);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.user.success.create,

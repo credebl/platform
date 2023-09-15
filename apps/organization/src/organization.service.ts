@@ -71,12 +71,12 @@ export class OrganizationService {
    * @returns OrgSlug
    */
   createOrgSlug(orgName: string): string {
-  return orgName
-    .toLowerCase() // Convert the input to lowercase
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters except hyphens
-    .replace(/--+/g, '-'); // Replace multiple consecutive hyphens with a single hyphen
-}
+    return orgName
+      .toLowerCase() // Convert the input to lowercase
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters except hyphens
+      .replace(/--+/g, '-'); // Replace multiple consecutive hyphens with a single hyphen
+  }
 
   /**
  *
@@ -175,7 +175,7 @@ export class OrganizationService {
   }
 
   async getPublicProfile(payload: { orgSlug: string }): Promise<organisation> {
-    const {orgSlug} = payload;
+    const { orgSlug } = payload;
     try {
 
       const query = {

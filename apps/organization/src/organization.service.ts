@@ -75,8 +75,7 @@ export class OrganizationService {
     .toLowerCase() // Convert the input to lowercase
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters except hyphens
-    .replace(/--+/g, '-') // Replace multiple consecutive hyphens with a single hyphen
-    .replace(/[^-+|-+$]/g, ''); // Trim hyphens from the beginning and end of the string
+    .replace(/--+/g, '-'); // Replace multiple consecutive hyphens with a single hyphen
 }
 
   /**

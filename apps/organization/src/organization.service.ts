@@ -466,5 +466,4 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
 }

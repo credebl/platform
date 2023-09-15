@@ -36,7 +36,7 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
         error: exception.message
       };
     }
-
-    response.status(status).json(errorResponse);
+    
+    response.status(errorResponse.statusCode).json(errorResponse);
   }
 }

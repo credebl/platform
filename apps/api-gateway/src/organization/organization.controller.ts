@@ -79,7 +79,7 @@ export class OrganizationController {
  * @param res 
  * @returns Users list of organization
  */
-  @Get('/public')
+  @Get()
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get public organization list', description: 'Get users list.' })
   @ApiQuery({

@@ -12,13 +12,12 @@ import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
 import { ICredDeffSchemaSearchInterface, ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { GetAllSchemaByPlatformDto, GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
+import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
-import { TransformStreamDefaultController } from 'node:stream/web';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)
@@ -33,7 +32,7 @@ export class SchemaController {
   private readonly logger = new Logger('SchemaController');
 
   @Get('/:orgId/schemas/:schemaId')
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
     summary: 'Get schema details from the ledger from its schema Id',
@@ -85,6 +84,8 @@ export class SchemaController {
     type: String,
     required: false
   })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getcredDeffListBySchemaId(
     @Param('orgId') orgId: number,
     @Param('schemaId') schemaId: string,
@@ -141,7 +142,7 @@ export class SchemaController {
     type: String,
     required: false
   })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getSchemas(
@@ -174,7 +175,7 @@ export class SchemaController {
     summary: 'Sends a schema to the ledger',
     description: 'Create and sends a schema to the ledger.'
   })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: number, @User() user: IUserRequestInterface): Promise<object> {

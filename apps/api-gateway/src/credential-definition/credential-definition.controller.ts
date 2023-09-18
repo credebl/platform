@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, Body, UseGuards, Get, Query, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Logger, Post, Body, UseGuards, Get, Query, HttpStatus, Res, Param } from '@nestjs/common';
 import { CredentialDefinitionService } from './credential-definition.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery } from '@nestjs/swagger';
 import { ApiResponseDto } from 'apps/api-gateway/src/dtos/apiResponse.dto';
@@ -18,52 +18,26 @@ import { Roles } from '../authz/decorators/roles.decorator';
 
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-@Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
 @ApiTags('credential-definitions')
-
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-@Controller('credential-definitions')
+@Controller('orgs')
 export class CredentialDefinitionController {
 
   constructor(private readonly credentialDefinitionService: CredentialDefinitionService) { }
   private readonly logger = new Logger('CredentialDefinitionController');
 
-  @Post('/')
-  @ApiOperation({
-    summary: 'Sends a credential definition to the ledger',
-    description: 'Create and sends a credential definition to the ledger.'
-  })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  async createCredentialDefinition(
-    @User() user: IUserRequestInterface,
-    @Body() credDef: CreateCredentialDefinitionDto,
-    @Res() res: Response
-  ): Promise<object> {
-    const credentialsDefinitionDetails = await this.credentialDefinitionService.createCredentialDefinition(credDef, user);
-    const credDefResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.credentialDefinition.success.create,
-      data: credentialsDefinitionDetails.response
-    };
-    return res.status(HttpStatus.OK).json(credDefResponse);
-  }
-  @Get('/id')
+  @Get('/:orgId/cred-defs/:credDefId')
   @ApiOperation({
     summary: 'Get an existing credential definition by Id',
     description: 'Get an existing credential definition by Id'
   })
-  @ApiQuery(
-    { name: 'credentialDefinitionId', required: true }
-  )
-  @ApiQuery(
-    { name: 'orgId', required: true }
-  )
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getCredentialDefinitionById(
-    @Query('credentialDefinitionId') credentialDefinitionId: string,
-    @Query('orgId') orgId: number,
+    @Param('orgId') orgId: number,
+    @Param('credDefId') credentialDefinitionId: string,
     @Res() res: Response
   ): Promise<object> {
     const credentialsDefinitionDetails = await this.credentialDefinitionService.getCredentialDefinitionById(credentialDefinitionId, orgId);
@@ -75,17 +49,38 @@ export class CredentialDefinitionController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
-  @Get('/')
+  @Get('/:orgId/cred-defs')
   @ApiOperation({
     summary: 'Fetch all credential definitions of provided organization id with pagination',
     description: 'Fetch all credential definitions from metadata saved in database of provided organization id.'
   })
+  @ApiQuery(
+    { name: 'pageNumber', required: false }
+  )
+  @ApiQuery(
+    { name: 'searchByText', required: false }
+  )
+  @ApiQuery(
+    { name: 'pageSize', required: false }
+  )
+  @ApiQuery(
+    { name: 'sorting', required: false }
+  )
+  @ApiQuery(
+    { name: 'sortByValue', required: false }
+  )
+  @ApiQuery(
+    { name: 'revocable', required: false }
+  )
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getAllCredDefs(
+    @Param('orgId') orgId: number,
     @Query() getAllCredDefs: GetAllCredDefsDto,
     @User() user: IUserRequestInterface,
     @Res() res: Response
   ): Promise<object> {
-    const { pageSize, pageNumber, sortByValue, sorting, orgId, searchByText, revocable } = getAllCredDefs;
+    const { pageSize, pageNumber, sortByValue, sorting, searchByText, revocable } = getAllCredDefs;
     const credDefSearchCriteria = { pageSize, pageNumber, searchByText, sorting, sortByValue, revocable };
     const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefs(
       credDefSearchCriteria,
@@ -95,6 +90,31 @@ export class CredentialDefinitionController {
     const credDefResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.credentialDefinition.success.fetch,
+      data: credentialsDefinitionDetails.response
+    };
+    return res.status(HttpStatus.OK).json(credDefResponse);
+  }
+
+  @Post('/:orgId/cred-defs')
+  @ApiOperation({
+    summary: 'Sends a credential definition to the ledger',
+    description: 'Create and sends a credential definition to the ledger.'
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async createCredentialDefinition(
+    @User() user: IUserRequestInterface,
+    @Body() credDef: CreateCredentialDefinitionDto,
+    @Param('orgId') orgId: number,
+    @Res() res: Response
+  ): Promise<object> {
+
+    credDef.orgId = orgId;
+    const credentialsDefinitionDetails = await this.credentialDefinitionService.createCredentialDefinition(credDef, user);
+    const credDefResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.credentialDefinition.success.create,
       data: credentialsDefinitionDetails.response
     };
     return res.status(HttpStatus.OK).json(credDefResponse);

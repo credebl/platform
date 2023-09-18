@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SortValue } from '../../enum';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import {  IsOptional } from 'class-validator';
 
 export class GetAllCredDefsDto {
     @ApiProperty({ required: false })
@@ -37,11 +37,5 @@ export class GetAllCredDefsDto {
     @ApiProperty({ required: false })
     @IsOptional()
     revocable: boolean = true;
-
-    @ApiProperty({ required: true })
-    @Type(() => Number)
-    @IsNumber()
-    @IsNotEmpty()
-    orgId: number;
 }
 

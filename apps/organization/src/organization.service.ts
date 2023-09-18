@@ -48,6 +48,9 @@ export class OrganizationService {
         throw new ConflictException(ResponseMessages.organisation.error.exists);
       }
 
+      const orgSlug = this.createOrgSlug(createOrgDto.name);
+      createOrgDto.orgSlug = orgSlug;
+
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
@@ -61,6 +64,20 @@ export class OrganizationService {
     }
   }
 
+
+  /**
+   * 
+   * @param orgName 
+   * @returns OrgSlug
+   */
+  createOrgSlug(orgName: string): string {
+  return orgName
+    .toLowerCase() // Convert the input to lowercase
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters except hyphens
+    .replace(/--+/g, '-'); // Replace multiple consecutive hyphens with a single hyphen
+}
+
   /**
  *
  * @param registerOrgDto
@@ -70,6 +87,16 @@ export class OrganizationService {
   // eslint-disable-next-line camelcase
   async updateOrganization(updateOrgDto: IUpdateOrganization, userId: number): Promise<organisation> {
     try {
+
+      const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name);
+      
+      if (organizationExist && organizationExist.id !== Number(updateOrgDto.orgId)) {        
+        throw new ConflictException(ResponseMessages.organisation.error.exists);
+      }
+
+      const orgSlug = await this.createOrgSlug(updateOrgDto.name);
+      updateOrgDto.orgSlug = orgSlug;
+
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
@@ -147,11 +174,12 @@ export class OrganizationService {
     }
   }
 
-  async getPublicProfile(payload: { id }): Promise<object> {
+  async getPublicProfile(payload: { orgSlug: string }): Promise<organisation> {
+    const {orgSlug} = payload;
     try {
 
       const query = {
-        id: payload.id,
+        orgSlug,
         publicProfile: true
       };
 

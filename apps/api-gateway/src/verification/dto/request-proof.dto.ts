@@ -1,4 +1,4 @@
-import { IsArray, IsEmail, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -48,10 +48,6 @@ export class RequestProof {
     @ApiProperty()
     @IsOptional()
     comment: string;
-
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
     orgId: number;
 
     @IsString({ message: 'auto accept proof must be in string' })
@@ -94,10 +90,6 @@ export class OutOfBandRequestProof {
     @ApiProperty()
     @IsOptional()
     comment: string;
-
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
     orgId: number;
 
     @IsString({ message: 'autoAcceptProof must be in string' })

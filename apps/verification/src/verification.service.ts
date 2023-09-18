@@ -49,7 +49,7 @@ export class VerificationService {
 
     } catch (error) {
       this.logger.error(`[getProofPresentations] - error in get proof presentation : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -109,7 +109,7 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[getProofPresentationById] - error in get proof presentation by id : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -272,7 +272,7 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -330,7 +330,7 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -378,7 +378,7 @@ export class VerificationService {
 
     } catch (error) {
       this.logger.error(`[webhookProofPresentation] - error in webhook proof presentation : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -487,7 +487,7 @@ export class VerificationService {
 
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -619,7 +619,7 @@ export class VerificationService {
       }
     } catch (error) {
       this.logger.error(`[proofRequestPayload] - error in proof request payload : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -815,7 +815,7 @@ export class VerificationService {
       return extractedDataArray;
     } catch (error) {
       this.logger.error(`[getProofFormData] - error in get proof form data : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

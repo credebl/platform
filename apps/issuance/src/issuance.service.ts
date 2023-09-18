@@ -55,7 +55,7 @@ export class IssuanceService {
       return credentialCreateOfferDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -90,7 +90,7 @@ export class IssuanceService {
       return credentialCreateOfferDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -152,7 +152,7 @@ export class IssuanceService {
       return issueCredentialsDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -203,7 +203,7 @@ export class IssuanceService {
       return createConnectionInvitation?.response;
     } catch (error) {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -213,7 +213,7 @@ export class IssuanceService {
       return agentDetails;
     } catch (error) {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -311,7 +311,6 @@ export class IssuanceService {
     } catch (error) {
       this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
       throw error;
-
     }
   }
 }

@@ -28,8 +28,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { Invitation } from '@credebl/enum/enum';
-import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
@@ -37,7 +35,6 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AddPasskeyDetails } from './dto/add-user.dto';
 import { EmailValidator } from '../dtos/email-validator.dto';
-import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -228,9 +225,8 @@ export class UserController {
     summary: 'accept/reject organization invitation',
     description: 'Accept or Reject organization invitations'
   })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
   async acceptRejectInvitaion(@Body() acceptRejectInvitation: AcceptRejectInvitationDto, @Param('invitationId') invitationId: string, @User() reqUser: user, @Res() res: Response): Promise<object> {
     acceptRejectInvitation.invitationId = parseInt(invitationId);
     const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);

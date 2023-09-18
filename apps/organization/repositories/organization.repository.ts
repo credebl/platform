@@ -54,7 +54,9 @@ export class OrganizationRepository {
           logoUrl: createOrgDto.logo,
           description: createOrgDto.description,
           website: createOrgDto.website,
-          orgSlug: createOrgDto.orgSlug
+          orgSlug: createOrgDto.orgSlug,
+          publicProfile: true
+
         }
       });
     } catch (error) {

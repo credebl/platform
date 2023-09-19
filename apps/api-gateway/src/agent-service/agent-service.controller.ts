@@ -85,7 +85,12 @@ export class AgentController {
     @Res() res: Response
   ): Promise<Response<object, Record<string, object>>> {
 
+    if (32 !== agentSpinupDto.seed.length) {
+      throw new BadRequestException(`seed must be at most 32 characters.`);
+    }
+
     const regex = new RegExp('^[a-zA-Z0-9]+$');
+
     if (!regex.test(agentSpinupDto.walletName)) {
       this.logger.error(`Wallet name in wrong format.`);
       throw new BadRequestException(`Please enter valid wallet name, It allows only alphanumeric values`);
@@ -120,6 +125,11 @@ export class AgentController {
   ): Promise<object> {
 
     createTenantDto.orgId = orgId;
+
+    if (32 !== createTenantDto.seed.length) {
+      throw new BadRequestException(`seed must be at most 32 characters.`);
+    }
+
     const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
 
     const finalResponse: IResponseType = {

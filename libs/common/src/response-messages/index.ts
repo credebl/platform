@@ -21,7 +21,7 @@ export const ResponseMessages = {
             profileNotFound: 'User public profile not found',
             verificationAlreadySent: 'The verification link has already been sent to your email address',
             emailSend: 'Unable to send email to the user',
-            invalidEmailUrl: 'Invalid token or EmailId!',
+            invalidEmailUrl: 'Invalid verification code or EmailId!',
             verifiedEmail: 'Email already verified',
             notFound: 'User not found',
             verifyMail: 'Please verify your email',

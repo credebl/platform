@@ -15,7 +15,7 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
     if ("Cannot read properties of undefined (reading 'response')" === exception.message) {
       exception.message = 'Oops! Something went wrong. Please try again';
     }
-    
+
     let errorResponse;
     if (exception && exception["statusCode"] === HttpStatus.INTERNAL_SERVER_ERROR) {
       errorResponse = {
@@ -30,13 +30,34 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
         error: 'Oops! Something went wrong. Please try again'
       };
     } else {
-      errorResponse = {
-        statusCode: exception["statusCode"] ? exception["statusCode"] : status,
-        message: exception.message || 'Internal server error',
-        error: exception.message
-      };
+      if (exception && exception["response"] && exception.message) {
+
+        if (Array.isArray(exception["response"].message)) {
+          exception["response"].message.forEach((msg) => {
+            errorResponse = {
+              statusCode: exception["statusCode"] ? exception["statusCode"] : status,
+              message: msg || 'Internal server error',
+              error: msg || 'Internal server error'
+            };
+          });
+        } else {
+          errorResponse = {
+            statusCode: exception["statusCode"] ? exception["statusCode"] : status,
+            message: exception["response"].message ? exception["response"].message : exception["response"] ? exception["response"] : 'Internal server error',
+            error: exception["response"].message ? exception["response"].message : exception["response"] ? exception["response"] : 'Internal server error'
+          };
+        }
+      } else if (exception && exception.message) {
+
+        errorResponse = {
+          statusCode: exception["statusCode"] ? exception["statusCode"] : status,
+          message: exception.message || 'Internal server error',
+          error: exception.message || 'Internal server error'
+        };
+
+      }
     }
-    
+
     response.status(errorResponse.statusCode).json(errorResponse);
   }
 }

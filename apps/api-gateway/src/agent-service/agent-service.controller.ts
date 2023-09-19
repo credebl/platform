@@ -34,6 +34,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
+const seedLength = 32;
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('agents')
@@ -42,7 +43,6 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
 export class AgentController {
   constructor(private readonly agentService: AgentService) { }
-
   private readonly logger = new Logger();
 
   @Get('/orgs/:orgId/agents/health')
@@ -85,7 +85,6 @@ export class AgentController {
     @Res() res: Response
   ): Promise<Response<object, Record<string, object>>> {
 
-    const seedLength = 32;
     if (seedLength !== agentSpinupDto.seed.length) {
       throw new BadRequestException(`seed must be at most 32 characters.`);
     }
@@ -127,7 +126,6 @@ export class AgentController {
 
     createTenantDto.orgId = orgId;
 
-    const seedLength = 32;
     if (seedLength !== createTenantDto.seed.length) {
       throw new BadRequestException(`seed must be at most 32 characters.`);
     }

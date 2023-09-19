@@ -85,7 +85,8 @@ export class AgentController {
     @Res() res: Response
   ): Promise<Response<object, Record<string, object>>> {
 
-    if (32 !== agentSpinupDto.seed.length) {
+    const seedLength = 32;
+    if (seedLength !== agentSpinupDto.seed.length) {
       throw new BadRequestException(`seed must be at most 32 characters.`);
     }
 
@@ -126,7 +127,8 @@ export class AgentController {
 
     createTenantDto.orgId = orgId;
 
-    if (32 !== createTenantDto.seed.length) {
+    const seedLength = 32;
+    if (seedLength !== createTenantDto.seed.length) {
       throw new BadRequestException(`seed must be at most 32 characters.`);
     }
 

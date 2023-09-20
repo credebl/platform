@@ -1,9 +1,7 @@
 import { Controller, Post, Put, Body, Param, UseFilters } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UserEmailVerificationDto } from './dto/create-user.dto';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiForbiddenResponse,
   ApiOperation,
   ApiParam,
@@ -21,11 +19,7 @@ import { HttpStatus } from '@nestjs/common';
 import { CommonService } from '@credebl/common';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { BadRequestException } from '@nestjs/common';
-import { AuthTokenResponse } from '../authz/dtos/auth-token-res.dto';
-import { LoginUserDto } from './dto/login-user.dto';
-import { UnauthorizedException } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { EmailVerificationDto } from './dto/email-verify.dto';
 import { Get } from '@nestjs/common';
 import { Query } from '@nestjs/common';
 import { user } from '@prisma/client';
@@ -34,15 +28,13 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { Invitation } from '@credebl/enum/enum';
-import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
-import { AddPasskeyDetails, AddUserDetails } from './dto/add-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { AddPasskeyDetails } from './dto/add-user.dto';
+import { EmailValidator } from '../dtos/email-validator.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -96,80 +88,6 @@ export class UserController {
  return res.status(HttpStatus.OK).json(finalResponse);
 }
 
-
-  /**
-   *
-   * @param query
-   * @param res
-   * @returns User email verified
-   */
-  @Get('/verify')
-  @ApiOperation({ summary: 'Verify new users email', description: 'Email verification for new users' })
-  async verifyEmail(@Query() query: EmailVerificationDto, @Res() res: Response): Promise<Response> {
-    await this.userService.verifyEmail(query);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.emaiVerified
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
-  /**
-   * 
-   * @param loginUserDto 
-   * @param res 
-   * @returns User access token details
-   */
-  @Post('/login')
-  @ApiOperation({
-    summary: 'Login API for web portal',
-    description: 'Password should be AES encrypted.'
-  })
-  @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
-  @ApiBody({ type: LoginUserDto })
-  async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
-
-    if (loginUserDto.email) {
-      let decryptedPassword;
-      if (loginUserDto.password) {
-        decryptedPassword = this.commonService.decryptPassword(loginUserDto.password);
-      }
-      const userData = await this.userService.login(loginUserDto.email, decryptedPassword, loginUserDto.isPasskey);
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.OK,
-        message: ResponseMessages.user.success.login,
-        data: userData.response
-      };
-
-      return res.status(HttpStatus.OK).json(finalResponse);
-    } else {
-      throw new UnauthorizedException(`Please provide valid credentials`);
-    }
-  }
-
-  @Get('profile')
-  @ApiOperation({
-    summary: 'Fetch login user details',
-    description: 'Fetch login user details'
-  })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  async getProfile(@User() reqUser: user, @Res() res: Response): Promise<object> {
-
-    const userData = await this.userService.getProfile(reqUser.id);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.fetchProfile,
-      data: userData.response
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
   @Get('public-profiles/:username')
   @ApiOperation({
     summary: 'Fetch user details',
@@ -193,14 +111,77 @@ export class UserController {
 
   }
 
-  @Get('invitations')
+  @Get('/profile')
+  @ApiOperation({
+    summary: 'Fetch login user details',
+    description: 'Fetch login user details'
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getProfile(@User() reqUser: user, @Res() res: Response): Promise<object> {
+
+    const userData = await this.userService.getProfile(reqUser.id);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchProfile,
+      data: userData.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
+  @Get('/activity')
   @ApiOperation({
     summary: 'organization invitations',
     description: 'Fetch organization invitations'
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async invitations(@User() reqUser: user, @Query() getAllInvitationsDto: GetAllInvitationsDto, @Res() res: Response): Promise<object> {
+  @ApiQuery({ name: 'limit', required: true })
+  async getUserActivities(@Query('limit') limit: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+
+    const userDetails = await this.userService.getUserActivities(reqUser.id, limit);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.userActivity,
+      data: userDetails.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+
+  @Get('/org-invitations')
+  @ApiOperation({
+    summary: 'organization invitations',
+    description: 'Fetch organization invitations'
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'status',
+    type: String,
+    required: false
+  })
+  async invitations(@Query() getAllInvitationsDto: GetAllInvitationsDto, @User() reqUser: user, @Res() res: Response): Promise<object> {
 
     if (!Object.values(Invitation).includes(getAllInvitationsDto.status)) {
       throw new BadRequestException(ResponseMessages.user.error.invalidInvitationStatus);
@@ -218,43 +199,16 @@ export class UserController {
 
   }
 
-
-  /**
-   * 
-   * @param acceptRejectInvitation 
-   * @param reqUser 
-   * @param res 
-   * @returns Organization invitation status
-   */
-  @Post('invitations')
-  @ApiOperation({
-    summary: 'accept/reject organization invitation',
-    description: 'Accept or Reject organization invitations'
-  })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  async acceptRejectInvitaion(@Body() acceptRejectInvitation: AcceptRejectInvitationDto, @User() reqUser: user, @Res() res: Response): Promise<object> {
-    const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: invitationRes.response
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
   /**
   *
   * @param email
   * @param res
   * @returns User email check
   */
-  @Get('/check-user/:email')
+  @Get('/:email')
   @ApiOperation({ summary: 'Check user exist', description: 'check user existence' })
-  async checkUserExist(@Param('email') email: string, @Res() res: Response): Promise<Response> {
-    const userDetails = await this.userService.checkUserExist(email);
+  async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
+    const userDetails = await this.userService.checkUserExist(emailParam.email);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -267,43 +221,29 @@ export class UserController {
   }
 
   /**
-  *
-  * @param email
-  * @param userInfo
-  * @param res
-  * @returns Add new user
-  */
-  @Post('/add/:email')
-  @ApiOperation({ summary: 'Add user information', description: 'Add user information' })
-  async addUserDetailsInKeyCloak(@Body() userInfo: AddUserDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
-    let finalResponse;
-    let userDetails;
+   * 
+   * @param acceptRejectInvitation 
+   * @param reqUser 
+   * @param res 
+   * @returns Organization invitation status
+   */
+  @Post('/org-invitations/:invitationId')
+  @ApiOperation({
+    summary: 'accept/reject organization invitation',
+    description: 'Accept or Reject organization invitations'
+  })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async acceptRejectInvitaion(@Body() acceptRejectInvitation: AcceptRejectInvitationDto, @Param('invitationId') invitationId: string, @User() reqUser: user, @Res() res: Response): Promise<object> {
+    acceptRejectInvitation.invitationId = parseInt(invitationId);
+    const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);
 
-    if (false === userInfo.isPasskey) {
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: invitationRes.response
+    };
 
-      const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
-      if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
-        this.commonService.passwordValidation(decryptedPassword);
-        userInfo.password = decryptedPassword;
-        userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
-        finalResponse = {
-          statusCode: HttpStatus.CREATED,
-          message: ResponseMessages.user.success.create,
-          data: userDetails.response
-        };
-      } else {
-        throw new BadRequestException('Password name must be between 8 to 50 Characters');
-      }
-    } else {
-
-      userDetails = await this.userService.addUserDetailsInKeyCloak(email, userInfo);
-      finalResponse = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.create,
-        data: userDetails.response
-      };
-    }
-    return res.status(HttpStatus.OK).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
 
@@ -315,8 +255,10 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @Res() res: Response): Promise<Response> {
+  async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @User() reqUser: user, @Res() res: Response): Promise<Response> {
 
+    const userId = reqUser.id;
+    updateUserProfileDto.id = userId;
     await this.userService.updateUserProfile(updateUserProfileDto);
 
     const finalResponse: IResponseType = {
@@ -349,8 +291,8 @@ export class UserController {
   async addPasskey(@Body() userInfo: AddPasskeyDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
     const userDetails = await this.userService.addPasskey(email, userInfo);
     const finalResponse = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.user.success.create,
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.update,
       data: userDetails.response
     };
 

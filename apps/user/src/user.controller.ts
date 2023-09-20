@@ -49,7 +49,7 @@ export class UserController {
     return this.userService.getPublicProfile(payload);
   }
 
-  @MessagePattern({ cmd: 'get-user-by-supabase' }) 
+  @MessagePattern({ cmd: 'get-user-by-supabase' })
   async findSupabaseUser(payload: { id }): Promise<object> {
     return this.userService.findSupabaseUser(payload);
   }
@@ -57,7 +57,7 @@ export class UserController {
 
   @MessagePattern({ cmd: 'get-user-by-mail' })
   async findUserByEmail(payload: { email }): Promise<object> {
-    return this.userService.findUserByEmail(payload); 
+    return this.userService.findUserByEmail(payload);
   }
 
   @MessagePattern({ cmd: 'get-org-invitations' })
@@ -83,29 +83,29 @@ export class UserController {
    * @param payload
    * @returns organization users list
    */
-  @MessagePattern({ cmd: 'fetch-organization-users' })
+  @MessagePattern({ cmd: 'fetch-organization-user' })
   async getOrganizationUsers(payload: { orgId: number, pageNumber: number, pageSize: number, search: string }): Promise<object> {
     return this.userService.getOrgUsers(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
   }
 
-    /**
-   *
-   * @param payload
-   * @returns organization users list
-   */
-    @MessagePattern({ cmd: 'fetch-users' })
-    async get(payload: { pageNumber: number, pageSize: number, search: string }): Promise<object> {
-      const users =  this.userService.get(payload.pageNumber, payload.pageSize, payload.search);
-      return users;
-    }
+  /**
+ *
+ * @param payload
+ * @returns organization users list
+ */
+  @MessagePattern({ cmd: 'fetch-users' })
+  async get(payload: { pageNumber: number, pageSize: number, search: string }): Promise<object> {
+    const users = this.userService.get(payload.pageNumber, payload.pageSize, payload.search);
+    return users;
+  }
 
   @MessagePattern({ cmd: 'check-user-exist' })
   async checkUserExist(payload: { userEmail: string }): Promise<string | object> {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userEmail: string, userInfo: userInfo }): Promise<string | object> {
-    return this.userService.createUserForToken(payload.userEmail, payload.userInfo);
+  async addUserDetailsInKeyCloak(payload: { userInfo: userInfo }): Promise<string | object> {
+    return this.userService.createUserForToken(payload.userInfo);
   }
 
   // Fetch Users recent activities

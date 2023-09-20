@@ -1,9 +1,11 @@
 import { trim } from '@credebl/common/cast.helper';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 const regex = /^[a-zA-Z0-9 ]*$/;
 export class AgentSpinupDto {
+
+    orgId: number;
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))
@@ -31,28 +33,28 @@ export class AgentSpinupDto {
     @Matches(/^\S*$/, {
         message: 'Spaces are not allowed in seed'
     })
-    seed: string;
+    seed: string; 
 
     @ApiProperty()
-    @IsNumber()    
-    orgId: number;
-
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @IsNumber()    
     ledgerId?: number;
 
     @ApiProperty()
     @IsOptional()  
+    @ApiPropertyOptional()
     clientSocketId?: string;
 
     @ApiProperty()
     @IsOptional()
-    @IsBoolean()  
+    @IsBoolean() 
+    @ApiPropertyOptional()
     tenant?: boolean;
     
     @ApiProperty()
     @IsOptional()
+    @ApiPropertyOptional()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'agentType is required'})
     @MinLength(2, { message: 'agentType must be at least 2 characters.' })
@@ -62,6 +64,7 @@ export class AgentSpinupDto {
 
     @ApiProperty()
     @IsOptional()
+    @ApiPropertyOptional()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'transactionApproval is required'})
     @MinLength(2, { message: 'transactionApproval must be at least 2 characters.' })

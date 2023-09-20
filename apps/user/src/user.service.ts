@@ -34,7 +34,6 @@ import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
 
-
 @Injectable()
 export class UserService {
   constructor(
@@ -59,7 +58,7 @@ export class UserService {
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
-      
+
       if (userDetails && userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
@@ -82,7 +81,7 @@ export class UserService {
       return resUser;
     } catch (error) {
       this.logger.error(`In Create User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -106,7 +105,7 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error.message);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -138,7 +137,7 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error.message);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -175,17 +174,18 @@ export class UserService {
       }
     } catch (error) {
       this.logger.error(`error in verifyEmail: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
 
-  async createUserForToken(email: string, userInfo: userInfo): Promise<string> {
+  async createUserForToken(userInfo: userInfo): Promise<string> {
     try {
-      if (!email) {
+      const { email } = userInfo;
+      if (!userInfo.email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(email);
+      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email);
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
@@ -195,11 +195,11 @@ export class UserService {
       if (false === checkUserDetails.isEmailVerified) {
         throw new NotFoundException(ResponseMessages.user.error.verifyEmail);
       }
-      const resUser = await this.userRepository.updateUserInfo(email, userInfo);
+      const resUser = await this.userRepository.updateUserInfo(userInfo.email, userInfo);
       if (!resUser) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
-      const userDetails = await this.userRepository.getUserDetails(email);
+      const userDetails = await this.userRepository.getUserDetails(userInfo.email);
 
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
@@ -208,7 +208,7 @@ export class UserService {
       let supaUser;
 
       if (userInfo.isPasskey) {
-        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);  
+        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email);
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
         if (!resUser) {
@@ -243,7 +243,7 @@ export class UserService {
       return 'User created successfully';
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -270,7 +270,7 @@ export class UserService {
       return 'User updated successfully';
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -304,32 +304,36 @@ export class UserService {
         return this.generateToken(email, decryptedPassword);
       }
 
-     return this.generateToken(email, password);
+      return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
   async generateToken(email: string, password: string): Promise<object> {
-    const supaInstance = await this.supabaseService.getClient();
+    try {
+      const supaInstance = await this.supabaseService.getClient();
 
-    this.logger.error(`supaInstance::`, supaInstance);
+      this.logger.error(`supaInstance::`, supaInstance);
 
-    const { data, error } = await supaInstance.auth.signInWithPassword({
-      email,
-      password
-    });
+      const { data, error } = await supaInstance.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+      this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
-    if (error) {
-      throw new BadRequestException(error?.message);
+      if (error) {
+        throw new BadRequestException(error?.message);
+      }
+
+      const token = data?.session;
+
+      return token;
+    } catch (error) {
+      throw new RpcException(error.response ? error.response : error);
     }
-
-    const token = data?.session;
-
-    return token;
   }
 
   async getProfile(payload: { id }): Promise<object> {
@@ -337,7 +341,7 @@ export class UserService {
       return this.userRepository.getUserById(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -352,7 +356,7 @@ export class UserService {
       return userProfile;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -361,7 +365,7 @@ export class UserService {
       return this.userRepository.updateUserProfile(updateUserProfileDto);
     } catch (error) {
       this.logger.error(`update user profile: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -370,7 +374,7 @@ export class UserService {
       return this.userRepository.getUserBySupabaseId(payload.id);
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -379,7 +383,7 @@ export class UserService {
       return this.userRepository.getUserBySupabaseId(payload.id);
     } catch (error) {
       this.logger.error(`Error in findSupabaseUser: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -388,7 +392,7 @@ export class UserService {
       return this.userRepository.findUserByEmail(payload.email);
     } catch (error) {
       this.logger.error(`findUserByEmail: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -413,7 +417,7 @@ export class UserService {
       return invitationsData;
     } catch (error) {
       this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -473,7 +477,7 @@ export class UserService {
       return this.fetchInvitationsStatus(acceptRejectInvitation, userId, userData.email);
     } catch (error) {
       this.logger.error(`acceptRejectInvitations: ${error}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -513,7 +517,7 @@ export class UserService {
       return invitationsData;
     } catch (error) {
       this.logger.error(`Error In fetchInvitationsStatus: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -524,6 +528,7 @@ export class UserService {
    */
   async getOrgUsers(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
+
       const query = {
         userOrgRoles: {
           some: { orgId }
@@ -538,10 +543,11 @@ export class UserService {
       const filterOptions = {
         orgId
       };
+
       return this.userRepository.findOrgUsers(query, pageNumber, pageSize, filterOptions);
     } catch (error) {
       this.logger.error(`get Org Users: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -563,7 +569,7 @@ export class UserService {
       return this.userRepository.findUsers(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`get Users: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -576,19 +582,22 @@ export class UserService {
       } else if (userDetails && userDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
-        return 'New User';
+        return {
+          isExist: false
+        };
       } else {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
+          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
+          isExist: true
         };
         return userVerificationDetails;
       }
 
     } catch (error) {
       this.logger.error(`In check User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -600,7 +609,7 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

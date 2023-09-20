@@ -1,8 +1,9 @@
-import { Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import { Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 
 @Catch()
 export class CustomExceptionFilter extends BaseExceptionFilter {
+  private readonly logger = new Logger();
   catch(exception: HttpException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
@@ -12,9 +13,11 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
       status = exception.getStatus();
     }
 
+    this.logger.error(`exception ::: ${JSON.stringify(exception)}`);
     if ("Cannot read properties of undefined (reading 'response')" === exception.message) {
       exception.message = 'Oops! Something went wrong. Please try again';
     }
+
 
     let errorResponse;
     if (exception && exception["statusCode"] === HttpStatus.INTERNAL_SERVER_ERROR) {

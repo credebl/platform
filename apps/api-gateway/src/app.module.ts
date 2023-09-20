@@ -11,7 +11,6 @@ import { CredentialDefinitionModule } from './credential-definition/credential-d
 import { FidoModule } from './fido/fido.module';
 import { IssuanceModule } from './issuance/issuance.module';
 import { OrganizationModule } from './organization/organization.module';
-import { PlatformController } from './platform/platform.controller';
 import { PlatformModule } from './platform/platform.module';
 import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
@@ -80,7 +79,6 @@ export class AppModule {
       )
       .forRoutes(
         AgentController,
-        PlatformController,
         RevocationController
       );
   }

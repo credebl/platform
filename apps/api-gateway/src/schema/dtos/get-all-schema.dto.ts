@@ -2,8 +2,7 @@
 /* eslint-disable camelcase */
 import { ApiProperty } from '@nestjs/swagger';
 import { SortValue } from '../../enum';
-import { Transform, Type } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
+import { Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 
 export class GetAllSchemaDto {
@@ -14,7 +13,6 @@ export class GetAllSchemaDto {
     @ApiProperty({ required: false })
     @IsOptional()
     @Type(() => String)
-    @Transform(({ value }) => trim(value))
     searchByText: string = '';
 
     @ApiProperty({ required: false })
@@ -23,7 +21,6 @@ export class GetAllSchemaDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    @Transform(({ value }) => trim(value))
     sorting: string = 'id';
 
     @ApiProperty({ required: false })
@@ -59,7 +56,6 @@ export class GetAllSchemaByPlatformDto {
     @ApiProperty({ required: false })
     @IsOptional()
     @Type(() => String)
-    @Transform(({ value }) => trim(value))
     searchByText: string = '';
 
     @ApiProperty({ required: false })
@@ -68,7 +64,6 @@ export class GetAllSchemaByPlatformDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    @Transform(({ value }) => trim(value))
     sorting: string = 'id';
 
     @ApiProperty({ required: false })

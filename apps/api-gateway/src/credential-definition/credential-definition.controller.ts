@@ -82,10 +82,8 @@ export class CredentialDefinitionController {
     @User() user: IUserRequestInterface,
     @Res() res: Response
   ): Promise<object> {
-    const { pageSize, pageNumber, sortByValue, sorting, searchByText, revocable } = getAllCredDefs;
-    const credDefSearchCriteria = { pageSize, pageNumber, searchByText, sorting, sortByValue, revocable };
     const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefs(
-      credDefSearchCriteria,
+      getAllCredDefs,
       user,
       orgId
     );

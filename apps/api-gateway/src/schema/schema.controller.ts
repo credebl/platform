@@ -96,14 +96,14 @@ export class SchemaController {
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
-    const { pageSize, pageNumber, sorting, sortByValue } = GetCredentialDefinitionBySchemaIdDto;
-    const schemaSearchCriteria: ICredDeffSchemaSearchInterface = {
-      pageNumber,
-      pageSize,
-      sorting,
-      sortByValue
-    };
-    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, schemaSearchCriteria, user, orgId);
+    // const { pageSize, pageNumber, sorting, sortByValue } = GetCredentialDefinitionBySchemaIdDto;
+    // const schemaSearchCriteria: ICredDeffSchemaSearchInterface = {
+    //   pageNumber,
+    //   pageSize,
+    //   sorting,
+    //   sortByValue
+    // };
+    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, GetCredentialDefinitionBySchemaIdDto, user, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,

@@ -35,8 +35,8 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
-    summary: 'Get schema details from the ledger from its schema Id',
-    description: 'Get schema details from the ledger from its schema Id'
+    summary: 'Get schema information from the ledger using its schema ID.',
+    description: 'Get schema information from the ledger using its schema ID.'
   })
 
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
@@ -96,13 +96,7 @@ export class SchemaController {
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
-    // const { pageSize, pageNumber, sorting, sortByValue } = GetCredentialDefinitionBySchemaIdDto;
-    // const schemaSearchCriteria: ICredDeffSchemaSearchInterface = {
-    //   pageNumber,
-    //   pageSize,
-    //   sorting,
-    //   sortByValue
-    // };
+
     const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, GetCredentialDefinitionBySchemaIdDto, user, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -172,8 +166,8 @@ export class SchemaController {
 
   @Post('/:orgId/schemas')
   @ApiOperation({
-    summary: 'Sends a schema to ledger',
-    description: 'Sends a schema to ledger'
+    summary: 'Create and sends a schema to the ledger.',
+    description: 'Create and sends a schema to the ledger.'
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

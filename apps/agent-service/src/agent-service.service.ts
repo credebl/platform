@@ -887,17 +887,5 @@ export class AgentServiceService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
-  async getProofFormData(url: string, apiKey: string): Promise<object> {
-    try {
-      const getProofFormData = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
-        .then(async response => response);
-      return getProofFormData;
-    } catch (error) {
-      this.logger.error(`Error in get proof form data in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
-    }
-  }
 }
 

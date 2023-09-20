@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -22,9 +22,6 @@ export class CreateSchemaDto {
     @IsNotEmpty({ message: 'please provide valid attributes' })
     attributes: IAttributeValue[];
 
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
     orgId: number;
 
     @ApiProperty()

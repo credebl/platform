@@ -896,7 +896,7 @@ export class AgentServiceService {
       return getProofFormData;
     } catch (error) {
       this.logger.error(`Error in get proof form data in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

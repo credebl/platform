@@ -67,7 +67,7 @@ export class UserService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-user-activity', payload);
   }
 
-  async addPasskey(userEmail: string, userInfo:AddPasskeyDetails): Promise<{ response: string }> {
+  async addPasskey(userEmail: string, userInfo: AddPasskeyDetails): Promise<{ response: string }> {
     const payload = { userEmail, userInfo };
     return this.sendNats(this.serviceProxy, 'add-passkey', payload);
   }

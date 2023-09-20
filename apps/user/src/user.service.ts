@@ -34,7 +34,6 @@ import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
 
-
 @Injectable()
 export class UserService {
   constructor(
@@ -59,7 +58,7 @@ export class UserService {
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
-      
+
       if (userDetails && userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
@@ -130,7 +129,7 @@ export class UserService {
 
     } catch (error) {
       this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error.message);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -233,7 +232,7 @@ export class UserService {
       let supaUser;
 
       if (userInfo.isPasskey) {
-        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);  
+        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email);
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
         if (!resUser) {
@@ -322,7 +321,7 @@ export class UserService {
       return 'User updated successfully';
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -356,7 +355,7 @@ export class UserService {
         return this.generateToken(email, decryptedPassword);
       }
 
-     return this.generateToken(email, password);
+      return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -364,24 +363,28 @@ export class UserService {
   }
 
   async generateToken(email: string, password: string): Promise<object> {
-    const supaInstance = await this.supabaseService.getClient();
+    try {
+      const supaInstance = await this.supabaseService.getClient();
 
-    this.logger.error(`supaInstance::`, supaInstance);
+      this.logger.error(`supaInstance::`, supaInstance);
 
-    const { data, error } = await supaInstance.auth.signInWithPassword({
-      email,
-      password
-    });
+      const { data, error } = await supaInstance.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+      this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
-    if (error) {
-      throw new BadRequestException(error?.message);
+      if (error) {
+        throw new BadRequestException(error?.message);
+      }
+
+      const token = data?.session;
+
+      return token;
+    } catch (error) {
+      throw new RpcException(error.response ? error.response : error);
     }
-
-    const token = data?.session;
-
-    return token;
   }
 
   async getProfile(payload: { id }): Promise<object> {

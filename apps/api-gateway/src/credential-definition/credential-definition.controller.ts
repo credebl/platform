@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, Body, UseGuards, Get, Query, HttpStatus, Res, Param } from '@nestjs/common';
+import { Controller, Logger, Post, Body, UseGuards, Get, Query, HttpStatus, Res, Param, UseFilters } from '@nestjs/common';
 import { CredentialDefinitionService } from './credential-definition.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery } from '@nestjs/swagger';
 import { ApiResponseDto } from 'apps/api-gateway/src/dtos/apiResponse.dto';
@@ -15,6 +15,7 @@ import { IUserRequestInterface } from './interfaces';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 
 @ApiBearerAuth()
@@ -22,6 +23,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
 @Controller('orgs')
+@UseFilters(CustomExceptionFilter)
 export class CredentialDefinitionController {
 
   constructor(private readonly credentialDefinitionService: CredentialDefinitionService) { }
@@ -97,8 +99,8 @@ export class CredentialDefinitionController {
 
   @Post('/:orgId/cred-defs')
   @ApiOperation({
-    summary: 'Sends a credential definition to the ledger',
-    description: 'Create and sends a credential definition to the ledger.'
+    summary: 'Sends a credential definition to ledger',
+    description: 'Sends a credential definition to ledger'
   })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)

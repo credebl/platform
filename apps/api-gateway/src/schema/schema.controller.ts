@@ -172,8 +172,8 @@ export class SchemaController {
 
   @Post('/:orgId/schemas')
   @ApiOperation({
-    summary: 'Sends a schema to the ledger',
-    description: 'Create and sends a schema to the ledger.'
+    summary: 'Sends a schema to ledger',
+    description: 'Sends a schema to ledger'
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Logger, Query, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Logger, Query, Res, UseFilters } from '@nestjs/common';
 import { PlatformService } from './platform.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -9,9 +9,11 @@ import { Response } from 'express';
 import { ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 @ApiBearerAuth()
 @Controller()
+@UseFilters(CustomExceptionFilter)
 export class PlatformController {
     constructor(private readonly platformService: PlatformService) { }
 

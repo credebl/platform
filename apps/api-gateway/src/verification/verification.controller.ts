@@ -44,11 +44,11 @@ export class VerificationController {
         summary: `Get a proof form data`,
         description: `Get a proof form data`
     })
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
-    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async getProofFormData(
         @Res() res: Response,
         @GetUser() user: IUserRequest,

@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -27,12 +27,9 @@ export class CreateConnectionDto {
     @ApiProperty()
     @IsBoolean()
     @IsOptional()
-    @IsNotEmpty({ message: 'please provide valid autoAcceptConnection' })
+    @IsNotEmpty({ message: 'autoAcceptConnection should boolean' })
     autoAcceptConnection: boolean;
 
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
     orgId: number;
 }
 

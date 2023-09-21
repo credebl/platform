@@ -21,6 +21,7 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
+@ApiBearerAuth()
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
 export class ConnectionController {
@@ -30,7 +31,7 @@ export class ConnectionController {
     ) { }
 
     /**
-        * Description: Get all connections by connectionId
+        * Description: Get connection by connectionId
         * @param user
         * @param connectionId
         * @param orgId
@@ -73,8 +74,8 @@ export class ConnectionController {
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiOperation({
-        summary: `Fetch all connections details`,
-        description: `Fetch all connections details`
+        summary: `Fetch all connection details`,
+        description: `Fetch all connection details`
     })
     @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
     @ApiQuery(
@@ -129,7 +130,6 @@ export class ConnectionController {
     @ApiOperation({ summary: 'Create outbound out-of-band connection (Legacy Invitation)', description: 'Create outbound out-of-band connection (Legacy Invitation)' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-    @ApiBearerAuth()
     @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
     async createLegacyConnectionInvitation(
         @Param('orgId') orgId: number,

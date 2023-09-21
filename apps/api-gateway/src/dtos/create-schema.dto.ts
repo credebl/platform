@@ -2,7 +2,7 @@ import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 
-class IAttributeValue {
+class AttributeValue {
 
     @IsString()
     @IsNotEmpty({ message: 'attributeName is required.' })
@@ -37,7 +37,7 @@ export class CreateSchemaDto {
     })
     @IsArray({ message: 'attributes must be an array' })
     @IsNotEmpty({ message: 'please provide valid attributes' })
-    attributes: IAttributeValue[];
+    attributes: AttributeValue[];
 
     orgId: number;
 

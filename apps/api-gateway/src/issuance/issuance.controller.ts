@@ -95,7 +95,6 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
 
-    state = state || undefined;
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentials(user, threadId, connectionId, state, orgId);
 
     const finalResponse: IResponseType = {
@@ -116,8 +115,8 @@ export class IssuanceController {
   @Get('/orgs/:orgId/credentials/:credentialRecordId')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Get all issued credentials for a specific organization`,
-    description: `Get all issued credentials for a specific organization`
+    summary: `Get credential by credentialRecordId`,
+    description: `Get credential credentialRecordId`
   })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

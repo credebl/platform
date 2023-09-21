@@ -3,7 +3,7 @@ import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
-export class IProofRequestAttribute {
+export class ProofRequestAttribute {
     @IsString()
     @IsNotEmpty({ message: 'attributeName is required.' })
     attributeName: string;
@@ -50,7 +50,7 @@ export class RequestProof {
     @IsArray({ message: 'attributes must be in array' })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
-    attributes: IProofRequestAttribute[];
+    attributes: ProofRequestAttribute[];
 
     @ApiProperty()
     @IsOptional()
@@ -83,7 +83,7 @@ export class OutOfBandRequestProof {
     @IsArray({ message: 'attributes must be in array' })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
-    attributes: IProofRequestAttribute[];
+    attributes: ProofRequestAttribute[];
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid emailId' })

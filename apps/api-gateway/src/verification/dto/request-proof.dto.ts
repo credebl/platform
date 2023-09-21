@@ -1,24 +1,31 @@
-import { IsArray, IsEmail, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-// import { IProofRequestAttribute } from '../interfaces/verification.interface';
 
-class IProofRequestAttribute {
+export class ProofRequestAttribute {
     @IsString()
+    @IsNotEmpty({ message: 'attributeName is required.' })
     attributeName: string;
 
     @IsString()
+    @IsNotEmpty({ message: 'schemaId is required.' })
+    schemaId: string;
+
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'condition is required.' })
     condition?: string;
 
     @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'value is required.' })
     value?: string;
 
     @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'credDefId is required.' })
     credDefId?: string;
-
-    @IsString()
-    schemaId: string;
 }
 
 export class RequestProof {
@@ -43,15 +50,11 @@ export class RequestProof {
     @IsArray({ message: 'attributes must be in array' })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
-    attributes: IProofRequestAttribute[];
+    attributes: ProofRequestAttribute[];
 
     @ApiProperty()
     @IsOptional()
     comment: string;
-
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
     orgId: number;
 
     @IsString({ message: 'auto accept proof must be in string' })
@@ -80,7 +83,7 @@ export class OutOfBandRequestProof {
     @IsArray({ message: 'attributes must be in array' })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
-    attributes: IProofRequestAttribute[];
+    attributes: ProofRequestAttribute[];
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid emailId' })
@@ -94,10 +97,6 @@ export class OutOfBandRequestProof {
     @ApiProperty()
     @IsOptional()
     comment: string;
-
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
     orgId: number;
 
     @IsString({ message: 'autoAcceptProof must be in string' })

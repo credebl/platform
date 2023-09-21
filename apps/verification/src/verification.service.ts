@@ -174,73 +174,7 @@ export class VerificationService {
         autoAcceptProof: ''
       };
 
-      const attributeWithSchemaIdExists = requestProof.attributes.some(attribute => attribute.schemaId);
-      if (attributeWithSchemaIdExists) {
-        requestedAttributes = Object.fromEntries(requestProof.attributes.map((attribute, index) => {
-
-          const attributeElement = attribute.attributeName;
-          const attributeReferent = `additionalProp${index + 1}`;
-
-          if (!attribute.condition && !attribute.value) {
-            const keys = Object.keys(requestedAttributes);
-
-            if (0 < keys.length) {
-              let attributeFound = false;
-
-              for (const attr of keys) {
-                if (
-                  requestedAttributes[attr].restrictions.some(res => res.schema_id) ===
-                  requestProof.attributes[index].schemaId
-                ) {
-                  requestedAttributes[attr].name.push(attributeElement);
-                  attributeFound = true;
-                }
-
-                if (attr === keys[keys.length - 1] && !attributeFound) {
-                  requestedAttributes[attributeReferent] = {
-                    name: attributeElement,
-                    restrictions: [
-                      {
-                        cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                        schema_id: requestProof.attributes[index].schemaId
-                      }
-                    ]
-                  };
-                }
-              }
-            } else {
-              return [
-                attributeReferent,
-                {
-                  name: attributeElement,
-                  restrictions: [
-                    {
-                      cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                      schema_id: requestProof.attributes[index].schemaId
-                    }
-                  ]
-                }
-              ];
-            }
-          } else {
-            requestedPredicates[attributeReferent] = {
-              p_type: attribute.condition,
-              restrictions: [
-                {
-                  cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                  schema_id: requestProof.attributes[index].schemaId
-                }
-              ],
-              name: attributeElement,
-              p_value: parseInt(attribute.value)
-            };
-          }
-
-          return [attributeReferent];
-        }));
-      } else {
-        throw new BadRequestException(ResponseMessages.verification.error.schemaIdNotFound);
-      }
+      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
 
       proofRequestPayload = {
         protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
@@ -802,7 +736,7 @@ export class VerificationService {
       return extractedDataArray;
     } catch (error) {
       this.logger.error(`[getProofFormData] - error in get proof form data : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

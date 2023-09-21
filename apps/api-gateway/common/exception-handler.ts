@@ -18,7 +18,6 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
       exception.message = 'Oops! Something went wrong. Please try again';
     }
 
-
     let errorResponse;
     if (exception && exception["statusCode"] === HttpStatus.INTERNAL_SERVER_ERROR) {
       errorResponse = {

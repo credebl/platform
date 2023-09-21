@@ -157,8 +157,6 @@ export class VerificationService {
    */
   async sendProofRequest(requestProof: IRequestProof): Promise<string> {
     try {
-      let requestedAttributes = {};
-      const requestedPredicates = {};
       const comment = requestProof.comment ? requestProof.comment : '';
 
       let proofRequestPayload: ISendProofRequestPayload = {
@@ -176,73 +174,7 @@ export class VerificationService {
         autoAcceptProof: ''
       };
 
-      const attributeWithSchemaIdExists = requestProof.attributes.some(attribute => attribute.schemaId);
-      if (attributeWithSchemaIdExists) {
-        requestedAttributes = Object.fromEntries(requestProof.attributes.map((attribute, index) => {
-
-          const attributeElement = attribute.attributeName;
-          const attributeReferent = `additionalProp${index + 1}`;
-
-          if (!attribute.condition && !attribute.value) {
-            const keys = Object.keys(requestedAttributes);
-
-            if (0 < keys.length) {
-              let attributeFound = false;
-
-              for (const attr of keys) {
-                if (
-                  requestedAttributes[attr].restrictions.some(res => res.schema_id) ===
-                  requestProof.attributes[index].schemaId
-                ) {
-                  requestedAttributes[attr].name.push(attributeElement);
-                  attributeFound = true;
-                }
-
-                if (attr === keys[keys.length - 1] && !attributeFound) {
-                  requestedAttributes[attributeReferent] = {
-                    name: attributeElement,
-                    restrictions: [
-                      {
-                        cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                        schema_id: requestProof.attributes[index].schemaId
-                      }
-                    ]
-                  };
-                }
-              }
-            } else {
-              return [
-                attributeReferent,
-                {
-                  name: attributeElement,
-                  restrictions: [
-                    {
-                      cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                      schema_id: requestProof.attributes[index].schemaId
-                    }
-                  ]
-                }
-              ];
-            }
-          } else {
-            requestedPredicates[attributeReferent] = {
-              p_type: attribute.condition,
-              restrictions: [
-                {
-                  cred_def_id: requestProof.attributes[index].credDefId ? requestProof.attributes[index].credDefId : undefined,
-                  schema_id: requestProof.attributes[index].schemaId
-                }
-              ],
-              name: attributeElement,
-              p_value: parseInt(attribute.value)
-            };
-          }
-
-          return [attributeReferent];
-        }));
-      } else {
-        throw new BadRequestException(ResponseMessages.verification.error.schemaIdNotFound);
-      }
+      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
 
       proofRequestPayload = {
         protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
@@ -536,9 +468,8 @@ export class VerificationService {
       const requestedPredicates = {};
       const attributeWithSchemaIdExists = proofRequestpayload.attributes.some(attribute => attribute.schemaId);
       if (attributeWithSchemaIdExists) {
+        requestedAttributes = Object.fromEntries(proofRequestpayload.attributes.map((attribute, index) => {
 
-        requestedAttributes = {};
-        for (const [index, attribute] of proofRequestpayload.attributes.entries()) {
           const attributeElement = attribute.attributeName;
           const attributeReferent = `additionalProp${index + 1}`;
 
@@ -550,9 +481,8 @@ export class VerificationService {
 
               for (const attr of keys) {
                 if (
-                  requestedAttributes[attr].restrictions.some(
-                    res => res.schema_id === proofRequestpayload.attributes[index].schemaId
-                  )
+                  requestedAttributes[attr].restrictions.some(res => res.schema_id) ===
+                  proofRequestpayload.attributes[index].schemaId
                 ) {
                   requestedAttributes[attr].name.push(attributeElement);
                   attributeFound = true;
@@ -563,9 +493,7 @@ export class VerificationService {
                     name: attributeElement,
                     restrictions: [
                       {
-                        cred_def_id: proofRequestpayload.attributes[index].credDefId
-                          ? proofRequestpayload.attributes[index].credDefId
-                          : undefined,
+                        cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
                         schema_id: proofRequestpayload.attributes[index].schemaId
                       }
                     ]
@@ -573,32 +501,25 @@ export class VerificationService {
                 }
               }
             } else {
-              requestedAttributes[attributeReferent] = {
-                name: attributeElement,
-                restrictions: [
-                  {
-                    cred_def_id: proofRequestpayload.attributes[index].credDefId
-                      ? proofRequestpayload.attributes[index].credDefId
-                      : undefined,
-                    schema_id: proofRequestpayload.attributes[index].schemaId
-                  }
-                ]
-              };
+              return [
+                attributeReferent,
+                {
+                  name: attributeElement,
+                  restrictions: [
+                    {
+                      cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
+                      schema_id: proofRequestpayload.attributes[index].schemaId
+                    }
+                  ]
+                }
+              ];
             }
           } else {
-            if (isNaN(parseInt(attribute.value))) {
-              throw new BadRequestException(
-                ResponseMessages.verification.error.predicatesValueNotNumber
-              );
-            }
-
             requestedPredicates[attributeReferent] = {
               p_type: attribute.condition,
               restrictions: [
                 {
-                  cred_def_id: proofRequestpayload.attributes[index].credDefId
-                    ? proofRequestpayload.attributes[index].credDefId
-                    : undefined,
+                  cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
                   schema_id: proofRequestpayload.attributes[index].schemaId
                 }
               ],
@@ -606,16 +527,16 @@ export class VerificationService {
               p_value: parseInt(attribute.value)
             };
           }
-        }
+
+          return [attributeReferent];
+        }));
 
         return {
           requestedAttributes,
           requestedPredicates
         };
       } else {
-        throw new BadRequestException(
-          ResponseMessages.verification.error.schemaIdNotFound
-        );
+        throw new BadRequestException(ResponseMessages.verification.error.schemaIdNotFound);
       }
     } catch (error) {
       this.logger.error(`[proofRequestPayload] - error in proof request payload : ${JSON.stringify(error)}`);

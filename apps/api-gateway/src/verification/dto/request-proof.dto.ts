@@ -6,19 +6,27 @@ import { Transform } from 'class-transformer';
 
 class IProofRequestAttribute {
     @IsString()
+    @IsNotEmpty({ message: 'attributeName is required.' })
     attributeName: string;
 
     @IsString()
+    @IsNotEmpty({ message: 'schemaId is required.' })
+    schemaId: string;
+
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'condition is required.' })
     condition?: string;
 
     @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'value is required.' })
     value?: string;
 
     @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'credDefId is required.' })
     credDefId?: string;
-
-    @IsString()
-    schemaId: string;
 }
 
 export class RequestProof {

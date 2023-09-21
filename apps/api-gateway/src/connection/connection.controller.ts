@@ -14,6 +14,9 @@ import { Response } from 'express';
 import { Connections } from './enums/connections.enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { OrgRoles } from 'libs/org-roles/enums';
+import { Roles } from '../authz/decorators/roles.decorator';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -34,8 +37,8 @@ export class ConnectionController {
         * 
     */
     @Get('orgs/:orgId/connections/:connectionId')
-    @UseGuards(AuthGuard('jwt'))
-    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiOperation({
         summary: `Get connections by connection Id`,
         description: `Get connections by connection Id`
@@ -67,8 +70,8 @@ export class ConnectionController {
     * 
     */
     @Get('/orgs/:orgId/connections')
-    @UseGuards(AuthGuard('jwt'))
-    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiOperation({
         summary: `Fetch all connections details`,
         description: `Fetch all connections details`
@@ -124,7 +127,8 @@ export class ConnectionController {
     */
     @Post('/orgs/:orgId/connections')
     @ApiOperation({ summary: 'Create outbound out-of-band connection (Legacy Invitation)', description: 'Create outbound out-of-band connection (Legacy Invitation)' })
-    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
     @ApiBearerAuth()
     @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
     async createLegacyConnectionInvitation(

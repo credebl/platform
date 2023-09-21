@@ -12,7 +12,7 @@ import {
     ApiQuery,
     ApiExcludeEndpoint
 } from '@nestjs/swagger';
-import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters } from '@nestjs/common';
+import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
@@ -154,6 +154,26 @@ export class VerificationController {
         @Body() requestProof: RequestProof
     ): Promise<object> {
 
+        for (const attrData of requestProof.attributes) {
+            if (!attrData['attributeName']) {
+                throw new BadRequestException('attributeName must be required');
+            } else if (!attrData['schemaId']) {
+                throw new BadRequestException('schemaId must be required');
+            }
+
+            if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
+                throw new BadRequestException('credDefId cannot be empty');
+            }
+
+            if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
+                throw new BadRequestException('condition cannot be empty');
+            }
+
+            if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
+                throw new BadRequestException('value cannot be empty');
+            }
+        }
+
         requestProof.orgId = orgId;
         const sendProofRequest = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponseType = {
@@ -217,8 +237,28 @@ export class VerificationController {
         @Res() res: Response,
         @GetUser() user: IUserRequest,
         @Body() outOfBandRequestProof: OutOfBandRequestProof,
-        @Query('orgId') orgId: number
+        @Param('orgId') orgId: number
     ): Promise<object> {
+
+        for (const attrData of outOfBandRequestProof.attributes) {
+            if (!attrData['attributeName']) {
+                throw new BadRequestException('attributeName must be required');
+            } else if (!attrData['schemaId']) {
+                throw new BadRequestException('schemaId must be required');
+            }
+
+            if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
+                throw new BadRequestException('credDefId cannot be empty');
+            }
+
+            if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
+                throw new BadRequestException('condition cannot be empty');
+            }
+
+            if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
+                throw new BadRequestException('value cannot be empty');
+            }
+        }
 
         outOfBandRequestProof.orgId = orgId;
         const sendProofRequest = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);

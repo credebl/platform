@@ -2,9 +2,8 @@ import { IsArray, IsEmail, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-// import { IProofRequestAttribute } from '../interfaces/verification.interface';
 
-class IProofRequestAttribute {
+export class IProofRequestAttribute {
     @IsString()
     @IsNotEmpty({ message: 'attributeName is required.' })
     attributeName: string;

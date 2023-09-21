@@ -155,23 +155,7 @@ export class VerificationController {
     ): Promise<object> {
 
         for (const attrData of requestProof.attributes) {
-            if (!attrData['attributeName']) {
-                throw new BadRequestException('attributeName must be required');
-            } else if (!attrData['schemaId']) {
-                throw new BadRequestException('schemaId must be required');
-            }
-
-            if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
-                throw new BadRequestException('credDefId cannot be empty');
-            }
-
-            if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
-                throw new BadRequestException('condition cannot be empty');
-            }
-
-            if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
-                throw new BadRequestException('value cannot be empty');
-            }
+            await this.validateAttribute(attrData);
         }
 
         requestProof.orgId = orgId;
@@ -241,23 +225,7 @@ export class VerificationController {
     ): Promise<object> {
 
         for (const attrData of outOfBandRequestProof.attributes) {
-            if (!attrData['attributeName']) {
-                throw new BadRequestException('attributeName must be required');
-            } else if (!attrData['schemaId']) {
-                throw new BadRequestException('schemaId must be required');
-            }
-
-            if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
-                throw new BadRequestException('credDefId cannot be empty');
-            }
-
-            if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
-                throw new BadRequestException('condition cannot be empty');
-            }
-
-            if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
-                throw new BadRequestException('value cannot be empty');
-            }
+            await this.validateAttribute(attrData);
         }
 
         outOfBandRequestProof.orgId = orgId;
@@ -294,5 +262,27 @@ export class VerificationController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
+    async validateAttribute(
+        attrData: object
+    ): Promise<void> {
+
+        if (!attrData['attributeName']) {
+            throw new BadRequestException('attributeName must be required');
+        } else if (!attrData['schemaId']) {
+            throw new BadRequestException('schemaId must be required');
+        }
+
+        if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
+            throw new BadRequestException('credDefId cannot be empty');
+        }
+
+        if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
+            throw new BadRequestException('condition cannot be empty');
+        }
+
+        if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
+            throw new BadRequestException('value cannot be empty');
+        }
+    }
 }
 

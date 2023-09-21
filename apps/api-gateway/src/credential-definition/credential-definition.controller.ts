@@ -117,6 +117,6 @@ export class CredentialDefinitionController {
       message: ResponseMessages.credentialDefinition.success.create,
       data: credentialsDefinitionDetails.response
     };
-    return res.status(HttpStatus.OK).json(credDefResponse);
+    return res.status(HttpStatus.CREATED).json(credDefResponse);
   }
 }

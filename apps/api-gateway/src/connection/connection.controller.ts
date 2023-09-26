@@ -168,6 +168,7 @@ export class ConnectionController {
         @Param('id') id: number,
         @Res() res: Response
     ): Promise<object> {
+        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)}`);
         const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,

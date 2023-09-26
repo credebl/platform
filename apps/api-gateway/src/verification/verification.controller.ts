@@ -252,7 +252,7 @@ export class VerificationController {
         @Body() proofPresentationPayload: WebhookPresentationProof,
         @Res() res: Response
     ): Promise<object> {
-
+        this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
         const webhookProofPresentation = await this.verificationService.webhookProofPresentation(id, proofPresentationPayload);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,

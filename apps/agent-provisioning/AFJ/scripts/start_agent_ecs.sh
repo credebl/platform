@@ -38,7 +38,7 @@ cat <<EOF >>/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}
   "label": "${AGENCY}_${CONTAINER_NAME}",
   "walletId": "$WALLET_NAME",
   "walletKey": "$WALLET_PASSWORD",
-  "walletType": "postgres_storage",
+  "walletType": "postgres",
   "walletUrl": "$WALLET_STORAGE_HOST:$WALLET_STORAGE_PORT",
   "walletAccount": "$WALLET_STORAGE_USER",
   "walletPassword": "$WALLET_STORAGE_PASSWORD",

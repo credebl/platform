@@ -6,10 +6,6 @@ import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 
 export class AcceptRejectInvitationDto {
-
-    @ApiProperty({ example: 1 })
-    @IsNotEmpty({ message: 'Please provide valid invitationId' })
-    @IsNumber()
     invitationId: number;
 
     @ApiProperty({ example: 1 })

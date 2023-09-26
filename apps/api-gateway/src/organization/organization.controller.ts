@@ -1,4 +1,4 @@
-import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
 import { Controller, Get, Put, Param, UseGuards, UseFilters } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
@@ -26,9 +26,11 @@ import { GetAllOrganizationsDto } from './dtos/get-all-organizations.dto';
 import { GetAllSentInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
+import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 
 @UseFilters(CustomExceptionFilter)
-@Controller('organization')
+@Controller('orgs')
 @ApiTags('organizations')
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
@@ -39,39 +41,6 @@ export class OrganizationController {
     private readonly commonService: CommonService
   ) { }
 
-  @Post('/')
-  @ApiOperation({ summary: 'Create a new Organization', description: 'Create an organization' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-    await this.organizationService.createOrganization(createOrgDto, reqUser.id);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.create
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
-  @Get('/')
-  @ApiOperation({ summary: 'Get all organizations', description: 'Get all organizations' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  async getOrganizations(@Query() getAllOrgsDto: GetAllOrganizationsDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-
-    const getOrganizations = await this.organizationService.getOrganizations(getAllOrgsDto, reqUser.id);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.organisation.success.getOrganizations,
-      data: getOrganizations.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
   /**
  * 
  * @param user 
@@ -79,9 +48,9 @@ export class OrganizationController {
  * @param res 
  * @returns Users list of organization
  */
-  @Get('/public')
+  @Get('/public-profile')
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Get public organization list', description: 'Get users list.' })
+  @ApiOperation({ summary: 'Get all public profile of organizations', description: 'Get all public profile of organizations.' })
   @ApiQuery({
     name: 'pageNumber',
     type: Number,
@@ -109,29 +78,6 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('public-profile')
-  @ApiOperation({
-    summary: 'Fetch user details',
-    description: 'Fetch user details'
-  })
-  @ApiQuery({
-    name: 'id',
-    type: Number,
-    required: false
-  })
-  async getPublicProfile(@User() reqUser: user, @Query('id') id: number, @Res() res: Response): Promise<object> {
-    const userData = await this.organizationService.getPublicProfile(id);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.organisation.success.fetchProfile,
-      data: userData.response
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
   @Get('/roles')
   @ApiOperation({
     summary: 'Fetch org-roles details',
@@ -154,54 +100,38 @@ export class OrganizationController {
 
   }
 
-  @Post('/invitations')
+  @Get('public-profiles/:orgSlug')
   @ApiOperation({
-    summary: 'Create organization invitation',
-    description: 'Create send invitation'
+    summary: 'Fetch user details',
+    description: 'Fetch user details'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiBearerAuth()
-  async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @User() user: user, @Res() res: Response): Promise<Response> {
-    await this.organizationService.createInvitation(bulkInvitationDto, user.id);
 
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.createInvitation
-    };
-
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-
-  }
-
-  @Get('/invitations/:id')
-  @ApiOperation({ summary: 'Get an invitations', description: 'Get an invitations' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  async getInvitationsByOrgId(@Param('id') orgId: number, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<Response> {
-
-    const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
+  @ApiParam({
+    name: 'orgSlug',
+    type: String,
+    required: false
+  })
+  async getPublicProfile(@Param('orgSlug') orgSlug: string, @Res() res: Response): Promise<object> {
+    const userData = await this.organizationService.getPublicProfile(orgSlug);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.organisation.success.getInvitation,
-      data: getInvitationById.response
+      message: ResponseMessages.organisation.success.fetchProfile,
+      data: userData.response
     };
+
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
 
-  @Get('/dashboard')
+
+  @Get('/dashboard/:orgId')
   @ApiOperation({ summary: 'Get an organization', description: 'Get an organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiQuery(
-    { name: 'orgId', required: true }
-  )
-  async getOrganizationDashboard(@Query('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+
+  async getOrganizationDashboard(@Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganizationDashboard(orgId, reqUser.id);
 
@@ -214,31 +144,83 @@ export class OrganizationController {
 
   }
 
-  
-  @Put('user-roles')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Get('/:orgId/invitations')
+  @ApiOperation({ summary: 'Get an invitations', description: 'Get an invitations' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Update user roles', description: 'update user roles' })
-  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Res() res: Response): Promise<Response> {
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  async getInvitationsByOrgId(@Param('orgId') orgId: number, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<Response> {
 
-    await this.organizationService.updateUserRoles(updateUserDto, updateUserDto.userId);
+    const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.organisation.success.updateUserRoles
+      message: ResponseMessages.organisation.success.getInvitation,
+      data: getInvitationById.response
     };
-
     return res.status(HttpStatus.OK).json(finalResponse);
+
   }
 
-  @Get('/:id')
-  @ApiOperation({ summary: 'Get an organization', description: 'Get an organization' })
+  @Get('/')
+  @ApiOperation({ summary: 'Get all organizations', description: 'Get all organizations' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getOrganization(@Param('id') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  @ApiQuery({
+    name: 'pageNumber',
+    example: '1',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    example: '10',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    example: '',
+    type: String,
+    required: false
+  })
+  async getOrganizations(@Query() getAllOrgsDto: GetAllOrganizationsDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+
+    const getOrganizations = await this.organizationService.getOrganizations(getAllOrgsDto, reqUser.id);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getOrganizations,
+      data: getOrganizations.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
+  @Get('/:orgId')
+  @ApiOperation({ summary: 'Get an organization', description: 'Get an organization' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  async getOrganization(@Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganization(orgId, reqUser.id);
 
@@ -251,16 +233,112 @@ export class OrganizationController {
 
   }
 
+  /**
+  * 
+  * @param user 
+  * @param orgId 
+  * @param res 
+  * @returns Users list of organization
+  */
+  @Get('/:orgId/users')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+    const users = await this.organizationService.getOrgUsers(orgId, getAllUsersDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchUsers,
+      data: users?.response
+    };
 
-  @Put('/')
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/')
+  @ApiOperation({ summary: 'Create a new Organization', description: 'Create an organization' })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+    await this.organizationService.createOrganization(createOrgDto, reqUser.id);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.organisation.success.create
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/:orgId/invitations')
+  @ApiOperation({
+    summary: 'Create organization invitation',
+    description: 'Create send invitation'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: number, @User() user: user, @Res() res: Response): Promise<Response> {
+
+    bulkInvitationDto.orgId = orgId;
+    await this.organizationService.createInvitation(bulkInvitationDto, user.id);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.organisation.success.createInvitation
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+
+  }
+
+  @Put('/:orgId/user-roles/:userId')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Update user roles', description: 'update user roles' })
+  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: number, @Param('userId') userId: number, @Res() res: Response): Promise<Response> {
+
+    updateUserDto.orgId = orgId;
+    updateUserDto.userId = userId;
+    await this.organizationService.updateUserRoles(updateUserDto, updateUserDto.userId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.updateUserRoles
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Put('/:orgId')
   @ApiOperation({ summary: 'Update Organization', description: 'Update an organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
-    await this.organizationService.updateOrganization(updateOrgDto, reqUser.id);
+    updateOrgDto.orgId = orgId;
+    await this.organizationService.updateOrganization(updateOrgDto, reqUser.id, orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

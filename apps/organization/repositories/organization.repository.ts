@@ -53,7 +53,10 @@ export class OrganizationRepository {
           name: createOrgDto.name,
           logoUrl: createOrgDto.logo,
           description: createOrgDto.description,
-          website: createOrgDto.website
+          website: createOrgDto.website,
+          orgSlug: createOrgDto.orgSlug,
+          publicProfile: true
+
         }
       });
     } catch (error) {
@@ -78,10 +81,11 @@ export class OrganizationRepository {
           name: updateOrgDto.name,
           logoUrl: updateOrgDto.logo,
           description: updateOrgDto.description,
-          website: updateOrgDto.website
+          website: updateOrgDto.website,
+          orgSlug: updateOrgDto.orgSlug,
+          publicProfile: updateOrgDto.isPublic
         }
       });
-
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -243,7 +247,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrganization(queryObject: object): Promise<object> {
+  async getOrganization(queryObject: object): Promise<organisation> {
     try {
       return this.prisma.organisation.findFirst({
         where: {
@@ -256,6 +260,12 @@ export class OrganizationRepository {
               agent_invitations: true,
               org_agent_type: true,
               ledgers: true
+            }
+          },
+          userOrgRoles: {
+            include: {
+              user: true,
+              orgRole: true
             }
           }
         }
@@ -398,6 +408,26 @@ export class OrganizationRepository {
       const totalPages = Math.ceil(totalCount / pageSize);
 
       return { totalPages, organizations };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  /**
+  *
+  * @param name
+  * @returns Organization exist details
+  */
+
+  async checkOrganizationExist(name: string, orgId: number): Promise<organisation[]> {
+    try {
+      return this.prisma.organisation.findMany({
+        where: {
+          id: orgId,
+          name
+        }
+      });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

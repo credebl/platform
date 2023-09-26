@@ -79,7 +79,7 @@ export class ConnectionService {
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -111,8 +111,8 @@ export class ConnectionService {
             throw new Error('Invalid condition');
         }
     } catch (error) {
-        this.logger.error(`[getConnectionWebhook] - error in fetch connection webhook: ${error}`);
-        throw new RpcException(error.response);
+      this.logger.error(`[getConnectionWebhook] - error in fetch connection webhook: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
     }
 }
 
@@ -179,8 +179,7 @@ export class ConnectionService {
       return urlDetails.url;
     } catch (error) {
       this.logger.error(`Error in get url in connection service: ${JSON.stringify(error)}`);
-      throw error;
-
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -240,8 +239,7 @@ export class ConnectionService {
       return connectionsDetails?.response;
     } catch (error) {
       this.logger.error(`Error in get url in connection service: ${JSON.stringify(error)}`);
-      throw error;
-
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -302,7 +300,7 @@ export class ConnectionService {
       return createConnectionInvitation?.response;
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

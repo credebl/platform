@@ -6,6 +6,9 @@ import {
   WebSocketServer
 
 } from '@nestjs/websockets';
+import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
+import { EmailVerificationDto } from '../user/dto/email-verify.dto';
+import { AddUserDetails } from '../user/dto/add-user.dto';
 
 
 @Injectable()
@@ -25,4 +28,24 @@ export class AuthzService extends BaseService {
     return this.sendNats(this.authServiceProxy, 'get-user-by-keycloakUserId', keycloakUserId);
   }
 
+  async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<object> {
+    const payload = { userEmailVerificationDto };
+    return this.sendNats(this.authServiceProxy, 'send-verification-mail', payload);
+  }
+
+  async verifyEmail(param: EmailVerificationDto): Promise<object> {
+    const payload = { param };
+    return this.sendNats(this.authServiceProxy, 'user-email-verification', payload);
+
+  }
+
+  async login(email: string, password?: string, isPasskey = false): Promise<{ response: object }> {
+    const payload = { email, password, isPasskey };
+    return this.sendNats(this.authServiceProxy, 'user-holder-login', payload);
+  }
+
+  async addUserDetails(userInfo: AddUserDetails): Promise<{ response: string }> {
+    const payload = { userInfo };
+    return this.sendNats(this.authServiceProxy, 'add-user', payload);
+  }
 }

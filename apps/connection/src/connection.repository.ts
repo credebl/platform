@@ -1,7 +1,9 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, connections, org_agents, platform_config, shortening_url } from '@prisma/client';
+import { ConnectionInfo, ConnectionPayload } from './interfaces/connection.interfaces';
+import { ResponseMessages } from '@credebl/common/response-messages';
 @Injectable()
 export class ConnectionRepository {
 
@@ -12,7 +14,7 @@ export class ConnectionRepository {
 
     /**
      * Description: Get getAgentEndPoint by orgId
-     * @param connectionId 
+     * @param orgId 
      * @returns Get getAgentEndPoint details
      */
     // eslint-disable-next-line camelcase
@@ -61,37 +63,41 @@ export class ConnectionRepository {
 
     /**
     * Description: Save connection details
-    * @param connectionInvitation
-    * @param agentId
-    * @param orgId
-    * @returns Get connection details
+    * @param connectionPayload
+    * @param orgDetails
+    * @returns connection details
     */
     // eslint-disable-next-line camelcase
-    async saveConnectionWebhook(createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: number): Promise<connections> {
+    async saveConnectionWebhook(connectionPayload: ConnectionPayload, orgDetails: ConnectionInfo): Promise<connections> {
         try {
+            const { orgId, orgDid } = orgDetails;
+            const { state, theirLabel, autoAcceptConnection, outOfBandId, threadId, id } = connectionPayload;
             const agentDetails = await this.prisma.connections.upsert({
                 where: {
-                    connectionId
+                    connectionId: connectionPayload?.id
                 },
                 update: {
-                    lastChangedDateTime,
                     lastChangedBy: orgId,
                     state,
                     orgDid,
                     theirLabel,
                     autoAcceptConnection,
-                    outOfBandId
+                    outOfBandId,
+                    threadId,
+                    orgId
                 },
                 create: {
-                    createDateTime,
-                    lastChangedDateTime,
-                    connectionId,
+                    lastChangedBy: orgId,
+                    connectionId: id,
                     state,
-                    orgDid,
                     theirLabel,
                     autoAcceptConnection,
                     outOfBandId,
-                    orgId
+                    orgId,
+                    orgDid,
+                    threadId
+
+
                 }
             });
             return agentDetails;
@@ -160,6 +166,34 @@ export class ConnectionRepository {
         } catch (error) {
             this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`);
             throw new InternalServerErrorException(error);
+        }
+    }
+
+    /**
+     * Description: Get agent details by tenantId
+     * @param tenantId 
+     * @returns Get agent details
+     */
+    // eslint-disable-next-line camelcase
+    async getAgentDetailsByTenantId(tenantId: string): Promise<org_agents> {
+        try {
+            if (!tenantId) {
+                throw new BadRequestException(ResponseMessages.connection.webhookError.tenantIdNotFound);
+
+            }
+            const agentDetails = await this.prisma.org_agents.findFirst({
+                where: {
+                    tenantId
+                }
+            });
+            if (!agentDetails) {
+                throw new NotFoundException(ResponseMessages.connection.webhookError.agentDetailsNotFound);
+            }
+            return agentDetails;
+
+        } catch (error) {
+            this.logger.error(`Error in get getAgentEndPoint: ${error.message} `);
+            throw error;
         }
     }
 }

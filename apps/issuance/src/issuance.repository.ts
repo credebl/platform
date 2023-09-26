@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { agent_invitations, credentials, org_agents, platform_config, shortening_url } from '@prisma/client';
+import { Prisma, agent_invitations, credentials, org_agents, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 @Injectable()
 export class IssuanceRepository {
@@ -45,22 +45,25 @@ export class IssuanceRepository {
  * @returns Get saved credential details
  */
     // eslint-disable-next-line camelcase
-    async saveIssuedCredentialDetails(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: object[], orgId: number): Promise<credentials> {
+    async saveIssuedCredentialDetails(issueCredentialPayload, orgId: number): Promise<credentials> {
         try {
-
+            const { state, threadId, protocolVersion, credentialAttributes, connectionId, createDateTime } = issueCredentialPayload;
             const credentialDetails = await this.prisma.credentials.upsert({
                 where: {
                     connectionId
                 },
                 update: {
+                    state,
                     lastChangedBy: orgId,
                     createDateTime,
                     threadId,
                     protocolVersion,
                     credentialAttributes,
+                    connectionId,
                     orgId
                 },
                 create: {
+                    state,
                     createDateTime,
                     lastChangedBy: orgId,
                     connectionId,
@@ -68,7 +71,7 @@ export class IssuanceRepository {
                     protocolVersion,
                     credentialAttributes,
                     orgId
-                }
+                } as unknown as Prisma.credentialsCreateInput
             });
             return credentialDetails;
 

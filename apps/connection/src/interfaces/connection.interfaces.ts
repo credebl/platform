@@ -92,3 +92,46 @@ export interface ConnectionInvitationResponse {
     invitation: object;
   };
 }
+
+export interface ConnectionPayload {
+  _tags?: {
+      did?: string;
+      outOfBandId?: string;
+      state?: string;
+      role?: string;
+      invitationDid?: string;
+      threadId?: string;
+  };
+  metadata?: Record<string, unknown>;
+  connectionTypes?: string[];
+  id?: string;
+  createdAt?: string;
+  did?: string;
+  invitationDid?: string;
+  theirLabel?: string;
+  state?: string;
+  role?: string;
+  autoAcceptConnection?: boolean;
+  threadId?: string;
+  protocol?: string;
+  outOfBandId?: string;
+  updatedAt?: string;
+  theirDid?: string;
+  contextCorrelationId?: string;
+}
+
+export interface ConnectionInfo {
+  id: number;
+  createDateTime: Date;
+  createdBy?: number;
+  lastChangedDateTime: Date;
+  lastChangedBy: number;
+  connectionId?: string;
+  state?: string;
+  orgDid?: string;
+  theirLabel?: string;
+  autoAcceptConnection?: boolean;
+  outOfBandId?: string;
+  orgId: number;
+}
+

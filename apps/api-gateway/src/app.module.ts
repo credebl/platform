@@ -20,6 +20,7 @@ import { SchemaModule } from './schema/schema.module';
 import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -41,7 +42,8 @@ import { ConnectionModule } from './connection/connection.module';
     OrganizationModule,
     UserModule,
     ConnectionModule,
-    IssuanceModule
+    IssuanceModule,
+    NotificationModule
   ],
   controllers: [AppController],
   providers: [AppService]

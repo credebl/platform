@@ -86,6 +86,10 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     autoAcceptCredential: string;
+   
+    @ApiProperty()
+    @IsOptional()
+    contextCorrelationId: string;
 }
 
 

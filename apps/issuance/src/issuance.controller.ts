@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions } from '../interfaces/issuance.interfaces';
+import { IIssuance, IIssueCredentials, IIssueCredentialsDefinitions } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 
 @Controller()
@@ -33,8 +33,8 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
-  async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
-    const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
-    return this.issuanceService.getIssueCredentialWebhook(createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId);
+  async getIssueCredentialWebhook(payload): Promise<object> {
+    const { issueCredentialPayload, orgId} = payload;
+    return this.issuanceService.getIssueCredentialWebhook(issueCredentialPayload, orgId);
   }
 }

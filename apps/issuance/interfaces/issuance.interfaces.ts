@@ -37,6 +37,9 @@ export interface IIssuanceWebhookInterface {
     protocolVersion: string;
     credentialAttributes: ICredentialAttributesInterface[];
     orgId: number;
+    state: string;
+    contextCorrelationId: string;
+
 }
  
 export interface ICredentialAttributesInterface {

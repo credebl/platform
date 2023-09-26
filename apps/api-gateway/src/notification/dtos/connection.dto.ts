@@ -97,7 +97,7 @@ export class ConnectionDto {
     @ApiProperty()
     @IsOptional()
     updatedAt: string;  
-   
+    
     @ApiProperty()
     @IsOptional()
     contextCorrelationId: string;

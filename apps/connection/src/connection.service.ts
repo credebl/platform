@@ -15,6 +15,7 @@ import {
 import { map } from 'rxjs';
 import {
   ConnectionInvitationResponse,
+  ConnectionPayload,
   IUserRequestInterface
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
@@ -89,18 +90,48 @@ export class ConnectionService {
    * @param user 
    * @returns Connection legacy invitation URL
    */
-  async getConnectionWebhook(
-    createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: number
-  ): Promise<object> {
+  async getConnectionWebhook(connectionPayload: ConnectionPayload, orgId: number): Promise<object> {
     try {
-      const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(createDateTime, lastChangedDateTime, connectionId, state, orgDid, theirLabel, autoAcceptConnection, outOfBandId, orgId);
-      return saveConnectionDetails;
+        // condition for multi-tenant agent
+        if ('default' !== connectionPayload?.contextCorrelationId) {
+            const orgDetailsByTenantId = await this.connectionRepository.getAgentDetailsByTenantId(connectionPayload?.contextCorrelationId);
+            const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(connectionPayload, orgDetailsByTenantId);
+            if ('completed' === connectionPayload.state) {
+                await this._connectionNotification(saveConnectionDetails);
+            }
+            return saveConnectionDetails;
+        } else if ('default' === connectionPayload?.contextCorrelationId) { 
+            const orgDetailsByOrgId = await this.connectionRepository.getAgentEndPoint(orgId);
+            const saveDedicatedConnectionDetails = await this.connectionRepository.saveConnectionWebhook(connectionPayload, orgDetailsByOrgId);
+            if ('completed' === connectionPayload.state) {
+                await this._connectionNotification(saveDedicatedConnectionDetails);
+            }
+            return saveDedicatedConnectionDetails;
+        } else {
+            throw new Error('Invalid condition');
+        }
     } catch (error) {
-      this.logger.error(`[getConnectionWebhook] - error in fetch connection webhook: ${error}`);
-      throw new RpcException(error.response);
+        this.logger.error(`[getConnectionWebhook] - error in fetch connection webhook: ${error}`);
+        throw new RpcException(error.response);
+    }
+}
+
+  async _connectionNotification(connectionNotificationPayload: object): Promise<string> {
+    const pattern = { cmd: 'connection-notification' };
+    const payload = { connectionNotificationPayload };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.connectionServiceProxy.send<string>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
     }
   }
-
 
   /**
    * Description: Store shortening URL 

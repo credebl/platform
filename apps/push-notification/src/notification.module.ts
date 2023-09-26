@@ -1,9 +1,9 @@
 import { Logger, Module } from '@nestjs/common';
-import { ConnectionController } from './connection.controller';
-import { ConnectionService } from './connection.service';
+import { NotificationController } from './notification.controller';
+import { NotificationService } from './notification.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule } from '@credebl/common';
-import { ConnectionRepository } from './connection.repository';
+import { NotificationRepository } from './notification.repository';
 import { PrismaService } from '@credebl/prisma-service';
 import { ConfigModule } from '@nestjs/config';
 
@@ -22,7 +22,7 @@ import { ConfigModule } from '@nestjs/config';
 
     CommonModule
   ],
-  controllers: [ConnectionController],
-  providers: [ConnectionService, ConnectionRepository, PrismaService, Logger]
+  controllers: [NotificationController],
+  providers: [NotificationService, NotificationRepository, PrismaService, Logger]
 })
-export class ConnectionModule { }
+export class NotificationModule { }

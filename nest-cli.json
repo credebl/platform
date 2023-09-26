@@ -232,6 +232,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/supabase/tsconfig.lib.json"
       }
+    },
+    "push-notification": {
+      "type": "application",
+      "root": "apps/push-notification",
+      "entryFile": "main",
+      "sourceRoot": "apps/push-notification/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/push-notification/tsconfig.app.json"
+      }
     }
   }
 }

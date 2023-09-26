@@ -140,7 +140,7 @@ model platform_config {
 }
 
 model org_agents {
-  id                  Int                 @unique @default(autoincrement())
+  id                  Int                 @id @unique @default(autoincrement())
   createDateTime      DateTime            @default(now()) @db.Timestamptz(6)
   createdBy           Int                 @default(1)
   lastChangedDateTime DateTime            @default(now()) @db.Timestamptz(6)
@@ -277,6 +277,7 @@ model connections {
   autoAcceptConnection Boolean
   outOfBandId          String
   orgId                Int
+  threadId             String
   organisation         organisation @relation(fields: [orgId], references: [id])
 }
 
@@ -291,6 +292,8 @@ model credentials {
   protocolVersion      String
   credentialAttributes Json[]
   orgId                Int
+  state                String?
+  recordId             String       @unique
   organisation         organisation @relation(fields: [orgId], references: [id])
 }
 
@@ -305,5 +308,21 @@ model presentations {
   threadId            String?
   isVerified          Boolean?
   orgId               Int
+  recordId            String       @unique
   organisation        organisation @relation(fields: [orgId], references: [id])
+}
+
+model notifications {
+  id                  Int      @id @default(autoincrement())
+  createDateTime      DateTime @default(now()) @db.Timestamptz(6)
+  createdBy           Int      @default(1)
+  lastChangedDateTime DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int      @default(1)
+  userId              Int      
+  orgId               Int    
+  recordId            String   @unique
+  type                String
+  details             String
+  state               String?
+  isRead              Boolean @default(false)
 }

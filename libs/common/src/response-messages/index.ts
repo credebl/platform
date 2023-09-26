@@ -133,6 +133,10 @@ export const ResponseMessages = {
             create: 'Connection created successfully',
             fetch: 'Connection Details fetched successfully'
         },
+        webhookError: {
+            tenantIdNotFound: 'Invalid tenant Id',
+            agentDetailsNotFound: 'Agent details Not Found',
+        },
         error: {
             exists: 'Connection is already exist',
             connectionNotFound: 'ConnectionNotFound not found',
@@ -170,6 +174,20 @@ export const ResponseMessages = {
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'
+        }
+    }, notification: {
+        success: {
+            fetch: 'Notification list fetched successfully'
+        },
+        webhookError: {
+            tenantIdNotFound: 'Invalid tenant Id',
+            agentDetailsNotFound: 'Agent details Not Found',
+        },
+        error: {
+            exists: 'Connection is already exist',
+            connectionNotFound: 'ConnectionNotFound not found',
+            agentEndPointNotFound: 'agentEndPoint Not Found',
+            agentUrlNotFound: 'agent url not found'
         }
     }
 };

@@ -133,9 +133,11 @@ export class AgentServiceService {
 
       agentSpinupDto.agentType = agentSpinupDto.agentType ? agentSpinupDto.agentType : 1;
       agentSpinupDto.tenant = agentSpinupDto.tenant ? agentSpinupDto.tenant : false;
+      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId.length ? [1] : agentSpinupDto.ledgerId;
+
 
       const platformConfig: platform_config = await this.agentServiceRepository.getPlatformConfigDetails();
-      const ledgerDetails: ledgers = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
+      const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
       const orgData: organisation = await this.agentServiceRepository.getOrgDetails(agentSpinupDto.orgId);
 
       if (!orgData) {
@@ -177,6 +179,18 @@ export class AgentServiceService {
         controllerIp
       );
 
+      const ledgerArray = [];
+      for (const iterator of ledgerDetails) {
+        const ledgerJson = {}; 
+      
+        ledgerJson["genesisTransactions"] = iterator.poolConfig; 
+        ledgerJson["indyNamespace"] = iterator.indyNamespace; 
+      
+        ledgerArray.push(ledgerJson);
+      }
+
+      const ledgerString = JSON.stringify(ledgerArray);
+      const escapedJsonString = ledgerString.replace(/"/g, '\\"');
       if (agentSpinupDto.agentType === AgentType.ACAPY) {
 
         // TODO: ACA-PY Agent Spin-Up
@@ -197,7 +211,7 @@ export class AgentServiceService {
           containerName,
           agentType: AgentType.AFJ,
           orgName: orgData.name,
-          genesisUrl: ledgerDetails?.poolConfig,
+          indyLedger: escapedJsonString,
           afjVersion: process.env.AFJ_VERSION,
           protocol: process.env.API_GATEWAY_PROTOCOL,
           tenant: agentSpinupDto.tenant
@@ -470,14 +484,10 @@ export class AgentServiceService {
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
     try {
 
+      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId.length ? [1] : payload.ledgerId;
+
+      const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
       const sharedAgentSpinUpResponse = new Promise(async (resolve, _reject) => {
-        const { label, seed } = payload;
-        const createTenantOptions = {
-          config: {
-            label
-          },
-          seed
-        };
 
         const socket = await io(`${process.env.SOCKET_HOST}`, {
           reconnection: true,
@@ -504,45 +514,57 @@ export class AgentServiceService {
               throw new NotFoundException('Platform-admin agent is not spun-up');
             }
 
-            const apiKey = '';
+            let tenantDetails;
             const url = `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`;
-            const tenantDetails = await this.commonService
-              .httpPost(url, createTenantOptions, { headers: { 'x-api-key': apiKey } })
-              .then(async (tenant) => {
-                this.logger.debug(`API Response Data: ${JSON.stringify(tenant)}`);
-                return tenant;
-              });
-
-            const storeOrgAgentData: IStoreOrgAgentDetails = {
-              did: tenantDetails.did,
-              verkey: tenantDetails.verkey,
-              isDidPublic: true,
-              agentSpinUpStatus: 2,
-              agentsTypeId: AgentType.AFJ,
-              orgId: payload.orgId,
-              agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
-              orgAgentTypeId: OrgAgentType.SHARED,
-              tenantId: tenantDetails.tenantRecord.id,
-              walletName: label
-            };
-
-            if (payload.clientSocketId) {
-              socket.emit('agent-spinup-process-completed', { clientId: payload.clientSocketId });
+            for (const iterator of ledgerDetails) {
+              const { label, seed } = payload;
+              const createTenantOptions = {
+                config: {
+                  label
+                },
+                seed,
+                method: iterator.indyNamespace
+              };
+              const apiKey = '';
+              tenantDetails = await this.commonService
+                .httpPost(url, createTenantOptions, { headers: { 'x-api-key': apiKey } })
+                .then(async (tenant) => {
+                  this.logger.debug(`API Response Data: ${JSON.stringify(tenant)}`);
+                  return tenant;
+                });
+                
+                const storeOrgAgentData: IStoreOrgAgentDetails = {
+                  did: tenantDetails.did,
+                  verkey: tenantDetails.verkey,
+                  isDidPublic: true,
+                  agentSpinUpStatus: 2,
+                  agentsTypeId: AgentType.AFJ,
+                  orgId: payload.orgId,
+                  agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
+                  orgAgentTypeId: OrgAgentType.SHARED,
+                  tenantId: tenantDetails.tenantRecord.id,
+                  walletName: label
+                };
+    
+                if (payload.clientSocketId) {
+                  socket.emit('agent-spinup-process-completed', { clientId: payload.clientSocketId });
+                }
+    
+                const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
+    
+                if (payload.clientSocketId) {
+                  socket.emit('invitation-url-creation-started', { clientId: payload.clientSocketId });
+                }
+    
+                await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
+    
+                if (payload.clientSocketId) {
+                  socket.emit('invitation-url-creation-success', { clientId: payload.clientSocketId });
+                }
+    
+                resolve(saveTenant);
             }
-
-            const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
-
-            if (payload.clientSocketId) {
-              socket.emit('invitation-url-creation-started', { clientId: payload.clientSocketId });
-            }
-
-            await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
-
-            if (payload.clientSocketId) {
-              socket.emit('invitation-url-creation-success', { clientId: payload.clientSocketId });
-            }
-
-            resolve(saveTenant);
+      
           } else {
             throw new InternalServerErrorException('Agent not able to spin-up');
           }

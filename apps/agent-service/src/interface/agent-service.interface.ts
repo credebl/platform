@@ -7,8 +7,8 @@ export interface IAgentSpinupDto {
     walletPassword: string;
     seed: string;
     orgId: number;
+    ledgerId: number[];
     agentType?: AgentType;
-    ledgerId?: number;
     transactionApproval?: boolean;
     clientSocketId?: string
     tenant?: boolean;
@@ -17,8 +17,10 @@ export interface IAgentSpinupDto {
 export interface ITenantDto {
     label: string;
     seed: string;
-    tenantId?: string;
+    ledgerId: number[];
+    method: string;
     orgId: number;
+    tenantId?: string;
     clientSocketId?: string;
 }
 
@@ -103,7 +105,7 @@ export interface IWalletProvision {
     containerName: string;
     agentType: AgentType;
     orgName: string;
-    genesisUrl: string;
+    indyLedger: string;
     afjVersion: string;
     protocol: string;
     tenant: boolean;

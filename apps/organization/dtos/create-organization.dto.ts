@@ -6,6 +6,7 @@ export class CreateOrganizationDto {
   description?: string;
   logo?: string;
   website?: string;
+  orgSlug?:string;
 }
 
 export class CreateUserRoleOrgDto {

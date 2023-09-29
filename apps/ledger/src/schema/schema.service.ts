@@ -180,7 +180,7 @@ export class SchemaService extends BaseService {
       this.logger.error(
         `[createSchema] - outer Error: ${JSON.stringify(error)}`
       );
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -244,7 +244,7 @@ export class SchemaService extends BaseService {
 
     } catch (error) {
       this.logger.error(`Error in getting schema by id: ${error}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -322,7 +322,7 @@ export class SchemaService extends BaseService {
 
     } catch (error) {
       this.logger.error(`Error in retrieving schemas by org id: ${error}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -361,7 +361,7 @@ export class SchemaService extends BaseService {
 
     } catch (error) {
       this.logger.error(`Error in retrieving credential definition: ${error}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -410,7 +410,7 @@ export class SchemaService extends BaseService {
 
     } catch (error) {
       this.logger.error(`Error in retrieving all schemas: ${error}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

@@ -13,14 +13,15 @@ export const ResponseMessages = {
             fetchUsers: 'Users fetched successfully',
             newUser: 'User not found',
             checkEmail: 'User email checked successfully.',
-            sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify'
+            sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
+            userActivity: 'User activities fetched successfully'
         },
         error: {
             exists: 'User already exists',
             profileNotFound: 'User public profile not found',
             verificationAlreadySent: 'The verification link has already been sent to your email address',
             emailSend: 'Unable to send email to the user',
-            invalidEmailUrl: 'Invalid token or EmailId!',
+            invalidEmailUrl: 'Invalid verification code or EmailId!',
             verifiedEmail: 'Email already verified',
             notFound: 'User not found',
             verifyMail: 'Please verify your email',
@@ -32,7 +33,8 @@ export const ResponseMessages = {
             invalidEmail: 'Invalid Email Id!',
             adduser: 'Unable to add user details',
             verifyEmail: 'The verification link has already been sent to your email address. please verify',
-            emailNotVerified: 'The verification link has already been sent to your email address. please verify'
+            emailNotVerified: 'The verification link has already been sent to your email address. please verify',
+            userNotRegisterd: 'The user has not yet completed the registration process'
         }
     },
     organisation: {
@@ -115,7 +117,7 @@ export const ResponseMessages = {
     },
     agent: {
         success: {
-            create: 'Agent spin-up up successfully',
+            create: 'Agent spin-up successfully',
             health: 'Agent health details retrieved successfully.'
         },
         error: {
@@ -131,7 +133,7 @@ export const ResponseMessages = {
     connection: {
         success: {
             create: 'Connection created successfully',
-            fetch: 'Connection Details fetched successfully'
+            fetch: 'Connection fetched successfully'
         },
         error: {
             exists: 'Connection is already exist',

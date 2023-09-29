@@ -31,8 +31,8 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'update-organization' })
-  async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: number }): Promise<object> {
-    return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId);
+  async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: number, orgId: number }): Promise<object> {
+    return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId, payload.orgId);
   }
 
   /**
@@ -72,7 +72,7 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'get-organization-public-profile' })
-  async getPublicProfile(payload: { id }): Promise<object> {
+  async getPublicProfile(payload: { orgSlug }): Promise<object> {
     return this.organizationService.getPublicProfile(payload);
   }
 

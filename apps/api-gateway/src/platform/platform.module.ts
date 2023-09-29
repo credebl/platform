@@ -3,7 +3,6 @@ import { PlatformController } from './platform.controller';
 import { PlatformService } from './platform.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
-import { commonNatsOptions } from 'libs/service/nats.options';
 
 @Module({
   imports: [
@@ -11,10 +10,12 @@ import { commonNatsOptions } from 'libs/service/nats.options';
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
-        ...commonNatsOptions('AGENT_SERVICE:REQUESTER')
+        transport: Transport.NATS,
+        options: {
+          servers: [`${process.env.NATS_URL}`]
+        }
       }
     ])
-    
   ],
   controllers: [PlatformController],
   providers: [PlatformService]

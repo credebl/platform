@@ -1,13 +1,16 @@
-import { Logger, Module } from '@nestjs/common';
+import { CommonModule, CommonService } from '@credebl/common';
+
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
 import { EcosystemController } from './ecosystem.controller';
 import { EcosystemService } from './ecosystem.service';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CommonModule } from '@credebl/common';
-// import { ConnectionRepository } from './connection.repository';
-import { PrismaService } from '@credebl/prisma-service';
 
 @Module({
   imports: [
+    HttpModule,
+    ConfigModule.forRoot(),
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -15,12 +18,12 @@ import { PrismaService } from '@credebl/prisma-service';
         options: {
           servers: [`${process.env.NATS_URL}`]
         }
-      }
-    ]),
-
-    CommonModule
+      },
+      CommonModule
+    ])
   ],
   controllers: [EcosystemController],
-  providers: [EcosystemService, PrismaService, Logger]
+  providers: [EcosystemService, CommonService]
 })
 export class EcosystemModule { }
+

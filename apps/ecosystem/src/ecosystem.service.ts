@@ -1,8 +1,20 @@
-import { Injectable } from '@nestjs/common';
+// eslint-disable-next-line camelcase
+import { Injectable} from '@nestjs/common';
 
 @Injectable()
 export class EcosystemService {
-  getHello(): string {
-    return 'Hello World!';
+  constructor(  
+  ) { }
+
+  /**
+   *
+   * @param registerOrgDto
+   * @returns
+   */
+
+  // eslint-disable-next-line camelcase
+  async createEcosystem():Promise<string> {
+    return "test";
   }
+
 }

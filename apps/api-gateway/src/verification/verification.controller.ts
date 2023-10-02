@@ -230,7 +230,8 @@ export class VerificationController {
         @Body() proofPresentationPayload: WebhookPresentationProof,
         @Res() res: Response
     ): Promise<object> {
-
+        // eslint-disable-next-line no-console
+        console.log('VERIFICATION:: ', `ORGID:: ${id}`, proofPresentationPayload);
         const webhookProofPresentation = await this.verificationService.webhookProofPresentation(id, proofPresentationPayload);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,

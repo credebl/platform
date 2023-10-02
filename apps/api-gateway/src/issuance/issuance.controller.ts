@@ -114,6 +114,8 @@ export class IssuanceController {
     @Param('id') id: number,
     @Res() res: Response
   ): Promise<Response> {
+    // eslint-disable-next-line no-console
+    console.log('Issuance::', `ORGID:: ${id}`, issueCredentialDto);
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

@@ -132,6 +132,8 @@ export class ConnectionController {
         @Param('id') id: number,
         @Res() res: Response
     ): Promise<object> {
+        // eslint-disable-next-line no-console
+        console.log('CONNECTION:: ', `ORGID::${id}`, connectionDto);
         const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,

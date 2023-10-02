@@ -377,6 +377,5 @@ model ecosystem_orgs {
   lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
   lastChangedBy       Int              @default(1)
   deletedAt           DateTime?        @db.Timestamp(6)
-
 }
 

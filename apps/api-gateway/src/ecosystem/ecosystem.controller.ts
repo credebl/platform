@@ -22,7 +22,6 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
 export class EcosystemController {
-
   constructor(
     private readonly ecosystemService: EcosystemService
   ) { }

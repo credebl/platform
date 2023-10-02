@@ -7,7 +7,7 @@ import { Body } from '@nestjs/common';
 @Controller()
 export class EcosystemController {
   constructor(private readonly ecosystemService: EcosystemService) {}
-  private readonly logger = new Logger('OrganizationController');
+  private readonly logger = new Logger('EcosystemController');
 
   /**
    * Description: create new ecosystem

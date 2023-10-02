@@ -1,7 +1,7 @@
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { MaxLength, IsString, MinLength, Matches, IsNotEmpty, IsOptional, IsArray, IsNumber } from 'class-validator';
+import { MaxLength, IsString, MinLength, Matches, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 const labelRegex = /^[a-zA-Z0-9 ]*$/;
 export class CreateTenantDto {
     @ApiProperty()
@@ -25,11 +25,11 @@ export class CreateTenantDto {
     })
     seed: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: [1] })
     @IsArray({ message: 'ledgerId must be an array' })
-    @IsNumber()
     @IsNotEmpty({ message: 'please provide valid ledgerId' })
     ledgerId: number[];
+
     orgId: number;
 
     @ApiProperty()

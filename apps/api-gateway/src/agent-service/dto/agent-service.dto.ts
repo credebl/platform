@@ -1,7 +1,7 @@
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength, IsArray } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength, IsArray } from 'class-validator';
 const regex = /^[a-zA-Z0-9 ]*$/;
 export class AgentSpinupDto {
 
@@ -35,9 +35,8 @@ export class AgentSpinupDto {
     })
     seed: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: [1] })
     @IsArray({ message: 'ledgerId must be an array' })
-    @IsNumber()
     @IsNotEmpty({ message: 'please provide valid ledgerId' })
     ledgerId: number[];
 

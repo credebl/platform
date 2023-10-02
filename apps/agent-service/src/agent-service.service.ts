@@ -181,11 +181,11 @@ export class AgentServiceService {
 
       const ledgerArray = [];
       for (const iterator of ledgerDetails) {
-        const ledgerJson = {}; 
-      
-        ledgerJson["genesisTransactions"] = iterator.poolConfig; 
-        ledgerJson["indyNamespace"] = iterator.indyNamespace; 
-      
+        const ledgerJson = {};
+
+        ledgerJson["genesisTransactions"] = iterator.poolConfig;
+        ledgerJson["indyNamespace"] = iterator.indyNamespace;
+
         ledgerArray.push(ledgerJson);
       }
 
@@ -532,39 +532,39 @@ export class AgentServiceService {
                   this.logger.debug(`API Response Data: ${JSON.stringify(tenant)}`);
                   return tenant;
                 });
-                
-                const storeOrgAgentData: IStoreOrgAgentDetails = {
-                  did: tenantDetails.did,
-                  verkey: tenantDetails.verkey,
-                  isDidPublic: true,
-                  agentSpinUpStatus: 2,
-                  agentsTypeId: AgentType.AFJ,
-                  orgId: payload.orgId,
-                  agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
-                  orgAgentTypeId: OrgAgentType.SHARED,
-                  tenantId: tenantDetails.tenantRecord.id,
-                  walletName: label
-                };
-    
-                if (payload.clientSocketId) {
-                  socket.emit('agent-spinup-process-completed', { clientId: payload.clientSocketId });
-                }
-    
-                const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
-    
-                if (payload.clientSocketId) {
-                  socket.emit('invitation-url-creation-started', { clientId: payload.clientSocketId });
-                }
-    
-                await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
-    
-                if (payload.clientSocketId) {
-                  socket.emit('invitation-url-creation-success', { clientId: payload.clientSocketId });
-                }
-    
-                resolve(saveTenant);
+
+              const storeOrgAgentData: IStoreOrgAgentDetails = {
+                did: tenantDetails.did,
+                verkey: tenantDetails.verkey,
+                isDidPublic: true,
+                agentSpinUpStatus: 2,
+                agentsTypeId: AgentType.AFJ,
+                orgId: payload.orgId,
+                agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
+                orgAgentTypeId: OrgAgentType.SHARED,
+                tenantId: tenantDetails.tenantRecord.id,
+                walletName: label
+              };
+
+              if (payload.clientSocketId) {
+                socket.emit('agent-spinup-process-completed', { clientId: payload.clientSocketId });
+              }
+
+              const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
+
+              if (payload.clientSocketId) {
+                socket.emit('invitation-url-creation-started', { clientId: payload.clientSocketId });
+              }
+
+              await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
+
+              if (payload.clientSocketId) {
+                socket.emit('invitation-url-creation-success', { clientId: payload.clientSocketId });
+              }
+
+              resolve(saveTenant);
             }
-      
+
           } else {
             throw new InternalServerErrorException('Agent not able to spin-up');
           }
@@ -621,16 +621,12 @@ export class AgentServiceService {
 
       } else if (2 === payload.agentType) {
 
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_WITH_TENANT_AGENT}`;
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_SCHEMA}`.replace('#', `${payload.tenantId}`);
         const schemaPayload = {
-          tenantId: payload.tenantId,
-          method: 'registerSchema',
-          payload: {
-            attributes: payload.payload.attributes,
-            version: payload.payload.version,
-            name: payload.payload.name,
-            issuerId: payload.payload.issuerId
-          }
+          attributes: payload.payload.attributes,
+          version: payload.payload.version,
+          name: payload.payload.name,
+          issuerId: payload.payload.issuerId
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'x-api-key': payload.apiKey } })
           .then(async (schema) => {
@@ -658,15 +654,9 @@ export class AgentServiceService {
           });
 
       } else if (2 === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_WITH_TENANT_AGENT}`;
-        const schemaPayload = {
-          tenantId: payload.tenantId,
-          method: payload.method,
-          payload: {
-            'schemaId': `${payload.payload.schemaId}`
-          }
-        };
-        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'x-api-key': payload.apiKey } })
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`.replace('@', `${payload.payload.schemaId}`).replace('#', `${payload.tenantId}`);
+
+        schemaResponse = await this.commonService.httpGet(url, { headers: { 'x-api-key': payload.apiKey } })
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
@@ -696,15 +686,11 @@ export class AgentServiceService {
           });
 
       } else if (2 === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_WITH_TENANT_AGENT}`;
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CRED_DEF}`.replace('#', `${payload.tenantId}`);
         const credDefPayload = {
-          tenantId: payload.tenantId,
-          method: 'registerCredentialDefinition',
-          payload: {
-            tag: payload.payload.tag,
-            schemaId: payload.payload.schemaId,
-            issuerId: payload.payload.issuerId
-          }
+          tag: payload.payload.tag,
+          schemaId: payload.payload.schemaId,
+          issuerId: payload.payload.issuerId
         };
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'x-api-key': payload.apiKey } })
           .then(async (credDef) => {
@@ -732,15 +718,8 @@ export class AgentServiceService {
           });
 
       } else if (2 === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_WITH_TENANT_AGENT}`;
-        const credDefPayload = {
-          tenantId: payload.tenantId,
-          method: payload.method,
-          payload: {
-            'credentialDefinitionId': `${payload.payload.credentialDefinitionId}`
-          }
-        };
-        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'x-api-key': payload.apiKey } })
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
+        credDefResponse = await this.commonService.httpGet(url, { headers: { 'x-api-key': payload.apiKey } })
           .then(async (credDef) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;

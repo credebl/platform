@@ -19,6 +19,7 @@ import { SchemaModule } from './schema/schema.module';
 import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
+import { EcosystemModule } from './ecosystem/ecosystem.module';
 
 @Module({
   imports: [
@@ -40,7 +41,8 @@ import { ConnectionModule } from './connection/connection.module';
     OrganizationModule,
     UserModule,
     ConnectionModule,
-    IssuanceModule
+    IssuanceModule,
+    EcosystemModule
   ],
   controllers: [AppController],
   providers: [AppService]

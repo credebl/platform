@@ -232,15 +232,6 @@
       "compilerOptions": {
         "tsConfigPath": "libs/supabase/tsconfig.lib.json"
       }
-    },
-    "ecosystem": {
-      "type": "application",
-      "root": "apps/ecosystem",
-      "entryFile": "main",
-      "sourceRoot": "apps/ecosystem/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/ecosystem/tsconfig.app.json"
-      }
     }
   }
 }

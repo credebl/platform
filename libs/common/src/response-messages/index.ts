@@ -173,14 +173,5 @@ export const ResponseMessages = {
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'
         }
-    },
-    ecosystem: {
-        success: {
-            create: 'Ecosystem created successfully',
-        },
-        error: {
-        
-        }
-
-    },
+    }
 };

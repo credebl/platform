@@ -307,3 +307,74 @@ model presentations {
   orgId               Int
   organisation        organisation @relation(fields: [orgId], references: [id])
 }
+
+model ecosystem_roles {
+  id                  Int              @id @default(autoincrement())
+  name                String           @unique
+  description         String
+  ecosystemOrgs       ecosystem_orgs[]
+  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
+  createdBy           Int              @default(1)
+  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int              @default(1)
+  deletedAt           DateTime?        @db.Timestamp(6)
+}
+
+model ecosystem {
+  id                      String           @id @default(uuid())
+  name                    String
+  description             String
+  tags                    String
+  ecosystemOrgs           ecosystem_orgs[]
+  ecosystemUsers          ecosystem_users[]
+  ecosystemInvitations    ecosystem_invitations[]
+  createDateTime          DateTime         @default(now()) @db.Timestamptz(6)
+  createdBy               Int              @default(1)
+  lastChangedDateTime     DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedBy           Int              @default(1)
+  deletedAt               DateTime?        @db.Timestamp(6)
+}
+
+model ecosystem_invitations {
+  id                  String           @id @default(uuid())
+  email               String
+  status              String
+  ecosystemId         String
+  userId              String
+  orgId               String
+  ecosystem           ecosystem        @relation(fields: [ecosystemId], references: [id])
+  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
+  createdBy           Int              @default(1)
+  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int              @default(1)
+  deletedAt           DateTime?        @db.Timestamp(6)
+}
+
+model ecosystem_users {
+  id                  String          @id @default(uuid()) // auto-increment
+  userId              String
+  ecosystemId         String
+  ecosystem           ecosystem        @relation(fields: [ecosystemId], references: [id])
+  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
+  createdBy           Int              @default(1)
+  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int              @default(1)
+  deletedAt           DateTime?        @db.Timestamp(6)
+}
+
+model ecosystem_orgs {
+  id                  String           @id @default(uuid()) // auto-increment
+  orgId               String
+  status              String
+  ecosystemId         String
+  ecosystemRoleId     Int
+  ecosystem           ecosystem        @relation(fields: [ecosystemId], references: [id])
+  ecosystemRole       ecosystem_roles  @relation(fields: [ecosystemRoleId], references: [id])
+  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
+  createdBy           Int              @default(1)
+  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int              @default(1)
+  deletedAt           DateTime?        @db.Timestamp(6)
+
+}
+

@@ -14,7 +14,7 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async createEcosystem():Promise<string> {
-    return "test";
+    return "test ecosystem";
   }
 
 }

@@ -20,4 +20,23 @@ export class EcosystemService extends BaseService {
     return this.sendNats(this.serviceProxy, 'create-ecosystem', payload);
   }
 
+  /**
+   *
+   * @param editEcosystemDto
+   * @returns Ecosystem creation success
+   */
+  async editEcosystem(editEcosystemDto, ecosystemId): Promise<object> {
+    const payload = { editEcosystemDto, ecosystemId };
+    return this.sendNats(this.serviceProxy, 'edit-ecosystem', payload);
+  }
+
+  /**
+   *
+   *
+   * @returns Get all ecosystems
+   */
+  // async getAllEcosystem() {
+  //   return this.sendNats(this.serviceProxy, 'get-all-ecosystem', '');
+  // }
+
 }

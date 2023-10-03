@@ -5,7 +5,7 @@ import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 
 @ApiExtraModels()
-export class CreateEcosystemDto {
+export class EditEcosystemDto {
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))
@@ -25,12 +25,12 @@ export class CreateEcosystemDto {
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => trim(value))
-    @IsString({ message: 'logo must be in string format.' })
-    logo: string;
+    @IsString({ message: 'tag must be in string format.' })
+    tag: string;
 
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => trim(value))
-    website?: string;
-    
+    @IsString({ message: 'logo must be in string format.' })
+    logo: string;
 }

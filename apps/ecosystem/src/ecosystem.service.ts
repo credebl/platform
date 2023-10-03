@@ -1,20 +1,63 @@
 // eslint-disable-next-line camelcase
-import { Injectable} from '@nestjs/common';
+import { Injectable, NotFoundException} from '@nestjs/common';
+import { EcosystemRepository } from './ecosystem.repository';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class EcosystemService {
-  constructor(  
+  constructor( 
+    private readonly ecosystemRepository: EcosystemRepository 
   ) { }
 
   /**
    *
-   * @param registerOrgDto
+   * @param createEcosystemDto
    * @returns
    */
 
   // eslint-disable-next-line camelcase
-  async createEcosystem():Promise<string> {
-    return "test ecosystem";
+  async createEcosystem(createEcosystemDto):Promise<object> {
+      const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
+      if (!createEcosystem) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
+      }
+      return createEcosystem;
   }
+  
+
+   /**
+   *
+   * @param editEcosystemDto
+   * @returns
+   */
+
+  // eslint-disable-next-line camelcase
+  async editEcosystem(editEcosystemDto, ecosystemId):Promise<object> {
+      const editOrganization = await this.ecosystemRepository.updateEcosystemById(editEcosystemDto, ecosystemId);
+      if (!editOrganization) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.update);
+      }
+      return editOrganization;
+  }
+  
+  /**
+   *
+   *
+   * @returns all ecosystem details
+   */
+
+  // eslint-disable-next-line camelcase
+  // async getAllEcosystem() {
+  //   try {
+  //     const editOrganization = await this.ecosystemRepository.getAllEcosystemDetails();
+  //     if(!editOrganization) {
+  //       throw new NotFoundException(ResponseMessages.ecosystem.error.update);
+  //     }
+  //     return editOrganization;
+  //   } catch (error) {
+  //     console.error(`Error in editEcosystem: ${error.message}`);
+  //     throw error;
+  //   }
+  // }
 
 }

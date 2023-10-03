@@ -16,9 +16,28 @@ export class EcosystemController {
    */
 
   @MessagePattern({ cmd: 'create-ecosystem' })
-  async createEcosystem(@Body() payload: { createOrgDto; userId }): Promise<string> {
-    this.logger.log(`EcosystemPayload : ${payload}`);
-    return this.ecosystemService.createEcosystem();
+  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<object> {
+    return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
   }
+
+  /**
+   * Description: edit ecosystem
+   * @param payload updation Details
+   * @returns Get updated ecosystem details
+   */
+  @MessagePattern({ cmd: 'edit-ecosystem' }) 
+  async editEcosystem(@Body() payload: { editEcosystemDto, ecosystemId }): Promise<object> {
+    return this.ecosystemService.editEcosystem(payload.editEcosystemDto, payload.ecosystemId);
+  }
+
+  // /**
+  //  * Description: get all ecosystems
+  //  * @param payload Registration Details
+  //  * @returns Get all ecosystem details
+  //  */
+  // @MessagePattern({ cmd: 'get-all-ecosystem' })
+  // async getAllEcosystems(){
+  //   return this.ecosystemService.getAllEcosystem();
+  // }
   
 }

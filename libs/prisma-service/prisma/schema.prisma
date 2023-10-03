@@ -132,6 +132,7 @@ model platform_config {
   emailFrom           String    @db.VarChar
   apiEndpoint         String    @db.VarChar
   tailsFileServer     String    @db.VarChar
+  enableEcosystem     Boolean   @default(false)
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
   createdBy           Int       @default(1)
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
@@ -309,7 +310,7 @@ model presentations {
 }
 
 model ecosystem_roles {
-  id                  Int              @id @default(autoincrement())
+  id                  String           @id @default(uuid())
   name                String           @unique
   description         String
   ecosystemOrgs       ecosystem_orgs[]
@@ -324,6 +325,7 @@ model ecosystem {
   id                      String           @id @default(uuid())
   name                    String
   description             String
+  logoUrl                 String?
   tags                    String
   ecosystemOrgs           ecosystem_orgs[]
   ecosystemUsers          ecosystem_users[]
@@ -363,11 +365,11 @@ model ecosystem_users {
 }
 
 model ecosystem_orgs {
-  id                  String           @id @default(uuid()) // auto-increment
+  id                  String           @id @default(uuid())
   orgId               String
   status              String
   ecosystemId         String
-  ecosystemRoleId     Int
+  ecosystemRoleId     String
   ecosystem           ecosystem        @relation(fields: [ecosystemId], references: [id])
   ecosystemRole       ecosystem_roles  @relation(fields: [ecosystemRoleId], references: [id])
   createDateTime      DateTime         @default(now()) @db.Timestamptz(6)

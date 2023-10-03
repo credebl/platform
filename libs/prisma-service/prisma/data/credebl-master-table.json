@@ -55,6 +55,21 @@
       "description": "Joins the organization as member"
     }
   ],
+  "ecosystemRoleData": [
+    {
+      "name": "Ecosystem Owner",
+      "description": "Ecosystem Owner"
+    },
+    {
+      "name": "Ecosystem Lead",
+      "description": "Ecosystem Lead"
+    },
+    {
+      "name": "Ecosystem Member",
+      "description": "Ecosystem Member"
+    }
+  ],
+
   "agentTypeData": [
     {
       "agent": "AFJ"

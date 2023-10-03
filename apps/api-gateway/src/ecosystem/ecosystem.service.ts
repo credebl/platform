@@ -35,8 +35,8 @@ export class EcosystemService extends BaseService {
    *
    * @returns Get all ecosystems
    */
-  // async getAllEcosystem() {
-  //   return this.sendNats(this.serviceProxy, 'get-all-ecosystem', '');
-  // }
+  async getAllEcosystem(): Promise<{ response: object }> {
+    return this.sendNats(this.serviceProxy, 'get-all-ecosystem', '');
+  }
 
 }

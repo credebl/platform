@@ -1,7 +1,7 @@
 import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { Controller, UseFilters, Put, Param } from '@nestjs/common';
 import { EcosystemService } from './ecosystem.service';
-import { Post } from '@nestjs/common';
+import { Post, Get } from '@nestjs/common';
 import { Body } from '@nestjs/common';
 import { Res } from '@nestjs/common';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
@@ -27,20 +27,20 @@ export class EcosystemController {
   ) { }
 
 
-  // @Get('/')
-  // @ApiOperation({ summary: 'Get all ecosystem', description: 'Get all existing ecosystem' })
-  // @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  // // @UseGuards(AuthGuard('jwt'))
-  // // @ApiBearerAuth()
-  // async getEcosystem(@Res() res: Response) {
-  //   const ecosystemList = await this.ecosystemService.getAllEcosystem();
-  //   const finalResponse: IResponseType = {
-  //     statusCode: HttpStatus.OK,
-  //     message: ResponseMessages.ecosystem.success.fetch,
-  //     data: ecosystemList.response
-  //   };
-  //   return res.status(HttpStatus.OK).json(finalResponse);
-  // }
+  @Get('/')
+  @ApiOperation({ summary: 'Get all ecosystem', description: 'Get all existing ecosystem' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  // @UseGuards(AuthGuard('jwt'))
+  // @ApiBearerAuth()
+  async getEcosystem(@Res() res: Response): Promise<Response>  {
+    const ecosystemList = await this.ecosystemService.getAllEcosystem();
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.fetch,
+      data: ecosystemList.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
   @Post('/')
   @ApiOperation({ summary: 'Create a new ecosystem', description: 'Create an ecosystem' })

@@ -30,14 +30,14 @@ export class EcosystemController {
     return this.ecosystemService.editEcosystem(payload.editEcosystemDto, payload.ecosystemId);
   }
 
-  // /**
-  //  * Description: get all ecosystems
-  //  * @param payload Registration Details
-  //  * @returns Get all ecosystem details
-  //  */
-  // @MessagePattern({ cmd: 'get-all-ecosystem' })
-  // async getAllEcosystems(){
-  //   return this.ecosystemService.getAllEcosystem();
-  // }
+  /**
+   * Description: get all ecosystems
+   * @param payload Registration Details
+   * @returns Get all ecosystem details
+   */
+  @MessagePattern({ cmd: 'get-all-ecosystem' })
+  async getAllEcosystems(): Promise<object> {
+    return this.ecosystemService.getAllEcosystem();
+  }
   
 }

@@ -16,15 +16,18 @@ export class EcosystemRepository {
      * @returns Get getAgentEndPoint details
      */
     // eslint-disable-next-line camelcase
-    async createNewEcosystem(createEcosystemDto):Promise<ecosystem> {
+    async createNewEcosystem(createEcosystemDto): Promise<ecosystem> {
         try {
             const transaction = await this.prisma.$transaction(async (prisma) => {
-                const { name, description, userId } = createEcosystemDto;
+                const { name, description, userId, logo, tags, orgId } = createEcosystemDto;
                 const createdEcosystem = await prisma.ecosystem.create({
                     data: {
                         name,
                         description,
-                        tags: 'test'
+                        tags,
+                        logoUrl: logo,
+                        createdBy: orgId,
+                        lastChangedBy: orgId
                     }
                 });
                 let ecosystemUser;
@@ -32,18 +35,27 @@ export class EcosystemRepository {
                     ecosystemUser = await prisma.ecosystem_users.create({
                         data: {
                             userId: String(userId),
-                            ecosystemId: createdEcosystem.id
+                            ecosystemId: createdEcosystem.id,
+                            createdBy: orgId,
+                            lastChangedBy: orgId
                         }
                     });
                 }
 
                 if (ecosystemUser) {
+                    const ecosystemRoleDetails = await this.prisma.ecosystem_roles.findFirst({
+                        where: {
+                            name: 'Ecosystem Lead'
+                        }
+                    });
                     ecosystemUser = await prisma.ecosystem_orgs.create({
                         data: {
-                            orgId: String(userId),
+                            orgId: String(orgId),
                             status: 'ACTIVE',
                             ecosystemId: createdEcosystem.id,
-                            ecosystemRoleId: 1
+                            ecosystemRoleId: ecosystemRoleDetails.id,
+                            createdBy: orgId,
+                            lastChangedBy: orgId
                         }
                     });
                 }
@@ -63,15 +75,16 @@ export class EcosystemRepository {
    * @returns ecosystem details
    */
     // eslint-disable-next-line camelcase
-    async updateEcosystemById(createEcosystemDto, ecosystemId):Promise<ecosystem> {
+    async updateEcosystemById(createEcosystemDto, ecosystemId): Promise<ecosystem> {
         try {
-            const {name, description} = createEcosystemDto;
+            const { name, description, tags, logo } = createEcosystemDto;
             const editEcosystem = await this.prisma.ecosystem.update({
                 where: { id: ecosystemId },
                 data: {
                     name,
                     description,
-                    tags: 'updated test'
+                    tags,
+                    logoUrl: logo
                 }
             });
             return editEcosystem;
@@ -81,19 +94,19 @@ export class EcosystemRepository {
         }
     }
 
-     /**
-   * Description: Edit ecosystem by Id
+    /**
+   * 
    *
    * @returns Get all ecosystem details
    */
     // eslint-disable-next-line camelcase
-    async getAllEcosystemDetails() :Promise<ecosystem[]> {
+    async getAllEcosystemDetails(): Promise<ecosystem[]> {
         try {
             const ecosystemDetails = await this.prisma.ecosystem.findMany({
             });
             return ecosystemDetails;
         } catch (error) {
-            this.logger.error(`Error in edit ecosystem transaction: ${error.message}`);
+            this.logger.error(`Error in get all ecosystem transaction: ${error.message}`);
             throw error;
         }
     }

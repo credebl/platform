@@ -14,31 +14,33 @@ export class CreateEcosystemDto {
     @MaxLength(50, { message: 'ecosystem name must be at most 50 characters.' })
     @IsString({ message: 'ecosystem name must be in string format.' })
     name: string;
-
+  
     @ApiPropertyOptional()
     @Transform(({ value }) => trim(value))
     @MinLength(2, { message: 'Description must be at least 2 characters.' })
     @MaxLength(255, { message: 'Description must be at most 255 characters.' })
     @IsString({ message: 'Description must be in string format.' })
-    description: string;
-
+    @IsOptional()
+    description?: string;
+  
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'tag must be in string format.' })
-    tag: string;
-    
+    tags?: string;
+  
     @ApiPropertyOptional()
     @IsInt({ message: 'orgId must be in number format.' })
     orgId: number;
-
+  
     @ApiPropertyOptional()
     @IsInt({ message: 'UserId must be in number format.' })
     userId: number;
-
+  
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'logo must be in string format.' })
-    logo: string;
-}
+    logo?: string;
+  }
+  

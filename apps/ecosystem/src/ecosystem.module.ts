@@ -3,7 +3,7 @@ import { EcosystemController } from './ecosystem.controller';
 import { EcosystemService } from './ecosystem.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule } from '@credebl/common';
-// import { ConnectionRepository } from './connection.repository';
+import { EcosystemRepository } from './ecosystem.repository';
 import { PrismaService } from '@credebl/prisma-service';
 
 @Module({
@@ -21,6 +21,6 @@ import { PrismaService } from '@credebl/prisma-service';
     CommonModule
   ],
   controllers: [EcosystemController],
-  providers: [EcosystemService, PrismaService, Logger]
+  providers: [EcosystemService, PrismaService, Logger, EcosystemRepository]
 })
 export class EcosystemModule { }

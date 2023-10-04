@@ -1,19 +1,20 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { Controller, UseGuards, UseFilters } from '@nestjs/common';
+import { Controller, UseFilters, Put, Param, UseGuards } from '@nestjs/common';
 import { EcosystemService } from './ecosystem.service';
-import { Post } from '@nestjs/common';
+import { Post, Get } from '@nestjs/common';
 import { Body } from '@nestjs/common';
 import { Res } from '@nestjs/common';
-import { CreateEcosystemDto } from './dtos/create-organization-dto';
+import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
+import { AuthGuard } from '@nestjs/passport';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -27,16 +28,45 @@ export class EcosystemController {
   ) { }
 
 
+  @Get('/')
+  @ApiOperation({ summary: 'Get all ecosystem', description: 'Get all existing ecosystem' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getEcosystem(@Res() res: Response): Promise<Response>  {
+    const ecosystemList = await this.ecosystemService.getAllEcosystem();
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.fetch,
+      data: ecosystemList.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
   @Post('/')
   @ApiOperation({ summary: 'Create a new ecosystem', description: 'Create an ecosystem' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async createOrganization(@Body() createOrgDto: CreateEcosystemDto, @Res() res: Response): Promise<Response> {
+  async createNewEcosystem(@Body() createOrgDto: CreateEcosystemDto, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.createEcosystem(createOrgDto);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.create
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Put('/:ecosystemId/')
+  @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async editEcosystem(@Body() editEcosystemDto: EditEcosystemDto, @Param('ecosystemId') ecosystemId: string, @Res() res: Response): Promise<Response> {
+    await this.ecosystemService.editEcosystem(editEcosystemDto, ecosystemId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.update
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

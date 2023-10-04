@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ecosystem } from '@prisma/client';
-import {Ecosystem} from '../enums/ecosystem.enum';
+import {EcosystemOrgStatus, EcosystemRoles} from '../enums/ecosystem.enum';
 // eslint-disable-next-line camelcase
 @Injectable()
 export class EcosystemRepository {
@@ -46,13 +46,13 @@ export class EcosystemRepository {
                 if (ecosystemUser) {
                     const ecosystemRoleDetails = await this.prisma.ecosystem_roles.findFirst({
                         where: {
-                            name: Ecosystem.LEAD
+                            name: EcosystemRoles.ECOSYSTEM_LEAD
                         }
                     });
                     ecosystemUser = await prisma.ecosystem_orgs.create({
                         data: {
                             orgId: String(orgId),
-                            status: Ecosystem.ACTIVE,
+                            status: EcosystemOrgStatus.ACTIVE,
                             ecosystemId: createdEcosystem.id,
                             ecosystemRoleId: ecosystemRoleDetails.id,
                             createdBy: orgId,

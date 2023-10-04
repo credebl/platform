@@ -386,7 +386,10 @@ export class UserService {
 
   async getProfile(payload: { id }): Promise<object> {
     try {
-      return this.userRepository.getUserById(payload.id);
+      const userData = await this.userRepository.getUserById(payload.id);
+      const platformConfigData = await this.prisma.platform_config.findMany();
+      userData['enableEcosystem'] = platformConfigData[0].enableEcosystem;
+      return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

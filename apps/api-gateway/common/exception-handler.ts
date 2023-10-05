@@ -41,13 +41,12 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
       if (exception && exception["response"] && exception.message) {
 
         if (Array.isArray(exception["response"].message)) {
-          exception["response"].message.forEach((msg) => {
-            errorResponse = {
-              statusCode: exception["statusCode"] ? exception["statusCode"] : status,
-              message: msg || 'Internal server error',
-              error: msg || 'Internal server error'
-            };
-          });
+          
+          errorResponse = {
+            statusCode: exception["statusCode"] ? exception["statusCode"] : status,
+            message: exception.message ? exception.message : 'Internal server error',
+            error: exception["response"].message ? exception["response"].message : exception["response"] ? exception["response"] : 'Internal server error'
+          };
         } else {
           errorResponse = {
             statusCode: exception["statusCode"] ? exception["statusCode"] : status,

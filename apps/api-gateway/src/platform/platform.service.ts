@@ -19,4 +19,11 @@ export class PlatformService extends BaseService {
         return this.sendNats(this.platformServiceProxy, 'get-all-schemas', schemaSearch);
 
     }
+
+    async getAllLedgers(): Promise<{
+        response: object;
+    }> {
+        const payload = {};
+        return this.sendNats(this.platformServiceProxy, 'get-all-ledgers', payload);
+    }
 }

@@ -200,6 +200,7 @@ model ledgers {
   isActive            Boolean
   networkString       String       @db.VarChar
   registerDIDEndpoint String       @db.VarChar
+  indyNamespace       String?      @db.VarChar
   registerDIDPayload  Json?
   org_agents          org_agents[]
 }
@@ -377,6 +378,5 @@ model ecosystem_orgs {
   lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
   lastChangedBy       Int              @default(1)
   deletedAt           DateTime?        @db.Timestamp(6)
-
 }
 

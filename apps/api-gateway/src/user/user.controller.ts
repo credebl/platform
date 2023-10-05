@@ -277,4 +277,5 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
+  
 }

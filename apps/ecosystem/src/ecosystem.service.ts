@@ -57,4 +57,96 @@ export class EcosystemService {
       }
       return getAllEcosystemDetails;
     } 
+
+
+  /**
+   * 
+   * @param bulkInvitationDto 
+   * @param userId 
+   * @returns 
+   */
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string): Promise<string> {
+    const { invitations, ecosystemId } = bulkInvitationDto;
+
+    try {
+      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
+
+      for (const invitation of invitations) {
+        const { email } = invitation;
+
+        const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
+
+        if (!isInvitationExist) {
+          await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
+
+          try {
+            await this.sendInviteEmailTemplate(email, ecosystemDetails.name);
+          } catch (error) {
+            throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+          }
+        }
+      }
+      return ResponseMessages.ecosystem.success.createInvitation;
+    } catch (error) {
+      this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  } 
+
+
+  /**
+   * 
+   * @param email 
+   * @param ecosystemId 
+   * @returns Returns boolean status for invitation
+   */
+  async checkInvitationExist(
+    email: string,
+    ecosystemId: string
+  ): Promise<boolean> {
+    try {
+
+      const query = {
+        email,
+        ecosystemId
+      };
+
+      const invitations = await this.ecosystemRepository.getEcosystemInvitations(query);
+
+      if (0 < invitations.length) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * 
+   * @param email 
+   * @param ecosystemName 
+   * @returns Send invitation mail 
+   */
+  async sendInviteEmailTemplate(
+    email: string,
+    ecosystemName: string
+  ): Promise<boolean> {
+    const platformConfigData = await this.prisma.platform_config.findMany();
+
+    const urlEmailTemplate = new EcosystemInviteTemplate();
+    const emailData = new EmailDto();
+    emailData.emailFrom = platformConfigData[0].emailFrom;
+    emailData.emailTo = email;
+    emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Invitation`;
+
+    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, ecosystemName);
+
+    //Email is sent to user for the verification through emailData
+    const isEmailSent = await sendEmail(emailData);
+
+    return isEmailSent;
+  }
+
+
 }

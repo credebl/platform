@@ -3,6 +3,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { EcosystemService } from './ecosystem.service';
 import { Body } from '@nestjs/common';
+import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 
 @Controller()
 export class EcosystemController {
@@ -38,6 +39,19 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'get-all-ecosystem' })
   async getAllEcosystems(): Promise<object> {
     return this.ecosystemService.getAllEcosystem();
+  }
+
+
+  /**
+   * 
+   * @param payload 
+   * @returns Sent ecosystem invitations status
+   */
+  @MessagePattern({ cmd: 'send-ecosystem-invitation' })
+  async createInvitation(
+    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string }
+    ): Promise<string> {
+    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
   }
   
 }

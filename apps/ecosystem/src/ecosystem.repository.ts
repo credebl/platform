@@ -1,7 +1,8 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { ecosystem } from '@prisma/client';
-import {EcosystemOrgStatus, EcosystemRoles} from '../enums/ecosystem.enum';
+// eslint-disable-next-line camelcase
+import { ecosystem, ecosystem_invitations } from '@prisma/client';
+import {EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles} from '../enums/ecosystem.enum';
 // eslint-disable-next-line camelcase
 @Injectable()
 export class EcosystemRepository {

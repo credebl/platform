@@ -5,16 +5,18 @@ import { IsOptional, IsString } from 'class-validator';
 import { Invitation } from '@credebl/enum/enum';
 
 export class GetAllSentEcosystemInvitationsDto {
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
+
 
     @ApiProperty({ required: false })
     @IsOptional()
     @Type(() => String)
     search = '';
+    
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => Number)
+    @Transform(({ value }) => toNumber(value))
+    pageNumber = 1;
 
     @ApiProperty({ required: false })
     @IsOptional()

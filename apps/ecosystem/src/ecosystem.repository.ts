@@ -155,7 +155,6 @@ export class EcosystemRepository {
         }
     }
 
-
     /**
      * 
      * @param email 
@@ -239,4 +238,5 @@ export class EcosystemRepository {
           throw new InternalServerErrorException(error);
         }
       }
+    
 }

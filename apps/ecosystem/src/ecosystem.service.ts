@@ -58,7 +58,6 @@ export class EcosystemService {
       return getAllEcosystemDetails;
     } 
 
-
   /**
    * 
    * @param bulkInvitationDto 

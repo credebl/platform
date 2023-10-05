@@ -195,7 +195,7 @@ export class EcosystemRepository {
             ]
           };
     
-          return this.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
+          return await this.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
         } catch (error) {
           this.logger.error(`error: ${JSON.stringify(error)}`);
           throw new InternalServerErrorException(error);

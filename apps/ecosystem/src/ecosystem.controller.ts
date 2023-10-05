@@ -41,6 +41,22 @@ export class EcosystemController {
     return this.ecosystemService.getAllEcosystem();
   }
 
+  /**
+   * Description: get ecosystem invitations
+   * @returns Get sent invitation details
+   */
+    @MessagePattern({ cmd: 'get-ecosystem-invitations' })
+    async getEcosystemInvitations(
+      @Body() payload: {userEmail: string, status: string; pageNumber: number; pageSize: number; search: string }
+    ): Promise<object> {
+      return this.ecosystemService.getEcosystemInvitations(
+        payload.userEmail,
+        payload.status,
+        payload.pageNumber,
+        payload.pageSize,
+        payload.search
+      );
+    } 
 
   /**
    * 

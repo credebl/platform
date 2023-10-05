@@ -1,7 +1,7 @@
 // eslint-disable-next-line camelcase
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { EcosystemRepository } from './ecosystem.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { RpcException } from '@nestjs/microservices';
 import { PrismaService } from '@credebl/prisma-service';
@@ -64,7 +64,29 @@ export class EcosystemService {
       return getAllEcosystemDetails;
     } 
 
+  /**
+    * Description: get an ecosystem invitation 
+    * @returns Get sent ecosystem invitation details
+    */
+   
+  // eslint-disable-next-line camelcase
+  async getEcosystemInvitations(userEmail: string, status: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+    
+    try {
+      const query = {
+        AND: [
+          { email: userEmail },
+          { status: { contains: search, mode: 'insensitive' } }
+        ]
+      };
 
+      return await this.ecosystemRepository.getEcosystemInvitationsPagination(query, status, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`In error getEcosystemInvitations: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+        
   /**
    * 
    * @param bulkInvitationDto 
@@ -153,6 +175,5 @@ export class EcosystemService {
 
     return isEmailSent;
   }
-
 
 }

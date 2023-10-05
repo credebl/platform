@@ -14,6 +14,7 @@ CONTAINER_NAME=${11}
 PROTOCOL=${12}
 TENANT=${13}
 AFJ_VERSION=${14}
+INDY_LEDGER=${15}
 ADMIN_PORT=$((8000 + $AGENCY))
 INBOUND_PORT=$((9000 + $AGENCY))
 CONTROLLER_PORT=$((3000 + $AGENCY))
@@ -55,6 +56,7 @@ cat <<EOF >>${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINE
   "walletAdminAccount": "$WALLET_STORAGE_USER",
   "walletAdminPassword": "$WALLET_STORAGE_PASSWORD",
   "walletScheme": "DatabasePerWallet",
+  "indyLedger": $INDY_LEDGER,
   "endpoint": [
     "$AGENT_ENDPOINT"
   ],

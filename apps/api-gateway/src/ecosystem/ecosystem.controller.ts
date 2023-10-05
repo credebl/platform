@@ -17,6 +17,8 @@ import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { user } from '@prisma/client';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -104,5 +106,4 @@ export class EcosystemController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-
 }

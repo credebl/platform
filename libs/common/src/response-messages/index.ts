@@ -194,6 +194,5 @@ export const ResponseMessages = {
             notCreated: 'Error while creating ecosystem',
             update: 'Error while updating ecosystem'
         }
-
     },
 };

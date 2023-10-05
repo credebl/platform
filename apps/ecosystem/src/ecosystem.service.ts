@@ -1,12 +1,15 @@
 // eslint-disable-next-line camelcase
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EcosystemRepository } from './ecosystem.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class EcosystemService {
   constructor(
-    private readonly ecosystemRepository: EcosystemRepository
+    private readonly ecosystemRepository: EcosystemRepository,
+    private readonly logger: Logger
+
   ) { }
 
   /**

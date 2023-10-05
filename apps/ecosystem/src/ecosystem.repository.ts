@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ecosystem } from '@prisma/client';
 import {EcosystemOrgStatus, EcosystemRoles} from '../enums/ecosystem.enum';
@@ -112,5 +112,54 @@ export class EcosystemRepository {
         }
     }
 
+    async getEcosystemInvitationsPagination(queryObject: object, status: string, pageNumber: number, pageSize: number): Promise<object> {
+        try {
+          const result = await this.prisma.$transaction([
+            this.prisma.ecosystem_invitations.findMany({
+              where: {
+                ...queryObject,
+                status
+              },
+              include: {
+                ecosystem: true
+              },
+              take: pageSize,
+              skip: (pageNumber - 1) * pageSize,
+              orderBy: {
+                createDateTime: 'desc'
+              }
+            }),
+            this.prisma.ecosystem_invitations.count({
+              where: {
+                ...queryObject
+              }
+            })
+          ]);
+    
+          const [invitations, totalCount] = result;
+          const totalPages = Math.ceil(totalCount / pageSize);
+    
+          return { totalPages, invitations };
+        } catch (error) {
+          this.logger.error(`error: ${JSON.stringify(error)}`);
+          throw new InternalServerErrorException(error);
+        }
+      }
 
+    async getEcosystemInvitations(userEmail: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+        try {
+          const query = {
+            AND: [
+              { email: userEmail },
+              { status: { contains: search, mode: 'insensitive' } }
+            ]
+          };
+
+          return this.getEcosystemInvitationsPagination(query, status, pageNumber, pageSize);
+        } catch (error) {
+          this.logger.error(`error: ${JSON.stringify(error)}`);
+          throw new InternalServerErrorException(error);
+        }
+      }
+    
 }

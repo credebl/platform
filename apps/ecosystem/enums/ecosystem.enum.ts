@@ -7,3 +7,9 @@ export enum EcosystemRoles {
 export enum EcosystemOrgStatus {
     ACTIVE = 'ACTIVE'
 }
+
+export enum EcosystemInvitationStatus {
+    ACCEPTED = 'accepted',
+    REJECTED = 'rejected',
+    PENDING = 'pending'
+}

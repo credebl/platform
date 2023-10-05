@@ -195,6 +195,5 @@ export const ResponseMessages = {
             update: 'Error while updating ecosystem',
             invalidInvitationStatus: 'Invalid invitation status'
         }
-
-    }
+    }   
 };

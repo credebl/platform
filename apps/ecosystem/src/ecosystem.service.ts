@@ -65,9 +65,10 @@ export class EcosystemService {
     } 
 
   /**
-    * Description: get an ecosystem invitation
+    * Description: get an ecosystem invitation 
     * @returns Get sent ecosystem invitation details
     */
+   
   // eslint-disable-next-line camelcase
   async getEcosystemInvitations(userEmail: string, status: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
     
@@ -79,7 +80,7 @@ export class EcosystemService {
         ]
       };
 
-      return this.ecosystemRepository.getEcosystemInvitationsPagination(query, status, pageNumber, pageSize);
+      return await this.ecosystemRepository.getEcosystemInvitationsPagination(query, status, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`In error getEcosystemInvitations: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

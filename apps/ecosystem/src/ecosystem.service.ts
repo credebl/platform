@@ -220,5 +220,4 @@ export class EcosystemService {
     return isEmailSent;
   }
 
-
 }

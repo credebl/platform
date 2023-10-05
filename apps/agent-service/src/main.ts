@@ -27,7 +27,8 @@ async function bootstrap(): Promise<void> {
     walletPassword: process.env.PLATFORM_WALLET_PASSWORD,
     seed: process.env.PLATFORM_SEED,
     orgId: parseInt(process.env.PLATFORM_ID),
-    tenant: true
+    tenant: true,
+    ledgerId: [1, 2]
   };
 
   const agentService = app.get(AgentServiceService);

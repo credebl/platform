@@ -53,5 +53,19 @@ export class EcosystemController {
     ): Promise<string> {
     return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
   }
+
+
+  @MessagePattern({ cmd: 'get-sent-invitations-ecosystemId' })
+  async getInvitationsByOrgId(
+    @Body() payload: { ecosystemId: string; userId: string, pageNumber: number; pageSize: number; search: string }
+  ): Promise<object> {
+    return this.ecosystemService.getInvitationsByEcosystemId(
+      payload.ecosystemId,
+      payload.pageNumber,
+      payload.pageSize,
+      payload.search,
+      payload.userId
+    );
+  }
   
 }

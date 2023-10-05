@@ -1,5 +1,5 @@
-import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { Controller, UseFilters, Put, Param, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { Controller, UseFilters, Put, Param, UseGuards, Query } from '@nestjs/common';
 import { EcosystemService } from './ecosystem.service';
 import { Post, Get } from '@nestjs/common';
 import { Body } from '@nestjs/common';
@@ -17,6 +17,9 @@ import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { user } from '@prisma/client';
+import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -87,6 +90,43 @@ export class EcosystemController {
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
+
+  }
+
+  @Get('/:ecosystemId/invitations')
+  @ApiOperation({ summary: 'Get all sent invitations', description: 'Get all sent invitations' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getInvitationsByEcosystemId(
+    @Param('ecosystemId') ecosystemId: string,
+    @Query() getAllInvitationsDto: GetAllEcosystemInvitationsDto,
+    @User() user: user,
+    @Res() res: Response): Promise<Response> {
+
+    const getInvitationById = await this.ecosystemService.getInvitationsByEcosystemId(ecosystemId, getAllInvitationsDto, String(user.id));
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getInvitation,
+      data: getInvitationById.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
 
   }
 

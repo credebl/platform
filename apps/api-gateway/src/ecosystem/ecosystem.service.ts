@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
+import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 
 
 @Injectable()
@@ -51,6 +52,14 @@ export class EcosystemService extends BaseService {
       const payload = { bulkInvitationDto, userId };
       return this.sendNats(this.serviceProxy, 'send-ecosystem-invitation', payload);
   }
-  
 
+  async getInvitationsByEcosystemId(
+    ecosystemId: string,
+    getAllInvitationsDto: GetAllEcosystemInvitationsDto,
+    userId: string
+  ): Promise<{ response: object }> {
+    const { pageNumber, pageSize, search } = getAllInvitationsDto;
+    const payload = { ecosystemId, pageNumber, pageSize, search, userId };
+    return this.sendNats(this.serviceProxy, 'get-sent-invitations-ecosystemId', payload);
+  }
 }

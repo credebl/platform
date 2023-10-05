@@ -154,5 +154,18 @@ export class EcosystemService {
     return isEmailSent;
   }
 
-
+  async getInvitationsByEcosystemId(ecosystemId: string,
+     pageNumber: number,
+     pageSize: number,
+     search: string,
+     userId: string
+     ): Promise<object> {
+    try {
+      const ecosystemInvitations = await this.ecosystemRepository.getInvitationsByEcosystemId(ecosystemId, pageNumber, pageSize, userId, search);
+      return ecosystemInvitations;
+    } catch (error) {
+      this.logger.error(`In getInvitationsByEcosystemId : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 }

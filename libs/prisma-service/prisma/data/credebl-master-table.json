@@ -94,7 +94,18 @@
       "isActive": true,
       "networkString": "testnet",
       "registerDIDEndpoint": "http://test.bcovrin.vonx.io/register",
-      "registerDIDPayload": ""
+      "registerDIDPayload": "",
+      "indyNamespace": "bcovrin:testnet"
+    },
+    {
+      "name": "Indicio Testnet",
+      "networkType": "testnet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_testnet_genesis",
+      "isActive": true,
+      "networkString": "testnet",
+      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registerDIDPayload": "",
+      "indyNamespace": "indicio:testnet"
     }
   ]
 }

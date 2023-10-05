@@ -15,7 +15,7 @@ export interface IWalletProvision {
     containerName: string;
     agentType: AgentType;
     orgName: string;
-    genesisUrl: string;
+    indyLedger: string;
     protocol: string;
     afjVersion: string;
     tenant: boolean;

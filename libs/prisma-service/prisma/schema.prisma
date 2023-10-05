@@ -200,6 +200,7 @@ model ledgers {
   isActive            Boolean
   networkString       String       @db.VarChar
   registerDIDEndpoint String       @db.VarChar
+  indyNamespace       String?      @db.VarChar
   registerDIDPayload  Json?
   org_agents          org_agents[]
 }

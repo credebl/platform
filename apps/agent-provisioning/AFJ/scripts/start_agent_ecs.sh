@@ -16,9 +16,10 @@ CONTAINER_NAME=${11}
 PROTOCOL=${12}
 TENANT=${13}
 AFJ_VERSION=${14}
-AGENT_HOST=${15}
-AWS_ACCOUNT_ID=${16}
-S3_BUCKET_ARN=${17}
+INDY_LEDGER=${15}
+AGENT_HOST=${16}
+AWS_ACCOUNT_ID=${17}
+S3_BUCKET_ARN=${18}
 ADMIN_PORT=$((8000 + AGENCY))
 INBOUND_PORT=$((9000 + AGENCY))
 CONTROLLER_PORT=$((3000 + AGENCY))
@@ -45,6 +46,7 @@ cat <<EOF >>/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}
   "walletAdminAccount": "$WALLET_STORAGE_USER",
   "walletAdminPassword": "$WALLET_STORAGE_PASSWORD",
   "walletScheme": "DatabasePerWallet",
+  "indyLedger": $INDY_LEDGER,
   "endpoint": [
     "$AGENT_ENDPOINT"
   ],

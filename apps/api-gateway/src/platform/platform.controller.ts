@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Logger, Query, Res, UseFilters } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Logger, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { PlatformService } from './platform.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -10,21 +10,23 @@ import { ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiBearerAuth()
-@Controller()
+@Controller('platform')
 @UseFilters(CustomExceptionFilter)
 export class PlatformController {
     constructor(private readonly platformService: PlatformService) { }
 
     private readonly logger = new Logger('PlatformController');
 
-    @Get('/platform/schemas')
+    @Get('/schemas')
     @ApiTags('schemas')
     @ApiOperation({
         summary: 'Get all schemas from platform.',
         description: 'Get all schemas from platform.'
     })
+    @UseGuards(AuthGuard('jwt'))
     @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
     async getAllSchema(
         @Query() getAllSchemaDto: GetAllSchemaByPlatformDto,
@@ -45,6 +47,27 @@ export class PlatformController {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.schema.success.fetch,
             data: schemasResponse.response
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
+    }
+
+    @Get('/ledgers')
+    @ApiTags('ledgers')
+    @ApiOperation({
+        summary: 'Get all ledgers from platform.',
+        description: 'Get all ledgers from platform.'
+    })
+    @UseGuards(AuthGuard('jwt'))
+    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+    async getAllLedgers(
+        @Res() res: Response
+    ): Promise<object> {
+        const networksResponse = await this.platformService.getAllLedgers();
+
+        const finalResponse: IResponseType = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.ledger.success.fetch,
+            data: networksResponse.response
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

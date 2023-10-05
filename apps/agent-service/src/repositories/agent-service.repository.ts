@@ -29,12 +29,14 @@ export class AgentServiceRepository {
      * @param id 
      * @returns 
      */
-    async getGenesisUrl(id: number): Promise<ledgers> {
+    async getGenesisUrl(ledgerId: number[]): Promise<ledgers[]> {
         try {
 
-            const genesisData = await this.prisma.ledgers.findFirst({
+            const genesisData = await this.prisma.ledgers.findMany({
                 where: {
-                    id
+                    id: {
+                        in: ledgerId
+                    }
                 }
             });
             return genesisData;
@@ -135,13 +137,13 @@ export class AgentServiceRepository {
         }
     }
 
-     /**
-     * Get agent details
-     * @param orgId 
-     * @returns Agent health details
-     */
+    /**
+    * Get agent details
+    * @param orgId 
+    * @returns Agent health details
+    */
     // eslint-disable-next-line camelcase
-     async getOrgAgentDetails(orgId: number): Promise<org_agents> {
+    async getOrgAgentDetails(orgId: number): Promise<org_agents> {
         try {
             const oranizationAgentDetails = await this.prisma.org_agents.findFirst({
                 where: {

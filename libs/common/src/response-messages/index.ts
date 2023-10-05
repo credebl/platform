@@ -115,6 +115,14 @@ export const ResponseMessages = {
             credDefIdNotFound: 'Credential Definition Id not found'
         }
     },
+    ledger: {
+        success: {
+            fetch: 'Ledgers retrieved successfully.'
+        },
+        error: {
+            NotFound: 'No ledgers found.'
+        }
+    },
     agent: {
         success: {
             create: 'Agent spin-up successfully',

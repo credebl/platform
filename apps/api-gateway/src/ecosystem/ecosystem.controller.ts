@@ -16,10 +16,12 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
-import { User } from '../authz/decorators/user.decorator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { Invitation } from '@credebl/enum/enum';
+import { User } from '../authz/decorators/user.decorator';
+import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
+
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -100,6 +102,38 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+
+  /**
+   * 
+   * @param bulkInvitationDto 
+   * @param ecosystemId 
+   * @param user 
+   * @param res 
+   * @returns Ecosystem invitation send details
+   */
+  @Post('/:ecosystemId/invitations')
+  @ApiOperation({
+    summary: 'Send ecosystem invitation',
+    description: 'Send ecosystem invitation'
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async createInvitation(@Body() bulkInvitationDto: BulkEcosystemInvitationDto, @Param('ecosystemId') ecosystemId: string, @User() user: user, @Res() res: Response): Promise<Response> {
+
+    bulkInvitationDto.ecosystemId = ecosystemId;
+    await this.ecosystemService.createInvitation(bulkInvitationDto, String(user.id));
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.createInvitation
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+
+  }
+
+
   @Put('/:ecosystemId/')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
@@ -113,4 +147,5 @@ export class EcosystemController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
 }

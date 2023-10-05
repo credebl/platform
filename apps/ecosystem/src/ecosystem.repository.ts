@@ -1,7 +1,8 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { ecosystem } from '@prisma/client';
-import {EcosystemOrgStatus, EcosystemRoles} from '../enums/ecosystem.enum';
+// eslint-disable-next-line camelcase
+import { ecosystem, ecosystem_invitations } from '@prisma/client';
+import {EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles} from '../enums/ecosystem.enum';
 // eslint-disable-next-line camelcase
 @Injectable()
 export class EcosystemRepository {
@@ -140,22 +141,79 @@ export class EcosystemRepository {
           const totalPages = Math.ceil(totalCount / pageSize);
     
           return { totalPages, invitations };
+
+        } catch (error) {
+            this.logger.error(`error: ${JSON.stringify(error)}`);
+            throw new InternalServerErrorException(error);
+          }
+    }
+
+    /**
+     * 
+     * @param ecosystemId 
+     * @returns Get specific ecosystem details
+     */
+    async getEcosystemDetails(ecosystemId: string): Promise<ecosystem> {
+        try {
+          return this.prisma.ecosystem.findFirst({
+            where: {
+              id: ecosystemId
+            }
+          });
         } catch (error) {
           this.logger.error(`error: ${JSON.stringify(error)}`);
           throw new InternalServerErrorException(error);
         }
-      }
+    }
 
-    async getEcosystemInvitations(userEmail: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+    /**
+     * 
+     * @param queryObject 
+     * @returns Get all ecosystem invitations
+     */
+    async getEcosystemInvitations(
+        queryObject: object
+      // eslint-disable-next-line camelcase
+      ): Promise<ecosystem_invitations[]> {
         try {
-          const query = {
-            AND: [
-              { email: userEmail },
-              { status: { contains: search, mode: 'insensitive' } }
-            ]
-          };
+          return this.prisma.ecosystem_invitations.findMany({
+            where: {
+              ...queryObject
+            },
+            include: {
+                ecosystem: true
+            }
+          });
+        } catch (error) {
+          this.logger.error(`error: ${JSON.stringify(error)}`);
+          throw new InternalServerErrorException(error);
+        }
+    }
 
-          return this.getEcosystemInvitationsPagination(query, status, pageNumber, pageSize);
+
+    /**
+     * 
+     * @param email 
+     * @param ecosystemId 
+     * @param userId 
+     * @returns 
+     */
+    async createSendInvitation(
+        email: string,
+        ecosystemId: string,
+        userId: string
+      // eslint-disable-next-line camelcase
+      ): Promise<ecosystem_invitations> {
+        try {
+          return this.prisma.ecosystem_invitations.create({
+            data: {
+              email,
+              userId,
+              ecosystem: {connect: {id: ecosystemId}},
+              status: EcosystemInvitationStatus.PENDING,
+              orgId: ''
+            }
+          });
         } catch (error) {
           this.logger.error(`error: ${JSON.stringify(error)}`);
           throw new InternalServerErrorException(error);

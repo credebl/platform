@@ -8,6 +8,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { EcosystemInviteTemplate } from '../templates/EcosystemInviteTemplate';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -177,13 +178,12 @@ export class EcosystemService {
     return isEmailSent;
   }
 
-  async getInvitationsByEcosystemId(ecosystemId: string,
-     pageNumber: number,
-     pageSize: number,
-     search: string,
-     userId: string
+  async getInvitationsByEcosystemId(
+     payload: FetchInvitationsPayload
      ): Promise<object> {
     try {
+
+      const { ecosystemId, userId, pageNumber, pageSize, search} = payload;
       const ecosystemInvitations = await this.ecosystemRepository.getInvitationsByEcosystemId(ecosystemId, pageNumber, pageSize, userId, search);
       return ecosystemInvitations;
     } catch (error) {

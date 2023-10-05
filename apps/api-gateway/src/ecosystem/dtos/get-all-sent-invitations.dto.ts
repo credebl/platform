@@ -5,7 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 
 export class GetAllEcosystemInvitationsDto {
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, default: 1 })
     @IsOptional()
     @Type(() => Number)
     @Transform(({ value }) => toNumber(value))

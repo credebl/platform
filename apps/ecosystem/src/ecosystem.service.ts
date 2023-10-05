@@ -1,12 +1,15 @@
 // eslint-disable-next-line camelcase
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EcosystemRepository } from './ecosystem.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class EcosystemService {
   constructor(
-    private readonly ecosystemRepository: EcosystemRepository
+    private readonly ecosystemRepository: EcosystemRepository,
+    private readonly logger: Logger
+
   ) { }
 
   /**
@@ -54,4 +57,20 @@ export class EcosystemService {
       }
       return getAllEcosystemDetails;
     } 
+
+  /**
+    * Description: get an ecosystem invitation
+    * @returns Get sent ecosystem invitation details
+    */
+  // eslint-disable-next-line camelcase
+  async getEcosystemInvitations(userEmail: string, status: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+    try { 
+      const getEcosystem = await this.ecosystemRepository.getEcosystemInvitations(userEmail, status, pageNumber, pageSize, search);
+      return getEcosystem;
+    } catch (error) {
+      this.logger.error(`In get invitation : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 }

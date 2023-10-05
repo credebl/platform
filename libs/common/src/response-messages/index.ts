@@ -178,12 +178,14 @@ export const ResponseMessages = {
         success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem updated successfully',
-            fetch: 'Ecosystem fetched successfully'
+            fetch: 'Ecosystem fetched successfully',
+            getInvitation: 'Ecosystem invitations fetched successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
-            update: 'Error while updating ecosystem'
+            update: 'Error while updating ecosystem',
+            invalidInvitationStatus: 'Invalid invitation status'
         }
 
-    },
+    }
 };

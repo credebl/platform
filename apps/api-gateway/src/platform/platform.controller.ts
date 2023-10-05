@@ -20,7 +20,7 @@ export class PlatformController {
 
     private readonly logger = new Logger('PlatformController');
 
-    @Get('/platform/schemas')
+    @Get('/schemas')
     @ApiTags('schemas')
     @ApiOperation({
         summary: 'Get all schemas from platform.',

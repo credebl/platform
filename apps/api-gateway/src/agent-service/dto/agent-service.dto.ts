@@ -36,9 +36,10 @@ export class AgentSpinupDto {
     seed: string;
 
     @ApiProperty({ example: [1] })
+    @IsOptional()
     @IsArray({ message: 'ledgerId must be an array' })
     @IsNotEmpty({ message: 'please provide valid ledgerId' })
-    ledgerId: number[];
+    ledgerId?: number[];
 
     @ApiProperty()
     @IsOptional()

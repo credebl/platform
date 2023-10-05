@@ -9,18 +9,17 @@ export class AddUserDetails {
     @IsEmail()
     @IsNotEmpty({ message: 'Please provide valid email' })
     @IsString({ message: 'email should be string' })
-    @IsOptional()
-    email?: string;
+    email: string;
 
     @ApiProperty({ example: 'Alen' })
+    @IsNotEmpty({ message: 'Please provide valid email' })
     @IsString({ message: 'firstName should be string' })
-    @IsOptional()
-    firstName?: string;
+    firstName: string;
 
     @ApiProperty({ example: 'Harvey' })
+    @IsNotEmpty({ message: 'Please provide valid email' })
     @IsString({ message: 'lastName should be string' })
-    @IsOptional()
-    lastName?: string;
+    lastName: string;
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))

@@ -5,6 +5,7 @@ import { ecosystem, ecosystem_invitations, ecosystem_orgs, endorsement_transacti
 import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus } from '../enums/ecosystem.enum';
 import { SchemaTransactionResponse } from '../interfaces/ecosystem.interfaces';
 // eslint-disable-next-line camelcase
+
 @Injectable()
 export class EcosystemRepository {
 
@@ -190,7 +191,6 @@ export class EcosystemRepository {
       throw new InternalServerErrorException(error);
     }
   }
-
 
   /**
    * 

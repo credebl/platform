@@ -192,7 +192,10 @@ export const ResponseMessages = {
         error: {
             notCreated: 'Error while creating ecosystem',
             update: 'Error while updating ecosystem',
-            invalidInvitationStatus: 'Invalid invitation status'
+            invalidInvitationStatus: 'Invalid invitation status',
+            invitationNotFound: 'Ecosystem Invitation not found',
+            invitationNotUpdate: 'Ecosystem Invitation not updated',
+            orgsNotUpdate: 'Ecosystem Orgs not updated'
         }
 
     }

@@ -38,8 +38,10 @@ export class EcosystemController {
    * @returns Get all ecosystem details
    */
   @MessagePattern({ cmd: 'get-all-ecosystem' })
-  async getAllEcosystems(): Promise<object> {
-    return this.ecosystemService.getAllEcosystem();
+  async getAllEcosystems(
+    @Body() payload: {orgId: string}
+  ): Promise<object> {
+    return this.ecosystemService.getAllEcosystem(payload);
   }
 
 

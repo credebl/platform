@@ -80,5 +80,12 @@ export class EcosystemController {
       payload
     );
   }
+
+  @MessagePattern({ cmd: 'send-ecosystem-invitation' })
+  async deleteInvitation(
+    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string }
+    ): Promise<string> {
+    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
+  }
   
 }

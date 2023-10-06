@@ -5,6 +5,7 @@ import { BaseService } from 'libs/service/base.service';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
+import { deleteEcosystemInvitationsDto } from './dtos/delete-ecosystemInvitations-dto';
 
 
 @Injectable()
@@ -78,5 +79,11 @@ export class EcosystemService extends BaseService {
       const payload = { userEmail, status, pageNumber, pageSize, search };
       return this.sendNats(this.serviceProxy, 'get-ecosystem-invitations', payload);
     }
+
+
+  async deleteEcosystemInvitations(deleteInvitationDto: deleteEcosystemInvitationsDto, userEmail: string): Promise<object> {
+    const payload = { deleteInvitationDto, userEmail };
+    return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
+}
     
 }

@@ -1,5 +1,5 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { Controller, UseFilters, Put, Param, UseGuards, Query, BadRequestException } from '@nestjs/common';
+import { Controller, UseFilters, Put, Param, UseGuards, Query, BadRequestException, Delete } from '@nestjs/common';
 import { EcosystemService } from './ecosystem.service';
 import { Post, Get } from '@nestjs/common';
 import { Body } from '@nestjs/common';
@@ -22,6 +22,7 @@ import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
+import { deleteEcosystemInvitationsDto } from './dtos/delete-ecosystemInvitations-dto';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -171,19 +172,36 @@ export class EcosystemController {
 
   }
 
-
   @Put('/:ecosystemId/')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async editEcosystem(@Body() editEcosystemDto: EditEcosystemDto, @Param('ecosystemId') ecosystemId: string, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.editEcosystem(editEcosystemDto, ecosystemId);
     const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.update
     };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/:ecosystemId/invitatons/:orgId')
+  @ApiOperation({ summary: 'Delete ecosystem pending invitations', description: 'Delete ecosystem pending invitations' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async deleteEcosystemInvitations(@Body() deleteInvitationDto: deleteEcosystemInvitationsDto, @Param('ecosystemId') invitationId: string, @Param('orgId') orgId: string, ecosystemId: string, @User() user: user, @Res() res: Response): Promise<Response> {
+    deleteInvitationDto.ecosystemId = ecosystemId;
+    deleteInvitationDto.orgId = orgId;
+    deleteInvitationDto.invitationId = invitationId;
+
+    await this.ecosystemService.deleteEcosystemInvitations(deleteInvitationDto, user.email);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.delete
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
 }

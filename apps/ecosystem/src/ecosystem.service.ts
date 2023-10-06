@@ -1,7 +1,7 @@
 // eslint-disable-next-line camelcase
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { EcosystemRepository } from './ecosystem.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { RpcException } from '@nestjs/microservices';
 import { PrismaService } from '@credebl/prisma-service';
@@ -11,6 +11,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { Invitation } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles } from '../enums/ecosystem.enum';
+import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -67,6 +68,7 @@ export class EcosystemService {
       return getAllEcosystemDetails;
     } 
 
+
   /**
     * Description: get an ecosystem invitation 
     * @returns Get sent ecosystem invitation details
@@ -83,7 +85,7 @@ export class EcosystemService {
         ]
       };
 
-      return await this.ecosystemRepository.getEcosystemInvitationsPagination(query, status, pageNumber, pageSize);
+      return await this.ecosystemRepository.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`In error getEcosystemInvitations: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -251,4 +253,17 @@ export class EcosystemService {
     return isEmailSent;
   }
 
+  async getInvitationsByEcosystemId(
+     payload: FetchInvitationsPayload
+     ): Promise<object> {
+    try {
+
+      const { ecosystemId, userId, pageNumber, pageSize, search} = payload;
+      const ecosystemInvitations = await this.ecosystemRepository.getInvitationsByEcosystemId(ecosystemId, pageNumber, pageSize, userId, search);
+      return ecosystemInvitations;
+    } catch (error) {
+      this.logger.error(`In getInvitationsByEcosystemId : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 }

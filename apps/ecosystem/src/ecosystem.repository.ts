@@ -115,41 +115,6 @@ export class EcosystemRepository {
         }
     }
 
-    async getEcosystemInvitationsPagination(queryObject: object, status: string, pageNumber: number, pageSize: number): Promise<object> {
-        try {
-          const result = await this.prisma.$transaction([
-            this.prisma.ecosystem_invitations.findMany({
-              where: {
-                ...queryObject,
-                status
-              },
-              include: {
-                ecosystem: true
-              },
-              take: pageSize,
-              skip: (pageNumber - 1) * pageSize,
-              orderBy: {
-                createDateTime: 'desc'
-              }
-            }),
-            this.prisma.ecosystem_invitations.count({
-              where: {
-                ...queryObject
-              }
-            })
-          ]);
-    
-          const [invitations, totalCount] = result;
-          const totalPages = Math.ceil(totalCount / pageSize);
-    
-          return { totalPages, invitations };
-
-        } catch (error) {
-            this.logger.error(`error: ${JSON.stringify(error)}`);
-            throw new InternalServerErrorException(error);
-          }
-    }
-
     /**
      * 
      * @param ecosystemId 
@@ -270,7 +235,6 @@ export class EcosystemRepository {
     }
   }
 
-
     /**
      * 
      * @param email 
@@ -294,6 +258,61 @@ export class EcosystemRepository {
               orgId: ''
             }
           });
+        } catch (error) {
+          this.logger.error(`error: ${JSON.stringify(error)}`);
+          throw new InternalServerErrorException(error);
+        }
+      }
+
+      async getInvitationsByEcosystemId(ecosystemId: string, pageNumber: number, pageSize: number, userId: string, search = ''): Promise<object> {
+        try {
+          const query = {
+            ecosystemId,
+            userId,
+            OR: [
+              { email: { contains: search, mode: 'insensitive' } },
+              { status: { contains: search, mode: 'insensitive' } }
+            ]
+          };
+    
+          return await this.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
+        } catch (error) {
+          this.logger.error(`error: ${JSON.stringify(error)}`);
+          throw new InternalServerErrorException(error);
+        }
+      }
+
+
+      async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+        try {
+          const result = await this.prisma.$transaction([
+            this.prisma.ecosystem_invitations.findMany({
+              where: {
+                ...queryObject
+              },
+              include: {
+                ecosystem: true
+              },
+              take: pageSize,
+              skip: (pageNumber - 1) * pageSize,
+              orderBy: {
+                createDateTime: 'desc'
+              }
+            }),
+            this.prisma.ecosystem_invitations.count({
+              where: {
+                ...queryObject
+              }
+            })
+          ]);
+    
+          // eslint-disable-next-line prefer-destructuring
+          const invitations = result[0];
+          // eslint-disable-next-line prefer-destructuring
+          const totalCount = result[1];
+          const totalPages = Math.ceil(totalCount / pageSize);
+    
+          return { totalPages, invitations };
         } catch (error) {
           this.logger.error(`error: ${JSON.stringify(error)}`);
           throw new InternalServerErrorException(error);

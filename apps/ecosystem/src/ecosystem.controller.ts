@@ -5,6 +5,7 @@ import { EcosystemService } from './ecosystem.service';
 import { Body } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
+import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 
 @Controller()
 export class EcosystemController {
@@ -77,10 +78,20 @@ export class EcosystemController {
    * @returns Ecosystem invitation status fetch-ecosystem-users
    */
     @MessagePattern({ cmd: 'accept-reject-ecosystem-invitations' })
-    async acceptRejectInvitations(payload: {
+    async acceptRejectEcosystemInvitations(payload: {
       acceptRejectInvitation: AcceptRejectEcosystemInvitationDto;
     }): Promise<string> {
       return this.ecosystemService.acceptRejectEcosystemInvitations(payload.acceptRejectInvitation);
     } 
     
+
+  @MessagePattern({ cmd: 'get-sent-invitations-ecosystemId' })
+  async getInvitationsByOrgId(
+    @Body() payload: FetchInvitationsPayload
+  ): Promise<object> {
+    return this.ecosystemService.getInvitationsByEcosystemId(
+      payload
+    );
+  }
+  
 }

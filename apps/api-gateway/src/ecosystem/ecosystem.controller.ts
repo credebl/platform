@@ -22,6 +22,7 @@ import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
+import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -134,6 +135,43 @@ export class EcosystemController {
 
   }
 
+  @Get('/:ecosystemId/invitations')
+  @ApiOperation({ summary: 'Get all sent invitations', description: 'Get all sent invitations' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getInvitationsByEcosystemId(
+    @Param('ecosystemId') ecosystemId: string,
+    @Query() getAllInvitationsDto: GetAllEcosystemInvitationsDto,
+    @User() user: user,
+    @Res() res: Response): Promise<Response> {
+
+    const getInvitationById = await this.ecosystemService.getInvitationsByEcosystemId(ecosystemId, getAllInvitationsDto, String(user.id));
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getInvitation,
+      data: getInvitationById.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
 
   /**
    * 
@@ -177,4 +215,5 @@ export class EcosystemController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
 }

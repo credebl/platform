@@ -1,0 +1,7 @@
+import { Invitation } from '@credebl/enum/enum';
+
+export class AcceptRejectEcosystemInvitationDto {
+    orgId: string;
+    invitationId: string;
+    status: Invitation;
+}

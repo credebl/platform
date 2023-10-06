@@ -21,6 +21,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
+import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -50,7 +51,7 @@ export class EcosystemController {
   }
 
   @Get('/users/invitations')
-  @ApiOperation({ summary: 'Get an ecosystem invitations', description: 'Get an ecosystem invitations' })
+  @ApiOperation({ summary: 'Get received ecosystem invitations', description: 'Get received ecosystem invitations' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
@@ -134,6 +135,35 @@ export class EcosystemController {
   }
 
 
+  /**
+   * 
+   * @param acceptRejectEcosystemInvitation 
+   * @param reqUser 
+   * @param res 
+   * @returns Ecosystem invitation status
+   */
+    @Post('/:ecosytemId/:orgId/invitations/:invitationId')
+    @ApiOperation({
+      summary: 'Accept or reject ecosystem invitation',
+      description: 'Accept or Reject ecosystem invitations'
+    })
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    async acceptRejectEcosystemInvitaion(@Body() acceptRejectEcosystemInvitation: AcceptRejectEcosystemInvitationDto, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Param('invitationId') invitationId: string, @User() user: user, @Res() res: Response): Promise<object> {
+      acceptRejectEcosystemInvitation.ecosystemId = ecosystemId;
+      acceptRejectEcosystemInvitation.orgId = orgId;
+      acceptRejectEcosystemInvitation.invitationId = invitationId;
+
+      const invitationRes = await this.ecosystemService.acceptRejectEcosystemInvitaion(acceptRejectEcosystemInvitation, user.email); 
+
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: invitationRes.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+  
   @Put('/:ecosystemId/')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })

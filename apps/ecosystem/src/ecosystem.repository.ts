@@ -1,9 +1,11 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { ecosystem, ecosystem_invitations } from '@prisma/client';
+import { ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles } from '@prisma/client';
 import {EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles} from '../enums/ecosystem.enum';
+import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 // eslint-disable-next-line camelcase
+
 @Injectable()
 export class EcosystemRepository {
 
@@ -71,7 +73,7 @@ export class EcosystemRepository {
         }
     }
 
-    /**
+  /**
    * Description: Edit ecosystem by Id
    * @param editEcosystemDto 
    * @returns ecosystem details
@@ -96,7 +98,7 @@ export class EcosystemRepository {
         }
     }
 
-    /**
+  /**
    * 
    *
    * @returns Get all ecosystem details
@@ -189,6 +191,84 @@ export class EcosystemRepository {
           throw new InternalServerErrorException(error);
         }
     }
+
+
+  /**
+   *
+   * @param id
+   * @returns Invitation details
+   */
+  // eslint-disable-next-line camelcase
+  async getEcosystemInvitationById(id: string): Promise<ecosystem_invitations> {
+    try {
+      return this.prisma.ecosystem_invitations.findUnique({
+        where: {
+          id
+        },
+        include: {
+          ecosystem: true
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  /**
+   *
+   * @param queryObject
+   * @param data
+   * @returns Updated ecosystem invitation response
+   */
+  async updateEcosystemInvitation(id: string, data: object): Promise<object> {
+    try {
+      return this.prisma.ecosystem_invitations.update({
+        where: {
+          id: String(id)
+        },
+        data: {
+          ...data
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException('Unable to update ecosystem invitation');
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getEcosystemRole(name: string): Promise<ecosystem_roles> {
+    try {
+      return this.prisma.ecosystem_roles.findFirst({
+        where: {
+          name
+        }
+      });
+    } catch (error) {
+      this.logger.error(`getEcosystemRole: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async updateEcosystemOrgs(createEcosystemOrgsDto: updateEcosystemOrgsDto): Promise<ecosystem_orgs> {
+    try {
+      const { orgId, status, ecosystemRoleId, ecosystemId } = createEcosystemOrgsDto;
+
+      return this.prisma.ecosystem_orgs.create({
+        data: {
+          orgId: String(orgId),
+          ecosystemId,
+          status,
+          ecosystemRoleId
+      }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException('Unable to update ecosystem orgs');
+    }
+  }
 
 
     /**

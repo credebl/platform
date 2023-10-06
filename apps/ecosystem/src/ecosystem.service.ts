@@ -8,6 +8,9 @@ import { PrismaService } from '@credebl/prisma-service';
 import { EcosystemInviteTemplate } from '../templates/EcosystemInviteTemplate';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
+import { Invitation } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, EcosystemRoles } from '../enums/ecosystem.enum';
 
 @Injectable()
 export class EcosystemService {
@@ -121,6 +124,78 @@ export class EcosystemService {
     }
   } 
 
+  /**
+   *
+   * @param acceptRejectEcosystemInvitation
+   * @param userId
+   * @returns Ecosystem invitation status
+   */
+  async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
+    try {
+      const { orgId, status, invitationId } = acceptRejectInvitation;
+      const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
+      
+      if (!invitation) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotFound);
+      }
+
+      const updatedInvitation = await this.updateEcosystemInvitation(invitationId, orgId, status);
+      if (!updatedInvitation) {
+         throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotUpdate);
+      }
+
+      if (status === Invitation.REJECTED) {
+        return ResponseMessages.ecosystem.success.invitationReject;
+      }
+
+      const ecosystemRole = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
+      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, invitation.ecosystemId, ecosystemRole.id);
+
+      if (!updateEcosystemOrgs) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.orgsNotUpdate);
+      }
+      return ResponseMessages.ecosystem.success.invitationAccept;
+    
+    } catch (error) {
+      this.logger.error(`acceptRejectInvitations: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+  
+  async updatedEcosystemOrgs(orgId: string, ecosystemId: string, ecosystemRoleId: string): Promise<object> {
+    try {
+      const data = {
+        orgId,
+        status: EcosystemOrgStatus.ACTIVE,
+        ecosystemId,
+        ecosystemRoleId
+      };
+      return this.ecosystemRepository.updateEcosystemOrgs(data);
+    } catch (error) {
+      this.logger.error(`In newEcosystemMneber : ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * 
+   * @param payload 
+   * @returns Updated invitation response
+   */
+  async updateEcosystemInvitation(invitationId: string, orgId: string, status: string): Promise<object> {
+    try {
+   
+      const data = {
+        status,
+        orgId: String(orgId)
+      };
+      return this.ecosystemRepository.updateEcosystemInvitation(invitationId, data);
+
+    } catch (error) {
+      this.logger.error(`In updateOrgInvitation : ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 
   /**
    * 

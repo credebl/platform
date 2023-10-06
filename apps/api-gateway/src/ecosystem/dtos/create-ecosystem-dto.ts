@@ -30,10 +30,6 @@ export class CreateEcosystemDto {
     tags?: string;
   
     @ApiPropertyOptional()
-    @IsInt({ message: 'orgId must be in number format.' })
-    orgId: number;
-  
-    @ApiPropertyOptional()
     @IsInt({ message: 'UserId must be in number format.' })
     userId: number;
   
@@ -42,5 +38,7 @@ export class CreateEcosystemDto {
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'logo must be in string format.' })
     logo?: string;
+
+    orgId?: string;
   }
   

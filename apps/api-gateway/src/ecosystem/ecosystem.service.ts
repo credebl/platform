@@ -38,8 +38,9 @@ export class EcosystemService extends BaseService {
    *
    * @returns Get all ecosystems
    */
-  async getAllEcosystem(): Promise<{ response: object }> {
-    return this.sendNats(this.serviceProxy, 'get-all-ecosystem', '');
+  async getAllEcosystem(orgId: string): Promise<{ response: object }> {
+    const payload = { orgId };
+    return this.sendNats(this.serviceProxy, 'get-all-ecosystem', payload);
   }
   
 
@@ -78,5 +79,14 @@ export class EcosystemService extends BaseService {
       const payload = { userEmail, status, pageNumber, pageSize, search };
       return this.sendNats(this.serviceProxy, 'get-ecosystem-invitations', payload);
     }
+
+    async fetchEcosystemOrg(
+      ecosystemId: string,
+      orgId: string
+    ): Promise<{ response: object }> {
+      const payload = { ecosystemId, orgId };
+      return this.sendNats(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
+    }
+
     
 }

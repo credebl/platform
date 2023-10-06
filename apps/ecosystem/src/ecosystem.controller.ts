@@ -38,8 +38,10 @@ export class EcosystemController {
    * @returns Get all ecosystem details
    */
   @MessagePattern({ cmd: 'get-all-ecosystem' })
-  async getAllEcosystems(): Promise<object> {
-    return this.ecosystemService.getAllEcosystem();
+  async getAllEcosystems(
+    @Body() payload: {orgId: string}
+  ): Promise<object> {
+    return this.ecosystemService.getAllEcosystem(payload);
   }
 
   /**
@@ -71,12 +73,21 @@ export class EcosystemController {
     return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
   }
 
-
+  
   @MessagePattern({ cmd: 'get-sent-invitations-ecosystemId' })
   async getInvitationsByOrgId(
     @Body() payload: FetchInvitationsPayload
   ): Promise<object> {
     return this.ecosystemService.getInvitationsByEcosystemId(
+      payload
+    );
+  }
+
+  @MessagePattern({ cmd: 'fetch-ecosystem-org-data' })
+  async fetchEcosystemOrg(
+    @Body() payload: { ecosystemId: string, orgId: string}
+  ): Promise<object> {
+    return this.ecosystemService.fetchEcosystemOrg(
       payload
     );
   }

@@ -27,9 +27,7 @@ export class EcosystemRepository {
                         name,
                         description,
                         tags,
-                        logoUrl: logo,
-                        createdBy: orgId,
-                        lastChangedBy: orgId
+                        logoUrl: logo                      
                     }
                 });
                 let ecosystemUser;
@@ -37,9 +35,7 @@ export class EcosystemRepository {
                     ecosystemUser = await prisma.ecosystem_users.create({
                         data: {
                             userId: String(userId),
-                            ecosystemId: createdEcosystem.id,
-                            createdBy: orgId,
-                            lastChangedBy: orgId
+                            ecosystemId: createdEcosystem.id
                         }
                     });
                 }
@@ -55,9 +51,7 @@ export class EcosystemRepository {
                             orgId: String(orgId),
                             status: EcosystemOrgStatus.ACTIVE,
                             ecosystemId: createdEcosystem.id,
-                            ecosystemRoleId: ecosystemRoleDetails.id,
-                            createdBy: orgId,
-                            lastChangedBy: orgId
+                            ecosystemRoleId: ecosystemRoleDetails.id                           
                         }
                     });
                 }
@@ -102,9 +96,16 @@ export class EcosystemRepository {
    * @returns Get all ecosystem details
    */
     // eslint-disable-next-line camelcase
-    async getAllEcosystemDetails(): Promise<ecosystem[]> {
+    async getAllEcosystemDetails(orgId: string): Promise<ecosystem[]> {
         try {
             const ecosystemDetails = await this.prisma.ecosystem.findMany({
+              where: {
+                ecosystemOrgs:{
+                  some: {
+                    orgId
+                  } 
+                }
+              }
             });
             return ecosystemDetails;
         } catch (error) {
@@ -184,11 +185,10 @@ export class EcosystemRepository {
         }
       }
 
-      async getInvitationsByEcosystemId(ecosystemId: string, pageNumber: number, pageSize: number, userId: string, search = ''): Promise<object> {
+      async getInvitationsByEcosystemId(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
         try {
           const query = {
             ecosystemId,
-            userId,
             OR: [
               { email: { contains: search, mode: 'insensitive' } },
               { status: { contains: search, mode: 'insensitive' } }
@@ -238,5 +238,22 @@ export class EcosystemRepository {
           throw new InternalServerErrorException(error);
         }
       }
+
+
+  async fetchEcosystemOrg(
+    payload: { ecosystemId: string, orgId: string }
+  ): Promise<object> {
+
+    return this.prisma.ecosystem_orgs.findFirst({
+      where: {
+        ...payload
+      },
+      select:{
+        ecosystemRole: true
+      }
+    });
+
+  }
+    
     
 }

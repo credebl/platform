@@ -1,5 +1,5 @@
 // eslint-disable-next-line camelcase
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { EcosystemRepository } from './ecosystem.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
@@ -57,8 +57,8 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async getAllEcosystem(): Promise<object> {
-      const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails();
+  async getAllEcosystem(payload: {orgId: string}): Promise<object> {
+      const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails(payload.orgId);
       if (!getAllEcosystemDetails) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.update);
       }
@@ -183,12 +183,44 @@ export class EcosystemService {
      ): Promise<object> {
     try {
 
-      const { ecosystemId, userId, pageNumber, pageSize, search} = payload;
-      const ecosystemInvitations = await this.ecosystemRepository.getInvitationsByEcosystemId(ecosystemId, pageNumber, pageSize, userId, search);
+      const { ecosystemId, pageNumber, pageSize, search} = payload;
+      const ecosystemInvitations = await this.ecosystemRepository.getInvitationsByEcosystemId(ecosystemId, pageNumber, pageSize, search);
       return ecosystemInvitations;
     } catch (error) {
       this.logger.error(`In getInvitationsByEcosystemId : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  /**
+   * 
+   * @param payload 
+   * @returns 
+   */
+  async fetchEcosystemOrg(
+    payload: { ecosystemId: string, orgId: string}
+  ): Promise<object> {
+
+    const isEcosystemEnabled = await this.checkEcosystemEnableFlag();    
+
+    if (!isEcosystemEnabled) {
+      throw new ForbiddenException(ResponseMessages.ecosystem.error.ecosystemNotEnabled);
+    }
+
+    return this.ecosystemRepository.fetchEcosystemOrg(
+      payload
+    );
+  }
+
+  /**
+   * 
+   * @returns Returns ecosystem flag from settings
+   */
+  async checkEcosystemEnableFlag(
+  ): Promise<boolean> {
+    const platformConfigData = await this.prisma.platform_config.findMany();
+    return platformConfigData[0].enableEcosystem;
+  }
+
+
 }

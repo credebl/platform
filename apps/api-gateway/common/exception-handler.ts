@@ -14,6 +14,7 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
     }
 
     this.logger.error(`exception ::: ${JSON.stringify(exception)}`);
+
     if ("Cannot read properties of undefined (reading 'response')" === exception.message) {
       exception.message = 'Oops! Something went wrong. Please try again';
     }
@@ -25,9 +26,11 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
         message: 'Oops! Something went wrong. Please try again',
         error: 'Oops! Something went wrong. Please try again'
       };
-    } else if (exception && exception["error"] && exception["error"].message && exception["error"].statusCode) {
+    } else if (exception && exception["error"] && exception["error"].message && (exception["error"].statusCode || exception["error"].code)) {
+      
+      const statusCode = exception["error"].statusCode || exception["error"].code || status;
       errorResponse = {
-        statusCode: exception["error"].statusCode ? exception["error"].statusCode : status,
+        statusCode,
         message: exception["error"].message || 'Internal server error',
         error: exception["error"].message || 'Internal server error'
       };

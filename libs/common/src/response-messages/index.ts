@@ -198,7 +198,8 @@ export const ResponseMessages = {
             invalidInvitationStatus: 'Invalid invitation status',
             invitationNotFound: 'Ecosystem Invitation not found',
             invitationNotUpdate: 'Ecosystem Invitation not updated',
-            orgsNotUpdate: 'Ecosystem Orgs not updated'
+            orgsNotUpdate: 'Ecosystem Orgs not updated',
+            ecosystemNotEnabled: 'Ecosystem service is not enabled'
         }
     }   
 };

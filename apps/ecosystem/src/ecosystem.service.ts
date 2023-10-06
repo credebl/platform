@@ -172,7 +172,7 @@ export class EcosystemService {
         ecosystemId,
         ecosystemRoleId
       };
-      return this.ecosystemRepository.updateEcosystemOrgs(data);
+      return await this.ecosystemRepository.updateEcosystemOrgs(data);
     } catch (error) {
       this.logger.error(`In newEcosystemMneber : ${error}`);
       throw new RpcException(error.response ? error.response : error);

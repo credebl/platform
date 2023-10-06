@@ -4,6 +4,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { EcosystemService } from './ecosystem.service';
 import { Body } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
+import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 
 @Controller()
@@ -73,7 +74,19 @@ export class EcosystemController {
     return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
   }
 
-  
+  /**
+   *
+   * @param payload
+   * @returns Ecosystem invitation status fetch-ecosystem-users
+   */
+  @MessagePattern({ cmd: 'accept-reject-ecosystem-invitations' })
+  async acceptRejectEcosystemInvitations(payload: {
+    acceptRejectInvitation: AcceptRejectEcosystemInvitationDto;
+  }): Promise<string> {
+    return this.ecosystemService.acceptRejectEcosystemInvitations(payload.acceptRejectInvitation);
+  }
+
+
   @MessagePattern({ cmd: 'get-sent-invitations-ecosystemId' })
   async getInvitationsByOrgId(
     @Body() payload: FetchInvitationsPayload

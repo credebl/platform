@@ -21,6 +21,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
+import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { EcosystemsRoles, Roles } from '../authz/decorators/roles.decorator';
@@ -58,8 +59,8 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/users/invitations')
-  @ApiOperation({ summary: 'Get an ecosystem invitations', description: 'Get an ecosystem invitations' })
+  @Get('/:orgId/users/invitations')
+  @ApiOperation({ summary: 'Get received ecosystem invitations', description: 'Get received ecosystem invitations' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -84,7 +85,11 @@ export class EcosystemController {
     type: String,
     required: false
   })
-  async getEcosystemInvitations(@Query() getAllInvitationsDto: GetAllSentEcosystemInvitationsDto, @User() user: user, @Res() res: Response): Promise<Response> {
+  async getEcosystemInvitations(
+    @Query() getAllInvitationsDto: GetAllSentEcosystemInvitationsDto,
+    @Param('orgId') orgId: string,
+    @User() user: user, @Res() res: Response): Promise<Response> {
+      
     if (!Object.values(Invitation).includes(getAllInvitationsDto.status)) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.invalidInvitationStatus);
     }
@@ -198,6 +203,34 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
+
+    /**
+   * 
+   * @param acceptRejectEcosystemInvitation 
+   * @param reqUser 
+   * @param res 
+   * @returns Ecosystem invitation status
+   */
+    @Post('/:orgId/invitations/:invitationId')
+    @ApiOperation({
+      summary: 'Accept or reject ecosystem invitation',
+      description: 'Accept or Reject ecosystem invitations'
+    })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @ApiBearerAuth()
+    @Roles(OrgRoles.OWNER)
+    async acceptRejectEcosystemInvitaion(@Body() acceptRejectEcosystemInvitation: AcceptRejectEcosystemInvitationDto, @Param('orgId') orgId: string, @Param('invitationId') invitationId: string, @User() user: user, @Res() res: Response): Promise<object> {
+      acceptRejectEcosystemInvitation.orgId = orgId;
+      acceptRejectEcosystemInvitation.invitationId = invitationId;
+
+      const invitationRes = await this.ecosystemService.acceptRejectEcosystemInvitaion(acceptRejectEcosystemInvitation, user.email); 
+
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: invitationRes.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
 
   @Put('/:ecosystemId/:orgId')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })

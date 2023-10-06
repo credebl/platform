@@ -54,5 +54,17 @@ export class EcosystemController {
     ): Promise<string> {
     return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
   }
-  
+
+  /**
+   *
+   * @param payload
+   * @returns Ecosystem invitation status fetch-ecosystem-users
+   */
+    @MessagePattern({ cmd: 'accept-reject-ecosystem-invitations' })
+    async acceptRejectInvitations(payload: {
+      acceptRejectInvitation: AcceptRejectEcosystemInvitationDto;
+    }): Promise<string> {
+      return this.ecosystemService.acceptRejectEcosystemInvitations(payload.acceptRejectInvitation);
+    } 
+    
 }

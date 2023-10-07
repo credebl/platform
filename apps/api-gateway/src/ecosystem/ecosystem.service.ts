@@ -3,8 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
-import { deleteEcosystemInvitationsDto } from './dtos/delete-ecosystemInvitations-dto';
-
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -80,10 +78,12 @@ export class EcosystemService extends BaseService {
     }
 
 
-  async deleteEcosystemInvitations(deleteInvitationDto: deleteEcosystemInvitationsDto, userEmail: string): Promise<object> {
-    const payload = { deleteInvitationDto, userEmail };
+  async deleteEcosystemInvitations(
+    invitationId: string
+    ): Promise<object> {
+    const payload = { invitationId };
     return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
-}
+  }
     
     async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number): Promise<object> {
       const payload = { requestSchemaPayload, orgId};

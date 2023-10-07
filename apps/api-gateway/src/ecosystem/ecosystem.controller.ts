@@ -4,7 +4,7 @@ import { EcosystemService } from './ecosystem.service';
 import { Post, Get } from '@nestjs/common';
 import { Body } from '@nestjs/common';
 import { Res } from '@nestjs/common';
-import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
+import { RequestSchemaDto } from './dtos/request-schema-dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
@@ -27,6 +27,7 @@ import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { EcosystemsRoles, Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
+import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -168,6 +169,33 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  @Post('/:orgId/transaction/schema')
+  @ApiOperation({ summary: 'Request new schema', description: 'Request new schema' })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+    await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.schemaRequest
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('transaction/sign/:endorsementId')
+  @ApiOperation({ summary: 'Sign transaction', description: 'Sign transaction' })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Res() res: Response): Promise<Response> {
+    await this.ecosystemService.signTransaction(endorsementId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.sign
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
 
   /**
    * 

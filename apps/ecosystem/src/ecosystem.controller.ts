@@ -4,6 +4,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { EcosystemService } from './ecosystem.service';
 import { Body } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
+import { RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {

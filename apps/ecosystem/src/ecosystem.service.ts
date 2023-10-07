@@ -7,6 +7,7 @@ import { RpcException } from '@nestjs/microservices';
 @Injectable()
 export class EcosystemService {
   constructor(
+    @Inject('NATS_CLIENT') private readonly ecosystemServiceProxy: ClientProxy,
     private readonly ecosystemRepository: EcosystemRepository,
     private readonly logger: Logger
 
@@ -20,11 +21,11 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async createEcosystem(createEcosystemDto): Promise<object> {
-      const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
-      if (!createEcosystem) {
-        throw new NotFoundException(ResponseMessages.ecosystem.error.update);
-      }
-      return createEcosystem;
+    const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
+    if (!createEcosystem) {
+      throw new NotFoundException(ResponseMessages.ecosystem.error.update);
+    }
+    return createEcosystem;
   }
 
 
@@ -51,12 +52,12 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async getAllEcosystem(): Promise<object> {
-      const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails();
-      if (!getAllEcosystemDetails) {
-        throw new NotFoundException(ResponseMessages.ecosystem.error.update);
-      }
-      return getAllEcosystemDetails;
-    } 
+    const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails();
+    if (!getAllEcosystemDetails) {
+      throw new NotFoundException(ResponseMessages.ecosystem.error.update);
+    }
+    return getAllEcosystemDetails;
+  }
 
   /**
    * 
@@ -90,7 +91,7 @@ export class EcosystemService {
       this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
-  } 
+  }
 
 
   /**

@@ -132,12 +132,12 @@ model platform_config {
   emailFrom           String    @db.VarChar
   apiEndpoint         String    @db.VarChar
   tailsFileServer     String    @db.VarChar
-  enableEcosystem     Boolean   @default(false)
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
   createdBy           Int       @default(1)
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       Int       @default(1)
   deletedAt           DateTime? @db.Timestamp(6)
+  enableEcosystem     Boolean   @default(false)
 }
 
 model org_agents {
@@ -200,8 +200,8 @@ model ledgers {
   isActive            Boolean
   networkString       String       @db.VarChar
   registerDIDEndpoint String       @db.VarChar
-  indyNamespace       String?      @db.VarChar
   registerDIDPayload  Json?
+  indyNamespace       String?      @db.VarChar
   org_agents          org_agents[]
 }
 
@@ -314,69 +314,80 @@ model ecosystem_roles {
   id                  String           @id @default(uuid())
   name                String           @unique
   description         String
-  ecosystemOrgs       ecosystem_orgs[]
   createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
   createdBy           Int              @default(1)
   lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
   lastChangedBy       Int              @default(1)
   deletedAt           DateTime?        @db.Timestamp(6)
+  ecosystemOrgs       ecosystem_orgs[]
 }
 
 model ecosystem {
-  id                      String           @id @default(uuid())
-  name                    String
-  description             String
-  logoUrl                 String?
-  tags                    String
-  ecosystemOrgs           ecosystem_orgs[]
-  ecosystemUsers          ecosystem_users[]
-  ecosystemInvitations    ecosystem_invitations[]
-  createDateTime          DateTime         @default(now()) @db.Timestamptz(6)
-  createdBy               Int              @default(1)
-  lastChangedDateTime     DateTime         @default(now()) @db.Timestamptz(6)
-  lastChangedBy           Int              @default(1)
-  deletedAt               DateTime?        @db.Timestamp(6)
+  id                   String                  @id @default(uuid())
+  name                 String
+  description          String
+  tags                 String
+  createDateTime       DateTime                @default(now()) @db.Timestamptz(6)
+  createdBy            Int                     @default(1)
+  lastChangedDateTime  DateTime                @default(now()) @db.Timestamptz(6)
+  lastChangedBy        Int                     @default(1)
+  deletedAt            DateTime?               @db.Timestamp(6)
+  logoUrl              String?
+  ecosystemInvitations ecosystem_invitations[]
+  ecosystemOrgs        ecosystem_orgs[]
+  ecosystemUsers       ecosystem_users[]
 }
 
 model ecosystem_invitations {
-  id                  String           @id @default(uuid())
+  id                  String    @id @default(uuid())
   email               String
   status              String
   ecosystemId         String
   userId              String
   orgId               String
-  ecosystem           ecosystem        @relation(fields: [ecosystemId], references: [id])
-  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
-  createdBy           Int              @default(1)
-  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int              @default(1)
-  deletedAt           DateTime?        @db.Timestamp(6)
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           Int       @default(1)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int       @default(1)
+  deletedAt           DateTime? @db.Timestamp(6)
+  ecosystem           ecosystem @relation(fields: [ecosystemId], references: [id])
 }
 
 model ecosystem_users {
-  id                  String          @id @default(uuid()) // auto-increment
+  id                  String    @id @default(uuid())
   userId              String
   ecosystemId         String
-  ecosystem           ecosystem        @relation(fields: [ecosystemId], references: [id])
-  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
-  createdBy           Int              @default(1)
-  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int              @default(1)
-  deletedAt           DateTime?        @db.Timestamp(6)
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           Int       @default(1)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int       @default(1)
+  deletedAt           DateTime? @db.Timestamp(6)
+  ecosystem           ecosystem @relation(fields: [ecosystemId], references: [id])
 }
 
 model ecosystem_orgs {
-  id                  String           @id @default(uuid())
-  orgId               String
-  status              String
-  ecosystemId         String
-  ecosystemRoleId     String
-  ecosystem           ecosystem        @relation(fields: [ecosystemId], references: [id])
-  ecosystemRole       ecosystem_roles  @relation(fields: [ecosystemRoleId], references: [id])
-  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
-  createdBy           Int              @default(1)
-  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int              @default(1)
-  deletedAt           DateTime?        @db.Timestamp(6)
+  id                     String                    @id @default(uuid())
+  orgId                  String
+  status                 String
+  ecosystemId            String
+  ecosystemRoleId        String
+  createDateTime         DateTime                  @default(now()) @db.Timestamptz(6)
+  createdBy              Int                       @default(1)
+  lastChangedDateTime    DateTime                  @default(now()) @db.Timestamptz(6)
+  lastChangedBy          Int                       @default(1)
+  deletedAt              DateTime?                 @db.Timestamp(6)
+  ecosystem              ecosystem                 @relation(fields: [ecosystemId], references: [id])
+  ecosystemRole          ecosystem_roles           @relation(fields: [ecosystemRoleId], references: [id])
+  endorsementTransaction endorsement_transaction[]
 }
 
+model endorsement_transaction {
+  id              String         @id @default(uuid())
+  endorserDid     String
+  authorDid       String
+  requestPayload  String
+  responsePayload String
+  status          String
+  ecosystemOrgId  String
+  ecosystemOrgs   ecosystem_orgs @relation(fields: [ecosystemOrgId], references: [id])
+}

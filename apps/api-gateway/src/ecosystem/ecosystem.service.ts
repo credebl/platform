@@ -7,6 +7,7 @@ import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosyst
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
+import { RequestSchemaDto } from './dtos/request-schema-dto';
 
 
 @Injectable()
@@ -110,4 +111,14 @@ export class EcosystemService extends BaseService {
     }
 
     
+    async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number): Promise<object> {
+      const payload = { requestSchemaPayload, orgId};
+      return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
+    }
+
+      
+    async signTransaction(endorsementId:string): Promise<object> {
+      const payload = { endorsementId };
+      return this.sendNats(this.serviceProxy, 'sign-endorsement-transaction', payload);
+    }
 }

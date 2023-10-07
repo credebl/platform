@@ -336,7 +336,7 @@ export class EcosystemRepository {
 
   }
 
-  async getEndorsementsWithPagination(queryObject: object, filterOptions: object, pageNumber: number, pageSize: number): Promise<object> {
+  async getEndorsementsWithPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.endorsement_transaction.findMany({
@@ -348,18 +348,14 @@ export class EcosystemRepository {
             endorserDid: true,
             authorDid: true,
             status: true,
-            ecosystemOrgs: {
-              where: {
-                ...filterOptions
-                // Additional filtering conditions if needed
-              }
-            }
+            type: true,
+            ecosystemOrgs: true
           },
           take: pageSize,
-          skip: (pageNumber - 1) * pageSize
-          // orderBy: {
-          //   createDateTime: 'desc'
-          // }
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
         }),
         this.prisma.endorsement_transaction.count({
           where: {

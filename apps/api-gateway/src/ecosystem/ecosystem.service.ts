@@ -105,8 +105,8 @@ export class EcosystemService extends BaseService {
       orgId: string,
       getAllEndorsements: GetAllEndorsementsDto
     ): Promise<{ response: object }> {
-      const { pageNumber, pageSize, search, status } = getAllEndorsements;
-      const payload = { ecosystemId, orgId, pageNumber, pageSize, search, status };
+      const { pageNumber, pageSize, search, type } = getAllEndorsements;
+      const payload = { ecosystemId, orgId, pageNumber, pageSize, search, type };
       return this.sendNats(this.serviceProxy, 'get-endorsement-transactions', payload);
     }
 

@@ -5,4 +5,5 @@ export interface GetEndorsementsPayload {
     pageNumber: number;
     pageSize: number;
     search: string;
+    type: string;
  }

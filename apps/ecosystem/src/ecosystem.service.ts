@@ -294,7 +294,7 @@ export class EcosystemService {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: agentDetails.orgDid,
         requestPayload: schemaTransactionRequest.message.schemaState.schemaRequest,
-        status: "Requested",
+        status: 'Requested',
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
       };
       return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse);
@@ -448,7 +448,7 @@ export class EcosystemService {
   }
 
   async getEndorsementTransactions(payload: GetEndorsementsPayload): Promise<object> {
-    const {ecosystemId, orgId, pageNumber, pageSize, search} = payload;
+    const {ecosystemId, orgId, pageNumber, pageSize, search, type } = payload;
     try {
 
       const query = {
@@ -462,9 +462,11 @@ export class EcosystemService {
         ]
       };
 
-      const filterOptions = {};
+      if (type) {
+        query['type'] = type;
+      }
 
-      return await this.ecosystemRepository.getEndorsementsWithPagination(query, filterOptions, pageNumber, pageSize);
+      return await this.ecosystemRepository.getEndorsementsWithPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`In error getEndorsementTransactions: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

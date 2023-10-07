@@ -3,7 +3,8 @@ import { Transform, Type } from 'class-transformer';
 import { toNumber } from '@credebl/common/cast.helper';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { EndorserTransactionType } from '@credebl/enum/enum';
 
 export class GetAllEndorsementsDto {
     @ApiProperty({ required: false, default: 1 })
@@ -14,6 +15,7 @@ export class GetAllEndorsementsDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @IsString()
     @Type(() => String)
     search = '';
 
@@ -23,9 +25,11 @@ export class GetAllEndorsementsDto {
     @Transform(({ value }) => toNumber(value))
     pageSize = 10;
 
-    @ApiProperty({ required: false })
+    @ApiProperty({
+        enum: [EndorserTransactionType.SCHEMA, EndorserTransactionType.CREDENTIAL_DEFINITION]
+    })
     @IsOptional()
-    @IsString()
-    status;    
+    @IsEnum(EndorserTransactionType)
+    type: EndorserTransactionType.SCHEMA | EndorserTransactionType.CREDENTIAL_DEFINITION;
 
 }

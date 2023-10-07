@@ -188,7 +188,9 @@ export const ResponseMessages = {
             update: 'Ecosystem updated successfully',
             fetch: 'Ecosystem fetched successfully',
             getInvitation: 'Ecosystem invitations fetched successfully',
-            createInvitation: 'Ecosystem invitations sent successfully'
+            createInvitation: 'Ecosystem invitations sent successfully',
+            schemaRequest: 'Schema transaction request created successfully',
+            sign: 'Transaction request signed successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

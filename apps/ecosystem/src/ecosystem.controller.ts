@@ -4,6 +4,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { EcosystemService } from './ecosystem.service';
 import { Body } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
+import { RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {
@@ -70,4 +71,27 @@ export class EcosystemController {
     return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
   }
   
+   /**
+   * 
+   * @param payload 
+   * @returns Schema endorsement request
+   */
+   @MessagePattern({ cmd: 'schema-endorsement-request' })
+   async schemaEndorsementRequest(
+     @Body() payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number }
+     ): Promise<object> {
+     return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId);
+   }
+
+   /**
+   * 
+   * @param payload 
+   * @returns sign endorsement request
+   */
+   @MessagePattern({ cmd: 'sign-endorsement-transaction' })
+   async signTransaction(
+     @Body() payload: { endorsementId: string }
+     ): Promise<object> {
+     return this.ecosystemService.signTransaction(payload.endorsementId);
+   }
 }

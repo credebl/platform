@@ -4,6 +4,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
+import { RequestSchemaDto } from './dtos/request-schema-dto';
 
 
 @Injectable()
@@ -68,4 +69,14 @@ export class EcosystemService extends BaseService {
       return this.sendNats(this.serviceProxy, 'get-ecosystem-invitations', payload);
     }
     
+    async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number): Promise<object> {
+      const payload = { requestSchemaPayload, orgId};
+      return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
+    }
+
+      
+    async signTransaction(endorsementId:string): Promise<object> {
+      const payload = { endorsementId };
+      return this.sendNats(this.serviceProxy, 'sign-endorsement-transaction', payload);
+    }
 }

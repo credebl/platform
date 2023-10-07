@@ -107,5 +107,43 @@
       "registerDIDPayload": "",
       "indyNamespace": "indicio:testnet"
     }
+  ],
+  "endorseData": [
+    {
+      "id": "0f8fad5b-d9cb-469f-a165-70867728950f",
+      "endorserDid": "endorser123",
+      "authorDid": "author456",
+      "requestPayload": "{\"type\": \"dummy_request_1\"}",
+      "responsePayload": "{\"type\": \"dummy_response_1\"}",
+      "status": "Requested",
+      "ecosystemOrgId": "1c247b4a-e2f6-48c0-8aa2-65ea47474294"
+    },
+    {
+      "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "endorserDid": "endorser789",
+      "authorDid": "author101",
+      "requestPayload": "{\"type\": \"dummy_request_2\"}",
+      "responsePayload": "{\"type\": \"dummy_response_2\"}",
+      "status": "Signed",
+      "ecosystemOrgId": "1c247b4a-e2f6-48c0-8aa2-65ea47474294"
+    },
+    {
+      "id": "a89b6e81-a1ff-4d13-a9e2-17176e707aac",
+      "endorserDid": "endorser321",
+      "authorDid": "author654",
+      "requestPayload": "{\"type\": \"dummy_request_3\"}",
+      "responsePayload": "{\"type\": \"dummy_response_3\"}",
+      "status": "Declined",
+      "ecosystemOrgId": "a2443e09-45be-4739-b8b3-0d4ffaecea94"
+    },
+    {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d47c",
+      "endorserDid": "endorser999",
+      "authorDid": "author777",
+      "requestPayload": "{\"type\": \"dummy_request_4\"}",
+      "responsePayload": "{\"type\": \"dummy_response_4\"}",
+      "status": "Submitted",
+      "ecosystemOrgId": "ca6ee687-a3a9-42ce-9e49-02bf62f5c93a"
+    }
   ]
 }

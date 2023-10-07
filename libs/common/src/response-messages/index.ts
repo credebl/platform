@@ -190,12 +190,18 @@ export const ResponseMessages = {
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent successfully',
             schemaRequest: 'Schema transaction request created successfully',
-            sign: 'Transaction request signed successfully'
+            sign: 'Transaction request signed successfully',
+            invitationReject: 'Ecosystem invitation rejected',
+            invitationAccept: 'Ecosystem invitation accepted successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
             update: 'Error while updating ecosystem',
-            invalidInvitationStatus: 'Invalid invitation status'
+            invalidInvitationStatus: 'Invalid invitation status',
+            invitationNotFound: 'Ecosystem Invitation not found',
+            invitationNotUpdate: 'Ecosystem Invitation not updated',
+            orgsNotUpdate: 'Ecosystem Orgs not updated',
+            ecosystemNotEnabled: 'Ecosystem service is not enabled'
         }
     }   
 };

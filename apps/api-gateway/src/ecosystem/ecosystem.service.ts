@@ -2,8 +2,10 @@ import { Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
+import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
+import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
+import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
 import { RequestSchemaDto } from './dtos/request-schema-dto';
 
 
@@ -38,8 +40,9 @@ export class EcosystemService extends BaseService {
    *
    * @returns Get all ecosystems
    */
-  async getAllEcosystem(): Promise<{ response: object }> {
-    return this.sendNats(this.serviceProxy, 'get-all-ecosystem', '');
+  async getAllEcosystem(orgId: string): Promise<{ response: object }> {
+    const payload = { orgId };
+    return this.sendNats(this.serviceProxy, 'get-all-ecosystem', payload);
   }
   
 
@@ -52,6 +55,16 @@ export class EcosystemService extends BaseService {
   async createInvitation(bulkInvitationDto: BulkEcosystemInvitationDto, userId: string): Promise<object> {
       const payload = { bulkInvitationDto, userId };
       return this.sendNats(this.serviceProxy, 'send-ecosystem-invitation', payload);
+  }
+
+  async getInvitationsByEcosystemId(
+    ecosystemId: string,
+    getAllInvitationsDto: GetAllEcosystemInvitationsDto,
+    userId: string
+  ): Promise<{ response: object }> {
+    const { pageNumber, pageSize, search } = getAllInvitationsDto;
+    const payload = { ecosystemId, pageNumber, pageSize, search, userId };
+    return this.sendNats(this.serviceProxy, 'get-sent-invitations-ecosystemId', payload);
   }
   
 
@@ -68,6 +81,24 @@ export class EcosystemService extends BaseService {
       const payload = { userEmail, status, pageNumber, pageSize, search };
       return this.sendNats(this.serviceProxy, 'get-ecosystem-invitations', payload);
     }
+
+    async acceptRejectEcosystemInvitaion(
+      acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
+      userEmail: string
+    ): Promise<{ response: string }> {
+      const payload = { acceptRejectInvitation, userEmail };
+      return this.sendNats(this.serviceProxy, 'accept-reject-ecosystem-invitations', payload);
+    }  
+
+    
+    async fetchEcosystemOrg(
+      ecosystemId: string,
+      orgId: string
+    ): Promise<{ response: object }> {
+      const payload = { ecosystemId, orgId };
+      return this.sendNats(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
+    }
+
     
     async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number): Promise<object> {
       const payload = { requestSchemaPayload, orgId};

@@ -12,6 +12,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { Invitation } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
+import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -297,5 +298,28 @@ export class EcosystemService {
     return platformConfigData[0].enableEcosystem;
   }
 
+  async getEndorsementTransactions(payload: GetEndorsementsPayload): Promise<object> {
+    const {ecosystemId, orgId, pageNumber, pageSize, search} = payload;
+    try {
+
+      const query = {
+        ecosystemOrgs: {
+          ecosystemId,
+          orgId
+        },
+        OR: [
+          { status: { contains: search, mode: 'insensitive' } },
+          { authorDid: { contains: search, mode: 'insensitive' } }
+        ]
+      };
+
+      const filterOptions = {};
+
+      return await this.ecosystemRepository.getEndorsementsWithPagination(query, filterOptions, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`In error getEndorsementTransactions: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
 
 }

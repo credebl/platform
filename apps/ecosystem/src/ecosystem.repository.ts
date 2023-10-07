@@ -334,6 +334,51 @@ export class EcosystemRepository {
     });
 
   }
+
+  async getEndorsementsWithPagination(queryObject: object, filterOptions: object, pageNumber: number, pageSize: number): Promise<object> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.endorsement_transaction.findMany({
+          where: {
+            ...queryObject
+          },
+          select:{
+            id:true,
+            endorserDid: true,
+            authorDid: true,
+            status: true,
+            ecosystemOrgs: {
+              where: {
+                ...filterOptions
+                // Additional filtering conditions if needed
+              }
+            }
+          },
+          take: pageSize,
+          skip: (pageNumber - 1) * pageSize
+          // orderBy: {
+          //   createDateTime: 'desc'
+          // }
+        }),
+        this.prisma.endorsement_transaction.count({
+          where: {
+            ...queryObject
+          }
+        })
+      ]);
+
+      // eslint-disable-next-line prefer-destructuring
+      const transactions = result[0];
+      // eslint-disable-next-line prefer-destructuring
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return { totalPages, transactions };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
     
     
 }

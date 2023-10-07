@@ -378,5 +378,17 @@ model ecosystem_orgs {
   lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
   lastChangedBy       Int              @default(1)
   deletedAt           DateTime?        @db.Timestamp(6)
+  endorseTransaction  endorsement_transaction[]
+}
+
+model endorsement_transaction {
+ id                   String              @id @default(uuid())
+ endorserDid          String?             @db.VarChar
+ authorDid            String?             @db.VarChar
+ requestPayload       String?             @db.VarChar
+ responsePayload      String?             @db.VarChar
+ status               String?             @db.VarChar
+ ecosystemOrgId       String?             @db.VarChar
+ ecosystemOrgs        ecosystem_orgs?     @relation(fields: [ecosystemOrgId], references: [id])
 }
 

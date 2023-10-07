@@ -6,6 +6,7 @@ import { Body } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
+import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 
 @Controller()
 export class EcosystemController {
@@ -96,13 +97,14 @@ export class EcosystemController {
     );
   }
 
-  @MessagePattern({ cmd: 'fetch-ecosystem-org-data' })
-  async fetchEcosystemOrg(
-    @Body() payload: { ecosystemId: string, orgId: string}
+  @MessagePattern({ cmd: 'get-endorsement-transactions' })
+  async getEndorsementTransactions(
+    @Body() payload: GetEndorsementsPayload
   ): Promise<object> {
-    return this.ecosystemService.fetchEcosystemOrg(
+    return this.ecosystemService.getEndorsementTransactions(
       payload
     );
-  }
+  } 
+
   
 }

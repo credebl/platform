@@ -6,6 +6,7 @@ import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
+import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
 
 @Injectable()
@@ -96,6 +97,16 @@ export class EcosystemService extends BaseService {
     ): Promise<{ response: object }> {
       const payload = { ecosystemId, orgId };
       return this.sendNats(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
+    }
+
+    async getEndorsementTranasactions(
+      ecosystemId: string,
+      orgId: string,
+      getAllEndorsements: GetAllEndorsementsDto
+    ): Promise<{ response: object }> {
+      const { pageNumber, pageSize, search, status } = getAllEndorsements;
+      const payload = { ecosystemId, orgId, pageNumber, pageSize, search, status };
+      return this.sendNats(this.serviceProxy, 'get-endorsement-transactions', payload);
     }
 
     

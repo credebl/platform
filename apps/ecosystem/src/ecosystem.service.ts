@@ -191,4 +191,14 @@ export class EcosystemService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async deleteEcosystemInvitations (invitationId: string): Promise<object> {
+    try {  
+      return await this.ecosystemRepository.deleteInvitations(invitationId);
+      
+    } catch (error) {
+      this.logger.error(`In error deleteEcosystemInvitation: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 }

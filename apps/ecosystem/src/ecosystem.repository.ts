@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger} from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { ecosystem, ecosystem_invitations } from '@prisma/client';
@@ -239,4 +239,19 @@ export class EcosystemRepository {
         }
       }
     
+      // eslint-disable-next-line camelcase
+      async deleteInvitations (invitationId: string): Promise<ecosystem_invitations> {
+        try { 
+          const deletedInvitation = await this.prisma.ecosystem_invitations.delete({
+            where: {
+              id: invitationId,
+              status: EcosystemInvitationStatus.PENDING
+            }
+          });
+            return deletedInvitation; 
+        } catch (error) {
+          this.logger.error(`error: ${JSON.stringify(error)}`);
+          throw new InternalServerErrorException(error);
+        }
+      }
 }

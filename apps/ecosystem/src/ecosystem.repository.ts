@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger} from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { ecosystem, ecosystem_invitations, ecosystem_orgs, endorsement_transaction, org_agents, platform_config } from '@prisma/client';
@@ -270,14 +270,5 @@ export class EcosystemRepository {
           this.logger.error(`error: ${JSON.stringify(error)}`);
           throw new InternalServerErrorException(error);
         }
-      });
-  
-      return updatedTransaction;
-  
-    } catch (error) {
-      this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
-      throw error;
-    }
-  }
-  
+      }
 }

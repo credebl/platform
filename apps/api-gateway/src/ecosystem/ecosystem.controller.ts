@@ -378,17 +378,18 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Delete('/:ecosystemId/invitatons/:orgId')
+  @Delete('/:ecosystemId/:orgId/invitations/:invitationId')
   @ApiOperation({ summary: 'Delete ecosystem pending invitations', description: 'Delete ecosystem pending invitations' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async deleteEcosystemInvitations(@Body() deleteInvitationDto: deleteEcosystemInvitationsDto, @Param('ecosystemId') invitationId: string, @Param('orgId') orgId: string, ecosystemId: string, @User() user: user, @Res() res: Response): Promise<Response> {
-    deleteInvitationDto.ecosystemId = ecosystemId;
-    deleteInvitationDto.orgId = orgId;
-    deleteInvitationDto.invitationId = invitationId;
-
-    await this.ecosystemService.deleteEcosystemInvitations(deleteInvitationDto, user.email);
+  async deleteEcosystemInvitations(
+    @Param('ecosystemId') ecosystemId: string, 
+    @Param('invitationId') invitationId: string, 
+    @Param('orgId') orgId: string, 
+    @Res() res: Response): Promise<Response> {
+  
+    await this.ecosystemService.deleteEcosystemInvitations(invitationId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.delete

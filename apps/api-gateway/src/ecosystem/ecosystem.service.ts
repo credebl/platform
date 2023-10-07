@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
+import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
 
 @Injectable()

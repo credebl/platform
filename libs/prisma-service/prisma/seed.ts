@@ -126,31 +126,17 @@ const createEcosystemRoles = async (): Promise<void> => {
     }
 };
 
-const createEndoresementTransactions = async (): Promise<void> => {
-    try {
-        const { endorseData } = JSON.parse(configData);
-        const endoresments = await prisma.endorsement_transaction.createMany({
-            data: endorseData
-        });
-
-        logger.log(endoresments);
-    } catch (e) {
-        logger.error('An error occurred seeding ecosystemRoles:', e);
-    }
-};
-
 async function main(): Promise<void> {
 
-    // await createPlatformConfig();
-    // await createOrgRoles();
-    // await createAgentTypes();
-    // await createPlatformOrganization();
-    // await createPlatformUser();
-    // await createPlatformUserOrgRoles();
-    // await createOrgAgentTypes();
-    // await createLedger();
-    // await createEcosystemRoles();
-    await createEndoresementTransactions();
+    await createPlatformConfig();
+    await createOrgRoles();
+    await createAgentTypes();
+    await createPlatformOrganization();
+    await createPlatformUser();
+    await createPlatformUserOrgRoles();
+    await createOrgAgentTypes();
+    await createLedger();
+    await createEcosystemRoles();
 }
 
 

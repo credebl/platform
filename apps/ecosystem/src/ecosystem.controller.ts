@@ -129,4 +129,16 @@ export class EcosystemController {
      ): Promise<object> {
      return this.ecosystemService.signTransaction(payload.endorsementId);
    }
+
+   /**
+   * 
+   * @param payload 
+   * @returns submit endorsement request
+   */
+   @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
+   async submitTransaction(
+     @Body() payload: { endorsementId: string }
+     ): Promise<object> {
+     return this.ecosystemService.submitTransaction(payload.endorsementId);
+   }
 }

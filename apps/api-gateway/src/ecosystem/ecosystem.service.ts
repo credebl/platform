@@ -110,4 +110,9 @@ export class EcosystemService extends BaseService {
       const payload = { endorsementId };
       return this.sendNats(this.serviceProxy, 'sign-endorsement-transaction', payload);
     }
+
+    async submitTransaction(endorsementId:string): Promise<object> {
+      const payload = { endorsementId };
+      return this.sendNats(this.serviceProxy, 'sumbit-endorsement-transaction', payload);
+    }
 }

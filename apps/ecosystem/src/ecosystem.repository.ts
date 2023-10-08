@@ -422,6 +422,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async getEcosystemOrgDetailsbyId(orgId: string): Promise<ecosystem_orgs> {
     try {
+      //need to change
       const ecosystemLeadDetails = await this.prisma.ecosystem_orgs.findFirst({
         where: {
           orgId
@@ -435,12 +436,12 @@ export class EcosystemRepository {
     }
   }
   // eslint-disable-next-line camelcase
-  async getEndorsementTransactionById(endorsementId: string): Promise<endorsement_transaction> {
+  async getEndorsementTransactionById(endorsementId: string, status:endorsementTransactionStatus): Promise<endorsement_transaction> {
     try {
       const ecosystemLeadDetails = await this.prisma.endorsement_transaction.findFirst({
         where: {
           id: endorsementId,
-          status: endorsementTransactionStatus.REQUESTED
+          status
         },
         include: {
           ecosystemOrgs: {
@@ -469,7 +470,29 @@ export class EcosystemRepository {
       const updatedTransaction = await this.prisma.endorsement_transaction.update({
         where: { id: endorsementId },
         data: {
-          responsePayload: schemaTransactionRequest
+          responsePayload: schemaTransactionRequest,
+          status: endorsementTransactionStatus.SIGNED
+        }
+      });
+
+      return updatedTransaction;
+
+    } catch (error) {
+      this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateTransactionStatus(
+    endorsementId: string,
+    status:endorsementTransactionStatus
+    // eslint-disable-next-line camelcase,
+  ): Promise<object> {
+    try {
+      const updatedTransaction = await this.prisma.endorsement_transaction.update({
+        where: { id: endorsementId },
+        data: {
+          status 
         }
       });
 

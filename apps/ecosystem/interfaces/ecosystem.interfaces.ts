@@ -49,3 +49,16 @@ export interface SignedTransactionMessage {
     signedTransaction: string;
   };
 }
+
+export interface EndorsementTransactionPayload {
+  id: string;
+  endorserDid: string;
+  authorDid: string;
+  requestPayload: string;
+  responsePayload: string;
+  status: string;
+  ecosystemOrgId: string;
+  ecosystemOrgs?: {
+    orgId: string;
+  };
+}

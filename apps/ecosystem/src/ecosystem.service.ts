@@ -103,14 +103,14 @@ export class EcosystemService {
     try {
       const { orgId, status, invitationId } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
-      
+
       if (!invitation) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotFound);
       }
 
       const updatedInvitation = await this.updateEcosystemInvitation(invitationId, orgId, status);
       if (!updatedInvitation) {
-         throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotUpdate);
+        throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotUpdate);
       }
 
       if (status === Invitation.REJECTED) {
@@ -124,13 +124,13 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgsNotUpdate);
       }
       return ResponseMessages.ecosystem.success.invitationAccept;
-    
+
     } catch (error) {
       this.logger.error(`acceptRejectInvitations: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
-  
+
   async updatedEcosystemOrgs(orgId: string, ecosystemId: string, ecosystemRoleId: string): Promise<object> {
     try {
       const data = {
@@ -153,7 +153,7 @@ export class EcosystemService {
    */
   async updateEcosystemInvitation(invitationId: string, orgId: string, status: string): Promise<object> {
     try {
-   
+
       const data = {
         status,
         orgId: String(orgId)

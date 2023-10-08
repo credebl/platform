@@ -159,7 +159,7 @@ export class EcosystemController {
   @Post('/:orgId/transaction/schema')
   @ApiOperation({ summary: 'Request new schema', description: 'Request new schema' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId);
@@ -173,7 +173,7 @@ export class EcosystemController {
   @Post('transaction/sign/:endorsementId')
   @ApiOperation({ summary: 'Sign transaction', description: 'Sign transaction' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.signTransaction(endorsementId);
@@ -184,6 +184,19 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  @Post('transaction/sumbit/:endorsementId')
+  @ApiOperation({ summary: 'Sumbit transaction', description: 'Sumbit transaction' })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  // @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Res() res: Response): Promise<Response> {
+    await this.ecosystemService.submitTransaction(endorsementId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.sign
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
   /**
    * 
    * @param bulkInvitationDto 

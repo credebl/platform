@@ -915,5 +915,19 @@ export class AgentServiceService {
     }
   }
 
+  async sumbitTransaction(url: string, apiKey: string, submitEndorsementPayload: string): Promise<object> {
+    try {
+
+      const signEndorsementTransaction = await this.commonService
+      .httpPost(url, submitEndorsementPayload, { headers: { 'x-api-key': apiKey } })
+      .then(async response => response);
+
+      return signEndorsementTransaction;
+    } catch (error) {
+      this.logger.error(`Error in sumbit transaction in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 }
 

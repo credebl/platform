@@ -1,8 +1,14 @@
 export interface RequestSchemaEndorsement {
   orgId: number
   name: string;
-  version: number;
+  version: string;
   attributes: IAttributeValue[];
+  endorse?: boolean;
+}
+
+export interface RequestCredDeffEndorsement {
+  schemaId: string
+  tag: string;
   endorse?: boolean;
 }
 
@@ -18,6 +24,14 @@ export interface SchemaTransactionPayload {
   attributes: string[];
   version: string;
   name: string;
+  issuerId: string;
+}
+
+export interface CredDefTransactionPayload {
+  endorserDid: string;
+  endorse: boolean;
+  tag: string;
+  schemaId: string;
   issuerId: string;
 }
 
@@ -58,7 +72,28 @@ export interface EndorsementTransactionPayload {
   responsePayload: string;
   status: string;
   ecosystemOrgId: string;
+  type: string;
   ecosystemOrgs?: {
     orgId: string;
   };
+}
+
+interface SchemaPayload {
+  attributes: string[];
+  version: string;
+  name: string;
+  issuerId: string;
+}
+
+interface CredentialDefinitionPayload {
+  tag: string;
+  issuerId: string;
+  schemaId: string;
+}
+
+export interface submitTransactionPayload {
+  endorsedTransaction: string;
+  endorserDid: string;
+  schema?: SchemaPayload;
+  credentialDefinition?: CredentialDefinitionPayload;
 }

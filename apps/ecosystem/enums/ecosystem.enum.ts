@@ -20,3 +20,7 @@ export enum endorsementTransactionStatus {
     DECLINED = 'Declined',
     SUBMITED = 'Submited'
 }
+export enum endorsementTransactionType {
+    SCHEMA = 'Schema',
+    CREDENTIAL_DEFINITION = 'Credential-definition'
+}

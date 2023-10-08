@@ -889,7 +889,31 @@ export class AgentServiceService {
     }
   }
 
-  async getProofFormData(url: string, apiKey: string): Promise<object> {
+  async schemaEndorsementRequest(url: string, apiKey: string, requestSchemaPayload:object): Promise<object> {
+    try {
+      const schemaRequest = await this.commonService
+      .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
+      .then(async response => response);
+      return schemaRequest;
+    } catch (error) {
+      this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async credDefEndorsementRequest(url: string, apiKey: string, requestSchemaPayload:object): Promise<object> {
+    try {
+      const credDefRequest = await this.commonService
+      .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
+      .then(async response => response);
+      return credDefRequest;
+    } catch (error) {
+      this.logger.error(`Error in credential-definition endorsement request in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async signTransaction(url: string, apiKey: string, signEndorsementPayload: string): Promise<object> {
     try {
       const getProofFormData = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })

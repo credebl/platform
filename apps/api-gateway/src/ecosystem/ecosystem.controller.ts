@@ -27,6 +27,7 @@ import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { EcosystemsRoles, Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
+import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 
 
@@ -103,6 +104,44 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
+
+  @Get('/:ecosystemId/:orgId/endorsement-transactions')
+  @ApiOperation({ summary: 'Get all endorsement transactions', description: 'Get all endorsement transactions' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getEndorsementTranasactions(
+    @Param('ecosystemId') ecosystemId: string,
+    @Param('orgId') orgId: string,
+    @Query() getAllEndorsementsDto: GetAllEndorsementsDto,
+    @Res() res: Response
+    ): Promise<Response>  {
+    const ecosystemList = await this.ecosystemService.getEndorsementTranasactions(ecosystemId, orgId, getAllEndorsementsDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: `Endorser transactions fetched successfully`,
+      data: ecosystemList.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
 
   @Get('/:ecosystemId/:orgId/invitations')
   @ApiOperation({ summary: 'Get all sent invitations', description: 'Get all sent invitations' })

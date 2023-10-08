@@ -336,7 +336,48 @@ export class EcosystemRepository {
 
   }
 
-  /**
+  async getEndorsementsWithPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.endorsement_transaction.findMany({
+          where: {
+            ...queryObject
+          },
+          select:{
+            id:true,
+            endorserDid: true,
+            authorDid: true,
+            status: true,
+            type: true,
+            ecosystemOrgs: true
+          },
+          take: pageSize,
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        }),
+        this.prisma.endorsement_transaction.count({
+          where: {
+            ...queryObject
+          }
+        })
+      ]);
+
+      // eslint-disable-next-line prefer-destructuring
+      const transactions = result[0];
+      // eslint-disable-next-line prefer-destructuring
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return { totalPages, transactions };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+/**
 * Description: Get getAgentEndPoint by orgId
 * @param orgId 
 * @returns Get getAgentEndPoint details
@@ -419,6 +460,7 @@ export class EcosystemRepository {
       throw new InternalServerErrorException(error);
     }
   }
+    
   // eslint-disable-next-line camelcase
   async getEcosystemOrgDetailsbyId(orgId: string): Promise<ecosystem_orgs> {
     try {
@@ -503,6 +545,5 @@ export class EcosystemRepository {
       throw error;
     }
   }
-
 
 }

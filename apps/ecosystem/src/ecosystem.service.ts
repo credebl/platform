@@ -13,6 +13,7 @@ import { Invitation, OrgAgentType } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EndorsementTransactionPayload, RequestSchemaEndorsement, SchemaMessage, SchemaTransactionPayload, SchemaTransactionResponse, SignedTransactionMessage } from '../interfaces/ecosystem.interfaces';
+import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 // eslint-disable-next-line camelcase
 import { platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -512,5 +513,30 @@ export class EcosystemService {
     return platformConfigData[0].enableEcosystem;
   }
 
+  async getEndorsementTransactions(payload: GetEndorsementsPayload): Promise<object> {
+    const {ecosystemId, orgId, pageNumber, pageSize, search, type } = payload;
+    try {
+
+      const query = {
+        ecosystemOrgs: {
+          ecosystemId,
+          orgId
+        },
+        OR: [
+          { status: { contains: search, mode: 'insensitive' } },
+          { authorDid: { contains: search, mode: 'insensitive' } }
+        ]
+      };
+
+      if (type) {
+        query['type'] = type;
+      }
+
+      return await this.ecosystemRepository.getEndorsementsWithPagination(query, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`In error getEndorsementTransactions: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
 
 }

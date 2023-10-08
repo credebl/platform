@@ -211,10 +211,10 @@ export class EcosystemController {
   @Post('/:orgId/transaction/schema')
   @ApiOperation({ summary: 'Request new schema', description: 'Request new schema' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  // @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  // @ApiBearerAuth()
-  // @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId);
     const finalResponse: IResponseType = {

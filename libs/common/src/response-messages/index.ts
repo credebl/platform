@@ -201,7 +201,14 @@ export const ResponseMessages = {
             invitationNotFound: 'Ecosystem Invitation not found',
             invitationNotUpdate: 'Ecosystem Invitation not updated',
             orgsNotUpdate: 'Ecosystem Orgs not updated',
-            ecosystemNotEnabled: 'Ecosystem service is not enabled'
+            ecosystemNotEnabled: 'Ecosystem service is not enabled',
+            sumbitTransaction: 'Error while submitting transaction',
+            requestSchemaTransaction: 'Error while request schema transaction',
+            requestCredDefTransaction: 'Error while submitting transaction',
+            notFound: 'Organization not found',
+            leadNotFound: 'Lead details not found',
+            invalidOrgId: 'Invalid organization Id',
+            invalidTransaction: 'Transaction does not exist'
         }
     }   
 };

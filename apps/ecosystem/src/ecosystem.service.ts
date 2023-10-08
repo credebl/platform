@@ -10,9 +10,9 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus } from '../enums/ecosystem.enum';
+import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
-import { EndorsementTransactionPayload, RequestSchemaEndorsement, SchemaMessage, SchemaTransactionPayload, SchemaTransactionResponse, SignedTransactionMessage } from '../interfaces/ecosystem.interfaces';
+import { CredDefTransactionPayload, EndorsementTransactionPayload, RequestCredDeffEndorsement, RequestSchemaEndorsement, SchemaMessage, SchemaTransactionPayload, SchemaTransactionResponse, SignedTransactionMessage, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 // eslint-disable-next-line camelcase
 import { platform_config } from '@prisma/client';
@@ -266,11 +266,15 @@ export class EcosystemService {
    */
   async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: number): Promise<object> {
     try {
-      const agentDetails = await this.ecosystemRepository.getAgentDetails(orgId);
+      const ecosystemMemberDetails = await this.ecosystemRepository.getAgentDetails(orgId);
+      if (!ecosystemMemberDetails) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.notFound);
+      }
+
       // eslint-disable-next-line camelcase
       const platformConfig: platform_config = await this.ecosystemRepository.getPlatformConfigDetails();
 
-      const url = await this.getAgentUrl(agentDetails?.orgAgentTypeId, agentDetails.agentEndPoint);
+      const url = await this.getAgentUrl(ecosystemMemberDetails?.orgAgentTypeId, ecosystemMemberDetails.agentEndPoint);
 
       const attributeArray = requestSchemaPayload.attributes.map(item => item.attributeName);
 
@@ -278,28 +282,88 @@ export class EcosystemService {
 
       const ecosystemLeadAgentDetails = await this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId));
 
+      if (!ecosystemLeadAgentDetails) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
+      }
+
       const getEcosystemOrgDetailsByOrgId = await this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId));
 
       const schemaTransactionPayload: SchemaTransactionPayload = {
-        endorserDid: 'did:indy:indicio:testnet:23FTzrmb5QUxTiZUmueJbY',
+        endorserDid: ecosystemLeadAgentDetails.orgDid,
         endorse: requestSchemaPayload.endorse,
         attributes: attributeArray,
         version: String(requestSchemaPayload.version),
         name: requestSchemaPayload.name,
-        issuerId: 'did:indy:indicio:testnet:G8jvtxj59GJRznz4Kk426u'
+        issuerId: ecosystemMemberDetails.orgDid
       };
 
       const schemaTransactionRequest: SchemaMessage = await this._requestSchemaEndorsement(schemaTransactionPayload, url, platformConfig?.sgApiKey);
       const schemaTransactionResponse: SchemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
-        authorDid: agentDetails.orgDid,
+        authorDid: ecosystemMemberDetails.orgDid,
         requestPayload: schemaTransactionRequest.message.schemaState.schemaRequest,
         status: endorsementTransactionStatus.REQUESTED,
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
       };
-      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse);
+
+      if ('failed' === schemaTransactionRequest.message.schemaState.state) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestSchemaTransaction);
+      }
+      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, endorsementTransactionType.SCHEMA);
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
+
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async requestCredDeffEndorsement(requestCredDefPayload: RequestCredDeffEndorsement, orgId: number): Promise<object> {
+    try {
+      const ecosystemMemberDetails = await this.ecosystemRepository.getAgentDetails(orgId);
+      if (!ecosystemMemberDetails) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.notFound);
+      }
+
+      // eslint-disable-next-line camelcase
+      const platformConfig: platform_config = await this.ecosystemRepository.getPlatformConfigDetails();
+
+      const url = await this.getAgentUrl(ecosystemMemberDetails?.orgAgentTypeId, ecosystemMemberDetails.agentEndPoint);
+
+      // const attributeArray = requestSchemaPayload.attributes.map(item => item.attributeName);
+
+      const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails();
+
+      const ecosystemLeadAgentDetails = await this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId));
+
+      if (!ecosystemLeadAgentDetails) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
+      }
+
+      const getEcosystemOrgDetailsByOrgId = await this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId));
+
+      const credDefTransactionPayload: CredDefTransactionPayload = {
+        endorserDid: ecosystemLeadAgentDetails.orgDid,
+        endorse: requestCredDefPayload.endorse,
+        tag: requestCredDefPayload.tag,
+        schemaId: requestCredDefPayload.schemaId,
+        issuerId: ecosystemMemberDetails.orgDid
+      };
+      // Need to add login and type for credential-definition
+      const credDefTransactionRequest: SchemaMessage = await this._requestCredDeffEndorsement(credDefTransactionPayload, url, platformConfig?.sgApiKey);
+      const schemaTransactionResponse: SchemaTransactionResponse = {
+        endorserDid: ecosystemLeadAgentDetails.orgDid,
+        authorDid: ecosystemMemberDetails.orgDid,
+        requestPayload: credDefTransactionRequest.message.schemaState.schemaRequest,
+        status: endorsementTransactionStatus.REQUESTED,
+        ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
+      };
+
+      if ('failed' === credDefTransactionRequest.message.schemaState.state) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestCredDefTransaction);
+      }
+      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, endorsementTransactionType.CREDENTIAL_DEFINITION);
+    } catch (error) {
+      this.logger.error(`In request cred-def endorsement : ${JSON.stringify(error)}`);
 
       throw new RpcException(error.response ? error.response : error);
     }
@@ -318,14 +382,26 @@ export class EcosystemService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-  /**
- * Description: Store shortening URL 
- * @param referenceId 
- * @param url 
- * @returns connection invitation URL
- */
+ 
   async _requestSchemaEndorsement(requestSchemaPayload: object, url: string, apiKey: string): Promise<object> {
     const pattern = { cmd: 'agent-schema-endorsement-request' };
+    const payload = { requestSchemaPayload, url, apiKey };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
+      return { message };
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
+  async _requestCredDeffEndorsement(requestSchemaPayload: object, url: string, apiKey: string): Promise<object> {
+    const pattern = { cmd: 'agent-credDef-endorsement-request' };
     const payload = { requestSchemaPayload, url, apiKey };
 
     try {
@@ -344,21 +420,30 @@ export class EcosystemService {
   async signTransaction(endorsementId: string): Promise<object> {
     try {
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(endorsementId, endorsementTransactionStatus.REQUESTED);
+      if (!endorsementTransactionPayload) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
+      }
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails();
+
+      if (!getEcosystemLeadDetails) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
+      }
       // eslint-disable-next-line camelcase
       const platformConfig: platform_config = await this.ecosystemRepository.getPlatformConfigDetails();
 
       const ecosystemLeadAgentDetails = await this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId));
-      const url = `${ecosystemLeadAgentDetails.agentEndPoint}/transactions/endorse`;
+      const url = `${ecosystemLeadAgentDetails.agentEndPoint}${CommonConstants.SIGN_TRANSACTION}`;
 
+      if (!ecosystemLeadAgentDetails) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
+      }
 
       const parsedRequestPayload = JSON.parse(endorsementTransactionPayload.requestPayload);
 
-
       const payload = {
         transaction: JSON.stringify(parsedRequestPayload),
-        endorserDid: 'did:indy:indicio:testnet:23FTzrmb5QUxTiZUmueJbY'
+        endorserDid: endorsementTransactionPayload.endorserDid
       };
 
       const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, platformConfig.sgApiKey);
@@ -409,26 +494,35 @@ export class EcosystemService {
 
       this.logger.log(url);
 
-      const apiUrl = `http://localhost:6002/transactions/write`;
+      const apiUrl = `${url}${CommonConstants.SUBMIT_TRANSACTION}`;
 
       const parsedRequestPayload = JSON.parse(endorsementTransactionPayload.requestPayload);
 
-      const payload = {
-        transaction: JSON.stringify(parsedRequestPayload),
-        endorserDid: ecosystemLeadAgentDetails.orgDid,
-        schema: {
+      const payload: submitTransactionPayload = {
+        endorsedTransaction: JSON.stringify(parsedRequestPayload),
+        endorserDid: ecosystemLeadAgentDetails.orgDid
+      };
+
+      if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
+        payload.schema = {
           attributes: parsedRequestPayload.operation.data.attr_names,
           version: parsedRequestPayload.operation.data.version,
           name: parsedRequestPayload.operation.data.name,
           issuerId: parsedRequestPayload.identifier
-        }
-      };
+        };
+      } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
+        payload.credentialDefinition = {
+          tag: parsedRequestPayload.operation.tag,
+          issuerId: parsedRequestPayload.identifier,
+          schemaId: parsedRequestPayload.operation.schemaId
+        };
+      }
 
       const submitTransactionRequest = await this._submitTransaction(payload, apiUrl, platformConfig.sgApiKey);
-      if (submitTransactionRequest) {
-        return this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.SUBMITED);
-
+      if (!submitTransactionRequest) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
       }
+      return this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.SUBMITED);
 
     } catch (error) {
       this.logger.error(`In sumit transaction : ${JSON.stringify(error)}`);
@@ -514,7 +608,7 @@ export class EcosystemService {
   }
 
   async getEndorsementTransactions(payload: GetEndorsementsPayload): Promise<object> {
-    const {ecosystemId, orgId, pageNumber, pageSize, search, type } = payload;
+    const { ecosystemId, orgId, pageNumber, pageSize, search, type } = payload;
     try {
 
       const query = {

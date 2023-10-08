@@ -2,9 +2,10 @@ import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config } from '@prisma/client';
-import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus } from '../enums/ecosystem.enum';
+import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { SchemaTransactionResponse } from '../interfaces/ecosystem.interfaces';
+import { ResponseMessages } from '@credebl/common/response-messages';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -385,6 +386,9 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async getAgentDetails(orgId: number): Promise<org_agents> {
     try {
+      if (!orgId) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidOrgId);
+      }
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
           orgId
@@ -441,7 +445,8 @@ export class EcosystemRepository {
   }
 
   async storeTransactionRequest(
-    schemaTransactionResponse: SchemaTransactionResponse
+    schemaTransactionResponse: SchemaTransactionResponse,
+    type: endorsementTransactionType
   ): Promise<object> {
     try {
       const { endorserDid, authorDid, requestPayload, status, ecosystemOrgId } = schemaTransactionResponse;
@@ -452,7 +457,8 @@ export class EcosystemRepository {
           requestPayload,
           status,
           ecosystemOrgId,
-          responsePayload: ''
+          responsePayload: '',
+          type
         }
       });
     } catch (error) {

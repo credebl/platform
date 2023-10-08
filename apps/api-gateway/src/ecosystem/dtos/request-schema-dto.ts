@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 @ApiExtraModels()
 
 class AttributeValue {
@@ -23,8 +23,8 @@ export class RequestSchemaDto {
   name: string;
 
   @ApiProperty()
-  @IsInt({ message: 'version must be in number format.' })
-  version: number;
+  @IsString({ message: 'version must be in string format.' })
+  version: string;
 
   @ApiProperty({
     'example': [
@@ -44,4 +44,19 @@ export class RequestSchemaDto {
   @IsOptional()
   endorse?: boolean;
 
+}
+
+export class RequestCredDefDto {
+  @ApiProperty()
+  @IsBoolean({ message: 'endorse must be a boolean.' })
+  @IsOptional()
+  endorse?: boolean;
+
+  @ApiProperty()
+  @IsString({ message: 'tag must be in string format.' })
+  tag: string;
+
+  @ApiProperty()
+  @IsString({ message: 'schemaId must be in string format.' })
+  schemaId: string;
 }

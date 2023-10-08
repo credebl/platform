@@ -4,6 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { ecosystem, ecosystem_invitations, ecosystem_orgs, endorsement_transaction, org_agents, platform_config } from '@prisma/client';
 import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus } from '../enums/ecosystem.enum';
 import { SchemaTransactionResponse } from '../interfaces/ecosystem.interfaces';
+import { ResponseMessages } from '@credebl/common/response-messages';
 // eslint-disable-next-line camelcase
 
 @Injectable()

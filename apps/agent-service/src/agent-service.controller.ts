@@ -111,6 +111,10 @@ export class AgentServiceController {
   async schemaEndorsementRequest(payload: { url: string, apiKey: string, requestSchemaPayload:object }): Promise<object> {
     return this.agentServiceService.schemaEndorsementRequest(payload.url, payload.apiKey, payload.requestSchemaPayload);
   }
+  @MessagePattern({ cmd: 'agent-credDef-endorsement-request' })
+  async credDefEndorsementRequest(payload: { url: string, apiKey: string, requestSchemaPayload:object }): Promise<object> {
+    return this.agentServiceService.credDefEndorsementRequest(payload.url, payload.apiKey, payload.requestSchemaPayload);
+  }
 
   @MessagePattern({ cmd: 'agent-sign-transaction' })
   async signTransaction(payload: { url: string, apiKey: string, signEndorsementPayload:string }): Promise<object> {

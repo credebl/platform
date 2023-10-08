@@ -901,6 +901,18 @@ export class AgentServiceService {
     }
   }
 
+  async credDefEndorsementRequest(url: string, apiKey: string, requestSchemaPayload:object): Promise<object> {
+    try {
+      const credDefRequest = await this.commonService
+      .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
+      .then(async response => response);
+      return credDefRequest;
+    } catch (error) {
+      this.logger.error(`Error in credential-definition endorsement request in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async signTransaction(url: string, apiKey: string, signEndorsementPayload: string): Promise<object> {
     try {
 

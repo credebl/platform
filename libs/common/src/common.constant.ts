@@ -281,6 +281,10 @@ export enum CommonConstants {
   ENDORSER_DID = 8,
   ORGANIZATION_CREATION = 9,
   ADD_USER = 10,
+
+  // Ecosystem
+  SIGN_TRANSACTION = '/transactions/endorse',
+  SUBMIT_TRANSACTION = '/transactions/endorse'
 }
 
 export const postgresqlErrorCodes = [];

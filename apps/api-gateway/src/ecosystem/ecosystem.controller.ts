@@ -189,10 +189,10 @@ export class EcosystemController {
     * @returns Ecosystem members list
     */
   @Get('/:ecosystemId/:orgId/members')
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  // @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get ecosystem members list', description: 'Get ecosystem members list.' })
   @ApiQuery({

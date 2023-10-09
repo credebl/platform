@@ -889,11 +889,11 @@ export class AgentServiceService {
     }
   }
 
-  async schemaEndorsementRequest(url: string, apiKey: string, requestSchemaPayload:object): Promise<object> {
+  async schemaEndorsementRequest(url: string, apiKey: string, requestSchemaPayload: object): Promise<object> {
     try {
       const schemaRequest = await this.commonService
-      .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
-      .then(async response => response);
+        .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
       return schemaRequest;
     } catch (error) {
       this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
@@ -901,11 +901,11 @@ export class AgentServiceService {
     }
   }
 
-  async credDefEndorsementRequest(url: string, apiKey: string, requestSchemaPayload:object): Promise<object> {
+  async credDefEndorsementRequest(url: string, apiKey: string, requestSchemaPayload: object): Promise<object> {
     try {
       const credDefRequest = await this.commonService
-      .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
-      .then(async response => response);
+        .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
       return credDefRequest;
     } catch (error) {
       this.logger.error(`Error in credential-definition endorsement request in agent service : ${JSON.stringify(error)}`);
@@ -913,12 +913,11 @@ export class AgentServiceService {
     }
   }
 
-  async signTransaction(url: string, apiKey: string, signEndorsementPayload: string): Promise<object> {
+  async signTransaction(url: string, apiKey: string, signEndorsementPayload: object): Promise<object> {
     try {
-
       const signEndorsementTransaction = await this.commonService
-      .httpPost(url, signEndorsementPayload, { headers: { 'x-api-key': apiKey } })
-      .then(async response => response);
+        .httpPost(url, signEndorsementPayload, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
 
       return signEndorsementTransaction;
     } catch (error) {
@@ -927,12 +926,12 @@ export class AgentServiceService {
     }
   }
 
-  async sumbitTransaction(url: string, apiKey: string, submitEndorsementPayload: string): Promise<object> {
+  async sumbitTransaction(url: string, apiKey: string, submitEndorsementPayload: object): Promise<object> {
     try {
 
       const signEndorsementTransaction = await this.commonService
-      .httpPost(url, submitEndorsementPayload, { headers: { 'x-api-key': apiKey } })
-      .then(async response => response);
+        .httpPost(url, submitEndorsementPayload, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
 
       return signEndorsementTransaction;
     } catch (error) {

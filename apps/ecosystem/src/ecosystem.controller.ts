@@ -7,6 +7,8 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
+import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
+import { RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {
@@ -70,11 +72,11 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'fetch-ecosystem-members' })
   async getEcosystemMembers(
-    @Body() payload: EcosystemMembersPayload 
-    ): Promise<object> {
+    @Body() payload: EcosystemMembersPayload
+  ): Promise<object> {
     return this.ecosystemService.getEcoystemMembers(
       payload
-      );
+    );
   }
 
   /**
@@ -111,13 +113,55 @@ export class EcosystemController {
     );
   }
 
+  @MessagePattern({ cmd: 'delete-ecosystem-invitations' })
+  async deleteInvitation(
+    @Body() payload: {invitationId: string}
+    ): Promise<object> {
+    return this.ecosystemService.deleteEcosystemInvitations(
+      payload.invitationId
+      );
+  } 
   @MessagePattern({ cmd: 'fetch-ecosystem-org-data' })
   async fetchEcosystemOrg(
-    @Body() payload: { ecosystemId: string, orgId: string}
+  @Body() payload: { ecosystemId: string, orgId: string}
   ): Promise<object> {
-    return this.ecosystemService.fetchEcosystemOrg(
+  return this.ecosystemService.fetchEcosystemOrg(
+  payload
+  );
+  }
+ 
+ 
+  @MessagePattern({ cmd: 'get-endorsement-transactions' })
+  async getEndorsementTransactions(
+    @Body() payload: GetEndorsementsPayload
+  ): Promise<object> {
+    return this.ecosystemService.getEndorsementTransactions(
       payload
     );
-  }
+  } 
+
   
+   /**
+   * 
+   * @param payload 
+   * @returns Schema endorsement request
+   */
+   @MessagePattern({ cmd: 'schema-endorsement-request' })
+   async schemaEndorsementRequest(
+     @Body() payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number }
+     ): Promise<object> {
+     return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId);
+   }
+
+   /**
+   * 
+   * @param payload 
+   * @returns sign endorsement request
+   */
+   @MessagePattern({ cmd: 'sign-endorsement-transaction' })
+   async signTransaction(
+     @Body() payload: { endorsementId: string }
+     ): Promise<object> {
+     return this.ecosystemService.signTransaction(payload.endorsementId);
+   }
 }

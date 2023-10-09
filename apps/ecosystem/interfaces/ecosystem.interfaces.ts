@@ -50,6 +50,20 @@ export interface SchemaMessage {
   };
 }
 
+export interface CredDefMessage {
+  message?: {
+    jobId: string;
+    credentialDefinitionState: {
+      state: string;
+      action: string;
+      schemaId: string;
+      schema: Record<string, unknown>;
+      credentialDefinitionRequest: string;
+    };
+    registrationMetadata: Record<string, unknown>;
+    schemaMetadata: Record<string, unknown>;
+  };
+}
 export interface SchemaTransactionResponse {
   endorserDid: string;
   authorDid: string;
@@ -97,3 +111,4 @@ export interface submitTransactionPayload {
   schema?: SchemaPayload;
   credentialDefinition?: CredentialDefinitionPayload;
 }
+

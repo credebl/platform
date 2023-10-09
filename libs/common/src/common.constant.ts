@@ -284,7 +284,12 @@ export enum CommonConstants {
 
   // Ecosystem
   SIGN_TRANSACTION = '/transactions/endorse',
-  SUBMIT_TRANSACTION = '/transactions/endorse'
+  SUBMIT_TRANSACTION = '/transactions/write',
+  TRANSACTION_MULTITENANT_SCHEMA = '/multi-tenancy/schema/#',
+  TRANSACTION_MULTITENANT_CRED_DEF = '/multi-tenancy/credential-definition/#',
+  TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
+  TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#'
+
 }
 
 export const postgresqlErrorCodes = [];

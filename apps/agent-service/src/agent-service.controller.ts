@@ -117,11 +117,11 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-sign-transaction' })
-  async signTransaction(payload: { url: string, apiKey: string, signEndorsementPayload:string }): Promise<object> {
+  async signTransaction(payload: { url: string, apiKey: string, signEndorsementPayload:object }): Promise<object> {
     return this.agentServiceService.signTransaction(payload.url, payload.apiKey, payload.signEndorsementPayload);
   }
   @MessagePattern({ cmd: 'agent-submit-transaction' })
-  async submitTransaction(payload: { url: string, apiKey: string, submitEndorsementPayload:string }): Promise<object> {
+  async submitTransaction(payload: { url: string, apiKey: string, submitEndorsementPayload:object }): Promise<object> {
     return this.agentServiceService.sumbitTransaction(payload.url, payload.apiKey, payload.submitEndorsementPayload);
   }
 }

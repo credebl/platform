@@ -192,7 +192,8 @@ export const ResponseMessages = {
             schemaRequest: 'Schema transaction request created successfully',
             sign: 'Transaction request signed successfully',
             invitationReject: 'Ecosystem invitation rejected',
-            invitationAccept: 'Ecosystem invitation accepted successfully'
+            invitationAccept: 'Ecosystem invitation accepted successfully',
+            fetchEndorsors: 'Endorser transactions fetched successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

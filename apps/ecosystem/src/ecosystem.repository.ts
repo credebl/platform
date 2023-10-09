@@ -349,7 +349,10 @@ export class EcosystemRepository {
             authorDid: true,
             status: true,
             type: true,
-            ecosystemOrgs: true
+            ecosystemOrgs: true,
+            requestPayload: true,
+            responsePayload: true,
+            createDateTime: true
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -460,7 +463,6 @@ export class EcosystemRepository {
       throw new InternalServerErrorException(error);
     }
   }
-    
     
   // eslint-disable-next-line camelcase
   async deleteInvitations(invitationId: string): Promise<ecosystem_invitations> {

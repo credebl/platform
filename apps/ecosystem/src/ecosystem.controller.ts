@@ -46,6 +46,20 @@ export class EcosystemController {
 
 
   /**
+   *
+   * @param payload
+   * @returns ecosystem members list
+   */
+  @MessagePattern({ cmd: 'fetch-ecosystem-members' })
+  async getEcosystemMembers(
+    @Body() payload: EcosystemMembersPayload 
+    ): Promise<object> {
+    return this.ecosystemService.getEcoystemMembers(
+      payload
+      );
+  }
+
+  /**
    * 
    * @param payload 
    * @returns Sent ecosystem invitations status

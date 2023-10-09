@@ -13,3 +13,10 @@ export enum EcosystemInvitationStatus {
     REJECTED = 'rejected',
     PENDING = 'pending'
 }
+
+export enum endorsementTransactionStatus {
+    REQUESTED = 'Requested',
+    SIGNED = 'Signed',
+    DECLINED = 'Declined',
+    SUBMITED = 'Submited'
+}

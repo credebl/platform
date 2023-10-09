@@ -6,6 +6,8 @@ import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
+import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
+import { RequestSchemaDto } from './dtos/request-schema-dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -104,5 +106,25 @@ export class EcosystemService extends BaseService {
       return this.sendNats(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
     }
 
+    async getEndorsementTranasactions(
+      ecosystemId: string,
+      orgId: string,
+      getAllEndorsements: GetAllEndorsementsDto
+    ): Promise<{ response: object }> {
+      const { pageNumber, pageSize, search, type } = getAllEndorsements;
+      const payload = { ecosystemId, orgId, pageNumber, pageSize, search, type };
+      return this.sendNats(this.serviceProxy, 'get-endorsement-transactions', payload);
+    }
+
     
+    async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number): Promise<object> {
+      const payload = { requestSchemaPayload, orgId};
+      return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
+    }
+
+      
+    async signTransaction(endorsementId:string): Promise<object> {
+      const payload = { endorsementId };
+      return this.sendNats(this.serviceProxy, 'sign-endorsement-transaction', payload);
+    }
 }

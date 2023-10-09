@@ -12,11 +12,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
-import { CredDefMessage, CredDefTransactionPayload, EndorsementTransactionPayload, RequestCredDeffEndorsement, RequestSchemaEndorsement, SchemaMessage, SchemaTransactionPayload, SchemaTransactionResponse, SignedTransactionMessage, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
-import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-// eslint-disable-next-line camelcase
-import { platform_config } from '@prisma/client';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -73,6 +69,7 @@ export class EcosystemService {
     return getAllEcosystemDetails;
   }
 
+        
   /**
    * 
    * @param bulkInvitationDto 
@@ -360,76 +357,23 @@ export class EcosystemService {
     }
   }
 
-  async _requestSchemaEndorsement(requestSchemaPayload: object, url: string, apiKey: string): Promise<object> {
-    const pattern = { cmd: 'agent-schema-endorsement-request' };
-    const payload = { requestSchemaPayload, url, apiKey };
-
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
-      return { message };
-    } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException({
-        status: error.status,
-        error: error.message
-      }, error.status);
-    }
-  }
-
-  async _requestCredDeffEndorsement(requestSchemaPayload: object, url: string, apiKey: string): Promise<object> {
-    const pattern = { cmd: 'agent-credDef-endorsement-request' };
-    const payload = { requestSchemaPayload, url, apiKey };
-
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
-      return { message };
-    } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException({
-        status: error.status,
-        error: error.message
-      }, error.status);
-    }
-  }
-
-  async signTransaction(endorsementId: string, ecosystemId:string): Promise<object> {
-    try {
-      const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(endorsementId, endorsementTransactionStatus.REQUESTED);
-      if (!endorsementTransactionPayload) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
+ /**
+   * 
+   * @returns Ecosystem members list
+   */
+    async getEcoystemMembers(
+      // ecosystemId: string, pageNumber: number, pageSize: number, search: string
+      payload: EcosystemMembersPayload
+      ): Promise<object> {
+      try {
+        const { ecosystemId, pageNumber, pageSize, search} = payload;
+          return await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search);
+      } catch (error) {
+        this.logger.error(`In getEcosystemMembers: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
       }
-
-      const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
-
-      if (!getEcosystemLeadDetails) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
-      }
-      // eslint-disable-next-line camelcase
-      const platformConfig: platform_config = await this.ecosystemRepository.getPlatformConfigDetails();
-
-      const ecosystemLeadAgentDetails = await this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId));
-      const url = await this.getAgentUrl(ecosystemLeadAgentDetails?.orgAgentTypeId, ecosystemLeadAgentDetails.agentEndPoint, endorsementTransactionType.SIGN, ecosystemLeadAgentDetails?.tenantId);
-
-      if (!ecosystemLeadAgentDetails) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
-      }
-      const jsonString = endorsementTransactionPayload.requestPayload.toString();
-      const payload = {
-        transaction: jsonString,
-        endorserDid: endorsementTransactionPayload.endorserDid
-      };
-
-      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, platformConfig.sgApiKey);
-      return this.ecosystemRepository.updateTransactionDetails(endorsementId, schemaTransactionRequest.message.signedTransaction);
-
-    } catch (error) {
-      this.logger.error(`In sign transaction : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
     }
-  }
-
+  
   /**
      * Description: Store shortening URL 
      * @param signEndorsementPayload 

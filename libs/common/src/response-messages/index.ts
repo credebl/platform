@@ -208,7 +208,8 @@ export const ResponseMessages = {
             notFound: 'Organization not found',
             leadNotFound: 'Lead details not found',
             invalidOrgId: 'Invalid organization Id',
-            invalidTransaction: 'Transaction does not exist'
+            invalidTransaction: 'Transaction does not exist',
+            invalidAgentUrl: 'Invalid agent url'
         }
     }   
 };

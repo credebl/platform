@@ -190,7 +190,8 @@ export const ResponseMessages = {
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent successfully',
             invitationReject: 'Ecosystem invitation rejected',
-            invitationAccept: 'Ecosystem invitation accepted successfully'
+            invitationAccept: 'Ecosystem invitation accepted successfully',
+            fetchMembers: 'Ecosystem members fetched successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

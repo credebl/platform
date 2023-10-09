@@ -12,6 +12,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { Invitation } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
+import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -91,6 +92,7 @@ export class EcosystemService {
       throw new InternalServerErrorException(error);
     }
   }
+
         
   /**
    * 
@@ -267,6 +269,23 @@ export class EcosystemService {
     }
   }
 
+ /**
+   * 
+   * @returns Ecosystem members list
+   */
+    async getEcoystemMembers(
+      // ecosystemId: string, pageNumber: number, pageSize: number, search: string
+      payload: EcosystemMembersPayload
+      ): Promise<object> {
+      try {
+        const { ecosystemId, pageNumber, pageSize, search} = payload;
+          return await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search);
+      } catch (error) {
+        this.logger.error(`In getEcosystemMembers: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  
   /**
    * 
    * @param payload 

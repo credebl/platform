@@ -15,11 +15,19 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { AuthGuard } from '@nestjs/passport';
-import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
+import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations.dto';
+import { EcosystemRoles, Invitation } from '@credebl/enum/enum';
 import { User } from '../authz/decorators/user.decorator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
+import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
+import { EcosystemsRoles, Roles } from '../authz/decorators/roles.decorator';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { OrgRoles } from 'libs/org-roles/enums';
+import { GetAllEcosystemMembersDto } from './dtos/get-ecosystemMembers.dto';
+import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
+import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')

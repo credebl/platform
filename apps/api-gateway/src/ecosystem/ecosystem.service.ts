@@ -3,12 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
-import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
+import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-invitations.dto';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
-import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations.dto';
-import { GetAllEcosystemMembersDto } from './dtos/get-ecosystemMembers.dto';
+import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invitations.dto';
+import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
-import { RequestSchemaDto } from './dtos/request-schema-dto';
+import { RequestSchemaDto } from './dtos/request-schema.dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {

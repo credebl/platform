@@ -107,13 +107,21 @@ export class EcosystemController {
     );
   } 
 
+  @MessagePattern({ cmd: 'delete-ecosystem-invitations' })
+  async deleteInvitation(
+    @Body() payload: {invitationId: string}
+    ): Promise<object> {
+    return this.ecosystemService.deleteEcosystemInvitations(
+      payload.invitationId
+      );
+  } 
   @MessagePattern({ cmd: 'fetch-ecosystem-org-data' })
   async fetchEcosystemOrg(
-    @Body() payload: { ecosystemId: string, orgId: string }
+  @Body() payload: { ecosystemId: string, orgId: string}
   ): Promise<object> {
-    return this.ecosystemService.fetchEcosystemOrg(
-      payload
-    );
+  return this.ecosystemService.fetchEcosystemOrg(
+  payload
+  );
   }
   
    /**

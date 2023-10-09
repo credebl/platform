@@ -98,6 +98,24 @@ export class EcosystemController {
     );
   }
 
+  @MessagePattern({ cmd: 'delete-ecosystem-invitations' })
+  async deleteInvitation(
+    @Body() payload: {invitationId: string}
+    ): Promise<object> {
+    return this.ecosystemService.deleteEcosystemInvitations(
+      payload.invitationId
+      );
+  } 
+  @MessagePattern({ cmd: 'fetch-ecosystem-org-data' })
+  async fetchEcosystemOrg(
+  @Body() payload: { ecosystemId: string, orgId: string}
+  ): Promise<object> {
+  return this.ecosystemService.fetchEcosystemOrg(
+  payload
+  );
+  }
+ 
+ 
   @MessagePattern({ cmd: 'get-endorsement-transactions' })
   async getEndorsementTransactions(
     @Body() payload: GetEndorsementsPayload

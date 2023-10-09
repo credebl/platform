@@ -9,7 +9,6 @@ import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystem
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { RequestSchemaDto } from './dtos/request-schema-dto';
 
-
 @Injectable()
 export class EcosystemService extends BaseService {
   constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy) {
@@ -83,6 +82,13 @@ export class EcosystemService extends BaseService {
       return this.sendNats(this.serviceProxy, 'get-ecosystem-invitations', payload);
     }
 
+
+  async deleteEcosystemInvitations(
+    invitationId: string
+    ): Promise<object> {
+    const payload = { invitationId };
+    return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
+  }
     async acceptRejectEcosystemInvitaion(
       acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
       userEmail: string

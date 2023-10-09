@@ -1,5 +1,5 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { Controller, UseFilters, Put, Param, UseGuards, Query, BadRequestException } from '@nestjs/common';
+import { Controller, UseFilters, Put, Param, UseGuards, Query, BadRequestException, Delete } from '@nestjs/common';
 import { EcosystemService } from './ecosystem.service';
 import { Post, Get } from '@nestjs/common';
 import { Body } from '@nestjs/common';
@@ -29,7 +29,6 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
-
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -301,7 +300,7 @@ export class EcosystemController {
 
   @Put('/:ecosystemId/:orgId')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
@@ -313,10 +312,32 @@ export class EcosystemController {
     @Res() res: Response): Promise<Response> {
     await this.ecosystemService.editEcosystem(editEcosystemDto, ecosystemId);
     const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.update
     };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  
+  @Delete('/:ecosystemId/:orgId/invitations/:invitationId')
+  @ApiOperation({ summary: 'Delete ecosystem pending invitations', description: 'Delete ecosystem pending invitations' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.OWNER)
+  @ApiBearerAuth()
+  async deleteEcosystemInvitations(
+    @Param('ecosystemId') ecosystemId: string, 
+    @Param('invitationId') invitationId: string, 
+    @Param('orgId') orgId: string, 
+    @Res() res: Response): Promise<Response> {
+  
+    await this.ecosystemService.deleteEcosystemInvitations(invitationId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.delete
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
 }

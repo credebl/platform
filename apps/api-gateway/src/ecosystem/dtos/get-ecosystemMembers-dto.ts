@@ -8,11 +8,6 @@ export class GetAllEcosystemMembersDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    @Type(() => String)
-    search = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
     @Type(() => Number)
     @Transform(({ value }) => toNumber(value))
     pageNumber = 1;
@@ -22,5 +17,11 @@ export class GetAllEcosystemMembersDto {
     @Type(() => Number)
     @Transform(({ value }) => toNumber(value))
     pageSize = 10;
+
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    search = '';
 
 }

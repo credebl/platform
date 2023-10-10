@@ -3,11 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
-import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
+import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-invitations.dto';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
-import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
+import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invitations.dto';
+import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
-import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema-dto';
+import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -67,6 +68,18 @@ export class EcosystemService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-sent-invitations-ecosystemId', payload);
   }
   
+  /**
+   *
+   * @returns Ecosystem members
+   */
+  async getEcosystemMembers(
+    ecosystemId: string,
+    getEcosystemMembers: GetAllEcosystemMembersDto
+  ): Promise<{ response: object }> {
+    const { pageNumber, pageSize, search } = getEcosystemMembers;
+    const payload = { ecosystemId, pageNumber, pageSize, search };
+    return this.sendNats(this.serviceProxy, 'fetch-ecosystem-members', payload);
+  }  
 
   /**
    *

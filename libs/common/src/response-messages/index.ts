@@ -188,6 +188,7 @@ export const ResponseMessages = {
             update: 'Ecosystem updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
+            getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent successfully',
             schemaRequest: 'Schema transaction request created successfully',
@@ -195,7 +196,8 @@ export const ResponseMessages = {
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
             fetchEndorsors: 'Endorser transactions fetched successfully',
-            DeclienEndorsementTransaction:'decline Endorsement Request successfully'
+            DeclienEndorsementTransaction:'decline Endorsement Request successfully',
+            fetchMembers: 'Ecosystem members fetched successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
@@ -211,6 +213,7 @@ export const ResponseMessages = {
             notFound: 'Organization not found',
             leadNotFound: 'Lead details not found',
             invalidOrgId: 'Invalid organization Id',
+            invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
             invalidAgentUrl: 'Invalid agent url'
         }

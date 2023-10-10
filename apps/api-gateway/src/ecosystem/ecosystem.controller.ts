@@ -4,7 +4,7 @@ import { EcosystemService } from './ecosystem.service';
 import { Post, Get } from '@nestjs/common';
 import { Body } from '@nestjs/common';
 import { Res } from '@nestjs/common';
-import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema-dto';
+import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
@@ -15,18 +15,19 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { AuthGuard } from '@nestjs/passport';
-import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
+import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invitations.dto';
 import { EcosystemRoles, Invitation } from '@credebl/enum/enum';
 import { User } from '../authz/decorators/user.decorator';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
-import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
+import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-invitations.dto';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { EcosystemsRoles, Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
+import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { DeclienEndorsementTransactionDto } from './dtos/decline-endorsement-transaction-dto';
@@ -69,8 +70,8 @@ export class EcosystemController {
     @Param('orgId') orgId: string,
     @Query() getAllEndorsementsDto: GetAllEndorsementsDto,
     @Res() res: Response
-    ): Promise<Response>  {
-    
+  ): Promise<Response> {
+
     const ecosystemList = await this.ecosystemService.getEndorsementTranasactions(ecosystemId, orgId, getAllEndorsementsDto);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -89,7 +90,7 @@ export class EcosystemController {
   async getEcosystem(
     @Param('orgId') orgId: string,
     @Res() res: Response
-    ): Promise<Response>  {
+  ): Promise<Response> {
     const ecosystemList = await this.ecosystemService.getAllEcosystem(orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -97,6 +98,26 @@ export class EcosystemController {
       data: ecosystemList.response
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/:ecosystemId/:orgId/dashboard')
+  @ApiOperation({ summary: 'Get ecosystem dashboard details', description: 'Get ecosystem dashboard details' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+  @ApiBearerAuth()
+
+  async getEcosystemDashboardDetails(@Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+
+    const getEcosystemDetails = await this.ecosystemService.getEcosystemDashboardDetails(ecosystemId, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.getEcosystemDashboard,
+      data: getEcosystemDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
   }
 
   @Get('/:orgId/users/invitations')
@@ -129,7 +150,7 @@ export class EcosystemController {
     @Query() getAllInvitationsDto: GetAllSentEcosystemInvitationsDto,
     @Param('orgId') orgId: string,
     @User() user: user, @Res() res: Response): Promise<Response> {
-      
+
     if (!Object.values(Invitation).includes(getAllInvitationsDto.status)) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.invalidInvitationStatus);
     }
@@ -184,6 +205,48 @@ export class EcosystemController {
   }
 
   /**
+    * 
+    * @param res 
+    * @returns Ecosystem members list
+    */
+  @Get('/:ecosystemId/:orgId/members')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get ecosystem members list', description: 'Get ecosystem members list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getEcosystemMembers(
+    @Param('ecosystemId') ecosystemId: string,
+    @Param('orgId') orgId: string,
+    @Query() getEcosystemMembers: GetAllEcosystemMembersDto,
+    @Res() res: Response): Promise<Response> {
+    const members = await this.ecosystemService.getEcosystemMembers(ecosystemId, getEcosystemMembers);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.fetchMembers,
+      data: members?.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+  
+  /**
    * 
    * @param createOrgDto 
    * @param res 
@@ -208,15 +271,15 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('/:orgId/transaction/schema')
+  @Post('/:ecosystemId/:orgId/transaction/schema')
   @ApiOperation({ summary: 'Request new schema', description: 'Request new schema' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
-  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
-    await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId);
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: number, @Param('ecosystemId') ecosystemId: string, @Res() res: Response): Promise<Response> {
+    await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.schemaRequest
@@ -225,30 +288,31 @@ export class EcosystemController {
   }
 
 
-  @Post('/:orgId/transaction/cred-def')
+  @Post('/:ecosystemId/:orgId/transaction/cred-def')
   @ApiOperation({ summary: 'Request new credential-definition', description: 'Request new credential-definition' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
-  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
-    await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId);
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('orgId') orgId: number, @Param('ecosystemId') ecosystemId: string, @Res() res: Response): Promise<Response> {
+    await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.schemaRequest
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-  @Post('transaction/sign/:endorsementId')
+
+  @Post('/:ecosystemId/:orgId/transaction/sign/:endorsementId')
   @ApiOperation({ summary: 'Sign transaction', description: 'Sign transaction' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
-  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Res() res: Response): Promise<Response> {
-    await this.ecosystemService.signTransaction(endorsementId);
+  async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string,  @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+    await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.sign
@@ -256,15 +320,15 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('transaction/sumbit/:endorsementId')
+  @Post('/:ecosystemId/:orgId/transaction/sumbit/:endorsementId')
   @ApiOperation({ summary: 'Sumbit transaction', description: 'Sumbit transaction' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
-  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Res() res: Response): Promise<Response> {
-    await this.ecosystemService.submitTransaction(endorsementId);
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+    await this.ecosystemService.submitTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.sign
@@ -290,9 +354,9 @@ export class EcosystemController {
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   async createInvitation(@Body() bulkInvitationDto: BulkEcosystemInvitationDto,
-   @Param('ecosystemId') ecosystemId: string,
-   @Param('orgId') orgId: string,
-   @User() user: user, @Res() res: Response): Promise<Response> {
+    @Param('ecosystemId') ecosystemId: string,
+    @Param('orgId') orgId: string,
+    @User() user: user, @Res() res: Response): Promise<Response> {
 
     bulkInvitationDto.ecosystemId = ecosystemId;
     await this.ecosystemService.createInvitation(bulkInvitationDto, String(user.id));
@@ -306,33 +370,33 @@ export class EcosystemController {
 
   }
 
-    /**
-   * 
-   * @param acceptRejectEcosystemInvitation 
-   * @param reqUser 
-   * @param res 
-   * @returns Ecosystem invitation status
-   */
-    @Post('/:orgId/invitations/:invitationId')
-    @ApiOperation({
-      summary: 'Accept or reject ecosystem invitation',
-      description: 'Accept or Reject ecosystem invitations'
-    })
-    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    @ApiBearerAuth()
-    @Roles(OrgRoles.OWNER)
-    async acceptRejectEcosystemInvitaion(@Body() acceptRejectEcosystemInvitation: AcceptRejectEcosystemInvitationDto, @Param('orgId') orgId: string, @Param('invitationId') invitationId: string, @User() user: user, @Res() res: Response): Promise<object> {
-      acceptRejectEcosystemInvitation.orgId = orgId;
-      acceptRejectEcosystemInvitation.invitationId = invitationId;
+  /**
+ * 
+ * @param acceptRejectEcosystemInvitation 
+ * @param reqUser 
+ * @param res 
+ * @returns Ecosystem invitation status
+ */
+  @Post('/:orgId/invitations/:invitationId')
+  @ApiOperation({
+    summary: 'Accept or reject ecosystem invitation',
+    description: 'Accept or Reject ecosystem invitations'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  async acceptRejectEcosystemInvitaion(@Body() acceptRejectEcosystemInvitation: AcceptRejectEcosystemInvitationDto, @Param('orgId') orgId: string, @Param('invitationId') invitationId: string, @User() user: user, @Res() res: Response): Promise<object> {
+    acceptRejectEcosystemInvitation.orgId = orgId;
+    acceptRejectEcosystemInvitation.invitationId = invitationId;
 
-      const invitationRes = await this.ecosystemService.acceptRejectEcosystemInvitaion(acceptRejectEcosystemInvitation, user.email); 
+    const invitationRes = await this.ecosystemService.acceptRejectEcosystemInvitaion(acceptRejectEcosystemInvitation, user.email);
 
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.CREATED,
-        message: invitationRes.response
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: invitationRes.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
 
 
   @Put('/:ecosystemId/:orgId')
@@ -355,7 +419,7 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  
+
   @Delete('/:ecosystemId/:orgId/invitations/:invitationId')
   @ApiOperation({ summary: 'Delete ecosystem pending invitations', description: 'Delete ecosystem pending invitations' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
@@ -364,11 +428,11 @@ export class EcosystemController {
   @Roles(OrgRoles.OWNER)
   @ApiBearerAuth()
   async deleteEcosystemInvitations(
-    @Param('ecosystemId') ecosystemId: string, 
-    @Param('invitationId') invitationId: string, 
-    @Param('orgId') orgId: string, 
+    @Param('ecosystemId') ecosystemId: string,
+    @Param('invitationId') invitationId: string,
+    @Param('orgId') orgId: string,
     @Res() res: Response): Promise<Response> {
-  
+
     await this.ecosystemService.deleteEcosystemInvitations(invitationId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

@@ -5,7 +5,6 @@ import { BaseService } from 'libs/service/base.service';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
-
 @Injectable()
 export class EcosystemService extends BaseService {
   constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy) {

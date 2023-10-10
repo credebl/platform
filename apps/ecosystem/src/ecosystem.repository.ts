@@ -199,14 +199,11 @@ export class EcosystemRepository {
           }
         }
       );
-
-      return membersCount;
-        
+      return membersCount;    
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
     }
-
   }
 
   async getEcosystemEndorsementsCount (ecosystemId: string): Promise<number> {
@@ -219,14 +216,11 @@ export class EcosystemRepository {
           }
         }
       });
-
-      return endorsementsCount;
-        
+      return endorsementsCount;        
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
     }
-
   }
 
   /**

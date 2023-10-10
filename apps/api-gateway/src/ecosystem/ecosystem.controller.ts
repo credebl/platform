@@ -98,7 +98,7 @@ export class EcosystemController {
   }
 
   @Get('/:ecosystemId/:orgId')
-  @ApiOperation({ summary: 'Get an ecosystem dashboard', description: 'Get an ecosystem dashboard' })
+  @ApiOperation({ summary: 'Get an ecosystem dashboard details', description: 'Get an ecosystem dashboard details' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()

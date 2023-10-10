@@ -282,14 +282,14 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('/:ecosystemId/transaction/sign/:endorsementId')
+  @Post('/:ecosystemId/:orgId/transaction/sign/:endorsementId')
   @ApiOperation({ summary: 'Sign transaction', description: 'Sign transaction' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response): Promise<Response> {
+  async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string,  @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
@@ -298,14 +298,14 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('/:ecosystemId/transaction/sumbit/:endorsementId')
+  @Post('/:ecosystemId/:orgId/transaction/sumbit/:endorsementId')
   @ApiOperation({ summary: 'Sumbit transaction', description: 'Sumbit transaction' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response): Promise<Response> {
+  async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.submitTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

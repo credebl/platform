@@ -213,7 +213,7 @@ export class EcosystemController {
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {    
     await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

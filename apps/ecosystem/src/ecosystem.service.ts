@@ -18,6 +18,7 @@ import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 // eslint-disable-next-line camelcase
 import { platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { DeclienEndorsementTransactionDto } from 'apps/api-gateway/src/ecosystem/dtos/decline-endorsement-transaction-dto';
 
 @Injectable()
 export class EcosystemService {
@@ -753,6 +754,17 @@ export class EcosystemService {
     } catch (error) {
       this.logger.error(`In error getEndorsementTransactions: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  async declineEndorsementRequestByLead(declineEndorsementTransactionRequest: DeclienEndorsementTransactionDto): Promise<object> {
+    try {
+      const {endorsementId } = declineEndorsementTransactionRequest;
+      return this.ecosystemRepository.updateEndorsementRequestStatus(endorsementId, endorsementTransactionStatus.DECLINED);
+      } catch (error) {
+      this.logger.error(`acceptRejectInvitations: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

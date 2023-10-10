@@ -8,7 +8,8 @@ import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.d
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invitations.dto';
 import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
-import { RequestSchemaDto } from './dtos/request-schema.dto';
+import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema-dto';
+import { DeclienEndorsementTransactionDto } from './dtos/decline-endorsement-transaction-dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -132,4 +133,10 @@ export class EcosystemService extends BaseService {
       const payload = { endorsementId, ecosystemId };
       return this.sendNats(this.serviceProxy, 'sumbit-endorsement-transaction', payload);
     }
+
+    async declineEndorsementRequestByLead(declineEndorsementTransactionRequest: DeclienEndorsementTransactionDto): Promise<{ response: string }> {
+      const payload = { declineEndorsementTransactionRequest};
+      return this.sendNats(this.serviceProxy, 'decline-endorsement-transaction', payload);
+    } 
+   
 }

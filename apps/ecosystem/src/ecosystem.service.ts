@@ -649,7 +649,7 @@ export class EcosystemService {
    */
   async checkEcosystemEnableFlag(
   ): Promise<boolean> {
-    const platformConfigData = await this.prisma.platform_config.findMany();
+    const platformConfigData = await this.prisma.ecosystem_config.findMany();
     return platformConfigData[0].enableEcosystem;
   }
 

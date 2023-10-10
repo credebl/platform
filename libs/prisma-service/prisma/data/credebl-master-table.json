@@ -145,5 +145,10 @@
       "status": "Submitted",
       "ecosystemOrgId": "ca6ee687-a3a9-42ce-9e49-02bf62f5c93a"
     }
-  ]
+  ],
+  "ecosystemConfigData": {
+    "url": "https://example3.com",
+    "enableEcosystem": false,
+    "autoEndorsement": false
+  }
 }

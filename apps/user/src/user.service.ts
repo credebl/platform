@@ -438,7 +438,7 @@ export class UserService {
   async getProfile(payload: { id }): Promise<object> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-      const platformConfigData = await this.prisma.platform_config.findMany();
+      const platformConfigData = await this.prisma.ecosystem_config.findMany();
       userData['enableEcosystem'] = platformConfigData[0].enableEcosystem;
       return userData;
     } catch (error) {

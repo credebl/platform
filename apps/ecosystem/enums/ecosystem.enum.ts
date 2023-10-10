@@ -15,8 +15,15 @@ export enum EcosystemInvitationStatus {
 }
 
 export enum endorsementTransactionStatus {
-    REQUESTED = 'Requested',
-    SIGNED = 'Signed',
-    DECLINED = 'Declined',
-    SUBMITED = 'Submited'
+    REQUESTED = 'requested',
+    SIGNED = 'signed',
+    DECLINED = 'declined',
+    SUBMITED = 'submited'
+}
+
+export enum endorsementTransactionType {
+    SCHEMA = 'schema',
+    CREDENTIAL_DEFINITION = 'credential-definition',
+    SIGN = 'sign',
+    SUBMIT = 'submit'
 }

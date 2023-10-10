@@ -188,6 +188,7 @@ export const ResponseMessages = {
             update: 'Ecosystem updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
+            getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent successfully',
             schemaRequest: 'Schema transaction request created successfully',

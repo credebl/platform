@@ -75,7 +75,20 @@ export class EcosystemService {
     return getAllEcosystemDetails;
   }
 
-
+  /**
+   *
+   *
+   * @returns ecosystem dashboard details
+   */
+    async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
+      try {
+        return await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
+      } catch (error) {
+        this.logger.error(`In ecosystem dashboard details : ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  
   /**
     * Description: get an ecosystem invitation 
     * @returns Get sent ecosystem invitation details

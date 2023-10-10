@@ -7,8 +7,7 @@ import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosyst
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
-import { RequestSchemaDto } from './dtos/request-schema-dto';
-
+import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema-dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -83,6 +82,13 @@ export class EcosystemService extends BaseService {
       return this.sendNats(this.serviceProxy, 'get-ecosystem-invitations', payload);
     }
 
+
+  async deleteEcosystemInvitations(
+    invitationId: string
+    ): Promise<object> {
+    const payload = { invitationId };
+    return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
+  }
     async acceptRejectEcosystemInvitaion(
       acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
       userEmail: string
@@ -116,9 +122,18 @@ export class EcosystemService extends BaseService {
       return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
     }
 
-      
+    async credDefEndorsementRequest(requestCredDefPayload: RequestCredDefDto, orgId: number): Promise<object> {
+      const payload = { requestCredDefPayload, orgId};
+      return this.sendNats(this.serviceProxy, 'credDef-endorsement-request', payload);
+    }
+
     async signTransaction(endorsementId:string): Promise<object> {
       const payload = { endorsementId };
       return this.sendNats(this.serviceProxy, 'sign-endorsement-transaction', payload);
+    }
+
+    async submitTransaction(endorsementId:string): Promise<object> {
+      const payload = { endorsementId };
+      return this.sendNats(this.serviceProxy, 'sumbit-endorsement-transaction', payload);
     }
 }

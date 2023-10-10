@@ -186,13 +186,15 @@ export const ResponseMessages = {
         success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem updated successfully',
+            delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent successfully',
             schemaRequest: 'Schema transaction request created successfully',
             sign: 'Transaction request signed successfully',
             invitationReject: 'Ecosystem invitation rejected',
-            invitationAccept: 'Ecosystem invitation accepted successfully'
+            invitationAccept: 'Ecosystem invitation accepted successfully',
+            fetchEndorsors: 'Endorser transactions fetched successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
@@ -201,7 +203,15 @@ export const ResponseMessages = {
             invitationNotFound: 'Ecosystem Invitation not found',
             invitationNotUpdate: 'Ecosystem Invitation not updated',
             orgsNotUpdate: 'Ecosystem Orgs not updated',
-            ecosystemNotEnabled: 'Ecosystem service is not enabled'
+            ecosystemNotEnabled: 'Ecosystem service is not enabled',
+            sumbitTransaction: 'Error while submitting transaction',
+            requestSchemaTransaction: 'Error while request schema transaction',
+            requestCredDefTransaction: 'Error while submitting transaction',
+            notFound: 'Organization not found',
+            leadNotFound: 'Lead details not found',
+            invalidOrgId: 'Invalid organization Id',
+            invalidTransaction: 'Transaction does not exist',
+            invalidAgentUrl: 'Invalid agent url'
         }
     }   
 };

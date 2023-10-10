@@ -7,7 +7,7 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
+import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {
@@ -101,12 +101,28 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'get-endorsement-transactions' })
   async getEndorsementTransactions(
     @Body() payload: GetEndorsementsPayload
-  ): Promise<object> {
+  ): Promise<object> {    
     return this.ecosystemService.getEndorsementTransactions(
       payload
     );
   } 
 
+  @MessagePattern({ cmd: 'delete-ecosystem-invitations' })
+  async deleteInvitation(
+    @Body() payload: {invitationId: string}
+    ): Promise<object> {
+    return this.ecosystemService.deleteEcosystemInvitations(
+      payload.invitationId
+      );
+  } 
+  @MessagePattern({ cmd: 'fetch-ecosystem-org-data' })
+  async fetchEcosystemOrg(
+  @Body() payload: { ecosystemId: string, orgId: string}
+  ): Promise<object> {
+  return this.ecosystemService.fetchEcosystemOrg(
+  payload
+  );
+  }
   
    /**
    * 
@@ -123,6 +139,18 @@ export class EcosystemController {
    /**
    * 
    * @param payload 
+   * @returns Schema endorsement request
+   */
+   @MessagePattern({ cmd: 'credDef-endorsement-request' })
+   async credDefEndorsementRequest(
+     @Body() payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number }
+     ): Promise<object> {
+     return this.ecosystemService.requestCredDeffEndorsement(payload.requestCredDefPayload, payload.orgId);
+   }
+
+   /**
+   * 
+   * @param payload 
    * @returns sign endorsement request
    */
    @MessagePattern({ cmd: 'sign-endorsement-transaction' })
@@ -130,5 +158,17 @@ export class EcosystemController {
      @Body() payload: { endorsementId: string }
      ): Promise<object> {
      return this.ecosystemService.signTransaction(payload.endorsementId);
+   }
+
+   /**
+   * 
+   * @param payload 
+   * @returns submit endorsement request
+   */
+   @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
+   async submitTransaction(
+     @Body() payload: { endorsementId: string }
+     ): Promise<object> {
+     return this.ecosystemService.submitTransaction(payload.endorsementId);
    }
 }

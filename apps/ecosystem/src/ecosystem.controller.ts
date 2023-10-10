@@ -6,6 +6,7 @@ import { Body } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
+import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 
@@ -76,6 +77,20 @@ export class EcosystemController {
     } 
 
   /**
+   *
+   * @param payload
+   * @returns ecosystem members list
+   */
+  @MessagePattern({ cmd: 'fetch-ecosystem-members' })
+  async getEcosystemMembers(
+    @Body() payload: EcosystemMembersPayload
+  ): Promise<object> {
+    return this.ecosystemService.getEcoystemMembers(
+      payload
+    );
+  }
+
+  /**
    * 
    * @param payload 
    * @returns Sent ecosystem invitations status
@@ -142,9 +157,9 @@ export class EcosystemController {
    */
    @MessagePattern({ cmd: 'schema-endorsement-request' })
    async schemaEndorsementRequest(
-     @Body() payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number }
+     @Body() payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number, ecosystemId: string }
      ): Promise<object> {
-     return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId);
+     return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId, payload.ecosystemId);
    }
 
    /**
@@ -154,9 +169,9 @@ export class EcosystemController {
    */
    @MessagePattern({ cmd: 'credDef-endorsement-request' })
    async credDefEndorsementRequest(
-     @Body() payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number }
+     @Body() payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number; ecosystemId:string}
      ): Promise<object> {
-     return this.ecosystemService.requestCredDeffEndorsement(payload.requestCredDefPayload, payload.orgId);
+     return this.ecosystemService.requestCredDeffEndorsement(payload.requestCredDefPayload, payload.orgId, payload.ecosystemId);
    }
 
    /**
@@ -166,9 +181,9 @@ export class EcosystemController {
    */
    @MessagePattern({ cmd: 'sign-endorsement-transaction' })
    async signTransaction(
-     @Body() payload: { endorsementId: string }
+     @Body() payload: { endorsementId: string, ecosystemId:string }
      ): Promise<object> {
-     return this.ecosystemService.signTransaction(payload.endorsementId);
+     return this.ecosystemService.signTransaction(payload.endorsementId, payload.ecosystemId);
    }
 
    /**
@@ -178,8 +193,8 @@ export class EcosystemController {
    */
    @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
    async submitTransaction(
-     @Body() payload: { endorsementId: string }
+     @Body() payload: { endorsementId: string, ecosystemId:string }
      ): Promise<object> {
-     return this.ecosystemService.submitTransaction(payload.endorsementId);
+     return this.ecosystemService.submitTransaction(payload.endorsementId, payload.ecosystemId);
    }
 }

@@ -3,11 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
-import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-ecosysteminvitation-dto';
+import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-invitations.dto';
 import { GetAllEcosystemInvitationsDto } from './dtos/get-all-sent-invitations.dto';
-import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-sent-ecosystemInvitations-dto';
+import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invitations.dto';
+import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
-import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema-dto';
+import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -77,6 +78,18 @@ export class EcosystemService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-sent-invitations-ecosystemId', payload);
   }
   
+  /**
+   *
+   * @returns Ecosystem members
+   */
+  async getEcosystemMembers(
+    ecosystemId: string,
+    getEcosystemMembers: GetAllEcosystemMembersDto
+  ): Promise<{ response: object }> {
+    const { pageNumber, pageSize, search } = getEcosystemMembers;
+    const payload = { ecosystemId, pageNumber, pageSize, search };
+    return this.sendNats(this.serviceProxy, 'fetch-ecosystem-members', payload);
+  }  
 
   /**
    *
@@ -127,23 +140,23 @@ export class EcosystemService extends BaseService {
     }
 
     
-    async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number): Promise<object> {
-      const payload = { requestSchemaPayload, orgId};
+    async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number, ecosystemId:string): Promise<object> {
+      const payload = { requestSchemaPayload, orgId, ecosystemId};
       return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
     }
 
-    async credDefEndorsementRequest(requestCredDefPayload: RequestCredDefDto, orgId: number): Promise<object> {
-      const payload = { requestCredDefPayload, orgId};
+    async credDefEndorsementRequest(requestCredDefPayload: RequestCredDefDto, orgId: number, ecosystemId:string): Promise<object> {
+      const payload = { requestCredDefPayload, orgId, ecosystemId};
       return this.sendNats(this.serviceProxy, 'credDef-endorsement-request', payload);
     }
 
-    async signTransaction(endorsementId:string): Promise<object> {
-      const payload = { endorsementId };
+    async signTransaction(endorsementId:string, ecosystemId:string): Promise<object> {
+      const payload = { endorsementId, ecosystemId };
       return this.sendNats(this.serviceProxy, 'sign-endorsement-transaction', payload);
     }
 
-    async submitTransaction(endorsementId:string): Promise<object> {
-      const payload = { endorsementId };
+    async submitTransaction(endorsementId:string, ecosystemId:string): Promise<object> {
+      const payload = { endorsementId, ecosystemId };
       return this.sendNats(this.serviceProxy, 'sumbit-endorsement-transaction', payload);
     }
 }

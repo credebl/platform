@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config } from '@prisma/client';
 import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { SchemaTransactionResponse } from '../interfaces/ecosystem.interfaces';
+import {  SchemaTransactionResponse } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 // eslint-disable-next-line camelcase
 
@@ -338,6 +338,64 @@ export class EcosystemRepository {
   }
 
 
+  /**
+   * 
+   * @param queryOptions 
+   * @param filterOptions 
+   * @returns users list
+   */
+  // eslint-disable-next-line camelcase
+  async findEcosystemMembers(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+    try {
+      const query = {
+        ecosystemId,
+        OR:
+          [{ orgId: { contains: search, mode: 'insensitive' } }]
+      };
+      return await this.getEcosystemMembersPagination(query, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  } 
+
+  async getEcosystemMembersPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.ecosystem_orgs.findMany({
+          where: {
+            ...queryObject
+          },
+          include: {
+            ecosystem: true
+          },
+          take: pageSize,
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        }),
+        this.prisma.ecosystem_orgs.count({
+          where: {
+            ...queryObject
+          }
+        })
+      ]);
+
+      // eslint-disable-next-line prefer-destructuring
+      const members = result[0];
+      // eslint-disable-next-line prefer-destructuring
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return { totalPages, members };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
   async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
       const result = await this.prisma.$transaction([
@@ -459,13 +517,16 @@ export class EcosystemRepository {
   }
 
   /**
-     * Description: Get getAgentEndPoint by orgId
-     * @param orgId 
+     * Description: Get getAgentEndPoint by invalidEcosystemId
+     * @param invalidEcosystemId 
      * @returns Get getAgentEndPoint details
      */
   // eslint-disable-next-line camelcase
-  async getEcosystemLeadDetails(): Promise<ecosystem_orgs> {
+  async getEcosystemLeadDetails(ecosystemId:string): Promise<ecosystem_orgs> {
     try {
+      if (!ecosystemId) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidEcosystemId);
+      }
       const ecosystemRoleDetails = await this.prisma.ecosystem_roles.findFirst({
         where: {
           name: EcosystemRoles.ECOSYSTEM_LEAD
@@ -473,7 +534,8 @@ export class EcosystemRepository {
       });
       const ecosystemLeadDetails = await this.prisma.ecosystem_orgs.findFirst({
         where: {
-          ecosystemRoleId: ecosystemRoleDetails.id
+          ecosystemRoleId: ecosystemRoleDetails.id,
+          ecosystemId
         }
       });
       return ecosystemLeadDetails;
@@ -502,6 +564,7 @@ export class EcosystemRepository {
 
   async storeTransactionRequest(
     schemaTransactionResponse: SchemaTransactionResponse,
+    requestBody: object,
     type: endorsementTransactionType
   ): Promise<object> {
     try {
@@ -514,7 +577,8 @@ export class EcosystemRepository {
           status,
           ecosystemOrgId,
           responsePayload: '',
-          type
+          type,
+          requestBody
         }
       });
     } catch (error) {

@@ -171,6 +171,65 @@ export class EcosystemRepository {
 
   /**
    * 
+   * @returns Get ecosystem dashboard card count
+   */
+
+  async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
+    try {
+      const membersCount = await this.getEcosystemMembersCount(ecosystemId);
+      const endorsementsCount = await this.getEcosystemEndorsementsCount(ecosystemId);
+      return {
+        membersCount,
+        endorsementsCount
+      };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }  
+  }
+
+
+  async getEcosystemMembersCount (ecosystemId: string): Promise<number> {
+    try {
+      const membersCount = await this.prisma.ecosystem_orgs.count(
+        {
+          where: {
+            ecosystemId
+          }
+        }
+      );
+
+      return membersCount;
+        
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+
+  }
+
+  async getEcosystemEndorsementsCount (ecosystemId: string): Promise<number> {
+    try {
+      const endorsementsCount = await this.prisma.endorsement_transaction.count({
+        where: {
+          ecosystemOrgs: {
+            ecosystemId
+    
+          }
+        }
+      });
+
+      return endorsementsCount;
+        
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+
+  }
+
+  /**
+   * 
    * @param queryObject 
    * @returns Get all ecosystem invitations
    */

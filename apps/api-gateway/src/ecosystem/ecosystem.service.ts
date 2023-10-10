@@ -42,6 +42,16 @@ export class EcosystemService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-all-ecosystem', payload);
   }
   
+  /**
+   *
+   *
+   * @returns Get ecosystems dashboard card counts
+   */
+  async getEcosystemDashboardDetails(ecosystemId: string, orgId: string): Promise<{ response: object }> {
+    const payload = { ecosystemId, orgId };
+    return this.sendNats(this.serviceProxy, 'get-ecosystem-dashboard-details', payload);
+  }
+
 
   /**
    * 

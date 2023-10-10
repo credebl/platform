@@ -670,10 +670,14 @@ export class EcosystemService {
     const { ecosystemId, orgId, pageNumber, pageSize, search, type } = payload;
     try {
 
+      const queryEcoOrgs = {
+        ecosystemId,
+        orgId
+      };
+
       const query = {
         ecosystemOrgs: {
-          ecosystemId,
-          orgId
+          ecosystemId
         },
         OR: [
           { status: { contains: search, mode: 'insensitive' } },
@@ -681,6 +685,12 @@ export class EcosystemService {
         ]
       };
 
+      const ecosystemOrgData =  await this.ecosystemRepository.fetchEcosystemOrg(queryEcoOrgs);
+
+      if (ecosystemOrgData['ecosystemRole']['name'] !== EcosystemRoles.ECOSYSTEM_LEAD) {
+        query.ecosystemOrgs['orgId'] = orgId;
+      }
+      
       if (type) {
         query['type'] = type;
       }

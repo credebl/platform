@@ -6,6 +6,7 @@ import { Body } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
+import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 
@@ -63,6 +64,20 @@ export class EcosystemController {
         payload.search
       );
     } 
+
+  /**
+   *
+   * @param payload
+   * @returns ecosystem members list
+   */
+  @MessagePattern({ cmd: 'fetch-ecosystem-members' })
+  async getEcosystemMembers(
+    @Body() payload: EcosystemMembersPayload
+  ): Promise<object> {
+    return this.ecosystemService.getEcoystemMembers(
+      payload
+    );
+  }
 
   /**
    * 

@@ -12,6 +12,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
+import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { CredDefMessage, CredDefTransactionPayload, EndorsementTransactionPayload, RequestCredDeffEndorsement, RequestSchemaEndorsement, SchemaMessage, SchemaTransactionPayload, SchemaTransactionResponse, SignedTransactionMessage, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 // eslint-disable-next-line camelcase
@@ -98,6 +99,7 @@ export class EcosystemService {
     }
   }
 
+        
   /**
    * 
    * @param bulkInvitationDto 
@@ -454,6 +456,22 @@ export class EcosystemService {
     }
   }
 
+ /**
+   * 
+   * @returns Ecosystem members list
+   */
+    async getEcoystemMembers(
+      payload: EcosystemMembersPayload
+      ): Promise<object> {
+      try {
+        const { ecosystemId, pageNumber, pageSize, search} = payload;
+          return await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search);
+      } catch (error) {
+        this.logger.error(`In getEcosystemMembers: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  
   async deleteEcosystemInvitations (invitationId: string): Promise<object> {
     try {  
       return await this.ecosystemRepository.deleteInvitations(invitationId);

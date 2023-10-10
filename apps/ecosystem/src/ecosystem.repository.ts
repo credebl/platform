@@ -285,6 +285,64 @@ export class EcosystemRepository {
   }
 
 
+  /**
+   * 
+   * @param queryOptions 
+   * @param filterOptions 
+   * @returns users list
+   */
+  // eslint-disable-next-line camelcase
+  async findEcosystemMembers(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+    try {
+      const query = {
+        ecosystemId,
+        OR:
+          [{ orgId: { contains: search, mode: 'insensitive' } }]
+      };
+      return await this.getEcosystemMembersPagination(query, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  } 
+
+  async getEcosystemMembersPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.ecosystem_orgs.findMany({
+          where: {
+            ...queryObject
+          },
+          include: {
+            ecosystem: true
+          },
+          take: pageSize,
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        }),
+        this.prisma.ecosystem_orgs.count({
+          where: {
+            ...queryObject
+          }
+        })
+      ]);
+
+      // eslint-disable-next-line prefer-destructuring
+      const members = result[0];
+      // eslint-disable-next-line prefer-destructuring
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return { totalPages, members };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
   async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
       const result = await this.prisma.$transaction([

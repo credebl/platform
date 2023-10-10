@@ -1,8 +1,14 @@
+export interface AttributeValue {
+  attributeName: string;
+  schemaDataType: string;
+  displayName: string;
+}
+
 export interface RequestSchemaEndorsement {
   orgId: number
   name: string;
   version: string;
-  attributes: IAttributeValue[];
+  attributes: AttributeValue[];
   endorse?: boolean;
 }
 

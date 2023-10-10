@@ -49,7 +49,7 @@ export class EcosystemController {
 
   /**
    * Description: get ecosystems dashboard details
-   * @returns Get ecosystem dashboard card counts
+   * @returns Get ecosystem dashboard details
    */
   @MessagePattern({ cmd: 'get-ecosystem-dashboard-details' })
   async getEcosystemDashboardDetails(

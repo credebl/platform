@@ -81,7 +81,7 @@ export class EcosystemService {
    */
     async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
       try {
-        return this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
+        return await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
       } catch (error) {
         this.logger.error(`In ecosystem dashboard details : ${JSON.stringify(error)}`);
         throw new RpcException(error.response ? error.response : error);

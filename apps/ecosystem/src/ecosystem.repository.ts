@@ -395,6 +395,7 @@ export class EcosystemRepository {
 
   }
 
+
   async getEndorsementsWithPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
       const result = await this.prisma.$transaction([

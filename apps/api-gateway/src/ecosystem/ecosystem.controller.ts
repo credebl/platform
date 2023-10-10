@@ -97,6 +97,24 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  @Get('/:ecosystemId/:orgId')
+  @ApiOperation({ summary: 'Get an ecosystem dashboard', description: 'Get an ecosystem dashboard' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+
+  async getEcosystemDashboardDetails(@Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+
+    const getEcosystemDetails = await this.ecosystemService.getEcosystemDashboardDetails(ecosystemId, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.getEcosystemDashboard,
+      data: getEcosystemDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
   @Get('/:orgId/users/invitations')
   @ApiOperation({ summary: 'Get received ecosystem invitations', description: 'Get received ecosystem invitations' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })

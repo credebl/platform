@@ -48,6 +48,17 @@ export class EcosystemController {
   }
 
   /**
+   * Description: get ecosystems dashboard details
+   * @returns Get ecosystem dashboard card counts
+   */
+  @MessagePattern({ cmd: 'get-ecosystem-dashboard-details' })
+  async getEcosystemDashboardDetails(
+    payload: { ecosystemId: string; orgId: string }): Promise<object> {
+    return this.ecosystemService.getEcosystemDashboardDetails(payload.ecosystemId);
+  }
+
+
+  /**
    * Description: get ecosystem invitations
    * @returns Get sent invitation details
    */

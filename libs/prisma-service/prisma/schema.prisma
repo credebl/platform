@@ -381,20 +381,21 @@ model ecosystem_orgs {
 }
 
 model endorsement_transaction {
-  id                     String                   @id @default(uuid())
-  endorserDid            String
-  authorDid              String
-  requestPayload         String
-  responsePayload        String
-  type                   String?                    
-  createDateTime         DateTime                  @default(now()) @db.Timestamptz(6)
-  createdBy              Int                       @default(1)
-  lastChangedDateTime    DateTime                  @default(now()) @db.Timestamptz(6)
-  lastChangedBy          Int                       @default(1)
-  deletedAt              DateTime?                 @db.Timestamp(6)  
-  status                 String
-  ecosystemOrgId         String
-  ecosystemOrgs          ecosystem_orgs @relation(fields: [ecosystemOrgId], references: [id])
+  id                  String         @id @default(uuid())
+  endorserDid         String
+  authorDid           String
+  requestPayload      String
+  responsePayload     String
+  type                String?
+  createDateTime      DateTime       @default(now()) @db.Timestamptz(6)
+  createdBy           Int            @default(1)
+  lastChangedDateTime DateTime       @default(now()) @db.Timestamptz(6)
+  lastChangedBy       Int            @default(1)
+  deletedAt           DateTime?      @db.Timestamp(6)
+  status              String
+  ecosystemOrgId      String
+  requestBody         Json?
+  ecosystemOrgs       ecosystem_orgs @relation(fields: [ecosystemOrgId], references: [id])
 }
 
 model ecosystem_config {

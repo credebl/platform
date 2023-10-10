@@ -194,6 +194,7 @@ export const ResponseMessages = {
             sign: 'Transaction request signed successfully',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
+            fetchMembers: 'Ecosystem members fetched successfully',
             fetchEndorsors: 'Endorser transactions fetched successfully'
         },
         error: {
@@ -210,6 +211,7 @@ export const ResponseMessages = {
             notFound: 'Organization not found',
             leadNotFound: 'Lead details not found',
             invalidOrgId: 'Invalid organization Id',
+            invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
             invalidAgentUrl: 'Invalid agent url'
         }

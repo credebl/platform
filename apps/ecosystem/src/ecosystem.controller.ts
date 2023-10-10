@@ -8,6 +8,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
+import { DeclienEndorsementTransactionDto } from 'apps/api-gateway/src/ecosystem/dtos/decline-endorsement-transaction-dto';
 
 @Controller()
 export class EcosystemController {
@@ -171,4 +172,18 @@ export class EcosystemController {
      ): Promise<object> {
      return this.ecosystemService.submitTransaction(payload.endorsementId);
    }
+
+    /**
+   *
+   * @param payload
+   * @returns Declien Endorsement Transaction status 
+   */
+  @MessagePattern({ cmd: 'decline-endorsement-transaction' })
+  async declineEndorsementRequestByLead(payload: {
+    declineEndorsementTransactionRequest: DeclienEndorsementTransactionDto;
+  }): Promise<object> {
+    return this.ecosystemService.declineEndorsementRequestByLead(payload.declineEndorsementTransactionRequest);
+  }
+
+
 }

@@ -572,4 +572,25 @@ export class EcosystemRepository {
     }
   }
 
+  async updateEndorsementRequestStatus(
+    endorsementId: string,
+    status:endorsementTransactionStatus
+    // eslint-disable-next-line camelcase,
+  ): Promise<object> {
+    try {
+      const updatedTransaction = await this.prisma.endorsement_transaction.update({
+        where: { id: endorsementId, status:endorsementTransactionStatus.REQUESTED},
+        data: {
+          status 
+        }
+      });
+
+      return updatedTransaction;
+
+    } catch (error) {
+      this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
+      throw error;
+    }
+  }
 }
+

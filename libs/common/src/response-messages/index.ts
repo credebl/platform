@@ -194,7 +194,8 @@ export const ResponseMessages = {
             sign: 'Transaction request signed successfully',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
-            fetchEndorsors: 'Endorser transactions fetched successfully'
+            fetchEndorsors: 'Endorser transactions fetched successfully',
+            DeclienEndorsementTransaction:'decline Endorsement Request successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

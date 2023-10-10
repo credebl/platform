@@ -29,6 +29,8 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
+import { DeclienEndorsementTransactionDto } from './dtos/decline-endorsement-transaction-dto';
+
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -332,6 +334,7 @@ export class EcosystemController {
       return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
+
   @Put('/:ecosystemId/:orgId')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
@@ -374,4 +377,35 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+
+   /**
+   * 
+   * @param declineEndorsementTransactionRequest
+   * 
+   * @param res 
+   * @returns  endorsement transaction status
+   */
+
+   
+   @Put('/:ecosystemId/:orgId/transactions/:endorsementId')
+   @ApiOperation({
+     summary: 'Declien Endorsement Request By Lead',
+     description: 'Declien Endorsement Request By Lead'
+   })
+   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+   @ApiBearerAuth()
+   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
+   async declineEndorsementRequestByLead(@Body() declineEndorsementTransactionRequest: DeclienEndorsementTransactionDto, @Param('ecosystemId') ecosystemId:string, @Param('orgId') orgId: string, @Param('endorsementId') endorsementId: string, @User() user: user, @Res() res: Response): Promise<object> {
+    declineEndorsementTransactionRequest.orgId = orgId;
+    declineEndorsementTransactionRequest.ecosystemId = ecosystemId;
+    declineEndorsementTransactionRequest.endorsementId = endorsementId;
+
+     const DeclienEndorsementTransaction = await this.ecosystemService.declineEndorsementRequestByLead(declineEndorsementTransactionRequest); 
+
+     const finalResponse: IResponseType = {
+       statusCode: HttpStatus.OK,
+       message: DeclienEndorsementTransaction.response
+     };
+     return res.status(HttpStatus.OK).json(finalResponse);
+   }
 }

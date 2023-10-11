@@ -367,6 +367,8 @@ model ecosystem_users {
 model ecosystem_orgs {
   id                     String                    @id @default(uuid())
   orgId                  String
+  orgName                String?
+  orgDid                 String?                    @db.VarChar
   status                 String
   ecosystemId            String
   ecosystemRoleId        String

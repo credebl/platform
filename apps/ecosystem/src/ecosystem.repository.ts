@@ -24,7 +24,7 @@ export class EcosystemRepository {
   async createNewEcosystem(createEcosystemDto): Promise<ecosystem> {
     try {
       const transaction = await this.prisma.$transaction(async (prisma) => {
-        const { name, description, userId, logo, tags, orgId } = createEcosystemDto;
+        const { name, description, userId, logo, tags, orgId, orgName, orgDid } = createEcosystemDto;
         const createdEcosystem = await prisma.ecosystem.create({
           data: {
             name,

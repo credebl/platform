@@ -80,7 +80,7 @@ export class EcosystemController {
   }
 
   @Get('/:orgId')
-  @ApiOperation({ summary: 'Get all ecosystem', description: 'Get all existing ecosystem' })
+  @ApiOperation({ summary: 'Get all organization ecosystems', description: 'Get all existing ecosystems of an specific organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -375,7 +375,7 @@ export class EcosystemController {
  * @param res 
  * @returns Ecosystem invitation status
  */
-  @Post('/:orgId/invitations/:invitationId')
+  @Put('/:orgId/invitations/:invitationId')
   @ApiOperation({
     summary: 'Accept or reject ecosystem invitation',
     description: 'Accept or Reject ecosystem invitations'

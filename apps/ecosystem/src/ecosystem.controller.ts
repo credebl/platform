@@ -9,7 +9,6 @@ import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
-import { DeclienEndorsementTransactionDto } from 'apps/api-gateway/src/ecosystem/dtos/decline-endorsement-transaction-dto';
 
 @Controller()
 export class EcosystemController {
@@ -199,17 +198,18 @@ export class EcosystemController {
      return this.ecosystemService.submitTransaction(payload.endorsementId, payload.ecosystemId);
    }
 
+  
     /**
    *
    * @param payload
    * @returns Declien Endorsement Transaction status 
    */
-  @MessagePattern({ cmd: 'decline-endorsement-transaction' })
-  async declineEndorsementRequestByLead(payload: {
-    declineEndorsementTransactionRequest: DeclienEndorsementTransactionDto;
-  }): Promise<object> {
-    return this.ecosystemService.declineEndorsementRequestByLead(payload.declineEndorsementTransactionRequest);
-  }
+    @MessagePattern({ cmd: 'decline-endorsement-transaction' })
+    async declineEndorsementRequestByLead(payload: {
+      ecosystemId:string, endorsementId:string, orgId:string
+    }): Promise<object> {
+      return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.orgId, payload.endorsementId);
+    }
 
 
 }

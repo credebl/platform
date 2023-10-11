@@ -66,8 +66,9 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async getAllEcosystem(): Promise<object> {
-    const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails();
+  async getAllEcosystem(payload: { orgId: string }): Promise<object> {
+    const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails(payload.orgId);    
+    
     if (!getAllEcosystemDetails) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.update);
     }
@@ -154,7 +155,8 @@ export class EcosystemService {
    */
   async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
     try {
-      const { orgId, status, invitationId } = acceptRejectInvitation;
+      
+      const { orgId, status, invitationId, orgName, orgDid } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
 
       if (!invitation) {
@@ -171,7 +173,7 @@ export class EcosystemService {
       }
 
       const ecosystemRole = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
-      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, invitation.ecosystemId, ecosystemRole.id);
+      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, orgName, orgDid, invitation.ecosystemId, ecosystemRole.id);
 
       if (!updateEcosystemOrgs) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgsNotUpdate);
@@ -184,13 +186,15 @@ export class EcosystemService {
     }
   }
 
-  async updatedEcosystemOrgs(orgId: string, ecosystemId: string, ecosystemRoleId: string): Promise<object> {
+  async updatedEcosystemOrgs(orgId: string, orgName: string, orgDid: string, ecosystemId: string, ecosystemRoleId: string): Promise<object> {
     try {
       const data = {
         orgId,
         status: EcosystemOrgStatus.ACTIVE,
         ecosystemId,
-        ecosystemRoleId
+        ecosystemRoleId,
+        orgName,
+        orgDid
       };
       return await this.ecosystemRepository.updateEcosystemOrgs(data);
     } catch (error) {

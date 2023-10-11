@@ -79,7 +79,7 @@ export class EcosystemController {
   }
 
   @Get('/:orgId')
-  @ApiOperation({ summary: 'Get all ecosystem', description: 'Get all existing ecosystem' })
+  @ApiOperation({ summary: 'Get all organization ecosystems', description: 'Get all existing ecosystems of an specific organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -403,10 +403,19 @@ export class EcosystemController {
 
   }
 
-  @Get('/:ecosystemId/invitations')
-  @ApiOperation({ summary: 'Get all sent invitations', description: 'Get all sent invitations' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  /**
+ * 
+ * @param acceptRejectEcosystemInvitation 
+ * @param reqUser 
+ * @param res 
+ * @returns Ecosystem invitation status
+ */
+  @Put('/:orgId/invitations/:invitationId')
+  @ApiOperation({
+    summary: 'Accept or reject ecosystem invitation',
+    description: 'Accept or Reject ecosystem invitations'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiQuery({
     name: 'pageNumber',

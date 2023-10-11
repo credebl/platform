@@ -431,8 +431,8 @@ export class EcosystemController {
      summary: 'Decline Endorsement Request By Lead',
      description: 'Decline Endorsement Request By Lead'
    })
-  //  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  //  @ApiBearerAuth()
+   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+   @ApiBearerAuth()
    @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
    async declineEndorsementRequestByLead(

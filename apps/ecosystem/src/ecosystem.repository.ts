@@ -26,7 +26,7 @@ export class EcosystemRepository {
   async createNewEcosystem(createEcosystemDto): Promise<ecosystem> {
     try {
       const transaction = await this.prisma.$transaction(async (prisma) => {
-        const { name, description, userId, logo, tags, orgId } = createEcosystemDto;
+        const { name, description, userId, logo, tags, orgId, orgName, orgDid } = createEcosystemDto;
         const createdEcosystem = await prisma.ecosystem.create({
           data: {
             name,
@@ -56,7 +56,9 @@ export class EcosystemRepository {
               orgId: String(orgId),
               status: EcosystemOrgStatus.ACTIVE,
               ecosystemId: createdEcosystem.id,
-              ecosystemRoleId: ecosystemRoleDetails.id
+              ecosystemRoleId: ecosystemRoleDetails.id,
+              orgName,
+              orgDid
             }
           });
         }
@@ -106,9 +108,19 @@ export class EcosystemRepository {
       const ecosystemDetails = await this.prisma.ecosystem.findMany({
         where: {
           ecosystemOrgs: {
-            some: {
-              orgId
-            }
+              some: {
+                orgId
+              }
+          }
+        },
+        include:{
+          ecosystemOrgs: {
+              where: {
+                orgId
+              },
+              include:{
+                ecosystemRole: true
+              }
           }
         }
       });
@@ -276,14 +288,16 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateEcosystemOrgs(createEcosystemOrgsDto: updateEcosystemOrgsDto): Promise<ecosystem_orgs> {
     try {
-      const { orgId, status, ecosystemRoleId, ecosystemId } = createEcosystemOrgsDto;
+      const { orgId, status, ecosystemRoleId, ecosystemId, orgName, orgDid } = createEcosystemOrgsDto;
 
       return this.prisma.ecosystem_orgs.create({
         data: {
           orgId: String(orgId),
           ecosystemId,
           status,
-          ecosystemRoleId
+          ecosystemRoleId,
+          orgName,
+          orgDid
         }
       });
     } catch (error) {

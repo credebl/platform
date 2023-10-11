@@ -719,7 +719,7 @@ export class EcosystemService {
    async declineEndorsementRequestByLead(ecosystemId:string, endorsementId:string, orgId:string): Promise<object> {
     try {
 
-      return this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, orgId, endorsementId);
+      return await this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, orgId, endorsementId);
       } catch (error) {
       this.logger.error(`error in decline endorsement request: ${error}`);
       throw new InternalServerErrorException(error);

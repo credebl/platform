@@ -109,6 +109,13 @@ export class EcosystemRepository {
               orgId
             }
           }
+        },
+        include:{
+          ecosystemOrgs: {
+              include:{
+                ecosystemRole: true
+              }
+          }
         }
       });
       return ecosystemDetails;

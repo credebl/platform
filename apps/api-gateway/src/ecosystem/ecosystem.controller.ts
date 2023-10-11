@@ -375,7 +375,7 @@ export class EcosystemController {
  * @param res 
  * @returns Ecosystem invitation status
  */
-  @Post('/:orgId/invitations/:invitationId')
+  @Put('/:orgId/invitations/:invitationId')
   @ApiOperation({
     summary: 'Accept or reject ecosystem invitation',
     description: 'Accept or Reject ecosystem invitations'

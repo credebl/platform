@@ -276,37 +276,194 @@ export class EcosystemRepository {
     }
   }
 
-    async getEcosystemInvitationsPagination(queryObject: object, status: string, pageNumber: number, pageSize: number): Promise<object> {
-        try {
-          const result = await this.prisma.$transaction([
-            this.prisma.ecosystem_invitations.findMany({
-              where: {
-                ...queryObject,
-                status
-              },
-              include: {
-                ecosystem: true
-              },
-              take: pageSize,
-              skip: (pageNumber - 1) * pageSize,
-              orderBy: {
-                createDateTime: 'desc'
-              }
-            }),
-            this.prisma.ecosystem_invitations.count({
-              where: {
-                ...queryObject
-              }
-            })
-          ]);
-    
-          const [invitations, totalCount] = result;
-          const totalPages = Math.ceil(totalCount / pageSize);
-    
-          return { totalPages, invitations };
-        } catch (error) {
-          this.logger.error(`error: ${JSON.stringify(error)}`);
-          throw new InternalServerErrorException(error);
+  async getInvitationsByEcosystemId(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+    try {
+      const query = {
+        ecosystemId,
+        OR: [
+          { email: { contains: search, mode: 'insensitive' } },
+          { status: { contains: search, mode: 'insensitive' } }
+        ]
+      };
+
+      return await this.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  /**
+   * 
+   * @param queryOptions 
+   * @param filterOptions 
+   * @returns users list
+   */
+  // eslint-disable-next-line camelcase
+  async findEcosystemMembers(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+    try {
+      const query = {
+        ecosystemId,
+        OR:
+          [{ orgId: { contains: search, mode: 'insensitive' } }]
+      };
+      return await this.getEcosystemMembersPagination(query, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getEcosystemMembersPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.ecosystem_orgs.findMany({
+          where: {
+            ...queryObject
+          },
+          include: {
+            ecosystem: true,
+            ecosystemRole:true
+          },
+          take: pageSize,
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        }),
+        this.prisma.ecosystem_orgs.count({
+          where: {
+            ...queryObject
+          }
+        })
+      ]);
+
+      // eslint-disable-next-line prefer-destructuring
+      const members = result[0];
+      // eslint-disable-next-line prefer-destructuring
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return { totalPages, members };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.ecosystem_invitations.findMany({
+          where: {
+            ...queryObject
+          },
+          include: {
+            ecosystem: true
+          },
+          take: pageSize,
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        }),
+        this.prisma.ecosystem_invitations.count({
+          where: {
+            ...queryObject
+          }
+        })
+      ]);
+
+      // eslint-disable-next-line prefer-destructuring
+      const invitations = result[0];
+      // eslint-disable-next-line prefer-destructuring
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return { totalPages, invitations };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  async fetchEcosystemOrg(
+    payload: { ecosystemId: string, orgId: string }
+  ): Promise<object> {
+
+    return this.prisma.ecosystem_orgs.findFirst({
+      where: {
+        ...payload
+      },
+      select: {
+        ecosystemRole: true
+      }
+    });
+
+  }
+
+
+  async getEndorsementsWithPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.endorsement_transaction.findMany({
+          where: {
+            ...queryObject
+          },
+          select: {
+            id: true,
+            endorserDid: true,
+            authorDid: true,
+            status: true,
+            type: true,
+            ecosystemOrgs: true,
+            requestPayload: true,
+            responsePayload: true,
+            createDateTime: true
+          },
+          take: pageSize,
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        }),
+        this.prisma.endorsement_transaction.count({
+          where: {
+            ...queryObject
+          }
+        })
+      ]);
+
+      // eslint-disable-next-line prefer-destructuring
+      const transactions = result[0];
+      // eslint-disable-next-line prefer-destructuring
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return { totalPages, transactions };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  /**
+  * Description: Get getAgentEndPoint by orgId
+  * @param orgId 
+  * @returns Get getAgentEndPoint details
+  */
+  // eslint-disable-next-line camelcase
+  async getAgentDetails(orgId: number): Promise<org_agents> {
+    try {
+      if (!orgId) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidOrgId);
+      }
+      const agentDetails = await this.prisma.org_agents.findFirst({
+        where: {
+          orgId
         }
       }
 

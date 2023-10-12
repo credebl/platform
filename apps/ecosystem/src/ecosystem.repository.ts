@@ -382,7 +382,8 @@ export class EcosystemRepository {
             ...queryObject
           },
           include: {
-            ecosystem: true
+            ecosystem: true,
+            ecosystemRole:true
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 export interface AttributeValue {
   attributeName: string;
   schemaDataType: string;
@@ -90,9 +91,15 @@ export interface EndorsementTransactionPayload {
   authorDid: string;
   requestPayload: string;
   responsePayload: string;
+  requestBody: Prisma.JsonValue
   status: string;
   ecosystemOrgId: string;
-  type: string;
+  createDateTime: Date;
+  createdBy: number;
+  lastChangedDateTime: Date;
+  lastChangedBy: number;
+  deletedAt?: Date;
+  type?: string;
   ecosystemOrgs?: {
     orgId: string;
   };
@@ -118,3 +125,46 @@ export interface submitTransactionPayload {
   credentialDefinition?: CredentialDefinitionPayload;
 }
 
+
+export interface SaveSchema {
+  name: string;
+  version: string;
+  attributes: string;
+  schemaLedgerId: string;
+  issuerId: string;
+  createdBy: string;
+  lastChangedBy: string;
+  publisherDid: string;
+  orgId: string;
+  ledgerId: number;
+}
+
+export interface saveCredDef {
+  schemaLedgerId: string;
+  tag: string;
+  credentialDefinitionId: string;
+  revocable: boolean;
+  createdBy: string;
+  orgId: number;
+  schemaId: number;
+}
+
+export interface EndorsementTransactionPayloadDetails {
+  id: string;
+  endorserDid: string;
+  authorDid: string;
+  requestPayload: string;
+  responsePayload: string;
+  type: string;
+  createDateTime: Date;
+  createdBy: number;
+  lastChangedDateTime: Date;
+  lastChangedBy: number;
+  deletedAt: Date | null;
+  status: string;
+  ecosystemOrgId: string;
+  requestBody: unknown;
+  ecosystemOrgs?: {
+    orgId: string;
+  };
+}

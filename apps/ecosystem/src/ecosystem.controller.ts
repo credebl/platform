@@ -197,4 +197,19 @@ export class EcosystemController {
      ): Promise<object> {
      return this.ecosystemService.submitTransaction(payload.endorsementId, payload.ecosystemId);
    }
+
+  
+    /**
+   *
+   * @param payload
+   * @returns Declien Endorsement Transaction status 
+   */
+    @MessagePattern({ cmd: 'decline-endorsement-transaction' })
+    async declineEndorsementRequestByLead(payload: {
+      ecosystemId:string, endorsementId:string, orgId:string
+    }): Promise<object> {
+      return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.orgId, payload.endorsementId);
+    }
+
+
 }

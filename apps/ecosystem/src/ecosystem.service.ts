@@ -19,6 +19,7 @@ import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 
+
 @Injectable()
 export class EcosystemService {
   constructor(
@@ -702,6 +703,25 @@ export class EcosystemService {
       return await this.ecosystemRepository.getEndorsementsWithPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`In error getEndorsementTransactions: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+   /**
+   * 
+   * @param ecosystemId 
+   * @param endorsementId 
+   * @param orgId 
+   * @returns EndorsementTransactionRequest Status message
+   */
+
+   async declineEndorsementRequestByLead(ecosystemId:string, endorsementId:string, orgId:string): Promise<object> {
+    try {
+
+      return await this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, orgId, endorsementId);
+      } catch (error) {
+      this.logger.error(`error in decline endorsement request: ${error}`);
       throw new InternalServerErrorException(error);
     }
   }

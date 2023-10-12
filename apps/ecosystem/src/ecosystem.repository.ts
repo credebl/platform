@@ -6,6 +6,7 @@ import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsem
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import {  SchemaTransactionResponse } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -704,4 +705,38 @@ export class EcosystemRepository {
     }
   }
 
+  async updateEndorsementRequestStatus(ecosystemId: string, orgId: string, endorsementId: string): Promise<object> {
+    try {
+      
+      const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
+        where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
+      });
+   
+      if (!endorsementTransaction) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
+      }
+      const { ecosystemOrgId } = endorsementTransaction;
+
+      const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
+        where: { id: ecosystemOrgId }
+      });
+
+      if (endorsementTransactionEcosystemOrg.orgId === orgId && endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
+        const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
+          where: { id: endorsementId },
+          data: {
+            status: endorsementTransactionStatus.DECLINED
+          }
+        });
+
+        return updatedEndorsementTransaction;
+      } else {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.OrgOrEcosystemNotFoundExceptionForEndorsementTransaction);
+      }
+    } catch (error) {
+      this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
+      throw error;
+    }
+  }
 }
+

@@ -31,6 +31,7 @@ import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 
+
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
 @ApiTags('ecosystem')
@@ -396,6 +397,7 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+
   @Put('/:ecosystemId/:orgId')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
@@ -415,6 +417,37 @@ export class EcosystemController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
+  
+   /**
+   *
+   * @param declineEndorsementTransactionRequest
+   *
+   * @param res
+   * @returns  endorsement transaction status
+   */
+   @Put('/:ecosystemId/:orgId/transactions/:endorsementId')
+   @ApiOperation({
+     summary: 'Decline Endorsement Request By Lead',
+     description: 'Decline Endorsement Request By Lead'
+   })
+   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+   @ApiBearerAuth()
+   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
+   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+   async declineEndorsementRequestByLead(
+     @Param('ecosystemId') ecosystemId: string,
+     @Param('orgId') orgId: string,
+     @Param('endorsementId') endorsementId: string,
+     @Res() res: Response
+   ): Promise<object> {
+     await this.ecosystemService.declineEndorsementRequestByLead(ecosystemId, orgId, endorsementId);
+     const finalResponse: IResponseType = {
+       statusCode: HttpStatus.OK,
+       message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction
+     };
+     return res.status(HttpStatus.OK).json(finalResponse);
+   }
 
 
   @Delete('/:ecosystemId/:orgId/invitations/:invitationId')
@@ -437,5 +470,6 @@ export class EcosystemController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
 
 }

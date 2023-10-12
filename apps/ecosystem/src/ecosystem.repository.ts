@@ -815,12 +815,29 @@ export class EcosystemRepository {
     }
   }
 
-  async updateEndorsementRequestStatus(ecosystemId: string, orgId: string, endorsementId: string): Promise<object> {
+  async updateEndorsementRequestStatus(ecosystemId: string, endorsementId: string): Promise<object> {
     try {
-      
-      const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
-        where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
-      });
+    
+    const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
+    where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
+    });
+    
+    if (!endorsementTransaction) {
+    throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
+    }
+    const { ecosystemOrgId } = endorsementTransaction;
+   
+    const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
+    where: { id: ecosystemOrgId }
+    });
+   
+    if (endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
+    const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
+    where: { id: endorsementId },
+    data: {
+    status: endorsementTransactionStatus.DECLINED
+    }
+    });
    
       if (!endorsementTransaction) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);

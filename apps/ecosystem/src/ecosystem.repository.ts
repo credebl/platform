@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { credential_definition, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
-import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
+import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -62,7 +62,8 @@ export class EcosystemRepository {
               ecosystemId: createdEcosystem.id,
               ecosystemRoleId: ecosystemRoleDetails.id,
               orgName,
-              orgDid
+              orgDid,
+              deploymentMode: DeploymentModeType.PROVIDER_HOSTED
             }
           });
         }
@@ -336,7 +337,8 @@ export class EcosystemRepository {
           status,
           ecosystemRoleId,
           orgName,
-          orgDid
+          orgDid,
+          deploymentMode: DeploymentModeType.PROVIDER_HOSTED
         }
       });
     } catch (error) {

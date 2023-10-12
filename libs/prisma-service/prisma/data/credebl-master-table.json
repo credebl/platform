@@ -146,9 +146,22 @@
       "ecosystemOrgId": "ca6ee687-a3a9-42ce-9e49-02bf62f5c93a"
     }
   ],
-  "ecosystemConfigData": {
-    "url": "https://example3.com",
-    "enableEcosystem": false,
-    "autoEndorsement": false
-  }
+  "ecosystemConfigData": [
+    {
+      "key": "url",
+      "value": "https://dummyurl.tk"
+    },
+    {
+      "key": "enableEcosystem",
+      "value": "false"
+    },
+    {
+      "key": "autoEndorsement",
+      "value": "false"
+    },
+    {
+      "key": "participateInEcosystem",
+      "value": "false"
+    }
+  ]
 }

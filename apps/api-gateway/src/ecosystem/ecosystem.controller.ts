@@ -80,7 +80,7 @@ export class EcosystemController {
   }
 
   @Get('/:orgId')
-  @ApiOperation({ summary: 'Get all ecosystem', description: 'Get all existing ecosystem' })
+  @ApiOperation({ summary: 'Get all organization ecosystems', description: 'Get all existing ecosystems of an specific organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -96,6 +96,26 @@ export class EcosystemController {
       data: ecosystemList.response
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/:ecosystemId/:orgId/dashboard')
+  @ApiOperation({ summary: 'Get ecosystem dashboard details', description: 'Get ecosystem dashboard details' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+  @ApiBearerAuth()
+
+  async getEcosystemDashboardDetails(@Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+
+    const getEcosystemDetails = await this.ecosystemService.getEcosystemDashboardDetails(ecosystemId, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.getEcosystemDashboard,
+      data: getEcosystemDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
   }
 
   @Get('/:orgId/users/invitations')
@@ -355,7 +375,7 @@ export class EcosystemController {
  * @param res 
  * @returns Ecosystem invitation status
  */
-  @Post('/:orgId/invitations/:invitationId')
+  @Put('/:orgId/invitations/:invitationId')
   @ApiOperation({
     summary: 'Accept or reject ecosystem invitation',
     description: 'Accept or Reject ecosystem invitations'

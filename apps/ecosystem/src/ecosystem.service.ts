@@ -68,14 +68,28 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async getAllEcosystem(payload: { orgId: string }): Promise<object> {
-    const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails(payload.orgId);
+    const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails(payload.orgId);    
+    
     if (!getAllEcosystemDetails) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.update);
     }
     return getAllEcosystemDetails;
   }
 
-
+  /**
+   *
+   *
+   * @returns ecosystem dashboard details
+   */
+    async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
+      try {
+        return await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
+      } catch (error) {
+        this.logger.error(`In ecosystem dashboard details : ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  
   /**
     * Description: get an ecosystem invitation 
     * @returns Get sent ecosystem invitation details
@@ -142,7 +156,8 @@ export class EcosystemService {
    */
   async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
     try {
-      const { orgId, status, invitationId } = acceptRejectInvitation;
+      
+      const { orgId, status, invitationId, orgName, orgDid } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
 
       if (!invitation) {
@@ -159,7 +174,7 @@ export class EcosystemService {
       }
 
       const ecosystemRole = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
-      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, invitation.ecosystemId, ecosystemRole.id);
+      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, orgName, orgDid, invitation.ecosystemId, ecosystemRole.id);
 
       if (!updateEcosystemOrgs) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgsNotUpdate);
@@ -172,13 +187,15 @@ export class EcosystemService {
     }
   }
 
-  async updatedEcosystemOrgs(orgId: string, ecosystemId: string, ecosystemRoleId: string): Promise<object> {
+  async updatedEcosystemOrgs(orgId: string, orgName: string, orgDid: string, ecosystemId: string, ecosystemRoleId: string): Promise<object> {
     try {
       const data = {
         orgId,
         status: EcosystemOrgStatus.ACTIVE,
         ecosystemId,
-        ecosystemRoleId
+        ecosystemRoleId,
+        orgName,
+        orgDid
       };
       return await this.ecosystemRepository.updateEcosystemOrgs(data);
     } catch (error) {
@@ -700,7 +717,7 @@ export class EcosystemService {
    */
   async checkEcosystemEnableFlag(
   ): Promise<boolean> {
-    const platformConfigData = await this.prisma.platform_config.findMany();
+    const platformConfigData = await this.prisma.ecosystem_config.findMany();
     return platformConfigData[0].enableEcosystem;
   }
 
@@ -708,10 +725,14 @@ export class EcosystemService {
     const { ecosystemId, orgId, pageNumber, pageSize, search, type } = payload;
     try {
 
+      const queryEcoOrgs = {
+        ecosystemId,
+        orgId
+      };
+
       const query = {
         ecosystemOrgs: {
-          ecosystemId,
-          orgId
+          ecosystemId
         },
         OR: [
           { status: { contains: search, mode: 'insensitive' } },
@@ -719,6 +740,12 @@ export class EcosystemService {
         ]
       };
 
+      const ecosystemOrgData =  await this.ecosystemRepository.fetchEcosystemOrg(queryEcoOrgs);
+
+      if (ecosystemOrgData['ecosystemRole']['name'] !== EcosystemRoles.ECOSYSTEM_LEAD) {
+        query.ecosystemOrgs['orgId'] = orgId;
+      }
+      
       if (type) {
         query['type'] = type;
       }

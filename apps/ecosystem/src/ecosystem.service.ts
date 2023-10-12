@@ -719,7 +719,7 @@ export class EcosystemService {
   ): Promise<object> {
 
     const isEcosystemEnabled = await this.checkEcosystemEnableFlag();
-
+    
     if (!isEcosystemEnabled) {
       throw new ForbiddenException(ResponseMessages.ecosystem.error.ecosystemNotEnabled);
     }
@@ -735,8 +735,19 @@ export class EcosystemService {
    */
   async checkEcosystemEnableFlag(
   ): Promise<boolean> {
-    const platformConfigData = await this.prisma.ecosystem_config.findMany();
-    return platformConfigData[0].enableEcosystem;
+    const ecosystemDetails = await this.prisma.ecosystem_config.findFirst(
+      {
+        where:{
+          key: 'enableEcosystem'
+        }
+      }
+    );
+
+    if ('true' === ecosystemDetails.value) {
+      return true;
+    }
+
+    return false;
   }
 
   async getEndorsementTransactions(payload: GetEndorsementsPayload): Promise<object> {

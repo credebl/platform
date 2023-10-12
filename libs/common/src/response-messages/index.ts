@@ -191,7 +191,9 @@ export const ResponseMessages = {
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent successfully',
             schemaRequest: 'Schema transaction request created successfully',
+            credDefRequest: 'credential-definition transaction request created successfully',
             sign: 'Transaction request signed successfully',
+            submit: 'Transaction request submitted successfully',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
             fetchMembers: 'Ecosystem members fetched successfully',
@@ -210,9 +212,12 @@ export const ResponseMessages = {
             requestCredDefTransaction: 'Error while submitting transaction',
             notFound: 'Organization not found',
             leadNotFound: 'Lead details not found',
+            saveSchema: 'Error while storing the schema details',
+            saveCredDef: 'Error while storing the credential-definition details',
             invalidOrgId: 'Invalid organization Id',
             invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
+            transactionSubmitted: 'Transaction already submitted',
             invalidAgentUrl: 'Invalid agent url'
         }
     }   

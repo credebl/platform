@@ -564,5 +564,174 @@ export class EcosystemRepository {
           this.logger.error(`error: ${JSON.stringify(error)}`);
           throw new InternalServerErrorException(error);
         }
-      }
+      });
+      return ecosystemLeadDetails;
+
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
+      throw error;
+    }
+  }
+  // eslint-disable-next-line camelcase
+  async getEndorsementTransactionById(endorsementId: string, status: endorsementTransactionStatus): Promise<endorsement_transaction> {
+    try {
+      const ecosystemLeadDetails = await this.prisma.endorsement_transaction.findFirst({
+        where: {
+          id: endorsementId,
+          status
+        },
+        include: {
+          ecosystemOrgs: {
+            select: {
+              orgId: true
+            }
+          }
+        }
+      });
+
+      return ecosystemLeadDetails;
+
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async updateTransactionDetails(
+    endorsementId: string,
+    schemaTransactionRequest: string
+
+    // eslint-disable-next-line camelcase,
+  ): Promise<object> {
+    try {
+      const updatedTransaction = await this.prisma.endorsement_transaction.update({
+        where: { id: endorsementId },
+        data: {
+          responsePayload: schemaTransactionRequest,
+          status: endorsementTransactionStatus.SIGNED
+        }
+      });
+
+      return updatedTransaction;
+
+    } catch (error) {
+      this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateTransactionStatus(
+    endorsementId: string,
+    status: endorsementTransactionStatus
+    // eslint-disable-next-line camelcase,
+  ): Promise<object> {
+    try {
+      const updatedTransaction = await this.prisma.endorsement_transaction.update({
+        where: { id: endorsementId },
+        data: {
+          status
+        }
+      });
+
+      return updatedTransaction;
+
+    } catch (error) {
+      this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async saveSchema(schemaResult: SaveSchema): Promise<schema> {
+    try {
+      const { name, version, attributes, schemaLedgerId, issuerId, createdBy, lastChangedBy, publisherDid, orgId, ledgerId } = schemaResult;
+      const saveResult = await this.prisma.schema.create({
+        data: {
+          name,
+          version,
+          attributes,
+          schemaLedgerId,
+          issuerId,
+          createdBy: Number(createdBy),
+          lastChangedBy: Number(lastChangedBy),
+          publisherDid,
+          orgId: Number(orgId),
+          ledgerId
+        }
+      });
+      return saveResult;
+    } catch (error) {
+      this.logger.error(`Error in storing schema for submit transaction: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async saveCredDef(credDefResult: saveCredDef): Promise<credential_definition> {
+    try {
+      const { schemaLedgerId, tag, credentialDefinitionId, revocable, createdBy, orgId, schemaId } = credDefResult;
+      const saveResult = await this.prisma.credential_definition.create({
+        data: {
+          schemaLedgerId,
+          tag,
+          credentialDefinitionId,
+          revocable,
+          createdBy: Number(createdBy),
+          orgId: Number(orgId),
+          schemaId
+        }
+      });
+      return saveResult;
+    } catch (error) {
+      this.logger.error(`Error in saving credential-definition for submit transaction: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async getSchemaDetailsById(schemaLedgerId: string): Promise<schema | null> {
+    try {
+      const schemaDetails = await this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId
+        }
+      });
+      return schemaDetails;
+    } catch (error) {
+      this.logger.error(`Error in fetching schema details for submit transaction: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateEndorsementRequestStatus(ecosystemId: string, endorsementId: string): Promise<object> {
+    try {
+    
+    const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
+    where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
+    });
+    
+    if (!endorsementTransaction) {
+    throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
+    }
+    const { ecosystemOrgId } = endorsementTransaction;
+   
+    const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
+    where: { id: ecosystemOrgId }
+    });
+   
+    if (endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
+    const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
+    where: { id: endorsementId },
+    data: {
+    status: endorsementTransactionStatus.DECLINED
+    }
+    });
+   
+    return updatedEndorsementTransaction;
+    } else {
+    throw new NotFoundException(ResponseMessages.ecosystem.error.OrgOrEcosystemNotFoundExceptionForEndorsementTransaction);
+    }
+    } catch (error) {
+    this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
+    throw error;
+    }
+    }
 }

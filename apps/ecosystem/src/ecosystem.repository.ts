@@ -1,9 +1,10 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { ecosystem, ecosystem_invitations, ecosystem_orgs, endorsement_transaction, org_agents, platform_config } from '@prisma/client';
-import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus } from '../enums/ecosystem.enum';
-import { SchemaTransactionResponse } from '../interfaces/ecosystem.interfaces';
+import { credential_definition, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
+import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
+import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
+import { SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
@@ -60,8 +61,9 @@ export class EcosystemRepository {
               status: EcosystemOrgStatus.ACTIVE,
               ecosystemId: createdEcosystem.id,
               ecosystemRoleId: ecosystemRoleDetails.id,
-              createdBy: orgId,
-              lastChangedBy: orgId
+              orgName,
+              orgDid,
+              deploymentMode: DeploymentModeType.PROVIDER_HOSTED
             }
           });
         }
@@ -244,6 +246,87 @@ export class EcosystemRepository {
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  /**
+   *
+   * @param id
+   * @returns Invitation details
+   */
+  // eslint-disable-next-line camelcase
+  async getEcosystemInvitationById(id: string): Promise<ecosystem_invitations> {
+    try {
+      return this.prisma.ecosystem_invitations.findUnique({
+        where: {
+          id
+        },
+        include: {
+          ecosystem: true
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  /**
+   *
+   * @param queryObject
+   * @param data
+   * @returns Updated ecosystem invitation response
+   */
+  async updateEcosystemInvitation(id: string, data: object): Promise<object> {
+    try {
+      return this.prisma.ecosystem_invitations.update({
+        where: {
+          id: String(id)
+        },
+        data: {
+          ...data
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException('Unable to update ecosystem invitation');
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getEcosystemRole(name: string): Promise<ecosystem_roles> {
+    try {
+      return this.prisma.ecosystem_roles.findFirst({
+        where: {
+          name
+        }
+      });
+    } catch (error) {
+      this.logger.error(`getEcosystemRole: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async updateEcosystemOrgs(createEcosystemOrgsDto: updateEcosystemOrgsDto): Promise<ecosystem_orgs> {
+    try {
+      const { orgId, status, ecosystemRoleId, ecosystemId, orgName, orgDid } = createEcosystemOrgsDto;
+
+      return this.prisma.ecosystem_orgs.create({
+        data: {
+          orgId: String(orgId),
+          ecosystemId,
+          status,
+          ecosystemRoleId,
+          orgName,
+          orgDid,
+          deploymentMode: DeploymentModeType.PROVIDER_HOSTED
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException('Unable to update ecosystem orgs');
     }
   }
 

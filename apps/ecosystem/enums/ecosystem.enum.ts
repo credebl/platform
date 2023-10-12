@@ -27,3 +27,9 @@ export enum endorsementTransactionType {
     SIGN = 'sign',
     SUBMIT = 'submit'
 }
+
+export enum DeploymentModeType {
+    PROVIDER_HOSTED = 'ProviderHosted',
+    ON_PREMISE = 'OnPremise'
+}
+

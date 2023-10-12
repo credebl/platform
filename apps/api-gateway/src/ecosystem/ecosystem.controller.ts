@@ -298,7 +298,7 @@ export class EcosystemController {
     await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.schemaRequest
+      message: ResponseMessages.ecosystem.success.credDefRequest
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -330,7 +330,7 @@ export class EcosystemController {
     await this.ecosystemService.submitTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.sign
+      message: ResponseMessages.ecosystem.success.submit
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

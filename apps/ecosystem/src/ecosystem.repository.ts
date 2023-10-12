@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger} from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { ecosystem, ecosystem_invitations, ecosystem_orgs, endorsement_transaction, org_agents, platform_config } from '@prisma/client';

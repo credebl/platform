@@ -129,7 +129,7 @@ const createEcosystemRoles = async (): Promise<void> => {
 const createEcosystemConfig = async (): Promise<void> => {
     try {
         const { ecosystemConfigData } = JSON.parse(configData);
-        const configDetails = await prisma.ecosystem_config.create({
+        const configDetails = await prisma.ecosystem_config.createMany({
             data: ecosystemConfigData
         });
 

@@ -31,6 +31,7 @@ import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 
+
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
 @ApiTags('ecosystem')
@@ -80,7 +81,7 @@ export class EcosystemController {
   }
 
   @Get('/:orgId')
-  @ApiOperation({ summary: 'Get all ecosystem', description: 'Get all existing ecosystem' })
+  @ApiOperation({ summary: 'Get all organization ecosystems', description: 'Get all existing ecosystems of an specific organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -297,7 +298,7 @@ export class EcosystemController {
     await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.schemaRequest
+      message: ResponseMessages.ecosystem.success.credDefRequest
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -329,7 +330,7 @@ export class EcosystemController {
     await this.ecosystemService.submitTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.sign
+      message: ResponseMessages.ecosystem.success.submit
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -375,7 +376,7 @@ export class EcosystemController {
  * @param res 
  * @returns Ecosystem invitation status
  */
-  @Post('/:orgId/invitations/:invitationId')
+  @Put('/:orgId/invitations/:invitationId')
   @ApiOperation({
     summary: 'Accept or reject ecosystem invitation',
     description: 'Accept or Reject ecosystem invitations'
@@ -396,6 +397,7 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+
   @Put('/:ecosystemId/:orgId')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
@@ -415,6 +417,37 @@ export class EcosystemController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
+  
+   /**
+   *
+   * @param declineEndorsementTransactionRequest
+   *
+   * @param res
+   * @returns  endorsement transaction status
+   */
+   @Put('/:ecosystemId/:orgId/transactions/:endorsementId')
+   @ApiOperation({
+     summary: 'Decline Endorsement Request By Lead',
+     description: 'Decline Endorsement Request By Lead'
+   })
+   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+   @ApiBearerAuth()
+   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
+   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+   async declineEndorsementRequestByLead(
+     @Param('ecosystemId') ecosystemId: string,
+     @Param('orgId') orgId: string,
+     @Param('endorsementId') endorsementId: string,
+     @Res() res: Response
+   ): Promise<object> {
+     await this.ecosystemService.declineEndorsementRequestByLead(ecosystemId, orgId, endorsementId);
+     const finalResponse: IResponseType = {
+       statusCode: HttpStatus.OK,
+       message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction
+     };
+     return res.status(HttpStatus.OK).json(finalResponse);
+   }
 
 
   @Delete('/:ecosystemId/:orgId/invitations/:invitationId')
@@ -437,5 +470,6 @@ export class EcosystemController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
 
 }

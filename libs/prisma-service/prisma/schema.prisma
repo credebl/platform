@@ -367,13 +367,16 @@ model ecosystem_users {
 model ecosystem_orgs {
   id                     String                    @id @default(uuid())
   orgId                  String
+  orgName                String?
+  orgDid                 String?                    @db.VarChar
   status                 String
+  deploymentMode         String?
   ecosystemId            String
   ecosystemRoleId        String
   createDateTime         DateTime                  @default(now()) @db.Timestamptz(6)
-  createdBy              Int                       @default(1)
+  createdBy              String                       @default("1")
   lastChangedDateTime    DateTime                  @default(now()) @db.Timestamptz(6)
-  lastChangedBy          Int                       @default(1)
+  lastChangedBy          String                       @default("1")
   deletedAt              DateTime?                 @db.Timestamp(6)
   ecosystem              ecosystem                 @relation(fields: [ecosystemId], references: [id])
   ecosystemRole          ecosystem_roles           @relation(fields: [ecosystemRoleId], references: [id])
@@ -400,12 +403,11 @@ model endorsement_transaction {
 
 model ecosystem_config {
   id                     String                    @id @default(uuid())
-  url                    String
-  enableEcosystem        Boolean                   @default(false)
-  autoEndorsement        Boolean                   @default(false)
+  key                    String?
+  value                  String?
   createDateTime         DateTime                  @default(now()) @db.Timestamptz(6)
-  createdBy              Int                       @default(1)
+  createdBy              String                    @default("1")
   lastChangedDateTime    DateTime                  @default(now()) @db.Timestamptz(6)
-  lastChangedBy          Int                       @default(1)
+  lastChangedBy          String                    @default("1")
   deletedAt              DateTime?                 @db.Timestamp(6)  
 }

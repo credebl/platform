@@ -192,11 +192,14 @@ export const ResponseMessages = {
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent successfully',
             schemaRequest: 'Schema transaction request created successfully',
+            credDefRequest: 'credential-definition transaction request created successfully',
             sign: 'Transaction request signed successfully',
+            submit: 'Transaction request submitted successfully',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
-            fetchMembers: 'Ecosystem members fetched successfully',
-            fetchEndorsors: 'Endorser transactions fetched successfully'
+            fetchEndorsors: 'Endorser transactions fetched successfully',
+            DeclineEndorsementTransaction:'Decline endorsement request successfully',
+            fetchMembers: 'Ecosystem members fetched successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
@@ -211,10 +214,17 @@ export const ResponseMessages = {
             requestCredDefTransaction: 'Error while submitting transaction',
             notFound: 'Organization not found',
             leadNotFound: 'Lead details not found',
+            schemaAlreadyExist: 'Schema name and schema version already exist',
+            credDefAlreadyExist: 'Credential definition already exist',
+            saveSchema: 'Error while storing the schema details',
+            saveCredDef: 'Error while storing the credential-definition details',
             invalidOrgId: 'Invalid organization Id',
             invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
-            invalidAgentUrl: 'Invalid agent url'
+            transactionSubmitted: 'Transaction already submitted',
+            invalidAgentUrl: 'Invalid agent url',
+            EndorsementTransactionNotFoundException:'Endorsement transaction with status requested not found',
+            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg'
         }
     }   
 };

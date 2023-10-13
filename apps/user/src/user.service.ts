@@ -186,6 +186,7 @@ export class UserService {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
       }
       const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email);
+
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
@@ -200,7 +201,6 @@ export class UserService {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
       const userDetails = await this.userRepository.getUserDetails(userInfo.email);
-
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
@@ -282,10 +282,8 @@ export class UserService {
    */
   async login(loginUserDto: LoginUserDto): Promise<object> {
     const { email, password, isPasskey } = loginUserDto;
-
     try {
       const userData = await this.userRepository.checkUserExist(email);
-
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
@@ -321,7 +319,6 @@ export class UserService {
         email,
         password
       });
-
       this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
       if (error) {
@@ -329,7 +326,6 @@ export class UserService {
       }
 
       const token = data?.session;
-
       return token;
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
@@ -396,7 +392,7 @@ export class UserService {
 
   async findSupabaseUser(payload: { id }): Promise<object> {
     try {
-      return this.userRepository.getUserBySupabaseId(payload.id);
+      return await this.userRepository.getUserBySupabaseId(payload.id);
     } catch (error) {
       this.logger.error(`Error in findSupabaseUser: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -405,7 +401,7 @@ export class UserService {
 
   async findUserByEmail(payload: { email }): Promise<object> {
     try {
-      return this.userRepository.findUserByEmail(payload.email);
+      return await this.userRepository.findUserByEmail(payload.email);
     } catch (error) {
       this.logger.error(`findUserByEmail: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

@@ -222,6 +222,8 @@ export const ResponseMessages = {
             ecosystemConfigNotFound: 'Ecosystem config not found',
             credentialDefinitionNotFound: 'Credential definition found',
             leadNotFound: 'Lead details not found',
+            signRequestError: 'Error while signing the transaction',
+            updateTransactionError: 'Error while update the transaction',
             schemaAlreadyExist: 'Schema name and schema version already exist',
             credDefAlreadyExist: 'Credential definition already exist',
             saveSchema: 'Error while storing the schema details',

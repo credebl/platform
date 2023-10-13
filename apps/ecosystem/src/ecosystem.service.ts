@@ -13,11 +13,11 @@ import { EcosystemConfigSettings, Invitation, OrgAgentType } from '@credebl/enum
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
+import { CredDefMessage, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
-import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
+import { credential_definition, org_agents, platform_config, schema } from '@prisma/client';
 
 
 @Injectable()
@@ -366,7 +366,7 @@ export class EcosystemService {
    * @param RequestSchemaEndorsement 
    * @returns 
    */
-  async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
+  async requestSchemaEndorsement(requestSchemaPayload, orgId, ecosystemId): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -436,7 +436,7 @@ export class EcosystemService {
     }
   }
 
-  async requestCredDeffEndorsement(requestCredDefPayload: RequestCredDeffEndorsement, orgId: number, ecosystemId: string): Promise<object> {
+  async requestCredDeffEndorsement(requestCredDefPayload, orgId, ecosystemId): Promise<object> {
     try {
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
@@ -495,7 +495,6 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.credentialDefinitionNotFound);
       }
 
-      requestCredDefPayload['credentialDefinition'] = requestBody;
       const schemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: ecosystemMemberDetails.orgDid,
@@ -504,7 +503,7 @@ export class EcosystemService {
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
       };
 
-      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestCredDefPayload, endorsementTransactionType.CREDENTIAL_DEFINITION);
+      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestBody, endorsementTransactionType.CREDENTIAL_DEFINITION);
     } catch (error) {
       this.logger.error(`In request cred-def endorsement: ${JSON.stringify(error)}`);
       throw new RpcException(error.response || error);
@@ -812,14 +811,6 @@ export class EcosystemService {
       if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
         return this.handleSchemaSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
-        payload.credentialDefinition = {
-          tag: parsedRequestPayload.operation.tag,
-          issuerId: ecosystemMemberDetails.orgDid,
-          schemaId: endorsementTransactionPayload.requestBody['schemaId'],
-          type: endorsementTransactionPayload.requestBody['type'],
-          value: endorsementTransactionPayload.requestBody['value']
-        };
-      }
 
         if ('undefined' === submitTransactionRequest['message'].credentialDefinitionId.split(':')[3]) {
 
@@ -836,41 +827,8 @@ export class EcosystemService {
 
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
         }
-        const saveSchemaPayload: SaveSchema = {
-          name: endorsementTransactionPayload.requestBody['name'],
-          version: endorsementTransactionPayload.requestBody['version'],
-          attributes: JSON.stringify(endorsementTransactionPayload.requestBody['attributes']),
-          schemaLedgerId: submitTransactionRequest['message'].schemaId,
-          issuerId: ecosystemMemberDetails.orgDid,
-          createdBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
-          lastChangedBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
-          publisherDid: extractedDidValue,
-          orgId: endorsementTransactionPayload.ecosystemOrgs.orgId,
-          ledgerId: ecosystemMemberDetails.ledgerId
-        };
-        const saveSchemaDetails = await this.ecosystemRepository.saveSchema(saveSchemaPayload);
-        if (!saveSchemaDetails) {
-          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.saveSchema);
-        }
-        return saveSchemaDetails;
-      } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
 
-        const schemaDetails = await this.ecosystemRepository.getSchemaDetailsById(endorsementTransactionPayload.requestBody['schemaId']);
-        const saveCredentialDefinition: saveCredDef = {
-          schemaLedgerId: endorsementTransactionPayload.requestBody['schemaId'],
-          tag: endorsementTransactionPayload.requestBody['tag'],
-          credentialDefinitionId: submitTransactionRequest['message'].credentialDefinitionId,
-          revocable: false,
-          createdBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
-          orgId: ecosystemMemberDetails.orgId,
-          schemaId: schemaDetails.id
-        };
-
-        const saveCredDefDetails = await this.ecosystemRepository.saveCredDef(saveCredentialDefinition);
-        if (!saveCredDefDetails) {
-          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.saveCredDef);
-        }
-        return saveCredDefDetails;
+        return this.handleCredDefSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       }
 
 

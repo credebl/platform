@@ -11,18 +11,18 @@ export class FidoService extends BaseService {
     ) {
         super('FidoService');
     }
-    async generateRegistrationOption(userName: string, deviceFlag: boolean): Promise<{response: object}> {
+    async generateRegistrationOption(deviceFlag: boolean, email:string): Promise<{response: object}> {
         try {
-            const payload = { userName, deviceFlag };
-            return this.sendNats(this.fidoServiceProxy, 'generate-registration-options', payload);
+            const payload = { deviceFlag, email };
+            return await this.sendNats(this.fidoServiceProxy, 'generate-registration-options', payload);
         } catch (error) {
             throw new RpcException(error.response);
         }
      
     }
 
-    async verifyRegistration(verifyRegistrationDto: VerifyRegistrationDto, userName: string): Promise<{response: object}> {
-        const payload = { verifyRegistrationDetails: verifyRegistrationDto, userName };
+    async verifyRegistration(verifyRegistrationDto: VerifyRegistrationDto, email: string): Promise<{response: object}> {
+        const payload = { verifyRegistrationDetails: verifyRegistrationDto, email };
         return this.sendNats(this.fidoServiceProxy, 'verify-registration', payload);
     }
 
@@ -31,18 +31,18 @@ export class FidoService extends BaseService {
         return this.sendNats(this.fidoServiceProxy, 'generate-authentication-options', payload);
     }
 
-    async verifyAuthentication(verifyAuthenticationDto: VerifyAuthenticationDto, userName: string): Promise<{response: object}> {
-        const payload = { verifyAuthenticationDetails: verifyAuthenticationDto, userName };
+    async verifyAuthentication(verifyAuthenticationDto: VerifyAuthenticationDto, email: string): Promise<{response: object}> {
+        const payload = { verifyAuthenticationDetails: verifyAuthenticationDto, email };
         return this.sendNats(this.fidoServiceProxy, 'verify-authentication', payload);
     }
 
-    async updateFidoUser(updateFidoUserDetailsDto: UpdateFidoUserDetailsDto) : Promise<{response: object}> {
-        const payload = updateFidoUserDetailsDto;
+    async updateFidoUser(updateFidoUserDetailsDto: UpdateFidoUserDetailsDto, credentialId: string) : Promise<{response: object}> {
+        const payload = {updateFidoUserDetailsDto, credentialId};
         return this.sendNats(this.fidoServiceProxy, 'update-user', payload);
     }
 
-    async fetchFidoUserDetails(userName: string): Promise<{response: string}> {
-        const payload = { userName };
+    async fetchFidoUserDetails(email: string): Promise<{response: string}> {
+        const payload = { email };
         return this.sendNats(this.fidoServiceProxy, 'fetch-fido-user-details', payload);
     }
 

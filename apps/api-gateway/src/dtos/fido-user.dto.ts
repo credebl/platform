@@ -1,11 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export class GenerateRegistrationDto {
-  @ApiProperty({ example: 'abc@vomoto.com' })
-  @IsNotEmpty({ message: 'Email is required.' })
-  @IsEmail()
-  userName: string;
 
   @IsOptional()
   @ApiProperty({ example: 'false' })

@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { credential_definition, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
+import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
@@ -185,7 +185,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -204,7 +204,7 @@ export class EcosystemRepository {
       };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -221,7 +221,7 @@ export class EcosystemRepository {
       return membersCount;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -238,7 +238,7 @@ export class EcosystemRepository {
       return endorsementsCount;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -262,7 +262,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -285,7 +285,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -307,7 +307,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException('Unable to update ecosystem invitation');
+      throw error;
     }
   }
 
@@ -343,7 +343,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException('Unable to update ecosystem orgs');
+      throw error;
     }
   }
 
@@ -372,7 +372,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -389,7 +389,7 @@ export class EcosystemRepository {
       return await this.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -448,7 +448,7 @@ export class EcosystemRepository {
       return { totalPages, members };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -485,7 +485,7 @@ export class EcosystemRepository {
       return { totalPages, invitations };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -547,7 +547,7 @@ export class EcosystemRepository {
       return { totalPages, transactions };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -617,7 +617,27 @@ export class EcosystemRepository {
 
     } catch (error) {
       this.logger.error(`Error in getting getPlatformConfigDetails for the ecosystem - error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get platform config details
+   * @returns 
+   */
+  // eslint-disable-next-line camelcase
+  async getEcosystemConfigDetails(key: string): Promise<ecosystem_config> {
+    try {
+
+      return this.prisma.ecosystem_config.findFirst({
+        where: {
+          key
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`Error in getting getPlatformConfigDetails for the ecosystem - error: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -642,7 +662,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -654,7 +674,13 @@ export class EcosystemRepository {
           id: invitationId,
           status: EcosystemInvitationStatus.PENDING
         }
-      }
+      });
+      return deletedInvitation;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 
 
   // eslint-disable-next-line camelcase

@@ -812,6 +812,14 @@ export class EcosystemService {
       if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
         return this.handleSchemaSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
+        payload.credentialDefinition = {
+          tag: parsedRequestPayload.operation.tag,
+          issuerId: ecosystemMemberDetails.orgDid,
+          schemaId: endorsementTransactionPayload.requestBody['schemaId'],
+          type: endorsementTransactionPayload.requestBody['type'],
+          value: endorsementTransactionPayload.requestBody['value']
+        };
+      }
 
         if ('undefined' === submitTransactionRequest['message'].credentialDefinitionId.split(':')[3]) {
 
@@ -828,6 +836,43 @@ export class EcosystemService {
 
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
         }
+        const saveSchemaPayload: SaveSchema = {
+          name: endorsementTransactionPayload.requestBody['name'],
+          version: endorsementTransactionPayload.requestBody['version'],
+          attributes: JSON.stringify(endorsementTransactionPayload.requestBody['attributes']),
+          schemaLedgerId: submitTransactionRequest['message'].schemaId,
+          issuerId: ecosystemMemberDetails.orgDid,
+          createdBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
+          lastChangedBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
+          publisherDid: extractedDidValue,
+          orgId: endorsementTransactionPayload.ecosystemOrgs.orgId,
+          ledgerId: ecosystemMemberDetails.ledgerId
+        };
+        const saveSchemaDetails = await this.ecosystemRepository.saveSchema(saveSchemaPayload);
+        if (!saveSchemaDetails) {
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.saveSchema);
+        }
+        return saveSchemaDetails;
+      } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
+
+        const schemaDetails = await this.ecosystemRepository.getSchemaDetailsById(endorsementTransactionPayload.requestBody['schemaId']);
+        const saveCredentialDefinition: saveCredDef = {
+          schemaLedgerId: endorsementTransactionPayload.requestBody['schemaId'],
+          tag: endorsementTransactionPayload.requestBody['tag'],
+          credentialDefinitionId: submitTransactionRequest['message'].credentialDefinitionId,
+          revocable: false,
+          createdBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
+          orgId: ecosystemMemberDetails.orgId,
+          schemaId: schemaDetails.id
+        };
+
+        const saveCredDefDetails = await this.ecosystemRepository.saveCredDef(saveCredentialDefinition);
+        if (!saveCredDefDetails) {
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.saveCredDef);
+        }
+        return saveCredDefDetails;
+      }
+
 
         return this.handleCredDefSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       }
@@ -985,8 +1030,13 @@ export class EcosystemService {
   * @returns EndorsementTransaction Status message
   */
 
-  async autoSignAndSubmitTransaction(): Promise<object> {
-    try {
+  /**
+  * 
+  * @param ecosystemId 
+  * @param endorsementId 
+  * @param orgId 
+  * @returns EndorsementTransactionRequest Status message
+  */
 
       return await this.ecosystemRepository.updateAutoSignAndSubmitTransaction();
     } catch (error) {

@@ -483,7 +483,8 @@ export class EcosystemRepository {
             ecosystemOrgs: true,
             requestPayload: true,
             responsePayload: true,
-            createDateTime: true
+            createDateTime: true,
+            requestBody: true
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -731,7 +732,7 @@ export class EcosystemRepository {
       throw error;
     }
   }
-
+  
   // eslint-disable-next-line camelcase
   async saveCredDef(credDefResult: saveCredDef): Promise<credential_definition> {
     try {
@@ -768,7 +769,7 @@ export class EcosystemRepository {
     }
   }
 
-  async updateEndorsementRequestStatus(ecosystemId: string, orgId: string, endorsementId: string): Promise<object> {
+  async updateEndorsementRequestStatus(ecosystemId: string, endorsementId: string): Promise<object> {
     try {
     
     const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
@@ -784,7 +785,7 @@ export class EcosystemRepository {
     where: { id: ecosystemOrgId }
     });
    
-    if (endorsementTransactionEcosystemOrg.orgId === orgId && endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
+    if (endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
     const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
     where: { id: endorsementId },
     data: {

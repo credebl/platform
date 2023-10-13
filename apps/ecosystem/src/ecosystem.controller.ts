@@ -208,7 +208,7 @@ export class EcosystemController {
     async declineEndorsementRequestByLead(payload: {
       ecosystemId:string, endorsementId:string, orgId:string
     }): Promise<object> {
-      return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.orgId, payload.endorsementId);
+      return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
     }
 
 

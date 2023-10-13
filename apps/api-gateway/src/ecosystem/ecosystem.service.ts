@@ -10,6 +10,7 @@ import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
+// import { OrgDidRegisterDto } from './dtos/org-did-registration.dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -168,6 +169,11 @@ export class EcosystemService extends BaseService {
     ): Promise<{ response: object }> {
       const payload = { ecosystemId, endorsementId, orgId };
       return this.sendNats(this.serviceProxy, 'decline-endorsement-transaction', payload);
+    }
+
+    async orgDidRegistration(ecosystemId:string, orgId:string, orgDidRegisterDto: OrgDidRegisterDto): Promise<object> { 
+       const payload = {ecosystemId, orgId, orgDidRegisterDto};
+       return this.sendNats(this.serviceProxy, 'org-did-registration', payload);
     }
    
 }

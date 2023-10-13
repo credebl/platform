@@ -18,6 +18,7 @@ import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 // eslint-disable-next-line camelcase
 import { platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { OrgDidRegisterDto } from 'apps/api-gateway/src/ecosystem/dtos/org-did-registration.dto';
 
 
 @Injectable()
@@ -775,6 +776,15 @@ export class EcosystemService {
       this.logger.error(`error in decline endorsement request: ${error}`);
       throw new InternalServerErrorException(error);
     }
+  }
+
+  async orgDidRegistration(ecosystemId:string, orgId:string, orgDidRegisterDto:OrgDidRegisterDto): Promise<object> {
+   try {
+     return await this.ecosystemRepository.orgDidRegistration(ecosystemId, orgId, orgDidRegisterDto);
+   } catch (error) {
+    this.logger.error(`error in org did registration: ${error}`);
+    throw new InternalServerErrorException(error); 
+   }
   }
 
 }

@@ -9,6 +9,7 @@ import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
+import { OrgDidRegisterDto } from 'apps/api-gateway/src/ecosystem/dtos/org-did-registration.dto';
 
 @Controller()
 export class EcosystemController {
@@ -211,5 +212,15 @@ export class EcosystemController {
       return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.orgId, payload.endorsementId);
     }
 
+     /**
+   *
+   * @param payload
+   * @returns  Org did registration details
+   */
+
+     @MessagePattern({cmd:'org-did-registration'})
+     async orgDidRegistration(payload: {ecosystemId:string, orgId:string, orgDidRegisterDto: OrgDidRegisterDto }):Promise<object> {
+          return this.ecosystemService.orgDidRegistration(payload.ecosystemId, payload.orgId, payload.orgDidRegisterDto);
+     }
 
 }

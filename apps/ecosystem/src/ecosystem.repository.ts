@@ -7,6 +7,7 @@ import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
+import { OrgDidRegisterDto } from 'apps/api-gateway/src/ecosystem/dtos/org-did-registration.dto';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -797,5 +798,42 @@ export class EcosystemRepository {
     this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
     throw error;
     }
+    }
+
+    async orgDidRegistration(ecosystemId:string, orgId:string, orgDidRegisterDto:OrgDidRegisterDto): Promise<object> {
+      // console.log('inside final Repo', ecosystemId, orgId, orgDidRegisterDto);
+      //  return Object;
+     const  { orgName, orgDescription, orgDid} = orgDidRegisterDto;
+       try {
+       const orgInfo = await this.prisma.organisation.create({
+        data:{
+          name:orgName,
+          description:orgDescription
+        }
+       });
+      //  console.log("create orgInfo query done",orgInfo);
+
+       const ecosystemRoleInfo = await this.prisma.ecosystem_roles.findUnique({where: { name:EcosystemRoles.ECOSYSTEM_MEMBER  }});
+      //  console.log("find ecosystem role info",ecosystemRoleInfo);
+
+       if (orgInfo && ecosystemRoleInfo) {
+        const ecosystemOrgs =  await this.prisma.ecosystem_orgs.create({
+          data: {
+            orgId:String(orgInfo.id),
+            ecosystemId,
+            ecosystemRoleId:ecosystemRoleInfo.id,
+            orgDid,
+            orgName,
+            status:EcosystemOrgStatus.ACTIVE
+          }
+        });
+        // console.log('ecosystemOrgs info',ecosystemOrgs);
+        return ecosystemOrgs;
+       }
+      return Object;
+       } catch (error) {
+        this.logger.error(`Error in org did registration: ${error.message}`);
+        throw error;
+       }
     }
 }

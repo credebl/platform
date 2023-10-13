@@ -1,10 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString, ValidateNested } from 'class-validator';
 export class GenerateRegistrationDto {
-    @ApiProperty({ example: 'abc@vomoto.com' })
-    @IsNotEmpty({ message: 'Email is required.' })
-    @IsEmail()
-    userName: string;
+    email: string;
     
     @IsOptional()
     @ApiProperty({ example: 'false' })
@@ -66,7 +63,7 @@ class ResponseDto {
   
     @ApiProperty()
     @IsString()
-    userName: string;
+    email: string;
   }
 
 //   
@@ -119,10 +116,7 @@ class VerifyAuthenticationResponseDto {
   export class VerifyAuthenticationPayloadDto {
     @ApiProperty()
     verifyAuthenticationDetails: VerifyAuthenticationDto;
-  
-    @ApiProperty()
-    @IsString()
-    userName: string;
+    email: string;
   }
 
   export class UpdateFidoUserDetailsDto {
@@ -142,7 +136,7 @@ class VerifyAuthenticationResponseDto {
   export class UserNameDto {
     @ApiProperty()
     @IsString()
-    userName: string;
+    email: string;
   }
 
   export class credentialDto {

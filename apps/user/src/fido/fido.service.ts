@@ -18,17 +18,17 @@ export class FidoService {
     ) { }
     async generateRegistration(payload: GenerateRegistrationDto): Promise<object> {
         try {
-            const { userName, deviceFlag } = payload;
-            const fidoUser = await this.fidoUserRepository.checkFidoUserExist(userName);
+            const { email, deviceFlag } = payload;
+            const fidoUser = await this.fidoUserRepository.checkFidoUserExist(email);
             if (!fidoUser && !fidoUser.id) {  
                 throw new NotFoundException(ResponseMessages.user.error.notFound); 
             }
 
             if (!fidoUser || true === deviceFlag || false === deviceFlag) {
-                const generatedOption = await this.generateRegistrationOption(userName);
+                const generatedOption = await this.generateRegistrationOption(email);
                 return generatedOption;
             } else if (!fidoUser.isFidoVerified) {
-                const generatedOption = await this.updateUserRegistrationOption(userName);
+                const generatedOption = await this.updateUserRegistrationOption(email);
                 return generatedOption;
             } else {
                 throw new BadRequestException(ResponseMessages.fido.error.exists);
@@ -39,13 +39,13 @@ export class FidoService {
         }
     }
 
-    generateRegistrationOption(userName: string): Promise<object> {
-        const url = `${process.env.FIDO_API_ENDPOINT}/generate-registration-options/?userName=${userName}`;
+    generateRegistrationOption(email: string): Promise<object> {
+        const url = `${process.env.FIDO_API_ENDPOINT}/generate-registration-options/?userName=${email}`;
         return this.commonService
             .httpGet(url, { headers: { 'Content-Type': 'application/json' } })
             .then(async (response) => {
                 const { user } = response;
-                const updateUser = await this.fidoUserRepository.updateUserDetails(userName, [
+                const updateUser = await this.fidoUserRepository.updateUserDetails(email, [
                     {fidoUserId:user.id},
                     {username:user.name}
                 ]);
@@ -57,14 +57,14 @@ export class FidoService {
             });
     }
 
-    updateUserRegistrationOption(userName: string): Promise<object> {
-        const url = `${process.env.FIDO_API_ENDPOINT}/generate-registration-options/?userName=${userName}`;
+    updateUserRegistrationOption(email: string): Promise<object> {
+        const url = `${process.env.FIDO_API_ENDPOINT}/generate-registration-options/?userName=${email}`;
         return this.commonService
             .httpGet(url, { headers: { 'Content-Type': 'application/json' } })
             .then(async (response) => {
                 const { user } = response;
                 this.logger.debug(`registration option:: already${JSON.stringify(response)}`);
-                 await this.fidoUserRepository.updateUserDetails(userName, [
+                 await this.fidoUserRepository.updateUserDetails(email, [
                     {fidoUserId:user.id},
                     {isFidoVerified:false}
                 ]);
@@ -74,17 +74,17 @@ export class FidoService {
 
     async verifyRegistration(verifyRegistrationDto: VerifyRegistrationPayloadDto): Promise<object> {
         try {
-            const { verifyRegistrationDetails, userName } = verifyRegistrationDto;
+            const { verifyRegistrationDetails, email } = verifyRegistrationDto;
             const url = `${process.env.FIDO_API_ENDPOINT}/verify-registration`;
             const payload = JSON.stringify(verifyRegistrationDetails);
             const response = await this.commonService.httpPost(url, payload, {
                 headers: { 'Content-Type': 'application/json' }
               });
-              if (response?.verified && userName) {
-                await this.fidoUserRepository.updateUserDetails(userName, [{isFidoVerified:true}]);
+              if (response?.verified && email) {
+                await this.fidoUserRepository.updateUserDetails(email, [{isFidoVerified:true}]);
                 const credentialID = response.newDevice.credentialID.replace(/=*$/, '');
                 response.newDevice.credentialID = credentialID;
-                const getUser = await this.fidoUserRepository.checkFidoUserExist(userName);
+                const getUser = await this.fidoUserRepository.checkFidoUserExist(email);
                 await this.userDevicesRepository.createMultiDevice(response?.newDevice, getUser.id);
                 return response;
               } else {
@@ -96,9 +96,9 @@ export class FidoService {
         }
     }
 
-    async generateAuthenticationOption(userName: string): Promise<object> {
+    async generateAuthenticationOption(email: string): Promise<object> {
         try {
-            const fidoUser = await this.fidoUserRepository.checkFidoUserExist(userName);
+            const fidoUser = await this.fidoUserRepository.checkFidoUserExist(email);
             if (fidoUser && fidoUser.id) {
                 const fidoMultiDevice = await this.userDevicesRepository.getfidoMultiDevice(fidoUser.id);
                 const credentialIds = [];
@@ -124,8 +124,8 @@ export class FidoService {
 
     async verifyAuthentication(verifyAuthenticationDto: VerifyAuthenticationPayloadDto): Promise<object> {
         try {
-            const { verifyAuthenticationDetails, userName } = verifyAuthenticationDto;
-            const fidoUser = await this.fidoUserRepository.checkFidoUserExist(userName);
+            const { verifyAuthenticationDetails, email } = verifyAuthenticationDto;
+            const fidoUser = await this.fidoUserRepository.checkFidoUserExist(email);
             const fidoMultiDevice = await this.userDevicesRepository.getfidoMultiDeviceDetails(fidoUser.id);
             const url = `${process.env.FIDO_API_ENDPOINT}/verify-authentication`;
             const payload = { verifyAuthenticationDetails: JSON.stringify(verifyAuthenticationDetails), devices: fidoMultiDevice };
@@ -164,11 +164,13 @@ export class FidoService {
 
     async updateUser(updateFidoUserDetailsDto: UpdateFidoUserDetailsDto): Promise<string> {
         try {
-            const { deviceFriendlyName, credentialId } = updateFidoUserDetailsDto;
-            const updateFidoUser = await this.userDevicesRepository.updateDeviceByCredentialId(credentialId);
-            if (updateFidoUser[0].id) {
-             await this.userDevicesRepository.addCredentialIdAndNameById(updateFidoUser[0].id, credentialId, deviceFriendlyName);
 
+            const updateFidoUserDetails = JSON.stringify(updateFidoUserDetailsDto);
+            const updateFidoUser = await this.userDevicesRepository.updateDeviceByCredentialId(updateFidoUserDetailsDto.credentialId);
+
+            if (updateFidoUser[0].id) {
+             await this.userDevicesRepository.addCredentialIdAndNameById(updateFidoUser[0].id, updateFidoUserDetails);
+             
             }
             if (updateFidoUser[0].id) {
                 return 'User updated.';
@@ -182,9 +184,9 @@ export class FidoService {
         }
     }
 
-    async fetchFidoUserDetails(userName: string): Promise<object> {
+    async fetchFidoUserDetails(email: string): Promise<object> {
         try {
-            const fidoUser = await this.fidoUserRepository.checkFidoUserExist(userName);
+            const fidoUser = await this.fidoUserRepository.checkFidoUserExist(email);
             if (!fidoUser) {
                 throw new NotFoundException(ResponseMessages.user.error.notFound);    
             }
@@ -219,7 +221,6 @@ export class FidoService {
     async updateFidoUserDeviceName(payload: updateDeviceDto): Promise<string> {
         try {
             const { credentialId, deviceName } = payload;
-            
             const getUserDevice = await this.userDevicesRepository.checkUserDeviceByCredentialId(credentialId);
             const updateUserDevice = await this.userDevicesRepository.updateUserDeviceByCredentialId(getUserDevice.id, deviceName);
             if (1 === updateUserDevice.count) {

@@ -718,7 +718,7 @@ export class EcosystemService {
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, platformConfig.sgApiKey);
 
-      if ('failed' === submitTransactionRequest["message"].state || undefined === submitTransactionRequest["message"].credentialDefinitionId.split(":")[3]) {
+      if ('failed' === submitTransactionRequest["message"].state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
       }
 
@@ -727,6 +727,11 @@ export class EcosystemService {
       if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
         return this.handleSchemaSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
+
+        if (undefined === submitTransactionRequest["message"].credentialDefinitionId.split(":")[3]) {
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
+        }
+
         return this.handleCredDefSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       }
     } catch (error) {

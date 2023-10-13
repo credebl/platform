@@ -196,7 +196,24 @@ export const ResponseMessages = {
             invalidInvitationStatus: 'Invalid invitation status',
             invitationNotFound: 'Ecosystem Invitation not found',
             invitationNotUpdate: 'Ecosystem Invitation not updated',
-            orgsNotUpdate: 'Ecosystem Orgs not updated'
+            orgsNotUpdate: 'Ecosystem Orgs not updated',
+            ecosystemNotEnabled: 'Ecosystem service is not enabled',
+            sumbitTransaction: 'Error while submitting transaction',
+            requestSchemaTransaction: 'Error while request schema transaction',
+            requestCredDefTransaction: 'Error while submitting transaction',
+            notFound: 'Organization not found',
+            leadNotFound: 'Lead details not found',
+            schemaAlreadyExist: 'Schema name and schema version already exist',
+            credDefAlreadyExist: 'Credential definition already exist',
+            saveSchema: 'Error while storing the schema details',
+            saveCredDef: 'Error while storing the credential-definition details',
+            invalidOrgId: 'Invalid organization Id',
+            invalidEcosystemId: 'Invalid ecosystem Id',
+            invalidTransaction: 'Transaction does not exist',
+            transactionSubmitted: 'Transaction already submitted',
+            invalidAgentUrl: 'Invalid agent url',
+            EndorsementTransactionNotFoundException:'Endorsement transaction with status requested not found',
+            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg'
         }
 
     }

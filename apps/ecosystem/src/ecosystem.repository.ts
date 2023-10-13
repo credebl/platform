@@ -111,6 +111,23 @@ export class EcosystemRepository {
   async getAllEcosystemDetails(): Promise<ecosystem[]> {
     try {
       const ecosystemDetails = await this.prisma.ecosystem.findMany({
+        where: {
+          ecosystemOrgs: {
+            some: {
+              orgId
+            }
+          }
+        },
+        include: {
+          ecosystemOrgs: {
+            where: {
+              orgId
+            },
+            include: {
+              ecosystemRole: true
+            }
+          }
+        }
       });
       return ecosystemDetails;
     } catch (error) {
@@ -188,11 +205,11 @@ export class EcosystemRepository {
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
-    }  
+    }
   }
 
 
-  async getEcosystemMembersCount (ecosystemId: string): Promise<number> {
+  async getEcosystemMembersCount(ecosystemId: string): Promise<number> {
     try {
       const membersCount = await this.prisma.ecosystem_orgs.count(
         {
@@ -201,24 +218,24 @@ export class EcosystemRepository {
           }
         }
       );
-      return membersCount;    
+      return membersCount;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
     }
   }
 
-  async getEcosystemEndorsementsCount (ecosystemId: string): Promise<number> {
+  async getEcosystemEndorsementsCount(ecosystemId: string): Promise<number> {
     try {
       const endorsementsCount = await this.prisma.endorsement_transaction.count({
         where: {
           ecosystemOrgs: {
             ecosystemId
-    
+
           }
         }
       });
-      return endorsementsCount;        
+      return endorsementsCount;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -407,7 +424,7 @@ export class EcosystemRepository {
           },
           include: {
             ecosystem: true,
-            ecosystemRole:true
+            ecosystemRole: true
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -598,6 +615,26 @@ export class EcosystemRepository {
     }
   }
 
+  // eslint-disable-next-line camelcase
+  async findRecordsByNameAndVersion(name: string, version: string): Promise<endorsement_transaction[]> {
+    try {
+      return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'name' = ${name} AND "requestBody"->>'version' = ${version}`;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystem schema: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async findRecordsByCredDefTag(tag: string): Promise<endorsement_transaction[]> {
+    try {
+      return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'tag' = ${tag}`;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystem credential-definition: ${error.message} `);
+      throw error;
+    }
+  }
+
   async updateTransactionDetails(
     endorsementId: string,
     schemaTransactionRequest: string
@@ -665,7 +702,7 @@ export class EcosystemRepository {
       throw error;
     }
   }
-  
+
   // eslint-disable-next-line camelcase
   async saveCredDef(credDefResult: saveCredDef): Promise<credential_definition> {
     try {
@@ -704,35 +741,35 @@ export class EcosystemRepository {
 
   async updateEndorsementRequestStatus(ecosystemId: string, endorsementId: string): Promise<object> {
     try {
-    
-    const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
-    where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
-    });
-    
-    if (!endorsementTransaction) {
-    throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
-    }
-    const { ecosystemOrgId } = endorsementTransaction;
-   
-    const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
-    where: { id: ecosystemOrgId }
-    });
-   
-    if (endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
-    const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
-    where: { id: endorsementId },
-    data: {
-    status: endorsementTransactionStatus.DECLINED
-    }
-    });
-   
-    return updatedEndorsementTransaction;
-    } else {
-    throw new NotFoundException(ResponseMessages.ecosystem.error.OrgOrEcosystemNotFoundExceptionForEndorsementTransaction);
-    }
+
+      const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
+        where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
+      });
+
+      if (!endorsementTransaction) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
+      }
+      const { ecosystemOrgId } = endorsementTransaction;
+
+      const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
+        where: { id: ecosystemOrgId }
+      });
+
+      if (endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
+        const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
+          where: { id: endorsementId },
+          data: {
+            status: endorsementTransactionStatus.DECLINED
+          }
+        });
+
+        return updatedEndorsementTransaction;
+      } else {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.OrgOrEcosystemNotFoundExceptionForEndorsementTransaction);
+      }
     } catch (error) {
-    this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
-    throw error;
+      this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
+      throw error;
     }
-    }
+  }
 }

@@ -289,11 +289,15 @@ export class EcosystemService {
 
       const ecosystemMemberDetails = await this.ecosystemRepository.getAgentDetails(orgId);
       if (!ecosystemMemberDetails) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.notFound);
+        throw new NotFoundException(ResponseMessages.ecosystem.error.notFound);
       }
 
       // eslint-disable-next-line camelcase
       const platformConfig: platform_config = await this.ecosystemRepository.getPlatformConfigDetails();
+
+      if (!ecosystemMemberDetails) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.platformConfigNotFound);
+      }
 
       const url = await this.getAgentUrl(ecosystemMemberDetails?.orgAgentTypeId, ecosystemMemberDetails.agentEndPoint, endorsementTransactionType.SCHEMA, ecosystemMemberDetails?.tenantId);
 
@@ -301,13 +305,21 @@ export class EcosystemService {
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
+      if (!getEcosystemLeadDetails) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
+      }
+
       const ecosystemLeadAgentDetails = await this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId));
 
       if (!ecosystemLeadAgentDetails) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
+        throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
       }
 
       const getEcosystemOrgDetailsByOrgId = await this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId));
+
+      if (!getEcosystemOrgDetailsByOrgId) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemOrgNotFound);
+      }
 
       const schemaTransactionPayload: SchemaTransactionPayload = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
@@ -330,6 +342,7 @@ export class EcosystemService {
       if ('failed' === schemaTransactionRequest.message.schemaState.state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestSchemaTransaction);
       }
+      
       return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestSchemaPayload, endorsementTransactionType.SCHEMA);
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
@@ -472,7 +485,7 @@ export class EcosystemService {
       const ecosystemConfigDetails = await this.ecosystemRepository.getEcosystemConfigDetails();
 
       const updateSignedTransation = await this.ecosystemRepository.updateTransactionDetails(endorsementId, schemaTransactionRequest.message.signedTransaction);
-      
+
       if (updateSignedTransation && ecosystemConfigDetails?.isAutoSubmit) {
         const submitTxn = await this.submitTransaction(endorsementId, ecosystemId);
         return submitTxn;
@@ -788,11 +801,11 @@ export class EcosystemService {
   * @returns EndorsementTransactionRequest Status message
   */
 
-   async declineEndorsementRequestByLead(ecosystemId:string, endorsementId:string): Promise<object> {
+  async declineEndorsementRequestByLead(ecosystemId: string, endorsementId: string): Promise<object> {
     try {
 
       return await this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, endorsementId);
-      } catch (error) {
+    } catch (error) {
       this.logger.error(`error in decline endorsement request: ${error}`);
       throw new InternalServerErrorException(error);
     }

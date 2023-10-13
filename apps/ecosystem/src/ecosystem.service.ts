@@ -95,31 +95,7 @@ export class EcosystemService {
    */
   async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
     try {
-      const endorseMemberCount = await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
-
-      const query = {
-        ecosystemId,
-        ecosystemRole: {
-          name: EcosystemRoles.ECOSYSTEM_LEAD
-        }
-      };
-
-      const ecosystemDetails = await this.ecosystemRepository.fetchEcosystemOrg(
-        query
-      );
-
-      const dashboardDetails = {
-        ecosystem: ecosystemDetails['ecosystem'],
-        membersCount: endorseMemberCount.membersCount,
-        endorsementsCount: endorseMemberCount.endorsementsCount,
-        ecosystemLead: {
-          role: ecosystemDetails['ecosystemRole']['name'],
-          orgName: ecosystemDetails['orgName'],
-          config: endorseMemberCount.ecosystemConfigData
-        }
-      };
-
-      return dashboardDetails;
+      return await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
     } catch (error) {
       this.logger.error(`In ecosystem dashboard details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -192,15 +168,6 @@ export class EcosystemService {
    */
   async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
     try {
-      const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(EcosystemConfigSettings.MULTI_ECOSYSTEM);
-      if (isMultiEcosystemEnabled 
-        && 'false' === isMultiEcosystemEnabled.value 
-        && acceptRejectInvitation.status !== Invitation.REJECTED) {
-        const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(acceptRejectInvitation.orgId);
-        if (0 < checkOrganization.length) {
-          throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-        };
-      } 
 
       const { orgId, status, invitationId, orgName, orgDid } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
@@ -368,7 +335,11 @@ export class EcosystemService {
    */
   async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
-      const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
+      const schemaRequestExist = await this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version);
+
+      if (0 !== schemaRequestExist.length) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+      }
 
       const [schemaRequestExist, ecosystemMemberDetails, platformConfig, ecosystemLeadAgentDetails, getEcosystemOrgDetailsByOrgId] = await Promise.all([
         this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version),
@@ -439,20 +410,13 @@ export class EcosystemService {
   async requestCredDeffEndorsement(requestCredDefPayload: RequestCredDeffEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
 
-      const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
-
-      const [credDefRequestExist, ecosystemMemberDetails, platformConfig, ecosystemLeadAgentDetails, getEcosystemOrgDetailsByOrgId] = await Promise.all([
-        this.ecosystemRepository.findRecordsByCredDefTag(requestCredDefPayload?.tag),
-        this.ecosystemRepository.getAgentDetails(orgId),
-        this.ecosystemRepository.getPlatformConfigDetails(),
-        this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId)),
-        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId))
-      ]);
+      const credDefRequestExist = await this.ecosystemRepository.findRecordsByCredDefTag(requestCredDefPayload?.tag);
 
       if (0 !== credDefRequestExist.length) {
         throw new ConflictException(ResponseMessages.ecosystem.error.credDefAlreadyExist);
       }
 
+      const ecosystemMemberDetails = await this.ecosystemRepository.getAgentDetails(orgId);
       if (!ecosystemMemberDetails) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.notFound);
       }
@@ -504,7 +468,13 @@ export class EcosystemService {
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
       };
 
-      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestCredDefPayload, endorsementTransactionType.CREDENTIAL_DEFINITION);
+
+      if ('failed' === credDefTransactionRequest.message.credentialDefinitionState.state) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestCredDefTransaction);
+      }
+
+      const requestBody = credDefTransactionRequest.message.credentialDefinitionState.credentialDefinition;
+      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestBody, endorsementTransactionType.CREDENTIAL_DEFINITION);
     } catch (error) {
       this.logger.error(`In request cred-def endorsement: ${JSON.stringify(error)}`);
       throw new RpcException(error.response || error);
@@ -812,6 +782,14 @@ export class EcosystemService {
       if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
         return this.handleSchemaSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
+        payload.credentialDefinition = {
+          tag: parsedRequestPayload.operation.tag,
+          issuerId: ecosystemMemberDetails.orgDid,
+          schemaId: endorsementTransactionPayload.requestBody['schemaId'],
+          type: endorsementTransactionPayload.requestBody['type'],
+          value: endorsementTransactionPayload.requestBody['value']
+        };
+      }
 
         if ('undefined' === submitTransactionRequest['message'].credentialDefinitionId.split(':')[3]) {
 
@@ -828,6 +806,43 @@ export class EcosystemService {
 
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
         }
+        const saveSchemaPayload: SaveSchema = {
+          name: endorsementTransactionPayload.requestBody['name'],
+          version: endorsementTransactionPayload.requestBody['version'],
+          attributes: JSON.stringify(endorsementTransactionPayload.requestBody['attributes']),
+          schemaLedgerId: submitTransactionRequest['message'].schemaId,
+          issuerId: ecosystemMemberDetails.orgDid,
+          createdBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
+          lastChangedBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
+          publisherDid: extractedDidValue,
+          orgId: endorsementTransactionPayload.ecosystemOrgs.orgId,
+          ledgerId: ecosystemMemberDetails.ledgerId
+        };
+        const saveSchemaDetails = await this.ecosystemRepository.saveSchema(saveSchemaPayload);
+        if (!saveSchemaDetails) {
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.saveSchema);
+        }
+        return saveSchemaDetails;
+      } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
+
+        const schemaDetails = await this.ecosystemRepository.getSchemaDetailsById(endorsementTransactionPayload.requestBody['schemaId']);
+        const saveCredentialDefinition: saveCredDef = {
+          schemaLedgerId: endorsementTransactionPayload.requestBody['schemaId'],
+          tag: endorsementTransactionPayload.requestBody['tag'],
+          credentialDefinitionId: submitTransactionRequest['message'].credentialDefinitionId,
+          revocable: false,
+          createdBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
+          orgId: ecosystemMemberDetails.orgId,
+          schemaId: schemaDetails.id
+        };
+
+        const saveCredDefDetails = await this.ecosystemRepository.saveCredDef(saveCredentialDefinition);
+        if (!saveCredDefDetails) {
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.saveCredDef);
+        }
+        return saveCredDefDetails;
+      }
+
 
         return this.handleCredDefSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       }
@@ -984,16 +999,6 @@ export class EcosystemService {
   /**
   * @returns EndorsementTransaction Status message
   */
-
-  async autoSignAndSubmitTransaction(): Promise<object> {
-    try {
-
-      return await this.ecosystemRepository.updateAutoSignAndSubmitTransaction();
-    } catch (error) {
-      this.logger.error(`error in decline endorsement request: ${error}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
 
   /**
   * 

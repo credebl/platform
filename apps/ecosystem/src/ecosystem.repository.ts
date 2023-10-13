@@ -801,6 +801,26 @@ export class EcosystemRepository {
     }
   }
 
+  // eslint-disable-next-line camelcase
+  async findRecordsByNameAndVersion(name: string, version: string): Promise<endorsement_transaction[]> {
+    try {
+      return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'name' = ${name} AND "requestBody"->>'version' = ${version}`;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystem schema: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async findRecordsByCredDefTag(tag: string): Promise<endorsement_transaction[]> {
+    try {
+      return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'tag' = ${tag}`;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystem credential-definition: ${error.message} `);
+      throw error;
+    }
+  }
+
   async updateTransactionDetails(
     endorsementId: string,
     schemaTransactionRequest: string
@@ -953,43 +973,6 @@ export class EcosystemRepository {
       }
     } catch (error) {
       this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async updateAutoSignAndSubmitTransaction(): Promise<{
-    id: string;
-    key: string;
-    value: string;
-    createDateTime: Date;
-    createdBy: string;
-    lastChangedDateTime: Date;
-    lastChangedBy: string;
-    deletedAt: Date;
-  }> {
-    try {
-
-      const { id, value } = await this.prisma.ecosystem_config.findFirst({
-        where: {
-          key: `${CommonConstants.ECOSYSTEM_AUTO_ENDOSEMENT}`
-        }
-      });
-
-      const updatedValue = 'false' === value ? 'true' : 'false';
-
-      const updateEcosystemConfig = await this.prisma.ecosystem_config.update({
-        where: {
-          id
-        },
-        data: {
-          value: updatedValue
-        }
-      });
-
-      return updateEcosystemConfig;
-
-    } catch (error) {
-      this.logger.error(`Error in update auto sign and submit flag: ${error.message}`);
       throw error;
     }
   }

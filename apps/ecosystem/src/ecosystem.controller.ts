@@ -206,9 +206,9 @@ export class EcosystemController {
    */
     @MessagePattern({ cmd: 'decline-endorsement-transaction' })
     async declineEndorsementRequestByLead(payload: {
-      ecosystemId:string, endorsementId:string, orgId:string
+      ecosystemId:string, endorsementId:string
     }): Promise<object> {
-      return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.orgId, payload.endorsementId);
+      return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
     }
 
 

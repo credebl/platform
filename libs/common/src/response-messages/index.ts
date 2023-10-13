@@ -217,6 +217,8 @@ export const ResponseMessages = {
             ecosystemNotFound: 'Ecosystem not found',
             c: 'Ecosystem org not found',
             leadNotFound: 'Lead details not found',
+            schemaAlreadyExist: 'Schema name and schema version already exist',
+            credDefAlreadyExist: 'Credential definition already exist',
             saveSchema: 'Error while storing the schema details',
             saveCredDef: 'Error while storing the credential-definition details',
             invalidOrgId: 'Invalid organization Id',

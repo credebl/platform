@@ -286,6 +286,11 @@ export class EcosystemService {
    */
   async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
+      const schemaRequestExist = await this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version);
+
+      if (0 !== schemaRequestExist.length) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+      }
 
       const ecosystemMemberDetails = await this.ecosystemRepository.getAgentDetails(orgId);
       if (!ecosystemMemberDetails) {
@@ -353,6 +358,13 @@ export class EcosystemService {
 
   async requestCredDeffEndorsement(requestCredDefPayload: RequestCredDeffEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
+
+      const credDefRequestExist = await this.ecosystemRepository.findRecordsByCredDefTag(requestCredDefPayload?.tag);
+
+      if (0 !== credDefRequestExist.length) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.credDefAlreadyExist);
+      }
+
       const ecosystemMemberDetails = await this.ecosystemRepository.getAgentDetails(orgId);
       if (!ecosystemMemberDetails) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.notFound);
@@ -396,7 +408,8 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestCredDefTransaction);
       }
 
-      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestCredDefPayload, endorsementTransactionType.CREDENTIAL_DEFINITION);
+      const requestBody = credDefTransactionRequest.message.credentialDefinitionState.credentialDefinition;
+      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestBody, endorsementTransactionType.CREDENTIAL_DEFINITION);
     } catch (error) {
       this.logger.error(`In request cred-def endorsement : ${JSON.stringify(error)}`);
 
@@ -585,7 +598,9 @@ export class EcosystemService {
         payload.credentialDefinition = {
           tag: parsedRequestPayload.operation.tag,
           issuerId: ecosystemMemberDetails.orgDid,
-          schemaId: endorsementTransactionPayload.requestBody['schemaId']
+          schemaId: endorsementTransactionPayload.requestBody['schemaId'],
+          type: endorsementTransactionPayload.requestBody['type'],
+          value: endorsementTransactionPayload.requestBody['value']
         };
       }
 
@@ -625,6 +640,7 @@ export class EcosystemService {
         }
         return saveSchemaDetails;
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
+
         const schemaDetails = await this.ecosystemRepository.getSchemaDetailsById(endorsementTransactionPayload.requestBody['schemaId']);
         const saveCredentialDefinition: saveCredDef = {
           schemaLedgerId: endorsementTransactionPayload.requestBody['schemaId'],
@@ -635,6 +651,7 @@ export class EcosystemService {
           orgId: ecosystemMemberDetails.orgId,
           schemaId: schemaDetails.id
         };
+
         const saveCredDefDetails = await this.ecosystemRepository.saveCredDef(saveCredentialDefinition);
         if (!saveCredDefDetails) {
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.saveCredDef);

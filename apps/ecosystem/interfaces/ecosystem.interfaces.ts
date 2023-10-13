@@ -66,6 +66,7 @@ export interface CredDefMessage {
       schemaId: string;
       schema: Record<string, unknown>;
       credentialDefinitionRequest: string;
+      credentialDefinition: Record<string, unknown>;
     };
     registrationMetadata: Record<string, unknown>;
     schemaMetadata: Record<string, unknown>;
@@ -116,6 +117,8 @@ interface CredentialDefinitionPayload {
   tag: string;
   issuerId: string;
   schemaId: string;
+  type: string;
+  value: Record<string, unknown>;
 }
 
 export interface submitTransactionPayload {

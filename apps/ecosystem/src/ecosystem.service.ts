@@ -517,7 +517,8 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
       }
 
-      const ecosystemConfigDetails = await this.ecosystemRepository.getEcosystemConfigDetails();
+      const autoEndorsement = `${CommonConstants.ECOSYSTEM_AUTO_ENDOSEMENT}`;
+      const ecosystemConfigDetails = await this.ecosystemRepository.getEcosystemConfigDetails(autoEndorsement);
 
       if (!ecosystemConfigDetails) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemConfigNotFound);
@@ -529,7 +530,7 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateTransactionError);
       }
 
-      if (updateSignedTransaction && ecosystemConfigDetails.isAutoSubmit) {
+      if (updateSignedTransaction && 'true' === ecosystemConfigDetails.value) {
 
         const submitTxn = await this.submitTransaction(endorsementId, ecosystemId);
         if (!submitTxn) {
@@ -728,7 +729,19 @@ export class EcosystemService {
         return this.handleSchemaSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
 
-        if (undefined === submitTransactionRequest["message"].credentialDefinitionId.split(":")[3]) {
+        if ('undefined' === submitTransactionRequest["message"].credentialDefinitionId.split(":")[3]) {
+
+          const autoEndorsement = `${CommonConstants.ECOSYSTEM_AUTO_ENDOSEMENT}`;
+          const ecosystemConfigDetails = await this.ecosystemRepository.getEcosystemConfigDetails(autoEndorsement);
+
+          if ('true' === ecosystemConfigDetails.value) {
+
+            await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
+          } else {
+
+            await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.SIGNED);
+          }
+
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
         }
 

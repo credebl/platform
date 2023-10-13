@@ -166,7 +166,7 @@ export class EcosystemRepository {
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw error;
-    }  
+    }
   }
 
 
@@ -587,10 +587,14 @@ export class EcosystemRepository {
    * @returns 
    */
   // eslint-disable-next-line camelcase
-  async getEcosystemConfigDetails(): Promise<ecosystem_config> {
+  async getEcosystemConfigDetails(key: string): Promise<ecosystem_config> {
     try {
 
-      return this.prisma.ecosystem_config.findFirst();
+      return this.prisma.ecosystem_config.findFirst({
+        where: {
+          key
+        }
+      });
 
     } catch (error) {
       this.logger.error(`Error in getting getPlatformConfigDetails for the ecosystem - error: ${JSON.stringify(error)}`);

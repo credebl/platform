@@ -405,7 +405,6 @@ model ecosystem_config {
   id                  String    @id @default(uuid())
   key                 String?
   value               String?
-  isAutoSubmit        Boolean   @default(false)
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
   createdBy           String    @default("1")
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)

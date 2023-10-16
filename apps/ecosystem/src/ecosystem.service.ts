@@ -84,7 +84,31 @@ export class EcosystemService {
    */
   async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
     try {
-      return await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
+      const endorseMemberCount = await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
+      // const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
+
+      const query = {
+        ecosystemId,
+        ecosystemRole: {
+          name: EcosystemRoles.ECOSYSTEM_LEAD
+        }
+      };
+
+      const ecosystemDetails = await this.ecosystemRepository.fetchEcosystemOrg(
+        query
+      );
+
+      const dashboardDetails = {
+        ecosystem: ecosystemDetails['ecosystem'],
+        membersCount: endorseMemberCount.membersCount,
+        endorsementsCount: endorseMemberCount.endorsementsCount,
+        ecosystemLead:{
+            role: ecosystemDetails['ecosystemRole']['name'],
+            orgName: ecosystemDetails['orgName']
+        } 
+      };
+
+      return dashboardDetails;
     } catch (error) {
       this.logger.error(`In ecosystem dashboard details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

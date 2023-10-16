@@ -172,9 +172,6 @@ export class FidoController {
         description: 'Internal server error',
         type: InternalServerErrorDto
     })
-    // @ApiQuery(
-    //     { name: 'credentialId', required: true }
-    // )
     @ApiQuery(
         { name: 'deviceName', required: true }
     )

@@ -10,6 +10,8 @@ import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
+import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
+import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -22,7 +24,7 @@ export class EcosystemService extends BaseService {
    * @param createEcosystemDto
    * @returns Ecosystem creation success
    */
-  async createEcosystem(createEcosystemDto): Promise<object> {
+  async createEcosystem(createEcosystemDto: CreateEcosystemDto): Promise<object> {
     const payload = { createEcosystemDto };
     return this.sendNats(this.serviceProxy, 'create-ecosystem', payload);
   }
@@ -32,7 +34,7 @@ export class EcosystemService extends BaseService {
    * @param editEcosystemDto
    * @returns Ecosystem creation success
    */
-  async editEcosystem(editEcosystemDto, ecosystemId): Promise<object> {
+  async editEcosystem(editEcosystemDto: EditEcosystemDto, ecosystemId:string): Promise<object> {
     const payload = { editEcosystemDto, ecosystemId };
     return this.sendNats(this.serviceProxy, 'edit-ecosystem', payload);
   }

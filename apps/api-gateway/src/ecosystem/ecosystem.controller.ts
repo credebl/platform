@@ -437,11 +437,11 @@ export class EcosystemController {
    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
    async declineEndorsementRequestByLead(
      @Param('ecosystemId') ecosystemId: string,
-     @Param('orgId') orgId: string,
      @Param('endorsementId') endorsementId: string,
+     @Param('orgId') orgId: string,
      @Res() res: Response
    ): Promise<object> {
-     await this.ecosystemService.declineEndorsementRequestByLead(ecosystemId, orgId, endorsementId);
+     await this.ecosystemService.declineEndorsementRequestByLead(ecosystemId, endorsementId, orgId);
      const finalResponse: IResponseType = {
        statusCode: HttpStatus.OK,
        message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction

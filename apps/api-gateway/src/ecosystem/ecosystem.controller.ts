@@ -88,7 +88,27 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/users/invitations')
+  @Get('/:ecosystemId/:orgId/dashboard')
+  @ApiOperation({ summary: 'Get ecosystem dashboard details', description: 'Get ecosystem dashboard details' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
+  @ApiBearerAuth()
+
+  async getEcosystemDashboardDetails(@Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+
+    const getEcosystemDetails = await this.ecosystemService.getEcosystemDashboardDetails(ecosystemId, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.getEcosystemDashboard,
+      data: getEcosystemDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
+  @Get('/:orgId/users/invitations')
   @ApiOperation({ summary: 'Get received ecosystem invitations', description: 'Get received ecosystem invitations' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

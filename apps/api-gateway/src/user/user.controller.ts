@@ -1,4 +1,4 @@
-import { Controller, Post, Put, Body, Param, UseFilters } from '@nestjs/common';
+import { Controller, Post, Put, Body, Param, UseFilters, Res, HttpStatus, BadRequestException, Get, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
   ApiBearerAuth,
@@ -13,17 +13,11 @@ import {
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { Res } from '@nestjs/common';
 import { Response } from 'express';
-import { HttpStatus } from '@nestjs/common';
 import { CommonService } from '@credebl/common';
 import IResponseType from '@credebl/common/interfaces/response.interface';
-import { BadRequestException } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Get } from '@nestjs/common';
-import { Query } from '@nestjs/common';
 import { user } from '@prisma/client';
-import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';

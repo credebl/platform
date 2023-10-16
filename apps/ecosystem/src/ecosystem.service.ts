@@ -13,7 +13,7 @@ import { Invitation, OrgAgentType } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CredDefMessage, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -37,10 +37,14 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async createEcosystem(createEcosystemDto): Promise<object> {
+  async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<object> {
+   const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
+   if (checkOrganization) {
+    throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+   };
     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
     if (!createEcosystem) {
-      throw new NotFoundException(ResponseMessages.ecosystem.error.update);
+      throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
     }
     return createEcosystem;
   }
@@ -157,7 +161,11 @@ export class EcosystemService {
    */
   async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
     try {
-
+      const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(acceptRejectInvitation.orgId);
+      
+      if (checkOrganization) {
+       throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+      };
       const { orgId, status, invitationId, orgName, orgDid } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
 

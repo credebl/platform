@@ -85,7 +85,6 @@ export class EcosystemService {
   async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
     try {
       const endorseMemberCount = await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
-      // const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
 
       const query = {
         ecosystemId,

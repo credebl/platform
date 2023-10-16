@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
@@ -19,9 +19,9 @@ export class EcosystemRepository {
   ) { }
 
   /**
-   * Description: Get getAgentEndPoint by orgId
+   * Description: create ecosystem
    * @param createEcosystemDto 
-   * @returns Get getAgentEndPoint details
+   * @returns ecosystem
    */
   // eslint-disable-next-line camelcase
   async createNewEcosystem(createEcosystemDto): Promise<ecosystem> {
@@ -153,10 +153,32 @@ export class EcosystemRepository {
 
   /**
    * 
+   * @param orgId 
+   * @returns Get specific organization details from ecosystem
+   */
+  // eslint-disable-next-line camelcase
+  async checkEcosystemOrgs(orgId: string): Promise<ecosystem_orgs> {
+    try {
+      if (!orgId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
+      }
+      return this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          orgId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 
    * @returns Get ecosystem dashboard card count
    */
-
-  async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
+  // eslint-disable-next-line camelcase
+  async getEcosystemDashboardDetails(ecosystemId: string): Promise<{ membersCount: number; endorsementsCount: number; ecosystemConfigData: ecosystem_config[] }> {
     try {
       const membersCount = await this.getEcosystemMembersCount(ecosystemId);
       const endorsementsCount = await this.getEcosystemEndorsementsCount(ecosystemId);
@@ -465,7 +487,7 @@ export class EcosystemRepository {
 
 
   async fetchEcosystemOrg(
-    payload: { ecosystemId: string, orgId: string }
+    payload: object
   ): Promise<object> {
 
     return this.prisma.ecosystem_orgs.findFirst({
@@ -473,7 +495,9 @@ export class EcosystemRepository {
         ...payload
       },
       select: {
-        ecosystemRole: true
+        ecosystem: true,
+        ecosystemRole: true,
+        orgName: true
       }
     });
 

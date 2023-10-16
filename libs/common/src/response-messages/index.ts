@@ -233,7 +233,8 @@ export const ResponseMessages = {
             transactionSubmitted: 'Transaction already submitted',
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
-            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg'
+            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg',
+            ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
         }
     }
 };

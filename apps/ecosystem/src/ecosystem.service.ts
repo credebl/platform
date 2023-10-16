@@ -532,7 +532,7 @@ export class EcosystemService {
 
       if (updateSignedTransaction && 'true' === ecosystemConfigDetails.value) {
 
-        const submitTxn = await this.submitTransaction(endorsementId, ecosystemId);
+        const submitTxn = await this.submitTransaction(endorsementId, ecosystemId, ecosystemLeadAgentDetails.agentEndPoint);
         if (!submitTxn) {
           await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
@@ -699,7 +699,7 @@ export class EcosystemService {
     return this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.SUBMITED);
   }
 
-  async submitTransaction(endorsementId, ecosystemId): Promise<object> {
+  async submitTransaction(endorsementId, ecosystemId, ecosystemLeadAgentEndPoint?): Promise<object> {
     try {
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(endorsementId, endorsementTransactionStatus.SIGNED);
 
@@ -714,7 +714,9 @@ export class EcosystemService {
       const ecosystemMemberDetails = await this.getEcosystemMemberDetails(endorsementTransactionPayload);
       const ecosystemLeadAgentDetails = await this.getEcosystemLeadAgentDetails(ecosystemId);
       const platformConfig = await this.getPlatformConfig();
-      const url = await this.getAgentUrl(ecosystemMemberDetails?.orgAgentTypeId, ecosystemMemberDetails.agentEndPoint, endorsementTransactionType.SUBMIT, ecosystemMemberDetails?.tenantId);
+
+      const agentEndPoint = ecosystemLeadAgentEndPoint ? ecosystemLeadAgentEndPoint : ecosystemMemberDetails.agentEndPoint;
+      const url = await this.getAgentUrl(ecosystemMemberDetails?.orgAgentTypeId, agentEndPoint, endorsementTransactionType.SUBMIT, ecosystemMemberDetails?.tenantId);
       const payload = await this.submitTransactionPayload(endorsementTransactionPayload, ecosystemMemberDetails, ecosystemLeadAgentDetails);
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, platformConfig.sgApiKey);
@@ -897,6 +899,19 @@ export class EcosystemService {
     }
   }
 
+  /**
+  * @returns EndorsementTransaction Status message
+  */
+
+  async autoSignAndSubmitTransaction(): Promise<object> {
+    try {
+
+      return await this.ecosystemRepository.updateAutoSignAndSubmitTransaction();
+    } catch (error) {
+      this.logger.error(`error in decline endorsement request: ${error}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
 
   /**
   * 

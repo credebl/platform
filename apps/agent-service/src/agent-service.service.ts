@@ -229,7 +229,7 @@ export class AgentServiceService {
           socket.emit('agent-spinup-process-initiated', { clientId: agentSpinupDto.clientSocketId });
         }
 
-        await this._agentSpinup(walletProvisionPayload, agentSpinupDto, orgApiKey, orgData, user, socket);
+        await this._agentSpinup(walletProvisionPayload, agentSpinupDto, orgApiKey, orgData, user, socket, agentSpinupDto.ledgerId);
         const agentStatusResponse = {
           agentSpinupStatus: 1
         };
@@ -251,7 +251,7 @@ export class AgentServiceService {
     }
   }
 
-  async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket): Promise<void> {
+  async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket, ledgerId: number[]): Promise<void> {
     try {
       const agentSpinUpResponse = new Promise(async (resolve, _reject) => {
 
@@ -288,7 +288,8 @@ export class AgentServiceService {
               agentsTypeId: AgentType.AFJ,
               orgId: orgData.id,
               walletName: agentSpinupDto.walletName,
-              clientSocketId: agentSpinupDto.clientSocketId
+              clientSocketId: agentSpinupDto.clientSocketId,
+              ledgerId
             };
 
             if (agentEndPoint && agentSpinupDto.clientSocketId) {
@@ -358,7 +359,8 @@ export class AgentServiceService {
           orgId: payload.orgId,
           agentEndPoint: payload.agentEndPoint,
           agentId: payload.agentId,
-          orgAgentTypeId: OrgAgentType.DEDICATED
+          orgAgentTypeId: OrgAgentType.DEDICATED,
+          ledgerId: payload.ledgerId
         };
 
 
@@ -543,7 +545,8 @@ export class AgentServiceService {
                 agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
                 orgAgentTypeId: OrgAgentType.SHARED,
                 tenantId: tenantDetails.tenantRecord.id,
-                walletName: label
+                walletName: label,
+                ledgerId: payload.ledgerId
               };
 
               if (payload.clientSocketId) {

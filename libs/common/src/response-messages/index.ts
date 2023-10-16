@@ -198,7 +198,8 @@ export const ResponseMessages = {
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
             fetchEndorsors: 'Endorser transactions fetched successfully',
-            DeclineEndorsementTransaction:'Decline endorsement request successfully',
+            DeclineEndorsementTransaction: 'Decline endorsement request successfully',
+            AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
             fetchMembers: 'Ecosystem members fetched successfully'
         },
         error: {
@@ -231,8 +232,8 @@ export const ResponseMessages = {
             invalidTransaction: 'Transaction does not exist',
             transactionSubmitted: 'Transaction already submitted',
             invalidAgentUrl: 'Invalid agent url',
-            EndorsementTransactionNotFoundException:'Endorsement transaction with status requested not found',
-            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg'
+            EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
+            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg'
         }
-    }   
+    }
 };

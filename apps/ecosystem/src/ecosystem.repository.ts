@@ -7,6 +7,7 @@ import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
+import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -159,9 +160,11 @@ export class EcosystemRepository {
     try {
       const membersCount = await this.getEcosystemMembersCount(ecosystemId);
       const endorsementsCount = await this.getEcosystemEndorsementsCount(ecosystemId);
+      const ecosystemConfigData = await this.getEcosystemConfig();
       return {
         membersCount,
-        endorsementsCount
+        endorsementsCount,
+        ecosystemConfigData
       };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
@@ -169,6 +172,16 @@ export class EcosystemRepository {
     }
   }
 
+  // eslint-disable-next-line camelcase
+  async getEcosystemConfig(): Promise<ecosystem_config[]> {
+    try {
+      const getEcosystemConfigDetails = await this.prisma.ecosystem_config.findMany();
+      return getEcosystemConfigDetails;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 
   async getEcosystemMembersCount(ecosystemId: string): Promise<number> {
     try {
@@ -839,6 +852,43 @@ export class EcosystemRepository {
       }
     } catch (error) {
       this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateAutoSignAndSubmitTransaction(): Promise<{
+    id: string;
+    key: string;
+    value: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    deletedAt: Date;
+  }> {
+    try {
+
+      const { id, value } = await this.prisma.ecosystem_config.findFirst({
+        where: {
+          key: `${CommonConstants.ECOSYSTEM_AUTO_ENDOSEMENT}`
+        }
+      });
+
+      const updatedValue = 'false' === value ? 'true' : 'false';
+
+      const updateEcosystemConfig = await this.prisma.ecosystem_config.update({
+        where: {
+          id
+        },
+        data: {
+          value: updatedValue
+        }
+      });
+
+      return updateEcosystemConfig;
+
+    } catch (error) {
+      this.logger.error(`Error in fetching schema details for submit transaction: ${error.message}`);
       throw error;
     }
   }

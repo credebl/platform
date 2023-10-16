@@ -106,7 +106,6 @@ export class EcosystemController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
   @ApiBearerAuth()
-
   async getEcosystemDashboardDetails(@Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
 
     const getEcosystemDetails = await this.ecosystemService.getEcosystemDashboardDetails(ecosystemId, orgId);
@@ -244,7 +243,7 @@ export class EcosystemController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-  
+
   /**
    * 
    * @param createOrgDto 
@@ -310,7 +309,7 @@ export class EcosystemController {
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string,  @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
@@ -370,6 +369,31 @@ export class EcosystemController {
   }
 
   /**
+   * 
+   * @param res 
+   * @returns 
+   */
+  @Put('transaction/actions')
+  @ApiOperation({
+    summary: 'Auto sign and submit transactions',
+    description: 'Auto sign and submit transactions'
+  })
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  async autoSignAndSubmitTransaction(
+    @Res() res: Response
+  ): Promise<object> {
+    await this.ecosystemService.autoSignAndSubmitTransaction();
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.AutoEndorsementTransaction
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
  * 
  * @param acceptRejectEcosystemInvitation 
  * @param reqUser 
@@ -418,37 +442,35 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  
-   /**
-   *
-   * @param declineEndorsementTransactionRequest
-   *
-   * @param res
-   * @returns  endorsement transaction status
-   */
-   @Put('/:ecosystemId/:orgId/transactions/:endorsementId')
-   @ApiOperation({
-     summary: 'Decline Endorsement Request By Lead',
-     description: 'Decline Endorsement Request By Lead'
-   })
-   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-   @ApiBearerAuth()
-   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
-   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-   async declineEndorsementRequestByLead(
-     @Param('ecosystemId') ecosystemId: string,
-     @Param('orgId') orgId: string,
-     @Param('endorsementId') endorsementId: string,
-     @Res() res: Response
-   ): Promise<object> {
-     await this.ecosystemService.declineEndorsementRequestByLead(ecosystemId, orgId, endorsementId);
-     const finalResponse: IResponseType = {
-       statusCode: HttpStatus.OK,
-       message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction
-     };
-     return res.status(HttpStatus.OK).json(finalResponse);
-   }
-
+  /**
+  *
+  * @param declineEndorsementTransactionRequest
+  *
+  * @param res
+  * @returns  endorsement transaction status
+  */
+  @Put('/:ecosystemId/:orgId/transactions/:endorsementId')
+  @ApiOperation({
+    summary: 'Decline Endorsement Request By Lead',
+    description: 'Decline Endorsement Request By Lead'
+  })
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  async declineEndorsementRequestByLead(
+    @Param('ecosystemId') ecosystemId: string,
+    @Param('orgId') orgId: string,
+    @Param('endorsementId') endorsementId: string,
+    @Res() res: Response
+  ): Promise<object> {
+    await this.ecosystemService.declineEndorsementRequestByLead(ecosystemId, orgId, endorsementId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
   @Delete('/:ecosystemId/:orgId/invitations/:invitationId')
   @ApiOperation({ summary: 'Delete ecosystem pending invitations', description: 'Delete ecosystem pending invitations' })

@@ -155,7 +155,7 @@ export class EcosystemRepository {
    * @returns Get ecosystem dashboard card count
    */
 
-  async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
+  async getEcosystemDashboardDetails(ecosystemId: string): Promise<{membersCount: number; endorsementsCount: number}> {
     try {
       const membersCount = await this.getEcosystemMembersCount(ecosystemId);
       const endorsementsCount = await this.getEcosystemEndorsementsCount(ecosystemId);
@@ -452,7 +452,7 @@ export class EcosystemRepository {
 
 
   async fetchEcosystemOrg(
-    payload: { ecosystemId: string, orgId: string }
+    payload: object
   ): Promise<object> {
 
     return this.prisma.ecosystem_orgs.findFirst({
@@ -460,7 +460,9 @@ export class EcosystemRepository {
         ...payload
       },
       select: {
-        ecosystemRole: true
+        ecosystem: true,
+        ecosystemRole: true,
+        orgName: true
       }
     });
 

@@ -104,11 +104,10 @@ export class EcosystemService {
         ecosystem: ecosystemDetails['ecosystem'],
         membersCount: endorseMemberCount.membersCount,
         endorsementsCount: endorseMemberCount.endorsementsCount,
-        ecosystemLead: {
-          role: ecosystemDetails['ecosystemRole']['name'],
-          orgName: ecosystemDetails['orgName'],
-          config: endorseMemberCount.ecosystemConfigData
-        }
+        ecosystemLead:{
+            role: ecosystemDetails['ecosystemRole']['name'],
+            orgName: ecosystemDetails['orgName']
+        } 
       };
 
       return dashboardDetails;

@@ -236,12 +236,7 @@ export class EcosystemRepository {
     }
   }
 
-  /**
-   * 
-   * @returns Get ecosystem dashboard card count
-   */
-  // eslint-disable-next-line camelcase
-  async getEcosystemDashboardDetails(ecosystemId: string): Promise<{ membersCount: number; endorsementsCount: number; ecosystemConfigData: ecosystem_config[] }> {
+  async getEcosystemDashboardDetails(ecosystemId: string): Promise<{membersCount: number; endorsementsCount: number}> {
     try {
       const membersCount = await this.getEcosystemMembersCount(ecosystemId);
       const endorsementsCount = await this.getEcosystemEndorsementsCount(ecosystemId);

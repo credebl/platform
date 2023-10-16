@@ -196,6 +196,27 @@ export class EcosystemRepository {
    * @returns Get specific organization details from ecosystem
    */
   // eslint-disable-next-line camelcase
+  async checkEcosystemOrgs(orgId:string): Promise<ecosystem_orgs> {
+    try {
+      if (!orgId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
+      }
+      return this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          orgId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 
+   * @returns Get ecosystem dashboard card count
+   */
+  // eslint-disable-next-line camelcase
   async checkEcosystemOrgs(orgId: string): Promise<ecosystem_orgs[]> {
     try {
       if (!orgId) {

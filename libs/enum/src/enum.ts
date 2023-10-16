@@ -19,6 +19,14 @@ export enum EcosystemRoles {
     ECOSYSTEM_OWNER = 'Ecosystem Owner'
 }
 
+export enum EcosystemConfigSettings {
+    URL = 'url',
+    ENABLE_ECOSYSTEM = 'enableEcosystem',
+    AUTO_ENDORSEMENT = 'autoEndorsement',
+    PARTICIPATE_IN_ECOSYSTEM = 'participateInEcosystem'
+    
+}
+
 export enum EndorserTransactionType{
     SCHEMA = 'schema',
     CREDENTIAL_DEFINITION = 'credential-definition',

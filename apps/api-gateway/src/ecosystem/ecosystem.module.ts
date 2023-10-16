@@ -6,6 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { EcosystemController } from './ecosystem.controller';
 import { EcosystemService } from './ecosystem.service';
+import { RequestInterceptor } from './interceptors/request.interceptor';
 
 @Module({
   imports: [
@@ -23,7 +24,11 @@ import { EcosystemService } from './ecosystem.service';
     ])
   ],
   controllers: [EcosystemController],
-  providers: [EcosystemService, CommonService]
+  providers: [
+    EcosystemService,
+    CommonService,
+    RequestInterceptor
+  ]
 })
 export class EcosystemModule { }
 

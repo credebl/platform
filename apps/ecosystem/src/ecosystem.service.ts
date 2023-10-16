@@ -16,7 +16,7 @@ import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interfac
 import { CredDefMessage, CredDefTransactionPayload, EndorsementTransactionPayload, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SchemaTransactionPayload, SchemaTransactionResponse, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 // eslint-disable-next-line camelcase
-import { platform_config } from '@prisma/client';
+import { ecosystem_config, platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 
 
@@ -732,6 +732,12 @@ export class EcosystemService {
 
     return false;
   }
+
+  async getEcosystemSettings(
+    // eslint-disable-next-line camelcase
+    ): Promise<ecosystem_config[]> {
+      return this.prisma.ecosystem_config.findMany();
+    }
 
   async getEndorsementTransactions(payload: GetEndorsementsPayload): Promise<object> {
     const { ecosystemId, orgId, pageNumber, pageSize, search, type } = payload;

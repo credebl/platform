@@ -130,6 +130,11 @@ export class EcosystemService extends BaseService {
       return this.sendNats(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
     }
 
+    async fetchEcosystemSettings(
+    ): Promise<{ response: object }> {
+      return this.sendNats(this.serviceProxy, 'fetch-ecosystem-settings', '');
+    }
+
     async getEndorsementTranasactions(
       ecosystemId: string,
       orgId: string,

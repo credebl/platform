@@ -90,6 +90,11 @@ export class EcosystemController {
     );
   }
 
+  @MessagePattern({ cmd: 'fetch-ecosystem-settings' })
+  async getEcosystemSettings(): Promise<object> {
+    return this.ecosystemService.getEcosystemSettings();
+  }
+
   /**
    * 
    * @param payload 

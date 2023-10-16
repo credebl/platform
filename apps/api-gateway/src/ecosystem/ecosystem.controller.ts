@@ -1,5 +1,5 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { Controller, UseFilters, Put, Param, UseGuards, Query, BadRequestException, Delete } from '@nestjs/common';
+import { Controller, UseFilters, Put, Param, UseGuards, Query, BadRequestException, Delete, UseInterceptors, Req } from '@nestjs/common';
 import { EcosystemService } from './ecosystem.service';
 import { Post, Get } from '@nestjs/common';
 import { Body } from '@nestjs/common';
@@ -7,7 +7,7 @@ import { Res } from '@nestjs/common';
 import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
@@ -30,6 +30,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
+import { RequestInterceptor } from './interceptors/request.interceptor';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -352,14 +353,19 @@ export class EcosystemController {
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async createInvitation(@Body() bulkInvitationDto: BulkEcosystemInvitationDto,
+  @UseInterceptors(RequestInterceptor)
+  async createInvitation(
+    @Req() req: Request,
+    @Body() bulkInvitationDto: BulkEcosystemInvitationDto,
     @Param('ecosystemId') ecosystemId: string,
     @Param('orgId') orgId: string,
-    @User() user: user, @Res() res: Response): Promise<Response> {
+    @User() user: user, 
+    @Res() res: Response): Promise<Response> {
 
     bulkInvitationDto.ecosystemId = ecosystemId;
     await this.ecosystemService.createInvitation(bulkInvitationDto, String(user.id));
-
+    // console.log(`:::::Ecosystem Controller:::::::`, req['redirected']);
+    
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.createInvitation

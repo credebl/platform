@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { credential_definition, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
+import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
@@ -109,19 +109,19 @@ export class EcosystemRepository {
       const ecosystemDetails = await this.prisma.ecosystem.findMany({
         where: {
           ecosystemOrgs: {
-              some: {
-                orgId
-              }
+            some: {
+              orgId
+            }
           }
         },
-        include:{
+        include: {
           ecosystemOrgs: {
-              where: {
-                orgId
-              },
-              include:{
-                ecosystemRole: true
-              }
+            where: {
+              orgId
+            },
+            include: {
+              ecosystemRole: true
+            }
           }
         }
       });
@@ -146,7 +146,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -165,12 +165,12 @@ export class EcosystemRepository {
       };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }  
+      throw error;
+    }
   }
 
 
-  async getEcosystemMembersCount (ecosystemId: string): Promise<number> {
+  async getEcosystemMembersCount(ecosystemId: string): Promise<number> {
     try {
       const membersCount = await this.prisma.ecosystem_orgs.count(
         {
@@ -179,27 +179,27 @@ export class EcosystemRepository {
           }
         }
       );
-      return membersCount;    
+      return membersCount;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
-  async getEcosystemEndorsementsCount (ecosystemId: string): Promise<number> {
+  async getEcosystemEndorsementsCount(ecosystemId: string): Promise<number> {
     try {
       const endorsementsCount = await this.prisma.endorsement_transaction.count({
         where: {
           ecosystemOrgs: {
             ecosystemId
-    
+
           }
         }
       });
-      return endorsementsCount;        
+      return endorsementsCount;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -223,7 +223,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -246,7 +246,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -268,7 +268,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException('Unable to update ecosystem invitation');
+      throw error;
     }
   }
 
@@ -304,7 +304,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException('Unable to update ecosystem orgs');
+      throw error;
     }
   }
 
@@ -333,7 +333,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -350,7 +350,7 @@ export class EcosystemRepository {
       return await this.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -385,7 +385,7 @@ export class EcosystemRepository {
           },
           include: {
             ecosystem: true,
-            ecosystemRole:true
+            ecosystemRole: true
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -409,7 +409,7 @@ export class EcosystemRepository {
       return { totalPages, members };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -446,7 +446,7 @@ export class EcosystemRepository {
       return { totalPages, invitations };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -483,7 +483,8 @@ export class EcosystemRepository {
             ecosystemOrgs: true,
             requestPayload: true,
             responsePayload: true,
-            createDateTime: true
+            createDateTime: true,
+            requestBody: true
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -507,7 +508,7 @@ export class EcosystemRepository {
       return { totalPages, transactions };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -577,7 +578,27 @@ export class EcosystemRepository {
 
     } catch (error) {
       this.logger.error(`Error in getting getPlatformConfigDetails for the ecosystem - error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get platform config details
+   * @returns 
+   */
+  // eslint-disable-next-line camelcase
+  async getEcosystemConfigDetails(key: string): Promise<ecosystem_config> {
+    try {
+
+      return this.prisma.ecosystem_config.findFirst({
+        where: {
+          key
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`Error in getting getPlatformConfigDetails for the ecosystem - error: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -602,7 +623,7 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -618,7 +639,7 @@ export class EcosystemRepository {
       return deletedInvitation;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -660,6 +681,26 @@ export class EcosystemRepository {
 
     } catch (error) {
       this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async findRecordsByNameAndVersion(name: string, version: string): Promise<endorsement_transaction[]> {
+    try {
+      return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'name' = ${name} AND "requestBody"->>'version' = ${version}`;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystem schema: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async findRecordsByCredDefTag(tag: string): Promise<endorsement_transaction[]> {
+    try {
+      return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'tag' = ${tag}`;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystem credential-definition: ${error.message} `);
       throw error;
     }
   }
@@ -768,37 +809,37 @@ export class EcosystemRepository {
     }
   }
 
-  async updateEndorsementRequestStatus(ecosystemId: string, orgId: string, endorsementId: string): Promise<object> {
+  async updateEndorsementRequestStatus(ecosystemId: string, endorsementId: string): Promise<object> {
     try {
-    
-    const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
-    where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
-    });
-    
-    if (!endorsementTransaction) {
-    throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
-    }
-    const { ecosystemOrgId } = endorsementTransaction;
-   
-    const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
-    where: { id: ecosystemOrgId }
-    });
-   
-    if (endorsementTransactionEcosystemOrg.orgId === orgId && endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
-    const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
-    where: { id: endorsementId },
-    data: {
-    status: endorsementTransactionStatus.DECLINED
-    }
-    });
-   
-    return updatedEndorsementTransaction;
-    } else {
-    throw new NotFoundException(ResponseMessages.ecosystem.error.OrgOrEcosystemNotFoundExceptionForEndorsementTransaction);
-    }
+
+      const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
+        where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
+      });
+
+      if (!endorsementTransaction) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
+      }
+      const { ecosystemOrgId } = endorsementTransaction;
+
+      const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
+        where: { id: ecosystemOrgId }
+      });
+
+      if (endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
+        const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
+          where: { id: endorsementId },
+          data: {
+            status: endorsementTransactionStatus.DECLINED
+          }
+        });
+
+        return updatedEndorsementTransaction;
+      } else {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.OrgOrEcosystemNotFoundExceptionForEndorsementTransaction);
+      }
     } catch (error) {
-    this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
-    throw error;
+      this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
+      throw error;
     }
-    }
+  }
 }

@@ -373,7 +373,7 @@ export class EcosystemController {
    * @param res 
    * @returns 
    */
-  @Put('transaction/actions')
+  @Put('transaction/endorsement/auto')
   @ApiOperation({
     summary: 'Auto sign and submit transactions',
     description: 'Auto sign and submit transactions'

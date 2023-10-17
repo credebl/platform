@@ -104,7 +104,7 @@ export class FidoService {
                 const credentialIds = [];
                 if (fidoMultiDevice) {
                     for (const iterator of fidoMultiDevice) {
-                        credentialIds.push(iterator.devices.credentialID);
+                        credentialIds.push(iterator.devices['credentialID']);
                     }
                 } else {
                     throw new BadRequestException(ResponseMessages.fido.error.deviceNotFound);

@@ -93,7 +93,7 @@ export class UserDevicesRepository {
      * @returns Get all device details
      */
   // eslint-disable-next-line camelcase, @typescript-eslint/no-explicit-any
-  async getfidoMultiDevice(userId: number): Promise<any> {
+  async getfidoMultiDevice(userId: number): Promise<user_devices[]> {
     try {
 
       const fidoMultiDevice = await this.prisma.user_devices.findMany({

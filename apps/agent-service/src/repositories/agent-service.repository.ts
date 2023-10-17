@@ -88,7 +88,7 @@ export class AgentServiceRepository {
                     agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
                     orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
                     tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
-                    ledgerId: 1
+                    ledgerId: storeOrgAgentDetails.ledgerId[0]
                 }
             });
         } catch (error) {

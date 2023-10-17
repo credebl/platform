@@ -188,7 +188,19 @@ export const ResponseMessages = {
             update: 'Ecosystem updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
-            getInvitation: 'Ecosystem invitations fetched successfully'
+            getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
+            getInvitation: 'Ecosystem invitations fetched successfully',
+            createInvitation: 'Ecosystem invitations sent successfully',
+            schemaRequest: 'Schema transaction request created successfully',
+            credDefRequest: 'credential-definition transaction request created successfully',
+            sign: 'Transaction request signed successfully',
+            submit: 'Transaction request submitted successfully',
+            invitationReject: 'Ecosystem invitation rejected',
+            invitationAccept: 'Ecosystem invitation accepted successfully',
+            fetchEndorsors: 'Endorser transactions fetched successfully',
+            DeclineEndorsementTransaction: 'Decline endorsement request successfully',
+            AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
+            fetchMembers: 'Ecosystem members fetched successfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
@@ -220,10 +232,9 @@ export const ResponseMessages = {
             invalidTransaction: 'Transaction does not exist',
             transactionSubmitted: 'Transaction already submitted',
             invalidAgentUrl: 'Invalid agent url',
-            EndorsementTransactionNotFoundException:'Endorsement transaction with status requested not found',
-            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg',
+            EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
+            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
             ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
         }
-
     }
 };

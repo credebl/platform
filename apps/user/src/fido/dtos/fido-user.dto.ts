@@ -66,7 +66,7 @@ class ResponseDto {
     email: string;
   }
 
-//   
+   
 class VerifyAuthenticationResponseDto {
     @ApiProperty()
     @IsString()

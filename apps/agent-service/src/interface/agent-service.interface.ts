@@ -137,6 +137,7 @@ export interface IStoreOrgAgentDetails {
     agentId?: number;
     orgAgentTypeId?: OrgAgentType;
     tenantId?: string;
+    ledgerId?: number[];
 }
 
 

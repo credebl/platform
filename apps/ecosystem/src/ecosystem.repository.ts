@@ -912,7 +912,7 @@ export class EcosystemRepository {
       return updateEcosystemConfig;
 
     } catch (error) {
-      this.logger.error(`Error in fetching schema details for submit transaction: ${error.message}`);
+      this.logger.error(`Error in update auto sign and submit flag: ${error.message}`);
       throw error;
     }
   }

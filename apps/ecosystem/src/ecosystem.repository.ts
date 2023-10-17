@@ -196,7 +196,7 @@ export class EcosystemRepository {
    * @returns Get specific organization details from ecosystem
    */
   // eslint-disable-next-line camelcase
-  async checkEcosystemOrgs(orgId:string): Promise<ecosystem_orgs> {
+  async checkEcosystemOrgs(orgId: string): Promise<ecosystem_orgs> {
     try {
       if (!orgId) {
         throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);

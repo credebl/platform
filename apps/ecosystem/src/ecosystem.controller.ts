@@ -93,9 +93,9 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'send-ecosystem-invitation' })
   async createInvitation(
-    payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string, userEmail: string }
+    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string }
   ): Promise<string> {
-    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail);
+    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
   }
 
   /**
@@ -211,67 +211,6 @@ export class EcosystemController {
   }): Promise<object> {
     return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
   }
-  
-   /**
-   * 
-   * @param payload 
-   * @returns Schema endorsement request
-   */
-   @MessagePattern({ cmd: 'schema-endorsement-request' })
-   async schemaEndorsementRequest(
-     @Body() payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number, ecosystemId: string }
-     ): Promise<object> {
-     return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId, payload.ecosystemId);
-   }
-
-   /**
-   * 
-   * @param payload 
-   * @returns Schema endorsement request
-   */
-   @MessagePattern({ cmd: 'credDef-endorsement-request' })
-   async credDefEndorsementRequest(
-     @Body() payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number; ecosystemId:string}
-     ): Promise<object> {
-     return this.ecosystemService.requestCredDeffEndorsement(payload.requestCredDefPayload, payload.orgId, payload.ecosystemId);
-   }
-
-   /**
-   * 
-   * @param payload 
-   * @returns sign endorsement request
-   */
-   @MessagePattern({ cmd: 'sign-endorsement-transaction' })
-   async signTransaction(
-     @Body() payload: { endorsementId: string, ecosystemId:string }
-     ): Promise<object> {
-     return this.ecosystemService.signTransaction(payload.endorsementId, payload.ecosystemId);
-   }
-
-   /**
-   * 
-   * @param payload 
-   * @returns submit endorsement request
-   */
-   @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
-   async submitTransaction(
-     @Body() payload: { endorsementId: string, ecosystemId:string }
-     ): Promise<object> {
-     return this.ecosystemService.submitTransaction(payload.endorsementId, payload.ecosystemId);
-   }
-
-  
-    /**
-   *
-   * @param payload
-   * @returns Declien Endorsement Transaction status 
-   */
-    @MessagePattern({ cmd: 'decline-endorsement-transaction' })
-    async declineEndorsementRequestByLead(payload: {
-      ecosystemId:string, endorsementId:string
-    }): Promise<object> {
-      return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
-    }
 
 
 }

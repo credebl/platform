@@ -106,7 +106,8 @@ export class EcosystemService {
         endorsementsCount: endorseMemberCount.endorsementsCount,
         ecosystemLead:{
             role: ecosystemDetails['ecosystemRole']['name'],
-            orgName: ecosystemDetails['orgName']
+            orgName: ecosystemDetails['orgName'],
+            config: endorseMemberCount.ecosystemConfigData  
         } 
       };
 

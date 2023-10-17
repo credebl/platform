@@ -219,8 +219,8 @@ export class EcosystemController {
    */
 
      @MessagePattern({cmd:'org-did-registration'})
-     async orgDidRegistration(payload: {ecosystemId:string, orgId:string, orgDidRegisterDto: OrgDidRegisterDto }):Promise<object> {
-          return this.ecosystemService.orgDidRegistration(payload.ecosystemId, payload.orgId, payload.orgDidRegisterDto);
+     async OnpremiseOrgRegistration(payload: {ecosystemId:string, orgId:string, orgDidRegisterDto: OrgDidRegisterDto }):Promise<object> {
+          return this.ecosystemService.OnpremiseOrgRegistration(payload.ecosystemId, payload.orgId, payload.orgDidRegisterDto);
      }
 
 }

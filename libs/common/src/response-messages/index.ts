@@ -200,7 +200,7 @@ export const ResponseMessages = {
             fetchEndorsors: 'Endorser transactions fetched successfully',
             DeclineEndorsementTransaction:'Decline endorsement request successfully',
             fetchMembers: 'Ecosystem members fetched successfully',
-            orgDidRegistration:'Org did register successfully'
+            orgDidRegistration:'On premise organization registration successful'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
@@ -223,7 +223,9 @@ export const ResponseMessages = {
             transactionSubmitted: 'Transaction already submitted',
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException:'Endorsement transaction with status requested not found',
-            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg'
+            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg',
+            UserdoesnotMeetCriteria:'User not found or user email is not verified',
+            UserWithRoleOwnerNotFound:'User with role Owner not found'
         }
     }   
 };

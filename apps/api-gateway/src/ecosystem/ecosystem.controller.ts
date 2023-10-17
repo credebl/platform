@@ -413,12 +413,12 @@ export class EcosystemController {
    * @param ecosystemId
    * @param orgId
    * @param res
-   * @returns Ecosystem org did registration details
+   * @returns Onpremise Org Registration details
    */
   @Post('/:ecosystemId/:orgId')
   @ApiOperation({
-    summary: 'Ecosystem org did registration',
-    description: 'Registration of org did in ecosystem'
+    summary: 'Onpremise orgnization registration',
+    description: 'Onpremise orgnization registration'
   })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   // @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
@@ -426,14 +426,15 @@ export class EcosystemController {
   @ApiBody({ type: OrgDidRegisterDto })
   // @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
   // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async orgDidRegistration(
+  async OnpremiseOrgRegistration(
     @Param('ecosystemId') ecosystemId: string,
     @Param('orgId') orgId: string,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     @Body() orgDidRegisterDto,
     @Res() res: Response
   ): Promise<Response> {
-    // console.log('inside controller', orgDidRegisterDto);
-    await this.ecosystemService.orgDidRegistration(ecosystemId, orgId, orgDidRegisterDto);
+
+    await this.ecosystemService.OnpremiseOrgRegistration(ecosystemId, orgId, orgDidRegisterDto);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

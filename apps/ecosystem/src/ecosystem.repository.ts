@@ -1,26 +1,46 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable camelcase */
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { credential_definition, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
-import { EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
+import {
+  credential_definition,
+  ecosystem,
+  ecosystem_invitations,
+  ecosystem_orgs,
+  ecosystem_roles,
+  endorsement_transaction,
+  org_agents,
+  org_roles,
+  platform_config,
+  schema,
+  user
+} from '@prisma/client';
+import {
+  EcosystemInvitationStatus,
+  EcosystemOrgStatus,
+  EcosystemRoles,
+  endorsementTransactionStatus,
+  endorsementTransactionType
+} from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { OrgDidRegisterDto } from 'apps/api-gateway/src/ecosystem/dtos/org-did-registration.dto';
+import { organisation } from '@prisma/client';
 // eslint-disable-next-line camelcase
 
 @Injectable()
 export class EcosystemRepository {
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: Logger
-  ) { }
+  ) {}
 
   /**
    * Description: Get getAgentEndPoint by orgId
-   * @param createEcosystemDto 
+   * @param createEcosystemDto
    * @returns Get getAgentEndPoint details
    */
   // eslint-disable-next-line camelcase
@@ -75,7 +95,7 @@ export class EcosystemRepository {
 
   /**
    * Description: Edit ecosystem by Id
-   * @param editEcosystemDto 
+   * @param editEcosystemDto
    * @returns ecosystem details
    */
   // eslint-disable-next-line camelcase
@@ -99,7 +119,7 @@ export class EcosystemRepository {
   }
 
   /**
-   * 
+   *
    *
    * @returns Get all ecosystem details
    */
@@ -109,19 +129,19 @@ export class EcosystemRepository {
       const ecosystemDetails = await this.prisma.ecosystem.findMany({
         where: {
           ecosystemOrgs: {
-              some: {
-                orgId
-              }
+            some: {
+              orgId
+            }
           }
         },
-        include:{
+        include: {
           ecosystemOrgs: {
-              where: {
-                orgId
-              },
-              include:{
-                ecosystemRole: true
-              }
+            where: {
+              orgId
+            },
+            include: {
+              ecosystemRole: true
+            }
           }
         }
       });
@@ -133,8 +153,8 @@ export class EcosystemRepository {
   }
 
   /**
-   * 
-   * @param ecosystemId 
+   *
+   * @param ecosystemId
    * @returns Get specific ecosystem details
    */
   async getEcosystemDetails(ecosystemId: string): Promise<ecosystem> {
@@ -151,7 +171,7 @@ export class EcosystemRepository {
   }
 
   /**
-   * 
+   *
    * @returns Get ecosystem dashboard card count
    */
 
@@ -166,37 +186,33 @@ export class EcosystemRepository {
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
-    }  
+    }
   }
 
-
-  async getEcosystemMembersCount (ecosystemId: string): Promise<number> {
+  async getEcosystemMembersCount(ecosystemId: string): Promise<number> {
     try {
-      const membersCount = await this.prisma.ecosystem_orgs.count(
-        {
-          where: {
-            ecosystemId
-          }
+      const membersCount = await this.prisma.ecosystem_orgs.count({
+        where: {
+          ecosystemId
         }
-      );
-      return membersCount;    
+      });
+      return membersCount;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
     }
   }
 
-  async getEcosystemEndorsementsCount (ecosystemId: string): Promise<number> {
+  async getEcosystemEndorsementsCount(ecosystemId: string): Promise<number> {
     try {
       const endorsementsCount = await this.prisma.endorsement_transaction.count({
         where: {
           ecosystemOrgs: {
             ecosystemId
-    
           }
         }
       });
-      return endorsementsCount;        
+      return endorsementsCount;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -204,8 +220,8 @@ export class EcosystemRepository {
   }
 
   /**
-   * 
-   * @param queryObject 
+   *
+   * @param queryObject
    * @returns Get all ecosystem invitations
    */
   async getEcosystemInvitations(
@@ -226,7 +242,6 @@ export class EcosystemRepository {
       throw new InternalServerErrorException(error);
     }
   }
-
 
   /**
    *
@@ -308,11 +323,11 @@ export class EcosystemRepository {
   }
 
   /**
-   * 
-   * @param email 
-   * @param ecosystemId 
-   * @param userId 
-   * @returns 
+   *
+   * @param email
+   * @param ecosystemId
+   * @param userId
+   * @returns
    */
   async createSendInvitation(
     email: string,
@@ -336,7 +351,12 @@ export class EcosystemRepository {
     }
   }
 
-  async getInvitationsByEcosystemId(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async getInvitationsByEcosystemId(
+    ecosystemId: string,
+    pageNumber: number,
+    pageSize: number,
+    search = ''
+  ): Promise<object> {
     try {
       const query = {
         ecosystemId,
@@ -353,11 +373,10 @@ export class EcosystemRepository {
     }
   }
 
-
   /**
-   * 
-   * @param queryOptions 
-   * @param filterOptions 
+   *
+   * @param queryOptions
+   * @param filterOptions
    * @returns users list
    */
   // eslint-disable-next-line camelcase
@@ -365,8 +384,7 @@ export class EcosystemRepository {
     try {
       const query = {
         ecosystemId,
-        OR:
-          [{ orgId: { contains: search, mode: 'insensitive' } }]
+        OR: [{ orgId: { contains: search, mode: 'insensitive' } }]
       };
       return await this.getEcosystemMembersPagination(query, pageNumber, pageSize);
     } catch (error) {
@@ -411,7 +429,6 @@ export class EcosystemRepository {
     }
   }
 
-
   async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
       const result = await this.prisma.$transaction([
@@ -448,11 +465,7 @@ export class EcosystemRepository {
     }
   }
 
-
-  async fetchEcosystemOrg(
-    payload: { ecosystemId: string, orgId: string }
-  ): Promise<object> {
-
+  async fetchEcosystemOrg(payload: { ecosystemId: string; orgId: string }): Promise<object> {
     return this.prisma.ecosystem_orgs.findFirst({
       where: {
         ...payload
@@ -461,9 +474,7 @@ export class EcosystemRepository {
         ecosystemRole: true
       }
     });
-
   }
-
 
   async getEndorsementsWithPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
@@ -510,10 +521,10 @@ export class EcosystemRepository {
   }
 
   /**
-  * Description: Get getAgentEndPoint by orgId
-  * @param orgId 
-  * @returns Get getAgentEndPoint details
-  */
+   * Description: Get getAgentEndPoint by orgId
+   * @param orgId
+   * @returns Get getAgentEndPoint details
+   */
   // eslint-disable-next-line camelcase
   async getAgentDetails(orgId: number): Promise<org_agents> {
     try {
@@ -526,7 +537,6 @@ export class EcosystemRepository {
         }
       });
       return agentDetails;
-
     } catch (error) {
       this.logger.error(`Error in getting getAgentEndPoint for the ecosystem: ${error.message} `);
       throw error;
@@ -534,10 +544,10 @@ export class EcosystemRepository {
   }
 
   /**
-     * Description: Get getAgentEndPoint by invalidEcosystemId
-     * @param invalidEcosystemId 
-     * @returns Get getAgentEndPoint details
-     */
+   * Description: Get getAgentEndPoint by invalidEcosystemId
+   * @param invalidEcosystemId
+   * @returns Get getAgentEndPoint details
+   */
   // eslint-disable-next-line camelcase
   async getEcosystemLeadDetails(ecosystemId: string): Promise<ecosystem_orgs> {
     try {
@@ -556,7 +566,6 @@ export class EcosystemRepository {
         }
       });
       return ecosystemLeadDetails;
-
     } catch (error) {
       this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
       throw error;
@@ -565,16 +574,16 @@ export class EcosystemRepository {
 
   /**
    * Get platform config details
-   * @returns 
+   * @returns
    */
   // eslint-disable-next-line camelcase
   async getPlatformConfigDetails(): Promise<platform_config> {
     try {
-
       return this.prisma.platform_config.findFirst();
-
     } catch (error) {
-      this.logger.error(`Error in getting getPlatformConfigDetails for the ecosystem - error: ${JSON.stringify(error)}`);
+      this.logger.error(
+        `Error in getting getPlatformConfigDetails for the ecosystem - error: ${JSON.stringify(error)}`
+      );
       throw new InternalServerErrorException(error);
     }
   }
@@ -620,7 +629,6 @@ export class EcosystemRepository {
     }
   }
 
-
   // eslint-disable-next-line camelcase
   async getEcosystemOrgDetailsbyId(orgId: string): Promise<ecosystem_orgs> {
     try {
@@ -631,14 +639,17 @@ export class EcosystemRepository {
         }
       });
       return ecosystemLeadDetails;
-
     } catch (error) {
       this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
       throw error;
     }
   }
   // eslint-disable-next-line camelcase
-  async getEndorsementTransactionById(endorsementId: string, status: endorsementTransactionStatus): Promise<endorsement_transaction> {
+  async getEndorsementTransactionById(
+    endorsementId: string,
+    status: endorsementTransactionStatus
+  // eslint-disable-next-line camelcase
+  ): Promise<endorsement_transaction> {
     try {
       const ecosystemLeadDetails = await this.prisma.endorsement_transaction.findFirst({
         where: {
@@ -655,7 +666,6 @@ export class EcosystemRepository {
       });
 
       return ecosystemLeadDetails;
-
     } catch (error) {
       this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
       throw error;
@@ -678,7 +688,6 @@ export class EcosystemRepository {
       });
 
       return updatedTransaction;
-
     } catch (error) {
       this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
       throw error;
@@ -699,7 +708,6 @@ export class EcosystemRepository {
       });
 
       return updatedTransaction;
-
     } catch (error) {
       this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
       throw error;
@@ -708,7 +716,18 @@ export class EcosystemRepository {
 
   async saveSchema(schemaResult: SaveSchema): Promise<schema> {
     try {
-      const { name, version, attributes, schemaLedgerId, issuerId, createdBy, lastChangedBy, publisherDid, orgId, ledgerId } = schemaResult;
+      const {
+        name,
+        version,
+        attributes,
+        schemaLedgerId,
+        issuerId,
+        createdBy,
+        lastChangedBy,
+        publisherDid,
+        orgId,
+        ledgerId
+      } = schemaResult;
       const saveResult = await this.prisma.schema.create({
         data: {
           name,
@@ -768,72 +787,154 @@ export class EcosystemRepository {
 
   async updateEndorsementRequestStatus(ecosystemId: string, orgId: string, endorsementId: string): Promise<object> {
     try {
-    
-    const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
-    where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
-    });
-    
-    if (!endorsementTransaction) {
-    throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
-    }
-    const { ecosystemOrgId } = endorsementTransaction;
-   
-    const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
-    where: { id: ecosystemOrgId }
-    });
-   
-    if (endorsementTransactionEcosystemOrg.orgId === orgId && endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId) {
-    const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
-    where: { id: endorsementId },
-    data: {
-    status: endorsementTransactionStatus.DECLINED
-    }
-    });
-   
-    return updatedEndorsementTransaction;
-    } else {
-    throw new NotFoundException(ResponseMessages.ecosystem.error.OrgOrEcosystemNotFoundExceptionForEndorsementTransaction);
-    }
-    } catch (error) {
-    this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
-    throw error;
-    }
-    }
+      const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({
+        where: { id: endorsementId, status: endorsementTransactionStatus.REQUESTED }
+      });
 
-    async orgDidRegistration(ecosystemId:string, orgId:string, orgDidRegisterDto:OrgDidRegisterDto): Promise<object> {
-      // console.log('inside final Repo', ecosystemId, orgId, orgDidRegisterDto);
-      //  return Object;
-     const  { orgName, orgDescription, orgDid} = orgDidRegisterDto;
-       try {
-       const orgInfo = await this.prisma.organisation.create({
-        data:{
-          name:orgName,
-          description:orgDescription
-        }
-       });
-      //  console.log("create orgInfo query done",orgInfo);
+      if (!endorsementTransaction) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.EndorsementTransactionNotFoundException);
+      }
+      const { ecosystemOrgId } = endorsementTransaction;
 
-       const ecosystemRoleInfo = await this.prisma.ecosystem_roles.findUnique({where: { name:EcosystemRoles.ECOSYSTEM_MEMBER  }});
-      //  console.log("find ecosystem role info",ecosystemRoleInfo);
+      const endorsementTransactionEcosystemOrg = await this.prisma.ecosystem_orgs.findUnique({
+        where: { id: ecosystemOrgId }
+      });
 
-       if (orgInfo && ecosystemRoleInfo) {
-        const ecosystemOrgs =  await this.prisma.ecosystem_orgs.create({
+      if (
+        endorsementTransactionEcosystemOrg.orgId === orgId &&
+        endorsementTransactionEcosystemOrg.ecosystemId === ecosystemId
+      ) {
+        const updatedEndorsementTransaction = await this.prisma.endorsement_transaction.update({
+          where: { id: endorsementId },
           data: {
-            orgId:String(orgInfo.id),
-            ecosystemId,
-            ecosystemRoleId:ecosystemRoleInfo.id,
-            orgDid,
-            orgName,
-            status:EcosystemOrgStatus.ACTIVE
+            status: endorsementTransactionStatus.DECLINED
           }
         });
-        // console.log('ecosystemOrgs info',ecosystemOrgs);
-        return ecosystemOrgs;
-       }
-      return Object;
-       } catch (error) {
-        this.logger.error(`Error in org did registration: ${error.message}`);
-        throw error;
-       }
+
+        return updatedEndorsementTransaction;
+      } else {
+        throw new NotFoundException(
+          ResponseMessages.ecosystem.error.OrgOrEcosystemNotFoundExceptionForEndorsementTransaction
+        );
+      }
+    } catch (error) {
+      this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
+      throw error;
     }
+  }
+
+  async OnpremiseOrgRegistration(
+    ecosystemId: string,
+    orgId: string,
+    indyNamespace: string,
+    orgRoleId: number,
+    userId: number,
+
+    orgDidRegisterDto: OrgDidRegisterDto
+  ): Promise<object> {
+    const { orgName, orgDescription, logo, orgDid, agentEndpoint } = orgDidRegisterDto;
+    try {
+      const orgInfo = await this.prisma.organisation.create({
+        data: {
+          name: orgName,
+          description: orgDescription,
+          logoUrl: logo
+        }
+      });
+
+      await this.prisma.user_org_roles.create({
+        data: {
+          userId,
+          orgRoleId,
+          orgId: orgInfo.id
+        }
+      });
+
+      const ecosystemRoleInfo = await this.prisma.ecosystem_roles.findFirst({
+        where: { name: EcosystemRoles.ECOSYSTEM_MEMBER }
+      });
+     const ledgerInfo =  await this.prisma.ledgers.findFirst({ where: { indyNamespace } });
+
+      let ecosystemOrgs;
+      if (orgInfo && ecosystemRoleInfo) {
+        ecosystemOrgs = await this.prisma.ecosystem_orgs.create({
+          data: {
+            orgId: String(orgInfo.id),
+            ecosystemId,
+            ecosystemRoleId: ecosystemRoleInfo.id,
+            orgDid,
+            orgName,
+            status: EcosystemOrgStatus.ACTIVE
+          }
+        });
+      }
+
+      let orgAgent;
+      if (ecosystemOrgs) {
+        orgAgent = await this.prisma.org_agents.create({
+          data: {
+            orgDid,
+            verkey: '',
+            isDidPublic: true,
+            agentSpinUpStatus: 2,
+            walletName: '',
+            agentsTypeId: 1,
+            orgId: orgInfo.id,
+            agentEndPoint: agentEndpoint,
+            agentId: null,
+            orgAgentTypeId: 1,
+            tenantId: null,
+            ledgerId: ledgerInfo.id
+          }
+        });
+      }
+
+      return orgAgent;
+    } catch (error) {
+      this.logger.error(`Error in org did registration: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async checkOrganizationNameExist(name: string): Promise<organisation> {
+    try {
+      return this.prisma.organisation.findFirst({
+        where: {
+          name
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async checkOrgOwnerExist(name: string): Promise<org_roles> {
+    try {
+      const roleDetails = await this.prisma.org_roles.findFirst({
+        where: {
+          name
+        }
+      });
+      return roleDetails;
+    } catch (error) {
+      this.logger.error(`In get role repository: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException('Bad Request');
+    }
+  }
+
+  async checkUserExist(email: string): Promise<user> {
+    try {
+      return this.prisma.user.findFirst({
+        where: {
+          email,
+          isEmailVerified: true,
+          supabaseUserId: { not: null }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
 }

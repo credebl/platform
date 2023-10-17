@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -10,7 +11,7 @@ import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
-// import { OrgDidRegisterDto } from './dtos/org-did-registration.dto';
+import { OrgDidRegisterDto } from './dtos/org-did-registration.dto';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -171,7 +172,7 @@ export class EcosystemService extends BaseService {
       return this.sendNats(this.serviceProxy, 'decline-endorsement-transaction', payload);
     }
 
-    async orgDidRegistration(ecosystemId:string, orgId:string, orgDidRegisterDto: OrgDidRegisterDto): Promise<object> { 
+    async OnpremiseOrgRegistration(ecosystemId:string, orgId:string, orgDidRegisterDto: OrgDidRegisterDto): Promise<object> { 
        const payload = {ecosystemId, orgId, orgDidRegisterDto};
        return this.sendNats(this.serviceProxy, 'org-did-registration', payload);
     }

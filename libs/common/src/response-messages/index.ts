@@ -232,8 +232,8 @@ export const ResponseMessages = {
             invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
             invalidAgentUrl: 'Invalid agent url',
-            EndorsementTransactionNotFoundException:'Endorsement transaction with status requested not found',
-            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg',
+            EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
+            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
             ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
         }
     },

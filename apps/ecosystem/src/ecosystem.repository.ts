@@ -196,7 +196,7 @@ export class EcosystemRepository {
    * @returns Get specific organization details from ecosystem
    */
   // eslint-disable-next-line camelcase
-  async checkEcosystemOrgs(orgId:string): Promise<ecosystem_orgs> {
+  async checkEcosystemOrgs(orgId: string): Promise<ecosystem_orgs> {
     try {
       if (!orgId) {
         throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
@@ -989,6 +989,43 @@ export class EcosystemRepository {
       }
     } catch (error) {
       this.logger.error(`Error in updating endorsement transaction status: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateAutoSignAndSubmitTransaction(): Promise<{
+    id: string;
+    key: string;
+    value: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    deletedAt: Date;
+  }> {
+    try {
+
+      const { id, value } = await this.prisma.ecosystem_config.findFirst({
+        where: {
+          key: `${CommonConstants.ECOSYSTEM_AUTO_ENDOSEMENT}`
+        }
+      });
+
+      const updatedValue = 'false' === value ? 'true' : 'false';
+
+      const updateEcosystemConfig = await this.prisma.ecosystem_config.update({
+        where: {
+          id
+        },
+        data: {
+          value: updatedValue
+        }
+      });
+
+      return updateEcosystemConfig;
+
+    } catch (error) {
+      this.logger.error(`Error in update auto sign and submit flag: ${error.message}`);
       throw error;
     }
   }

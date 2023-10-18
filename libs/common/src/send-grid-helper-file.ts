@@ -18,7 +18,7 @@ export const sendEmail = async (EmailDto: EmailDto): Promise<boolean> => {
       html: EmailDto.emailHtml,
       attachments: EmailDto.emailAttachments
     };
-    return await sendgrid.send(msg).then(() => true).catch(() => false)
+    return await sendgrid.send(msg).then(() => true).catch(() => false);
 
   } catch (error) {
     return false;

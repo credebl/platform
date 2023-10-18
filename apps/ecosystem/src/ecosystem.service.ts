@@ -17,7 +17,7 @@ import { CreateEcosystem, CredDefMessage, RequestCredDeffEndorsement, RequestSch
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
-import { credential_definition, org_agents, platform_config, schema } from '@prisma/client';
+import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
 
 
 @Injectable()
@@ -158,6 +158,8 @@ export class EcosystemService {
         const { email } = invitation;
 
         const isUserExist = await this.checkUserExistInPlatform(email);
+
+        const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
 
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
         if (!isInvitationExist && userEmail !== invitation.email) {

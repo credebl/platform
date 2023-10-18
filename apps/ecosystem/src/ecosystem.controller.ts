@@ -155,8 +155,7 @@ export class EcosystemController {
   * @returns Schema endorsement request
   */
   @MessagePattern({ cmd: 'schema-endorsement-request' })
-  async schemaEndorsementRequest(
-    @Body() payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number, ecosystemId: string }
+  async schemaEndorsementRequest(payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number, ecosystemId: string }
   ): Promise<object> {
     return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId, payload.ecosystemId);
   }
@@ -167,8 +166,7 @@ export class EcosystemController {
   * @returns Schema endorsement request
   */
   @MessagePattern({ cmd: 'credDef-endorsement-request' })
-  async credDefEndorsementRequest(
-    @Body() payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number; ecosystemId: string }
+  async credDefEndorsementRequest(payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number; ecosystemId: string }
   ): Promise<object> {
     return this.ecosystemService.requestCredDeffEndorsement(payload.requestCredDefPayload, payload.orgId, payload.ecosystemId);
   }
@@ -179,8 +177,7 @@ export class EcosystemController {
   * @returns sign endorsement request
   */
   @MessagePattern({ cmd: 'sign-endorsement-transaction' })
-  async signTransaction(
-    @Body() payload: { endorsementId: string, ecosystemId: string }
+  async signTransaction(payload: { endorsementId: string, ecosystemId: string }
   ): Promise<object> {
     return this.ecosystemService.signTransaction(payload.endorsementId, payload.ecosystemId);
   }
@@ -191,8 +188,7 @@ export class EcosystemController {
   * @returns submit endorsement request
   */
   @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
-  async submitTransaction(
-    @Body() payload: { endorsementId: string, ecosystemId: string }
+  async submitTransaction(payload: { endorsementId: string, ecosystemId: string }
   ): Promise<object> {
     return this.ecosystemService.submitTransaction(payload.endorsementId, payload.ecosystemId);
   }

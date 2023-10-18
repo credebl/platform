@@ -34,7 +34,7 @@ export class FidoController {
    */
     @MessagePattern({ cmd: 'generate-authentication-options' })
     generateAuthenticationOption(payload: GenerateRegistrationDto): Promise<object> {
-        return this.fidoService.generateAuthenticationOption(payload.userName);
+        return this.fidoService.generateAuthenticationOption(payload.email);
     }
     /**
    * Description: FIDO User Verification
@@ -61,7 +61,7 @@ export class FidoController {
    */
     @MessagePattern({ cmd: 'fetch-fido-user-details' })
     fetchFidoUserDetails(payload: UserNameDto):Promise<object> {
-        return this.fidoService.fetchFidoUserDetails(payload.userName);
+        return this.fidoService.fetchFidoUserDetails(payload.email);
     }
 
     /**

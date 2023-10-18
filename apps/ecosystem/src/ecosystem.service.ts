@@ -17,7 +17,7 @@ import { CreateEcosystem, CredDefMessage, RequestCredDeffEndorsement, RequestSch
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
-import { credential_definition, org_agents, platform_config, schema } from '@prisma/client';
+import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
 
 
 @Injectable()
@@ -158,13 +158,14 @@ export class EcosystemService {
       for (const invitation of invitations) {
         const { email } = invitation;
 
+        const isUserExist = await this.checkUserExistInPlatform(email);
+
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
 
         if (!isInvitationExist) {
           await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
-
           try {
-            await this.sendInviteEmailTemplate(email, ecosystemDetails.name);
+            await this.sendInviteEmailTemplate(email, ecosystemDetails.name, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
@@ -293,7 +294,8 @@ export class EcosystemService {
    */
   async sendInviteEmailTemplate(
     email: string,
-    ecosystemName: string
+    ecosystemName: string,
+    isUserExist: boolean
   ): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -303,12 +305,36 @@ export class EcosystemService {
     emailData.emailTo = email;
     emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Invitation`;
 
-    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, ecosystemName);
+    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, ecosystemName, isUserExist);
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData);
 
     return isEmailSent;
+  }
+
+  async checkUserExistInPlatform(email: string): Promise<boolean> {
+    const pattern = { cmd: 'get-user-by-mail' };
+    const payload = { email };
+
+    const userData: user = await this.ecosystemServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    if (userData && userData.isEmailVerified) {
+      return true;
+    }
+    return false;
   }
 
   /**

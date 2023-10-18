@@ -2,12 +2,17 @@ export class EcosystemInviteTemplate {
 
     public sendInviteEmailTemplate(
         email: string,
-        ecosystemName: string
+        ecosystemName: string,
+        isUserExist = false
     ): string {
 
-        const validUrl = `${process.env.FRONT_END_URL}/authentication/sign-in`;
+        const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/authentication/sign-in` : `${process.env.FRONT_END_URL}/authentication/sign-up`;
 
-        const message = `You have been invited to join the ecosystem so please log in and accept the ecosystem “INVITATION” and participate in the ecosystem`;
+        const message = isUserExist
+          ? `You have already registered on platform, you can access the application.
+         Please log in and accept the ecosystem “INVITATION” and participate in the ecosystem`
+          : `You have to register on the platform and then you can access the application. Accept the ecosystem “INVITATION” and participate in the ecosystem`;
+
         const year: number = new Date().getFullYear();
 
         return `<!DOCTYPE html>

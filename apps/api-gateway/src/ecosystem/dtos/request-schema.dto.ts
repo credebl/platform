@@ -18,6 +18,16 @@ class AttributeValue {
   displayName: string;
 }
 
+class CredDefSchemaDetails {
+
+  @IsString()
+  @IsNotEmpty({ message: 'attributeName is required.' })
+  attributeName: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'schemaDataType is required.' })
+  schemaDataType: string;
+}
 
 export class RequestSchemaDto {
   @ApiProperty()
@@ -58,11 +68,19 @@ export class SchemaDetails {
   version: string;
 
   @ApiProperty({
-    example: ['name', 'id']
+    example: [
+      {
+        attributeName: 'name',
+        schemaDataType: 'string',
+        displayName: 'Name'
+      }
+    ]
   })
   @IsArray({ message: 'attributes must be an array.' })
   @IsNotEmpty({ message: 'please provide valid attributes.' })
-  attributes: string[];
+  @ValidateNested({ each: true })
+  @Type(() => CredDefSchemaDetails)
+  attributes: CredDefSchemaDetails[];
 
 }
 
@@ -82,7 +100,6 @@ export class RequestCredDefDto {
 
   @ApiProperty()
   @ValidateNested()
-  @IsOptional()
   @Type(() => SchemaDetails)
-  schemaDetails?: SchemaDetails;
+  schemaDetails: SchemaDetails;
 }

@@ -13,7 +13,7 @@ import { Invitation, OrgAgentType } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -316,7 +316,7 @@ export class EcosystemService {
    * @param RequestSchemaEndorsement 
    * @returns 
    */
-  async requestSchemaEndorsement(requestSchemaPayload, orgId, ecosystemId): Promise<object> {
+  async requestSchemaEndorsement(requestSchemaPayload:RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -386,7 +386,7 @@ export class EcosystemService {
     }
   }
 
-  async requestCredDeffEndorsement(requestCredDefPayload, orgId, ecosystemId): Promise<object> {
+  async requestCredDeffEndorsement(requestCredDefPayload:RequestCredDeffEndorsement, orgId:number, ecosystemId:string): Promise<object> {
     try {
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
@@ -439,12 +439,6 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestCredDefTransaction);
       }
 
-      const requestBody = credDefTransactionRequest.message.credentialDefinitionState.credentialDefinition;
-
-      if (!requestBody) {
-        throw new NotFoundException(ResponseMessages.ecosystem.error.credentialDefinitionNotFound);
-      }
-
       const schemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: ecosystemMemberDetails.orgDid,
@@ -453,7 +447,7 @@ export class EcosystemService {
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
       };
 
-      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestBody, endorsementTransactionType.CREDENTIAL_DEFINITION);
+      return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestCredDefPayload, endorsementTransactionType.CREDENTIAL_DEFINITION);
     } catch (error) {
       this.logger.error(`In request cred-def endorsement: ${JSON.stringify(error)}`);
       throw new RpcException(error.response || error);
@@ -734,7 +728,6 @@ export class EcosystemService {
   async submitTransaction(endorsementId, ecosystemId, ecosystemLeadAgentEndPoint?): Promise<object> {
     try {
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(endorsementId, endorsementTransactionStatus.SIGNED);
-
       if (!endorsementTransactionPayload) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
       }

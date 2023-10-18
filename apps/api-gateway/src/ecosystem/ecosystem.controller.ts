@@ -187,6 +187,44 @@ export class EcosystemController {
 
   }
 
+  /**
+    * 
+    * @param res 
+    * @returns Ecosystem members list
+    */
+  @Get('/:ecosystemId/:orgId/members')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get ecosystem members list', description: 'Get ecosystem members list.' })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  async getEcosystemMembers(
+    @Param('ecosystemId') ecosystemId: string,
+    @Param('orgId') orgId: string,
+    @Query() getEcosystemMembers: GetAllEcosystemMembersDto,
+    @Res() res: Response): Promise<Response> {
+    const members = await this.ecosystemService.getEcosystemMembers(ecosystemId, getEcosystemMembers);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.fetchMembers,
+      data: members?.response
+    };
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }

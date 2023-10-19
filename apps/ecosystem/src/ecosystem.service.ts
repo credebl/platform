@@ -354,7 +354,7 @@ export class EcosystemService {
    * @param RequestSchemaEndorsement 
    * @returns 
    */
-  async requestSchemaEndorsement(requestSchemaPayload:RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
+  async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -424,7 +424,7 @@ export class EcosystemService {
     }
   }
 
-  async requestCredDeffEndorsement(requestCredDefPayload:RequestCredDeffEndorsement, orgId:number, ecosystemId:string): Promise<object> {
+  async requestCredDeffEndorsement(requestCredDefPayload: RequestCredDeffEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
@@ -477,6 +477,13 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestCredDefTransaction);
       }
 
+      const requestBody = credDefTransactionRequest.message.credentialDefinitionState.credentialDefinition;
+
+      if (!requestBody) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.credentialDefinitionNotFound);
+      }
+
+      requestCredDefPayload["credentialDefinition"] = requestBody;
       const schemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: ecosystemMemberDetails.orgDid,

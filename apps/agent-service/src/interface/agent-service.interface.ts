@@ -14,6 +14,15 @@ export interface IAgentSpinupDto {
     tenant?: boolean;
 }
 
+export interface OutOfBandCredentialOffer {
+    emailId: string;
+    attributes: IAttributes[];
+    credentialDefinitionId: string;
+    comment: string;
+    protocolVersion?: string;
+    orgId: number;
+}
+
 export interface ITenantDto {
     label: string;
     seed: string;

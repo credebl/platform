@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema } from './interface/agent-service.interface';
+import { GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, OutOfBandCredentialOffer } from './interface/agent-service.interface';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { ISendProofRequestPayload } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
@@ -123,5 +123,10 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'agent-submit-transaction' })
   async submitTransaction(payload: { url: string, apiKey: string, submitEndorsementPayload:object }): Promise<object> {
     return this.agentServiceService.sumbitTransaction(payload.url, payload.apiKey, payload.submitEndorsementPayload);
+  }
+
+  @MessagePattern({ cmd: 'agent-out-of-band-credential-offer' })
+  async outOfBandCredentialOffer(payload: { outOfBandIssuancePayload: OutOfBandCredentialOffer, url: string, apiKey: string }): Promise<object> {
+    return this.agentServiceService.outOfBandCredentialOffer(payload.outOfBandIssuancePayload, payload.url, payload.apiKey);
   }
 }

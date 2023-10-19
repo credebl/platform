@@ -275,7 +275,7 @@ export class IssuanceService {
           protocolVersion: protocolVersion || 'v1',
           credentialFormats: {
             indy: {
-              attributes: [iterator.attribute],
+              attributes: iterator.attribute,
               credentialDefinitionId
             }
           },

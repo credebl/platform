@@ -162,7 +162,7 @@ export class CredentialDefinitionRepository {
 
             });
         } catch (error) {
-            this.logger.error(`Error in getting agent type: ${error}`);
+            this.logger.error(`Error in getting credential definitions: ${error}`);
             throw error;
         }
     }

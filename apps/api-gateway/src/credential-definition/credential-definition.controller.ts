@@ -53,10 +53,10 @@ export class CredentialDefinitionController {
 
   @Get('/verifiation/cred-defs/:schemaId')
   @ApiOperation({
-    summary: 'Get an existing credential definition by Id',
-    description: 'Get an existing credential definition by Id'
+    summary: 'Get an existing credential definitions by schema Id',
+    description: 'Get an existing credential definitions by schema Id'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   async getCredentialDefinitionBySchemaId(
     @Param('schemaId') schemaId: string,

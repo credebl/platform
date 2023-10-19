@@ -342,7 +342,7 @@ export class EcosystemController {
     @User() user: user, @Res() res: Response): Promise<Response> {
 
     bulkInvitationDto.ecosystemId = ecosystemId;
-    await this.ecosystemService.createInvitation(bulkInvitationDto, String(user.id));
+    await this.ecosystemService.createInvitation(bulkInvitationDto, String(user.id), user.email);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

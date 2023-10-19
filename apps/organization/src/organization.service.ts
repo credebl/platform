@@ -273,9 +273,22 @@ export class OrganizationService {
 
       const invitations = await this.organizationRepository.getOrgInvitations(query);
 
-      if (0 < invitations.length) {
+      let isPendingInvitation = false;
+      let isAcceptedInvitation = false;
+
+      for (const invitation of invitations) {
+         if (invitation.status === Invitation.PENDING) {
+          isPendingInvitation = true;
+         }
+         if (invitation.status === Invitation.ACCEPTED) {
+          isAcceptedInvitation = true;
+         }             
+      }      
+
+      if (isPendingInvitation || isAcceptedInvitation) {
         return true;
       }
+
       return false;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
@@ -290,7 +303,7 @@ export class OrganizationService {
    */
 
   // eslint-disable-next-line camelcase
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number): Promise<string> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number, userEmail: string): Promise<string> {
     const { invitations, orgId } = bulkInvitationDto;
 
     try {
@@ -301,9 +314,10 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
-        const isInvitationExist = await this.checkInvitationExist(email, orgId);
+        const isInvitationExist = await this.checkInvitationExist(email, orgId);        
 
-        if (!isInvitationExist) {
+        if (!isInvitationExist && userEmail !== invitation.email) {
+
           await this.organizationRepository.createSendInvitation(email, orgId, userId, orgRoleId);
 
           const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);

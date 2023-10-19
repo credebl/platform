@@ -33,7 +33,7 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { IssuanceDto, IssueCredentialDto } from './dtos/issuance.dto';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -184,6 +184,42 @@ export class IssuanceController {
   }
 
   /**
+   * Description: credential issuance out-of-band
+   * @param user 
+   * @param outOfBandCredentialDto 
+   * @param orgId 
+   * @param res 
+   * @returns 
+   */
+  @Post('/orgs/:orgId/credentials/oob')
+  // @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: `Create out-of-band credential offer`,
+    description: `Create out-of-band credential offer`
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  // @ApiBearerAuth()
+  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  async outOfBandCredentialOffer(
+    @User() user: IUserRequest,
+    @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
+    @Param('orgId') orgId: number,
+    @Res() res: Response
+  ): Promise<Response> {
+
+    outOfBandCredentialDto.orgId = orgId;
+    const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(user, outOfBandCredentialDto);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.fetch,
+      data: getCredentialDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
   * Description: webhook Save issued credential details
   * @param user
   * @param issueCredentialDto
@@ -209,5 +245,4 @@ export class IssuanceController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
-
 }

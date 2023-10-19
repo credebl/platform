@@ -1,15 +1,19 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { ICredentialAttributesInterface } from '../interfaces/issuance.interfaces';
+import { ICredentialAttributesInterface, OutOfBandCredentialOfferPayload } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
+import * as QRCode from 'qrcode';
+import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { sendEmail } from '@credebl/common/send-grid-helper-file';
 
 
 @Injectable()
@@ -18,8 +22,9 @@ export class IssuanceService {
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
-    private readonly issuanceRepository: IssuanceRepository
-
+    private readonly issuanceRepository: IssuanceRepository,
+    private readonly outOfBandIssuance: OutOfBandIssuance,
+    private readonly emailData: EmailDto
   ) { }
 
 
@@ -245,6 +250,121 @@ export class IssuanceService {
     }
   }
 
+  async outOfBandCredentialOffer(user: IUserRequest, outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
+    try {
+      const {
+        credentialOffer,
+        comment,
+        credentialDefinitionId,
+        orgId,
+        protocolVersion
+      } = outOfBandCredential;
+
+      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+
+      const issuanceMethodLabel = 'create-offer-oob';
+      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails.orgAgentTypeId, agentDetails.agentEndPoint, agentDetails.tenantId);
+      const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
+      const { apiKey } = agentDetails;
+
+      const emailPromises = credentialOffer.map(async (iterator) => {
+        const outOfBandIssuancePayload = {
+          protocolVersion: protocolVersion || 'v1',
+          credentialFormats: {
+            indy: {
+              attributes: [iterator.attribute],
+              credentialDefinitionId
+            }
+          },
+          autoAcceptCredential: 'always',
+          comment
+        };
+
+        const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
+
+        if (!credentialCreateOfferDetails) {
+          throw new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound);
+        }
+
+        const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
+        if (!invitationId) {
+          throw new NotFoundException(ResponseMessages.issuance.error.invitationNotFound);
+        }
+
+        const agentEndPoint = agentDetails.tenantId
+          ? `${agentDetails.agentEndPoint}/multi-tenancy/url/${agentDetails.tenantId}/${invitationId}`
+          : `${agentDetails.agentEndPoint}/url/${invitationId}`;
+
+        const qrCodeOptions = { type: 'image/png' };
+        const outOfBandIssuanceQrCode = await QRCode.toDataURL(agentEndPoint, qrCodeOptions);
+        const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
+
+        if (!platformConfigData) {
+          throw new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound);
+        }
+
+        this.emailData.emailFrom = platformConfigData.emailFrom;
+        this.emailData.emailTo = iterator.emailId;
+        this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credentials Required`;
+        this.emailData.emailHtml = await this.outOfBandIssuance.outOfBandIssuance(iterator.emailId, organizationDetails.name, outOfBandIssuanceQrCode);
+        this.emailData.emailAttachments = [
+          {
+            filename: 'qrcode.png',
+            content: outOfBandIssuanceQrCode.split(';base64,')[1],
+            contentType: 'image/png',
+            disposition: 'attachment'
+          }
+        ];
+
+        const isEmailSent = await sendEmail(this.emailData);
+        if (!isEmailSent) {
+          throw new InternalServerErrorException(ResponseMessages.issuance.error.emailSend);
+        }
+        return isEmailSent;
+      });
+
+      const results = await Promise.all(emailPromises);
+
+      // Check if all emails were successfully sent
+      return results.every((result) => true === result);
+    } catch (error) {
+      this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+
+  async _outOfBandCredentialOffer(outOfBandIssuancePayload: object, url: string, apiKey: string): Promise<{
+    response;
+  }> {
+    try {
+      const pattern = { cmd: 'agent-out-of-band-credential-offer' };
+      const payload = { outOfBandIssuancePayload, url, apiKey };
+      return this.issuanceServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   /**
   * Description: Fetch agent url 
   * @param referenceId 
@@ -272,7 +392,7 @@ export class IssuanceService {
 
         case 'create-offer-oob': {
           url = orgAgentTypeId === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
+            ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
             : orgAgentTypeId === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
               : null;
@@ -294,6 +414,16 @@ export class IssuanceService {
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
             : orgAgentTypeId === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`.replace('#', credentialRecordId).replace('@', tenantId)
+              : null;
+          break;
+        }
+
+        case 'create-offer-oob': {
+
+          url = orgAgentTypeId === OrgAgentType.DEDICATED
+            ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
+            : orgAgentTypeId === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_OUT_OF_BAND_CREDENTIAL}`.replace('#', tenantId)
               : null;
           break;
         }

@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions } from '../interfaces/issuance.interfaces';
+import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, OutOfBandCredentialOffer } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 
 @Controller()
@@ -36,5 +36,11 @@ export class IssuanceController {
   async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
     const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
     return this.issuanceService.getIssueCredentialWebhook(createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId);
+  }
+
+  @MessagePattern({ cmd: 'out-of-band-credential-offer' })
+  async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<boolean> {
+    const { user, outOfBandCredentialDto } = payload;
+    return this.issuanceService.outOfBandCredentialOffer(user, outOfBandCredentialDto);
   }
 }

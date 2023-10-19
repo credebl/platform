@@ -2,7 +2,7 @@
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 
-export interface IAttributes {
+export interface Attributes {
     name: string;
     value: string;
 }
@@ -11,7 +11,7 @@ export interface IIssuance {
     credentialDefinitionId: string;
     comment: string;
     connectionId: string;
-    attributes: IAttributes[];
+    attributes: Attributes[];
     orgId: number;
     protocolVersion: string;
 }
@@ -38,9 +38,26 @@ export interface IIssuanceWebhookInterface {
     credentialAttributes: ICredentialAttributesInterface[];
     orgId: number;
 }
- 
+
 export interface ICredentialAttributesInterface {
     'mime-type': string;
     name: string;
     value: string;
+}
+
+export interface CredentialOffer {
+    emailId: string;
+    attribute: Attributes[];
+}
+export interface OutOfBandCredentialOfferPayload {
+    credentialOffer: CredentialOffer[];
+    credentialDefinitionId: string;
+    comment: string;
+    protocolVersion?: string;
+    orgId: number;
+}
+
+export interface OutOfBandCredentialOffer {
+    user: IUserRequest;
+    outOfBandCredentialDto: OutOfBandCredentialOfferPayload;
 }

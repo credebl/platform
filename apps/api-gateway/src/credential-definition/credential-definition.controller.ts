@@ -20,16 +20,16 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 
 @ApiBearerAuth()
 @ApiTags('credential-definitions')
+@Controller()
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-@Controller('orgs')
 @UseFilters(CustomExceptionFilter)
 export class CredentialDefinitionController {
 
   constructor(private readonly credentialDefinitionService: CredentialDefinitionService) { }
   private readonly logger = new Logger('CredentialDefinitionController');
 
-  @Get('/:orgId/cred-defs/:credDefId')
+  @Get('/orgs/:orgId/cred-defs/:credDefId')
   @ApiOperation({
     summary: 'Get an existing credential definition by Id',
     description: 'Get an existing credential definition by Id'
@@ -51,7 +51,27 @@ export class CredentialDefinitionController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
-  @Get('/:orgId/cred-defs')
+  @Get('/verifiation/cred-defs/:schemaId')
+  @ApiOperation({
+    summary: 'Get an existing credential definitions by schema Id',
+    description: 'Get an existing credential definitions by schema Id'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  async getCredentialDefinitionBySchemaId(
+    @Param('schemaId') schemaId: string,
+    @Res() res: Response
+  ): Promise<object> {
+    const credentialsDefinitions = await this.credentialDefinitionService.getCredentialDefinitionBySchemaId(schemaId);
+    const credDefResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.credentialDefinition.success.fetch,
+      data: credentialsDefinitions.response
+    };
+    return res.status(HttpStatus.OK).json(credDefResponse);
+  }
+
+  @Get('/orgs/:orgId/cred-defs')
   @ApiOperation({
     summary: 'Fetch all credential definitions of provided organization id with pagination',
     description: 'Fetch all credential definitions from metadata saved in database of provided organization id.'
@@ -95,7 +115,7 @@ export class CredentialDefinitionController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
-  @Post('/:orgId/cred-defs')
+  @Post('/orgs/:orgId/cred-defs')
   @ApiOperation({
     summary: 'Sends a credential definition to ledger',
     description: 'Sends a credential definition to ledger'

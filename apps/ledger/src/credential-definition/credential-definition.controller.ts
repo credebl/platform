@@ -4,7 +4,7 @@ import { Controller, Logger } from '@nestjs/common';
 
 import { CredentialDefinitionService } from './credential-definition.service';
 import { MessagePattern } from '@nestjs/microservices';
-import {  GetAllCredDefsPayload } from './interfaces/create-credential-definition.interface';
+import {  GetAllCredDefsPayload, GetCredDefBySchemaId } from './interfaces/create-credential-definition.interface';
 import { CreateCredDefPayload, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
 
@@ -44,5 +44,10 @@ export class CredentialDefinitionController {
         }[]
     }> {
         return this.credDefService.getAllCredDefs(payload);
+    }
+
+    @MessagePattern({ cmd: 'get-all-credential-definitions-by-schema-id' })
+    async getCredentialDefinitionBySchemaId(payload: GetCredDefBySchemaId): Promise<credential_definition[]> {
+        return this.credDefService.getCredentialDefinitionBySchemaId(payload);
     }
 }

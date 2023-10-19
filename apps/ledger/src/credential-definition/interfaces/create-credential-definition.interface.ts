@@ -51,3 +51,7 @@ export interface GetAllCredDefsPayload {
   user: IUserRequestInterface,
   orgId: number
 }
+
+export interface GetCredDefBySchemaId {
+  schemaId: string
+}

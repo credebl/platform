@@ -9,7 +9,7 @@ import {
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CredentialDefinitionRepository } from './repositories/credential-definition.repository';
-import { CreateCredDefPayload, CredDefPayload, GetAllCredDefsPayload, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
+import { CreateCredDefPayload, CredDefPayload, GetAllCredDefsPayload, GetCredDefBySchemaId, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CreateCredDefAgentRedirection, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
@@ -256,4 +256,14 @@ export class CredentialDefinitionService extends BaseService {
         }
     }
 
+    async getCredentialDefinitionBySchemaId(payload: GetCredDefBySchemaId): Promise<credential_definition[]> {
+        try {
+            const { schemaId } = payload;
+            const credDefListBySchemaId = await this.credentialDefinitionRepository.getCredentialDefinitionBySchemaId(schemaId);
+            return credDefListBySchemaId;
+        } catch (error) {
+            this.logger.error(`Error in retrieving credential definitions: ${error}`);
+            throw new RpcException(error.response ? error.response : error);
+        }
+    }
 }

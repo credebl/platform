@@ -152,4 +152,18 @@ export class CredentialDefinitionRepository {
             throw error;
         }
     }
+
+    async getCredentialDefinitionBySchemaId(schemaId: string): Promise<credential_definition[]> {
+        try {
+            return this.prisma.credential_definition.findMany({
+                where: {
+                    schemaLedgerId: schemaId
+                }
+
+            });
+        } catch (error) {
+            this.logger.error(`Error in getting agent type: ${error}`);
+            throw error;
+        }
+    }
 }

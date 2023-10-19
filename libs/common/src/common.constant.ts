@@ -83,6 +83,10 @@ export enum CommonConstants {
   // SHARED AGENT
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',
   URL_SHAGENT_WITH_TENANT_AGENT = '/multi-tenancy/with-tenant-agent',
+  URL_SHAGENT_CREATE_SCHEMA = '/multi-tenancy/schema/#',
+  URL_SHAGENT_GET_SCHEMA = '/multi-tenancy/schema/@/#',
+  URL_SHAGENT_CREATE_CRED_DEF = '/multi-tenancy/credential-definition/#',
+  URL_SHAGENT_GET_CRED_DEF = '/multi-tenancy/credential-definition/@/#',
   URL_SHAGENT_CREATE_INVITATION = '/multi-tenancy/create-legacy-invitation/#',
   URL_SHAGENT_GET_CREATEED_INVITATIONS = '/multi-tenancy/connections/#',
   URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID = '/multi-tenancy/connections/#/@',
@@ -257,6 +261,8 @@ export enum CommonConstants {
   ONBOARDING_TYPE_EXTERNAL = 1,
   ONBOARDING_TYPE_INVITATION = 2,
 
+  // ecosystem config auto endorsement
+  ECOSYSTEM_AUTO_ENDOSEMENT = 'autoEndorsement',
 
   // Network 
   TESTNET = 'testnet',
@@ -277,6 +283,15 @@ export enum CommonConstants {
   ENDORSER_DID = 8,
   ORGANIZATION_CREATION = 9,
   ADD_USER = 10,
+
+  // Ecosystem
+  SIGN_TRANSACTION = '/transactions/endorse',
+  SUBMIT_TRANSACTION = '/transactions/write',
+  TRANSACTION_MULTITENANT_SCHEMA = '/multi-tenancy/schema/#',
+  TRANSACTION_MULTITENANT_CRED_DEF = '/multi-tenancy/credential-definition/#',
+  TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
+  TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#'
+
 }
 
 export const postgresqlErrorCodes = [];

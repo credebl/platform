@@ -113,6 +113,32 @@ const createLedger = async (): Promise<void> => {
     }
 };
 
+const createEcosystemRoles = async (): Promise<void> => {
+    try {
+        const { ecosystemRoleData } = JSON.parse(configData);
+        const ecosystemRoles = await prisma.ecosystem_roles.createMany({
+            data: ecosystemRoleData
+        });
+
+        logger.log(ecosystemRoles);
+    } catch (e) {
+        logger.error('An error occurred seeding ecosystemRoles:', e);
+    }
+};
+
+const createEcosystemConfig = async (): Promise<void> => {
+    try {
+        const { ecosystemConfigData } = JSON.parse(configData);
+        const configDetails = await prisma.ecosystem_config.createMany({
+            data: ecosystemConfigData
+        });
+
+        logger.log(configDetails);
+    } catch (e) {
+        logger.error('An error occurred seeding createEcosystemConfig:', e);
+    }
+};
+
 async function main(): Promise<void> {
 
     await createPlatformConfig();
@@ -123,6 +149,9 @@ async function main(): Promise<void> {
     await createPlatformUserOrgRoles();
     await createOrgAgentTypes();
     await createLedger();
+    await createEcosystemRoles();
+    await createEcosystemConfig();
+
 }
 
 

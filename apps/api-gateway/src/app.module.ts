@@ -11,7 +11,6 @@ import { CredentialDefinitionModule } from './credential-definition/credential-d
 import { FidoModule } from './fido/fido.module';
 import { IssuanceModule } from './issuance/issuance.module';
 import { OrganizationModule } from './organization/organization.module';
-import { PlatformController } from './platform/platform.controller';
 import { PlatformModule } from './platform/platform.module';
 import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
@@ -20,6 +19,7 @@ import { SchemaModule } from './schema/schema.module';
 import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
+import { EcosystemModule } from './ecosystem/ecosystem.module';
 
 @Module({
   imports: [
@@ -41,7 +41,8 @@ import { ConnectionModule } from './connection/connection.module';
     OrganizationModule,
     UserModule,
     ConnectionModule,
-    IssuanceModule
+    IssuanceModule,
+    EcosystemModule
   ],
   controllers: [AppController],
   providers: [AppService]
@@ -80,7 +81,6 @@ export class AppModule {
       )
       .forRoutes(
         AgentController,
-        PlatformController,
         RevocationController
       );
   }

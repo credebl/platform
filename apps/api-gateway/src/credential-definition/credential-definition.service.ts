@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { BaseService } from '../../../../libs/service/base.service';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
@@ -15,32 +15,22 @@ export class CredentialDefinitionService extends BaseService {
   }
 
   createCredentialDefinition(credDef: CreateCredentialDefinitionDto, user: IUserRequestInterface): Promise<{ response: object }> {
-    try {
-      const payload = { credDef, user };
-      return this.sendNats(this.credDefServiceProxy, 'create-credential-definition', payload);
-    } catch (error) {
-      throw new RpcException(error.response);
-
-    }
+    const payload = { credDef, user };
+    return this.sendNats(this.credDefServiceProxy, 'create-credential-definition', payload);
   }
 
   getCredentialDefinitionById(credentialDefinitionId: string, orgId: number): Promise<{ response: object }> {
-    try {
-      const payload = { credentialDefinitionId, orgId };
-      return this.sendNats(this.credDefServiceProxy, 'get-credential-definition-by-id', payload);
-    } catch (error) {
-      throw new RpcException(error.response);
-
-    }
+    const payload = { credentialDefinitionId, orgId };
+    return this.sendNats(this.credDefServiceProxy, 'get-credential-definition-by-id', payload);
   }
 
   getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, user: IUserRequestInterface, orgId: number): Promise<{ response: object }> {
-    try {
-      const payload = { credDefSearchCriteria, user, orgId };
-      return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions', payload);
-    } catch (error) {
-      throw new RpcException(error.response);
+    const payload = { credDefSearchCriteria, user, orgId };
+    return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions', payload);
+  }
 
-    }
+  getCredentialDefinitionBySchemaId(schemaId: string): Promise<{ response: object }> {
+    const payload = { schemaId };
+    return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions-by-schema-id', payload);
   }
 }

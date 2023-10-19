@@ -280,12 +280,12 @@ export class EcosystemService {
       let isAcceptedInvitation = false;
 
       for (const invitation of invitations) {
-        if (invitation.status === Invitation.PENDING) {
+         if (invitation.status === Invitation.PENDING) {
           isPendingInvitation = true;
-        }
-        if (invitation.status === Invitation.ACCEPTED) {
+         }
+         if (invitation.status === Invitation.ACCEPTED) {
           isAcceptedInvitation = true;
-        }
+         }             
       }
 
       if (isPendingInvitation || isAcceptedInvitation) {

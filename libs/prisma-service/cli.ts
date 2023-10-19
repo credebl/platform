@@ -36,8 +36,39 @@ const readLineAsync = msg => new Promise(resolve => {
     });
   });
 
+  const agentSetup = async () => {
+    const choice = await readLineAsync('Choose an option for agent spinup (1. Dedicated, 2. Shared): ');
+
+    if ('1' === choice) {
+      console.log('Dedicated Agent');
+    } else if ('2' === choice) {
+      console.log('Shared Agent');
+    } else {
+      console.error('Invalid choice.');
+    }
+};
+
+const createOrganization = async () => {
+    const organizationName = await readLineAsync('Enter organization name: ');
+    const organizationDescription = await readLineAsync('Enter organization description: ');
+  
+    const organization = await prisma.organisation.create({
+      data: {
+        'name': organizationName,
+        'description': organizationDescription,
+        'logoUrl': '',
+        'website': '',
+        'publicProfile': true
+      }
+    });
+    console.log('Organization created:', organization);
+
+    await agentSetup();
+};
+  
+
 const createUser = async () => {
-  const name = await readLineAsync('Enter user name: ');
+  const name = await readLineAsync('Enter your name: ');
   const email = await readLineAsync('Enter email address: ');
   const password = await readLineAsync('Enter your password: ');
 
@@ -62,33 +93,26 @@ const createUser = async () => {
       }
     });
     console.log('User created:', user);
+
+    await createOrganization();
+
 } catch (e) {
   console.error('An error occurred in createUser:', e);
 }
 };
 
-const createOrganization = async () => {
-  const organizationName = await readLineAsync('Enter organization name: ');
-
-  // const organization = await prisma.organisation.create({
-  //   data: {
-  //     name: organizationName
-  //   }
-  // });
-  console.log('Organization created:', organizationName);
-};
-
   async function main() {
-
-  const choice = await readLineAsync('Choose an action (1. Create user, 2. Create organization): ');
-
-  if ('1' === choice) {
     await createUser();
-  } else if ('2' === choice) {
-    await createOrganization();
-  } else {
-    console.error('Invalid choice.');
-  }
+
+  // const choice = await readLineAsync('Choose an action (1. Create user, 2. Create organization): ');
+
+  // if ('1' === choice) {
+  //   await createUser();
+  // } else if ('2' === choice) {
+  //   await createOrganization();
+  // } else {
+  //   console.error('Invalid choice.');
+  // }
 
   // Close the Prisma client connection
   // await prisma.$disconnect();

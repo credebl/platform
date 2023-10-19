@@ -105,7 +105,7 @@ export class CredentialAttributes {
 
 export class OutOfBandCredentialDto {
 
-    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attribute': { 'value': 'string', 'name': 'string' } }] })
+    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attribute': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
     credentialOffer: CredentialOffer[];

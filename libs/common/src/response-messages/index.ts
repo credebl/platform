@@ -214,7 +214,17 @@ export const ResponseMessages = {
             requestSchemaTransaction: 'Error while request schema transaction',
             requestCredDefTransaction: 'Error while submitting transaction',
             notFound: 'Organization not found',
+            platformConfigNotFound: 'Platform configurations not found',
+            schemaNotFound: 'Schema not found',
+            ecosystemNotFound: 'Ecosystem not found',
+            ecosystemOrgNotFound: 'Ecosystem org not found',
+            ecosystemConfigNotFound: 'Ecosystem config not found',
+            credentialDefinitionNotFound: 'Credential definition found',
             leadNotFound: 'Lead details not found',
+            signRequestError: 'Error while signing the transaction',
+            updateTransactionError: 'Error while update the transaction',
+            schemaAlreadyExist: 'Schema name and schema version already exist',
+            credDefAlreadyExist: 'Credential definition already exist',
             saveSchema: 'Error while storing the schema details',
             saveCredDef: 'Error while storing the credential-definition details',
             invalidOrgId: 'Invalid organization Id',
@@ -225,7 +235,8 @@ export const ResponseMessages = {
             EndorsementTransactionNotFoundException:'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg',
             UserdoesnotMeetCriteria:'User not found or user email is not verified',
-            UserWithRoleOwnerNotFound:'User with role Owner not found'
+            UserWithRoleOwnerNotFound:'User with role Owner not found',
+            ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
         }
     }   
 };

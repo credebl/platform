@@ -261,6 +261,8 @@ export enum CommonConstants {
   ONBOARDING_TYPE_EXTERNAL = 1,
   ONBOARDING_TYPE_INVITATION = 2,
 
+  // ecosystem config auto endorsement
+  ECOSYSTEM_AUTO_ENDOSEMENT = 'autoEndorsement',
 
   // Network 
   TESTNET = 'testnet',

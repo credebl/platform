@@ -298,7 +298,7 @@ export class OrganizationController {
   async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: number, @User() user: user, @Res() res: Response): Promise<Response> {
 
     bulkInvitationDto.orgId = orgId;
-    await this.organizationService.createInvitation(bulkInvitationDto, user.id);
+    await this.organizationService.createInvitation(bulkInvitationDto, user.id, user.email);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

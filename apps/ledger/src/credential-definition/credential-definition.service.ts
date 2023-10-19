@@ -259,7 +259,8 @@ export class CredentialDefinitionService extends BaseService {
     async getCredentialDefinitionBySchemaId(payload: GetCredDefBySchemaId): Promise<credential_definition[]> {
         try {
             const { schemaId } = payload;
-            return this.credentialDefinitionRepository.getCredentialDefinitionBySchemaId(schemaId);
+            const credDefListBySchemaId = await this.credentialDefinitionRepository.getCredentialDefinitionBySchemaId(schemaId);
+            return credDefListBySchemaId;
         } catch (error) {
             this.logger.error(`Error in retrieving credential definitions: ${error}`);
             throw new RpcException(error.response ? error.response : error);

@@ -97,9 +97,9 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'send-ecosystem-invitation' })
   async createInvitation(
-    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string }
+    payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string, userEmail: string }
   ): Promise<string> {
-    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
+    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail);
   }
 
   /**

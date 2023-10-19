@@ -62,8 +62,8 @@ export class EcosystemService extends BaseService {
    * @param userId 
    * @returns 
    */
-  async createInvitation(bulkInvitationDto: BulkEcosystemInvitationDto, userId: string): Promise<object> {
-    const payload = { bulkInvitationDto, userId };
+  async createInvitation(bulkInvitationDto: BulkEcosystemInvitationDto, userId: string, userEmail: string): Promise<object> {
+    const payload = { bulkInvitationDto, userId, userEmail };
     return this.sendNats(this.serviceProxy, 'send-ecosystem-invitation', payload);
   }
 

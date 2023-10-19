@@ -2,8 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IssuanceDto, IssueCredentialDto } from './dtos/issuance.dto';
-import { FileExportResponse } from './interfaces';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -51,10 +50,10 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
     }
 
-    async exportSchemaToCSV(credentialDefinitionId: string
-        ): Promise<FileExportResponse> {
-          const payload = {credentialDefinitionId};
-          return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
-        }
-
+    outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OutOfBandCredentialDto): Promise<{
+        response: object;
+    }> {
+        const payload = { user, outOfBandCredentialDto };
+        return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
+    }
 }

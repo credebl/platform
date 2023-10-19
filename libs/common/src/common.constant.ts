@@ -71,6 +71,7 @@ export enum CommonConstants {
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_GET_CREDS_AFJ = '/credentials',
   URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
+  URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
 
   // SCHEMA & CRED DEF SERVICES
   URL_SCHM_CREATE_SCHEMA = '/schemas',
@@ -100,6 +101,7 @@ export enum CommonConstants {
   URL_SHAGENT_ACCEPT_PRESENTATION = '/multi-tenancy/proofs/@/accept-presentation/#',
   URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST = '/multi-tenancy/proofs/create-request-oob/#',
   URL_SHAGENT_PROOF_FORM_DATA = '/multi-tenancy/form-data/#/@',
+  URL_SHAGENT_OUT_OF_BAND_CREDENTIAL = '/multi-tenancy/credentials/create-offer-oob/#',
 
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',

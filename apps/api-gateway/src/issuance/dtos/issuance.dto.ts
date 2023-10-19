@@ -1,7 +1,12 @@
 import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-interface attribute {
+interface CredentialOffer {
+    emailId: string;
+    attribute: Attribute[];
+}
+
+interface Attribute {
     name: string;
     value: string;
 }
@@ -11,7 +16,7 @@ export class IssueCredentialDto {
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
-    attributes: attribute[];
+    attributes: Attribute[];
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid credentialDefinitionId' })
@@ -98,3 +103,29 @@ export class CredentialAttributes {
     value: string;
 }
 
+export class OutOfBandCredentialDto {
+
+    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attribute': { 'value': 'string', 'name': 'string' } }] })
+    @IsNotEmpty({ message: 'Please provide valid attributes' })
+    @IsArray({ message: 'attributes should be array' })
+    credentialOffer: CredentialOffer[];
+
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid credential definition id' })
+    @IsString({ message: 'credential definition id should be string' })
+    credentialDefinitionId: string;
+
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid comment' })
+    @IsString({ message: 'comment should be string' })
+    @IsOptional()
+    comment: string;
+
+    @ApiProperty({ example: 'v1' })
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid protocol version' })
+    @IsString({ message: 'protocol version should be string' })
+    protocolVersion?: string;
+
+    orgId: number;
+}

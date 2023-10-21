@@ -356,23 +356,38 @@ export class VerificationService {
         }
       };
 
-      const emailPromises = outOfBandRequestProof.emailId.map(async email => {
-        return this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
-      });
-
-      const results = await Promise.all(emailPromises);
-
-      // Check if any email sending failed
-      if (results.some(result => !result)) {
-        throw new Error(ResponseMessages.verification.error.emailSend);
-      }
-
+      const batchSize = 100; // Define the batch size according to your needs
+      const { emailId } = outOfBandRequestProof; // Assuming it's an array
+      await this.sendEmailInBatches(payload, emailId, getAgentDetails, organizationDetails, batchSize);
       return true;
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
       throw new RpcException(error.message);
     }
   }
+
+  async sendEmailInBatches(payload, emailIds, getAgentDetails, organizationDetails, batchSize): Promise<void> {
+    const accumulatedErrors = [];
+
+    for (let i = 0; i < emailIds.length; i += batchSize) {
+      const batch = emailIds.slice(i, i + batchSize);
+      const emailPromises = batch.map(async email => {
+        try {
+          await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
+        } catch (error) {
+          accumulatedErrors.push(error);
+        }
+      });
+
+      await Promise.all(emailPromises);
+    }
+
+    if (0 < accumulatedErrors.length) {
+      this.logger.error(accumulatedErrors);
+      throw new Error(ResponseMessages.verification.error.emailSend);
+    }
+  }
+
 
   async sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails): Promise<boolean> {
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);

@@ -161,6 +161,7 @@ export const ResponseMessages = {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
+            organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
             notFound: 'Organization agent not found',
             credentialOfferNotFound: "Credential offer not found",

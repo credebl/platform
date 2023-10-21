@@ -85,15 +85,15 @@ export class OutOfBandRequestProof {
     @IsNotEmpty({ message: 'please provide valid attributes' })
     attributes: ProofRequestAttribute[];
 
-    @ApiProperty({ example: 'string' })
+    @ApiProperty({ example: ['exmaple@example.com'] })
     @IsNotEmpty({ message: 'Please provide valid emailId' })
     @Transform(({ value }) => trim(value))
     @Transform(({ value }) => toLowerCase(value))
     @IsNotEmpty({ message: 'Email is required.' })
     @MaxLength(256, { message: 'Email must be at most 256 character.' })
     @IsEmail()
-    emailId: string;
-    
+    emailId: string[];
+
     @ApiProperty()
     @IsOptional()
     comment: string;

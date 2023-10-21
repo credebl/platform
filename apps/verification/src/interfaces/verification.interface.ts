@@ -16,7 +16,7 @@ export interface IRequestProof {
     comment: string;
     autoAcceptProof: string;
     protocolVersion: string;
-    emailId?: string
+    emailId?: string[]
 }
 
 export interface IGetAllProofPresentations {

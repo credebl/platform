@@ -21,7 +21,9 @@ export class VerificationService {
 
   constructor(
     @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
-    private readonly verificationRepository: VerificationRepository
+    private readonly verificationRepository: VerificationRepository,
+    private readonly outOfBandVerification: OutOfBandVerification,
+    private readonly emailData: EmailDto
 
   ) { }
 
@@ -315,113 +317,111 @@ export class VerificationService {
   }
 
   /**
-   * Request out-of-band proof presentation
-   * @param outOfBandRequestProof 
-   * @returns Get requested proof presentation details
-   */
+ * Request out-of-band proof presentation
+ * @param outOfBandRequestProof 
+ * @returns Get requested proof presentation details
+ */
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: IRequestProof): Promise<boolean> {
     try {
-      const comment = outOfBandRequestProof.comment ? outOfBandRequestProof.comment : '';
-
-      let proofRequestPayload: ISendProofRequestPayload = {
-        protocolVersion: '',
-        comment: '',
-        proofFormats: {
-          indy: {
-            name: '',
-            requested_attributes: {},
-            requested_predicates: {},
-            version: ''
-          }
-        },
-        autoAcceptProof: ''
-      };
+      const comment = outOfBandRequestProof.comment || '';
+      const protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
+      const autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'never';
 
       const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
 
-      proofRequestPayload = {
-        protocolVersion: outOfBandRequestProof.protocolVersion ? outOfBandRequestProof.protocolVersion : 'v1',
-        comment,
-        proofFormats: {
-          indy: {
-            name: 'Proof Request',
-            version: '1.0',
-            // eslint-disable-next-line camelcase
-            requested_attributes: requestedAttributes,
-            // eslint-disable-next-line camelcase
-            requested_predicates: requestedPredicates
-          }
-        },
-        autoAcceptProof: outOfBandRequestProof.autoAcceptProof ? outOfBandRequestProof.autoAcceptProof : 'never'
-      };
 
-      const getAgentDetails = await this.verificationRepository.getAgentEndPoint(outOfBandRequestProof.orgId);
-      const organizationDetails = await this.verificationRepository.getOrganization(outOfBandRequestProof.orgId);
+      const [getAgentDetails, organizationDetails] = await Promise.all([
+        this.verificationRepository.getAgentEndPoint(outOfBandRequestProof.orgId),
+        this.verificationRepository.getOrganization(outOfBandRequestProof.orgId)
+      ]);
 
       const verificationMethodLabel = 'create-request-out-of-band';
       const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
 
-      const payload = { apiKey: '', url, proofRequestPayload };
-
-      const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
-
-      if (!getProofPresentation) {
-        throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
-      }
-
-      const invitationId = getProofPresentation?.response?.invitation['@id'];
-
-      if (!invitationId) {
-        throw new NotFoundException(ResponseMessages.verification.error.invitationNotFound);
-      }
-
-      let shortenedUrl;
-      if (getAgentDetails?.tenantId) {
-        shortenedUrl = `${getAgentDetails?.agentEndPoint}/multi-tenancy/url/${getAgentDetails?.tenantId}/${invitationId}`;
-      } else {
-        shortenedUrl = `${getAgentDetails?.agentEndPoint}/url/${invitationId}`;
-      }
-
-      const uniqueCID = uuid.v4();
-
-      const qrCodeOptions: QRCode.QRCodeToDataURLOptions = {
-        type: 'image/png'
+      const payload = {
+        apiKey: '',
+        url,
+        proofRequestPayload: {
+          protocolVersion,
+          comment,
+          proofFormats: {
+            indy: {
+              name: 'Proof Request',
+              version: '1.0',
+              requested_attributes: requestedAttributes,
+              requested_predicates: requestedPredicates
+            }
+          },
+          autoAcceptProof
+        }
       };
 
-      const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
-      const platformConfigData = await this.verificationRepository.getPlatformConfigDetails();
+      const emailPromises = outOfBandRequestProof.emailId.map(async email => {
+        return this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
+      });
 
-      if (!platformConfigData) {
-        throw new NotFoundException(ResponseMessages.verification.error.platformConfigNotFound);
+      const results = await Promise.all(emailPromises);
+
+      // Check if any email sending failed
+      if (results.some(result => !result)) {
+        throw new Error(ResponseMessages.verification.error.emailSend);
       }
 
-      const outOfBandVerification = new OutOfBandVerification();
-      const emailData = new EmailDto();
-      emailData.emailFrom = platformConfigData.emailFrom;
-      emailData.emailTo = outOfBandRequestProof.emailId;
-      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials Required`;
-      emailData.emailHtml = await outOfBandVerification.outOfBandVerification(outOfBandRequestProof.emailId, uniqueCID, organizationDetails.name);
-      emailData.emailAttachments = [
-        {
-          filename: 'qrcode.png',
-          content: outOfBandIssuanceQrCode.split(';base64,')[1],
-          contentType: 'image/png',
-          disposition: 'attachment'
-        }
-      ];
-      const isEmailSent = await sendEmail(emailData);
-
-      if (isEmailSent) {
-        return isEmailSent;
-      } else {
-        throw new InternalServerErrorException(ResponseMessages.verification.error.emailSend);
-      }
-
+      return true;
     } catch (error) {
-      this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
+      throw new RpcException(error.message);
     }
   }
+
+  async sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails): Promise<boolean> {
+    const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
+
+    if (!getProofPresentation) {
+      throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
+    }
+
+    const invitationId = getProofPresentation?.response?.invitation['@id'];
+
+    if (!invitationId) {
+      throw new Error(ResponseMessages.verification.error.invitationNotFound);
+    }
+
+    const shortenedUrl = getAgentDetails?.tenantId
+      ? `${getAgentDetails?.agentEndPoint}/multi-tenancy/url/${getAgentDetails?.tenantId}/${invitationId}`
+      : `${getAgentDetails?.agentEndPoint}/url/${invitationId}`;
+
+    const uniqueCID = uuid.v4();
+    const qrCodeOptions: QRCode.QRCodeToDataURLOptions = { type: 'image/png' };
+    const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
+
+    const platformConfigData = await this.verificationRepository.getPlatformConfigDetails();
+
+    if (!platformConfigData) {
+      throw new Error(ResponseMessages.verification.error.platformConfigNotFound);
+    }
+
+    this.emailData.emailFrom = platformConfigData.emailFrom;
+    this.emailData.emailTo = email;
+    this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials Required`;
+    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, uniqueCID, organizationDetails.name);
+    this.emailData.emailAttachments = [
+      {
+        filename: 'qrcode.png',
+        content: outOfBandIssuanceQrCode.split(';base64,')[1],
+        contentType: 'image/png',
+        disposition: 'attachment'
+      }
+    ];
+    const isEmailSent = await sendEmail(this.emailData);
+
+    if (!isEmailSent) {
+      throw new Error(ResponseMessages.verification.error.emailSend);
+    }
+
+    return isEmailSent;
+  }
+
 
   /**
    * Consume agent API for request out-of-band proof presentation

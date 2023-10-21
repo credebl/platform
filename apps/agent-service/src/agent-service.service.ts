@@ -338,10 +338,11 @@ export class AgentServiceService {
 
 
       const agentDidWriteUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-      const { seed } = payload;
+      const { seed, ledgerId } = payload;
       const { apiKey } = payload;
       const writeDid = 'write-did';
-      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed);
+      const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(ledgerId);
+      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace);
       if (agentDid) {
 
         const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DIDS}`;
@@ -388,14 +389,14 @@ export class AgentServiceService {
     }
   }
 
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string): Promise<object> {
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string): Promise<object> {
     return retry(
       async () => {
 
         if ('write-did' === agentApiState) {
 
           const agentDid = await this.commonService
-            .httpPost(agentUrl, { seed }, { headers: { 'x-api-key': apiKey } })
+            .httpPost(agentUrl, { seed, method: indyNamespace }, { headers: { 'x-api-key': apiKey } })
             .then(async response => response);
           return agentDid;
         } else if ('get-did-doc' === agentApiState) {

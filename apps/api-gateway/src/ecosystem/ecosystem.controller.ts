@@ -276,9 +276,9 @@ export class EcosystemController {
   @Post('/:orgId')
   @ApiOperation({ summary: 'Create a new ecosystem', description: 'Create an ecosystem' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  // @ApiBearerAuth()
-  // @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
   async createNewEcosystem(
     @Body() createOrgDto: CreateEcosystemDto,
     @Param('orgId') orgId: string,
@@ -295,10 +295,10 @@ export class EcosystemController {
   @Post('/:ecosystemId/:orgId/transaction/schema')
   @ApiOperation({ summary: 'Request new schema', description: 'Request new schema' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  // @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  // @ApiBearerAuth()
-  // @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: number, @Param('ecosystemId') ecosystemId: string, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId, ecosystemId);
     const finalResponse: IResponseType = {
@@ -312,10 +312,10 @@ export class EcosystemController {
   @Post('/:ecosystemId/:orgId/transaction/cred-def')
   @ApiOperation({ summary: 'Request new credential-definition', description: 'Request new credential-definition' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  // @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  // @ApiBearerAuth()
-  // @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('orgId') orgId: number, @Param('ecosystemId') ecosystemId: string, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
     const finalResponse: IResponseType = {
@@ -328,10 +328,10 @@ export class EcosystemController {
   @Post('/:ecosystemId/:orgId/transaction/sign/:endorsementId')
   @ApiOperation({ summary: 'Sign transaction', description: 'Sign transaction' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  // @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  // @ApiBearerAuth()
-  // @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {
@@ -344,10 +344,10 @@ export class EcosystemController {
   @Post('/:ecosystemId/:orgId/transaction/sumbit/:endorsementId')
   @ApiOperation({ summary: 'Sumbit transaction', description: 'Sumbit transaction' })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  // @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  // @ApiBearerAuth()
-  // @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     await this.ecosystemService.submitTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponseType = {

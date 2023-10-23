@@ -13,6 +13,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from 'apps/user/repositories/user.repository';
+// import { nkeyAuthenticator } from 'nats';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UserRepository } from 'apps/user/repositories/user.repository';
         transport: Transport.NATS,
         options: {
           servers: [`${process.env.NATS_URL}`]
+          // authenticator: nkeyAuthenticator(new TextEncoder().encode(process.env.ORGANIZATION_NKEY_SEED)),
         }
       }
     ]),

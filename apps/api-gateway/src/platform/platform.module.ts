@@ -3,6 +3,7 @@ import { PlatformController } from './platform.controller';
 import { PlatformService } from './platform.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
+// import { nkeyAuthenticator } from 'nats';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ConfigModule } from '@nestjs/config';
         transport: Transport.NATS,
         options: {
           servers: [`${process.env.NATS_URL}`]
+          
         }
       }
     ])

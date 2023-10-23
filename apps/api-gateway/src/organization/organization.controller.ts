@@ -41,6 +41,19 @@ export class OrganizationController {
     private readonly commonService: CommonService
   ) { }
 
+  @Get('/profile/:orgId')
+  @ApiOperation({ summary: 'Organization Profile', description: 'Update an organization' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async getOgPofile(@Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+    const orgProfile = await this.organizationService.getOgPofile(orgId);
+
+    const base64Data = orgProfile.response["logoUrl"].replace(/^data:image\/\w+;base64,/, '');
+
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    res.setHeader('Content-Type', 'image/png'); 
+    return res.send(imageBuffer);
+  }
+
   /**
  * 
  * @param user 

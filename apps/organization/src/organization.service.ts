@@ -277,13 +277,13 @@ export class OrganizationService {
       let isAcceptedInvitation = false;
 
       for (const invitation of invitations) {
-         if (invitation.status === Invitation.PENDING) {
+        if (invitation.status === Invitation.PENDING) {
           isPendingInvitation = true;
-         }
-         if (invitation.status === Invitation.ACCEPTED) {
+        }
+        if (invitation.status === Invitation.ACCEPTED) {
           isAcceptedInvitation = true;
-         }             
-      }      
+        }
+      }
 
       if (isPendingInvitation || isAcceptedInvitation) {
         return true;
@@ -314,7 +314,7 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
-        const isInvitationExist = await this.checkInvitationExist(email, orgId);        
+        const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
@@ -477,6 +477,15 @@ export class OrganizationService {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getOgPofile(orgId: number): Promise<organisation> {
+    try {
+      return this.organizationRepository.getOrgProfile(orgId);
+    } catch (error) {
+      this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

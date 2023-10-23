@@ -483,7 +483,11 @@ export class OrganizationService {
 
   async getOgPofile(orgId: number): Promise<organisation> {
     try {
-      return this.organizationRepository.getOrgProfile(orgId);
+      const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
+      if (!orgProfile.logoUrl || '' === orgProfile.logoUrl) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgProfile);
+      }
+      return orgProfile;
     } catch (error) {
       this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

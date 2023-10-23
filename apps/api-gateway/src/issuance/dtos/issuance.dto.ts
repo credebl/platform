@@ -1,9 +1,9 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 interface CredentialOffer {
     emailId: string;
-    attribute: Attribute[];
+    attributes: Attribute[];
 }
 
 interface Attribute {
@@ -108,7 +108,21 @@ export class OutOfBandCredentialDto {
     @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attribute': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
+    @IsOptional()
     credentialOffer: CredentialOffer[];
+
+    @ApiProperty({ example: 'awqx@getnada.com' })
+    @IsEmail()
+    @IsNotEmpty({ message: 'Please provide valid email' })
+    @IsString({ message: 'email should be string' })
+    @IsOptional()
+    emailId: string;
+
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
+    @IsNotEmpty({ message: 'Please provide valid attributes' })
+    @IsArray({ message: 'attributes should be array' })
+    @IsOptional()
+    attributes: Attribute[];
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid credential definition id' })

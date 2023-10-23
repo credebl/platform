@@ -115,34 +115,76 @@ export class EcosystemService extends BaseService {
     const payload = { invitationId };
     return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
   }
-    
-    async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number, ecosystemId:string): Promise<object> {
-      const payload = { requestSchemaPayload, orgId, ecosystemId};
-      return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
-    }
+  async acceptRejectEcosystemInvitaion(
+    acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
+    userEmail: string
+  ): Promise<{ response: string }> {
+    const payload = { acceptRejectInvitation, userEmail };
+    return this.sendNats(this.serviceProxy, 'accept-reject-ecosystem-invitations', payload);
+  }
 
-    async credDefEndorsementRequest(requestCredDefPayload: RequestCredDefDto, orgId: number, ecosystemId:string): Promise<object> {
-      const payload = { requestCredDefPayload, orgId, ecosystemId};
-      return this.sendNats(this.serviceProxy, 'credDef-endorsement-request', payload);
-    }
 
-    async signTransaction(endorsementId:string, ecosystemId:string): Promise<object> {
-      const payload = { endorsementId, ecosystemId };
-      return this.sendNats(this.serviceProxy, 'sign-endorsement-transaction', payload);
-    }
+  async fetchEcosystemOrg(
+    ecosystemId: string,
+    orgId: string
+  ): Promise<{ response: object }> {
+    const payload = { ecosystemId, orgId };
+    return this.sendNats(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
+  }
 
-    async submitTransaction(endorsementId:string, ecosystemId:string): Promise<object> {
-      const payload = { endorsementId, ecosystemId };
-      return this.sendNats(this.serviceProxy, 'sumbit-endorsement-transaction', payload);
-    }
+  async getEndorsementTranasactions(
+    ecosystemId: string,
+    orgId: string,
+    getAllEndorsements: GetAllEndorsementsDto
+  ): Promise<{ response: object }> {
+    const { pageNumber, pageSize, search, type } = getAllEndorsements;
+    const payload = { ecosystemId, orgId, pageNumber, pageSize, search, type };
+    return this.sendNats(this.serviceProxy, 'get-endorsement-transactions', payload);
+  }
 
-    async declineEndorsementRequestByLead(
-      ecosystemId: string,
-      endorsementId: string,
-      orgId: string
-    ): Promise<{ response: object }> {
-      const payload = { ecosystemId, endorsementId, orgId };
-      return this.sendNats(this.serviceProxy, 'decline-endorsement-transaction', payload);
-    }
-   
+  async getAllEcosystemSchemas(
+    ecosystemId: string,
+    orgId: string,
+    getAllEcosystemSchemaDto: GetAllEcosystemInvitationsDto
+  ): Promise<{ response: object }> {
+    const { pageNumber, pageSize, search } = getAllEcosystemSchemaDto;
+    const payload = { ecosystemId, orgId, pageNumber, pageSize, search };
+    return this.sendNats(this.serviceProxy, 'get-all-ecosystem-schemas', payload);
+  }
+
+
+  async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number, ecosystemId: string): Promise<object> {
+    const payload = { requestSchemaPayload, orgId, ecosystemId };
+    return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
+  }
+
+  async credDefEndorsementRequest(requestCredDefPayload: RequestCredDefDto, orgId: number, ecosystemId: string): Promise<object> {
+    const payload = { requestCredDefPayload, orgId, ecosystemId };
+    return this.sendNats(this.serviceProxy, 'credDef-endorsement-request', payload);
+  }
+
+  async signTransaction(endorsementId: string, ecosystemId: string): Promise<object> {
+    const payload = { endorsementId, ecosystemId };
+    return this.sendNats(this.serviceProxy, 'sign-endorsement-transaction', payload);
+  }
+
+  async submitTransaction(endorsementId: string, ecosystemId: string): Promise<object> {
+    const payload = { endorsementId, ecosystemId };
+    return this.sendNats(this.serviceProxy, 'sumbit-endorsement-transaction', payload);
+  }
+
+  async autoSignAndSubmitTransaction(): Promise<{ response: object }> {
+    const payload = {};
+    return this.sendNats(this.serviceProxy, 'auto-endorsement-transaction', payload);
+  }
+
+  async declineEndorsementRequestByLead(
+    ecosystemId: string,
+    endorsementId: string,
+    orgId: string
+  ): Promise<{ response: object }> {
+    const payload = { ecosystemId, endorsementId, orgId };
+    return this.sendNats(this.serviceProxy, 'decline-endorsement-transaction', payload);
+  }
+
 }

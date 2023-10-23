@@ -314,7 +314,7 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
-        const isInvitationExist = await this.checkInvitationExist(email, orgId);        
+        const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 

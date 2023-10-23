@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { FidoController } from './fido.controller';
 import { FidoService } from './fido.service';
+// import { nkeyAuthenticator } from 'nats';
 
 @Module({
   imports:[
@@ -11,6 +12,7 @@ import { FidoService } from './fido.service';
         transport: Transport.NATS,
         options: {
           servers: [`${process.env.NATS_URL}`]
+  
         }
       }
     ])

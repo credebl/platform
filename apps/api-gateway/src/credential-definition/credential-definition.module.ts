@@ -3,6 +3,7 @@ import { Logger, Module } from '@nestjs/common';
 
 import { CredentialDefinitionController } from './credential-definition.controller';
 import { CredentialDefinitionService } from './credential-definition.service';
+// import { nkeyAuthenticator } from 'nats';
 
 @Module({
   imports:[
@@ -12,6 +13,7 @@ import { CredentialDefinitionService } from './credential-definition.service';
         transport: Transport.NATS,
         options: {
           servers: [`${process.env.NATS_URL}`]
+          
         }
       }
     ])

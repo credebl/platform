@@ -17,6 +17,7 @@ import { UserModule } from '../user/user.module';
 import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';
 import { EcosystemService } from '../ecosystem/ecosystem.service';
+// import { nkeyAuthenticator } from 'nats';
 
 //import { WebhookService } from "../../../platform-service/src/webhook/webhook.service";
 
@@ -33,6 +34,7 @@ import { EcosystemService } from '../ecosystem/ecosystem.service';
         transport: Transport.NATS,
         options: {
           servers: [`${process.env.NATS_URL}`]
+          // authenticator: nkeyAuthenticator(new TextEncoder().encode(process.env.API_GATEWAY_NKEY_SEED)),
         }
       },
       CommonModule

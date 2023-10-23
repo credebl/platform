@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+// import { nkeyAuthenticator } from 'nats';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UserService } from './user.service';
         transport: Transport.NATS,
         options: {
           servers: [`${process.env.NATS_URL}`]
+          // authenticator: nkeyAuthenticator(new TextEncoder().encode(process.env.USER_NKEY_SEED)),
         }
       }
     ])

@@ -153,4 +153,9 @@ export class OrganizationController {
   async getOrgDashboard(payload: { orgId: number; userId: number }): Promise<object> {
     return this.organizationService.getOrgDashboard(payload.orgId);
   }
+
+  @MessagePattern({ cmd: 'fetch-organization-profile' })
+  async getOgPofile(payload: { orgId: number }): Promise<object> {
+    return this.organizationService.getOgPofile(payload.orgId);
+  }
 }

@@ -433,4 +433,18 @@ export class OrganizationRepository {
       throw new InternalServerErrorException(error);
     }
   }
+
+  async getOrgProfile(id: number): Promise<organisation> {
+    try {
+      return this.prisma.organisation.findUnique({
+        where: {
+          id
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
 }

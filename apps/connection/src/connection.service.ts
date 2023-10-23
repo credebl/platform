@@ -52,11 +52,16 @@ export class ConnectionService {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
 
+      let logoImageUrl;
+      if (organisation.logoUrl) {
+        logoImageUrl = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/orgs/profile/${organisation.id}`;
+      }
+
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: organisation.logoUrl || undefined,
+        imageUrl: logoImageUrl ? logoImageUrl : '',
         label: label || undefined
       };
 

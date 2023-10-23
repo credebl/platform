@@ -142,6 +142,16 @@ export class EcosystemService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-endorsement-transactions', payload);
   }
 
+  async getAllEcosystemSchemas(
+    ecosystemId: string,
+    orgId: string,
+    getAllEcosystemSchemaDto: GetAllEcosystemInvitationsDto
+  ): Promise<{ response: object }> {
+    const { pageNumber, pageSize, search } = getAllEcosystemSchemaDto;
+    const payload = { ecosystemId, orgId, pageNumber, pageSize, search };
+    return this.sendNats(this.serviceProxy, 'get-all-ecosystem-schemas', payload);
+  }
+
 
   async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number, ecosystemId: string): Promise<object> {
     const payload = { requestSchemaPayload, orgId, ecosystemId };

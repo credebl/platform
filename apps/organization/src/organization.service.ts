@@ -318,8 +318,6 @@ export class OrganizationService {
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
-        if (!isInvitationExist && userEmail !== invitation.email) {
-
           await this.organizationRepository.createSendInvitation(email, orgId, userId, orgRoleId);
 
           const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);

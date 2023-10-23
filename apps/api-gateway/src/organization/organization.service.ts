@@ -109,8 +109,8 @@ export class OrganizationService extends BaseService {
    * @param sendInvitationDto
    * @returns Organization invitation creation Success
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number): Promise<object> {
-    const payload = { bulkInvitationDto, userId };
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number, userEmail: string): Promise<object> {
+    const payload = { bulkInvitationDto, userId, userEmail };
     return this.sendNats(this.serviceProxy, 'send-invitation', payload);
   }
 

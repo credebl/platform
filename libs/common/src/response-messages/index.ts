@@ -244,7 +244,11 @@ export const ResponseMessages = {
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
-            ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
+            ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.',
+            updateSchemaId: 'Error while updating the schema id',
+            updateCredDefId: 'Error while updating the credential-definition',
+            invalidMessage: 'Invalid transaction details. Missing "message" property.',
+            invalidTransactionMessage: 'Invalid transaction details'
         }
     },
     bulkIssuance: {

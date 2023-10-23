@@ -47,14 +47,16 @@ export interface ICredentialAttributesInterface {
 
 export interface CredentialOffer {
     emailId: string;
-    attribute: Attributes[];
+    attributes: Attributes[];
 }
 export interface OutOfBandCredentialOfferPayload {
-    credentialOffer: CredentialOffer[];
     credentialDefinitionId: string;
     comment: string;
-    protocolVersion?: string;
     orgId: number;
+    credentialOffer?: CredentialOffer[];
+    emailId?: string;
+    attributes?: Attributes[];
+    protocolVersion?: string;
 }
 
 export interface OutOfBandCredentialOffer {

@@ -258,7 +258,9 @@ export class IssuanceService {
         comment,
         credentialDefinitionId,
         orgId,
-        protocolVersion
+        protocolVersion,
+        attributes,
+        emailId
       } = outOfBandCredential;
 
       // Define a batch size
@@ -282,78 +284,83 @@ export class IssuanceService {
       const errors = [];
       const emailPromises = [];
 
-      // Split the credentialOffer array into batches
-      for (let i = 0; i < credentialOffer.length; i += batchSize) {
-        const batch = credentialOffer.slice(i, i + batchSize);
-
-        // Process each batch in parallel
-        const batchPromises = batch.map(async (iterator) => {
-          try {
-            const outOfBandIssuancePayload = {
-              protocolVersion: protocolVersion || 'v1',
-              credentialFormats: {
-                indy: {
-                  attributes: iterator.attribute,
-                  credentialDefinitionId
-                }
-              },
-              autoAcceptCredential: 'always',
-              comment
-            };
-
-            const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
-
-            if (!credentialCreateOfferDetails) {
-              errors.push(ResponseMessages.issuance.error.credentialOfferNotFound);
-              return false;
-            }
-
-            const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
-            if (!invitationId) {
-              errors.push(ResponseMessages.issuance.error.invitationNotFound);
-              return false;
-            }
-
-            const agentEndPoint = agentDetails.tenantId
-              ? `${agentDetails.agentEndPoint}/multi-tenancy/url/${agentDetails.tenantId}/${invitationId}`
-              : `${agentDetails.agentEndPoint}/url/${invitationId}`;
-
-            const qrCodeOptions = { type: 'image/png' };
-            const outOfBandIssuanceQrCode = await QRCode.toDataURL(agentEndPoint, qrCodeOptions);
-            const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
-
-            if (!platformConfigData) {
-              errors.push(ResponseMessages.issuance.error.platformConfigNotFound);
-              return false;
-            }
-
-            this.emailData.emailFrom = platformConfigData.emailFrom;
-            this.emailData.emailTo = iterator.emailId;
-            this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credentials Required`;
-            this.emailData.emailHtml = await this.outOfBandIssuance.outOfBandIssuance(iterator.emailId, organizationDetails.name, outOfBandIssuanceQrCode);
-            this.emailData.emailAttachments = [
-              {
-                filename: 'qrcode.png',
-                content: outOfBandIssuanceQrCode.split(';base64,')[1],
-                contentType: 'image/png',
-                disposition: 'attachment'
+      const sendEmailForCredentialOffer = async (iterator, emailId): Promise<boolean> => {
+        try {
+          const outOfBandIssuancePayload = {
+            protocolVersion: protocolVersion || 'v1',
+            credentialFormats: {
+              indy: {
+                attributes: iterator.attributes || attributes,
+                credentialDefinitionId
               }
-            ];
+            },
+            autoAcceptCredential: 'always',
+            comment
+          };
 
-            const isEmailSent = await sendEmail(this.emailData);
-            if (!isEmailSent) {
-              errors.push(ResponseMessages.issuance.error.emailSend);
-              return false;
-            }
 
-            return isEmailSent;
-          } catch (error) {
-            errors.push(error.message);
+          const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
+          if (!credentialCreateOfferDetails) {
+            errors.push(ResponseMessages.issuance.error.credentialOfferNotFound);
             return false;
           }
-        });
 
-        emailPromises.push(Promise.all(batchPromises));
+          const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
+          if (!invitationId) {
+            errors.push(ResponseMessages.issuance.error.invitationNotFound);
+            return false;
+          }
+
+          const agentEndPoint = agentDetails.tenantId
+            ? `${agentDetails.agentEndPoint}/multi-tenancy/url/${agentDetails.tenantId}/${invitationId}`
+            : `${agentDetails.agentEndPoint}/url/${invitationId}`;
+
+          const qrCodeOptions = { type: 'image/png' };
+          const outOfBandIssuanceQrCode = await QRCode.toDataURL(agentEndPoint, qrCodeOptions);
+          const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
+
+          if (!platformConfigData) {
+            errors.push(ResponseMessages.issuance.error.platformConfigNotFound);
+            return false;
+          }
+
+          this.emailData.emailFrom = platformConfigData.emailFrom;
+          this.emailData.emailTo = emailId;
+          this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credentials Required`;
+          this.emailData.emailHtml = await this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, outOfBandIssuanceQrCode);
+          this.emailData.emailAttachments = [
+            {
+              filename: 'qrcode.png',
+              content: outOfBandIssuanceQrCode.split(';base64,')[1],
+              contentType: 'image/png',
+              disposition: 'attachment'
+            }
+          ];
+
+          const isEmailSent = await sendEmail(this.emailData);
+          if (!isEmailSent) {
+            errors.push(ResponseMessages.issuance.error.emailSend);
+            return false;
+          }
+
+          return isEmailSent;
+        } catch (error) {
+          errors.push(error.message);
+          return false;
+        }
+      };
+
+      if (credentialOffer) {
+        for (let i = 0; i < credentialOffer.length; i += batchSize) {
+          const batch = credentialOffer.slice(i, i + batchSize);
+
+          // Process each batch in parallel
+          const batchPromises = batch.map((iterator) => sendEmailForCredentialOffer(iterator, iterator.emailId));
+
+          emailPromises.push(Promise.all(batchPromises));
+        }
+      } else {
+        emailPromises.push(sendEmailForCredentialOffer({}, emailId));
       }
 
       const results = await Promise.all(emailPromises);
@@ -374,6 +381,7 @@ export class IssuanceService {
       throw new RpcException(error);
     }
   }
+
 
   async _outOfBandCredentialOffer(outOfBandIssuancePayload: object, url: string, apiKey: string): Promise<{
     response;

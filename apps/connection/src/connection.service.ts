@@ -62,7 +62,7 @@ export class ConnectionService {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: organisation.logoUrl || undefined,
+        imageUrl: logoImageUrl ? logoImageUrl : '',
         label: label || undefined
       };
 

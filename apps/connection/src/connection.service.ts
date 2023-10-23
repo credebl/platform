@@ -57,12 +57,11 @@ export class ConnectionService {
         logoImageUrl = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/orgs/profile/${organisation.id}`;
       }
 
-      this.logger.log(`logoImageUrl ::: ${logoImageUrl}`);
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: organisation.logoUrl || undefined,
+        imageUrl: logoImageUrl ? logoImageUrl : '',
         label: label || undefined
       };
 

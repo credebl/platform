@@ -4,6 +4,7 @@ import { IssuanceController } from './issuance.controller';
 import { IssuanceService } from './issuance.service';
 import { CommonService } from '@credebl/common';
 import { HttpModule } from '@nestjs/axios';
+// import { nkeyAuthenticator } from 'nats';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { HttpModule } from '@nestjs/axios';
         transport: Transport.NATS,
         options: {
           servers: [`${process.env.NATS_URL}`]
+          // authenticator: nkeyAuthenticator(new TextEncoder().encode(process.env.ISSUANCE_NKEY_SEED)),
         }
       }
     ])

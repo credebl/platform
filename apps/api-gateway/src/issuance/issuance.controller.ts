@@ -13,7 +13,8 @@ import {
   Query,
   Get,
   Param,
-  UseFilters
+  UseFilters,
+  Header
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -42,6 +43,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { FileExportResponse } from './interfaces';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -210,4 +212,26 @@ export class IssuanceController {
 
   }
 
+  @Get('/orgs/:orgId/download')
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @Header('Content-Disposition', 'attachment; filename="schema.csv"')
+  @Header('Content-Type', 'application/csv')
+  @ApiOperation({
+    summary: 'Download csv template for bulk-issuance',
+    description: 'Download csv template for bulk-issuance'
+  })
+  async downloadSchemaCsvFile(
+    @Query('credDefid') credentialDefinitionId: string,
+    @Res() res: Response
+  ): Promise<object> {
+    try {
+      const exportedData: FileExportResponse = await this.issueCredentialService.exportSchemaToCSV(credentialDefinitionId);
+      return res.header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`).status(200).send(exportedData.fileContent);
+    } catch (error) {
+    }
+
+  }
 }

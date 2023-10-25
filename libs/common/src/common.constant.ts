@@ -101,7 +101,6 @@ export enum CommonConstants {
   URL_SHAGENT_ACCEPT_PRESENTATION = '/multi-tenancy/proofs/@/accept-presentation/#',
   URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST = '/multi-tenancy/proofs/create-request-oob/#',
   URL_SHAGENT_PROOF_FORM_DATA = '/multi-tenancy/form-data/#/@',
-  URL_SHAGENT_OUT_OF_BAND_CREDENTIAL = '/multi-tenancy/credentials/create-offer-oob/#',
 
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',

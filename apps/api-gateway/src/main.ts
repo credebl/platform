@@ -7,14 +7,10 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AllExceptionsFilter } from '@credebl/common/exception-handler';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
-
 
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
-
   const app = await NestFactory.create(AppModule, {
     // httpsOptions,
   });

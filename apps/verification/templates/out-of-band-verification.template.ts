@@ -1,6 +1,6 @@
 export class OutOfBandVerification {
 
-    public outOfBandVerification(email: string, uniqueCID: string, orgName: string): string {
+    public outOfBandVerification(email: string, orgName: string, verificationQrCode: string): string {
         try {
             return `<!DOCTYPE html>
             <html lang="en">
@@ -37,6 +37,7 @@ export class OutOfBandVerification {
                             </ul>
                             Should you encounter any difficulties or have inquiries, our dedicated support team is available to assist you. Feel free to reach out.
                          </p>
+                         <img src="${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/verification/oob/qr/${verificationQrCode}" alt="QR Code" width="200" height="200">
                         <hr style="border-top:1px solid #e8e8e8" />
                         <footer style="padding-top: 20px;">
                             <div>

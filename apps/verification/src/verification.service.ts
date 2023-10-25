@@ -5,14 +5,13 @@ import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IWebhookProofPresentation, ProofFormDataPayload } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { presentations } from '@prisma/client';
+import { org_agents, organisation, presentations } from '@prisma/client';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-import * as uuid from 'uuid';
 
 @Injectable()
 export class VerificationService {
@@ -338,7 +337,8 @@ export class VerificationService {
       const verificationMethodLabel = 'create-request-out-of-band';
       const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
 
-      const payload = {
+      const payload: IProofRequestPayload
+        = {
         apiKey: '',
         url,
         proofRequestPayload: {
@@ -366,20 +366,25 @@ export class VerificationService {
     }
   }
 
-  async sendEmailInBatches(payload, emailIds, getAgentDetails, organizationDetails, batchSize): Promise<void> {
+  async sendEmailInBatches(payload: IProofRequestPayload, emailIds: string[] | string, getAgentDetails: org_agents, organizationDetails: organisation, batchSize: number): Promise<void> {
     const accumulatedErrors = [];
 
-    for (let i = 0; i < emailIds.length; i += batchSize) {
-      const batch = emailIds.slice(i, i + batchSize);
-      const emailPromises = batch.map(async email => {
-        try {
-          await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
-        } catch (error) {
-          accumulatedErrors.push(error);
-        }
-      });
+    if (Array.isArray(emailIds)) {
 
-      await Promise.all(emailPromises);
+      for (let i = 0; i < emailIds.length; i += batchSize) {
+        const batch = emailIds.slice(i, i + batchSize);
+        const emailPromises = batch.map(async email => {
+          try {
+            await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
+          } catch (error) {
+            accumulatedErrors.push(error);
+          }
+        });
+
+        await Promise.all(emailPromises);
+      }
+    } else {
+      await this.sendOutOfBandProofRequest(payload, emailIds, getAgentDetails, organizationDetails);
     }
 
     if (0 < accumulatedErrors.length) {
@@ -389,7 +394,7 @@ export class VerificationService {
   }
 
 
-  async sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails): Promise<boolean> {
+  async sendOutOfBandProofRequest(payload: IProofRequestPayload, email: string, getAgentDetails: org_agents, organizationDetails: organisation): Promise<boolean> {
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
 
     if (!getProofPresentation) {
@@ -406,9 +411,8 @@ export class VerificationService {
       ? `${getAgentDetails?.agentEndPoint}/multi-tenancy/url/${getAgentDetails?.tenantId}/${invitationId}`
       : `${getAgentDetails?.agentEndPoint}/url/${invitationId}`;
 
-    const uniqueCID = uuid.v4();
     const qrCodeOptions: QRCode.QRCodeToDataURLOptions = { type: 'image/png' };
-    const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
+    const outOfBandVerificationQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
 
     const platformConfigData = await this.verificationRepository.getPlatformConfigDetails();
 
@@ -419,11 +423,11 @@ export class VerificationService {
     this.emailData.emailFrom = platformConfigData.emailFrom;
     this.emailData.emailTo = email;
     this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials Required`;
-    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, uniqueCID, organizationDetails.name);
+    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, outOfBandVerificationQrCode);
     this.emailData.emailAttachments = [
       {
         filename: 'qrcode.png',
-        content: outOfBandIssuanceQrCode.split(';base64,')[1],
+        content: outOfBandVerificationQrCode.split(';base64,')[1],
         contentType: 'image/png',
         disposition: 'attachment'
       }

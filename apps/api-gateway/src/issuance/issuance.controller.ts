@@ -213,8 +213,8 @@ export class IssuanceController {
   }
 
   @Get('/orgs/:orgId/download')
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   @Header('Content-Disposition', 'attachment; filename="schema.csv"')

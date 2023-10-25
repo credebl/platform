@@ -146,8 +146,8 @@ export class CredentialDefinitionController {
     description: 'Fetch all credential definition from metadata saved in database for bulk opeartion.'
   })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getAllCredDefAndSchemaForBulkOperation(
     @Param('orgId') orgId: number,
     @Res() res: Response

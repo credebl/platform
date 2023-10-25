@@ -1,5 +1,6 @@
 // eslint-disable-next-line camelcase
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { organisation } from '@prisma/client';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IConnection {
@@ -91,4 +92,21 @@ export interface ConnectionInvitationResponse {
   message: {
     invitation: object;
   };
+}
+
+export interface OrgAgent {
+  organisation: organisation;
+  id: number;
+  createDateTime: Date;
+  createdBy: number;
+  lastChangedDateTime: Date;
+  lastChangedBy: number;
+  orgDid: string;
+  verkey: string;
+  agentEndPoint: string;
+  agentId: number;
+  isDidPublic: boolean;
+  ledgerId: number;
+  orgAgentTypeId: number;
+  tenantId: string;
 }

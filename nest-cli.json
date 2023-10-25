@@ -241,6 +241,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/ecosystem/tsconfig.app.json"
       }
+    },
+    "image-service": {
+      "type": "library",
+      "root": "libs/image-service",
+      "entryFile": "index",
+      "sourceRoot": "libs/image-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/image-service/tsconfig.lib.json"
+      }
     }
   }
 }

@@ -1,7 +1,8 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { agent_invitations, connections, organisation, platform_config, shortening_url } from '@prisma/client';
+import { agent_invitations, connections, platform_config, shortening_url } from '@prisma/client';
+import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
 export class ConnectionRepository {
 
@@ -16,23 +17,7 @@ export class ConnectionRepository {
      * @returns Get getAgentEndPoint details
      */
     // eslint-disable-next-line camelcase
-    async getAgentEndPoint(orgId: number): Promise<{
-        organisation: organisation;
-    } & {
-        id: number;
-        createDateTime: Date;
-        createdBy: number;
-        lastChangedDateTime: Date;
-        lastChangedBy: number;
-        orgDid: string;
-        verkey: string;
-        agentEndPoint: string;
-        agentId: number;
-        isDidPublic: boolean;
-        ledgerId: number;
-        orgAgentTypeId: number;
-        tenantId: string;
-    }> {
+    async getAgentEndPoint(orgId: number): Promise<OrgAgent> {
         try {
 
             const agentDetails = await this.prisma.org_agents.findFirst({

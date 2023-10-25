@@ -99,12 +99,10 @@ export class IssuanceService {
     }
   }
 
-  async _sendCredentialCreateOffer(issueData: object, url: string, apiKey: string): Promise<{
+  async natsCall(pattern: object, payload: object): Promise<{
     response: string;
   }> {
     try {
-      const pattern = { cmd: 'agent-send-credential-create-offer' };
-      const payload = { issueData, url, apiKey };
       return this.issuanceServiceProxy
         .send<string>(pattern, payload)
         .pipe(
@@ -121,6 +119,19 @@ export class IssuanceService {
               error: error.message
             }, error.error);
         });
+    } catch (error) {
+      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async _sendCredentialCreateOffer(issueData: object, url: string, apiKey: string): Promise<{
+    response: string;
+  }> {
+    try {
+      const pattern = { cmd: 'agent-send-credential-create-offer' };
+      const payload = { issueData, url, apiKey };
+      return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_sendCredentialCreateOffer] [NATS call]- error in create credentials : ${JSON.stringify(error)}`);
       throw error;
@@ -167,22 +178,7 @@ export class IssuanceService {
     try {
       const pattern = { cmd: 'agent-get-all-issued-credentials' };
       const payload = { url, apiKey };
-      return this.issuanceServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_getIssueCredentials] [NATS call]- error in fetch credentials : ${JSON.stringify(error)}`);
       throw error;
@@ -228,22 +224,8 @@ export class IssuanceService {
     try {
       const pattern = { cmd: 'agent-get-issued-credentials-by-credentialDefinitionId' };
       const payload = { url, apiKey };
-      return this.issuanceServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      return this.natsCall(pattern, payload);
+
     } catch (error) {
       this.logger.error(`[_getIssueCredentialsbyCredentialRecordId] [NATS call]- error in fetch credentials : ${JSON.stringify(error)}`);
       throw error;
@@ -389,22 +371,7 @@ export class IssuanceService {
     try {
       const pattern = { cmd: 'agent-out-of-band-credential-offer' };
       const payload = { outOfBandIssuancePayload, url, apiKey };
-      return this.issuanceServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);
       throw error;
@@ -460,16 +427,6 @@ export class IssuanceService {
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
             : orgAgentTypeId === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`.replace('#', credentialRecordId).replace('@', tenantId)
-              : null;
-          break;
-        }
-
-        case 'create-offer-oob': {
-
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
-            : orgAgentTypeId === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_OUT_OF_BAND_CREDENTIAL}`.replace('#', tenantId)
               : null;
           break;
         }

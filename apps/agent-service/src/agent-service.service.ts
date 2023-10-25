@@ -213,7 +213,7 @@ export class AgentServiceService {
           orgName: orgData.name,
           indyLedger: escapedJsonString,
           afjVersion: process.env.AFJ_VERSION,
-          protocol: process.env.API_GATEWAY_PROTOCOL,
+          protocol: process.env.AGENT_PROTOCOL,
           tenant: agentSpinupDto.tenant
         };
 

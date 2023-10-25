@@ -38,10 +38,10 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<object> {
-   const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
-   if (checkOrganization) {
-    throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-   };
+    const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
+    if (checkOrganization) {
+      throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+    };
     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
     if (!createEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
@@ -105,11 +105,11 @@ export class EcosystemService {
         ecosystem: ecosystemDetails['ecosystem'],
         membersCount: endorseMemberCount.membersCount,
         endorsementsCount: endorseMemberCount.endorsementsCount,
-        ecosystemLead:{
-            role: ecosystemDetails['ecosystemRole']['name'],
-            orgName: ecosystemDetails['orgName'],
-            config: endorseMemberCount.ecosystemConfigData  
-        } 
+        ecosystemLead: {
+          role: ecosystemDetails['ecosystemRole']['name'],
+          orgName: ecosystemDetails['orgName'],
+          config: endorseMemberCount.ecosystemConfigData
+        }
       };
 
       return dashboardDetails;
@@ -149,7 +149,7 @@ export class EcosystemService {
    * @param userId 
    * @returns 
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string): Promise<string> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, ecosystemId } = bulkInvitationDto;
 
     try {
@@ -162,7 +162,7 @@ export class EcosystemService {
 
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
 
-        if (!isInvitationExist) {
+        if (!isInvitationExist && userEmail === invitation.email) {
           await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
           try {
             await this.sendInviteEmailTemplate(email, ecosystemDetails.name, isUserExist);
@@ -187,9 +187,9 @@ export class EcosystemService {
   async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
     try {
       const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(acceptRejectInvitation.orgId);
-      
+
       if (checkOrganization) {
-       throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+        throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
       };
       const { orgId, status, invitationId, orgName, orgDid } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
@@ -277,9 +277,22 @@ export class EcosystemService {
 
       const invitations = await this.ecosystemRepository.getEcosystemInvitations(query);
 
-      if (0 < invitations.length) {
+      let isPendingInvitation = false;
+      let isAcceptedInvitation = false;
+
+      for (const invitation of invitations) {
+        if (invitation.status === Invitation.PENDING) {
+          isPendingInvitation = true;
+        }
+        if (invitation.status === Invitation.ACCEPTED) {
+          isAcceptedInvitation = true;
+        }
+      }
+
+      if (isPendingInvitation || isAcceptedInvitation) {
         return true;
       }
+
       return false;
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
@@ -342,7 +355,7 @@ export class EcosystemService {
    * @param RequestSchemaEndorsement 
    * @returns 
    */
-  async requestSchemaEndorsement(requestSchemaPayload:RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
+  async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -412,7 +425,7 @@ export class EcosystemService {
     }
   }
 
-  async requestCredDeffEndorsement(requestCredDefPayload:RequestCredDeffEndorsement, orgId:number, ecosystemId:string): Promise<object> {
+  async requestCredDeffEndorsement(requestCredDefPayload: RequestCredDeffEndorsement, orgId: number, ecosystemId: string): Promise<object> {
     try {
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
@@ -465,6 +478,13 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestCredDefTransaction);
       }
 
+      const requestBody = credDefTransactionRequest.message.credentialDefinitionState.credentialDefinition;
+
+      if (!requestBody) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.credentialDefinitionNotFound);
+      }
+
+      requestCredDefPayload["credentialDefinition"] = requestBody;
       const schemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: ecosystemMemberDetails.orgDid,
@@ -684,9 +704,9 @@ export class EcosystemService {
       payload.credentialDefinition = {
         tag: parsedRequestPayload.operation.tag,
         issuerId: ecosystemMemberDetails.orgDid,
-        schemaId: endorsementTransactionPayload.requestBody['schemaId'],
-        type: endorsementTransactionPayload.requestBody['type'],
-        value: endorsementTransactionPayload.requestBody['value']
+        schemaId: endorsementTransactionPayload.requestBody.credentialDefinition['schemaId'],
+        type: endorsementTransactionPayload.requestBody.credentialDefinition['type'],
+        value: endorsementTransactionPayload.requestBody.credentialDefinition['value']
       };
     }
 

@@ -42,6 +42,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { ImageServiceService } from '@credebl/image-service';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -52,6 +53,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
+    private readonly imageServiceService: ImageServiceService,
     private readonly commonService: CommonService
 
   ) { }
@@ -61,13 +63,11 @@ export class IssuanceController {
   @ApiOperation({ summary: 'Out-Of-Band issuance QR', description: 'Out-Of-Band issuance QR' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiExcludeEndpoint()
-  async getOgPofile(@Param('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
+  async getQrCode(@Param('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
 
-    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
-
-    const imageBuffer = Buffer.from(base64Data, 'base64');
-    res.setHeader('Content-Type', 'image/png'); 
-    return res.send(imageBuffer);
+    const getImageBuffer = await this.imageServiceService.getBase64Image(base64Image);
+    res.setHeader('Content-Type', 'image/png');
+    return res.send(getImageBuffer);
   }
 
   /**
@@ -205,15 +205,15 @@ export class IssuanceController {
    * @returns 
    */
   @Post('/orgs/:orgId/credentials/oob')
-  // @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
     summary: `Create out-of-band credential offer`,
     description: `Create out-of-band credential offer`
   })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OutOfBandCredentialDto,

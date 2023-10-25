@@ -16,7 +16,7 @@ export interface IAgentSpinupDto {
 
 export interface OutOfBandCredentialOffer {
     emailId: string;
-    attributes: IAttributes[];
+    attributes: Attributes[];
     credentialDefinitionId: string;
     comment: string;
     protocolVersion?: string;
@@ -240,10 +240,10 @@ export interface ICredentialFormats {
 }
 
 export interface IIndy {
-    attributes: IAttributes[];
+    attributes: Attributes[];
 }
 
-export interface IAttributes {
+export interface Attributes {
     name: string;
     value: string;
 }

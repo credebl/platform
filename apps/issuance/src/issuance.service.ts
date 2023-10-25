@@ -131,7 +131,7 @@ export class IssuanceService {
     try {
       const pattern = { cmd: 'agent-send-credential-create-offer' };
       const payload = { issueData, url, apiKey };
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_sendCredentialCreateOffer] [NATS call]- error in create credentials : ${JSON.stringify(error)}`);
       throw error;
@@ -178,7 +178,7 @@ export class IssuanceService {
     try {
       const pattern = { cmd: 'agent-get-all-issued-credentials' };
       const payload = { url, apiKey };
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_getIssueCredentials] [NATS call]- error in fetch credentials : ${JSON.stringify(error)}`);
       throw error;
@@ -224,7 +224,7 @@ export class IssuanceService {
     try {
       const pattern = { cmd: 'agent-get-issued-credentials-by-credentialDefinitionId' };
       const payload = { url, apiKey };
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
 
     } catch (error) {
       this.logger.error(`[_getIssueCredentialsbyCredentialRecordId] [NATS call]- error in fetch credentials : ${JSON.stringify(error)}`);
@@ -371,7 +371,7 @@ export class IssuanceService {
     try {
       const pattern = { cmd: 'agent-out-of-band-credential-offer' };
       const payload = { outOfBandIssuancePayload, url, apiKey };
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);
       throw error;

@@ -106,6 +106,26 @@
       "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
       "registerDIDPayload": "",
       "indyNamespace": "indicio:testnet"
+    },
+    {
+      "name": "Indicio Demonet",
+      "networkType": "demonet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_demonet_genesis",
+      "isActive": true,
+      "networkString": "demonet",
+      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registerDIDPayload": "",
+      "indyNamespace": "indicio:demonet"
+    },
+    {
+      "name": "Indicio Mainnet",
+      "networkType": "mainnet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_mainnet_genesis",
+      "isActive": true,
+      "networkString": "mainnet",
+      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registerDIDPayload": "",
+      "indyNamespace": "indicio:mainnet"
     }
   ],
   "endorseData": [

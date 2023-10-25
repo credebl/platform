@@ -2,6 +2,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
+import { of } from 'rxjs';
 
 @Controller()
 export class IssuanceController {
@@ -36,5 +37,15 @@ export class IssuanceController {
   async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
     const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
     return this.issuanceService.getIssueCredentialWebhook(createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId);
+  }
+
+  @MessagePattern({ cmd: 'export-schema-to-csv-by-credDefId' })
+  async exportSchemaToCSV(payload: {
+    credentialDefinitionId: string
+  }): Promise<object> {
+
+    const response = await this.issuanceService.exportSchemaToCSV(payload.credentialDefinitionId);
+
+    return of(response).pipe();
   }
 }

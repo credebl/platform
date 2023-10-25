@@ -3,6 +3,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IssuanceDto, IssueCredentialDto } from './dtos/issuance.dto';
+import { FileExportResponse } from './interfaces';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -49,5 +50,11 @@ export class IssuanceService extends BaseService {
         const payload = { createDateTime: issueCredentialDto.createdAt, connectionId: issueCredentialDto.connectionId, threadId: issueCredentialDto.threadId, protocolVersion: issueCredentialDto.protocolVersion, credentialAttributes: issueCredentialDto.credentialAttributes, orgId: id };
         return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
     }
+
+    async exportSchemaToCSV(credentialDefinitionId: string
+        ): Promise<FileExportResponse> {
+          const payload = {credentialDefinitionId};
+          return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
+        }
 
 }

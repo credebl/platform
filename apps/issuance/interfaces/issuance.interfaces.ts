@@ -44,3 +44,10 @@ export interface ICredentialAttributesInterface {
     name: string;
     value: string;
 }
+
+export interface SchemaDetails {
+    credentialDefinitionId: string;
+    tag: string;
+    schemaLedgerId: string;
+    attributes: string;
+  }

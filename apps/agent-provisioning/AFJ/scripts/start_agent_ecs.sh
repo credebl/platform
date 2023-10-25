@@ -20,13 +20,14 @@ INDY_LEDGER=${15}
 AGENT_HOST=${16}
 AWS_ACCOUNT_ID=${17}
 S3_BUCKET_ARN=${18}
+CLUSTER_NAME=${19}
+TESKDEFINITION_FAMILY=${20}
 ADMIN_PORT=$((8000 + AGENCY))
 INBOUND_PORT=$((9000 + AGENCY))
 CONTROLLER_PORT=$((3000 + AGENCY))
 POSTGRES_PORT=$((5432 + AGENCY))
 
 SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service"
-CLUSTER_NAME='agent-spinup'
 DESIRED_COUNT=1
 
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
@@ -132,7 +133,7 @@ EOF
 TASK_DEFINITION=$(
   cat <<EOF
 {
-  "family": "AGENT",
+  "family": "$TESKDEFINITION_FAMILY",
   "containerDefinitions": $CONTAINER_DEFINITIONS,
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
   "volumes": [

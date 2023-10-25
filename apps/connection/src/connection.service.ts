@@ -46,17 +46,23 @@ export class ConnectionService {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
-      const { agentEndPoint, id } = agentDetails;
+      const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
 
+      let logoImageUrl;
+      if (organisation.logoUrl) {
+        logoImageUrl = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/orgs/profile/${organisation.id}`;
+      }
+
+      this.logger.log(`logoImageUrl ::: ${logoImageUrl}`);
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: imageUrl || undefined,
+        imageUrl: logoImageUrl ? logoImageUrl : undefined,
         label: label || undefined
       };
 

@@ -54,6 +54,7 @@ export const ResponseMessages = {
             exists: 'An organization name is already exist',
             profileNotFound: 'Organization public profile not found',
             rolesNotExist: 'Provided roles not exists in the platform',
+            orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles'
         }

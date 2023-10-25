@@ -133,7 +133,7 @@ export class AgentServiceService {
 
       agentSpinupDto.agentType = agentSpinupDto.agentType ? agentSpinupDto.agentType : 1;
       agentSpinupDto.tenant = agentSpinupDto.tenant ? agentSpinupDto.tenant : false;
-      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId.length ? [1] : agentSpinupDto.ledgerId;
+      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId.length ? [3] : agentSpinupDto.ledgerId;
 
 
       const platformConfig: platform_config = await this.agentServiceRepository.getPlatformConfigDetails();
@@ -213,7 +213,7 @@ export class AgentServiceService {
           orgName: orgData.name,
           indyLedger: escapedJsonString,
           afjVersion: process.env.AFJ_VERSION,
-          protocol: process.env.API_GATEWAY_PROTOCOL,
+          protocol: process.env.AGENT_PROTOCOL,
           tenant: agentSpinupDto.tenant
         };
 
@@ -338,10 +338,11 @@ export class AgentServiceService {
 
 
       const agentDidWriteUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-      const { seed } = payload;
+      const { seed, ledgerId } = payload;
       const { apiKey } = payload;
       const writeDid = 'write-did';
-      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed);
+      const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(ledgerId);
+      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace);
       if (agentDid) {
 
         const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DIDS}`;
@@ -388,14 +389,14 @@ export class AgentServiceService {
     }
   }
 
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string): Promise<object> {
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string): Promise<object> {
     return retry(
       async () => {
 
         if ('write-did' === agentApiState) {
 
           const agentDid = await this.commonService
-            .httpPost(agentUrl, { seed }, { headers: { 'x-api-key': apiKey } })
+            .httpPost(agentUrl, { seed, method: indyNamespace }, { headers: { 'x-api-key': apiKey } })
             .then(async response => response);
           return agentDid;
         } else if ('get-did-doc' === agentApiState) {
@@ -486,7 +487,7 @@ export class AgentServiceService {
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
     try {
 
-      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId.length ? [1] : payload.ledgerId;
+      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId.length ? [3] : payload.ledgerId;
 
       const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
       const sharedAgentSpinUpResponse = new Promise(async (resolve, _reject) => {

@@ -90,7 +90,7 @@ export class IssuanceRepository {
     async saveAgentConnectionInvitations(connectionInvitation: string, agentId: number, orgId: number): Promise<agent_invitations> {
         try {
 
-            const agentDetails = await this.prisma.agent_invitations.create({
+            const agentInvitationData = await this.prisma.agent_invitations.create({
                 data: {
                     orgId,
                     agentId,
@@ -98,8 +98,7 @@ export class IssuanceRepository {
                     multiUse: true
                 }
             });
-            return agentDetails;
-
+            return agentInvitationData;
         } catch (error) {
             this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
             throw error;
@@ -116,14 +115,14 @@ export class IssuanceRepository {
     async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<shortening_url> {
         try {
 
-            return this.prisma.shortening_url.create({
+            const createShorteningUrl = await this.prisma.shortening_url.create({
                 data: {
                     referenceId,
                     url: connectionInvitationUrl,
                     type: null
                 }
             });
-
+            return createShorteningUrl;
         } catch (error) {
             this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
             throw error;
@@ -153,7 +152,8 @@ export class IssuanceRepository {
     async getOrganization(orgId: number): Promise<organisation> {
         try {
 
-            return this.prisma.organisation.findFirst({ where: { id: orgId } });
+            const organizationDetails = await this.prisma.organisation.findFirst({ where: { id: orgId } });
+            return organizationDetails;
 
         } catch (error) {
             this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`);

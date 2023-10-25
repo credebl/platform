@@ -31,13 +31,25 @@ import { WebhookPresentationProof } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)
-@ApiBearerAuth()
 @Controller()
 @ApiTags('verifications')
 export class VerificationController {
     constructor(private readonly verificationService: VerificationService) { }
 
     private readonly logger = new Logger('VerificationController');
+
+    @Get('/verification/oob/qr/:base64Image')
+    @ApiOperation({ summary: 'Out-Of-Band issuance QR', description: 'Out-Of-Band issuance QR' })
+    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+    @ApiExcludeEndpoint()
+    async getOgPofile(@Param('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
+
+        const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+        res.setHeader('Content-Type', 'image/png');
+        return res.send(imageBuffer);
+    }
 
     @Get('/orgs/:orgId/proofs/:proofId/form')
     @ApiOperation({
@@ -46,6 +58,7 @@ export class VerificationController {
     })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @ApiBearerAuth()
     @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
@@ -81,6 +94,7 @@ export class VerificationController {
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @ApiBearerAuth()
     async getProofPresentationById(
         @Res() res: Response,
         @GetUser() user: IUserRequest,
@@ -113,6 +127,7 @@ export class VerificationController {
     @ApiQuery(
         { name: 'threadId', required: false }
     )
+    @ApiBearerAuth()
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async getProofPresentations(
@@ -145,6 +160,7 @@ export class VerificationController {
     @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBody({ type: RequestProof })
+    @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     async sendPresentationRequest(
@@ -184,6 +200,7 @@ export class VerificationController {
     @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
+    @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async verifyPresentation(
         @Res() res: Response,
@@ -216,6 +233,7 @@ export class VerificationController {
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBody({ type: OutOfBandRequestProof })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
+    @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async sendOutOfBandPresentationRequest(
         @Res() res: Response,

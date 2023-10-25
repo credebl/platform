@@ -59,6 +59,19 @@ export class IssuanceController {
   ) { }
   private readonly logger = new Logger('IssuanceController');
 
+  @Get('/issuance/oob/qr/:base64Image')
+  @ApiOperation({ summary: 'Out-Of-Band issuance QR', description: 'Out-Of-Band issuance QR' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiExcludeEndpoint()
+  async getOgPofile(@Param('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
+
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    res.setHeader('Content-Type', 'image/png'); 
+    return res.send(imageBuffer);
+  }
+
   /**
     * Description: Get all issued credentials
     * @param user

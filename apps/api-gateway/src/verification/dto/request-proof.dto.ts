@@ -85,9 +85,9 @@ export class OutOfBandRequestProof {
     @IsNotEmpty({ message: 'please provide valid attributes' })
     attributes: ProofRequestAttribute[];
 
-    @ApiProperty({ example: ['exmaple@example.com'] })
-    @IsArray({ message: 'emailId should be array' })
-    emailId: string[];
+    @ApiProperty()
+    @IsString({ each: true, message: 'Each emailId in the array should be a string' })
+    emailId: string | string[];
 
     @ApiProperty()
     @IsOptional()

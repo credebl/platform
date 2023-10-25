@@ -131,7 +131,7 @@ export class UserService {
       emailData.emailTo = email;
       emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Email Verification`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, 'USER');
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;

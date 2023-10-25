@@ -152,7 +152,7 @@ export class IssuanceRepository {
     async getOrganization(orgId: number): Promise<organisation> {
         try {
 
-            const organizationDetails = await this.prisma.organisation.findFirst({ where: { id: orgId } });
+            const organizationDetails = await this.prisma.organisation.findUnique({ where: { id: orgId } });
             return organizationDetails;
 
         } catch (error) {

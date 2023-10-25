@@ -233,7 +233,7 @@ export class IssuanceService {
   }
 
 
-  async outOfBandCredentialOffer(user: IUserRequest, outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
+  async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
     try {
       const {
         credentialOffer,

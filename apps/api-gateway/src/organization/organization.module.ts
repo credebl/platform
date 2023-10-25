@@ -23,7 +23,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ])
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService]
+  providers: [OrganizationService, CommonService, ImageServiceService]
 })
 export class OrganizationModule { }
 

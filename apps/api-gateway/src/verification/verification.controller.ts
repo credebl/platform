@@ -29,12 +29,16 @@ import { AuthGuard } from '@nestjs/passport';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { WebhookPresentationProof } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { ImageServiceService } from '@credebl/image-service';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('verifications')
 export class VerificationController {
-    constructor(private readonly verificationService: VerificationService) { }
+    constructor(
+        private readonly verificationService: VerificationService,
+        private readonly imageServiceService: ImageServiceService
+    ) { }
 
     private readonly logger = new Logger('VerificationController');
 
@@ -44,11 +48,9 @@ export class VerificationController {
     @ApiExcludeEndpoint()
     async getOgPofile(@Param('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
 
-        const verificationQrBase64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
-
-        const imageBuffer = Buffer.from(verificationQrBase64Data, 'base64');
+        const getImageBuffer = await this.imageServiceService.getBase64Image(base64Image);
         res.setHeader('Content-Type', 'image/png');
-        return res.send(imageBuffer);
+        return res.send(getImageBuffer);
     }
 
     @Get('/orgs/:orgId/proofs/:proofId/form')

@@ -133,7 +133,7 @@ export class AgentServiceService {
 
       agentSpinupDto.agentType = agentSpinupDto.agentType ? agentSpinupDto.agentType : 1;
       agentSpinupDto.tenant = agentSpinupDto.tenant ? agentSpinupDto.tenant : false;
-      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId.length ? [3] : agentSpinupDto.ledgerId;
+      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId?.length ? [3] : agentSpinupDto.ledgerId;
 
 
       const platformConfig: platform_config = await this.agentServiceRepository.getPlatformConfigDetails();
@@ -487,7 +487,7 @@ export class AgentServiceService {
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
     try {
 
-      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId.length ? [3] : payload.ledgerId;
+      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? [3] : payload.ledgerId;
 
       const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
       const sharedAgentSpinUpResponse = new Promise(async (resolve, _reject) => {

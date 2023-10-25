@@ -18,6 +18,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ])
   ],
   controllers: [VerificationController],
-  providers: [VerificationService]
+  providers: [VerificationService, ImageServiceService]
 })
 export class VerificationModule { }

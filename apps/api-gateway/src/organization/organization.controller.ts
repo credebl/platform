@@ -28,6 +28,7 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
+import { ImageServiceService } from '@credebl/image-service';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -38,6 +39,7 @@ export class OrganizationController {
 
   constructor(
     private readonly organizationService: OrganizationService,
+    private readonly imageServiceService: ImageServiceService,
     private readonly commonService: CommonService
   ) { }
 
@@ -47,11 +49,11 @@ export class OrganizationController {
   async getOgPofile(@Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     const orgProfile = await this.organizationService.getOgPofile(orgId);
 
-    const base64Data = orgProfile.response["logoUrl"].replace(/^data:image\/\w+;base64,/, '');
+    const base64Data = orgProfile.response["logoUrl"];
+    const getImageBuffer = await this.imageServiceService.getBase64Image(base64Data);
 
-    const imageBuffer = Buffer.from(base64Data, 'base64');
     res.setHeader('Content-Type', 'image/png'); 
-    return res.send(imageBuffer);
+    return res.send(getImageBuffer);
   }
 
   /**

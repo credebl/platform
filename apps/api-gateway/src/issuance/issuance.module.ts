@@ -18,6 +18,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ])
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, CommonService]
+  providers: [IssuanceService, ImageServiceService, CommonService]
 })
 export class IssuanceModule { }

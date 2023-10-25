@@ -237,5 +237,13 @@ export const ResponseMessages = {
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
             ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
         }
+    },
+    bulkIssuance: {
+        success: {
+            create: 'Issuance process successfully'
+        },
+        error: {
+            PathNotFound: 'Path to export data not found.'
+        }
     }
 };

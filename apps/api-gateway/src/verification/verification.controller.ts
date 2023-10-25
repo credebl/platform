@@ -44,9 +44,9 @@ export class VerificationController {
     @ApiExcludeEndpoint()
     async getOgPofile(@Param('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
 
-        const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+        const verificationQrBase64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
-        const imageBuffer = Buffer.from(base64Data, 'base64');
+        const imageBuffer = Buffer.from(verificationQrBase64Data, 'base64');
         res.setHeader('Content-Type', 'image/png');
         return res.send(imageBuffer);
     }

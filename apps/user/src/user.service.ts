@@ -1,33 +1,39 @@
-
 import {
   BadRequestException,
   ConflictException,
   Injectable,
   Logger,
   NotFoundException,
-  UnauthorizedException
+  UnauthorizedException,
+  InternalServerErrorException,
+  Inject,
+  HttpException
 } from '@nestjs/common';
 
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonService } from '@credebl/common';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { InternalServerErrorException } from '@nestjs/common';
 import { LoginUserDto } from '../dtos/login-user.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesService } from '@credebl/org-roles';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { URLUserEmailTemplate } from '../templates/user-url-template';
+import { URLUserEmailTemplate } from '../templates/user-email-template';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 // eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
-import { Inject } from '@nestjs/common';
-import { HttpException } from '@nestjs/common';
-import { AddPasskeyDetails, InvitationsI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import {
+  AddPasskeyDetails,
+  InvitationsI,
+  UpdateUserProfile,
+  UserEmailVerificationDto,
+  UserI,
+  userInfo
+} from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
@@ -49,7 +55,7 @@ export class UserService {
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
-  ) { }
+  ) {}
 
   /**
    *
@@ -87,7 +93,6 @@ export class UserService {
   }
 
   async createUsername(email: string, verifyCode: string): Promise<string> {
-
     try {
       // eslint-disable-next-line prefer-destructuring
       const emailTrim = email.split('@')[0];
@@ -103,7 +108,6 @@ export class UserService {
       const uniqueUsername = `${cleanedUsername}-${uuid}`;
 
       return uniqueUsername;
-
     } catch (error) {
       this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -183,13 +187,11 @@ export class UserService {
       } else {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
-
     } catch (error) {
       this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
 
   /**
    *
@@ -226,7 +228,6 @@ export class UserService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
 
   async createUserForToken(userInfo: userInfo): Promise<string> {
     try {
@@ -267,7 +268,6 @@ export class UserService {
           email,
           password: decryptedPassword
         });
-
       } else {
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
@@ -281,10 +281,7 @@ export class UserService {
 
       const supaId = supaUser.data?.user?.id;
 
-      await this.userRepository.updateUserDetails(
-        userDetails.id,
-        supaId.toString()
-      );
+      await this.userRepository.updateUserDetails(userDetails.id, supaId.toString());
 
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
@@ -461,7 +458,6 @@ export class UserService {
       }
   
       return userData;
-
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -519,7 +515,7 @@ export class UserService {
     }
   }
 
-  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<object> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<object> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
 
@@ -544,10 +540,20 @@ export class UserService {
     }
   }
 
-  async getOrgInvitations(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async getOrgInvitations(
+    email: string,
+    status: string,
+    pageNumber: number,
+    pageSize: number,
+    search = ''
+  ): Promise<object> {
     const pattern = { cmd: 'fetch-user-invitations' };
     const payload = {
-      email, status, pageNumber, pageSize, search
+      email,
+      status,
+      pageNumber,
+      pageSize,
+      search
     };
 
     const invitationsData = await this.userServiceProxy
@@ -645,13 +651,12 @@ export class UserService {
   }
 
   /**
-   * 
-   * @param orgId 
+   *
+   * @param orgId
    * @returns users list
    */
   async getOrgUsers(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
-
       const query = {
         userOrgRoles: {
           some: { orgId }
@@ -675,10 +680,10 @@ export class UserService {
   }
 
   /**
-  * 
-  * @param orgId 
-  * @returns users list
-  */
+   *
+   * @param orgId
+   * @returns users list
+   */
   async get(pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
       const query = {
@@ -700,7 +705,6 @@ export class UserService {
     try {
       const userDetails = await this.userRepository.checkUniqueUserExist(email);
       if (userDetails && !userDetails.isEmailVerified) {
-
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
       } else if (userDetails && userDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
@@ -717,19 +721,15 @@ export class UserService {
         };
         return userVerificationDetails;
       }
-
     } catch (error) {
       this.logger.error(`In check User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-
   async getUserActivity(userId: number, limit: number): Promise<object[]> {
     try {
-
       return this.userActivityService.getUserActivity(userId, limit);
-
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

@@ -162,6 +162,10 @@
     {
       "key": "participateInEcosystem",
       "value": "false"
+    },
+    {
+      "key": "multiEcosystemSupport",
+      "value": "false"
     }
   ]
 }

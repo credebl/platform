@@ -3,6 +3,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
+import { FileExportResponse } from './interfaces';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -56,4 +57,11 @@ export class IssuanceService extends BaseService {
         const payload = { user, outOfBandCredentialDto };
         return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
     }
+
+    async exportSchemaToCSV(credentialDefinitionId: string
+    ): Promise<FileExportResponse> {
+        const payload = { credentialDefinitionId };
+        return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
+    }
+
 }

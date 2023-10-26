@@ -139,4 +139,25 @@ export class CredentialDefinitionController {
     };
     return res.status(HttpStatus.CREATED).json(credDefResponse);
   }
+
+  @Get('/orgs/:orgId/bulk/cred-defs')
+  @ApiOperation({
+    summary: 'Fetch all credential definition for bulk opeartion',
+    description: 'Fetch all credential definition from metadata saved in database for bulk opeartion.'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getAllCredDefAndSchemaForBulkOperation(
+    @Param('orgId') orgId: number,
+    @Res() res: Response
+  ): Promise<object> {
+    const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefAndSchemaForBulkOperation(orgId);
+    const credDefResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.credentialDefinition.success.fetch,
+      data: credentialsDefinitionDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(credDefResponse);
+  }
 }

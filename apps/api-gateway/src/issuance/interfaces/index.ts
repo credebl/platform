@@ -55,3 +55,9 @@ export class IUserOrg {
     id: number;
     orgName: string;
 }
+
+export interface FileExportResponse {
+    response: unknown;
+    fileContent: string;
+    fileName : string
+}

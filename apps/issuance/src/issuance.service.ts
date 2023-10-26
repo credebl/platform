@@ -7,13 +7,16 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { ICredentialAttributesInterface, OutOfBandCredentialOfferPayload } from '../interfaces/issuance.interfaces';
+import { ICredentialAttributesInterface, OutOfBandCredentialOfferPayload, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { join } from 'path';
+import { parse } from 'json2csv';
+import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
 
 
 @Injectable()
@@ -446,4 +449,54 @@ export class IssuanceService {
       throw error;
     }
   }
+
+  async exportSchemaToCSV(credentialDefinitionId: string): Promise<object> {
+    try {
+      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+
+      const jsonData = [];
+      const attributesArray = JSON.parse(schemaResponse.attributes);
+
+      // Extract the 'attributeName' values from the objects and store them in an array
+      const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
+      attributeNameArray.unshift('email');
+
+      const [csvData, csvFields] = [jsonData, attributeNameArray];
+
+      if (!csvData || !csvFields) {
+        // eslint-disable-next-line prefer-promise-reject-errors
+        return Promise.reject('Unable to transform schema data for CSV.');
+      }
+
+      const csv = parse(csvFields, { fields: csvFields });
+
+      const filePath = join(process.cwd(), `uploadedFiles/exports`);
+
+
+      let processedFileName: string = credentialDefinitionId;
+      processedFileName = processedFileName.replace(/[\/:*?"<>|]/g, '_');
+      const timestamp = Math.floor(Date.now() / 1000);
+      const fileName = `${processedFileName}-${timestamp}.csv`;
+
+      await createFile(filePath, fileName, csv);
+      this.logger.log(`File created - ${fileName}`);
+      const fullFilePath = join(process.cwd(), `uploadedFiles/exports/${fileName}`);
+
+      if (!checkIfFileOrDirectoryExists(fullFilePath)) {
+        throw new NotFoundException(ResponseMessages.bulkIssuance.error.PathNotFound);
+      }
+
+      // https required to download csv from frontend side
+      const filePathToDownload = `${process.env.API_GATEWAY_PROTOCOL_SECURE}://${process.env.UPLOAD_LOGO_HOST}/${fileName}`;
+
+      return {
+        fileContent: filePathToDownload,
+        fileName: processedFileName
+      };
+    } catch (error) {
+      throw new Error('An error occurred during CSV export.');
+    }
+  }
+
+
 }

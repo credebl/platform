@@ -3,6 +3,7 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, credentials, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { SchemaDetails } from '../interfaces/issuance.interfaces';
 @Injectable()
 export class IssuanceRepository {
 
@@ -159,4 +160,41 @@ export class IssuanceRepository {
             throw new InternalServerErrorException(error);
         }
     }
+
+    async getCredentialDefinitionDetails(credentialDefinitionId: string): Promise<SchemaDetails> {
+        try {
+            const credentialDefinitionDetails = await this.prisma.credential_definition.findFirst({
+                where: {
+                    credentialDefinitionId
+                }
+            });
+
+            if (!credentialDefinitionDetails) {
+                throw new NotFoundException(`Credential definition not found for ID: ${credentialDefinitionId}`);
+            }
+
+            const schemaDetails = await this.prisma.schema.findFirst({
+                where: {
+                    schemaLedgerId: credentialDefinitionDetails.schemaLedgerId
+                }
+            });
+
+            if (!schemaDetails) {
+                throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
+            }
+
+            const credentialDefRes = {
+                credentialDefinitionId: credentialDefinitionDetails.credentialDefinitionId,
+                tag: credentialDefinitionDetails.tag,
+                schemaLedgerId: schemaDetails.schemaLedgerId,
+                attributes: schemaDetails.attributes
+            };
+
+            return credentialDefRes;
+        } catch (error) {
+            this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
+            throw new InternalServerErrorException(error.message);
+        }
+    }
+
 }

@@ -16,7 +16,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { catchError, map } from 'rxjs/operators';
 dotenv.config();
-import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer } from './interface/agent-service.interface';
+import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, OutOfBandCredentialOffer } from './interface/agent-service.interface';
 import { AgentType, OrgAgentType } from '@credebl/enum/enum';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -133,7 +133,7 @@ export class AgentServiceService {
 
       agentSpinupDto.agentType = agentSpinupDto.agentType ? agentSpinupDto.agentType : 1;
       agentSpinupDto.tenant = agentSpinupDto.tenant ? agentSpinupDto.tenant : false;
-      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId.length ? [3] : agentSpinupDto.ledgerId;
+      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId?.length ? [3] : agentSpinupDto.ledgerId;
 
 
       const platformConfig: platform_config = await this.agentServiceRepository.getPlatformConfigDetails();
@@ -487,7 +487,7 @@ export class AgentServiceService {
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
     try {
 
-      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId.length ? [3] : payload.ledgerId;
+      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? [3] : payload.ledgerId;
 
       const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
       const sharedAgentSpinUpResponse = new Promise(async (resolve, _reject) => {
@@ -944,5 +944,16 @@ export class AgentServiceService {
     }
   }
 
+  async outOfBandCredentialOffer(outOfBandIssuancePayload: OutOfBandCredentialOffer, url: string, apiKey: string): Promise<object> {
+    try {
+      const sendOutOfbandCredentialOffer = await this.commonService
+        .httpPost(url, outOfBandIssuancePayload, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
+      return sendOutOfbandCredentialOffer;
+    } catch (error) {
+      this.logger.error(`Error in out-of-band credential in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
 }
 

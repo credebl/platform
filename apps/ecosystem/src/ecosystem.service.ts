@@ -169,7 +169,7 @@ export class EcosystemService {
         const isUserExist = await this.checkUserExistInPlatform(email);
 
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
-
+        
         if (!isInvitationExist && userEmail !== invitation.email) {
           await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
           try {

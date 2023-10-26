@@ -13,7 +13,8 @@ import {
   Query,
   Get,
   Param,
-  UseFilters
+  UseFilters,
+  Header
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -33,7 +34,7 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { IssuanceDto, IssueCredentialDto } from './dtos/issuance.dto';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -42,6 +43,8 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { ImageServiceService } from '@credebl/image-service';
+import { FileExportResponse } from './interfaces';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -52,10 +55,22 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
+    private readonly imageServiceService: ImageServiceService,
     private readonly commonService: CommonService
 
   ) { }
   private readonly logger = new Logger('IssuanceController');
+
+  @Get('/issuance/oob/qr/:base64Image')
+  @ApiOperation({ summary: 'Out-Of-Band issuance QR', description: 'Out-Of-Band issuance QR' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiExcludeEndpoint()
+  async getQrCode(@Param('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
+
+    const getImageBuffer = await this.imageServiceService.getBase64Image(base64Image);
+    res.setHeader('Content-Type', 'image/png');
+    return res.send(getImageBuffer);
+  }
 
   /**
     * Description: Get all issued credentials
@@ -184,6 +199,42 @@ export class IssuanceController {
   }
 
   /**
+   * Description: credential issuance out-of-band
+   * @param user 
+   * @param outOfBandCredentialDto 
+   * @param orgId 
+   * @param res 
+   * @returns 
+   */
+  @Post('/orgs/:orgId/credentials/oob')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: `Create out-of-band credential offer`,
+    description: `Create out-of-band credential offer`
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  async outOfBandCredentialOffer(
+    @User() user: IUserRequest,
+    @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
+    @Param('orgId') orgId: number,
+    @Res() res: Response
+  ): Promise<Response> {
+
+    outOfBandCredentialDto.orgId = orgId;
+    const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(user, outOfBandCredentialDto);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.fetch,
+      data: getCredentialDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
   * Description: webhook Save issued credential details
   * @param user
   * @param issueCredentialDto
@@ -210,4 +261,26 @@ export class IssuanceController {
 
   }
 
+  @Get('/orgs/:orgId/download')
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @Header('Content-Disposition', 'attachment; filename="schema.csv"')
+  @Header('Content-Type', 'application/csv')
+  @ApiOperation({
+    summary: 'Download csv template for bulk-issuance',
+    description: 'Download csv template for bulk-issuance'
+  })
+  async downloadSchemaCsvFile(
+    @Query('credDefid') credentialDefinitionId: string,
+    @Res() res: Response
+  ): Promise<object> {
+    try {
+      const exportedData: FileExportResponse = await this.issueCredentialService.exportSchemaToCSV(credentialDefinitionId);
+      return res.header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`).status(200).send(exportedData.fileContent);
+    } catch (error) {
+    }
+
+  }
 }

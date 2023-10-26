@@ -5,6 +5,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule } from '@credebl/common';
 import { VerificationRepository } from './repositories/verification.repository';
 import { PrismaService } from '@credebl/prisma-service';
+import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
+import { EmailDto } from '@credebl/common/dtos/email.dto';
 
 @Module({
   imports: [
@@ -21,6 +23,6 @@ import { PrismaService } from '@credebl/prisma-service';
     CommonModule
   ],
   controllers: [VerificationController],
-  providers: [VerificationService, VerificationRepository, PrismaService, Logger]
+  providers: [VerificationService, VerificationRepository, PrismaService, Logger, OutOfBandVerification, EmailDto]
 })
 export class VerificationModule { }

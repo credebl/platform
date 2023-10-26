@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
+import { ImageServiceService } from '@credebl/image-service';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { VerificationService } from './verification.service';
     ])
   ],
   controllers: [VerificationController],
-  providers: [VerificationService]
+  providers: [VerificationService, ImageServiceService]
 })
 export class VerificationModule { }

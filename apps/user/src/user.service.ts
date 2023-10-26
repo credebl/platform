@@ -39,6 +39,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
+import { EcosystemConfigSettings } from '@credebl/enum/enum';
 
 @Injectable()
 export class UserService {
@@ -331,18 +332,21 @@ export class UserService {
   async getProfile(payload: { id }): Promise<object> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-      const ecosystemDetails = await this.prisma.ecosystem_config.findFirst({
-        where: {
-          key: 'enableEcosystem'
+      const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany(
+        {
+          where:{
+            OR: [
+              { key: EcosystemConfigSettings.ENABLE_ECOSYSTEM },
+              { key: EcosystemConfigSettings.MULTI_ECOSYSTEM }
+            ]
+          }
         }
-      });
+      );      
 
-      if ('true' === ecosystemDetails.value) {
-        userData['enableEcosystem'] = true;
-        return userData;
+      for (const setting of ecosystemSettingsList) {
+        userData[setting.key] = 'true' === setting.value;
       }
-
-      userData['enableEcosystem'] = false;
+  
       return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);

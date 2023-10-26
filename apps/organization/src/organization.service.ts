@@ -296,7 +296,7 @@ export class OrganizationService {
     }
   }
 
-  /**
+   /**
    *
    * @Body sendInvitationDto
    * @returns createInvitation
@@ -327,7 +327,6 @@ export class OrganizationService {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
         }
-
       }
       await this.userActivityService.createActivity(userId, organizationDetails.id, `Invitations sent for ${organizationDetails.name}`, 'Get started with user role management once invitations accepted');
       return ResponseMessages.organisation.success.createInvitation;

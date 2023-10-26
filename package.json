@@ -168,7 +168,8 @@
       "^@credebl/org-roles(|/.*)$": "<rootDir>/libs/org-roles/src/$1",
       "^@credebl/user-org-roles(|/.*)$": "<rootDir>/libs/user-org-roles/src/$1",
       "^y/user-activity(|/.*)$": "<rootDir>/libs/user-activity/src/$1",
-      "^@app/supabase(|/.*)$": "<rootDir>/libs/supabase/src/$1"
+      "^@app/supabase(|/.*)$": "<rootDir>/libs/supabase/src/$1",
+      "^@credebl/image-service(|/.*)$": "<rootDir>/libs/image-service/src/$1"
     }
   }
 }

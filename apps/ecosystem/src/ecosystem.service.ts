@@ -9,7 +9,7 @@ import { EcosystemInviteTemplate } from '../templates/EcosystemInviteTemplate';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
-import { Invitation, OrgAgentType } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, Invitation, OrgAgentType } from '@credebl/enum/enum';
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
@@ -37,10 +37,18 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<object> {
-    const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
-    if (checkOrganization) {
-      throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-    };
+
+    const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(EcosystemConfigSettings.MULTI_ECOSYSTEM);
+
+    if (isMultiEcosystemEnabled && 'false' === isMultiEcosystemEnabled.value) {
+      const ecoOrganizationList = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
+      
+      for (const organization of ecoOrganizationList) {
+        if (organization['ecosystemRole']['name'] === EcosystemRoles.ECOSYSTEM_MEMBER) {
+          throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+        }
+      }
+    }   
     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
     if (!createEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
@@ -160,7 +168,6 @@ export class EcosystemService {
         const isUserExist = await this.checkUserExistInPlatform(email);
 
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
-        
         if (!isInvitationExist && userEmail !== invitation.email) {
           await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
           try {
@@ -185,11 +192,16 @@ export class EcosystemService {
    */
   async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
     try {
-      const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(acceptRejectInvitation.orgId);
+      const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(EcosystemConfigSettings.MULTI_ECOSYSTEM);
+      if (isMultiEcosystemEnabled 
+        && 'false' === isMultiEcosystemEnabled.value 
+        && acceptRejectInvitation.status !== Invitation.REJECTED) {
+        const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(acceptRejectInvitation.orgId);
+        if (0 < checkOrganization.length) {
+          throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+        };
+      } 
 
-      if (checkOrganization) {
-        throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-      };
       const { orgId, status, invitationId, orgName, orgDid } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
 
@@ -215,7 +227,7 @@ export class EcosystemService {
       return ResponseMessages.ecosystem.success.invitationAccept;
 
     } catch (error) {
-      this.logger.error(`acceptRejectInvitations: ${error}`);
+      this.logger.error(`acceptRejectEcosystemInvitations: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -483,7 +495,7 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.credentialDefinitionNotFound);
       }
 
-      requestCredDefPayload["credentialDefinition"] = requestBody;
+      requestCredDefPayload['credentialDefinition'] = requestBody;
       const schemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: ecosystemMemberDetails.orgDid,
@@ -791,7 +803,7 @@ export class EcosystemService {
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, platformConfig.sgApiKey);
 
-      if ('failed' === submitTransactionRequest["message"].state) {
+      if ('failed' === submitTransactionRequest['message'].state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
       }
 
@@ -801,7 +813,7 @@ export class EcosystemService {
         return this.handleSchemaSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
 
-        if ('undefined' === submitTransactionRequest["message"].credentialDefinitionId.split(":")[3]) {
+        if ('undefined' === submitTransactionRequest['message'].credentialDefinitionId.split(':')[3]) {
 
           const autoEndorsement = `${CommonConstants.ECOSYSTEM_AUTO_ENDOSEMENT}`;
           const ecosystemConfigDetails = await this.ecosystemRepository.getEcosystemConfigDetails(autoEndorsement);

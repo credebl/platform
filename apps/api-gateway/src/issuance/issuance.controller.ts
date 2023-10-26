@@ -226,11 +226,11 @@ export class IssuanceController {
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(user, outOfBandCredentialDto);
 
     const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
+      statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.fetch,
       data: getCredentialDetails.response
     };
-    return res.status(HttpStatus.OK).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**

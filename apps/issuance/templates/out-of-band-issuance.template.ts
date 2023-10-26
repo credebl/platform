@@ -33,7 +33,7 @@ export class OutOfBandIssuance {
                             </ul>
                             Should you require any assistance or have questions, feel free to contact our dedicated support team.
                          </p>
-                         <img src="${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/issuance/oob/qr/${issuanceQrCode}" alt="QR Code" class="CToWUd" width="200" height="200">
+                         <img src="${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/issuance/oob/qr/${issuanceQrCode}" alt="QR Code" class="CToWUd" width="200" height="200 data-bit="iit"">
                         <hr style="border-top:1px solid #e8e8e8" />
                         <footer style="padding-top: 20px;">
                             <div>

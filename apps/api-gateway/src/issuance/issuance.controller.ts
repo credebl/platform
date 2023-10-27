@@ -262,8 +262,6 @@ export class IssuanceController {
   }
 
   @Get('/orgs/:orgId/download')
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   @Header('Content-Disposition', 'attachment; filename="schema.csv"')
@@ -272,7 +270,7 @@ export class IssuanceController {
     summary: 'Download csv template for bulk-issuance',
     description: 'Download csv template for bulk-issuance'
   })
-  async downloadSchemaCsvFile(
+  async downloadBulkIssuanceCSVTemplate(
     @Query('credDefid') credentialDefinitionId: string,
     @Res() res: Response
   ): Promise<object> {

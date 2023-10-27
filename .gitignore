@@ -1,6 +1,6 @@
 node_modules
 dist
-uploadedFiles
+
 .env
 sonar-project.properties
 .scannerwork/*

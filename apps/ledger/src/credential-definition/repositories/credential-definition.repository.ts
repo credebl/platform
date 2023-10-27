@@ -188,7 +188,7 @@ export class CredentialDefinitionRepository {
                     [credDefSortBy]: 'DESC' === sortValue ? 'desc' : 'asc'
                 }
             });
-    
+
             const schemaLedgerIdArray = credentialDefinitions.map((credDef) => credDef.schemaLedgerId);
     
             const schemas = await this.prisma.schema.findMany({
@@ -205,13 +205,15 @@ export class CredentialDefinitionRepository {
                 }
             });
     
+
             // Match Credential Definitions with Schemas and map to CredDefSchema
             const matchingSchemas = credentialDefinitions.map((credDef) => {
+
                 const matchingSchema = schemas.find((schema) => schema.schemaLedgerId === credDef.schemaLedgerId);
                 if (matchingSchema) {
                     return {
                         credentialDefinitionId: credDef.credentialDefinitionId,
-                        schemaCredDefName: `${matchingSchema.name}:${matchingSchema.version}`
+                        schemaCredDefName: `${matchingSchema.name}:${matchingSchema.version}-${credDef.tag}`
                     };
                 }
                 return null;

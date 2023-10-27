@@ -157,14 +157,17 @@ export class EcosystemRepository {
    * @returns Get specific organization details from ecosystem
    */
   // eslint-disable-next-line camelcase
-  async checkEcosystemOrgs(orgId: string): Promise<ecosystem_orgs> {
+  async checkEcosystemOrgs(orgId: string): Promise<ecosystem_orgs[]> {
     try {
       if (!orgId) {
         throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
       }
-      return this.prisma.ecosystem_orgs.findFirst({
+      return this.prisma.ecosystem_orgs.findMany({
         where: {
           orgId
+        },
+        include:{
+          ecosystemRole: true
         }
       });
     } catch (error) {
@@ -204,6 +207,22 @@ export class EcosystemRepository {
       throw error;
     }
   }
+
+    // eslint-disable-next-line camelcase
+    async getSpecificEcosystemConfig(key: string): Promise<ecosystem_config> {
+      try {
+        return await this.prisma.ecosystem_config.findFirst(
+          {
+            where: {
+              key
+            }
+          }
+        );
+      } catch (error) {
+        this.logger.error(`error: ${JSON.stringify(error)}`);
+        throw error;
+      }
+    }
 
   async getEcosystemMembersCount(ecosystemId: string): Promise<number> {
     try {

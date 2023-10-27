@@ -289,7 +289,8 @@ export class AgentServiceService {
               orgId: orgData.id,
               walletName: agentSpinupDto.walletName,
               clientSocketId: agentSpinupDto.clientSocketId,
-              ledgerId
+              ledgerId,
+              did: agentSpinupDto.did
             };
 
             if (agentEndPoint && agentSpinupDto.clientSocketId) {
@@ -338,21 +339,20 @@ export class AgentServiceService {
 
 
       const agentDidWriteUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-      const { seed, ledgerId } = payload;
-      const { apiKey } = payload;
+      const { seed, ledgerId, did, apiKey } = payload;
       const writeDid = 'write-did';
       const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(ledgerId);
-      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace);
+      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);
       if (agentDid) {
 
-        const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DIDS}`;
+        const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}`.replace('#', agentDid['did']);
         const getDidDic = 'get-did-doc';
         const getDidMethod = await this._retryAgentSpinup(getDidMethodUrl, apiKey, getDidDic);
 
 
         const storeOrgAgentData: IStoreOrgAgentDetails = {
-          did: getDidMethod[0]?.did,
-          verkey: getDidMethod[0]?.didDocument?.verificationMethod[0]?.publicKeyBase58,
+          did: getDidMethod['didDocument']?.id,
+          verkey: getDidMethod['didDocument']?.verificationMethod[0]?.publicKeyBase58,
           isDidPublic: true,
           agentSpinUpStatus: 2,
           walletName: payload.walletName,
@@ -389,14 +389,14 @@ export class AgentServiceService {
     }
   }
 
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string): Promise<object> {
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {
     return retry(
       async () => {
 
         if ('write-did' === agentApiState) {
 
           const agentDid = await this.commonService
-            .httpPost(agentUrl, { seed, method: indyNamespace }, { headers: { 'x-api-key': apiKey } })
+            .httpPost(agentUrl, { seed, method: indyNamespace, did: did ? did : undefined }, { headers: { 'x-api-key': apiKey } })
             .then(async response => response);
           return agentDid;
         } else if ('get-did-doc' === agentApiState) {
@@ -520,12 +520,13 @@ export class AgentServiceService {
             let tenantDetails;
             const url = `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`;
             for (const iterator of ledgerDetails) {
-              const { label, seed } = payload;
+              const { label, seed, did } = payload;
               const createTenantOptions = {
                 config: {
                   label
                 },
                 seed,
+                did: did ? did : undefined,
                 method: iterator.indyNamespace
               };
               const apiKey = '';

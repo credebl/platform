@@ -24,7 +24,6 @@ export class AgentSpinupDto {
     @IsNotEmpty({ message: 'Password is required.' })
     walletPassword: string;
 
-
     @ApiProperty()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'seed is required' })
@@ -34,6 +33,11 @@ export class AgentSpinupDto {
         message: 'Spaces are not allowed in seed'
     })
     seed: string;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString({ message: 'did must be in string format.' })
+    did?: string;
 
     @ApiProperty({ example: [1] })
     @IsOptional()

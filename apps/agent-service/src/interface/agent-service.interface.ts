@@ -7,6 +7,7 @@ export interface IAgentSpinupDto {
     walletPassword: string;
     seed: string;
     orgId: number;
+    did?: string;
     ledgerId?: number[];
     agentType?: AgentType;
     transactionApproval?: boolean;
@@ -26,9 +27,10 @@ export interface OutOfBandCredentialOffer {
 export interface ITenantDto {
     label: string;
     seed: string;
-    ledgerId?: number[];
     method: string;
     orgId: number;
+    did?: string;
+    ledgerId?: number[];
     tenantId?: string;
     clientSocketId?: string;
 }

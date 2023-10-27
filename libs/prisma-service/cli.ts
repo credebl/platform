@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/no-var-requires */
 
+// eslint-disable-next-line camelcase
+// import { org_roles } from '@prisma/client';
 const {createInterface} = require('readline');
 
 const { PrismaClient } = require('@prisma/client'); 
@@ -36,18 +38,6 @@ const readLineAsync = msg => new Promise(resolve => {
     });
   });
 
-  const agentSetup = async () => {
-    const choice = await readLineAsync('Choose an option for agent spinup (1. Dedicated, 2. Shared): ');
-
-    if ('1' === choice) {
-      console.log('Dedicated Agent');
-    } else if ('2' === choice) {
-      console.log('Shared Agent');
-    } else {
-      console.error('Invalid choice.');
-    }
-};
-
 const createOrganization = async () => {
     const organizationName = await readLineAsync('Enter organization name: ');
     const organizationDescription = await readLineAsync('Enter organization description: ');
@@ -63,9 +53,42 @@ const createOrganization = async () => {
     });
     console.log('Organization created:', organization);
 
-    await agentSetup();
 };
-  
+
+// eslint-disable-next-line camelcase
+const getRole = async (roleName: string) => {
+  try {
+    const roleDetails = await prisma.org_roles.findFirst({
+      where: {
+        name: roleName
+      }
+    });
+    return roleDetails;
+  } catch (error) {
+    console.error('An error occurred in getRole:', error);
+  }
+};
+
+const createUserOrgRole = async(userId: number, roleId: number) => {
+  try {
+    const data: {
+      orgRole: { connect: { id: number } };
+      user: { connect: { id: number } };
+      organisation?: { connect: { id: number } };
+    } = {
+      orgRole: { connect: { id: roleId } },
+      user: { connect: { id: userId } }
+    };
+
+    const saveResponse = await prisma.user_org_roles.create({
+      data
+    });
+
+    return saveResponse;
+  } catch (error) {
+    console.error('An error occurred in createUserOrgRole:', error);
+  }
+};
 
 const createUser = async () => {
   const name = await readLineAsync('Enter your name: ');
@@ -92,9 +115,15 @@ const createUser = async () => {
         'supabaseUserId': supaId
       }
     });
+
+    const platformRoleData = await getRole('platform_admin');
+
+    await createUserOrgRole(user.id, platformRoleData['id']);
+
+    
     console.log('User created:', user);
 
-    await createOrganization();
+    // await createOrganization();
 
 } catch (e) {
   console.error('An error occurred in createUser:', e);

@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { agent_invitations, credentials, org_agents, platform_config, shortening_url } from '@prisma/client';
+import { agent_invitations, credentials, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { SchemaDetails } from '../interfaces/issuance.interfaces';
 @Injectable()
@@ -90,7 +90,7 @@ export class IssuanceRepository {
     async saveAgentConnectionInvitations(connectionInvitation: string, agentId: number, orgId: number): Promise<agent_invitations> {
         try {
 
-            const agentDetails = await this.prisma.agent_invitations.create({
+            const agentInvitationData = await this.prisma.agent_invitations.create({
                 data: {
                     orgId,
                     agentId,
@@ -98,8 +98,7 @@ export class IssuanceRepository {
                     multiUse: true
                 }
             });
-            return agentDetails;
-
+            return agentInvitationData;
         } catch (error) {
             this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
             throw error;
@@ -116,14 +115,14 @@ export class IssuanceRepository {
     async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<shortening_url> {
         try {
 
-            return this.prisma.shortening_url.create({
+            const createShorteningUrl = await this.prisma.shortening_url.create({
                 data: {
                     referenceId,
                     url: connectionInvitationUrl,
                     type: null
                 }
             });
-
+            return createShorteningUrl;
         } catch (error) {
             this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
             throw error;
@@ -146,6 +145,22 @@ export class IssuanceRepository {
         }
     }
 
+    /**
+    * Get organization details
+    * @returns 
+    */
+    async getOrganization(orgId: number): Promise<organisation> {
+        try {
+
+            const organizationDetails = await this.prisma.organisation.findUnique({ where: { id: orgId } });
+            return organizationDetails;
+
+        } catch (error) {
+            this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`);
+            throw new InternalServerErrorException(error);
+        }
+    }
+
     async getCredentialDefinitionDetails(credentialDefinitionId: string): Promise<SchemaDetails> {
         try {
             const credentialDefinitionDetails = await this.prisma.credential_definition.findFirst({
@@ -153,33 +168,33 @@ export class IssuanceRepository {
                     credentialDefinitionId
                 }
             });
-    
+
             if (!credentialDefinitionDetails) {
                 throw new NotFoundException(`Credential definition not found for ID: ${credentialDefinitionId}`);
             }
-    
+
             const schemaDetails = await this.prisma.schema.findFirst({
                 where: {
                     schemaLedgerId: credentialDefinitionDetails.schemaLedgerId
                 }
             });
-    
+
             if (!schemaDetails) {
                 throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
             }
-    
+
             const credentialDefRes = {
                 credentialDefinitionId: credentialDefinitionDetails.credentialDefinitionId,
                 tag: credentialDefinitionDetails.tag,
                 schemaLedgerId: schemaDetails.schemaLedgerId,
                 attributes: schemaDetails.attributes
             };
-    
+
             return credentialDefRes;
         } catch (error) {
             this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
             throw new InternalServerErrorException(error.message);
         }
     }
-    
+
 }

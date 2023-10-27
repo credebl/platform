@@ -6,6 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
+import { ImageServiceService } from '@credebl/image-service';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { OrganizationService } from './organization.service';
     ])
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService]
+  providers: [OrganizationService, CommonService, ImageServiceService]
 })
 export class OrganizationModule { }
 

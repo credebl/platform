@@ -8,26 +8,9 @@ import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AllExceptionsFilter } from '@credebl/common/exception-handler';
 
-// const fs = require('fs'); 
-
-
 dotenv.config();
 
-// async function readSecretFile(filename: string): Promise<void> {
-//   return fs.readFile(filename, 'utf8', function (err, data) {
-//     // Display the file content 
-//     return data;
-//   });
-// }
-
 async function bootstrap(): Promise<void> {
-
-  // const httpsOptions = {
-  //   key: await readSecretFile(''),
-  //   cert: await readSecretFile(''),
-  // };
-
-  // const config = new ConfigService();
   const app = await NestFactory.create(AppModule, {
     // httpsOptions,
   });

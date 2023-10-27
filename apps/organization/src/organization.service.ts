@@ -277,13 +277,13 @@ export class OrganizationService {
       let isAcceptedInvitation = false;
 
       for (const invitation of invitations) {
-         if (invitation.status === Invitation.PENDING) {
+        if (invitation.status === Invitation.PENDING) {
           isPendingInvitation = true;
-         }
-         if (invitation.status === Invitation.ACCEPTED) {
+        }
+        if (invitation.status === Invitation.ACCEPTED) {
           isAcceptedInvitation = true;
-         }             
-      }      
+        }
+      }
 
       if (isPendingInvitation || isAcceptedInvitation) {
         return true;
@@ -296,7 +296,7 @@ export class OrganizationService {
     }
   }
 
-  /**
+   /**
    *
    * @Body sendInvitationDto
    * @returns createInvitation
@@ -314,7 +314,7 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
-        const isInvitationExist = await this.checkInvitationExist(email, orgId);        
+        const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
@@ -327,7 +327,6 @@ export class OrganizationService {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
         }
-
       }
       await this.userActivityService.createActivity(userId, organizationDetails.id, `Invitations sent for ${organizationDetails.name}`, 'Get started with user role management once invitations accepted');
       return ResponseMessages.organisation.success.createInvitation;

@@ -52,13 +52,13 @@ export class OrganizationInviteTemplate {
                                 INVITATION
                             </a>
                         </div>
-                        <p>In case you need any assistance to access your account, please contact <a href="https://credebl.in/"
-                                target="_blank">CREDEBL Platform</a>
+                        <p>In case you need any assistance to access your account, please contact <a href=${process.env.PLATFORM_WEB_URL}
+                                target="_blank">${process.env.PLATFORM_NAME} Platform</a>
                         </p>
                         <hr style="border-top:1px solid #e8e8e8" />
                         <footer style="padding-top: 20px;">
                             <p style="margin-top: 2px;">
-                                &reg; CREDEBL ${year}, Powered by Blockster Labs. All Rights Reserved.
+                                &reg; ${process.env.PLATFORM_NAME} ${year}, Powered by ${process.env.POWERED_BY}. All Rights Reserved.
                             </p>
                         </footer>
                     </div>

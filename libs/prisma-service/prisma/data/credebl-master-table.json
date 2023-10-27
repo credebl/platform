@@ -53,6 +53,10 @@
     {
       "name": "member",
       "description": "Joins the organization as member"
+    },
+    {
+      "name": "platform-admin",
+      "description": "To setup all the platform of the user"
     }
   ],
   "ecosystemRoleData": [

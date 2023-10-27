@@ -31,9 +31,6 @@ services:
     env_file:
       - ./.env
   user:
-    depends_on:
-      - nats  # Use depends_on instead of needs
-      - api-gateway
     build:
       context: ./  # Adjust the context path as needed
       dockerfile: Dockerfiles/Dockerfile.user

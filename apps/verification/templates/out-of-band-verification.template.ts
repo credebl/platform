@@ -34,7 +34,7 @@ export class OutOfBandVerification {
                             </ul>
                             Should you encounter any difficulties or have inquiries, our dedicated support team is available to assist you. Feel free to reach out.
                          </p>
-                         <img src="${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/verification/oob/qr/${verificationQrCode}" alt="QR Code" class="CToWUd" width="200" height="200" data-bit="iit">
+                         <img src="${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/verification/oob/qr?base64Image=${verificationQrCode}" alt="QR Code" class="CToWUd" width="200" height="200" data-bit="iit">
                         <hr style="border-top:1px solid #e8e8e8" />
                         <footer style="padding-top: 20px;">
                             <div>

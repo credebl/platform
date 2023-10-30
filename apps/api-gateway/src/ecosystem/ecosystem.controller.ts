@@ -80,8 +80,8 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/:ecosystemId/schema')
-  @ApiOperation({ summary: 'Get all ecosystem schema', description: 'Get all ecosystem schema' })
+  @Get('/:ecosystemId/:orgId/schemas')
+  @ApiOperation({ summary: 'Get all ecosystem schemas', description: 'Get all ecosystem schemas' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()

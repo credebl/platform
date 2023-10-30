@@ -190,6 +190,9 @@ export class OrganizationService {
       if (!organizationDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
       }
+
+      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
+      organizationDetails['credential_definitions'] = credentials;
       return organizationDetails;
 
     } catch (error) {

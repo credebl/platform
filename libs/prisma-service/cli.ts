@@ -3,18 +3,12 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 // eslint-disable-next-line camelcase
-// import { org_roles } from '@prisma/client';
 const {createInterface} = require('readline');
 
 const { PrismaClient } = require('@prisma/client'); 
 const { createClient } = require('@supabase/supabase-js'); 
 
-// import { Logger } from '@nestjs/common';
-// import { PrismaClient } from '@prisma/client';
-
-// import {} from './data/'
 const prisma = new PrismaClient();
-// const supabaseService = new SupabaseService();
 
 const clientInstance = createClient(
   process.env.SUPABASE_URL,
@@ -25,7 +19,6 @@ const clientInstance = createClient(
       }
     }
 );
-// const logger = new Logger('Init seed DB');
 
 const readline = createInterface({
   input: process.stdin,
@@ -38,25 +31,8 @@ const readLineAsync = msg => new Promise(resolve => {
     });
   });
 
-const createOrganization = async () => {
-    const organizationName = await readLineAsync('Enter organization name: ');
-    const organizationDescription = await readLineAsync('Enter organization description: ');
-  
-    const organization = await prisma.organisation.create({
-      data: {
-        'name': organizationName,
-        'description': organizationDescription,
-        'logoUrl': '',
-        'website': '',
-        'publicProfile': true
-      }
-    });
-    console.log('Organization created:', organization);
-
-};
-
 // eslint-disable-next-line camelcase
-const getRole = async (roleName: string) => {
+const getRole = async (roleName) => {
   try {
     const roleDetails = await prisma.org_roles.findFirst({
       where: {
@@ -69,13 +45,9 @@ const getRole = async (roleName: string) => {
   }
 };
 
-const createUserOrgRole = async(userId: number, roleId: number) => {
+const createUserOrgRole = async(userId, roleId) => {
   try {
-    const data: {
-      orgRole: { connect: { id: number } };
-      user: { connect: { id: number } };
-      organisation?: { connect: { id: number } };
-    } = {
+    const data = {
       orgRole: { connect: { id: roleId } },
       user: { connect: { id: userId } }
     };
@@ -91,7 +63,8 @@ const createUserOrgRole = async(userId: number, roleId: number) => {
 };
 
 const createUser = async () => {
-  const name = await readLineAsync('Enter your name: ');
+  const firstName = await readLineAsync('Enter your first name: ');
+  const lastName = await readLineAsync('Enter your last name: ');
   const email = await readLineAsync('Enter email address: ');
   const password = await readLineAsync('Enter your password: ');
 
@@ -100,16 +73,16 @@ const createUser = async () => {
       email: email.toString(),
       password: password.toString()
     });
-  
+
     const supaId = supaUser.data?.user?.id;
 
     const user = await prisma.user.create({
       data: {
-        'firstName': name.toString(),
-        'lastName': 'Tirang',
+        'firstName': firstName.toString(),
+        'lastName': lastName.toString(),
         'email': email.toString(),
         'username': email.toString(),
-        'password': '####Please provide encrypted password using crypto-js###',
+        'password': '',
         'verificationCode': '',
         'isEmailVerified': true,
         'supabaseUserId': supaId
@@ -117,34 +90,18 @@ const createUser = async () => {
     });
 
     const platformRoleData = await getRole('platform_admin');
-
-    await createUserOrgRole(user.id, platformRoleData['id']);
-
     
-    console.log('User created:', user);
-
-    // await createOrganization();
+    await createUserOrgRole(user.id, platformRoleData['id']);
+    
+    console.log('Platform admin user created');
 
 } catch (e) {
   console.error('An error occurred in createUser:', e);
 }
 };
 
-  async function main() {
-    await createUser();
-
-  // const choice = await readLineAsync('Choose an action (1. Create user, 2. Create organization): ');
-
-  // if ('1' === choice) {
-  //   await createUser();
-  // } else if ('2' === choice) {
-  //   await createOrganization();
-  // } else {
-  //   console.error('Invalid choice.');
-  // }
-
-  // Close the Prisma client connection
-  // await prisma.$disconnect();
+async function main() {
+  await createUser();
   readline.close();
 }
 

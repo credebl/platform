@@ -71,6 +71,7 @@ export enum CommonConstants {
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_GET_CREDS_AFJ = '/credentials',
   URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
+  URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
 
   // SCHEMA & CRED DEF SERVICES
   URL_SCHM_CREATE_SCHEMA = '/schemas',

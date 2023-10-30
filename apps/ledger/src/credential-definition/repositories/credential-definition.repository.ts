@@ -4,6 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
 
 @Injectable()
 export class CredentialDefinitionRepository {
@@ -152,4 +153,79 @@ export class CredentialDefinitionRepository {
             throw error;
         }
     }
+
+    async getCredentialDefinitionBySchemaId(schemaId: string): Promise<credential_definition[]> {
+        try {
+            return this.prisma.credential_definition.findMany({
+                where: {
+                    schemaLedgerId: schemaId
+                }
+
+            });
+        } catch (error) {
+            this.logger.error(`Error in getting credential definitions: ${error}`);
+            throw error;
+        }
+    }
+
+ 
+    async getAllCredDefsByOrgIdForBulk(payload: BulkCredDefSchema): Promise<CredDefSchema[]> {
+        try {
+            const { credDefSortBy, sortValue, orgId } = payload;
+
+            const credentialDefinitions = await this.prisma.credential_definition.findMany({
+                where: {
+                    orgId
+                },
+                select: {
+                    id: true,
+                    credentialDefinitionId: true,
+                    tag: true,
+                    createDateTime: true,
+                    schemaLedgerId: true
+                },
+                orderBy: {
+                    [credDefSortBy]: 'DESC' === sortValue ? 'desc' : 'asc'
+                }
+            });
+
+            const schemaLedgerIdArray = credentialDefinitions.map((credDef) => credDef.schemaLedgerId);
+    
+            const schemas = await this.prisma.schema.findMany({
+                where: {
+                    schemaLedgerId: {
+                        in: schemaLedgerIdArray
+                    }
+                },
+                select: {
+                    name: true,
+                    version: true,
+                    schemaLedgerId: true,
+                    orgId: true
+                }
+            });
+    
+
+            // Match Credential Definitions with Schemas and map to CredDefSchema
+            const matchingSchemas = credentialDefinitions.map((credDef) => {
+
+                const matchingSchema = schemas.find((schema) => schema.schemaLedgerId === credDef.schemaLedgerId);
+                if (matchingSchema) {
+                    return {
+                        credentialDefinitionId: credDef.credentialDefinitionId,
+                        schemaCredDefName: `${matchingSchema.name}:${matchingSchema.version}-${credDef.tag}`
+                    };
+                }
+                return null;
+            });
+    
+            // Filter out null values (missing schemas) and return the result
+            return matchingSchemas.filter((schema) => null !== schema) as CredDefSchema[];
+        } catch (error) {
+            this.logger.error(`Error in listing all credential definitions with schema details: ${error}`);
+            throw error;
+        }
+    }
+    
+    
 }

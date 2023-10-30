@@ -43,7 +43,7 @@ export const ResponseMessages = {
             update: 'Organization updated successfully',
             fetchProfile: 'Organization profile fetched successfully',
             fetchOrgRoles: 'Organization roles fetched successfully',
-            createInvitation: 'Organization invitations sent successfully',
+            createInvitation: 'Organization invitations sent',
             getInvitation: 'Organization invitations fetched successfully',
             getOrganization: 'Organization details fetched successfully',
             getOrgDashboard: 'Organization dashboard details fetched',
@@ -54,6 +54,7 @@ export const ResponseMessages = {
             exists: 'An organization name is already exist',
             profileNotFound: 'Organization public profile not found',
             rolesNotExist: 'Provided roles not exists in the platform',
+            orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles'
         }
@@ -160,8 +161,13 @@ export const ResponseMessages = {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
+            organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
-            notFound: 'Organization agent not found'
+            notFound: 'Organization agent not found',
+            credentialOfferNotFound: "Credential offer not found",
+            invitationNotFound: "Invitation not found",
+            platformConfigNotFound: "Platform config details not found",
+            emailSend: 'Unable to send email to the user',
         }
     },
     verification: {
@@ -190,7 +196,7 @@ export const ResponseMessages = {
             fetch: 'Ecosystem fetched successfully',
             getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
             getInvitation: 'Ecosystem invitations fetched successfully',
-            createInvitation: 'Ecosystem invitations sent successfully',
+            createInvitation: 'Ecosystem invitations sent',
             schemaRequest: 'Schema transaction request created successfully',
             credDefRequest: 'credential-definition transaction request created successfully',
             sign: 'Transaction request signed successfully',
@@ -235,6 +241,14 @@ export const ResponseMessages = {
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
             ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
+        }
+    },
+    bulkIssuance: {
+        success: {
+            create: 'Issuance process successfully'
+        },
+        error: {
+            PathNotFound: 'Path to export data not found.'
         }
     }
 };

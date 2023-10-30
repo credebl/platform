@@ -110,9 +110,9 @@ export class OrganizationController {
    */
   @MessagePattern({ cmd: 'send-invitation' })
   async createInvitation(
-    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: number }
+    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: number, userEmail: string }
   ): Promise<string> {
-    return this.organizationService.createInvitation(payload.bulkInvitationDto, payload.userId);
+    return this.organizationService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail);
   }
 
   @MessagePattern({ cmd: 'fetch-user-invitations' })
@@ -152,5 +152,10 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-organization-dashboard' })
   async getOrgDashboard(payload: { orgId: number; userId: number }): Promise<object> {
     return this.organizationService.getOrgDashboard(payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'fetch-organization-profile' })
+  async getOgPofile(payload: { orgId: number }): Promise<object> {
+    return this.organizationService.getOgPofile(payload.orgId);
   }
 }

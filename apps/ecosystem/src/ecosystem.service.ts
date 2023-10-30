@@ -14,7 +14,7 @@ import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endor
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { CreateEcosystem, CredDefMessage, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
-import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
+import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
@@ -812,6 +812,13 @@ export class EcosystemService {
       await this.updateTransactionStatus(endorsementId);
 
       if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
+
+        const updateSchemaId = await this._updateResourceId(endorsementId, endorsementTransactionType.SCHEMA, submitTransactionRequest);
+        
+        if (!updateSchemaId) {
+
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateSchemaId);
+        }
         return this.handleSchemaSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
 
@@ -830,7 +837,12 @@ export class EcosystemService {
 
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
         }
+        const updateCredDefId = await this._updateResourceId(endorsementId, endorsementTransactionType.CREDENTIAL_DEFINITION, submitTransactionRequest);
 
+        if (!updateCredDefId) {
+
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateCredDefId);
+        }
         return this.handleCredDefSubmission(endorsementTransactionPayload, ecosystemMemberDetails, submitTransactionRequest);
       }
     } catch (error) {
@@ -860,6 +872,26 @@ export class EcosystemService {
         status: error.status,
         error: error.message
       }, error.status);
+    }
+  }
+
+  async _updateResourceId(endorsementId: string, transactionType: endorsementTransactionType, transactionDetails: object): Promise<object> {
+    try {
+      // eslint-disable-next-line prefer-destructuring
+      const message = transactionDetails['message'];
+      if (!message) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidMessage);
+      }
+
+      const resourceId = message[transactionType === endorsementTransactionType.SCHEMA ? 'schemaId' : 'credentialDefinitionId'];
+
+      if (!resourceId) {
+        throw new Error(`${ResponseMessages.ecosystem.error.invalidTransactionMessage} Missing "${transactionType === endorsementTransactionType.SCHEMA ? 'schemaId' : 'credentialDefinitionId'}" property.`);
+      }
+
+      return await this.ecosystemRepository.updateResourse(endorsementId, resourceId);
+    } catch (error) {
+      this.logger.error(`Error updating resource ID: ${JSON.stringify(error)}`);
     }
   }
 
@@ -979,6 +1011,33 @@ export class EcosystemService {
       return await this.ecosystemRepository.getEndorsementsWithPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`In error getEndorsementTransactions: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  async getAllEcosystemSchemas(ecosystemSchemas: GetAllSchemaList): Promise<object> {
+    try {
+
+      const response = await this.ecosystemRepository.getAllEcosystemSchemasDetails(ecosystemSchemas);
+
+      const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
+        const attributes = JSON.parse(schemaAttributeItem.attributes);
+        return { ...schemaAttributeItem, attributes };
+      });
+      
+      const schemasResponse = {
+        totalItems: response.schemasCount,
+        hasNextPage: ecosystemSchemas.pageSize * ecosystemSchemas.pageNumber < response.schemasCount,
+        hasPreviousPage: 1 < ecosystemSchemas.pageNumber,
+        nextPage: ecosystemSchemas.pageNumber + 1,
+        previousPage: ecosystemSchemas.pageNumber - 1,
+        lastPage: Math.ceil(response.schemasCount / ecosystemSchemas.pageSize),
+        data: schemasDetails
+      };
+      return schemasResponse;
+    } catch (error) {
+      this.logger.error(`In error fetching all ecosystem schemas: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
     }
   }

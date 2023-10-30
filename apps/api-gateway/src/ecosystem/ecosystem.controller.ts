@@ -80,6 +80,44 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  @Get('/:ecosystemId/schema')
+  @ApiOperation({ summary: 'Get all ecosystem schema', description: 'Get all ecosystem schema' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  async getAllEcosystemSchemas(
+    @Param('ecosystemId') ecosystemId: string,
+    @Param('orgId') orgId: string,
+    @Query() getAllEcosystemSchemaDto: GetAllEcosystemInvitationsDto,
+    @Res() res: Response
+  ): Promise<Response> {
+
+    const schemaList = await this.ecosystemService.getAllEcosystemSchemas(ecosystemId, orgId, getAllEcosystemSchemaDto);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.allschema,
+      data: schemaList.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
   @Get('/:orgId')
   @ApiOperation({ summary: 'Get all organization ecosystems', description: 'Get all existing ecosystems of an specific organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })

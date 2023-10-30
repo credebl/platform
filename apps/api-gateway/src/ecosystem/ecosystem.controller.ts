@@ -83,8 +83,8 @@ export class EcosystemController {
   @Get('/:ecosystemId/schema')
   @ApiOperation({ summary: 'Get all ecosystem schema', description: 'Get all ecosystem schema' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  @ApiBearerAuth()
+  // @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  // @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiQuery({
@@ -112,7 +112,7 @@ export class EcosystemController {
     const schemaList = await this.ecosystemService.getAllEcosystemSchemas(ecosystemId, orgId, getAllEcosystemSchemaDto);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.fetchEndorsors,
+      message: ResponseMessages.ecosystem.success.allschema,
       data: schemaList.response
     };
     return res.status(HttpStatus.OK).json(finalResponse);

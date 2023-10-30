@@ -93,13 +93,13 @@ export class EcosystemController {
     required: false
   })
   @ApiQuery({
-    name: 'pageSize',
-    type: Number,
+    name: 'search',
+    type: String,
     required: false
   })
   @ApiQuery({
-    name: 'search',
-    type: String,
+    name: 'pageSize',
+    type: Number,
     required: false
   })
   async getAllEcosystemSchemas(

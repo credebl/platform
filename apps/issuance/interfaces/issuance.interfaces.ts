@@ -63,3 +63,14 @@ export interface OutOfBandCredentialOffer {
     user: IUserRequest;
     outOfBandCredentialDto: OutOfBandCredentialOfferPayload;
 }
+export interface SchemaDetails {
+    credentialDefinitionId: string;
+    tag: string;
+    schemaLedgerId: string;
+    attributes: string;
+  }
+export interface ImportFileDetails {
+    credDefId: string;
+    filePath: string;
+    fileName: string;
+  }

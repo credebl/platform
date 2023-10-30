@@ -1,19 +1,27 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { ICredentialAttributesInterface, OutOfBandCredentialOfferPayload } from '../interfaces/issuance.interfaces';
+import { ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { join } from 'path';
+import { parse } from 'json2csv';
+import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
+import { readFileSync } from 'fs';
+import { parse as paParse } from 'papaparse';
+import { v4 as uuidv4 } from 'uuid';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 
 @Injectable()
@@ -23,6 +31,7 @@ export class IssuanceService {
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto
   ) { }
@@ -495,5 +504,134 @@ export class IssuanceService {
     }
   }
 
+
+  async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
+    this.logger.log(`START importAndPreviewDataForIssuance`);
+    try {
+      const credDefResponse =
+        await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
+
+
+      const csvFile = readFileSync(importFileDetails.filePath);
+      const csvData = csvFile.toString();
+      const parsedData = paParse(csvData, {
+        header: true,
+        skipEmptyLines: true,
+        transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
+        complete: (results) => results.data
+      });
+
+
+      if (0 >= parsedData.data.length) {
+        throw new BadRequestException(`File data is empty`);
+      }
+
+      if (0 >= parsedData.meta.fields.length) {
+        throw new BadRequestException(`File header is empty`);
+      }
+
+      const fileData: string[] = parsedData.data.map(Object.values);
+      const fileHeader: string[] = parsedData.meta.fields;
+
+      const attributesArray = JSON.parse(credDefResponse.attributes);
+
+      // Extract the 'attributeName' values from the objects and store them in an array
+      const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
+
+      if (0 >= attributeNameArray.length) {
+        throw new BadRequestException(
+          `Attributes are empty for credential definition ${importFileDetails.credDefId}`
+        );
+      }
+
+      this.validateFileHeaders(fileHeader, attributeNameArray, importFileDetails);
+      this.validateFileData(fileData);
+
+      const resData = {
+        schemaLedgerId: credDefResponse.schemaLedgerId,
+        credentialDefinitionId: importFileDetails.credDefId,
+        fileData: parsedData,
+        fileName: importFileDetails.fileName
+      };
+      const newCacheKey = uuidv4();
+
+      await this.cacheManager.set(newCacheKey, JSON.stringify(resData), 3600);
+
+      return newCacheKey;
+
+    } catch (error) {
+      this.logger.error(`error in validating credentials : ${error}`);
+      throw new RpcException(error.response);
+    } finally {
+      this.logger.error(`Deleted uploaded file after processing.`);
+      // await deleteFile(payload.filePath);
+    }
+  }
+
+  async validateFileHeaders(
+    fileHeader: string[],
+    schemaAttributes,
+    payload
+  ): Promise<void> {
+    try {
+      
+      const fileSchemaHeader: string[] = fileHeader.slice();
+      if ('email' === fileHeader[0]) {
+        fileSchemaHeader.splice(0, 1);
+      } else {
+        throw new BadRequestException(
+          `1st column of the file should always be 'reference_id'`
+        );
+      }
+      if (schemaAttributes.length !== fileSchemaHeader.length) {
+        throw new BadRequestException(
+          `Number of supplied values is different from the number of schema attributes defined for '${payload.credDefId}'`
+        );
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      let attributeIndex: number = 0;
+      const isConflictAttribute = Object.values(fileSchemaHeader).some(
+        (value) => {
+          if (!schemaAttributes.includes(value)) {
+            attributeIndex++;
+            return true;
+          }
+          return false;
+        }
+      );
+      if (isConflictAttribute) {
+        throw new BadRequestException(
+          `Schema attributes are mismatched in the file header. Please check supplied headers in the file`
+        );
+      }
+    } catch (error) {
+      // Handle exceptions here
+      // You can also throw a different exception or return an error response here if needed
+    }
+  }
+  
+
+  async validateFileData(fileData: string[]):Promise<void> {
+    let rowIndex: number = 0;
+    let columnIndex: number = 0;
+    const isNullish = Object.values(fileData).some((value) => {
+      columnIndex = 0;
+      rowIndex++;
+      const isFalsyForColumnValue = Object.values(value).some((colvalue) => {
+        columnIndex++;
+        if (null === colvalue || '' == colvalue) {
+          return true;
+        }
+        return false;
+      });
+      return isFalsyForColumnValue;
+    });
+    this.logger.log(`isNullish: ${isNullish}`);
+    if (isNullish) {
+      throw new BadRequestException(
+        `Empty data found at row ${rowIndex} and column ${columnIndex}`
+      );
+    }
+  }
 
 }

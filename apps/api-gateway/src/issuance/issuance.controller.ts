@@ -14,7 +14,10 @@ import {
   Get,
   Param,
   UseFilters,
-  Header
+  Header,
+  UseInterceptors,
+  UploadedFile,
+  HttpException
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,7 +27,9 @@ import {
   ApiForbiddenResponse,
   ApiUnauthorizedResponse,
   ApiQuery,
-  ApiExcludeEndpoint
+  ApiExcludeEndpoint,
+  ApiConsumes,
+  ApiBody
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -44,6 +49,10 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { FileExportResponse } from './interfaces';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerCSVOptions } from './config/multer.config';
+import { extname } from 'path';
+import * as fs from 'fs';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -151,6 +160,103 @@ export class IssuanceController {
       data: getCredentialDetails.response
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/download')
+  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @Header('Content-Disposition', 'attachment; filename="schema.csv"')
+  @Header('Content-Type', 'application/csv')
+  @ApiOperation({
+    summary: 'Download csv template for bulk-issuance',
+    description: 'Download csv template for bulk-issuance'
+  })
+  async downloadBulkIssuanceCSVTemplate(
+    @Query('credDefid') credentialDefinitionId: string,
+    @Res() res: Response
+  ): Promise<object> {
+    try {
+      const exportedData: FileExportResponse = await this.issueCredentialService.exportSchemaToCSV(credentialDefinitionId);
+      return res.header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`).status(200).send(exportedData.fileContent);
+    } catch (error) {
+    }
+
+  }
+
+
+  @Post('/upload')
+  @ApiOperation({
+    summary: 'Upload file for bulk issuance',
+    description: 'Upload file for bulk issuance.'
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      nullable: false,
+      required: ['file'],
+      properties: {
+        file: {
+          // 👈 this property
+          type: 'string',
+          format: 'binary'
+        }
+      }
+    },
+    required: true
+  })
+  @UseInterceptors(FileInterceptor('file', multerCSVOptions))
+  async importAndPreviewDataForIssuance(
+    @Query('credDefId') credentialDefinitionId: string,
+    @UploadedFile() file: Express.Multer.File
+  ): Promise<string> {
+    if (file) {
+      this.logger.log(`file:${file.path}`);
+      this.logger.log(`Uploaded file : ${file.filename}`);
+      const timestamp = Math.floor(Date.now() / 1000);
+      const ext = extname(file.filename);
+      const newFilename = `${file.filename}-${timestamp}${ext}`;
+
+      fs.rename(
+        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
+        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        async (err: any) => {
+          if (err) {
+            throw err;
+          }
+        }
+      );
+
+      const reqPayload = {
+        credDefId: credentialDefinitionId,
+        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        fileName: newFilename
+      };
+      const response = await this.issueCredentialService.importCsv(
+        reqPayload
+      );
+      return response;
+    } else {
+      this.logger.error(`No file uploaded`);
+      throw new HttpException(
+        {
+          status: 400,
+          error: 'No file uploaded'
+        },
+        400
+      );
+    }
   }
 
   /**

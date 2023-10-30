@@ -16,8 +16,7 @@ import {
   UseFilters,
   Header,
   UseInterceptors,
-  UploadedFile,
-  HttpException
+  UploadedFile
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -162,7 +161,7 @@ export class IssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/orgs/:orgId/download')
+  @Get('/orgs/:orgId/:credentialDefinitionId/download')
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   @Header('Content-Disposition', 'attachment; filename="schema.csv"')
@@ -172,7 +171,8 @@ export class IssuanceController {
     description: 'Download csv template for bulk-issuance'
   })
   async downloadBulkIssuanceCSVTemplate(
-    @Query('credDefid') credentialDefinitionId: string,
+    @Param('credentialDefinitionId') credentialDefinitionId: string,
+    @Param('orgId') orgId: number,
     @Res() res: Response
   ): Promise<object> {
     try {
@@ -184,7 +184,7 @@ export class IssuanceController {
   }
 
 
-  @Post('/upload')
+  @Post('/orgs/:orgId/upload')
   @ApiOperation({
     summary: 'Upload file for bulk issuance',
     description: 'Upload file for bulk issuance.'
@@ -219,8 +219,10 @@ export class IssuanceController {
   @UseInterceptors(FileInterceptor('file', multerCSVOptions))
   async importAndPreviewDataForIssuance(
     @Query('credDefId') credentialDefinitionId: string,
-    @UploadedFile() file: Express.Multer.File
-  ): Promise<string> {
+    @UploadedFile() file: Express.Multer.File,
+    @Param('orgId') orgId: number,
+    @Res() res: Response
+  ): Promise<object> {
     if (file) {
       this.logger.log(`file:${file.path}`);
       this.logger.log(`Uploaded file : ${file.filename}`);
@@ -243,20 +245,17 @@ export class IssuanceController {
         filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
         fileName: newFilename
       };
-      const response = await this.issueCredentialService.importCsv(
+      const importCsvDetails = await this.issueCredentialService.importCsv(
         reqPayload
       );
-      return response;
-    } else {
-      this.logger.error(`No file uploaded`);
-      throw new HttpException(
-        {
-          status: 400,
-          error: 'No file uploaded'
-        },
-        400
-      );
-    }
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.importCSV,
+        data: importCsvDetails
+      };
+      return res.status(HttpStatus.OK).json(finalResponse);
+
+    } 
   }
 
   /**

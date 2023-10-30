@@ -59,7 +59,6 @@ export class IssuanceController {
   async importCSV(payload: {
     importFileDetails: ImportFileDetails
   }): Promise<object> {
-
     const response = await this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
 
     return of(response).pipe();

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -83,36 +82,16 @@ export class AuthzController {
   @Post('/signup')
   @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
   async addUserDetails(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
-    let finalResponse;
-    let userDetails;
-
-    if (false === userInfo.isPasskey) {
-
-      const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
-      if (8 <= decryptedPassword.length && 50 >= decryptedPassword.length) {
-        this.commonService.passwordValidation(decryptedPassword);
-        userInfo.password = decryptedPassword;
-        userDetails = await this.authzService.addUserDetails(userInfo);
-        finalResponse = {
-          statusCode: HttpStatus.CREATED,
-          message: ResponseMessages.user.success.create,
-          data: userDetails.response
-        };
-      } else {
-        throw new BadRequestException('Password name must be between 8 to 50 Characters');
-      }
-    } else {
-
-      userDetails = await this.authzService.addUserDetails(userInfo);
-      finalResponse = {
+      const userDetails = await this.authzService.addUserDetails(userInfo);
+      const finalResponse = {
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.user.success.create,
         data: userDetails.response
       };
-    }
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
+
 
   /**
   * 
@@ -130,11 +109,7 @@ export class AuthzController {
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
 
     if (loginUserDto.email) {
-      let decryptedPassword;
-      if (loginUserDto.password) {
-        decryptedPassword = this.commonService.decryptPassword(loginUserDto.password);
-      }
-      const userData = await this.authzService.login(loginUserDto.email, decryptedPassword, loginUserDto.isPasskey);
+      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password, loginUserDto.isPasskey);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.user.success.login,

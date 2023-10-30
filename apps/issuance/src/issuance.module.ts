@@ -8,6 +8,9 @@ import { IssuanceRepository } from './issuance.repository';
 import { IssuanceService } from './issuance.service';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { BullModule } from '@nestjs/bull';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -21,7 +24,11 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
         }
       }
     ]),
-    CommonModule
+    CommonModule,
+    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    BullModule.registerQueue({
+      name: 'bulk-issuance'
+    })
   ],
   controllers: [IssuanceController],
   providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto]

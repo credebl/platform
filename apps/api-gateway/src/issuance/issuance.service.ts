@@ -64,4 +64,9 @@ export class IssuanceService extends BaseService {
         return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
     }
 
+    async importCsv(credDefFileDetails
+        ): Promise<string> {
+            const payload = { credDefFileDetails };
+            return (await this.sendNats(this.issuanceProxy, 'import-and-preview-data-for-issuance', payload)).response;
+        }
 }

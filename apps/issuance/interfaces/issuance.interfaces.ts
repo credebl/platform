@@ -69,3 +69,8 @@ export interface SchemaDetails {
     schemaLedgerId: string;
     attributes: string;
   }
+export interface ImportFileDetails {
+    credDefId: string;
+    filePath: string;
+    fileName: string;
+  }

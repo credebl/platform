@@ -210,7 +210,8 @@ export const ResponseMessages = {
             fetchEndorsors: 'Endorser transactions fetched successfully',
             DeclineEndorsementTransaction: 'Decline endorsement request successfully',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
-            fetchMembers: 'Ecosystem members fetched successfully'
+            fetchMembers: 'Ecosystem members fetched successfully',
+            allschema: 'Schema details fetched sucessfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

@@ -595,13 +595,16 @@ export class EcosystemRepository {
             ecosystem: {
               id: ecosystemId
             }
+          },
+          resourceId: {
+            not: {
+              equals: null
+            }
           }
         }
       });
-
       const schemaArray = [];
       schemaDetails.map((schemaData) => schemaArray.push(schemaData.resourceId));
-
       const schemasResult = await this.prisma.schema.findMany({
         where: {
           OR: [

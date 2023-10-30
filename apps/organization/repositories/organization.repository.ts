@@ -254,6 +254,7 @@ export class OrganizationRepository {
           ...queryObject
         },
         include: {
+          schema: true,
           org_agents: {
             include: {
               agents_type: true,

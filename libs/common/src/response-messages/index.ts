@@ -154,7 +154,8 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Issue-credential offer created successfully',
-            fetch: 'Issue-credential fetched successfully'
+            fetch: 'Issue-credential fetched successfully',
+            importCSV: 'CSV imported sucessfully'
 
         },
         error: {
@@ -167,7 +168,7 @@ export const ResponseMessages = {
             credentialOfferNotFound: "Credential offer not found",
             invitationNotFound: "Invitation not found",
             platformConfigNotFound: "Platform config details not found",
-            emailSend: 'Unable to send email to the user',
+            emailSend: 'Unable to send email to the user'
         }
     },
     verification: {

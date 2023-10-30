@@ -506,7 +506,7 @@ export class IssuanceService {
 
 
   async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
-    this.logger.log(`START importAndPreviewDataForIssuance`);
+    this.logger.log(`START importAndPreviewDataForIssuance`, importFileDetails);
     try {
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);

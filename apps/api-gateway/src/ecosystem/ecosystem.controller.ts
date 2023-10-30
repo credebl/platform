@@ -83,8 +83,8 @@ export class EcosystemController {
   @Get('/:ecosystemId/schema')
   @ApiOperation({ summary: 'Get all ecosystem schema', description: 'Get all ecosystem schema' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  // @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  // @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiQuery({

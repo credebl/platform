@@ -213,6 +213,7 @@ export class UserService {
         const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email);
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
+        
         if (!resUser) {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
@@ -221,9 +222,11 @@ export class UserService {
           password: decryptedPassword
         });
       } else {
+        const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);       
+
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
-          password: userInfo.password
+          password: decryptedPassword
         });
       }
 
@@ -297,9 +300,10 @@ export class UserService {
         const getUserDetails = await this.userRepository.getUserDetails(userData.email);
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
         return this.generateToken(email, decryptedPassword);
+      } else {
+        const decryptedPassword = await this.commonService.decryptPassword(password);
+        return this.generateToken(email, decryptedPassword);
       }
-
-      return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -308,14 +312,15 @@ export class UserService {
 
   async generateToken(email: string, password: string): Promise<object> {
     try {
+
       const supaInstance = await this.supabaseService.getClient();
-
       this.logger.error(`supaInstance::`, supaInstance);
-
+            
       const { data, error } = await supaInstance.auth.signInWithPassword({
         email,
         password
-      });
+      });   
+
       this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
       if (error) {

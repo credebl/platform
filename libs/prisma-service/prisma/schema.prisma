@@ -398,6 +398,7 @@ model endorsement_transaction {
   status              String
   ecosystemOrgId      String
   requestBody         Json?
+  resourceId          String?        
   ecosystemOrgs       ecosystem_orgs @relation(fields: [ecosystemOrgId], references: [id])
 }
 

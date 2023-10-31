@@ -3,12 +3,12 @@ import {IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 
 export class UpdatePlatformSettingsDto {
-    @ApiProperty({ example: '123.678.90.10' })
+    @ApiProperty({ example: '127.0.0.1' })
     @IsOptional()
     @IsString({ message: 'external Ip should be string' })
     externalIp: string;
 
-    @ApiProperty({ example: '192.168.1.1' })
+    @ApiProperty({ example: '127.0.0.1' })
     @IsOptional()
     @IsString({ message: 'last Internal Id should be string' })
     lastInternalId: string;
@@ -23,7 +23,7 @@ export class UpdatePlatformSettingsDto {
     @IsString({ message: 'emailFrom should be string' })
     emailFrom: string;
 
-    @ApiProperty({ example: '0.0.0.0.5000' })
+    @ApiProperty({ example: 'dev.credebl.id' })
     @IsOptional()
     @IsString({ message: 'API endpoint should be string' })
     apiEndPoint: string;

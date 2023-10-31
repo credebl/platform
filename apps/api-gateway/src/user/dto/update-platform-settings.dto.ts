@@ -13,7 +13,7 @@ export class UpdatePlatformSettingsDto {
     @IsString({ message: 'last Internal Id should be string' })
     lastInternalId: string;
 
-    @ApiProperty({ example: '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'})
+    @ApiProperty()
     @IsOptional()
     @IsString({ message: 'sgApiKey should be string' })
     sgApiKey: string;

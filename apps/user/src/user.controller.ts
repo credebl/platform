@@ -1,3 +1,5 @@
+import { AddPasskeyDetails, PlatformSettingsI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
 import { LoginUserDto } from '../dtos/login-user.dto';
@@ -119,4 +121,8 @@ export class UserController {
     return this.userService.addPasskey(payload.userEmail, payload.userInfo);
   }
 
+  @MessagePattern({ cmd: 'update-platform-settings' })
+  async updatePlatformSettings(payload: { platformSettings: PlatformSettingsI }): Promise<string> {
+    return this.userService.updatePlatformSettings(payload.platformSettings);
+  }
 }

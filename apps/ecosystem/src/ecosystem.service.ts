@@ -998,7 +998,7 @@ export class EcosystemService {
       return await this.ecosystemRepository.getEndorsementsWithPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`In error getEndorsementTransactions: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -1007,7 +1007,7 @@ export class EcosystemService {
     try {
 
       const response = await this.ecosystemRepository.getAllEcosystemSchemasDetails(ecosystemSchemas);
-
+      this.logger.error(`In error getAllEcosystemSchemas1: ${JSON.stringify(response)}`);
       const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
@@ -1022,10 +1022,11 @@ export class EcosystemService {
         lastPage: Math.ceil(response.schemasCount / ecosystemSchemas.pageSize),
         data: schemasDetails
       };
+      this.logger.error(`In error getAllEcosystemSchemas1: ${JSON.stringify(response)}`);
       return schemasResponse;
     } catch (error) {
       this.logger.error(`In error fetching all ecosystem schemas: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -1039,7 +1040,7 @@ export class EcosystemService {
       return await this.ecosystemRepository.updateAutoSignAndSubmitTransaction();
     } catch (error) {
       this.logger.error(`error in decline endorsement request: ${error}`);
-      throw new InternalServerErrorException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -1057,7 +1058,7 @@ export class EcosystemService {
       return await this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, endorsementId);
     } catch (error) {
       this.logger.error(`error in decline endorsement request: ${error}`);
-      throw new InternalServerErrorException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

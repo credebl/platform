@@ -604,6 +604,7 @@ export class EcosystemRepository {
         }
       });
       const schemaArray = [];
+      this.logger.error(`In error schemaDetails2: ${JSON.stringify(schemaDetails)}`);
       schemaDetails.map((schemaData) => schemaArray.push(schemaData.resourceId));
       const schemasResult = await this.prisma.schema.findMany({
         where: {
@@ -623,7 +624,8 @@ export class EcosystemRepository {
         }
       });
       const schemasCount = schemaArray.length;
-
+      
+      this.logger.error(`In error schemaDetails3: ${JSON.stringify(schemasResult)}`);
       return { schemasCount, schemasResult };
 
     } catch (error) {

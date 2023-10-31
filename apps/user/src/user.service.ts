@@ -24,11 +24,11 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-// eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
 import {
   AddPasskeyDetails,
   InvitationsI,
+  PlatformSettingsI,
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
@@ -622,6 +622,45 @@ export class UserService {
       return this.userActivityService.getUserActivity(userId, limit);
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async updatePlatformSettings(platformSettings: PlatformSettingsI): Promise<string> {
+    try {
+      const platformConfigSettings = await this.userRepository.updatePlatformSettings(platformSettings);
+      
+      if (!platformConfigSettings) {
+        throw new BadRequestException(ResponseMessages.user.error.notUpdatePlatformSettings);
+      }
+
+      const ecosystemobj = {};
+
+      if (EcosystemConfigSettings.ENABLE_ECOSYSTEM in platformSettings) {
+        ecosystemobj[EcosystemConfigSettings.ENABLE_ECOSYSTEM] = platformSettings.enableEcosystem;
+      }
+
+      if (EcosystemConfigSettings.MULTI_ECOSYSTEM in platformSettings) {
+        ecosystemobj[EcosystemConfigSettings.MULTI_ECOSYSTEM] = platformSettings.multiEcosystemSupport;
+      }
+
+      const eosystemKeys = Object.keys(ecosystemobj);
+
+      if (0 === eosystemKeys.length) {
+        return ResponseMessages.user.success.platformEcosystemettings;
+      }
+      
+      const ecosystemSettings = await this.userRepository.updateEcosystemSettings(eosystemKeys, ecosystemobj);
+
+      if (!ecosystemSettings) {
+        throw new BadRequestException(ResponseMessages.user.error.notUpdateEcosystemSettings);
+      }
+
+      return ResponseMessages.user.success.platformEcosystemettings;
+
+    } catch (error) {
+      this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

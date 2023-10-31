@@ -363,7 +363,7 @@ export class EcosystemService {
         this.ecosystemRepository.getAgentDetails(orgId),
         this.ecosystemRepository.getPlatformConfigDetails(),
         this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId)),
-        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId))
+        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId), ecosystemId)
       ]);
 
       if (0 !== schemaRequestExist.length) {
@@ -434,7 +434,7 @@ export class EcosystemService {
         this.ecosystemRepository.getAgentDetails(orgId),
         this.ecosystemRepository.getPlatformConfigDetails(),
         this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId)),
-        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId))
+        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId), ecosystemId)
       ]);
 
       if (0 !== credDefRequestExist.length) {

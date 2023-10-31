@@ -768,12 +768,13 @@ export class EcosystemRepository {
 
 
   // eslint-disable-next-line camelcase
-  async getEcosystemOrgDetailsbyId(orgId: string): Promise<ecosystem_orgs> {
+  async getEcosystemOrgDetailsbyId(orgId: string, ecosystemId: string): Promise<ecosystem_orgs> {
     try {
       //need to change
       const ecosystemLeadDetails = await this.prisma.ecosystem_orgs.findFirst({
         where: {
-          orgId
+          orgId,
+          ecosystemId
         }
       });
       return ecosystemLeadDetails;

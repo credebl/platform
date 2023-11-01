@@ -158,8 +158,8 @@ export const ResponseMessages = {
         success: {
             create: 'Issue-credential offer created successfully',
             fetch: 'Issue-credential fetched successfully',
-            importCSV: 'CSV imported sucessfully'
-
+            importCSV: 'File imported sucessfully',
+            previewCSV: 'File details fetched sucessfully'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -171,7 +171,9 @@ export const ResponseMessages = {
             credentialOfferNotFound: 'Credential offer not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config details not found',
-            emailSend: 'Unable to send email to the user'
+            emailSend: 'Unable to send email to the user',
+            previewFile: 'Error while fetching file details',
+            previewCachedData: 'Error while fetching cached data'
         }
     },
     verification: {

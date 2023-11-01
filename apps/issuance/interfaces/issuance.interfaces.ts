@@ -68,9 +68,17 @@ export interface SchemaDetails {
     tag: string;
     schemaLedgerId: string;
     attributes: string;
-  }
+}
 export interface ImportFileDetails {
     credDefId: string;
     filePath: string;
     fileName: string;
-  }
+}
+
+export interface PreviewRequest {
+    pageNumber: number,
+    search: string,
+    pageSize: number,
+    sortBy: string,
+    sortValue: string
+}

@@ -7,7 +7,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -22,6 +22,7 @@ import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { orderValues, paginator } from '@credebl/common/common.utils';
 
 
 @Injectable()
@@ -565,6 +566,30 @@ export class IssuanceService {
     } finally {
       this.logger.error(`Deleted uploaded file after processing.`);
       // await deleteFile(payload.filePath);
+    }
+  }
+
+  async previewFileDataForIssuance(
+    requestId:string,
+    previewRequest: PreviewRequest
+  ): Promise<object> {
+    try {
+      if ('' !== requestId.trim()) {
+        const cachedData = await this.cacheManager.get(requestId);
+        if (cachedData === undefined || null) {
+          throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
+        }
+        const parsedData = JSON.parse(cachedData as string).fileData.data;
+        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortValue));
+        const finalData = paginator(parsedData, previewRequest.pageNumber, previewRequest.pageSize);
+
+        return finalData;
+      } else {
+        throw new BadRequestException(ResponseMessages.issuance.error.previewFile);
+      }
+    } catch (error) {
+      this.logger.error(`error in previewFileDataForIssuance : ${error}`);
+      throw new RpcException(error.response);
     }
   }
 

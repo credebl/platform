@@ -64,6 +64,28 @@ export class ConnectionRepository {
     }
 
     /**
+     * Get agent invitation by orgId 
+     * @param orgId 
+     * @returns Get connection details
+     */
+    // eslint-disable-next-line camelcase
+    async getConnectionInvitationByOrgId(orgId: number): Promise<agent_invitations> {
+        try {
+
+            const agentInvitationDetails = await this.prisma.agent_invitations.findFirst({
+                where: {
+                    orgId
+                }
+            });
+            return agentInvitationDetails;
+
+        } catch (error) {
+            this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
+            throw error;
+        }
+    }
+
+    /**
     * Description: Save connection details
     * @param connectionInvitation
     * @param agentId

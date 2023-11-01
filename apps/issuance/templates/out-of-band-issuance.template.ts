@@ -25,7 +25,7 @@ export class OutOfBandIssuance {
                         The organization ${orgName} has requested your assistance in issuing your credentials. 
                         We are delighted to notify you that a credential document has been successfully issued to you. To acknowledge and access the document, kindly proceed with the instructions outlined below:
                             <ul>
-                                <li>Download the ADHAYA Wallet from the Play Store.</li>
+                                <li>Download the ADEYA Wallet from the Play Store.</li>
                                 <li>Create an Account.</li>
                                 <li>Scan the QR code provided below.</li>
                                 <li>Accept the Credential Document request.</li>

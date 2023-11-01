@@ -25,7 +25,7 @@ export class OutOfBandVerification {
                         The organization ${orgName} has requested your assistance in verifying your credentials. 
                         To proceed, kindly follow the steps outlined below:
                             <ul>
-                                <li>Download the ADHAYA Wallet application from the Play Store.</li>
+                                <li>Download the ADEYA Wallet application from the Play Store.</li>
                                 <li>Create a new account within the app.</li>
                                 <li>Scan the QR code provided below within the app.</li>
                                 <li>Accept the request for the Credential Document.</li>

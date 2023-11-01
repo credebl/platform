@@ -44,6 +44,13 @@ export class ConnectionService {
     orgId: number, user: IUserRequestInterface, multiUseInvitation: boolean, autoAcceptConnection: boolean, alias: string, imageUrl: string, label: string
   ): Promise<object> {
     try {
+
+      const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
+
+      if (connectionInvitationExist) {
+        return connectionInvitationExist;
+      }
+
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id, organisation } = agentDetails;

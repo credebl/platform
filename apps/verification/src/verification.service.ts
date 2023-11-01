@@ -422,7 +422,7 @@ export class VerificationService {
 
     this.emailData.emailFrom = platformConfigData.emailFrom;
     this.emailData.emailTo = email;
-    this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials Required`;
+    this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials`;
     this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, outOfBandVerificationQrCode);
     this.emailData.emailAttachments = [
       {

@@ -24,11 +24,11 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-// eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
 import {
   AddPasskeyDetails,
   InvitationsI,
+  PlatformSettingsI,
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
@@ -213,6 +213,7 @@ export class UserService {
         const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email);
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
+        
         if (!resUser) {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
@@ -221,9 +222,11 @@ export class UserService {
           password: decryptedPassword
         });
       } else {
+        const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);       
+
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
-          password: userInfo.password
+          password: decryptedPassword
         });
       }
 
@@ -297,9 +300,10 @@ export class UserService {
         const getUserDetails = await this.userRepository.getUserDetails(userData.email);
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
         return this.generateToken(email, decryptedPassword);
+      } else {
+        const decryptedPassword = await this.commonService.decryptPassword(password);
+        return this.generateToken(email, decryptedPassword);
       }
-
-      return this.generateToken(email, password);
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -308,14 +312,15 @@ export class UserService {
 
   async generateToken(email: string, password: string): Promise<object> {
     try {
+
       const supaInstance = await this.supabaseService.getClient();
-
       this.logger.error(`supaInstance::`, supaInstance);
-
+            
       const { data, error } = await supaInstance.auth.signInWithPassword({
         email,
         password
-      });
+      });   
+
       this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
       if (error) {
@@ -622,6 +627,45 @@ export class UserService {
       return this.userActivityService.getUserActivity(userId, limit);
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async updatePlatformSettings(platformSettings: PlatformSettingsI): Promise<string> {
+    try {
+      const platformConfigSettings = await this.userRepository.updatePlatformSettings(platformSettings);
+      
+      if (!platformConfigSettings) {
+        throw new BadRequestException(ResponseMessages.user.error.notUpdatePlatformSettings);
+      }
+
+      const ecosystemobj = {};
+
+      if (EcosystemConfigSettings.ENABLE_ECOSYSTEM in platformSettings) {
+        ecosystemobj[EcosystemConfigSettings.ENABLE_ECOSYSTEM] = platformSettings.enableEcosystem;
+      }
+
+      if (EcosystemConfigSettings.MULTI_ECOSYSTEM in platformSettings) {
+        ecosystemobj[EcosystemConfigSettings.MULTI_ECOSYSTEM] = platformSettings.multiEcosystemSupport;
+      }
+
+      const eosystemKeys = Object.keys(ecosystemobj);
+
+      if (0 === eosystemKeys.length) {
+        return ResponseMessages.user.success.platformEcosystemettings;
+      }
+      
+      const ecosystemSettings = await this.userRepository.updateEcosystemSettings(eosystemKeys, ecosystemobj);
+
+      if (!ecosystemSettings) {
+        throw new BadRequestException(ResponseMessages.user.error.notUpdateEcosystemSettings);
+      }
+
+      return ResponseMessages.user.success.platformEcosystemettings;
+
+    } catch (error) {
+      this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

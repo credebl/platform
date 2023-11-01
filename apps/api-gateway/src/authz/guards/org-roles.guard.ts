@@ -51,6 +51,21 @@ export class OrgRolesGuard implements CanActivate {
         }
       });
 
+    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {      
+
+      // eslint-disable-next-line array-callback-return
+      const isPlatformAdmin = user.userOrgRoles.find((orgDetails) => {
+        if (orgDetails.orgRole.name === OrgRoles.PLATFORM_ADMIN) {
+          return true;
+        }
+      });
+
+      if (isPlatformAdmin) {
+        return true;
+      }
+
+      return false;
+
     } else {
       throw new HttpException('organization is required', HttpStatus.BAD_REQUEST);
     }

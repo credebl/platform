@@ -8,6 +8,7 @@ import { SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interface
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { GetAllSchemaList } from '../interfaces/endorsements.interface';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -568,6 +569,71 @@ export class EcosystemRepository {
     }
   }
 
+
+  async getAllEcosystemSchemasDetails(payload: GetAllSchemaList): Promise<{
+    schemasCount: number;
+    schemasResult: {
+      createDateTime: Date;
+      createdBy: number;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: number;
+    }[];
+  }> {
+    try {
+      const { ecosystemId, search, pageNumber, pageSize } = payload;
+
+      const schemaDetails = await this.prisma.endorsement_transaction.findMany({
+        where: {
+          type: endorsementTransactionType.SCHEMA,
+          status: endorsementTransactionStatus.SUBMITED,
+          ecosystemOrgs: {
+            ecosystem: {
+              id: ecosystemId
+            }
+          },
+          resourceId: {
+            not: {
+              equals: null
+            }
+          }
+        }
+      });
+      const schemaArray = [];
+      this.logger.error(`In error schemaDetails2: ${JSON.stringify(schemaDetails)}`);
+      schemaDetails.map((schemaData) => schemaArray.push(schemaData.resourceId));
+      const schemasResult = await this.prisma.schema.findMany({
+        where: {
+          OR: [
+            { version: { contains: search, mode: 'insensitive' } },
+            { name: { contains: search, mode: 'insensitive' } },
+            { schemaLedgerId: { contains: search, mode: 'insensitive' } }
+          ],
+          schemaLedgerId: {
+            in: schemaArray
+          }
+        },
+        take: Number(pageSize),
+        skip: (pageNumber - 1) * pageSize,
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+      const schemasCount = schemaArray.length;
+      
+      this.logger.error(`In error schemaDetails3: ${JSON.stringify(schemasResult)}`);
+      return { schemasCount, schemasResult };
+
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   /**
   * Description: Get getAgentEndPoint by orgId
   * @param orgId 
@@ -674,7 +740,8 @@ export class EcosystemRepository {
           ecosystemOrgId,
           responsePayload: '',
           type,
-          requestBody
+          requestBody,
+          resourceId: ''
         }
       });
     } catch (error) {
@@ -701,12 +768,13 @@ export class EcosystemRepository {
 
 
   // eslint-disable-next-line camelcase
-  async getEcosystemOrgDetailsbyId(orgId: string): Promise<ecosystem_orgs> {
+  async getEcosystemOrgDetailsbyId(orgId: string, ecosystemId: string): Promise<ecosystem_orgs> {
     try {
       //need to change
       const ecosystemLeadDetails = await this.prisma.ecosystem_orgs.findFirst({
         where: {
-          orgId
+          orgId,
+          ecosystemId
         }
       });
       return ecosystemLeadDetails;
@@ -794,6 +862,27 @@ export class EcosystemRepository {
         where: { id: endorsementId },
         data: {
           status
+        }
+      });
+
+      return updatedTransaction;
+
+    } catch (error) {
+      this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateResourse(
+    endorsementId: string,
+    resourceId: string
+    // eslint-disable-next-line camelcase,
+  ): Promise<object> {
+    try {
+      const updatedTransaction = await this.prisma.endorsement_transaction.update({
+        where: { id: endorsementId },
+        data: {
+          resourceId
         }
       });
 

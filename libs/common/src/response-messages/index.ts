@@ -14,11 +14,14 @@ export const ResponseMessages = {
             newUser: 'User not found',
             checkEmail: 'User email checked successfully.',
             sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
-            userActivity: 'User activities fetched successfully'
+            userActivity: 'User activities fetched successfully',
+            platformEcosystemettings: 'Platform and ecosystem settings updated'
         },
         error: {
             exists: 'User already exists',
             profileNotFound: 'User public profile not found',
+            notUpdatePlatformSettings: 'Unable to update platform config settings',
+            notUpdateEcosystemSettings: 'Unable to update ecosystem config settings',
             verificationAlreadySent: 'The verification link has already been sent to your email address',
             emailSend: 'Unable to send email to the user',
             invalidEmailUrl: 'Invalid verification code or EmailId!',
@@ -165,9 +168,9 @@ export const ResponseMessages = {
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
             notFound: 'Organization agent not found',
-            credentialOfferNotFound: "Credential offer not found",
-            invitationNotFound: "Invitation not found",
-            platformConfigNotFound: "Platform config details not found",
+            credentialOfferNotFound: 'Credential offer not found',
+            invitationNotFound: 'Invitation not found',
+            platformConfigNotFound: 'Platform config details not found',
             emailSend: 'Unable to send email to the user'
         }
     },
@@ -207,7 +210,8 @@ export const ResponseMessages = {
             fetchEndorsors: 'Endorser transactions fetched successfully',
             DeclineEndorsementTransaction: 'Decline endorsement request successfully',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
-            fetchMembers: 'Ecosystem members fetched successfully'
+            fetchMembers: 'Ecosystem members fetched successfully',
+            allschema: 'Schema details fetched sucessfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
@@ -241,7 +245,11 @@ export const ResponseMessages = {
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
-            ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
+            ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.',
+            updateSchemaId: 'Error while updating the schema id',
+            updateCredDefId: 'Error while updating the credential-definition',
+            invalidMessage: 'Invalid transaction details. Missing "message" property.',
+            invalidTransactionMessage: 'Invalid transaction details'
         }
     },
     bulkIssuance: {

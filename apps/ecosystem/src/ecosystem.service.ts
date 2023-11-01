@@ -588,11 +588,10 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
       }
 
-      const autoEndorsement = `${CommonConstants.ECOSYSTEM_AUTO_ENDOSEMENT}`;
-      const ecosystemConfigDetails = await this.ecosystemRepository.getEcosystemConfigDetails(autoEndorsement);
+      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
 
-      if (!ecosystemConfigDetails) {
-        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemConfigNotFound);
+      if (!ecosystemDetails) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
       }
 
       const updateSignedTransaction = await this.ecosystemRepository.updateTransactionDetails(endorsementId, schemaTransactionRequest.message.signedTransaction);
@@ -601,7 +600,7 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateTransactionError);
       }
 
-      if (updateSignedTransaction && 'true' === ecosystemConfigDetails.value) {
+      if (updateSignedTransaction && true === ecosystemDetails.autoEndorsement) {
 
         const submitTxn = await this.submitTransaction(endorsementId, ecosystemId, ecosystemLeadAgentDetails.agentEndPoint);
         if (!submitTxn) {
@@ -810,10 +809,9 @@ export class EcosystemService {
 
         if ('undefined' === submitTransactionRequest['message'].credentialDefinitionId.split(':')[3]) {
 
-          const autoEndorsement = `${CommonConstants.ECOSYSTEM_AUTO_ENDOSEMENT}`;
-          const ecosystemConfigDetails = await this.ecosystemRepository.getEcosystemConfigDetails(autoEndorsement);
+          const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
 
-          if ('true' === ecosystemConfigDetails.value) {
+          if (true === ecosystemDetails.autoEndorsement) {
 
             await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
           } else {

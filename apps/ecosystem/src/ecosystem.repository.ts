@@ -28,15 +28,14 @@ export class EcosystemRepository {
   async createNewEcosystem(createEcosystemDto): Promise<ecosystem> {
     try {
       const transaction = await this.prisma.$transaction(async (prisma) => {
-        const { name, description, userId, logo, tags, orgId, orgName, orgDid } = createEcosystemDto;
+        const { name, description, userId, logo, tags, orgId, orgName, orgDid, autoEndorsement } = createEcosystemDto;
         const createdEcosystem = await prisma.ecosystem.create({
           data: {
             name,
             description,
             tags,
-            logoUrl: logo,
-            createdBy: orgId,
-            lastChangedBy: orgId
+            autoEndorsement,
+            logoUrl: logo
           }
         });
         let ecosystemUser;
@@ -87,12 +86,13 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateEcosystemById(createEcosystemDto, ecosystemId): Promise<ecosystem> {
     try {
-      const { name, description, tags, logo } = createEcosystemDto;
+      const { name, description, tags, logo, autoEndorsement } = createEcosystemDto;
       const editEcosystem = await this.prisma.ecosystem.update({
         where: { id: ecosystemId },
         data: {
           name,
           description,
+          autoEndorsement,
           tags,
           logoUrl: logo
         }

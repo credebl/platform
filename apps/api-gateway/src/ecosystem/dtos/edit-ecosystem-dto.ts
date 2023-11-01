@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
@@ -34,5 +34,11 @@ export class EditEcosystemDto {
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'logo must be in string format.' })
     logo?: string;
+
+    @ApiPropertyOptional({ example: 'false' })
+    @IsBoolean()
+    @IsOptional()
+    @IsNotEmpty({ message: 'autoEndorsement should be boolean value' })
+    autoEndorsement = false;
   }
   

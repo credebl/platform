@@ -1,5 +1,7 @@
 import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { toNumber } from '@credebl/common/cast.helper';
 
 interface CredentialOffer {
     emailId: string;
@@ -142,4 +144,35 @@ export class OutOfBandCredentialDto {
     protocolVersion?: string;
 
     orgId: number;
+}
+
+
+export class PreviewFileDetails {
+    @ApiProperty({ required: false, default: 1 })
+    @IsOptional()
+    @Type(() => Number)
+    @Transform(({ value }) => toNumber(value))
+    pageNumber = 1;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    search = '';
+
+    @ApiProperty({ required: false, default: 10 })
+    @IsOptional()
+    @Type(() => Number)
+    @Transform(({ value }) => toNumber(value))
+    pageSize = 10;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    sortBy = '';
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    sortValue = '';
+
 }

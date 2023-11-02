@@ -1,7 +1,7 @@
 
 
 export interface UserI {
-    id?: number,
+    id?: string,
     username?: string,
     email?: string,
     firstName?: string,
@@ -14,14 +14,14 @@ export interface UserI {
 }
 
 export interface InvitationsI {
-    id: number,
-    userId: number,
-    orgId?: number,
+    id: string,
+    userId: string,
+    orgId?: string,
     organisation?: object
-    orgRoleId?: number,
+    orgRoleId?: string,
     status: string,
     email?: string
-    orgRoles: number[]
+    orgRoles: string[]
 }
 
 export interface UserEmailVerificationDto{
@@ -42,14 +42,14 @@ export interface AddPasskeyDetails{
 }
 
 export interface UserWhereUniqueInput{
-    id?: number
+    id?: string
 }
 
 export interface UserWhereInput{
     email?: string
 }
 export interface UpdateUserProfile {
-    id: number,
+    id: string,
     profileImg?: string;
     firstName: string,
     lastName: string,

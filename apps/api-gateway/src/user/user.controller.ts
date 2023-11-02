@@ -222,7 +222,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async acceptRejectInvitaion(@Body() acceptRejectInvitation: AcceptRejectInvitationDto, @Param('invitationId') invitationId: string, @User() reqUser: user, @Res() res: Response): Promise<object> {
-    acceptRejectInvitation.invitationId = parseInt(invitationId);
+    acceptRejectInvitation.invitationId = invitationId;
     const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);
 
     const finalResponse: IResponseType = {

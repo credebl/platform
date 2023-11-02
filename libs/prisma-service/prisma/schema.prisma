@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url  = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model user {
@@ -398,7 +398,7 @@ model endorsement_transaction {
   status              String
   ecosystemOrgId      String
   requestBody         Json?
-  resourceId          String?        
+  resourceId          String?
   ecosystemOrgs       ecosystem_orgs @relation(fields: [ecosystemOrgId], references: [id])
 }
 
@@ -411,4 +411,33 @@ model ecosystem_config {
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
+}
+
+model file_upload {
+  id                  String      @id @default(uuid())
+  name                String?
+  status              String?
+  upload_type         String?
+  orgId               String      @default("1")
+  createDateTime      DateTime    @default(now()) @db.Timestamptz(6)
+  createdBy           String      @default("1")
+  lastChangedDateTime DateTime    @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String      @default("1")
+  deletedAt           DateTime?   @db.Timestamp(6)
+  file_data           file_data[]
+}
+
+model file_data {
+  id                  String      @id @default(uuid())
+  referenceId         String?
+  isError             Boolean?
+  error               String?
+  detailError         String?
+  createDateTime      DateTime    @default(now()) @db.Timestamptz(6)
+  createdBy           String      @default("1")
+  lastChangedDateTime DateTime    @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String      @default("1")
+  deletedAt           DateTime?   @db.Timestamp(6)
+  fileUploadId        String
+  fileUpload          file_upload @relation(fields: [fileUploadId], references: [id])
 }

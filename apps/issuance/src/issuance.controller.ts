@@ -39,7 +39,7 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'out-of-band-credential-offer' })
-  async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<boolean> {
+  async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<boolean | object[]> {
     const { outOfBandCredentialDto } = payload;
     return this.issuanceService.outOfBandCredentialOffer(outOfBandCredentialDto);
   }
@@ -64,5 +64,10 @@ export class IssuanceController {
       payload.requestId, 
       payload.previewFileDetails
       );
+  }
+
+  @MessagePattern({ cmd: 'issue-bulk-credentials' })
+  async issueBulkCredentials(payload: {requestId:string, orgId:number }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId);
   }
 }

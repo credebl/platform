@@ -258,7 +258,7 @@ export class IssuanceController {
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.issuance.success.importCSV,
-        data: importCsvDetails
+        data: importCsvDetails.response
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
 
@@ -327,6 +327,34 @@ export class IssuanceController {
       data: perviewCSVDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/:requestId/bulk')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'bulk issue credential',
+    description: 'bulk issue credential'
+  })
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number,  @Res() res: Response): Promise<Response> {
+    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.bulkIssuance,
+      data: bulkIssunaceDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**

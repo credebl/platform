@@ -159,7 +159,8 @@ export const ResponseMessages = {
             create: 'Issue-credential offer created successfully',
             fetch: 'Issue-credential fetched successfully',
             importCSV: 'File imported sucessfully',
-            previewCSV: 'File details fetched sucessfully'
+            previewCSV: 'File details fetched sucessfully',
+            bulkIssuance: 'Bulk-issunace process started'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -173,7 +174,8 @@ export const ResponseMessages = {
             platformConfigNotFound: 'Platform config details not found',
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',
-            previewCachedData: 'Error while fetching cached data'
+            previewCachedData: 'Error while fetching cached data',
+            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request.'
         }
     },
     verification: {

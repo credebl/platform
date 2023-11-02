@@ -66,7 +66,7 @@ export class IssuanceService extends BaseService {
     }
 
     async importCsv(importFileDetails: RequestPayload
-    ): Promise<string> {
+    ): Promise<{ response: object }> {
         const payload = { importFileDetails };
         return this.sendNats(this.issuanceProxy, 'import-and-preview-data-for-issuance', payload);
     }
@@ -79,7 +79,12 @@ export class IssuanceService extends BaseService {
             requestId,
             orgId,
             previewFileDetails
-          };
-        return  this.sendNats(this.issuanceProxy, 'preview-csv-details', payload);
+        };
+        return this.sendNats(this.issuanceProxy, 'preview-csv-details', payload);
+    }
+
+    async issueBulkCredential(requestId: string, orgId: number): Promise<{ response: object }> {
+        const payload = { requestId, orgId };
+        return this.sendNats(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }
 }

@@ -7,7 +7,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -23,6 +23,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { orderValues, paginator } from '@credebl/common/common.utils';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 
 
 @Injectable()
@@ -34,7 +37,8 @@ export class IssuanceService {
     private readonly issuanceRepository: IssuanceRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
-    private readonly emailData: EmailDto
+    private readonly emailData: EmailDto,
+    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
   ) { }
 
 
@@ -243,7 +247,7 @@ export class IssuanceService {
   }
 
 
-  async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
+  async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean | object[]> {
     try {
       const {
         credentialOffer,
@@ -364,7 +368,7 @@ export class IssuanceService {
       const allSuccessful = flattenedResults.every((result) => true === result);
 
       if (0 < errors.length) {
-        this.logger.error(errors);
+        throw errors;
       }
 
       return allSuccessful;
@@ -570,7 +574,7 @@ export class IssuanceService {
   }
 
   async previewFileDataForIssuance(
-    requestId:string,
+    requestId: string,
     previewRequest: PreviewRequest
   ): Promise<object> {
     try {
@@ -593,13 +597,149 @@ export class IssuanceService {
     }
   }
 
+
+  async issueBulkCredential(requestId: string, orgId: number): Promise<string> {
+    const fileUpload: {
+      lastChangedDateTime: Date;
+      name?: string;
+      upload_type: string;
+      status: string;
+      orgId: string | number;
+      createDateTime: Date;
+    } = {
+      upload_type: '',
+      status: '',
+      orgId: '',
+      createDateTime: undefined,
+      lastChangedDateTime: undefined
+    };
+    let respFileUpload;
+    if ('' === requestId.trim()) {
+      throw new BadRequestException(
+        `Param 'requestId' is missing from the request.`
+      );
+    }
+    try {
+      const cachedData = await this.cacheManager.get(requestId);
+      if (cachedData === undefined) {
+        throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
+      }
+
+      const parsedData = JSON.parse(cachedData as string).fileData.data;
+      const parsedPrimeDetails = JSON.parse(cachedData as string);
+     
+      fileUpload.upload_type = FileUploadType.Issuance;
+      fileUpload.status = FileUploadStatus.started;
+      fileUpload.orgId = orgId;
+      fileUpload.createDateTime = new Date();
+
+      if (parsedPrimeDetails && parsedPrimeDetails.fileName) {
+        fileUpload.name = parsedPrimeDetails.fileName;
+      }
+
+      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
+      
+
+      await parsedData.forEach(async (element, index) => {
+        this.bulkIssuanceQueue.add(
+          'issue-credential',
+          {
+            data: element,
+            fileUploadId: respFileUpload.id,
+            cacheId: requestId,
+            credentialDefinitionId: parsedPrimeDetails.credentialDefinitionId,
+            schemaLedgerId: parsedPrimeDetails.schemaLedgerId,
+            orgId,
+            isLastData: index === parsedData.length - 1
+          },
+          { delay: 5000 }
+        );
+      });
+      
+      return 'Process completed for bulk issuance';
+    } catch (error) {
+      fileUpload.status = FileUploadStatus.interrupted;
+      this.logger.error(`error in issueBulkCredential : ${error}`);
+      throw new RpcException(error.response);
+    } finally {
+      if (respFileUpload !== undefined && respFileUpload.id !== undefined) {
+        fileUpload.lastChangedDateTime = new Date();
+        await this.issuanceRepository.updateFileUploadDetails(respFileUpload.id, fileUpload);
+      }
+    }
+  }
+
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async processIssuanceData(jobDetails): Promise<boolean | object[]> {
+
+    const fileUploadData: FileUploadData = {
+      fileUpload: '',
+      fileRow: '',
+      isError: false,
+      referenceId: '',
+      createDateTime: undefined,
+      error: '',
+      detailError: ''
+    };
+
+    fileUploadData.fileUpload = jobDetails.fileUploadId;
+    fileUploadData.fileRow = JSON.stringify(jobDetails);
+    fileUploadData.isError = false;
+    fileUploadData.createDateTime = new Date();
+    fileUploadData.referenceId = jobDetails.data.email;
+    try {
+
+      const oobIssuancepayload: OutOfBandCredentialOfferPayload = {
+        credentialDefinitionId: '',
+        orgId: 0
+      };
+
+      for (const key in jobDetails.data) {
+        if (jobDetails.data.hasOwnProperty(key)) {
+          const value = jobDetails.data[key];
+          // eslint-disable-next-line no-unused-expressions
+          if ('email' !== key) {
+            oobIssuancepayload['attributes'] = [{ name: key, value }];
+          } else {
+            oobIssuancepayload['emailId'] = value;
+          }
+
+        }
+      }
+      oobIssuancepayload['credentialDefinitionId'] = jobDetails.credentialDefinitionId;
+      oobIssuancepayload['orgId'] = jobDetails.orgId;
+
+      const oobCredentials = await this.outOfBandCredentialOffer(
+        oobIssuancepayload
+      );
+      return oobCredentials;
+    } catch (error) {
+      this.logger.error(
+        `error in issuanceBulkCredential for data ${jobDetails} : ${error}`
+      );
+      fileUploadData.isError = true;
+      fileUploadData.error = error.message;
+      fileUploadData.detailError = `${JSON.stringify(error)}`;
+    }
+    this.issuanceRepository.saveFileUploadData(fileUploadData);
+
+    if (jobDetails.isLastData) {
+      this.cacheManager.del(jobDetails.cacheId);
+      this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
+        status: FileUploadStatus.completed,
+        lastChangedDateTime: new Date()
+      });
+    }
+  }
+
   async validateFileHeaders(
     fileHeader: string[],
     schemaAttributes,
     payload
   ): Promise<void> {
     try {
-      
+
       const fileSchemaHeader: string[] = fileHeader.slice();
       if ('email' === fileHeader[0]) {
         fileSchemaHeader.splice(0, 1);
@@ -634,9 +774,9 @@ export class IssuanceService {
       // You can also throw a different exception or return an error response here if needed
     }
   }
-  
 
-  async validateFileData(fileData: string[]):Promise<void> {
+
+  async validateFileData(fileData: string[]): Promise<void> {
     let rowIndex: number = 0;
     let columnIndex: number = 0;
     const isNullish = Object.values(fileData).some((value) => {

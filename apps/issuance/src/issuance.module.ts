@@ -11,6 +11,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { BullModule } from '@nestjs/bull';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
+import { BulkIssuanceProcessor } from './issuance.processor';
 
 @Module({
   imports: [
@@ -29,6 +30,6 @@ import * as redisStore from 'cache-manager-redis-store';
     })
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto]
+  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor]
 })
 export class IssuanceModule { }

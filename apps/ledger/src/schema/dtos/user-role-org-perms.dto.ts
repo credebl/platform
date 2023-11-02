@@ -1,24 +1,24 @@
 
 export class UserRoleOrgPermsDto {
-    id?: number;
+    id?: string;
     role?: userRoleDto;
     organization?: userOrgDto;
     userRoleOrgPermissions?: unknown;
  }
  
  export class userRoleDto {
-    id: number;
+    id: string;
     name: string;
     permissions: string[];
  
  }
  
  export class OrgRole {
-    id: number;
+    id: string;
  }
  
  export class userOrgDto {
-    id?: number;
+    id?: string;
     orgName?: string;
     orgRole?: OrgRole;
     agentEndPoint?: string;

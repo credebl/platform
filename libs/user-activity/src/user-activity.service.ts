@@ -10,12 +10,12 @@ export class UserActivityService {
         private readonly userActivityRepository: UserActivityRepository
     ) { }
 
-    async createActivity(userId: number, orgId: number, action: string, details: string): Promise<user_activity> {
+    async createActivity(userId: string, orgId: string, action: string, details: string): Promise<user_activity> {
         
         return this.userActivityRepository.logActivity(userId, orgId, action, details);
     }
 
-    async getUserActivity(userId: number, limit: number): Promise<user_activity[]> {
+    async getUserActivity(userId: string, limit: number): Promise<user_activity[]> {
         return this.userActivityRepository.getRecentActivities(userId, limit);
     }
 }

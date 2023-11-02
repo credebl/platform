@@ -50,7 +50,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { ImageServiceService } from '@credebl/image-service';
 import { FileExportResponse, RequestPayload } from './interfaces';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerCSVOptions } from './config/multer.config';
+import { multerCSVOptions } from '../config/multer.config';
 import { extname } from 'path';
 import * as fs from 'fs';
 

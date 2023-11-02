@@ -14,7 +14,9 @@ import {
   Get,
   Param,
   UseFilters,
-  Header
+  Header,
+  UseInterceptors,
+  UploadedFile
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,7 +26,9 @@ import {
   ApiForbiddenResponse,
   ApiUnauthorizedResponse,
   ApiQuery,
-  ApiExcludeEndpoint
+  ApiExcludeEndpoint,
+  ApiConsumes,
+  ApiBody
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -34,7 +38,7 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -44,7 +48,11 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
-import { FileExportResponse } from './interfaces';
+import { FileExportResponse, RequestPayload } from './interfaces';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerCSVOptions } from './config/multer.config';
+import { extname } from 'path';
+import * as fs from 'fs';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -60,6 +68,7 @@ export class IssuanceController {
 
   ) { }
   private readonly logger = new Logger('IssuanceController');
+  private readonly PAGE: number = 1;
 
   @Get('/issuance/oob/qr')
   @ApiOperation({ summary: 'Out-Of-Band issuance QR', description: 'Out-Of-Band issuance QR' })
@@ -155,6 +164,197 @@ export class IssuanceController {
       data: getCredentialDetails.response
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/:credentialDefinitionId/download')
+  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @Header('Content-Disposition', 'attachment; filename="schema.csv"')
+  @Header('Content-Type', 'application/csv')
+  @ApiOperation({
+    summary: 'Download csv template for bulk-issuance',
+    description: 'Download csv template for bulk-issuance'
+  })
+  async downloadBulkIssuanceCSVTemplate(
+    @Param('credentialDefinitionId') credentialDefinitionId: string,
+    @Param('orgId') orgId: number,
+    @Res() res: Response
+  ): Promise<object> {
+    try {
+      const exportedData: FileExportResponse = await this.issueCredentialService.exportSchemaToCSV(credentialDefinitionId);
+      return res.header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`).status(200).send(exportedData.fileContent);
+    } catch (error) {
+    }
+
+  }
+
+
+  @Post('/orgs/:orgId/bulk/upload')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiOperation({
+    summary: 'Upload file for bulk issuance',
+    description: 'Upload file for bulk issuance.'
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      nullable: false,
+      required: ['file'],
+      properties: {
+        file: {
+          // 👈 this property
+          type: 'string',
+          format: 'binary'
+        }
+      }
+    },
+    required: true
+  })
+  @UseInterceptors(FileInterceptor('file', multerCSVOptions))
+  async importAndPreviewDataForIssuance(
+    @Query('credDefId') credentialDefinitionId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Param('orgId') orgId: number,
+    @Res() res: Response
+  ): Promise<object> {
+    if (file) {
+      this.logger.log(`file:${file.path}`);
+      this.logger.log(`Uploaded file : ${file.filename}`);
+      const timestamp = Math.floor(Date.now() / 1000);
+      const ext = extname(file.filename);
+      const newFilename = `${file.filename}-${timestamp}${ext}`;
+
+      fs.rename(
+        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
+        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        async (err: any) => {
+          if (err) {
+            throw err;
+          }
+        }
+      );
+
+      const reqPayload: RequestPayload = {
+        credDefId: credentialDefinitionId,
+        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        fileName: newFilename
+      };
+      const importCsvDetails = await this.issueCredentialService.importCsv(
+        reqPayload
+      );
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.importCSV,
+        data: importCsvDetails.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+
+    } 
+  }
+
+
+  @Get('/orgs/:orgId/:requestId/preview')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'file-preview',
+    description: 'file-preview'
+  })
+
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortValue',
+    type: Number,
+    required: false
+  })
+  async previewFileDataForIssuance(
+    @Param('requestId') requestId: string,
+    @Param('orgId') orgId: number,
+    @Query() previewFileDetails: PreviewFileDetails,
+    @Res() res: Response
+  ): Promise<object> {
+    const perviewCSVDetails = await this.issueCredentialService.previewCSVDetails(
+      requestId,
+      orgId,
+      previewFileDetails
+    );
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.previewCSV,
+      data: perviewCSVDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/:requestId/bulk')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'bulk issue credential',
+    description: 'bulk issue credential'
+  })
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number,  @Res() res: Response): Promise<Response> {
+    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.bulkIssuance,
+      data: bulkIssunaceDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**
@@ -264,24 +464,5 @@ export class IssuanceController {
 
   }
 
-  @Get('/orgs/:orgId/download')
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-  @Header('Content-Disposition', 'attachment; filename="schema.csv"')
-  @Header('Content-Type', 'application/csv')
-  @ApiOperation({
-    summary: 'Download csv template for bulk-issuance',
-    description: 'Download csv template for bulk-issuance'
-  })
-  async downloadBulkIssuanceCSVTemplate(
-    @Query('credDefid') credentialDefinitionId: string,
-    @Res() res: Response
-  ): Promise<object> {
-    try {
-      const exportedData: FileExportResponse = await this.issueCredentialService.exportSchemaToCSV(credentialDefinitionId);
-      return res.header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`).status(200).send(exportedData.fileContent);
-    } catch (error) {
-    }
-
-  }
+  
 }

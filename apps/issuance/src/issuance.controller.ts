@@ -1,8 +1,7 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, OutOfBandCredentialOffer } from '../interfaces/issuance.interfaces';
+import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
-import { of } from 'rxjs';
 
 @Controller()
 export class IssuanceController {
@@ -40,7 +39,7 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'out-of-band-credential-offer' })
-  async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<boolean> {
+  async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<boolean | object[]> {
     const { outOfBandCredentialDto } = payload;
     return this.issuanceService.outOfBandCredentialOffer(outOfBandCredentialDto);
   }
@@ -49,9 +48,26 @@ export class IssuanceController {
   async exportSchemaToCSV(payload: {
     credentialDefinitionId: string
   }): Promise<object> {
+    return this.issuanceService.exportSchemaToCSV(payload.credentialDefinitionId);
+  }
 
-    const response = await this.issuanceService.exportSchemaToCSV(payload.credentialDefinitionId);
+  @MessagePattern({ cmd: 'import-and-preview-data-for-issuance' })
+  async importCSV(payload: {
+    importFileDetails: ImportFileDetails
+  }): Promise<string> {
+   return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
+  }
 
-    return of(response).pipe();
+  @MessagePattern({ cmd: 'preview-csv-details' })
+  async previewCSVDetails(payload: {requestId:string, previewFileDetails:PreviewRequest}): Promise<object> {
+    return this.issuanceService.previewFileDataForIssuance(
+      payload.requestId, 
+      payload.previewFileDetails
+      );
+  }
+
+  @MessagePattern({ cmd: 'issue-bulk-credentials' })
+  async issueBulkCredentials(payload: {requestId:string, orgId:number }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId);
   }
 }

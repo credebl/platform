@@ -1,9 +1,10 @@
+/* eslint-disable camelcase */
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { agent_invitations, credentials, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
+import { agent_invitations, credentials, file_data, file_upload, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUpload, FileUploadData, SchemaDetails } from '../interfaces/issuance.interfaces';
 @Injectable()
 export class IssuanceRepository {
 
@@ -197,4 +198,61 @@ export class IssuanceRepository {
         }
     }
 
+    async saveFileUploadDetails(fileUploadPayload: FileUpload): Promise<file_upload> {
+        try {
+            const { name, orgId, status, upload_type } = fileUploadPayload;
+            return this.prisma.file_upload.create({
+                data: {
+                    name,
+                    orgId: `${orgId}`,
+                    status,
+                    upload_type
+                }
+            });
+
+        } catch (error) {
+            this.logger.error(`[saveFileUploadDetails] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async updateFileUploadDetails(fileId: string, fileUploadPayload: FileUpload): Promise<file_upload> {
+        try {
+            const { name, orgId, status, upload_type } = fileUploadPayload;
+            return this.prisma.file_upload.update({
+                where: {
+                    id: fileId
+                },
+                data: {
+                    name,
+                    orgId: `${orgId}`,
+                    status,
+                    upload_type
+                }
+            });
+
+        } catch (error) {
+            this.logger.error(`[updateFileUploadDetails] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async saveFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
+        try {
+            const { fileUpload, isError, referenceId, error, detailError } = fileUploadData;
+            return this.prisma.file_data.create({
+                data: {
+                    detailError,
+                    error,
+                    isError,
+                    referenceId,
+                    fileUploadId: fileUpload
+                }
+            });
+
+        } catch (error) {
+            this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
 }

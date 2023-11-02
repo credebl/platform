@@ -1,9 +1,10 @@
+/* eslint-disable camelcase */
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
-import { FileExportResponse } from './interfaces';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
+import { FileExportResponse, RequestPayload } from './interfaces';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -64,4 +65,26 @@ export class IssuanceService extends BaseService {
         return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
     }
 
+    async importCsv(importFileDetails: RequestPayload
+    ): Promise<{ response: object }> {
+        const payload = { importFileDetails };
+        return this.sendNats(this.issuanceProxy, 'import-and-preview-data-for-issuance', payload);
+    }
+
+    async previewCSVDetails(requestId: string,
+        orgId: number,
+        previewFileDetails: PreviewFileDetails
+    ): Promise<string> {
+        const payload = {
+            requestId,
+            orgId,
+            previewFileDetails
+        };
+        return this.sendNats(this.issuanceProxy, 'preview-csv-details', payload);
+    }
+
+    async issueBulkCredential(requestId: string, orgId: number): Promise<{ response: object }> {
+        const payload = { requestId, orgId };
+        return this.sendNats(this.issuanceProxy, 'issue-bulk-credentials', payload);
+    }
 }

@@ -1,13 +1,13 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { ICredentialAttributesInterface, OutOfBandCredentialOfferPayload, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -17,6 +17,15 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
 import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
+import { readFileSync } from 'fs';
+import { parse as paParse } from 'papaparse';
+import { v4 as uuidv4 } from 'uuid';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { orderValues, paginator } from '@credebl/common/common.utils';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 
 
 @Injectable()
@@ -26,8 +35,10 @@ export class IssuanceService {
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
-    private readonly emailData: EmailDto
+    private readonly emailData: EmailDto,
+    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
   ) { }
 
 
@@ -236,7 +247,7 @@ export class IssuanceService {
   }
 
 
-  async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
+  async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean | object[]> {
     try {
       const {
         credentialOffer,
@@ -357,7 +368,7 @@ export class IssuanceService {
       const allSuccessful = flattenedResults.every((result) => true === result);
 
       if (0 < errors.length) {
-        this.logger.error(errors);
+        throw errors;
       }
 
       return allSuccessful;
@@ -498,5 +509,294 @@ export class IssuanceService {
     }
   }
 
+
+  async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
+    this.logger.log(`START importAndPreviewDataForIssuance`, importFileDetails);
+    try {
+      const credDefResponse =
+        await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
+
+
+      const csvFile = readFileSync(importFileDetails.filePath);
+      const csvData = csvFile.toString();
+      const parsedData = paParse(csvData, {
+        header: true,
+        skipEmptyLines: true,
+        transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
+        complete: (results) => results.data
+      });
+
+
+      if (0 >= parsedData.data.length) {
+        throw new BadRequestException(`File data is empty`);
+      }
+
+      if (0 >= parsedData.meta.fields.length) {
+        throw new BadRequestException(`File header is empty`);
+      }
+
+      const fileData: string[] = parsedData.data.map(Object.values);
+      const fileHeader: string[] = parsedData.meta.fields;
+
+      const attributesArray = JSON.parse(credDefResponse.attributes);
+
+      // Extract the 'attributeName' values from the objects and store them in an array
+      const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
+
+      if (0 >= attributeNameArray.length) {
+        throw new BadRequestException(
+          `Attributes are empty for credential definition ${importFileDetails.credDefId}`
+        );
+      }
+
+      this.validateFileHeaders(fileHeader, attributeNameArray, importFileDetails);
+      this.validateFileData(fileData);
+
+      const resData = {
+        schemaLedgerId: credDefResponse.schemaLedgerId,
+        credentialDefinitionId: importFileDetails.credDefId,
+        fileData: parsedData,
+        fileName: importFileDetails.fileName
+      };
+      const newCacheKey = uuidv4();
+
+      await this.cacheManager.set(newCacheKey, JSON.stringify(resData), 3600);
+
+      return newCacheKey;
+
+    } catch (error) {
+      this.logger.error(`error in validating credentials : ${error}`);
+      throw new RpcException(error.response);
+    } finally {
+      this.logger.error(`Deleted uploaded file after processing.`);
+      // await deleteFile(payload.filePath);
+    }
+  }
+
+  async previewFileDataForIssuance(
+    requestId: string,
+    previewRequest: PreviewRequest
+  ): Promise<object> {
+    try {
+      if ('' !== requestId.trim()) {
+        const cachedData = await this.cacheManager.get(requestId);
+        if (cachedData === undefined || null) {
+          throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
+        }
+        const parsedData = JSON.parse(cachedData as string).fileData.data;
+        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortValue));
+        const finalData = paginator(parsedData, previewRequest.pageNumber, previewRequest.pageSize);
+
+        return finalData;
+      } else {
+        throw new BadRequestException(ResponseMessages.issuance.error.previewFile);
+      }
+    } catch (error) {
+      this.logger.error(`error in previewFileDataForIssuance : ${error}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+
+  async issueBulkCredential(requestId: string, orgId: number): Promise<string> {
+    const fileUpload: {
+      lastChangedDateTime: Date;
+      name?: string;
+      upload_type: string;
+      status: string;
+      orgId: string | number;
+      createDateTime: Date;
+    } = {
+      upload_type: '',
+      status: '',
+      orgId: '',
+      createDateTime: undefined,
+      lastChangedDateTime: undefined
+    };
+    let respFileUpload;
+    if ('' === requestId.trim()) {
+      throw new BadRequestException(
+        `Param 'requestId' is missing from the request.`
+      );
+    }
+    try {
+      const cachedData = await this.cacheManager.get(requestId);
+      if (cachedData === undefined) {
+        throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
+      }
+
+      const parsedData = JSON.parse(cachedData as string).fileData.data;
+      const parsedPrimeDetails = JSON.parse(cachedData as string);
+     
+      fileUpload.upload_type = FileUploadType.Issuance;
+      fileUpload.status = FileUploadStatus.started;
+      fileUpload.orgId = orgId;
+      fileUpload.createDateTime = new Date();
+
+      if (parsedPrimeDetails && parsedPrimeDetails.fileName) {
+        fileUpload.name = parsedPrimeDetails.fileName;
+      }
+
+      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
+      
+
+      await parsedData.forEach(async (element, index) => {
+        this.bulkIssuanceQueue.add(
+          'issue-credential',
+          {
+            data: element,
+            fileUploadId: respFileUpload.id,
+            cacheId: requestId,
+            credentialDefinitionId: parsedPrimeDetails.credentialDefinitionId,
+            schemaLedgerId: parsedPrimeDetails.schemaLedgerId,
+            orgId,
+            isLastData: index === parsedData.length - 1
+          },
+          { delay: 5000 }
+        );
+      });
+      
+      return 'Process completed for bulk issuance';
+    } catch (error) {
+      fileUpload.status = FileUploadStatus.interrupted;
+      this.logger.error(`error in issueBulkCredential : ${error}`);
+      throw new RpcException(error.response);
+    } finally {
+      if (respFileUpload !== undefined && respFileUpload.id !== undefined) {
+        fileUpload.lastChangedDateTime = new Date();
+        await this.issuanceRepository.updateFileUploadDetails(respFileUpload.id, fileUpload);
+      }
+    }
+  }
+
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async processIssuanceData(jobDetails): Promise<boolean | object[]> {
+
+    const fileUploadData: FileUploadData = {
+      fileUpload: '',
+      fileRow: '',
+      isError: false,
+      referenceId: '',
+      createDateTime: undefined,
+      error: '',
+      detailError: ''
+    };
+
+    fileUploadData.fileUpload = jobDetails.fileUploadId;
+    fileUploadData.fileRow = JSON.stringify(jobDetails);
+    fileUploadData.isError = false;
+    fileUploadData.createDateTime = new Date();
+    fileUploadData.referenceId = jobDetails.data.email;
+    try {
+
+      const oobIssuancepayload: OutOfBandCredentialOfferPayload = {
+        credentialDefinitionId: '',
+        orgId: 0
+      };
+
+      for (const key in jobDetails.data) {
+        if (jobDetails.data.hasOwnProperty(key)) {
+          const value = jobDetails.data[key];
+          // eslint-disable-next-line no-unused-expressions
+          if ('email' !== key) {
+            oobIssuancepayload['attributes'] = [{ name: key, value }];
+          } else {
+            oobIssuancepayload['emailId'] = value;
+          }
+
+        }
+      }
+      oobIssuancepayload['credentialDefinitionId'] = jobDetails.credentialDefinitionId;
+      oobIssuancepayload['orgId'] = jobDetails.orgId;
+
+      const oobCredentials = await this.outOfBandCredentialOffer(
+        oobIssuancepayload
+      );
+      return oobCredentials;
+    } catch (error) {
+      this.logger.error(
+        `error in issuanceBulkCredential for data ${jobDetails} : ${error}`
+      );
+      fileUploadData.isError = true;
+      fileUploadData.error = error.message;
+      fileUploadData.detailError = `${JSON.stringify(error)}`;
+    }
+    this.issuanceRepository.saveFileUploadData(fileUploadData);
+
+    if (jobDetails.isLastData) {
+      this.cacheManager.del(jobDetails.cacheId);
+      this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
+        status: FileUploadStatus.completed,
+        lastChangedDateTime: new Date()
+      });
+    }
+  }
+
+  async validateFileHeaders(
+    fileHeader: string[],
+    schemaAttributes,
+    payload
+  ): Promise<void> {
+    try {
+
+      const fileSchemaHeader: string[] = fileHeader.slice();
+      if ('email' === fileHeader[0]) {
+        fileSchemaHeader.splice(0, 1);
+      } else {
+        throw new BadRequestException(
+          `1st column of the file should always be 'reference_id'`
+        );
+      }
+      if (schemaAttributes.length !== fileSchemaHeader.length) {
+        throw new BadRequestException(
+          `Number of supplied values is different from the number of schema attributes defined for '${payload.credDefId}'`
+        );
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      let attributeIndex: number = 0;
+      const isConflictAttribute = Object.values(fileSchemaHeader).some(
+        (value) => {
+          if (!schemaAttributes.includes(value)) {
+            attributeIndex++;
+            return true;
+          }
+          return false;
+        }
+      );
+      if (isConflictAttribute) {
+        throw new BadRequestException(
+          `Schema attributes are mismatched in the file header. Please check supplied headers in the file`
+        );
+      }
+    } catch (error) {
+      // Handle exceptions here
+      // You can also throw a different exception or return an error response here if needed
+    }
+  }
+
+
+  async validateFileData(fileData: string[]): Promise<void> {
+    let rowIndex: number = 0;
+    let columnIndex: number = 0;
+    const isNullish = Object.values(fileData).some((value) => {
+      columnIndex = 0;
+      rowIndex++;
+      const isFalsyForColumnValue = Object.values(value).some((colvalue) => {
+        columnIndex++;
+        if (null === colvalue || '' == colvalue) {
+          return true;
+        }
+        return false;
+      });
+      return isFalsyForColumnValue;
+    });
+    this.logger.log(`isNullish: ${isNullish}`);
+    if (isNullish) {
+      throw new BadRequestException(
+        `Empty data found at row ${rowIndex} and column ${columnIndex}`
+      );
+    }
+  }
 
 }

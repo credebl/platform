@@ -51,8 +51,8 @@ export interface CredentialOffer {
 }
 export interface OutOfBandCredentialOfferPayload {
     credentialDefinitionId: string;
-    comment: string;
     orgId: number;
+    comment?: string;
     credentialOffer?: CredentialOffer[];
     emailId?: string;
     attributes?: Attributes[];
@@ -68,4 +68,36 @@ export interface SchemaDetails {
     tag: string;
     schemaLedgerId: string;
     attributes: string;
+}
+export interface ImportFileDetails {
+    credDefId: string;
+    filePath: string;
+    fileName: string;
+}
+
+export interface PreviewRequest {
+    pageNumber: number,
+    search: string,
+    pageSize: number,
+    sortBy: string,
+    sortValue: string
+}
+
+export interface FileUpload {
+    name?: string;
+    upload_type?: string;
+    status?: string;
+    orgId?: number | string;
+    createDateTime?: Date;
+    lastChangedDateTime?: Date;
   }
+
+export interface FileUploadData {
+    fileUpload: string;
+    fileRow: string;
+    isError: boolean;
+    referenceId: string;
+    createDateTime: Date;
+    error?: string;
+    detailError?: string;
+}

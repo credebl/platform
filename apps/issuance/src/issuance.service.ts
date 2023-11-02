@@ -16,7 +16,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
-import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
+import { checkIfFileOrDirectoryExists, createFile, deleteFile } from '../../api-gateway/src/helper-files/file-operation.helper';
 import { readFileSync } from 'fs';
 import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
@@ -569,7 +569,7 @@ export class IssuanceService {
       throw new RpcException(error.response);
     } finally {
       this.logger.error(`Deleted uploaded file after processing.`);
-      // await deleteFile(payload.filePath);
+      await deleteFile(importFileDetails.filePath);
     }
   }
 

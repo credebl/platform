@@ -189,4 +189,6 @@ export interface CreateEcosystem {
   orgDid: string;
 
   orgId?: string;
+
+  autoEndorsement: boolean
 }

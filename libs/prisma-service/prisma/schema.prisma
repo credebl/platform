@@ -332,6 +332,7 @@ model ecosystem {
   lastChangedBy        Int                     @default(1)
   deletedAt            DateTime?               @db.Timestamp(6)
   logoUrl              String?
+  autoEndorsement      Boolean                 @default(false)
   ecosystemInvitations ecosystem_invitations[]
   ecosystemOrgs        ecosystem_orgs[]
   ecosystemUsers       ecosystem_users[]

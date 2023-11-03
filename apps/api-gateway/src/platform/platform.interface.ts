@@ -5,7 +5,7 @@ export enum SortValue {
     DESC = 'DESC'
 }
 export interface IConnectedHolderList {
-    orgId: number;
+    orgId: string;
     itemsPerPage?: number;
     page?: number;
     searchText?: string;

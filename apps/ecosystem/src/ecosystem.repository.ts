@@ -446,6 +446,7 @@ export class EcosystemRepository {
     // eslint-disable-next-line camelcase
   ): Promise<ecosystem_invitations> {
     try {
+     
       return this.prisma.ecosystem_invitations.create({
         data: {
           email,
@@ -638,38 +639,19 @@ export class EcosystemRepository {
     }
   }
 
-
-  async getAllEcosystemSchemasDetails(payload: GetAllSchemaList): Promise<{
-    schemasCount: number;
-    schemasResult: {
-      createDateTime: Date;
-      createdBy: number;
-      name: string;
-      version: string;
-      attributes: string;
-      schemaLedgerId: string;
-      publisherDid: string;
-      issuerId: string;
-      orgId: number;
-    }[];
-  }> {
+  /**
+  * Description: Get getAgentEndPoint by orgId
+  * @param orgId 
+  * @returns Get getAgentEndPoint details
+  */
+  // eslint-disable-next-line camelcase
+  async getAgentDetails(orgId: string): Promise<org_agents> {
     try {
       const { ecosystemId, search, pageNumber, pageSize } = payload;
 
       const schemaDetails = await this.prisma.endorsement_transaction.findMany({
         where: {
-          type: endorsementTransactionType.SCHEMA,
-          status: endorsementTransactionStatus.SUBMITED,
-          ecosystemOrgs: {
-            ecosystem: {
-              id: ecosystemId
-            }
-          },
-          resourceId: {
-            not: {
-              equals: null
-            }
-          }
+          orgId:orgId.toString()
         }
       });
       const schemaArray = [];
@@ -942,10 +924,10 @@ export class EcosystemRepository {
           attributes,
           schemaLedgerId,
           issuerId,
-          createdBy: Number(createdBy),
-          lastChangedBy: Number(lastChangedBy),
+          createdBy,
+          lastChangedBy,
           publisherDid,
-          orgId: Number(orgId),
+          orgId: String(orgId),
           ledgerId
         }
       });
@@ -966,8 +948,8 @@ export class EcosystemRepository {
           tag,
           credentialDefinitionId,
           revocable,
-          createdBy: Number(createdBy),
-          orgId: Number(orgId),
+          createdBy,
+          orgId,
           schemaId
         }
       });

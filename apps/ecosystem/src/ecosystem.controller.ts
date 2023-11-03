@@ -162,7 +162,7 @@ export class EcosystemController {
   * @returns Schema endorsement request
   */
   @MessagePattern({ cmd: 'schema-endorsement-request' })
-  async schemaEndorsementRequest(payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number, ecosystemId: string }
+  async schemaEndorsementRequest(payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: string, ecosystemId: string }
   ): Promise<object> {
     return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId, payload.ecosystemId);
   }
@@ -173,7 +173,7 @@ export class EcosystemController {
   * @returns Schema endorsement request
   */
   @MessagePattern({ cmd: 'credDef-endorsement-request' })
-  async credDefEndorsementRequest(payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number; ecosystemId: string }
+  async credDefEndorsementRequest(payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: string; ecosystemId: string }
   ): Promise<object> {
     return this.ecosystemService.requestCredDeffEndorsement(payload.requestCredDefPayload, payload.orgId, payload.ecosystemId);
   }

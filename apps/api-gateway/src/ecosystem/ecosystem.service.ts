@@ -64,6 +64,7 @@ export class EcosystemService extends BaseService {
    */
   async createInvitation(bulkInvitationDto: BulkEcosystemInvitationDto, userId: string, userEmail: string): Promise<object> {
     const payload = { bulkInvitationDto, userId, userEmail };
+    
     return this.sendNats(this.serviceProxy, 'send-ecosystem-invitation', payload);
   }
 
@@ -149,12 +150,12 @@ export class EcosystemService extends BaseService {
   }
 
 
-  async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: number, ecosystemId: string): Promise<object> {
+  async schemaEndorsementRequest(requestSchemaPayload: RequestSchemaDto, orgId: string, ecosystemId: string): Promise<object> {
     const payload = { requestSchemaPayload, orgId, ecosystemId };
     return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
   }
 
-  async credDefEndorsementRequest(requestCredDefPayload: RequestCredDefDto, orgId: number, ecosystemId: string): Promise<object> {
+  async credDefEndorsementRequest(requestCredDefPayload: RequestCredDefDto, orgId: string, ecosystemId: string): Promise<object> {
     const payload = { requestCredDefPayload, orgId, ecosystemId };
     return this.sendNats(this.serviceProxy, 'credDef-endorsement-request', payload);
   }

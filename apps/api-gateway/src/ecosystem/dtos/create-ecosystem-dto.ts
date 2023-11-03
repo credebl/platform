@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
@@ -52,6 +52,12 @@ export class CreateEcosystemDto {
     @IsNotEmpty({ message: 'organization did is required.' })
     @IsString({ message: 'organization did must be in string format.' })
     orgDid: string;
+
+    @ApiPropertyOptional({ example: 'false' })
+    @IsBoolean()
+    @IsOptional()
+    @IsNotEmpty({ message: 'autoEndorsement should be boolean value' })
+    autoEndorsement = false;
 
     orgId?: string;
   }

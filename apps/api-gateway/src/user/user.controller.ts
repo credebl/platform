@@ -29,6 +29,10 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AddPasskeyDetails } from './dto/add-user.dto';
 import { EmailValidator } from '../dtos/email-validator.dto';
+import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
+import { Roles } from '../authz/decorators/roles.decorator';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { OrgRoles } from 'libs/org-roles/enums';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -272,4 +276,21 @@ export class UserController {
 
   }
   
+  @Put('/platform-settings')
+  @ApiOperation({ summary: 'Update platform and ecosystem settings', description: 'Update platform and ecosystem settings' })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiBearerAuth()
+  async updatePlatformSettings(@Body() platformSettings: UpdatePlatformSettingsDto, @Res() res: Response): Promise<Response> {
+    const result = await this.userService.updatePlatformSettings(platformSettings);
+
+    const finalResponse = {
+      statusCode: HttpStatus.OK,
+      message: result.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
 }

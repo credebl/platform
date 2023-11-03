@@ -12,7 +12,7 @@ import { CredentialDefinitionRepository } from './repositories/credential-defini
 import { CreateCredDefPayload, CredDefPayload, GetAllCredDefsPayload, GetCredDefBySchemaId, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { CreateCredDefAgentRedirection, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
+import { CreateCredDefAgentRedirection, CredDefSchema, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
 
 @Injectable()
@@ -268,4 +268,29 @@ export class CredentialDefinitionService extends BaseService {
             throw new RpcException(error.response ? error.response : error);
         }
     }
+
+    async getAllCredDefAndSchemaForBulkOperation(orgId: number): Promise<CredDefSchema[]> {
+        try {
+            const payload = {
+                orgId,
+                sortValue: 'ASC',
+                credDefSortBy: 'id'
+            };
+
+            const credDefSchemaList: CredDefSchema[] =
+                await this.credentialDefinitionRepository.getAllCredDefsByOrgIdForBulk(
+                    payload
+                );
+                if (!credDefSchemaList) {
+                    throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
+                }    
+            return credDefSchemaList;
+        } catch (error) {
+            this.logger.error(
+                `get Cred-Defs and schema List By OrgId for bulk operations: ${JSON.stringify(error)}`
+            );
+            throw new RpcException(error.response);
+        }
+    }
+
 }

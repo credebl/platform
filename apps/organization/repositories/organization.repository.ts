@@ -257,6 +257,7 @@ export class OrganizationRepository {
           ...queryObject
         },
         include: {
+          schema: true,
           org_agents: {
             include: {
               agents_type: true,
@@ -436,4 +437,46 @@ export class OrganizationRepository {
       throw new InternalServerErrorException(error);
     }
   }
+
+  async getOrgProfile(id: number): Promise<organisation> {
+    try {
+      return this.prisma.organisation.findUnique({
+        where: {
+          id
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getCredDefByOrg(orgId: number): Promise<{
+    tag: string;
+    credentialDefinitionId: string;
+    schemaLedgerId: string;
+    revocable: boolean;
+  }[]> {
+    try {
+      return this.prisma.credential_definition.findMany({
+        where: {
+          orgId
+        },
+        select: {
+          tag: true,
+          credentialDefinitionId: true,
+          schemaLedgerId: true,
+          revocable: true,
+          createDateTime: true
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getting agent DID: ${error}`);
+      throw error;
+    }
+  }
+
 }

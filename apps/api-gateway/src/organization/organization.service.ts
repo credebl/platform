@@ -134,4 +134,12 @@ export class OrganizationService extends BaseService {
 
     return this.sendNats(this.serviceProxy, 'fetch-organization-user', payload);
   }
+
+  async getOgPofile(
+    orgId: number
+  ): Promise<{ response: object }> {
+    const payload = { orgId };
+
+    return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
+  }
 }

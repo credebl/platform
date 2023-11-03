@@ -44,20 +44,32 @@ export class ConnectionService {
     orgId: string, user: IUserRequestInterface, multiUseInvitation: boolean, autoAcceptConnection: boolean, alias: string, imageUrl: string, label: string
   ): Promise<object> {
     try {
+
+      const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
+
+      if (connectionInvitationExist) {
+        return connectionInvitationExist;
+      }
+
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
     
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
-      const { agentEndPoint, id } = agentDetails;
+      const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
+      }
+
+      let logoImageUrl;
+      if (organisation.logoUrl) {
+        logoImageUrl = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/orgs/profile/${organisation.id}`;
       }
 
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: imageUrl || undefined,
+        imageUrl: logoImageUrl ? logoImageUrl : undefined,
         label: label || undefined
       };
 

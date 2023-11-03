@@ -8,10 +8,20 @@ export interface IAgentSpinupDto {
     seed: string;
     orgId: string;
     ledgerId?: string[];
+    did?: string;
     agentType?: AgentType;
     transactionApproval?: boolean;
     clientSocketId?: string
     tenant?: boolean;
+}
+
+export interface OutOfBandCredentialOffer {
+    emailId: string;
+    attributes: Attributes[];
+    credentialDefinitionId: string;
+    comment: string;
+    protocolVersion?: string;
+    orgId: number;
 }
 
 export interface ITenantDto {
@@ -20,6 +30,7 @@ export interface ITenantDto {
     ledgerId?: string[];
     method: string;
     orgId: string;
+    did?: string;
     tenantId?: string;
     clientSocketId?: string;
 }
@@ -231,10 +242,10 @@ export interface ICredentialFormats {
 }
 
 export interface IIndy {
-    attributes: IAttributes[];
+    attributes: Attributes[];
 }
 
-export interface IAttributes {
+export interface Attributes {
     name: string;
     value: string;
 }

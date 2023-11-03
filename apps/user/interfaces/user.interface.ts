@@ -1,5 +1,3 @@
-
-
 export interface UserI {
     id?: string,
     username?: string,
@@ -54,4 +52,13 @@ export interface UpdateUserProfile {
     firstName: string,
     lastName: string,
     isPublic: boolean,
+}
+export interface PlatformSettingsI {
+    externalIp: string,
+    lastInternalId: string,
+    sgApiKey: string;
+    emailFrom: string,
+    apiEndPoint: string;
+    enableEcosystem: boolean;
+    multiEcosystemSupport: boolean;
 }

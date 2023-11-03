@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions } from '../interfaces/issuance.interfaces';
+import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 
 @Controller()
@@ -39,5 +39,38 @@ export class IssuanceController {
     const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
   
     return this.issuanceService.getIssueCredentialWebhook(createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId);
+  }
+
+  @MessagePattern({ cmd: 'out-of-band-credential-offer' })
+  async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<boolean | object[]> {
+    const { outOfBandCredentialDto } = payload;
+    return this.issuanceService.outOfBandCredentialOffer(outOfBandCredentialDto);
+  }
+
+  @MessagePattern({ cmd: 'export-schema-to-csv-by-credDefId' })
+  async exportSchemaToCSV(payload: {
+    credentialDefinitionId: string
+  }): Promise<object> {
+    return this.issuanceService.exportSchemaToCSV(payload.credentialDefinitionId);
+  }
+
+  @MessagePattern({ cmd: 'import-and-preview-data-for-issuance' })
+  async importCSV(payload: {
+    importFileDetails: ImportFileDetails
+  }): Promise<string> {
+   return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
+  }
+
+  @MessagePattern({ cmd: 'preview-csv-details' })
+  async previewCSVDetails(payload: {requestId:string, previewFileDetails:PreviewRequest}): Promise<object> {
+    return this.issuanceService.previewFileDataForIssuance(
+      payload.requestId, 
+      payload.previewFileDetails
+      );
+  }
+
+  @MessagePattern({ cmd: 'issue-bulk-credentials' })
+  async issueBulkCredentials(payload: {requestId:string, orgId:number }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId);
   }
 }

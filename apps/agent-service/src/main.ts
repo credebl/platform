@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
     seed: process.env.PLATFORM_SEED,
     orgId: `${process.env.PLATFORM_ID}`,
     tenant: true,
-    ledgerId: [`1`, `2`]
+    ledgerId: [`1`, `2`, `3`, `4`]
   };
 
   const agentService = app.get(AgentServiceService);

@@ -129,7 +129,7 @@ export class ConnectionController {
     @Post('/orgs/:orgId/connections')
     @ApiOperation({ summary: 'Create outbound out-of-band connection (Legacy Invitation)', description: 'Create outbound out-of-band connection (Legacy Invitation)' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
     async createLegacyConnectionInvitation(
         @Param('orgId') orgId: string,

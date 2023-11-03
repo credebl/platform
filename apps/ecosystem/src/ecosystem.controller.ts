@@ -133,6 +133,16 @@ export class EcosystemController {
     );
   }
 
+
+  @MessagePattern({ cmd: 'get-all-ecosystem-schemas' })
+  async getAllEcosystemSchemas(
+    @Body() payload: GetEndorsementsPayload
+  ): Promise<object> {
+    return this.ecosystemService.getAllEcosystemSchemas(
+      payload
+    );
+  }
+
   @MessagePattern({ cmd: 'delete-ecosystem-invitations' })
   async deleteInvitation(
     @Body() payload: { invitationId: string }

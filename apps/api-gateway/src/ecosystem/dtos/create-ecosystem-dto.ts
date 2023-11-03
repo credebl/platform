@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
@@ -30,8 +30,8 @@ export class CreateEcosystemDto {
     tags?: string;
   
     @ApiPropertyOptional()
-    @IsInt({ message: 'UserId must be in number format.' })
-    userId: number;
+    
+    userId: string;
   
     @ApiPropertyOptional()
     @IsOptional()

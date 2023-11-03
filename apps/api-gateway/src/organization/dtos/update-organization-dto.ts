@@ -8,7 +8,7 @@ import { trim } from '@credebl/common/cast.helper';
 export class UpdateOrganizationDto {
 
 
-    orgId: number;
+    orgId: string;
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))

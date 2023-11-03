@@ -10,7 +10,7 @@ export class CreateOrganizationDto {
 }
 
 export class CreateUserRoleOrgDto {
- orgRoleId: number;
- userId: number;
- organisationId: number;
+ orgRoleId: string;
+ userId: string;
+ organisationId: string;
 }

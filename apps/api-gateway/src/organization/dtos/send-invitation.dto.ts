@@ -17,7 +17,7 @@ export class SendInvitationDto {
     @ApiProperty({ example: [2, 1, 3] })
     @IsNotEmpty({ message: 'Please provide valid orgRoleId' })
     @IsArray()
-    orgRoleId: number[];
+    orgRoleId: string[];
 
 }
 
@@ -29,5 +29,5 @@ export class BulkSendInvitationDto {
     @ValidateNested({ each: true })
     @Type(() => SendInvitationDto)
     invitations: SendInvitationDto[];
-    orgId: number;
+    orgId: string;
 }

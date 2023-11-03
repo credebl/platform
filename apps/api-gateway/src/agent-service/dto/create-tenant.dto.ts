@@ -29,9 +29,9 @@ export class CreateTenantDto {
     @IsOptional()
     @IsArray({ message: 'ledgerId must be an array' })
     @IsNotEmpty({ message: 'please provide valid ledgerId' })
-    ledgerId?: number[];
+    ledgerId?: string[];
 
-    orgId: number;
+    orgId: string;
 
     @ApiProperty()
     @IsOptional()

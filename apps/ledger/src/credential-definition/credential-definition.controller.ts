@@ -35,12 +35,12 @@ export class CredentialDefinitionController {
         lastPage: number;
         data: {
             createDateTime: Date;
-            createdBy: number;
+            createdBy: string;
             credentialDefinitionId: string;
             tag: string;
             schemaLedgerId: string;
-            schemaId: number;
-            orgId: number;
+            schemaId: string;
+            orgId: string;
             revocable: boolean;
         }[]
     }> {

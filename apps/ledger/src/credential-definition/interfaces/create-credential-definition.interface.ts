@@ -8,7 +8,7 @@ export interface GetCredDefPayload {
   searchText?: string;
   itemsPerPage?: number;
   user?: IUserRequestInterface;
-  orgId?: number;
+  orgId?: string;
   sortValue?: SortValue;
   credDefSortBy?: string;
   supportRevocation?: string;
@@ -19,19 +19,19 @@ export interface GetCredDefPayload {
 export interface CreateCredDefPayload {
   credDef: CreateCredentialDefinitionDto;
   user: IUserRequestInterface;
-  orgId?: number;
+  orgId?: string;
 }
 
 export interface CredDefPayload {
-  userId?: number,
-  schemaId?: number;
+  userId?: string,
+  schemaId?: string;
   tag?: string;
   issuerId?: string;
   credentialDefinitionId?: string;
   issuerDid?: string;
   schemaLedgerId?: string;
-  orgId?: number;
-  createdBy?: number;
+  orgId?: string;
+  createdBy?: string;
   autoIssue?: boolean;
   revocable?: boolean;
   orgDid?: string;
@@ -49,7 +49,7 @@ export class GetAllCredDefsDto {
 export interface GetAllCredDefsPayload {
   credDefSearchCriteria: GetAllCredDefsDto,
   user: IUserRequestInterface,
-  orgId: number
+  orgId: string
 }
 
 export interface GetCredDefBySchemaId {

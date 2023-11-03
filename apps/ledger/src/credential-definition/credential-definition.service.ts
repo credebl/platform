@@ -31,7 +31,6 @@ export class CredentialDefinitionService extends BaseService {
             const { agentEndPoint, orgDid } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(credDef.orgId);
             // eslint-disable-next-line yoda
             const did = credDef.orgDid?.split(':').length >= 4 ? credDef.orgDid : orgDid;
-
             const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(credDef.orgId);
             const apiKey = '';
             const { userId } = user.selectedOrg;
@@ -45,17 +44,19 @@ export class CredentialDefinitionService extends BaseService {
                 throw new ConflictException(ResponseMessages.credentialDefinition.error.Conflict);
             }
             let credDefResponseFromAgentService;
-            if (1 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+            if (`1` === getAgentDetails.org_agents[0].orgAgentTypeId) {
                 const CredDefPayload = {
                     tag: credDef.tag,
                     schemaId: credDef.schemaLedgerId,
                     issuerId: did,
                     agentEndPoint,
                     apiKey,
-                    agentType: 1
+                    agentType: `1`
                 };
+               
                 credDefResponseFromAgentService = await this._createCredentialDefinition(CredDefPayload);
-            } else if (2 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+
+            } else if (`2` === getAgentDetails.org_agents[0].orgAgentTypeId) {
                 const { tenantId } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(credDef.orgId);
 
                 const CredDefPayload = {
@@ -68,7 +69,7 @@ export class CredentialDefinitionService extends BaseService {
                     },
                     agentEndPoint,
                     apiKey,
-                    agentType: 2
+                    agentType: `2`
                 };
                 credDefResponseFromAgentService = await this._createCredentialDefinition(CredDefPayload);
             }
@@ -82,9 +83,9 @@ export class CredentialDefinitionService extends BaseService {
                 schemaLedgerId: '',
                 issuerId: '',
                 revocable: credDef.revocable,
-                createdBy: 0,
-                orgId: 0,
-                schemaId: 0,
+                createdBy: `0`,
+                orgId: '0',
+                schemaId: '0',
                 credentialDefinitionId: ''
             };
 
@@ -125,6 +126,7 @@ export class CredentialDefinitionService extends BaseService {
             const pattern = {
                 cmd: 'agent-create-credential-definition'
             };
+           
             const credDefResponse = await this.credDefServiceProxy
                 .send(pattern, payload)
                 .pipe(
@@ -151,25 +153,25 @@ export class CredentialDefinitionService extends BaseService {
     async getCredentialDefinitionById(payload: GetCredDefPayload): Promise<credential_definition> {
         try {
             const { credentialDefinitionId, orgId } = payload;
-            const { agentEndPoint } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(orgId);
-            const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(orgId);
+            const { agentEndPoint } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(String(orgId));
+            const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(String(orgId));
             const apiKey = '';
             let credDefResponse;
-            if (1 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+            if (`1` === getAgentDetails.org_agents[0].orgAgentTypeId) {
                 const getSchemaPayload = {
                     credentialDefinitionId,
                     apiKey,
                     agentEndPoint,
-                    agentType: 1
+                    agentType: `1`
                 };
                 credDefResponse = await this._getCredentialDefinitionById(getSchemaPayload);
-            } else if (2 === getAgentDetails.org_agents[0].orgAgentTypeId) {
-                const { tenantId } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(orgId);
+            } else if (`2` === getAgentDetails.org_agents[0].orgAgentTypeId) {
+                const { tenantId } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(String(orgId));
                 const getSchemaPayload = {
                     tenantId,
                     method: 'getCredentialDefinitionById',
                     payload: { credentialDefinitionId },
-                    agentType: 2,
+                    agentType: `2`,
                     agentEndPoint
                 };
                 credDefResponse = await this._getCredentialDefinitionById(getSchemaPayload);
@@ -223,12 +225,12 @@ export class CredentialDefinitionService extends BaseService {
         lastPage: number;
         data: {
             createDateTime: Date;
-            createdBy: number;
+            createdBy: string;
             credentialDefinitionId: string;
             tag: string;
             schemaLedgerId: string;
-            schemaId: number;
-            orgId: number;
+            schemaId: string;
+            orgId: string;
             revocable: boolean;
         }[]
     }> {

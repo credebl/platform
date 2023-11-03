@@ -11,7 +11,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Response } from 'express';
 import { GetAllCredDefsDto } from './dto/get-all-cred-defs.dto';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { IUserRequestInterface } from './interfaces';
+import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
@@ -38,7 +38,7 @@ export class CredentialDefinitionController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getCredentialDefinitionById(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Param('credDefId') credentialDefinitionId: string,
     @Res() res: Response
   ): Promise<object> {
@@ -97,7 +97,7 @@ export class CredentialDefinitionController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getAllCredDefs(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Query() getAllCredDefs: GetAllCredDefsDto,
     @User() user: IUserRequestInterface,
     @Res() res: Response
@@ -126,7 +126,7 @@ export class CredentialDefinitionController {
   async createCredentialDefinition(
     @User() user: IUserRequestInterface,
     @Body() credDef: CreateCredentialDefinitionDto,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
 

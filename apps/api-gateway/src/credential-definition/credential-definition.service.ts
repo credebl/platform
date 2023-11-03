@@ -16,15 +16,16 @@ export class CredentialDefinitionService extends BaseService {
 
   createCredentialDefinition(credDef: CreateCredentialDefinitionDto, user: IUserRequestInterface): Promise<{ response: object }> {
     const payload = { credDef, user };
+    
     return this.sendNats(this.credDefServiceProxy, 'create-credential-definition', payload);
   }
 
-  getCredentialDefinitionById(credentialDefinitionId: string, orgId: number): Promise<{ response: object }> {
+  getCredentialDefinitionById(credentialDefinitionId: string, orgId: string): Promise<{ response: object }> {
     const payload = { credentialDefinitionId, orgId };
     return this.sendNats(this.credDefServiceProxy, 'get-credential-definition-by-id', payload);
   }
 
-  getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, user: IUserRequestInterface, orgId: number): Promise<{ response: object }> {
+  getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, user: IUserRequestInterface, orgId: string): Promise<{ response: object }> {
     const payload = { credDefSearchCriteria, user, orgId };
     return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions', payload);
   }

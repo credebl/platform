@@ -26,7 +26,7 @@ async function bootstrap(): Promise<void> {
     walletName: process.env.PLATFORM_WALLET_NAME,
     walletPassword: process.env.PLATFORM_WALLET_PASSWORD,
     seed: process.env.PLATFORM_SEED,
-    orgId: parseInt(process.env.PLATFORM_ID),
+    orgId: `${process.env.PLATFORM_ID}`,
     tenant: true,
     ledgerId: [1, 2, 3, 4]
   };

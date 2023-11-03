@@ -8,11 +8,12 @@ datasource db {
 }
 
 model user {
-  id                  Int               @id(map: "PK_cace4a159ff9f2512dd42373760") @default(autoincrement())
+  // id                  Int               @id(map: "PK_cace4a159ff9f2512dd42373760") @default(autoincrement())
+  id                  String                  @id(map: "PK_cace4a159ff9f2512dd42373760") @default(uuid())
   createDateTime      DateTime          @default(now()) @db.Timestamptz(6)
-  createdBy           Int               @default(1)
+  createdBy           String               @default("1")
   lastChangedDateTime DateTime          @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int               @default(1)
+  lastChangedBy       String               @default("1")
   firstName           String?           @db.VarChar(500)
   lastName            String?           @db.VarChar(500)
   email               String?           @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar(500)
@@ -34,48 +35,49 @@ model user {
 }
 
 model user_activity {
-  id                  Int          @id @default(autoincrement())
-  userId              Int
-  orgId               Int
+  id                  String                  @id @default(uuid())
+  userId              String
+  orgId               String
   action              String
   details             String
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           Int          @default(1)
+  createdBy           String          @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int          @default(1)
+  lastChangedBy       String          @default("1")
   deletedAt           DateTime?    @db.Timestamp(6)
   organisation        organisation @relation(fields: [orgId], references: [id])
   user                user         @relation(fields: [userId], references: [id])
 }
 
 model org_roles {
-  id                  Int              @id @default(autoincrement())
+   id                   String                  @id @default(uuid())
   name                String           @unique
   description         String
   createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
-  createdBy           Int              @default(1)
+  createdBy           String             @default("1")
   lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int              @default(1)
+  lastChangedBy       String              @default("1")
   deletedAt           DateTime?        @db.Timestamp(6)
   userOrgRoles        user_org_roles[]
 }
 
 model user_org_roles {
-  id           Int           @id @default(autoincrement())
-  userId       Int
-  orgRoleId    Int
-  orgId        Int?
+  id                   String                  @id @default(uuid())
+
+  userId       String
+  orgRoleId    String
+  orgId        String?
   organisation organisation? @relation(fields: [orgId], references: [id])
   orgRole      org_roles     @relation(fields: [orgRoleId], references: [id])
   user         user          @relation(fields: [userId], references: [id])
 }
 
 model organisation {
-  id                  Int               @id @default(autoincrement())
+  id                   String                  @id @default(uuid())
   createDateTime      DateTime          @default(now()) @db.Timestamptz(6)
-  createdBy           Int               @default(1)
+  createdBy           String              @default("1")
   lastChangedDateTime DateTime          @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int               @default(1)
+  lastChangedBy       String               @default("1")
   name                String?           @db.VarChar(500)
   description         String?           @db.VarChar(500)
   orgSlug             String?           @unique
@@ -93,38 +95,39 @@ model organisation {
 }
 
 model org_invitations {
-  id                  Int          @id @default(autoincrement())
+  id                   String                  @id @default(uuid())
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           Int          @default(1)
+  createdBy           String        @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int          @default(1)
+  lastChangedBy       String           @default("1")
   deletedAt           DateTime?    @db.Timestamp(6)
-  userId              Int
-  orgId               Int
+  userId              String
+  orgId               String
   status              String
-  orgRoles            Int[]
+  orgRoles            String[]
   email               String?
   organisation        organisation @relation(fields: [orgId], references: [id])
   user                user         @relation(fields: [userId], references: [id])
 }
 
 model user_devices {
-  id                  Int       @id(map: "PK_c9e7e648903a9e537347aba4371") @default(autoincrement())
+  // id                  Int       @id(map: "PK_c9e7e648903a9e537347aba4371") @default(autoincrement())
+    id                   String                  @id(map: "PK_c9e7e648903a9e537347aba4371") @default(uuid())
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           Int       @default(1)
+  createdBy           String        @default("1")
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int       @default(1)
+  lastChangedBy       String        @default("1")
   devices             Json?     @default("[]")
   credentialId        String?   @unique(map: "UQ_7c903f5e362fe8fd3d3edba17b5") @db.VarChar
   deviceFriendlyName  String?   @db.VarChar
-  userId              Int?
+  userId              String?
   deletedAt           DateTime? @db.Timestamp(6)
   authCounter         Int       @default(0)
   user                user?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_e12ac4f8016243ac71fd2e415af")
 }
 
 model platform_config {
-  id                  Int       @id @default(autoincrement())
+   id                   String                  @id @default(uuid())
   externalIp          String    @db.VarChar
   lastInternalId      String    @db.VarChar
   username            String    @db.VarChar
@@ -133,32 +136,33 @@ model platform_config {
   apiEndpoint         String    @db.VarChar
   tailsFileServer     String    @db.VarChar
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           Int       @default(1)
+  createdBy           String      @default("1")
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int       @default(1)
+  lastChangedBy       String       @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
 }
 
 model org_agents {
-  id                  Int                 @unique @default(autoincrement())
+  // id                  Int                 @unique @default(autoincrement())
+    id                   String                  @id @default(uuid())
   createDateTime      DateTime            @default(now()) @db.Timestamptz(6)
-  createdBy           Int                 @default(1)
+  createdBy           String                 @default("1")
   lastChangedDateTime DateTime            @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int                 @default(1)
+  lastChangedBy       String               @default("1")
   orgDid              String              @db.VarChar
   verkey              String              @db.VarChar
   agentEndPoint       String              @db.VarChar
-  agentId             Int?
+  agentId             String?
   isDidPublic         Boolean
   agentSpinUpStatus   Int
   agentOptions        Bytes?
   walletName          String?             @db.VarChar
   tenantId            String?
   apiKey              String?
-  agentsTypeId        Int
-  orgId               Int
-  orgAgentTypeId      Int
-  ledgerId            Int?
+  agentsTypeId        String
+  orgId               String
+  orgAgentTypeId      String
+  ledgerId            String?
   agent_invitations   agent_invitations[]
   agents              agents?             @relation(fields: [agentId], references: [id])
   agents_type         agents_type         @relation(fields: [agentsTypeId], references: [id])
@@ -168,31 +172,31 @@ model org_agents {
 }
 
 model org_agents_type {
-  id                  Int          @id @default(autoincrement())
+   id                   String                  @id @default(uuid())
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           Int          @default(1)
+  createdBy           String         @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int          @default(1)
+  lastChangedBy       String          @default("1")
   agent               String       @db.VarChar(500)
   org_agents          org_agents[]
 }
 
 model agents_type {
-  id                  Int          @id @default(autoincrement())
+   id                   String                  @id @default(uuid())
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           Int          @default(1)
+  createdBy           String          @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int          @default(1)
+  lastChangedBy       String          @default("1")
   agent               String       @db.VarChar(500)
   org_agents          org_agents[]
 }
 
 model ledgers {
-  id                  Int          @unique @default(autoincrement())
+ id                   String                  @id @default(uuid())
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           Int          @default(1)
+  createdBy           String          @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int          @default(1)
+  lastChangedBy       String          @default("1")
   name                String       @db.VarChar
   networkType         String       @db.VarChar
   poolConfig          String       @db.VarChar
@@ -205,43 +209,45 @@ model ledgers {
 }
 
 model agents {
-  id                  Int          @unique @default(autoincrement())
+ id                   String                  @id @default(uuid())
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           Int          @default(1)
+  createdBy           String       @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int          @default(1)
+  lastChangedBy       String          @default("1")
   name                String
   org_agents          org_agents[]
 }
 
 model schema {
-  id                  Int          @id(map: "PK_c9e7e648903a9e537347aba4372") @default(autoincrement())
+  // id                  Int          @id(map: "PK_c9e7e648903a9e537347aba4372") @default(autoincrement())
+  id                   String                  @id(map: "PK_c9e7e648903a9e537347aba4372") @default(uuid())
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           Int          @default(1)
+  createdBy           String        @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int          @default(1)
+  lastChangedBy       String        @default("1")
   name                String       @db.VarChar
   version             String       @db.VarChar
   attributes          String
   schemaLedgerId      String       @db.VarChar
   publisherDid        String       @db.VarChar
-  ledgerId            Int          @default(1)
+  ledgerId            String        @default("1")
   issuerId            String       @db.VarChar
-  orgId               Int
+  orgId               String
   organisation        organisation @relation(fields: [orgId], references: [id])
 }
 
 model credential_definition {
-  id                     Int      @id(map: "PK_c9e7e648903a9e537347aba4373") @default(autoincrement())
+  // id                     Int      @id(map: "PK_c9e7e648903a9e537347aba4373") @default(autoincrement())
+  id                   String                  @id(map: "PK_c9e7e648903a9e537347aba4373") @default(uuid())
   createDateTime         DateTime @default(now()) @db.Timestamptz(6)
-  createdBy              Int      @default(1)
+  createdBy              String     @default("1")
   lastChangedDateTime    DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedBy          Int      @default(1)
+  lastChangedBy          String      @default("1")
   credentialDefinitionId String   @db.VarChar
   tag                    String   @db.VarChar
   schemaLedgerId         String   @db.VarChar
-  schemaId               Int      @default(1)
-  orgId                  Int      @default(1)
+  schemaId               String      @default("1")
+  orgId                  String     @default("1")
   revocable              Boolean  @default(false)
 }
 
@@ -253,9 +259,10 @@ model shortening_url {
 }
 
 model agent_invitations {
-  id                   Int        @unique @default(autoincrement())
-  orgId                Int        @default(1)
-  agentId              Int        @default(1)
+  // id                   Int        @unique @default(autoincrement())
+  id                   String                  @id @default(uuid())
+  orgId                String       @default("1")
+  agentId              String        @default("1")
   connectionInvitation String
   multiUse             Boolean
   createDateTime       DateTime   @default(now()) @db.Timestamptz(6)
@@ -266,46 +273,48 @@ model agent_invitations {
 }
 
 model connections {
-  id                   Int          @id @default(autoincrement())
+  // id                   Int          @id @default(autoincrement())
+  id                   String                  @id @default(uuid())
   createDateTime       DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy            Int          @default(1)
+  createdBy            String          @default("1")
   lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy        Int          @default(1)
+  lastChangedBy        String          @default("1")
   connectionId         String       @unique
   state                String
   orgDid               String
   theirLabel           String
   autoAcceptConnection Boolean
   outOfBandId          String
-  orgId                Int
+  orgId                String
   organisation         organisation @relation(fields: [orgId], references: [id])
 }
 
 model credentials {
-  id                   Int          @id @default(autoincrement())
+  // id                   Int          @id @default(autoincrement())
+  id                   String                  @id @default(uuid())
   createDateTime       DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy            Int          @default(1)
+  createdBy            String          @default("1")
   lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy        Int          @default(1)
+  lastChangedBy        String         @default("1")
   connectionId         String       @unique
   threadId             String
   protocolVersion      String
   credentialAttributes Json[]
-  orgId                Int
+  orgId                String
   organisation         organisation @relation(fields: [orgId], references: [id])
 }
 
 model presentations {
-  id                  Int          @unique @default(autoincrement())
+  id                   String                  @id @default(uuid())
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           Int          @default(1)
+  createdBy           String          @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int          @default(1)
+  lastChangedBy       String         @default("1")
   connectionId        String       @unique
   state               String?
   threadId            String?
   isVerified          Boolean?
-  orgId               Int
+  orgId               String
   organisation        organisation @relation(fields: [orgId], references: [id])
 }
 
@@ -314,9 +323,9 @@ model ecosystem_roles {
   name                String           @unique
   description         String
   createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
-  createdBy           Int              @default(1)
+  createdBy           String              @default("1")
   lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int              @default(1)
+  lastChangedBy       String             @default("1")
   deletedAt           DateTime?        @db.Timestamp(6)
   ecosystemOrgs       ecosystem_orgs[]
 }
@@ -327,9 +336,9 @@ model ecosystem {
   description          String
   tags                 String
   createDateTime       DateTime                @default(now()) @db.Timestamptz(6)
-  createdBy            Int                     @default(1)
+  createdBy            String                     @default("1")
   lastChangedDateTime  DateTime                @default(now()) @db.Timestamptz(6)
-  lastChangedBy        Int                     @default(1)
+  lastChangedBy       String                   @default("1")
   deletedAt            DateTime?               @db.Timestamp(6)
   logoUrl              String?
   autoEndorsement      Boolean                 @default(false)
@@ -346,9 +355,9 @@ model ecosystem_invitations {
   userId              String
   orgId               String
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           Int       @default(1)
+  createdBy           String      @default("1")
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int       @default(1)
+  lastChangedBy       String      @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
   ecosystem           ecosystem @relation(fields: [ecosystemId], references: [id])
 }
@@ -358,9 +367,9 @@ model ecosystem_users {
   userId              String
   ecosystemId         String
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           Int       @default(1)
+  createdBy           String       @default("1")
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int       @default(1)
+  lastChangedBy       String      @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
   ecosystem           ecosystem @relation(fields: [ecosystemId], references: [id])
 }
@@ -392,9 +401,9 @@ model endorsement_transaction {
   responsePayload     String
   type                String?
   createDateTime      DateTime       @default(now()) @db.Timestamptz(6)
-  createdBy           Int            @default(1)
+  createdBy           String           @default("1")
   lastChangedDateTime DateTime       @default(now()) @db.Timestamptz(6)
-  lastChangedBy       Int            @default(1)
+  lastChangedBy       String            @default("1")
   deletedAt           DateTime?      @db.Timestamp(6)
   status              String
   ecosystemOrgId      String

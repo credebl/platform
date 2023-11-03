@@ -10,7 +10,7 @@ interface IProofRequestAttribute {
 }
 
 export interface IRequestProof {
-    orgId: number;
+    orgId: string;
     connectionId?: string;
     attributes: IProofRequestAttribute[];
     comment: string;
@@ -41,7 +41,7 @@ export interface ProofFormDataPayload {
 
 export interface ProofFormData {
     id: string;
-    orgId: number; 
+    orgId: string; 
     user: IUserRequest;
 }
 

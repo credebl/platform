@@ -15,7 +15,7 @@ export class VerificationController {
    * @returns Get all proof presentation
    */
   @MessagePattern({ cmd: 'get-proof-presentations' })
-  async getProofPresentations(payload: { user: IUserRequest, threadId: string, orgId: number }): Promise<string> {
+  async getProofPresentations(payload: { user: IUserRequest, threadId: string, orgId: string }): Promise<string> {
     return this.verificationService.getProofPresentations(payload.orgId, payload.threadId);
   }
 
@@ -25,7 +25,7 @@ export class VerificationController {
    * @returns Get proof presentation details
    */
   @MessagePattern({ cmd: 'get-proof-presentations-by-id' })
-  async getProofPresentationById(payload: { id: string, orgId: number, user: IUserRequest }): Promise<string> {
+  async getProofPresentationById(payload: { id: string, orgId: string, user: IUserRequest }): Promise<string> {
     return this.verificationService.getProofPresentationById(payload.id, payload.orgId);
   }
 
@@ -45,7 +45,7 @@ export class VerificationController {
    * @returns Get verified proof presentation details
    */
   @MessagePattern({ cmd: 'verify-presentation' })
-  async verifyPresentation(payload: { id: string, orgId: number, user: IUserRequest }): Promise<string> {
+  async verifyPresentation(payload: { id: string, orgId: string, user: IUserRequest }): Promise<string> {
     return this.verificationService.verifyPresentation(payload.id, payload.orgId);
   }
 
@@ -61,7 +61,9 @@ export class VerificationController {
 
   @MessagePattern({ cmd: 'proof-form-data' })
   async getProofFormData(payload: ProofFormData): Promise<object> {
+  
     const { id, orgId } = payload;
+   
     return this.verificationService.getProofFormData(id, orgId);
   }
 }

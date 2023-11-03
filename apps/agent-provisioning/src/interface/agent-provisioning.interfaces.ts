@@ -42,7 +42,7 @@ export interface IAgentSpinUp {
 
 export interface IStartStopAgent {
     action: string;
-    orgId: number;
+    orgId: string;
     orgName: string;
 }
 

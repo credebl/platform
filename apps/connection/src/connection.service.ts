@@ -41,10 +41,11 @@ export class ConnectionService {
    * @returns Connection legacy invitation URL
    */
   async createLegacyConnectionInvitation(
-    orgId: number, user: IUserRequestInterface, multiUseInvitation: boolean, autoAcceptConnection: boolean, alias: string, imageUrl: string, label: string
+    orgId: string, user: IUserRequestInterface, multiUseInvitation: boolean, autoAcceptConnection: boolean, alias: string, imageUrl: string, label: string
   ): Promise<object> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+    
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id } = agentDetails;
       const agentId = id;
@@ -65,6 +66,7 @@ export class ConnectionService {
       const apiKey = platformConfig?.sgApiKey;
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
+      
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
 
       let shortenedUrl;
@@ -75,6 +77,7 @@ export class ConnectionService {
       }
 
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(shortenedUrl, agentId, orgId);
+      
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
@@ -90,7 +93,7 @@ export class ConnectionService {
    * @returns Connection legacy invitation URL
    */
   async getConnectionWebhook(
-    createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: number
+    createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: string
   ): Promise<object> {
     try {
       const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(createDateTime, lastChangedDateTime, connectionId, state, orgDid, theirLabel, autoAcceptConnection, outOfBandId, orgId);
@@ -111,7 +114,7 @@ export class ConnectionService {
   async _createConnectionInvitation(connectionPayload: object, url: string, apiKey: string): Promise<ConnectionInvitationResponse> {
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
     const payload = { connectionPayload, url, apiKey };
-
+    
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
@@ -165,7 +168,7 @@ export class ConnectionService {
  *  
  * @returns get all connections details
  */
-  async getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: number): Promise<string> {
+  async getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<string> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
@@ -241,7 +244,7 @@ export class ConnectionService {
     }
   }
 
-  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: number): Promise<string> {
+  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<string> {
     try {
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
@@ -306,7 +309,7 @@ export class ConnectionService {
   * @returns agent URL
   */
   async getAgentUrl(
-    orgAgentTypeId: number,
+    orgAgentTypeId: string,
     agentEndPoint: string,
     tenantId?: string
   ): Promise<string> {

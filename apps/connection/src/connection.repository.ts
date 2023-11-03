@@ -16,7 +16,7 @@ export class ConnectionRepository {
      * @returns Get getAgentEndPoint details
      */
     // eslint-disable-next-line camelcase
-    async getAgentEndPoint(orgId: number): Promise<org_agents> {
+    async getAgentEndPoint(orgId: string): Promise<org_agents> {
         try {
 
             const agentDetails = await this.prisma.org_agents.findFirst({
@@ -40,12 +40,12 @@ export class ConnectionRepository {
        * @returns Get connection details
        */
     // eslint-disable-next-line camelcase
-    async saveAgentConnectionInvitations(connectionInvitation: string, agentId: number, orgId: number): Promise<agent_invitations> {
+    async saveAgentConnectionInvitations(connectionInvitation: string, agentId: string, orgId: string): Promise<agent_invitations> {
         try {
 
             const agentDetails = await this.prisma.agent_invitations.create({
                 data: {
-                    orgId,
+                    orgId:String(orgId),
                     agentId,
                     connectionInvitation,
                     multiUse: true
@@ -67,7 +67,7 @@ export class ConnectionRepository {
     * @returns Get connection details
     */
     // eslint-disable-next-line camelcase
-    async saveConnectionWebhook(createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: number): Promise<connections> {
+    async saveConnectionWebhook(createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: string): Promise<connections> {
         try {
             const agentDetails = await this.prisma.connections.upsert({
                 where: {

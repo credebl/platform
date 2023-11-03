@@ -25,9 +25,9 @@
     "website": ""
   },
   "userOrgRoleData": {
-    "userId": 1,
-    "orgRoleId": 1,
-    "orgId": 1
+    "userId": "1",
+    "orgRoleId": "1",
+    "orgId": "1"
   },
   "orgRoleData": [
     {

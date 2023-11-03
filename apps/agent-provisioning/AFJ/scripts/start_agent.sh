@@ -15,22 +15,76 @@ PROTOCOL=${12}
 TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
-ADMIN_PORT=$((8000 + $AGENCY))
-INBOUND_PORT=$((9000 + $AGENCY))
-CONTROLLER_PORT=$((3000 + $AGENCY))
-POSTGRES_PORT=$((5432 + $AGENCY))
+
+echo "-----$AGENCY-----"
+echo "-----$EXTERNAL_IP-----"
+echo "-----$WALLET_NAME-----"
+echo "-----$WALLET_PASSWORD-----"
+echo "-----$RANDOM_SEED-----"
+echo "-----$WEBHOOK_HOST-----"
+echo "-----$WALLET_STORAGE_HOST-----"
+echo "-----$WALLET_STORAGE_PORT-----"
+echo "-----$WALLET_STORAGE_USER-----"
+echo "-----$WALLET_STORAGE_PASSWORD-----"
+echo "-----$CONTAINER_NAME-----"
+echo "-----$PROTOCOL-----"
+echo "-----$TENANT-----"
+echo "-----$AFJ_VERSION-----"
+echo "-----$INDY_LEDGER-----"
+
 NETWORK_NAME="credebl-network"
+ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
+INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
+ADMIN_PORT=8001
+INBOUND_PORT=9001
+
+increment_port() {
+    local port="$1"
+    local lower_limit="$2"
+
+    while [ "$port" -le "$lower_limit" ]; do
+        port=$((port + 1))  # Increment the port using arithmetic expansion
+    done
+
+    echo "$port"
+}
+
+# Check if admin port file exists and if not, create and initialize it
+if [ ! -e "$ADMIN_PORT_FILE" ]; then
+    echo "$ADMIN_PORT" > "$ADMIN_PORT_FILE"
+fi
+
+# Read the last used admin port number from the file
+last_used_admin_port=$(cat "$ADMIN_PORT_FILE")
+echo "Last used admin port: $last_used_admin_port"
+
+# Increment the admin port number starting from the last used port
+last_used_admin_port=$(increment_port "$last_used_admin_port" "$last_used_admin_port")
+
+# Save the updated admin port number back to the file and update the global variable
+echo "$last_used_admin_port" > "$ADMIN_PORT_FILE"
+ADMIN_PORT="$last_used_admin_port"
+
+# Check if inbound port file exists and if not, create and initialize it
+if [ ! -e "$INBOUND_PORT_FILE" ]; then
+    echo "$INBOUND_PORT" > "$INBOUND_PORT_FILE"
+fi
+
+# Read the last used inbound port number from the file
+last_used_inbound_port=$(cat "$INBOUND_PORT_FILE")
+echo "Last used inbound port: $last_used_inbound_port"
+
+# Increment the inbound port number starting from the last used port
+last_used_inbound_port=$(increment_port "$last_used_inbound_port" "$last_used_inbound_port")
+
+# Save the updated inbound port number back to the file and update the global variable
+echo "$last_used_inbound_port" > "$INBOUND_PORT_FILE"
+INBOUND_PORT="$last_used_inbound_port"
+
+echo "Last used admin port: $ADMIN_PORT"
+echo "Last used inbound port: $INBOUND_PORT"
 
 echo "AGENT SPIN-UP STARTED"
-if [ ${AGENCY} -eq 1 ]; then
-  echo "CREATING DOCKER NETWORK"
-  docker network create --driver bridge --subnet 10.20.0.0/16 --gateway 10.20.0.1 credebl-network
-  [ $? != 0 ] && error "Failed to create docker network !" && exit 102
-  echo "CREATED DOCKER NETWORK. SETTING UP INITIAL IPs"
-  INTERNAL_IP=10.20.0.2
-  POSTGRES_IP=10.20.0.3
-  CONTROLLER_IP=10.20.0.4
-fi
 
 if [ -d "${PWD}/apps/agent-provisioning/AFJ/endpoints" ]; then
   echo "Endpoints directory exists."

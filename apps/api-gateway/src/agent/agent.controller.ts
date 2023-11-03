@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable no-param-reassign */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -180,12 +181,12 @@ export class AgentController {
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   registerNym(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @GetUser() user: IUserRequestInterface
   ): Promise<object> {
     this.logger.log(`user: ${typeof user.orgId} == id: ${typeof Number(id)}`);
 
-    if (user.orgId !== Number(id)) {
+    if (user.orgId !== id) {
       return this.agentService.registerNym(id, user);
     } else {
       this.logger.error(`Cannot register nym of requested organization.`);
@@ -205,7 +206,7 @@ export class AgentController {
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   @ApiParam({ name: 'action', enum: AgentActions })
-  restartStopAgent(@Param('orgId') orgId: number, @Param('action') action: string): Promise<object> {
+  restartStopAgent(@Param('orgId') orgId: string, @Param('action') action: string): Promise<object> {
     return this.agentService.restartStopAgent(action, orgId);
   }
 

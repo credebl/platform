@@ -29,7 +29,7 @@ export class AgentServiceRepository {
      * @param id 
      * @returns 
      */
-    async getGenesisUrl(ledgerId: number[]): Promise<ledgers[]> {
+    async getGenesisUrl(ledgerId: string[]): Promise<ledgers[]> {
         try {
 
             const genesisData = await this.prisma.ledgers.findMany({
@@ -51,7 +51,7 @@ export class AgentServiceRepository {
      * @param id 
      * @returns 
      */
-    async getOrgDetails(id: number): Promise<organisation> {
+    async getOrgDetails(id: string): Promise<organisation> {
         try {
 
             const oranizationDetails = await this.prisma.organisation.findFirst({
@@ -103,21 +103,25 @@ export class AgentServiceRepository {
      * @returns 
      */
     // eslint-disable-next-line camelcase
-    async getAgentDetails(orgId: number): Promise<org_agents> {
+    async getAgentDetails(orgId: string): Promise<org_agents> {
         try {
 
-            return this.prisma.org_agents.findFirst({
+          const x =   await this.prisma.org_agents.findFirst({
                 where: {
                     orgId
                 }
             });
+           
+            return x;
+           
         } catch (error) {
+          
             this.logger.error(`[getAgentDetails] - get agent details: ${JSON.stringify(error)}`);
             throw new InternalServerErrorException(error);
         }
     }
 
-    async platformAdminAgent(platformId: number): Promise<organisation & {
+    async platformAdminAgent(platformId: string): Promise<organisation & {
         // eslint-disable-next-line camelcase
         org_agents: org_agents[];
     }> {
@@ -143,7 +147,7 @@ export class AgentServiceRepository {
     * @returns Agent health details
     */
     // eslint-disable-next-line camelcase
-    async getOrgAgentDetails(orgId: number): Promise<org_agents> {
+    async getOrgAgentDetails(orgId: string): Promise<org_agents> {
         try {
             const oranizationAgentDetails = await this.prisma.org_agents.findFirst({
                 where: {

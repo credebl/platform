@@ -6,8 +6,8 @@ export interface IAgentSpinupDto {
     walletName: string;
     walletPassword: string;
     seed: string;
-    orgId: number;
-    ledgerId?: number[];
+    orgId: string;
+    ledgerId?: string[];
     agentType?: AgentType;
     transactionApproval?: boolean;
     clientSocketId?: string
@@ -17,9 +17,9 @@ export interface IAgentSpinupDto {
 export interface ITenantDto {
     label: string;
     seed: string;
-    ledgerId?: number[];
+    ledgerId?: string[];
     method: string;
-    orgId: number;
+    orgId: string;
     tenantId?: string;
     clientSocketId?: string;
 }
@@ -32,7 +32,7 @@ export interface ITenantSchema {
     issuerId?: string;
     payload?: ITenantSchemaDto;
     method?: string;
-    agentType?: number;
+    agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
 }
@@ -50,7 +50,7 @@ export interface GetSchemaAgentRedirection {
     payload?: GetSchemaFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
-    agentType?: number;
+    agentType?: string;
     method?: string;
 }
 
@@ -65,7 +65,7 @@ export interface ITenantCredDef {
     issuerId?: string;
     payload?: ITenantCredDef;
     method?: string;
-    agentType?: number;
+    agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
 }
@@ -82,7 +82,7 @@ export interface GetCredDefAgentRedirection {
     payload?: GetCredDefFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
-    agentType?: number;
+    agentType?: string;
     method?: string;
 }
 
@@ -133,11 +133,11 @@ export interface IStoreOrgAgentDetails {
     agentSpinUpStatus?: number;
     walletName?: string;
     agentsTypeId?: AgentType;
-    orgId?: number;
-    agentId?: number;
+    orgId?: string;
+    agentId?: string;
     orgAgentTypeId?: OrgAgentType;
     tenantId?: string;
-    ledgerId?: number[];
+    ledgerId?: string[];
 }
 
 
@@ -147,24 +147,24 @@ export interface IConnectionDetails {
 }
 
 export interface IUserRequestInterface {
-    userId: number;
+    userId: string;
     email: string;
-    orgId: number;
+    orgId: string;
     agentEndPoint?: string;
     apiKey?: string;
-    tenantId?: number;
+    tenantId?: string;
     tenantName?: string;
-    tenantOrgId?: number;
+    tenantOrgId?: string;
     userRoleOrgPermissions?: UserRoleOrgPermsDto[];
     orgName?: string;
     selectedOrg: ISelectedOrgInterface;
 }
 
 export interface ISelectedOrgInterface {
-    id: number;
-    userId: number;
-    orgRoleId: number;
-    orgId: number;
+    id: string;
+    userId: string;
+    orgRoleId: string;
+    orgId: string;
     orgRole: object;
     organisation: IOrganizationInterface;
 }
@@ -193,7 +193,7 @@ export interface ITenantCredDef {
     issuerId?: string;
     payload?: ITenantCredDef;
     method?: string;
-    agentType?: number;
+    agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
 }
@@ -210,7 +210,7 @@ export interface GetCredDefAgentRedirection {
     payload?: GetCredDefFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
-    agentType?: number;
+    agentType?: string;
     method?: string;
 }
 

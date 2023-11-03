@@ -53,9 +53,9 @@ export class VerificationController {
         @Res() res: Response,
         @GetUser() user: IUserRequest,
         @Param('proofId') id: string,
-        @Param('orgId') orgId: number
-    ): Promise<object> {
-        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);
+        @Param('orgId') orgId: string
+    ): Promise<object> { 
+        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);      
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.proofFormData,
@@ -85,7 +85,7 @@ export class VerificationController {
         @Res() res: Response,
         @GetUser() user: IUserRequest,
         @Param('proofId') id: string,
-        @Param('orgId') orgId: number
+        @Param('orgId') orgId: string
     ): Promise<object> {
         const getProofPresentationById = await this.verificationService.getProofPresentationById(id, orgId, user);
         const finalResponse: IResponseType = {
@@ -118,7 +118,7 @@ export class VerificationController {
     async getProofPresentations(
         @Res() res: Response,
         @GetUser() user: IUserRequest,
-        @Param('orgId') orgId: number,
+        @Param('orgId') orgId: string,
         @Query('threadId') threadId: string
     ): Promise<object> {
         const proofPresentationDetails = await this.verificationService.getProofPresentations(orgId, threadId, user);
@@ -150,7 +150,7 @@ export class VerificationController {
     async sendPresentationRequest(
         @Res() res: Response,
         @GetUser() user: IUserRequest,
-        @Param('orgId') orgId: number,
+        @Param('orgId') orgId: string,
         @Body() requestProof: RequestProof
     ): Promise<object> {
 
@@ -189,7 +189,7 @@ export class VerificationController {
         @Res() res: Response,
         @GetUser() user: IUserRequest,
         @Param('proofId') id: string,
-        @Param('orgId') orgId: number
+        @Param('orgId') orgId: string
     ): Promise<object> {
         const verifyPresentation = await this.verificationService.verifyPresentation(id, orgId, user);
         const finalResponse: IResponseType = {
@@ -221,7 +221,7 @@ export class VerificationController {
         @Res() res: Response,
         @GetUser() user: IUserRequest,
         @Body() outOfBandRequestProof: OutOfBandRequestProof,
-        @Param('orgId') orgId: number
+        @Param('orgId') orgId: string
     ): Promise<object> {
 
         for (const attrData of outOfBandRequestProof.attributes) {

@@ -4,8 +4,8 @@ export enum SortValue {
 }
 
 export enum AgentType {
-    AFJ = 1,
-    ACAPY = 2
+    AFJ = '1',
+    ACAPY = '2'
 }
 export enum Invitation {
     ACCEPTED = 'accepted',
@@ -25,6 +25,6 @@ export enum EndorserTransactionType{
 }
 
 export enum OrgAgentType {
-    DEDICATED = 1,
-    SHARED = 2
+    DEDICATED = `1`,
+    SHARED = `2`
 }

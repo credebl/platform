@@ -68,18 +68,18 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemas(payload: ISchemaSearchCriteria, orgId: number): Promise<{
+  async getSchemas(payload: ISchemaSearchCriteria, orgId: string): Promise<{
     schemasCount: number;
     schemasResult: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       version: string;
       attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
       issuerId: string;
-      orgId: number;
+      orgId: string;
     }[];
   }> {
     try {
@@ -124,7 +124,7 @@ export class SchemaRepository {
     }
   }
 
-  async getAgentDetailsByOrgId(orgId: number): Promise<{
+  async getAgentDetailsByOrgId(orgId: string): Promise<{
     orgDid: string;
     agentEndPoint: string;
     tenantId: string
@@ -147,7 +147,7 @@ export class SchemaRepository {
     }
   }
 
-  async getAgentType(orgId: number): Promise<organisation & {
+  async getAgentType(orgId: string): Promise<organisation & {
     org_agents: (org_agents & {
       org_agent_type: org_agents_type;
     })[];
@@ -172,7 +172,7 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: number, schemaId: string): Promise<{
+  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: string, schemaId: string): Promise<{
     tag: string;
     credentialDefinitionId: string;
     schemaLedgerId: string;
@@ -207,14 +207,14 @@ export class SchemaRepository {
     schemasCount: number;
     schemasResult: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       version: string;
       attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
       issuerId: string;
-      orgId: number;
+      orgId: string;
     }[];
   }> {
     try {

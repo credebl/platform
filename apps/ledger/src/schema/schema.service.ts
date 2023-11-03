@@ -29,7 +29,7 @@ export class SchemaService extends BaseService {
   async createSchema(
     schema: ISchemaPayload,
     user: IUserRequestInterface,
-    orgId: number
+    orgId: string
   ): Promise<schema> {
     const apiKey = '';
     const { userId } = user.selectedOrg;
@@ -80,7 +80,7 @@ export class SchemaService extends BaseService {
 
           const attributeArray = schema.attributes.map(item => item.attributeName);
           let schemaResponseFromAgentService;
-          if (1 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+          if (`1` === getAgentDetails.org_agents[0].orgAgentTypeId) {
             const issuerId = did;
 
             const schemaPayload = {
@@ -90,11 +90,11 @@ export class SchemaService extends BaseService {
               issuerId,
               agentEndPoint,
               apiKey,
-              agentType: 1
+              agentType: `1`
             };
             schemaResponseFromAgentService = await this._createSchema(schemaPayload);
 
-          } else if (2 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+          } else if (`2` === getAgentDetails.org_agents[0].orgAgentTypeId) {
             const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
 
             const schemaPayload = {
@@ -108,7 +108,7 @@ export class SchemaService extends BaseService {
               },
               agentEndPoint,
               apiKey,
-              agentType: 2
+              agentType: `2`
             };
             schemaResponseFromAgentService = await this._createSchema(schemaPayload);
           }
@@ -117,11 +117,11 @@ export class SchemaService extends BaseService {
 
           const schemaDetails: ISchema = {
             schema: { schemaName: '', attributes: [], schemaVersion: '', id: '' },
-            createdBy: 0,
+            createdBy: `0`,
             issuerId: '',
             onLedgerStatus: 'Submitted on ledger',
             orgId,
-            ledgerId: 0
+            ledgerId: "0"
           };
 
           if ('finished' === responseObj.schema.state) {
@@ -131,7 +131,7 @@ export class SchemaService extends BaseService {
             schemaDetails.createdBy = userId;
             schemaDetails.schema.id = responseObj.schema.schemaId;
             schemaDetails.changedBy = userId;
-            schemaDetails.orgId = Number(orgId);
+            schemaDetails.orgId = orgId;
             schemaDetails.issuerId = responseObj.schema.schema.issuerId;
             const saveResponse = this.schemaRepository.saveSchema(
               schemaDetails
@@ -148,7 +148,7 @@ export class SchemaService extends BaseService {
             schemaDetails.createdBy = userId;
             schemaDetails.schema.id = responseObj.schemaId;
             schemaDetails.changedBy = userId;
-            schemaDetails.orgId = Number(orgId);
+            schemaDetails.orgId = orgId;
             schemaDetails.issuerId = responseObj.schema.issuerId;
             const saveResponse = this.schemaRepository.saveSchema(
               schemaDetails
@@ -215,27 +215,27 @@ export class SchemaService extends BaseService {
   }
 
 
-  async getSchemaById(schemaId: string, orgId: number): Promise<schema> {
+  async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
     try {
         const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
         const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
         const apiKey = '';
         let schemaResponse;
-        if (1 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+        if (`1` === getAgentDetails.org_agents[0].orgAgentTypeId) {
           const getSchemaPayload = {
             schemaId,
             apiKey,
             agentEndPoint,
-            agentType: 1
+            agentType: `1`
           };
           schemaResponse = await this._getSchemaById(getSchemaPayload);
-        } else if (2 === getAgentDetails.org_agents[0].orgAgentTypeId) {
+        } else if (`2` === getAgentDetails.org_agents[0].orgAgentTypeId) {
           const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
           const getSchemaPayload = {
             tenantId,
             method: 'getSchemaById',
             payload: { schemaId },
-            agentType: 2,
+            agentType: `2`,
             agentEndPoint
           };
           schemaResponse = await this._getSchemaById(getSchemaPayload);
@@ -276,7 +276,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getSchemas(schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: number): Promise<{
+  async getSchemas(schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: string): Promise<{
     totalItems: number;
     hasNextPage: boolean;
     hasPreviousPage: boolean;
@@ -285,14 +285,14 @@ export class SchemaService extends BaseService {
     lastPage: number;
     data: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       version: string;
       attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
       issuerId: string;
-      orgId: number;
+      orgId: string;
     }[];
   }> {
     try {
@@ -326,7 +326,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: number): Promise<{
+  async getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: string): Promise<{
     totalItems: number;
     hasNextPage: boolean;
     hasPreviousPage: boolean;
@@ -374,7 +374,7 @@ export class SchemaService extends BaseService {
     lastPage: number;
     data: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       schemaLedgerId: string;
       version: string;

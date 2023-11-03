@@ -42,7 +42,7 @@ export class SchemaController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
     @Res() res: Response,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Param('schemaId') schemaId: string
   ): Promise<object> {
 
@@ -87,7 +87,7 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getcredDeffListBySchemaId(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Param('schemaId') schemaId: string,
     @Query() GetCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
@@ -141,7 +141,7 @@ export class SchemaController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getSchemas(
     @Query() getAllSchemaDto: GetAllSchemaDto,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response,
     @User() user: IUserRequestInterface
   ): Promise<object> {
@@ -172,7 +172,7 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: number, @User() user: IUserRequestInterface): Promise<object> {
+  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<object> {
 
     schema.attributes.forEach((attribute) => {
       if (attribute.hasOwnProperty('attributeName') && attribute.hasOwnProperty('schemaDataType') && attribute.hasOwnProperty('displayName')) {

@@ -12,28 +12,28 @@ export class SchemaService extends BaseService {
     @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy
   ) { super(`Schema Service`); }
 
-  createSchema(schema: CreateSchemaDto, user: IUserRequestInterface, orgId: number): Promise<{
+  createSchema(schema: CreateSchemaDto, user: IUserRequestInterface, orgId: string): Promise<{
     response: object;
   }> {
     const payload = { schema, user, orgId };
     return this.sendNats(this.schemaServiceProxy, 'create-schema', payload);
   }
 
-  getSchemaById(schemaId: string, orgId: number): Promise<{
+  getSchemaById(schemaId: string, orgId: string): Promise<{
     response: object;
   }> {
     const payload = { schemaId, orgId };
     return this.sendNats(this.schemaServiceProxy, 'get-schema-by-id', payload);
   }
 
-  getSchemas(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface, orgId: number): Promise<{
+  getSchemas(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface, orgId: string): Promise<{
     response: object;
   }> {
     const schemaSearch = { schemaSearchCriteria, user, orgId };
     return this.sendNats(this.schemaServiceProxy, 'get-schemas', schemaSearch);
   }
 
-  getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ICredDeffSchemaSearchInterface, user: IUserRequestInterface, orgId: number): Promise<{
+  getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ICredDeffSchemaSearchInterface, user: IUserRequestInterface, orgId: string): Promise<{
     response: object;
   }> {
     const payload = { schemaId, schemaSearchCriteria, user, orgId };

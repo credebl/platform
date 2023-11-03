@@ -593,8 +593,7 @@ export class ClientRegistrationService {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       };
-      console.log('payload::::', payload);
-      console.log('typeof  payload.refresh_token', typeof payload.refresh_token);
+      
       const tokenResponse = await this.commonService.httpPost(
         await this.keycloakUrlService.GetSATURL('credebl-platform'),
         qs.stringify(payload)

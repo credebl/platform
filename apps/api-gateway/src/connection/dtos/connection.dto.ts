@@ -30,7 +30,7 @@ export class CreateConnectionDto {
     @IsNotEmpty({ message: 'autoAcceptConnection should boolean' })
     autoAcceptConnection: boolean;
 
-    orgId: number;
+    orgId: string;
 }
 
 

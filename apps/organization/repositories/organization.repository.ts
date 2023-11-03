@@ -75,7 +75,7 @@ export class OrganizationRepository {
     try {
       return this.prisma.organisation.update({
         where: {
-          id: Number(updateOrgDto.orgId)
+          id: String(updateOrgDto.orgId)
         },
         data: {
           name: updateOrgDto.name,
@@ -102,13 +102,16 @@ export class OrganizationRepository {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async createUserOrgRole(userOrgRoleDto): Promise<user_org_roles> {
     try {
+     
       return this.prisma.user_org_roles.create({
         data: {
           userId: userOrgRoleDto.userId,
           orgRoleId: userOrgRoleDto.orgRoleId,
           orgId: userOrgRoleDto.orgId
         }
+        
       });
+      
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -123,9 +126,9 @@ export class OrganizationRepository {
 
   async createSendInvitation(
     email: string,
-    orgId: number,
-    userId: number,
-    orgRoleId: number[]
+    orgId: string,
+    userId: string,
+    orgRoleId: string[]
   ): Promise<org_invitations> {
     try {
       return this.prisma.org_invitations.create({
@@ -149,7 +152,7 @@ export class OrganizationRepository {
    * @returns OrganizationDetails
    */
 
-  async getOrganizationDetails(orgId: number): Promise<organisation> {
+  async getOrganizationDetails(orgId:string): Promise<organisation> {
     try {
       return this.prisma.organisation.findFirst({
         where: {
@@ -230,7 +233,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getInvitationsByOrgId(orgId: number, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
     try {
       const query = {
         orgId,
@@ -276,7 +279,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgDashboard(orgId: number): Promise<object> {
+  async getOrgDashboard(orgId: string): Promise<object> {
 
     const query = {
       where: {
@@ -329,7 +332,7 @@ export class OrganizationRepository {
    * @param id
    * @returns Invitation details
    */
-  async getInvitationById(id: number): Promise<org_invitations> {
+  async getInvitationById(id: string): Promise<org_invitations> {
     try {
       return this.prisma.org_invitations.findUnique({
         where: {
@@ -351,7 +354,7 @@ export class OrganizationRepository {
    * @param data
    * @returns Updated org invitation response
    */
-  async updateOrgInvitation(id: number, data: object): Promise<object> {
+  async updateOrgInvitation(id: string, data: object): Promise<object> {
     try {
       return this.prisma.org_invitations.update({
         where: {
@@ -420,7 +423,7 @@ export class OrganizationRepository {
   * @returns Organization exist details
   */
 
-  async checkOrganizationExist(name: string, orgId: number): Promise<organisation[]> {
+  async checkOrganizationExist(name: string, orgId: string): Promise<organisation[]> {
     try {
       return this.prisma.organisation.findMany({
         where: {

@@ -11,6 +11,6 @@ export class OrgNameCheckDto {
     @ApiPropertyOptional({example:'1'})
     @IsNotEmpty({message:'Please provide valid id of organization'})
     // @IsNumberString({message:'Organization id should be number'})
-    orgId?: number;
+    orgId?: string;
 
 }

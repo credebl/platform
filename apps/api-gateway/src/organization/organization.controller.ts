@@ -131,7 +131,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
 
-  async getOrganizationDashboard(@Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async getOrganizationDashboard(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganizationDashboard(orgId, reqUser.id);
 
@@ -165,7 +165,7 @@ export class OrganizationController {
     required: false
   })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  async getInvitationsByOrgId(@Param('orgId') orgId: number, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<Response> {
+  async getInvitationsByOrgId(@Param('orgId') orgId: string, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<Response> {
 
     const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
 
@@ -220,7 +220,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  async getOrganization(@Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async getOrganization(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganization(orgId, reqUser.id);
 
@@ -261,7 +261,7 @@ export class OrganizationController {
     type: String,
     required: false
   })
-  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
     const users = await this.organizationService.getOrgUsers(orgId, getAllUsersDto);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -295,7 +295,7 @@ export class OrganizationController {
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: number, @User() user: user, @Res() res: Response): Promise<Response> {
+  async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: string, @User() user: user, @Res() res: Response): Promise<Response> {
 
     bulkInvitationDto.orgId = orgId;
     await this.organizationService.createInvitation(bulkInvitationDto, user.id, user.email);
@@ -315,7 +315,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Update user roles', description: 'update user roles' })
-  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: number, @Param('userId') userId: number, @Res() res: Response): Promise<Response> {
+  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId') userId: string, @Res() res: Response): Promise<Response> {
 
     updateUserDto.orgId = orgId;
     updateUserDto.userId = userId;
@@ -335,7 +335,7 @@ export class OrganizationController {
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     updateOrgDto.orgId = orgId;
     await this.organizationService.updateOrganization(updateOrgDto, reqUser.id, orgId);

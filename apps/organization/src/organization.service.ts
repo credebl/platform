@@ -40,7 +40,7 @@ export class OrganizationService {
    */
 
   // eslint-disable-next-line camelcase
-  async createOrganization(createOrgDto: CreateOrganizationDto, userId: number): Promise<organisation> {
+  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<organisation> {
     try {
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
 
@@ -85,7 +85,7 @@ export class OrganizationService {
  */
 
   // eslint-disable-next-line camelcase
-  async updateOrganization(updateOrgDto: IUpdateOrganization, userId: number, orgId: number): Promise<organisation> {
+  async updateOrganization(updateOrgDto: IUpdateOrganization, userId: string, orgId: string): Promise<organisation> {
     try {
 
       const organizationExist = await this.organizationRepository.checkOrganizationExist(updateOrgDto.name, orgId);
@@ -115,7 +115,7 @@ export class OrganizationService {
    * @returns Get created organizations details
    */
   // eslint-disable-next-line camelcase
-  async getOrganizations(userId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
 
       const query = {
@@ -204,7 +204,7 @@ export class OrganizationService {
      * @returns Get created organization details
      */
   // eslint-disable-next-line camelcase
-  async getOrganization(orgId: number): Promise<object> {
+  async getOrganization(orgId: string): Promise<object> {
     try {
 
       const query = {
@@ -225,7 +225,7 @@ export class OrganizationService {
     * @returns Get created invitation details
     */
   // eslint-disable-next-line camelcase
-  async getInvitationsByOrgId(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
       for await (const item of getOrganization['invitations']) {
@@ -262,7 +262,7 @@ export class OrganizationService {
    */
   async checkInvitationExist(
     email: string,
-    orgId: number
+    orgId: string
   ): Promise<boolean> {
     try {
 
@@ -303,7 +303,7 @@ export class OrganizationService {
    */
 
   // eslint-disable-next-line camelcase
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number, userEmail: string): Promise<string> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, orgId } = bulkInvitationDto;
 
     try {
@@ -318,7 +318,7 @@ export class OrganizationService {
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
-          await this.organizationRepository.createSendInvitation(email, orgId, userId, orgRoleId);
+          await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
 
           const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
           try {
@@ -409,7 +409,7 @@ export class OrganizationService {
     try {
       const { orgId, status, invitationId, userId } = payload;
 
-      const invitation = await this.organizationRepository.getInvitationById(invitationId);
+      const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
       if (!invitation) {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
@@ -443,7 +443,7 @@ export class OrganizationService {
    * @param userId 
    * @returns 
    */
-  async updateUserRoles(orgId: number, roleIds: number[], userId: number): Promise<boolean> {
+  async updateUserRoles(orgId: string, roleIds: string[], userId: string): Promise<boolean> {
     try {
 
       const isUserExistForOrg = await this.userOrgRoleService.checkUserOrgExist(userId, orgId);
@@ -472,7 +472,7 @@ export class OrganizationService {
     }
   }
 
-  async getOrgDashboard(orgId: number): Promise<object> {
+  async getOrgDashboard(orgId: string): Promise<object> {
     try {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {

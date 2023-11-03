@@ -1,13 +1,13 @@
 export interface IUserOrgRoles {
-  id: number
-  userId: number
-  orgRoleId: number
-  orgId: number | null,
+  id: string
+  userId: string
+  orgRoleId: string
+  orgId: string | null,
   orgRole: OrgRole
 }
 
 export interface OrgRole {
-  id: number
+  id: string
   name: string
   description: string
 }

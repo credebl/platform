@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsInt } from 'class-validator';
+
 // export class ConnectionDto {
 //     @IsNotEmpty()
 //     @IsNumberString()
@@ -22,6 +22,6 @@ import { IsString, IsNotEmpty, IsInt } from 'class-validator';
 // }
 
 export class Org {
-    @IsInt({message:'number expected'})
-    orgId: number;
+   
+    orgId: string;
 }

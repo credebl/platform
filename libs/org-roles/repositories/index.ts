@@ -38,7 +38,7 @@ export class OrgRolesRepository {
     }
 
     // eslint-disable-next-line camelcase
-  async getOrgRolesByIds(orgRoles: number[]): Promise<object[]> {
+  async getOrgRolesByIds(orgRoles: string[]): Promise<object[]> {
         try {
             const roleDetails = await this.prisma.org_roles.findMany({
                 where: {

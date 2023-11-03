@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 // eslint-disable-next-line camelcase
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EcosystemRepository } from './ecosystem.repository';
@@ -164,7 +165,8 @@ export class EcosystemService {
    */
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, ecosystemId } = bulkInvitationDto;
-
+   
+   
     try {
       const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
 
@@ -172,10 +174,12 @@ export class EcosystemService {
         const { email } = invitation;
 
         const isUserExist = await this.checkUserExistInPlatform(email);
-
+ 
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
-        
+       
+
         if (!isInvitationExist && userEmail !== invitation.email) {
+        
           await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
           try {
             await this.sendInviteEmailTemplate(email, ecosystemDetails.name, isUserExist);
@@ -186,6 +190,7 @@ export class EcosystemService {
       }
       return ResponseMessages.ecosystem.success.createInvitation;
     } catch (error) {
+   
       this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -368,7 +373,7 @@ export class EcosystemService {
    * @param RequestSchemaEndorsement 
    * @returns 
    */
-  async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: number, ecosystemId: string): Promise<object> {
+  async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: string, ecosystemId: string): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -376,8 +381,8 @@ export class EcosystemService {
         this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version),
         this.ecosystemRepository.getAgentDetails(orgId),
         this.ecosystemRepository.getPlatformConfigDetails(),
-        this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId)),
-        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId), ecosystemId)
+        this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
+        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId))
       ]);
 
       if (0 !== schemaRequestExist.length) {
@@ -438,7 +443,7 @@ export class EcosystemService {
     }
   }
 
-  async requestCredDeffEndorsement(requestCredDefPayload: RequestCredDeffEndorsement, orgId: number, ecosystemId: string): Promise<object> {
+  async requestCredDeffEndorsement(requestCredDefPayload: RequestCredDeffEndorsement, orgId: string, ecosystemId: string): Promise<object> {
     try {
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
@@ -447,8 +452,8 @@ export class EcosystemService {
         this.ecosystemRepository.findRecordsByCredDefTag(requestCredDefPayload?.tag),
         this.ecosystemRepository.getAgentDetails(orgId),
         this.ecosystemRepository.getPlatformConfigDetails(),
-        this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId)),
-        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId), ecosystemId)
+        this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
+        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId))
       ]);
 
       if (0 !== credDefRequestExist.length) {
@@ -582,7 +587,7 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.platformConfigNotFound);
       }
 
-      const ecosystemLeadAgentDetails = await this.ecosystemRepository.getAgentDetails(Number(ecosystemLeadDetails.orgId));
+      const ecosystemLeadAgentDetails = await this.ecosystemRepository.getAgentDetails(ecosystemLeadDetails.orgId);
 
       if (!ecosystemLeadAgentDetails) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
@@ -681,14 +686,14 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async getEcosystemMemberDetails(endorsementTransactionPayload): Promise<org_agents> {
-    const orgId = Number(endorsementTransactionPayload.ecosystemOrgs.orgId);
+    const orgId =  endorsementTransactionPayload.ecosystemOrgs.orgId;
     return this.ecosystemRepository.getAgentDetails(orgId);
   }
 
   // eslint-disable-next-line camelcase
   async getEcosystemLeadAgentDetails(ecosystemId): Promise<org_agents> {
     const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
-    return this.ecosystemRepository.getAgentDetails(Number(getEcosystemLeadDetails.orgId));
+    return this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId);
   }
 
   // eslint-disable-next-line camelcase
@@ -899,7 +904,7 @@ export class EcosystemService {
 
 
   async getAgentUrl(
-    orgAgentTypeId: number,
+    orgAgentTypeId: string,
     agentEndPoint: string,
     type: string,
     tenantId?: string

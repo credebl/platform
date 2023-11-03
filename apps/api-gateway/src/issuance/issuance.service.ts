@@ -17,7 +17,9 @@ export class IssuanceService extends BaseService {
     sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<{
         response: object;
     }> {
+       
         const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, user };
+    
         return this.sendNats(this.issuanceProxy, 'send-credential-create-offer', payload);
     }
 
@@ -29,21 +31,21 @@ export class IssuanceService extends BaseService {
     }
 
 
-    getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: number): Promise<{
+    getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<{
         response: object;
     }> {
         const payload = { user, threadId, connectionId, state, orgId };
         return this.sendNats(this.issuanceProxy, 'get-all-issued-credentials', payload);
     }
 
-    getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: number): Promise<{
+    getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<{
         response: object;
     }> {
         const payload = { user, credentialRecordId, orgId };
         return this.sendNats(this.issuanceProxy, 'get-issued-credentials-by-credentialDefinitionId', payload);
     }
 
-    getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: number): Promise<{
+    getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: string): Promise<{
         response: object;
     }> {
         const payload = { createDateTime: issueCredentialDto.createdAt, connectionId: issueCredentialDto.connectionId, threadId: issueCredentialDto.threadId, protocolVersion: issueCredentialDto.protocolVersion, credentialAttributes: issueCredentialDto.credentialAttributes, orgId: id };

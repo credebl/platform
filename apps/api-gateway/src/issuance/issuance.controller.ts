@@ -91,7 +91,7 @@ export class IssuanceController {
     @Query('threadId') threadId: string,
     @Query('connectionId') connectionId: string,
     @Query('state') state: string,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
 
@@ -124,7 +124,7 @@ export class IssuanceController {
   async getIssueCredentialsbyCredentialRecordId(
     @User() user: IUserRequest,
     @Param('credentialRecordId') credentialRecordId: string,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
 
     @Res() res: Response
   ): Promise<Response> {
@@ -155,7 +155,7 @@ export class IssuanceController {
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Body() issueCredentialDto: IssueCredentialDto,
     @Res() res: Response
   ): Promise<Response> {
@@ -170,6 +170,7 @@ export class IssuanceController {
         throw new BadRequestException(`Value must be required at position of ${data['name']}`);
       }
     });
+ 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(
       issueCredentialDto,
       user
@@ -196,10 +197,12 @@ export class IssuanceController {
   })
   async getIssueCredentialWebhook(
     @Body() issueCredentialDto: IssuanceDto,
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    this.logger.debug(`issueCredentialDto ::: ${issueCredentialDto}`);
+    this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
+    
+   
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

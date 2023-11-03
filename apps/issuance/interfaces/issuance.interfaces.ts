@@ -12,7 +12,7 @@ export interface IIssuance {
     comment: string;
     connectionId: string;
     attributes: IAttributes[];
-    orgId: number;
+    orgId: string;
     protocolVersion: string;
 }
 
@@ -20,14 +20,14 @@ export interface IIssueCredentials {
     user: IUserRequest;
     connectionId: string;
     threadId: string;
-    orgId: number;
+    orgId: string;
     state: string;
 }
 
 export interface IIssueCredentialsDefinitions {
     user: IUserRequest;
     credentialRecordId: string;
-    orgId: number;
+    orgId: string;
 }
 
 export interface IIssuanceWebhookInterface {
@@ -36,7 +36,7 @@ export interface IIssuanceWebhookInterface {
     threadId: string;
     protocolVersion: string;
     credentialAttributes: ICredentialAttributesInterface[];
-    orgId: number;
+    orgId: string;
 }
  
 export interface ICredentialAttributesInterface {

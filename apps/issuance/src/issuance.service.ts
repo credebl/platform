@@ -23,7 +23,7 @@ export class IssuanceService {
   ) { }
 
 
-  async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
+  async sendCredentialCreateOffer(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
@@ -60,7 +60,7 @@ export class IssuanceService {
   }
 
 
-  async sendCredentialOutOfBand(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
+  async sendCredentialOutOfBand(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
@@ -87,6 +87,7 @@ export class IssuanceService {
         comment
       };
       const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
+
       return credentialCreateOfferDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
@@ -122,7 +123,7 @@ export class IssuanceService {
     }
   }
 
-  async getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: number): Promise<string> {
+  async getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
@@ -184,7 +185,7 @@ export class IssuanceService {
     }
   }
 
-  async getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: number): Promise<string> {
+  async getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<string> {
     try {
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -207,7 +208,7 @@ export class IssuanceService {
     }
   }
 
-  async getIssueCredentialWebhook(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: ICredentialAttributesInterface[], orgId: number): Promise<object> {
+  async getIssueCredentialWebhook(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: ICredentialAttributesInterface[], orgId: string): Promise<object> {
     try {
       const agentDetails = await this.issuanceRepository.saveIssuedCredentialDetails(createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId);
       return agentDetails;
@@ -252,7 +253,7 @@ export class IssuanceService {
   */
   async getAgentUrl(
     issuanceMethodLabel: string,
-    orgAgentTypeId: number,
+    orgAgentTypeId: string,
     agentEndPoint: string,
     tenantId: string,
     credentialRecordId?: string

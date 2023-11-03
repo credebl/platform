@@ -192,6 +192,7 @@ export class IssuanceController {
   @Post('/orgs/:orgId/bulk/upload')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Upload file for bulk issuance',
     description: 'Upload file for bulk issuance.'
@@ -269,6 +270,7 @@ export class IssuanceController {
   @Get('/orgs/:orgId/:requestId/preview')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,
@@ -332,6 +334,7 @@ export class IssuanceController {
   @Post('/orgs/:orgId/:requestId/bulk')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,

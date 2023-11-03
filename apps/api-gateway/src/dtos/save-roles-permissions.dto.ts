@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class RolesPermissionsObj {
     @ApiProperty()
-    roleId: number;
+    roleId: string;
 
     @ApiProperty({ type: [] })
     permissionsId: number;

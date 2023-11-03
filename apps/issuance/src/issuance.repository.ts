@@ -19,7 +19,7 @@ export class IssuanceRepository {
      * @returns Get getAgentEndPoint details
      */
     // eslint-disable-next-line camelcase
-    async getAgentEndPoint(orgId: number): Promise<org_agents> {
+    async getAgentEndPoint(orgId: string): Promise<org_agents> {
         try {
 
             const agentDetails = await this.prisma.org_agents.findFirst({
@@ -47,29 +47,29 @@ export class IssuanceRepository {
  * @returns Get saved credential details
  */
     // eslint-disable-next-line camelcase
-    async saveIssuedCredentialDetails(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: object[], orgId: number): Promise<credentials> {
+    async saveIssuedCredentialDetails(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: object[], orgId: string): Promise<credentials> {
         try {
-
+            
             const credentialDetails = await this.prisma.credentials.upsert({
                 where: {
                     connectionId
                 },
                 update: {
-                    lastChangedBy: orgId,
+                    lastChangedBy: `${orgId}`,
                     createDateTime,
                     threadId,
                     protocolVersion,
                     credentialAttributes,
-                    orgId
+                    orgId :String(orgId)
                 },
                 create: {
                     createDateTime,
-                    lastChangedBy: orgId,
+                    lastChangedBy: `${orgId}`,
                     connectionId,
                     threadId,
                     protocolVersion,
                     credentialAttributes,
-                    orgId
+                    orgId :String(orgId)
                 }
             });
             return credentialDetails;
@@ -88,7 +88,7 @@ export class IssuanceRepository {
        * @returns Get connection details
        */
     // eslint-disable-next-line camelcase
-    async saveAgentConnectionInvitations(connectionInvitation: string, agentId: number, orgId: number): Promise<agent_invitations> {
+    async saveAgentConnectionInvitations(connectionInvitation: string, agentId: string, orgId: string): Promise<agent_invitations> {
         try {
 
             const agentInvitationData = await this.prisma.agent_invitations.create({

@@ -1,3 +1,6 @@
+/* eslint-disable quotes */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable yoda */
 /* eslint-disable no-useless-catch */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
@@ -131,21 +134,26 @@ export class AgentServiceService {
   }> {
     try {
 
-      agentSpinupDto.agentType = agentSpinupDto.agentType ? agentSpinupDto.agentType : 1;
+      // agentSpinupDto.agentType = agentSpinupDto.agentType ? agentSpinupDto.agentType : 1;
+      agentSpinupDto.agentType = agentSpinupDto.agentType || AgentType.AFJ; // Replace SomeValue with the actual enum value you want to use.
+
+
       agentSpinupDto.tenant = agentSpinupDto.tenant ? agentSpinupDto.tenant : false;
-      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId?.length ? [3] : agentSpinupDto.ledgerId;
+      // agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId.length ? [1] : agentSpinupDto.ledgerId;
+      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || agentSpinupDto.ledgerId.length === 0 ? ['1'] : agentSpinupDto.ledgerId as string[];
 
 
       const platformConfig: platform_config = await this.agentServiceRepository.getPlatformConfigDetails();
       const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
       const orgData: organisation = await this.agentServiceRepository.getOrgDetails(agentSpinupDto.orgId);
-
+      
       if (!orgData) {
         this.logger.error(ResponseMessages.agent.error.orgNotFound);
         throw new NotFoundException(ResponseMessages.agent.error.orgNotFound);
       }
-
+      
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(agentSpinupDto.orgId);
+  
 
       if (2 === getOrgAgent?.agentSpinUpStatus) {
         this.logger.error(`Agent already exists.`);
@@ -154,13 +162,12 @@ export class AgentServiceService {
 
       const orgApiKey: string = platformConfig?.sgApiKey;
 
-      const containerName: string = uuidv4();
-
-      if (fs.existsSync(`./apps/agent-provisioning/AFJ/endpoints/${agentSpinupDto.orgId}_${containerName}.json`)) {
-        fs.unlinkSync(`./apps/agent-provisioning/AFJ/endpoints/${agentSpinupDto.orgId}_${containerName}.json`);
+      if (fs.existsSync(`./apps/agent-provisioning/AFJ/endpoints/${agentSpinupDto.orgId}.json`)) {
+        fs.unlinkSync(`./apps/agent-provisioning/AFJ/endpoints/${agentSpinupDto.orgId}.json`);
       }
 
       if (!platformConfig?.apiEndpoint) {
+
         this.logger.error(ResponseMessages.agent.error.apiEndpointNotFound);
         throw new BadRequestException(ResponseMessages.agent.error.apiEndpointNotFound);
       }
@@ -195,7 +202,7 @@ export class AgentServiceService {
 
         // TODO: ACA-PY Agent Spin-Up
       } else if (agentSpinupDto.agentType === AgentType.AFJ) {
-
+      
         const walletProvisionPayload: IWalletProvision = {
           orgId: `${orgData.id}`,
           externalIp,
@@ -208,7 +215,7 @@ export class AgentServiceService {
           walletStorageUser: WALLET_STORAGE_USER,
           walletStoragePassword: WALLET_STORAGE_PASSWORD,
           internalIp,
-          containerName,
+          containerName: orgData.name.split(' ').join('_'),
           agentType: AgentType.AFJ,
           orgName: orgData.name,
           indyLedger: escapedJsonString,
@@ -226,6 +233,7 @@ export class AgentServiceService {
         });
 
         if (agentSpinupDto.clientSocketId) {
+
           socket.emit('agent-spinup-process-initiated', { clientId: agentSpinupDto.clientSocketId });
         }
 
@@ -237,6 +245,7 @@ export class AgentServiceService {
         return agentStatusResponse;
       }
     } catch (error) {
+  
       if (agentSpinupDto.clientSocketId) {
         const socket = await io(`${process.env.SOCKET_HOST}`, {
           reconnection: true,
@@ -251,10 +260,11 @@ export class AgentServiceService {
     }
   }
 
-  async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket, ledgerId: number[]): Promise<void> {
+  async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket, ledgerId: string[]): Promise<void> {
     try {
       const agentSpinUpResponse = new Promise(async (resolve, _reject) => {
 
+      
         const walletProvision: {
           response
         } = await this._walletProvision(walletProvisionPayload);
@@ -413,7 +423,7 @@ export class AgentServiceService {
     );
   }
 
-  async _createLegacyConnectionInvitation(orgId: number, user: IUserRequestInterface, label: string): Promise<{
+  async _createLegacyConnectionInvitation(orgId: string, user: IUserRequestInterface, label: string): Promise<{
     response;
   }> {
     try {
@@ -487,7 +497,9 @@ export class AgentServiceService {
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
     try {
 
-      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? [3] : payload.ledgerId;
+      // payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId.length ? [1] : payload.ledgerId;
+      payload.ledgerId = !payload.ledgerId || payload.ledgerId.length === 0 ? ['1'] : payload.ledgerId;
+
 
       const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
       const sharedAgentSpinUpResponse = new Promise(async (resolve, _reject) => {
@@ -503,7 +515,7 @@ export class AgentServiceService {
         if (payload.clientSocketId) {
           socket.emit('agent-spinup-process-initiated', { clientId: payload.clientSocketId });
         }
-        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(parseInt(process.env.PLATFORM_ID));
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(process.env.PLATFORM_ID);
 
         if (!platformAdminSpinnedUp) {
           throw new InternalServerErrorException('Agent not able to spin-up');
@@ -609,7 +621,7 @@ export class AgentServiceService {
     try {
       let schemaResponse;
 
-      if (1 === payload.agentType) {
+      if (`1` === payload.agentType) {
 
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_CREATE_SCHEMA}`;
         const schemaPayload = {
@@ -624,7 +636,7 @@ export class AgentServiceService {
             return schema;
           });
 
-      } else if (2 === payload.agentType) {
+      } else if (`2` === payload.agentType) {
 
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_SCHEMA}`.replace('#', `${payload.tenantId}`);
         const schemaPayload = {
@@ -650,7 +662,7 @@ export class AgentServiceService {
     try {
       let schemaResponse;
 
-      if (1 === payload.agentType) {
+      if (`1` === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace('#', `${payload.schemaId}`)}`;
         schemaResponse = await this.commonService.httpGet(url, payload.schemaId)
           .then(async (schema) => {
@@ -658,7 +670,7 @@ export class AgentServiceService {
             return schema;
           });
 
-      } else if (2 === payload.agentType) {
+      } else if (`2` === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`.replace('@', `${payload.payload.schemaId}`).replace('#', `${payload.tenantId}`);
 
         schemaResponse = await this.commonService.httpGet(url, { headers: { 'x-api-key': payload.apiKey } })
@@ -677,20 +689,23 @@ export class AgentServiceService {
   async createCredentialDefinition(payload: ITenantCredDef): Promise<object> {
     try {
       let credDefResponse;
-      if (1 === payload.agentType) {
+    
+      if (`1` === String(payload.agentType)) {
+       
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_CREATE_CRED_DEF}`;
         const credDefPayload = {
           tag: payload.tag,
           schemaId: payload.schemaId,
           issuerId: payload.issuerId
         };
+      
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'x-api-key': payload.apiKey } })
           .then(async (credDef) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
-
-      } else if (2 === payload.agentType) {
+         
+      } else if (`2` === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CRED_DEF}`.replace('#', `${payload.tenantId}`);
         const credDefPayload = {
           tag: payload.payload.tag,
@@ -703,6 +718,7 @@ export class AgentServiceService {
             return credDef;
           });
       }
+      
       return credDefResponse;
     } catch (error) {
       this.logger.error(`Error in creating credential definition: ${error}`);
@@ -714,7 +730,7 @@ export class AgentServiceService {
     try {
       let credDefResponse;
 
-      if (1 === payload.agentType) {
+      if (`1` === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID.replace('#', `${payload.credentialDefinitionId}`)}`;
         credDefResponse = await this.commonService.httpGet(url, payload.credentialDefinitionId)
           .then(async (credDef) => {
@@ -722,7 +738,7 @@ export class AgentServiceService {
             return credDef;
           });
 
-      } else if (2 === payload.agentType) {
+      } else if (`2` === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
         credDefResponse = await this.commonService.httpGet(url, { headers: { 'x-api-key': payload.apiKey } })
           .then(async (credDef) => {
@@ -739,9 +755,11 @@ export class AgentServiceService {
 
   async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<object> {
     try {
+   
       const data = await this.commonService
         .httpPost(url, connectionPayload, { headers: { 'x-api-key': apiKey } })
         .then(async response => response);
+        
       return data;
     } catch (error) {
       this.logger.error(`Error in connection Invitation in agent service : ${JSON.stringify(error)}`);
@@ -764,6 +782,7 @@ export class AgentServiceService {
       const getProofPresentationsData = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })
         .then(async response => response);
+
       return getProofPresentationsData;
     } catch (error) {
       this.logger.error(`Error in proof presentations in agent service : ${JSON.stringify(error)}`);
@@ -849,9 +868,10 @@ export class AgentServiceService {
     }
   }
 
-  async getAgentHealthDetails(orgId: number): Promise<object> {
+  async getAgentHealthDetails(orgId: string): Promise<object> {
     try {
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      
       if (!orgAgentDetails) {
         throw new NotFoundException(ResponseMessages.agent.error.agentNotExists);
       }

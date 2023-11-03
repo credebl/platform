@@ -34,6 +34,7 @@ export class AgentServiceController {
 
   @MessagePattern({ cmd: 'agent-create-credential-definition' })
   async createCredentialDefinition(payload: ITenantCredDef): Promise<object> {
+    
     return this.agentServiceService.createCredentialDefinition(payload);
   }
 
@@ -45,6 +46,7 @@ export class AgentServiceController {
 
   @MessagePattern({ cmd: 'agent-create-connection-legacy-invitation' })
   async createLegacyConnectionInvitation(payload: { connectionPayload: IConnectionDetails, url: string, apiKey: string }): Promise<object> {
+
     return this.agentServiceService.createLegacyConnectionInvitation(payload.connectionPayload, payload.url, payload.apiKey);
   }
 
@@ -93,7 +95,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-health' })
-  async getAgentHealth(payload: { user: user, orgId: number }): Promise<object> {
+  async getAgentHealth(payload: { user: user, orgId: string }): Promise<object> {
     return this.agentServiceService.getAgentHealthDetails(payload.orgId);
   }
 
@@ -104,6 +106,7 @@ export class AgentServiceController {
 
   @MessagePattern({ cmd: 'agent-proof-form-data' })
   async getProofFormData(payload: { url: string, apiKey: string }): Promise<object> {
+   
     return this.agentServiceService.getProofFormData(payload.url, payload.apiKey);
   }
 

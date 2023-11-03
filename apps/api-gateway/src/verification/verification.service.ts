@@ -20,7 +20,7 @@ export class VerificationService extends BaseService {
      * @param user 
      * @returns Get all proof presentation
      */
-    getProofPresentations(orgId: number, threadId: string, user: IUserRequest): Promise<{ response: object }> {
+    getProofPresentations(orgId: string, threadId: string, user: IUserRequest): Promise<{ response: object }> {
         const payload = { user, threadId, orgId };
         return this.sendNats(this.verificationServiceProxy, 'get-proof-presentations', payload);
     }
@@ -32,7 +32,7 @@ export class VerificationService extends BaseService {
      * @param user 
      * @returns Get proof presentation details
      */
-    getProofPresentationById(id: string, orgId: number, user: IUserRequest): Promise<{ response: object }> {
+    getProofPresentationById(id: string, orgId: string, user: IUserRequest): Promise<{ response: object }> {
         const payload = { id, orgId, user };
         return this.sendNats(this.verificationServiceProxy, 'get-proof-presentations-by-id', payload);
     }
@@ -55,7 +55,7 @@ export class VerificationService extends BaseService {
      * @param user 
      * @returns Get requested proof presentation details
      */
-    verifyPresentation(id: string, orgId: number, user: IUserRequest): Promise<{ response: object }> {
+    verifyPresentation(id: string, orgId: string, user: IUserRequest): Promise<{ response: object }> {
         const payload = { id, orgId, user };
         return this.sendNats(this.verificationServiceProxy, 'verify-presentation', payload);
     }
@@ -77,8 +77,8 @@ export class VerificationService extends BaseService {
     }
 
      
-    getProofFormData(id: string, orgId: number, user: IUserRequest): Promise<{ response: object }> {
-        const payload = { id, orgId, user };
+    getProofFormData(id: string, orgId: string, user: IUserRequest): Promise<{ response: object }> {
+        const payload = { id, orgId, user };       
         return this.sendNats(this.verificationServiceProxy, 'proof-form-data', payload);
     }
 

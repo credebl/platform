@@ -16,7 +16,7 @@ export class VerificationRepository {
      * @returns 
      */
     // eslint-disable-next-line camelcase
-    async getAgentEndPoint(orgId: number): Promise<org_agents> {
+    async getAgentEndPoint(orgId: string): Promise<org_agents> {
         try {
 
             const agentDetails = await this.prisma.org_agents.findFirst({
@@ -54,7 +54,7 @@ export class VerificationRepository {
                     state: proofPresentationPayload.state,
                     threadId: proofPresentationPayload.threadId,
                     isVerified: proofPresentationPayload.isVerified,
-                    orgId: parseInt(id)
+                    orgId: id
                 }
             });
 
@@ -84,7 +84,7 @@ export class VerificationRepository {
   * Get organization details
   * @returns 
   */
-    async getOrganization(orgId: number): Promise<organisation> {
+    async getOrganization(orgId: string): Promise<organisation> {
         try {
 
             return this.prisma.organisation.findFirst({ where: { id: orgId } });

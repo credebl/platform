@@ -32,10 +32,10 @@ export class VerificationService {
    * @param orgId 
    * @returns Get all proof presentation
    */
-  async getProofPresentations(orgId: number, threadId: string): Promise<string> {
+  async getProofPresentations(orgId: string, threadId: string): Promise<string> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-
+       
       const verificationMethodLabel = 'get-proof-presentation';
       let url;
       if (threadId) {
@@ -97,7 +97,7 @@ export class VerificationService {
    * @param user 
    * @returns Get proof presentation details
    */
-  async getProofPresentationById(id: string, orgId: number): Promise<string> {
+  async getProofPresentationById(id: string, orgId: string): Promise<string> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
 
@@ -252,7 +252,7 @@ export class VerificationService {
    * @param user 
    * @returns Get verified proof presentation details
    */
-  async verifyPresentation(id: string, orgId: number): Promise<string> {
+  async verifyPresentation(id: string, orgId: string): Promise<string> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
       const verificationMethodLabel = 'accept-presentation';
@@ -570,7 +570,7 @@ export class VerificationService {
   */
   async getAgentUrl(
     verificationMethodLabel: string,
-    orgAgentTypeId: number,
+    orgAgentTypeId: string,
     agentEndPoint: string,
     tenantId: string,
     threadId?: string,
@@ -578,6 +578,7 @@ export class VerificationService {
   ): Promise<string> {
     try {
 
+   
       let url;
       switch (verificationMethodLabel) {
         case 'get-proof-presentation': {
@@ -631,7 +632,7 @@ export class VerificationService {
 
         case 'proof-form-data': {
           url = orgAgentTypeId === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_PROOF_FORM_DATA}`
+            ? `${agentEndPoint}${CommonConstants.URL_PROOF_FORM_DATA}`.replace('#', proofPresentationId)
             : orgAgentTypeId === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_PROOF_FORM_DATA}`.replace('@', proofPresentationId).replace('#', tenantId)
               : null;
@@ -655,17 +656,17 @@ export class VerificationService {
     }
   }
 
-  async getProofFormData(id: string, orgId: number): Promise<object> {
+  async getProofFormData(id: string, orgId: string): Promise<object> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
       const verificationMethodLabel = 'proof-form-data';
 
       const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
-
+      
       const payload = { apiKey: '', url };
-      const getProofPresentationById = await this._getProofFormData(payload);
 
-      if (!getProofPresentationById?.response?.presentation) {
+      const getProofPresentationById = await this._getProofFormData(payload);
+    if (!getProofPresentationById?.response?.presentation) {
         throw new NotFoundException("Proof presentation not found!");
       }
 
@@ -762,6 +763,8 @@ export class VerificationService {
   async _getProofFormData(payload: ProofFormDataPayload): Promise<{
     response;
   }> {
+   
+    
     try {
 
       const pattern = {

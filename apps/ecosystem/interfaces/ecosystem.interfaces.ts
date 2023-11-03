@@ -6,7 +6,7 @@ export interface AttributeValue {
 }
 
 export interface RequestSchemaEndorsement {
-  orgId: number
+  orgId: string
   name: string;
   version: string;
   attributes: AttributeValue[];
@@ -97,9 +97,9 @@ export interface EndorsementTransactionPayload {
   status: string;
   ecosystemOrgId: string;
   createDateTime: Date;
-  createdBy: number;
+  createdBy: string;
   lastChangedDateTime: Date;
-  lastChangedBy: number;
+  lastChangedBy: string;
   deletedAt?: Date;
   type?: string;
   ecosystemOrgs?: {
@@ -140,7 +140,7 @@ export interface SaveSchema {
   lastChangedBy: string;
   publisherDid: string;
   orgId: string;
-  ledgerId: number;
+  ledgerId: string;
 }
 
 export interface saveCredDef {
@@ -149,8 +149,8 @@ export interface saveCredDef {
   credentialDefinitionId: string;
   revocable: boolean;
   createdBy: string;
-  orgId: number;
-  schemaId: number;
+  orgId: string;
+  schemaId: string;
 }
 
 export interface EndorsementTransactionPayloadDetails {
@@ -161,9 +161,9 @@ export interface EndorsementTransactionPayloadDetails {
   responsePayload: string;
   type: string;
   createDateTime: Date;
-  createdBy: number;
+  createdBy:string;
   lastChangedDateTime: Date;
-  lastChangedBy: number;
+  lastChangedBy: string;
   deletedAt: Date | null;
   status: string;
   ecosystemOrgId: string;
@@ -180,7 +180,7 @@ export interface CreateEcosystem {
 
   tags?: string;
 
-  userId: number;
+  userId: string;
 
   logo?: string;
 

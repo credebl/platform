@@ -376,13 +376,13 @@ export class EcosystemService {
   async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: string, ecosystemId: string): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
-
+    
       const [schemaRequestExist, ecosystemMemberDetails, platformConfig, ecosystemLeadAgentDetails, getEcosystemOrgDetailsByOrgId] = await Promise.all([
         this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version),
         this.ecosystemRepository.getAgentDetails(orgId),
         this.ecosystemRepository.getPlatformConfigDetails(),
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
-        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId))
+        this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
 
       if (0 !== schemaRequestExist.length) {
@@ -406,6 +406,7 @@ export class EcosystemService {
       }
 
       if (!getEcosystemOrgDetailsByOrgId) {
+      
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemOrgNotFound);
       }
 
@@ -432,6 +433,7 @@ export class EcosystemService {
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
       };
 
+
       if ('failed' === schemaTransactionRequest.message.schemaState.state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestSchemaTransaction);
       }
@@ -453,7 +455,7 @@ export class EcosystemService {
         this.ecosystemRepository.getAgentDetails(orgId),
         this.ecosystemRepository.getPlatformConfigDetails(),
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
-        this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId))
+        this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
 
       if (0 !== credDefRequestExist.length) {

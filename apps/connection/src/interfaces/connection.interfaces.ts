@@ -96,17 +96,17 @@ export interface ConnectionInvitationResponse {
 
 export interface OrgAgent {
   organisation: organisation;
-  id: number;
+  id: string;
   createDateTime: Date;
-  createdBy: number;
+  createdBy: string;
   lastChangedDateTime: Date;
-  lastChangedBy: number;
+  lastChangedBy: string;
   orgDid: string;
   verkey: string;
   agentEndPoint: string;
   agentId: string;
   isDidPublic: boolean;
-  ledgerId: number;
-  orgAgentTypeId: number;
+  ledgerId: string;
+  orgAgentTypeId: string;
   tenantId: string;
 }

@@ -269,7 +269,7 @@ export class CredentialDefinitionService extends BaseService {
         }
     }
 
-    async getAllCredDefAndSchemaForBulkOperation(orgId: number): Promise<CredDefSchema[]> {
+    async getAllCredDefAndSchemaForBulkOperation(orgId: string): Promise<CredDefSchema[]> {
         try {
             const payload = {
                 orgId,

@@ -74,7 +74,7 @@ export class IssuanceService extends BaseService {
     }
 
     async previewCSVDetails(requestId: string,
-        orgId: number,
+        orgId: string,
         previewFileDetails: PreviewFileDetails
     ): Promise<string> {
         const payload = {
@@ -85,7 +85,7 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'preview-csv-details', payload);
     }
 
-    async issueBulkCredential(requestId: string, orgId: number): Promise<{ response: object }> {
+    async issueBulkCredential(requestId: string, orgId: string): Promise<{ response: object }> {
         const payload = { requestId, orgId };
         return this.sendNats(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }

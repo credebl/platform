@@ -36,7 +36,7 @@ export interface CredDefSchema {
 }
 
 export interface BulkCredDefSchema {
-    orgId: number
+    orgId: string
     sortValue: string,
     credDefSortBy: string
 }

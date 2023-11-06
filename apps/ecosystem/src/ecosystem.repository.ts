@@ -639,13 +639,21 @@ export class EcosystemRepository {
     }
   }
 
-  /**
-  * Description: Get getAgentEndPoint by orgId
-  * @param orgId 
-  * @returns Get getAgentEndPoint details
-  */
-  // eslint-disable-next-line camelcase
-  async getAgentDetails(orgId: string): Promise<org_agents> {
+
+  async getAllEcosystemSchemasDetails(payload: GetAllSchemaList): Promise<{
+    schemasCount: number;
+    schemasResult: {
+      createDateTime: Date;
+      createdBy: string;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: string;
+    }[];
+  }> {
     try {
       const { ecosystemId, search, pageNumber, pageSize } = payload;
 

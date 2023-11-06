@@ -376,7 +376,7 @@ export class EcosystemService {
   async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: string, ecosystemId: string): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
-
+    
       const [schemaRequestExist, ecosystemMemberDetails, platformConfig, ecosystemLeadAgentDetails, getEcosystemOrgDetailsByOrgId] = await Promise.all([
         this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version),
         this.ecosystemRepository.getAgentDetails(orgId),
@@ -406,6 +406,7 @@ export class EcosystemService {
       }
 
       if (!getEcosystemOrgDetailsByOrgId) {
+      
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemOrgNotFound);
       }
 
@@ -431,6 +432,7 @@ export class EcosystemService {
         status: endorsementTransactionStatus.REQUESTED,
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
       };
+
 
       if ('failed' === schemaTransactionRequest.message.schemaState.state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestSchemaTransaction);

@@ -104,7 +104,7 @@ export interface OrgAgent {
   orgDid: string;
   verkey: string;
   agentEndPoint: string;
-  agentId: number;
+  agentId: string;
   isDidPublic: boolean;
   ledgerId: number;
   orgAgentTypeId: number;

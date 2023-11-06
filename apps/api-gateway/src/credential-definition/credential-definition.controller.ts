@@ -149,7 +149,7 @@ export class CredentialDefinitionController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getAllCredDefAndSchemaForBulkOperation(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
     const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefAndSchemaForBulkOperation(orgId);

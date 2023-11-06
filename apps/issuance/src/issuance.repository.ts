@@ -150,7 +150,7 @@ export class IssuanceRepository {
     * Get organization details
     * @returns 
     */
-    async getOrganization(orgId: number): Promise<organisation> {
+    async getOrganization(orgId: string): Promise<organisation> {
         try {
 
             const organizationDetails = await this.prisma.organisation.findUnique({ where: { id: orgId } });

@@ -177,7 +177,7 @@ export class IssuanceController {
   })
   async downloadBulkIssuanceCSVTemplate(
     @Param('credentialDefinitionId') credentialDefinitionId: string,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
     try {
@@ -228,7 +228,7 @@ export class IssuanceController {
   async importAndPreviewDataForIssuance(
     @Query('credDefId') credentialDefinitionId: string,
     @UploadedFile() file: Express.Multer.File,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
     if (file) {
@@ -317,7 +317,7 @@ export class IssuanceController {
   })
   async previewFileDataForIssuance(
     @Param('requestId') requestId: string,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<object> {
@@ -353,7 +353,7 @@ export class IssuanceController {
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
-  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number,  @Res() res: Response): Promise<Response> {
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: string,  @Res() res: Response): Promise<Response> {
     const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
@@ -429,7 +429,7 @@ export class IssuanceController {
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
 

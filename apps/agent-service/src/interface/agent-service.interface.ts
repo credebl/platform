@@ -20,7 +20,7 @@ export interface OutOfBandCredentialOffer {
     credentialDefinitionId: string;
     comment: string;
     protocolVersion?: string;
-    orgId: number;
+    orgId: string;
 }
 
 export interface ITenantDto {

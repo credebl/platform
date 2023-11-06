@@ -46,7 +46,7 @@ export class OrganizationController {
   @Get('/profile/:orgId')
   @ApiOperation({ summary: 'Organization Profile', description: 'Update an organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getOgPofile(@Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  async getOgPofile(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
     const orgProfile = await this.organizationService.getOgPofile(orgId);
 
     const base64Data = orgProfile.response["logoUrl"];

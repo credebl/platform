@@ -50,9 +50,9 @@ export class ConnectionService {
       if (connectionInvitationExist) {
         return connectionInvitationExist;
       }
-
+ 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-    
+
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
@@ -69,7 +69,7 @@ export class ConnectionService {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: logoImageUrl ? logoImageUrl : undefined,
+         imageUrl: logoImageUrl ? logoImageUrl : undefined,
         label: label || undefined
       };
 
@@ -260,6 +260,7 @@ export class ConnectionService {
     try {
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+     
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;

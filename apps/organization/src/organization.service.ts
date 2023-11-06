@@ -483,7 +483,7 @@ export class OrganizationService {
     }
   }
 
-  async getOgPofile(orgId: number): Promise<organisation> {
+  async getOgPofile(orgId: string): Promise<organisation> {
     try {
       const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
       if (!orgProfile.logoUrl || '' === orgProfile.logoUrl) {

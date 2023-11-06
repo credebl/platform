@@ -35,7 +35,7 @@ export class CredentialDefinitionService extends BaseService {
     return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions-by-schema-id', payload);
   }
 
-  getAllCredDefAndSchemaForBulkOperation(orgId:number): Promise<{ response: object }> {
+  getAllCredDefAndSchemaForBulkOperation(orgId:string): Promise<{ response: object }> {
     const payload = { orgId };
     return this.sendNats(this.credDefServiceProxy, 'get-all-schema-cred-defs-for-bulk-operation', payload);
   }

@@ -577,14 +577,14 @@ export class EcosystemRepository {
     schemasCount: number;
     schemasResult: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       version: string;
       attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
       issuerId: string;
-      orgId: number;
+      orgId: string;
     }[];
   }> {
     try {

@@ -51,7 +51,7 @@ export interface CredentialOffer {
 }
 export interface OutOfBandCredentialOfferPayload {
     credentialDefinitionId: string;
-    orgId: number;
+    orgId: string;
     comment?: string;
     credentialOffer?: CredentialOffer[];
     emailId?: string;

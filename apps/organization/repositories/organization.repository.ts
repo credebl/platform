@@ -438,7 +438,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgProfile(id: number): Promise<organisation> {
+  async getOrgProfile(id: string): Promise<organisation> {
     try {
       return this.prisma.organisation.findUnique({
         where: {
@@ -451,7 +451,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getCredDefByOrg(orgId: number): Promise<{
+  async getCredDefByOrg(orgId: string): Promise<{
     tag: string;
     credentialDefinitionId: string;
     schemaLedgerId: string;

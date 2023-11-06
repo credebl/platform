@@ -136,7 +136,7 @@ export class OrganizationService extends BaseService {
   }
 
   async getOgPofile(
-    orgId: number
+    orgId: string
   ): Promise<{ response: object }> {
     const payload = { orgId };
 

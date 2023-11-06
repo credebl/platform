@@ -599,7 +599,7 @@ export class IssuanceService {
   }
 
 
-  async issueBulkCredential(requestId: string, orgId: number): Promise<string> {
+  async issueBulkCredential(requestId: string, orgId: string): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -693,7 +693,7 @@ export class IssuanceService {
 
       const oobIssuancepayload: OutOfBandCredentialOfferPayload = {
         credentialDefinitionId: '',
-        orgId: 0
+        orgId: '0'
       };
 
       for (const key in jobDetails.data) {

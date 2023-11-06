@@ -58,15 +58,16 @@ export class IssuanceController {
   async importCSV(payload: {
     importFileDetails: ImportFileDetails
   }): Promise<string> {
-   return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
+    this.logger.log(`payload.importFileDetails----${payload.importFileDetails}`);
+    return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
   }
 
   @MessagePattern({ cmd: 'preview-csv-details' })
-  async previewCSVDetails(payload: {requestId:string, previewFileDetails:PreviewRequest}): Promise<object> {
+  async previewCSVDetails(payload: { requestId: string, previewFileDetails: PreviewRequest }): Promise<object> {
     return this.issuanceService.previewFileDataForIssuance(
-      payload.requestId, 
+      payload.requestId,
       payload.previewFileDetails
-      );
+    );
   }
 
   @MessagePattern({ cmd: 'issue-bulk-credentials' })

@@ -9,10 +9,10 @@ import {
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CredentialDefinitionRepository } from './repositories/credential-definition.repository';
-import { CreateCredDefPayload, CredDefPayload, GetAllCredDefsPayload, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
+import { CreateCredDefPayload, CredDefPayload, GetAllCredDefsPayload, GetCredDefBySchemaId, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { CreateCredDefAgentRedirection, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
+import { CreateCredDefAgentRedirection, CredDefSchema, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
 
 @Injectable()
@@ -253,6 +253,41 @@ export class CredentialDefinitionService extends BaseService {
         } catch (error) {
             this.logger.error(`Error in retrieving credential definitions: ${error}`);
             throw new RpcException(error.response ? error.response : error);
+        }
+    }
+
+    async getCredentialDefinitionBySchemaId(payload: GetCredDefBySchemaId): Promise<credential_definition[]> {
+        try {
+            const { schemaId } = payload;
+            const credDefListBySchemaId = await this.credentialDefinitionRepository.getCredentialDefinitionBySchemaId(schemaId);
+            return credDefListBySchemaId;
+        } catch (error) {
+            this.logger.error(`Error in retrieving credential definitions: ${error}`);
+            throw new RpcException(error.response ? error.response : error);
+        }
+    }
+
+    async getAllCredDefAndSchemaForBulkOperation(orgId: number): Promise<CredDefSchema[]> {
+        try {
+            const payload = {
+                orgId,
+                sortValue: 'ASC',
+                credDefSortBy: 'id'
+            };
+
+            const credDefSchemaList: CredDefSchema[] =
+                await this.credentialDefinitionRepository.getAllCredDefsByOrgIdForBulk(
+                    payload
+                );
+                if (!credDefSchemaList) {
+                    throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
+                }    
+            return credDefSchemaList;
+        } catch (error) {
+            this.logger.error(
+                `get Cred-Defs and schema List By OrgId for bulk operations: ${JSON.stringify(error)}`
+            );
+            throw new RpcException(error.response);
         }
     }
 

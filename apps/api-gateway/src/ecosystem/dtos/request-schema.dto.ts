@@ -1,5 +1,6 @@
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 @ApiExtraModels()
 
 class AttributeValue {
@@ -16,6 +17,7 @@ class AttributeValue {
   @IsNotEmpty({ message: 'displayName is required.' })
   displayName: string;
 }
+
 
 export class RequestSchemaDto {
   @ApiProperty()
@@ -46,6 +48,24 @@ export class RequestSchemaDto {
 
 }
 
+export class SchemaDetails {
+  @ApiProperty()
+  @IsString({ message: 'name must be a string.' })
+  name: string;
+
+  @ApiProperty()
+  @IsString({ message: 'version must be a string.' })
+  version: string;
+
+  @ApiProperty({
+    example: ['name', 'id']
+  })
+  @IsArray({ message: 'attributes must be an array.' })
+  @IsNotEmpty({ message: 'please provide valid attributes.' })
+  attributes: string[];
+
+}
+
 export class RequestCredDefDto {
   @ApiProperty()
   @IsBoolean({ message: 'endorse must be a boolean.' })
@@ -53,10 +73,16 @@ export class RequestCredDefDto {
   endorse?: boolean;
 
   @ApiProperty()
-  @IsString({ message: 'tag must be in string format.' })
+  @IsString({ message: 'tag must be a string.' })
   tag: string;
 
   @ApiProperty()
-  @IsString({ message: 'schemaId must be in string format.' })
+  @IsString({ message: 'schemaId must be a string.' })
   schemaId: string;
+
+  @ApiProperty()
+  @ValidateNested()
+  @IsOptional()
+  @Type(() => SchemaDetails)
+  schemaDetails?: SchemaDetails;
 }

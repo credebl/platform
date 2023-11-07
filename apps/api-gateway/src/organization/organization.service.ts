@@ -109,8 +109,8 @@ export class OrganizationService extends BaseService {
    * @param sendInvitationDto
    * @returns Organization invitation creation Success
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number): Promise<object> {
-    const payload = { bulkInvitationDto, userId };
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number, userEmail: string): Promise<object> {
+    const payload = { bulkInvitationDto, userId, userEmail };
     return this.sendNats(this.serviceProxy, 'send-invitation', payload);
   }
 
@@ -133,5 +133,13 @@ export class OrganizationService extends BaseService {
     const payload = { orgId, pageNumber, pageSize, search };
 
     return this.sendNats(this.serviceProxy, 'fetch-organization-user', payload);
+  }
+
+  async getOgPofile(
+    orgId: number
+  ): Promise<{ response: object }> {
+    const payload = { orgId };
+
+    return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
   }
 }

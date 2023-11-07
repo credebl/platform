@@ -17,6 +17,7 @@ export interface RequestCredDeffEndorsement {
   schemaId: string
   tag: string;
   endorse?: boolean;
+  schemaDetails?: object;
 }
 
 export interface IAttributeValue {
@@ -188,4 +189,6 @@ export interface CreateEcosystem {
   orgDid: string;
 
   orgId?: string;
+
+  autoEndorsement: boolean
 }

@@ -16,7 +16,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { catchError, map } from 'rxjs/operators';
 dotenv.config();
-import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer } from './interface/agent-service.interface';
+import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, OutOfBandCredentialOffer } from './interface/agent-service.interface';
 import { AgentType, OrgAgentType } from '@credebl/enum/enum';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -133,7 +133,7 @@ export class AgentServiceService {
 
       agentSpinupDto.agentType = agentSpinupDto.agentType ? agentSpinupDto.agentType : 1;
       agentSpinupDto.tenant = agentSpinupDto.tenant ? agentSpinupDto.tenant : false;
-      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId.length ? [1] : agentSpinupDto.ledgerId;
+      agentSpinupDto.ledgerId = !agentSpinupDto.ledgerId || 0 === agentSpinupDto.ledgerId?.length ? [3] : agentSpinupDto.ledgerId;
 
 
       const platformConfig: platform_config = await this.agentServiceRepository.getPlatformConfigDetails();
@@ -213,7 +213,7 @@ export class AgentServiceService {
           orgName: orgData.name,
           indyLedger: escapedJsonString,
           afjVersion: process.env.AFJ_VERSION,
-          protocol: process.env.API_GATEWAY_PROTOCOL,
+          protocol: process.env.AGENT_PROTOCOL,
           tenant: agentSpinupDto.tenant
         };
 
@@ -229,7 +229,7 @@ export class AgentServiceService {
           socket.emit('agent-spinup-process-initiated', { clientId: agentSpinupDto.clientSocketId });
         }
 
-        await this._agentSpinup(walletProvisionPayload, agentSpinupDto, orgApiKey, orgData, user, socket);
+        await this._agentSpinup(walletProvisionPayload, agentSpinupDto, orgApiKey, orgData, user, socket, agentSpinupDto.ledgerId);
         const agentStatusResponse = {
           agentSpinupStatus: 1
         };
@@ -251,7 +251,7 @@ export class AgentServiceService {
     }
   }
 
-  async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket): Promise<void> {
+  async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket, ledgerId: number[]): Promise<void> {
     try {
       const agentSpinUpResponse = new Promise(async (resolve, _reject) => {
 
@@ -288,7 +288,9 @@ export class AgentServiceService {
               agentsTypeId: AgentType.AFJ,
               orgId: orgData.id,
               walletName: agentSpinupDto.walletName,
-              clientSocketId: agentSpinupDto.clientSocketId
+              clientSocketId: agentSpinupDto.clientSocketId,
+              ledgerId,
+              did: agentSpinupDto.did
             };
 
             if (agentEndPoint && agentSpinupDto.clientSocketId) {
@@ -337,20 +339,20 @@ export class AgentServiceService {
 
 
       const agentDidWriteUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-      const { seed } = payload;
-      const { apiKey } = payload;
+      const { seed, ledgerId, did, apiKey } = payload;
       const writeDid = 'write-did';
-      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed);
+      const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(ledgerId);
+      const agentDid = await this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);
       if (agentDid) {
 
-        const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DIDS}`;
+        const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}`.replace('#', agentDid['did']);
         const getDidDic = 'get-did-doc';
         const getDidMethod = await this._retryAgentSpinup(getDidMethodUrl, apiKey, getDidDic);
 
 
         const storeOrgAgentData: IStoreOrgAgentDetails = {
-          did: getDidMethod[0]?.did,
-          verkey: getDidMethod[0]?.didDocument?.verificationMethod[0]?.publicKeyBase58,
+          did: getDidMethod['didDocument']?.id,
+          verkey: getDidMethod['didDocument']?.verificationMethod[0]?.publicKeyBase58,
           isDidPublic: true,
           agentSpinUpStatus: 2,
           walletName: payload.walletName,
@@ -358,7 +360,8 @@ export class AgentServiceService {
           orgId: payload.orgId,
           agentEndPoint: payload.agentEndPoint,
           agentId: payload.agentId,
-          orgAgentTypeId: OrgAgentType.DEDICATED
+          orgAgentTypeId: OrgAgentType.DEDICATED,
+          ledgerId: payload.ledgerId
         };
 
 
@@ -386,14 +389,14 @@ export class AgentServiceService {
     }
   }
 
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string): Promise<object> {
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {
     return retry(
       async () => {
 
         if ('write-did' === agentApiState) {
 
           const agentDid = await this.commonService
-            .httpPost(agentUrl, { seed }, { headers: { 'x-api-key': apiKey } })
+            .httpPost(agentUrl, { seed, method: indyNamespace, did: did ? did : undefined }, { headers: { 'x-api-key': apiKey } })
             .then(async response => response);
           return agentDid;
         } else if ('get-did-doc' === agentApiState) {
@@ -484,7 +487,7 @@ export class AgentServiceService {
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
     try {
 
-      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId.length ? [1] : payload.ledgerId;
+      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? [3] : payload.ledgerId;
 
       const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
       const sharedAgentSpinUpResponse = new Promise(async (resolve, _reject) => {
@@ -517,12 +520,13 @@ export class AgentServiceService {
             let tenantDetails;
             const url = `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`;
             for (const iterator of ledgerDetails) {
-              const { label, seed } = payload;
+              const { label, seed, did } = payload;
               const createTenantOptions = {
                 config: {
                   label
                 },
                 seed,
+                did: did ? did : undefined,
                 method: iterator.indyNamespace
               };
               const apiKey = '';
@@ -543,7 +547,8 @@ export class AgentServiceService {
                 agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
                 orgAgentTypeId: OrgAgentType.SHARED,
                 tenantId: tenantDetails.tenantRecord.id,
-                walletName: label
+                walletName: label,
+                ledgerId: payload.ledgerId
               };
 
               if (payload.clientSocketId) {
@@ -940,5 +945,16 @@ export class AgentServiceService {
     }
   }
 
+  async outOfBandCredentialOffer(outOfBandIssuancePayload: OutOfBandCredentialOffer, url: string, apiKey: string): Promise<object> {
+    try {
+      const sendOutOfbandCredentialOffer = await this.commonService
+        .httpPost(url, outOfBandIssuancePayload, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
+      return sendOutOfbandCredentialOffer;
+    } catch (error) {
+      this.logger.error(`Error in out-of-band credential in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
 }
 

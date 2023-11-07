@@ -1,4 +1,4 @@
-import { Controller, Post, Put, Body, Param, UseFilters } from '@nestjs/common';
+import { Controller, Post, Put, Body, Param, UseFilters, Res, HttpStatus, BadRequestException, Get, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
   ApiBearerAuth,
@@ -13,17 +13,11 @@ import {
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { Res } from '@nestjs/common';
 import { Response } from 'express';
-import { HttpStatus } from '@nestjs/common';
 import { CommonService } from '@credebl/common';
 import IResponseType from '@credebl/common/interfaces/response.interface';
-import { BadRequestException } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Get } from '@nestjs/common';
-import { Query } from '@nestjs/common';
 import { user } from '@prisma/client';
-import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
@@ -35,6 +29,10 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AddPasskeyDetails } from './dto/add-user.dto';
 import { EmailValidator } from '../dtos/email-validator.dto';
+import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
+import { Roles } from '../authz/decorators/roles.decorator';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { OrgRoles } from 'libs/org-roles/enums';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -278,4 +276,21 @@ export class UserController {
 
   }
   
+  @Put('/platform-settings')
+  @ApiOperation({ summary: 'Update platform and ecosystem settings', description: 'Update platform and ecosystem settings' })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiBearerAuth()
+  async updatePlatformSettings(@Body() platformSettings: UpdatePlatformSettingsDto, @Res() res: Response): Promise<Response> {
+    const result = await this.userService.updatePlatformSettings(platformSettings);
+
+    const finalResponse = {
+      statusCode: HttpStatus.OK,
+      message: result.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
 }

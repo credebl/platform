@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { ImageServiceService } from '@credebl/image-service';
 
 @Module({
   imports: [
@@ -18,6 +19,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ])
   ],
   controllers: [VerificationController],
-  providers: [VerificationService]
+  providers: [VerificationService, ImageServiceService]
 })
 export class VerificationModule { }

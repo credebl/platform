@@ -2,12 +2,17 @@ export class EcosystemInviteTemplate {
 
     public sendInviteEmailTemplate(
         email: string,
-        ecosystemName: string
+        ecosystemName: string,
+        isUserExist = false
     ): string {
 
-        const validUrl = `${process.env.FRONT_END_URL}/authentication/sign-in`;
+        const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/authentication/sign-in` : `${process.env.FRONT_END_URL}/authentication/sign-up`;
 
-        const message = `You have been invited to join the ecosystem so please log in and accept the ecosystem “INVITATION” and participate in the ecosystem`;
+        const message = isUserExist
+          ? `You have already registered on platform, you can access the application.
+         Please log in and accept the ecosystem “INVITATION” and participate in the ecosystem`
+          : `You have to register on the platform and then you can access the application. Accept the ecosystem “INVITATION” and participate in the ecosystem`;
+
         const year: number = new Date().getFullYear();
 
         return `<!DOCTYPE html>
@@ -46,12 +51,12 @@ export class EcosystemInviteTemplate {
                             </a>
                         </div>
                         <p>In case you need any assistance to access your account, please contact <a href="https://credebl.in/"
-                                target="_blank">CREDEBL Platform</a>
+                                target="_blank">${process.env.PLATFORM_NAME} Platform</a>
                         </p>
                         <hr style="border-top:1px solid #e8e8e8" />
                         <footer style="padding-top: 20px;">
                             <p style="margin-top: 2px;">
-                                &reg; CREDEBL ${year}, Powered by Blockster Labs. All Rights Reserved.
+                                &reg; ${process.env.PLATFORM_NAME} ${year}, Powered by ${process.env.POWERED_BY}. All Rights Reserved.
                             </p>
                         </footer>
                     </div>

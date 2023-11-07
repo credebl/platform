@@ -190,6 +190,9 @@ export class OrganizationService {
       if (!organizationDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
       }
+
+      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
+      organizationDetails['credential_definitions'] = credentials;
       return organizationDetails;
 
     } catch (error) {
@@ -273,9 +276,22 @@ export class OrganizationService {
 
       const invitations = await this.organizationRepository.getOrgInvitations(query);
 
-      if (0 < invitations.length) {
+      let isPendingInvitation = false;
+      let isAcceptedInvitation = false;
+
+      for (const invitation of invitations) {
+        if (invitation.status === Invitation.PENDING) {
+          isPendingInvitation = true;
+        }
+        if (invitation.status === Invitation.ACCEPTED) {
+          isAcceptedInvitation = true;
+        }
+      }
+
+      if (isPendingInvitation || isAcceptedInvitation) {
         return true;
       }
+
       return false;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
@@ -283,14 +299,14 @@ export class OrganizationService {
     }
   }
 
-  /**
+   /**
    *
    * @Body sendInvitationDto
    * @returns createInvitation
    */
 
   // eslint-disable-next-line camelcase
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number): Promise<string> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number, userEmail: string): Promise<string> {
     const { invitations, orgId } = bulkInvitationDto;
 
     try {
@@ -303,7 +319,8 @@ export class OrganizationService {
 
         const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
-        if (!isInvitationExist) {
+        if (!isInvitationExist && userEmail !== invitation.email) {
+
           await this.organizationRepository.createSendInvitation(email, orgId, userId, orgRoleId);
 
           const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
@@ -313,7 +330,6 @@ export class OrganizationService {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
         }
-
       }
       await this.userActivityService.createActivity(userId, organizationDetails.id, `Invitations sent for ${organizationDetails.name}`, 'Get started with user role management once invitations accepted');
       return ResponseMessages.organisation.success.createInvitation;
@@ -463,6 +479,19 @@ export class OrganizationService {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getOgPofile(orgId: number): Promise<organisation> {
+    try {
+      const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
+      if (!orgProfile.logoUrl || '' === orgProfile.logoUrl) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgProfile);
+      }
+      return orgProfile;
+    } catch (error) {
+      this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

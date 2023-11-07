@@ -7,6 +7,12 @@ import { IssuanceController } from './issuance.controller';
 import { IssuanceRepository } from './issuance.repository';
 import { IssuanceService } from './issuance.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { BullModule } from '@nestjs/bull';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
+import { BulkIssuanceProcessor } from './issuance.processor';
 
 @Module({
   imports: [
@@ -18,9 +24,13 @@ import { getNatsOptions } from '@credebl/common/nats.config';
         options: getNatsOptions()
       }
     ]),
-    CommonModule
+    CommonModule,
+    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    BullModule.registerQueue({
+      name: 'bulk-issuance'
+    })
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger]
+  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor]
 })
 export class IssuanceModule { }

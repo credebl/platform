@@ -12,7 +12,7 @@ import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfa
 
 @Controller()
 export class EcosystemController {
-  constructor(private readonly ecosystemService: EcosystemService) {}
+  constructor(private readonly ecosystemService: EcosystemService) { }
   private readonly logger = new Logger('EcosystemController');
 
   /**
@@ -31,7 +31,7 @@ export class EcosystemController {
    * @param payload updation Details
    * @returns Get updated ecosystem details
    */
-  @MessagePattern({ cmd: 'edit-ecosystem' }) 
+  @MessagePattern({ cmd: 'edit-ecosystem' })
   async editEcosystem(@Body() payload: { editEcosystemDto, ecosystemId }): Promise<object> {
     return this.ecosystemService.editEcosystem(payload.editEcosystemDto, payload.ecosystemId);
   }
@@ -43,7 +43,7 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'get-all-ecosystem' })
   async getAllEcosystems(
-    @Body() payload: {orgId: string}
+    @Body() payload: { orgId: string }
   ): Promise<object> {
     return this.ecosystemService.getAllEcosystem(payload);
   }
@@ -63,18 +63,18 @@ export class EcosystemController {
    * Description: get ecosystem invitations
    * @returns Get sent invitation details
    */
-    @MessagePattern({ cmd: 'get-ecosystem-invitations' })
-    async getEcosystemInvitations(
-      @Body() payload: {userEmail: string, status: string; pageNumber: number; pageSize: number; search: string }
-    ): Promise<object> {
-      return this.ecosystemService.getEcosystemInvitations(
-        payload.userEmail,
-        payload.status,
-        payload.pageNumber,
-        payload.pageSize,
-        payload.search
-      );
-    } 
+  @MessagePattern({ cmd: 'get-ecosystem-invitations' })
+  async getEcosystemInvitations(
+    @Body() payload: { userEmail: string, status: string; pageNumber: number; pageSize: number; search: string }
+  ): Promise<object> {
+    return this.ecosystemService.getEcosystemInvitations(
+      payload.userEmail,
+      payload.status,
+      payload.pageNumber,
+      payload.pageSize,
+      payload.search
+    );
+  }
 
   /**
    *
@@ -97,9 +97,9 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'send-ecosystem-invitation' })
   async createInvitation(
-    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string }
-    ): Promise<string> {
-    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId);
+    payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string, userEmail: string }
+  ): Promise<string> {
+    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail);
   }
 
   /**
@@ -127,89 +127,104 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'get-endorsement-transactions' })
   async getEndorsementTransactions(
     @Body() payload: GetEndorsementsPayload
-  ): Promise<object> {    
+  ): Promise<object> {
     return this.ecosystemService.getEndorsementTransactions(
       payload
     );
-  } 
+  }
+
+
+  @MessagePattern({ cmd: 'get-all-ecosystem-schemas' })
+  async getAllEcosystemSchemas(
+    @Body() payload: GetEndorsementsPayload
+  ): Promise<object> {
+    return this.ecosystemService.getAllEcosystemSchemas(
+      payload
+    );
+  }
 
   @MessagePattern({ cmd: 'delete-ecosystem-invitations' })
   async deleteInvitation(
-    @Body() payload: {invitationId: string}
-    ): Promise<object> {
+    @Body() payload: { invitationId: string }
+  ): Promise<object> {
     return this.ecosystemService.deleteEcosystemInvitations(
       payload.invitationId
-      );
-  } 
+    );
+  }
   @MessagePattern({ cmd: 'fetch-ecosystem-org-data' })
   async fetchEcosystemOrg(
-  @Body() payload: { ecosystemId: string, orgId: string}
+    @Body() payload: { ecosystemId: string, orgId: string }
   ): Promise<object> {
-  return this.ecosystemService.fetchEcosystemOrg(
-  payload
-  );
+    return this.ecosystemService.fetchEcosystemOrg(
+      payload
+    );
   }
-  
-   /**
-   * 
-   * @param payload 
-   * @returns Schema endorsement request
-   */
-   @MessagePattern({ cmd: 'schema-endorsement-request' })
-   async schemaEndorsementRequest(
-     @Body() payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number, ecosystemId: string }
-     ): Promise<object> {
-     return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId, payload.ecosystemId);
-   }
 
-   /**
-   * 
-   * @param payload 
-   * @returns Schema endorsement request
-   */
-   @MessagePattern({ cmd: 'credDef-endorsement-request' })
-   async credDefEndorsementRequest(
-     @Body() payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number; ecosystemId:string}
-     ): Promise<object> {
-     return this.ecosystemService.requestCredDeffEndorsement(payload.requestCredDefPayload, payload.orgId, payload.ecosystemId);
-   }
+  /**
+  * 
+  * @param payload 
+  * @returns Schema endorsement request
+  */
+  @MessagePattern({ cmd: 'schema-endorsement-request' })
+  async schemaEndorsementRequest(payload: { requestSchemaPayload: RequestSchemaEndorsement; orgId: number, ecosystemId: string }
+  ): Promise<object> {
+    return this.ecosystemService.requestSchemaEndorsement(payload.requestSchemaPayload, payload.orgId, payload.ecosystemId);
+  }
 
-   /**
-   * 
-   * @param payload 
-   * @returns sign endorsement request
-   */
-   @MessagePattern({ cmd: 'sign-endorsement-transaction' })
-   async signTransaction(
-     @Body() payload: { endorsementId: string, ecosystemId:string }
-     ): Promise<object> {
-     return this.ecosystemService.signTransaction(payload.endorsementId, payload.ecosystemId);
-   }
+  /**
+  * 
+  * @param payload 
+  * @returns Schema endorsement request
+  */
+  @MessagePattern({ cmd: 'credDef-endorsement-request' })
+  async credDefEndorsementRequest(payload: { requestCredDefPayload: RequestCredDeffEndorsement; orgId: number; ecosystemId: string }
+  ): Promise<object> {
+    return this.ecosystemService.requestCredDeffEndorsement(payload.requestCredDefPayload, payload.orgId, payload.ecosystemId);
+  }
 
-   /**
-   * 
-   * @param payload 
-   * @returns submit endorsement request
-   */
-   @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
-   async submitTransaction(
-     @Body() payload: { endorsementId: string, ecosystemId:string }
-     ): Promise<object> {
-     return this.ecosystemService.submitTransaction(payload.endorsementId, payload.ecosystemId);
-   }
+  /**
+  * 
+  * @param payload 
+  * @returns sign endorsement request
+  */
+  @MessagePattern({ cmd: 'sign-endorsement-transaction' })
+  async signTransaction(payload: { endorsementId: string, ecosystemId: string }
+  ): Promise<object> {
+    return this.ecosystemService.signTransaction(payload.endorsementId, payload.ecosystemId);
+  }
 
-  
-    /**
-   *
-   * @param payload
-   * @returns Declien Endorsement Transaction status 
-   */
-    @MessagePattern({ cmd: 'decline-endorsement-transaction' })
-    async declineEndorsementRequestByLead(payload: {
-      ecosystemId:string, endorsementId:string
-    }): Promise<object> {
-      return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
-    }
+  /**
+  * 
+  * @param payload 
+  * @returns submit endorsement request
+  */
+  @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
+  async submitTransaction(payload: { endorsementId: string, ecosystemId: string }
+  ): Promise<object> {
+    return this.ecosystemService.submitTransaction(payload.endorsementId, payload.ecosystemId);
+  }
+
+  /**
+  * 
+  * @param payload 
+  * @returns auto sign and submit endorsement request
+  */
+  @MessagePattern({ cmd: 'auto-endorsement-transaction' })
+  async autoSignAndSubmitTransaction(): Promise<object> {
+    return this.ecosystemService.autoSignAndSubmitTransaction();
+  }
+
+  /**
+ *
+ * @param payload
+ * @returns Declien Endorsement Transaction status 
+ */
+  @MessagePattern({ cmd: 'decline-endorsement-transaction' })
+  async declineEndorsementRequestByLead(payload: {
+    ecosystemId: string, endorsementId: string
+  }): Promise<object> {
+    return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
+  }
 
 
 }

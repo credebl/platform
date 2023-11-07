@@ -7,6 +7,7 @@ export interface IAgentSpinupDto {
     walletPassword: string;
     seed: string;
     orgId: number;
+    did?: string;
     ledgerId?: number[];
     agentType?: AgentType;
     transactionApproval?: boolean;
@@ -14,12 +15,22 @@ export interface IAgentSpinupDto {
     tenant?: boolean;
 }
 
+export interface OutOfBandCredentialOffer {
+    emailId: string;
+    attributes: Attributes[];
+    credentialDefinitionId: string;
+    comment: string;
+    protocolVersion?: string;
+    orgId: number;
+}
+
 export interface ITenantDto {
     label: string;
     seed: string;
-    ledgerId?: number[];
     method: string;
     orgId: number;
+    did?: string;
+    ledgerId?: number[];
     tenantId?: string;
     clientSocketId?: string;
 }
@@ -137,6 +148,7 @@ export interface IStoreOrgAgentDetails {
     agentId?: number;
     orgAgentTypeId?: OrgAgentType;
     tenantId?: string;
+    ledgerId?: number[];
 }
 
 
@@ -230,10 +242,10 @@ export interface ICredentialFormats {
 }
 
 export interface IIndy {
-    attributes: IAttributes[];
+    attributes: Attributes[];
 }
 
-export interface IAttributes {
+export interface Attributes {
     name: string;
     value: string;
 }

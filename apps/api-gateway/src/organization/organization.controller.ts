@@ -28,6 +28,7 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
+import { ImageServiceService } from '@credebl/image-service';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -38,8 +39,22 @@ export class OrganizationController {
 
   constructor(
     private readonly organizationService: OrganizationService,
+    private readonly imageServiceService: ImageServiceService,
     private readonly commonService: CommonService
   ) { }
+
+  @Get('/profile/:orgId')
+  @ApiOperation({ summary: 'Organization Profile', description: 'Update an organization' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async getOgPofile(@Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+    const orgProfile = await this.organizationService.getOgPofile(orgId);
+
+    const base64Data = orgProfile.response["logoUrl"];
+    const getImageBuffer = await this.imageServiceService.getBase64Image(base64Data);
+
+    res.setHeader('Content-Type', 'image/png'); 
+    return res.send(getImageBuffer);
+  }
 
   /**
  * 
@@ -298,7 +313,7 @@ export class OrganizationController {
   async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: number, @User() user: user, @Res() res: Response): Promise<Response> {
 
     bulkInvitationDto.orgId = orgId;
-    await this.organizationService.createInvitation(bulkInvitationDto, user.id);
+    await this.organizationService.createInvitation(bulkInvitationDto, user.id, user.email);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

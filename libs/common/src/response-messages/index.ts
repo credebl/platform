@@ -14,11 +14,14 @@ export const ResponseMessages = {
             newUser: 'User not found',
             checkEmail: 'User email checked successfully.',
             sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
-            userActivity: 'User activities fetched successfully'
+            userActivity: 'User activities fetched successfully',
+            platformEcosystemettings: 'Platform and ecosystem settings updated'
         },
         error: {
             exists: 'User already exists',
             profileNotFound: 'User public profile not found',
+            notUpdatePlatformSettings: 'Unable to update platform config settings',
+            notUpdateEcosystemSettings: 'Unable to update ecosystem config settings',
             verificationAlreadySent: 'The verification link has already been sent to your email address',
             emailSend: 'Unable to send email to the user',
             invalidEmailUrl: 'Invalid verification code or EmailId!',
@@ -43,7 +46,7 @@ export const ResponseMessages = {
             update: 'Organization updated successfully',
             fetchProfile: 'Organization profile fetched successfully',
             fetchOrgRoles: 'Organization roles fetched successfully',
-            createInvitation: 'Organization invitations sent successfully',
+            createInvitation: 'Organization invitations sent',
             getInvitation: 'Organization invitations fetched successfully',
             getOrganization: 'Organization details fetched successfully',
             getOrgDashboard: 'Organization dashboard details fetched',
@@ -54,6 +57,7 @@ export const ResponseMessages = {
             exists: 'An organization name is already exist',
             profileNotFound: 'Organization public profile not found',
             rolesNotExist: 'Provided roles not exists in the platform',
+            orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles'
         }
@@ -153,15 +157,25 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Issue-credential offer created successfully',
-            fetch: 'Issue-credential fetched successfully'
-
+            fetch: 'Issue-credential fetched successfully',
+            importCSV: 'File imported sucessfully',
+            previewCSV: 'File details fetched sucessfully',
+            bulkIssuance: 'Bulk-issunace process started'
         },
         error: {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
+            organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
-            notFound: 'Organization agent not found'
+            notFound: 'Organization agent not found',
+            credentialOfferNotFound: 'Credential offer not found',
+            invitationNotFound: 'Invitation not found',
+            platformConfigNotFound: 'Platform config details not found',
+            emailSend: 'Unable to send email to the user',
+            previewFile: 'Error while fetching file details',
+            previewCachedData: 'Error while fetching cached data',
+            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request.'
         }
     },
     verification: {
@@ -190,7 +204,7 @@ export const ResponseMessages = {
             fetch: 'Ecosystem fetched successfully',
             getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
             getInvitation: 'Ecosystem invitations fetched successfully',
-            createInvitation: 'Ecosystem invitations sent successfully',
+            createInvitation: 'Ecosystem invitations sent',
             schemaRequest: 'Schema transaction request created successfully',
             credDefRequest: 'credential-definition transaction request created successfully',
             sign: 'Transaction request signed successfully',
@@ -198,8 +212,10 @@ export const ResponseMessages = {
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
             fetchEndorsors: 'Endorser transactions fetched successfully',
-            DeclineEndorsementTransaction:'Decline endorsement request successfully',
-            fetchMembers: 'Ecosystem members fetched successfully'
+            DeclineEndorsementTransaction: 'Decline endorsement request successfully',
+            AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
+            fetchMembers: 'Ecosystem members fetched successfully',
+            allschema: 'Schema details fetched sucessfully'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
@@ -231,9 +247,21 @@ export const ResponseMessages = {
             invalidTransaction: 'Transaction does not exist',
             transactionSubmitted: 'Transaction already submitted',
             invalidAgentUrl: 'Invalid agent url',
-            EndorsementTransactionNotFoundException:'Endorsement transaction with status requested not found',
-            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction:'Cannot update  endorsement transaction status as OrgId and EcosystemId is not present in ecosystemOrg',
-            ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.'
+            EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
+            OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
+            ecosystemOrgAlready: 'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.',
+            updateSchemaId: 'Error while updating the schema id',
+            updateCredDefId: 'Error while updating the credential-definition',
+            invalidMessage: 'Invalid transaction details. Missing "message" property.',
+            invalidTransactionMessage: 'Invalid transaction details'
         }
-    }   
+    },
+    bulkIssuance: {
+        success: {
+            create: 'Issuance process successfully'
+        },
+        error: {
+            PathNotFound: 'Path to export data not found.'
+        }
+    }
 };

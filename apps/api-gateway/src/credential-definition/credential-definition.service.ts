@@ -28,4 +28,14 @@ export class CredentialDefinitionService extends BaseService {
     const payload = { credDefSearchCriteria, user, orgId };
     return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions', payload);
   }
+
+  getCredentialDefinitionBySchemaId(schemaId: string): Promise<{ response: object }> {
+    const payload = { schemaId };
+    return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions-by-schema-id', payload);
+  }
+
+  getAllCredDefAndSchemaForBulkOperation(orgId:number): Promise<{ response: object }> {
+    const payload = { orgId };
+    return this.sendNats(this.credDefServiceProxy, 'get-all-schema-cred-defs-for-bulk-operation', payload);
+  }
 }

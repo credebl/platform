@@ -82,17 +82,16 @@ export class AuthzController {
   @Post('/signup')
   @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
   async addUserDetails(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
-    const decryptedPassword = this.commonService.decryptPassword(userInfo.password);
-
-    userInfo.password = decryptedPassword;
-    const userDetails = await this.authzService.addUserDetails(userInfo);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.user.success.create,
-      data: userDetails.response
-    };
+      const userDetails = await this.authzService.addUserDetails(userInfo);
+      const finalResponse = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.user.success.create,
+        data: userDetails.response
+      };
     return res.status(HttpStatus.CREATED).json(finalResponse);
+
   }
+
 
   /**
   * 
@@ -110,11 +109,7 @@ export class AuthzController {
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
 
     if (loginUserDto.email) {
-      let decryptedPassword;
-      if (loginUserDto.password) {
-        decryptedPassword = this.commonService.decryptPassword(loginUserDto.password);
-      }
-      const userData = await this.authzService.login(loginUserDto.email, decryptedPassword, loginUserDto.isPasskey);
+      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password, loginUserDto.isPasskey);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.user.success.login,

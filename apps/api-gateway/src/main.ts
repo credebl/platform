@@ -7,30 +7,23 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AllExceptionsFilter } from '@credebl/common/exception-handler';
-
-// const fs = require('fs'); 
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 
 dotenv.config();
 
-// async function readSecretFile(filename: string): Promise<void> {
-//   return fs.readFile(filename, 'utf8', function (err, data) {
-//     // Display the file content 
-//     return data;
-//   });
-// }
-
 async function bootstrap(): Promise<void> {
 
-  // const httpsOptions = {
-  //   key: await readSecretFile(''),
-  //   cert: await readSecretFile(''),
-  // };
-
-  // const config = new ConfigService();
   const app = await NestFactory.create(AppModule, {
     // httpsOptions,
   });
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.NATS,
+    options: getNatsOptions()
+  });
+
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb' }));
 

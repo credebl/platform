@@ -5,7 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthzMiddleware } from './authz/authz.middleware';
 import { AuthzModule } from './authz/authz.module';
-import { ClientsModule } from '@nestjs/microservices';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import { CredentialDefinitionModule } from './credential-definition/credential-definition.module';
 import { FidoModule } from './fido/fido.module';
@@ -16,10 +16,11 @@ import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
 import { RevocationModule } from './revocation/revocation.module';
 import { SchemaModule } from './schema/schema.module';
-import { commonNatsOptions } from 'libs/service/nats.options';
+// import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { EcosystemModule } from './ecosystem/ecosystem.module';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { EcosystemModule } from './ecosystem/ecosystem.module';
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
-        ...commonNatsOptions('AGENT_SERVICE:REQUESTER')
+        transport: Transport.NATS,
+        options: getNatsOptions()
       }
     ]),
     AgentModule,

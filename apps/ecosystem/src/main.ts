@@ -3,6 +3,7 @@ import { EcosystemModule } from './ecosystem.module';
 import { HttpExceptionFilter } from 'libs/http-exception.filter';
 import { Logger } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 const logger = new Logger();
 
@@ -10,9 +11,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(EcosystemModule, {
     transport: Transport.NATS,
-    options: {
-      servers: [`${process.env.NATS_URL}`]
-    }
+    options: getNatsOptions()
   });
 
   app.useGlobalFilters(new HttpExceptionFilter());

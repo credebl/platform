@@ -5,6 +5,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule } from '@credebl/common';
 import { ConnectionRepository } from './connection.repository';
 import { PrismaService } from '@credebl/prisma-service';
+import { getNatsOptions } from '@credebl/common/nats.config';
 // import { nkeyAuthenticator } from 'nats';
 
 @Module({
@@ -13,10 +14,7 @@ import { PrismaService } from '@credebl/prisma-service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        //   authenticator: nkeyAuthenticator(new TextEncoder().encode(process.env.CONNECTION_NKEY_SEED)),
-         }
+        options: getNatsOptions()
       }
     ]),
 

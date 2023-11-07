@@ -38,7 +38,7 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
+import { FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -327,6 +327,132 @@ export class IssuanceController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,
       data: perviewCSVDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/bulk/files')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'Get the file list for bulk operation',
+    description: 'Get all the file list for organization for bulk operation'
+  })
+
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortValue',
+    type: Number,
+    required: false
+  })
+  async issuedFileDetails(
+    @Param('orgId') orgId: number,
+    @Query() fileParameter: FileParameter,
+    @Res() res: Response
+  ): Promise<object> {
+    const issuedFileDetails = await this.issueCredentialService.issuedFileDetails(
+      orgId,
+      fileParameter
+    );
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.previewCSV,
+      data: issuedFileDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+  
+  @Get('/orgs/:orgId/bulk/file-data')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'Get the file data',
+    description: 'Get the file data by file id'
+  })
+
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortValue',
+    type: Number,
+    required: false
+  })
+  async getFileDetailsByFileId(
+    @Param('orgId') orgId: number,
+    @Param('fileId') fileId: string,
+    @Query() fileParameter: FileParameter,
+    @Res() res: Response
+  ): Promise<object> {
+    const issuedFileDetails = await this.issueCredentialService.getFileDetailsByFileId(
+      orgId,
+      fileId,
+      fileParameter
+    );
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.previewCSV,
+      data: issuedFileDetails.response
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

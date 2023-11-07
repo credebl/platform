@@ -597,6 +597,65 @@ export class IssuanceService {
     }
   }
 
+  async getFileDetailsByFileId(
+    fileId: string,
+    getAllfileDetails: PreviewRequest
+  ): Promise<object> {
+    try {
+ 
+      const fileDetails = await this.issuanceRepository.getFileDetailsByFileId(fileId, getAllfileDetails);
+
+      const fileResponse = {
+        totalItems: fileDetails.fileCount,
+        hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
+        hasPreviousPage: 1 < getAllfileDetails.pageNumber,
+        nextPage: getAllfileDetails.pageNumber + 1,
+        previousPage: getAllfileDetails.pageNumber - 1,
+        lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
+        data: fileDetails.fileList
+      };
+
+      if (0 !== fileDetails.fileCount) {
+        return fileResponse;
+      } else {
+        throw new NotFoundException(ResponseMessages.issuance.error.notFound);
+      }
+
+    } catch (error) {
+      this.logger.error(`error in issuedFileDetails : ${error}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async issuedFileDetails(
+    orgId: string,
+    getAllfileDetails: PreviewRequest
+  ): Promise<object> {
+    try {
+ 
+      const fileDetails = await this.issuanceRepository.getAllFileDetails(orgId, getAllfileDetails);
+
+      const fileResponse = {
+        totalItems: fileDetails.fileCount,
+        hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
+        hasPreviousPage: 1 < getAllfileDetails.pageNumber,
+        nextPage: getAllfileDetails.pageNumber + 1,
+        previousPage: getAllfileDetails.pageNumber - 1,
+        lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
+        data: fileDetails.fileList
+      };
+
+      if (0 !== fileDetails.fileCount) {
+        return fileResponse;
+      } else {
+        throw new NotFoundException(ResponseMessages.issuance.error.notFound);
+      }
+
+    } catch (error) {
+      this.logger.error(`error in issuedFileDetails : ${error}`);
+      throw new RpcException(error.response);
+    }
+  }
 
   async issueBulkCredential(requestId: string, orgId: number): Promise<string> {
     const fileUpload: {

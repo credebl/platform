@@ -130,6 +130,24 @@ export class UserController {
 
   }
 
+  @Get('/platform-settings')
+  @ApiOperation({ summary: 'Get all platform and ecosystem settings', description: 'Get all platform and ecosystem settings' })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiBearerAuth()
+  async getPlatformSettings(@Res() res: Response): Promise<Response> {
+    const settings = await this.userService.getPlatformSettings();
+
+    const finalResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchPlatformSettings,
+      data: settings.response
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
   @Get('/activity')
   @ApiOperation({
     summary: 'organization invitations',

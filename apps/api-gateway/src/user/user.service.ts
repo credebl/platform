@@ -81,4 +81,8 @@ export class UserService extends BaseService {
     const payload = { platformSettings };
     return this.sendNats(this.serviceProxy, 'update-platform-settings', payload);
   }
+
+  async getPlatformSettings(): Promise<{ response: object }> {
+    return this.sendNats(this.serviceProxy, 'fetch-platform-settings', '');
+  }
 }

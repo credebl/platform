@@ -6,7 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { EcosystemController } from './ecosystem.controller';
 import { EcosystemService } from './ecosystem.service';
-import { nkeyAuthenticator } from 'nats';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -16,10 +16,7 @@ import { nkeyAuthenticator } from 'nats';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`],
-           authenticator: nkeyAuthenticator(new TextEncoder().encode('SUAG4DUOUYQLU2QKQUBCF74LV3CYHIHGNZVAGH4P3Q4NLBRVDZF6UZ6CNY'))
-        }
+        options: getNatsOptions()
       },
       CommonModule
     ])

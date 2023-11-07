@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { FidoController } from './fido.controller';
 import { FidoService } from './fido.service';
-// import { nkeyAuthenticator } from 'nats';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports:[
@@ -10,10 +10,8 @@ import { FidoService } from './fido.service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-  
-        }
+        options: getNatsOptions()
+
       }
     ])
   ],

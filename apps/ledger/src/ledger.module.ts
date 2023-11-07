@@ -6,7 +6,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { CredentialDefinitionModule } from './credential-definition/credential-definition.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { LedgerRepository } from './repositories/ledger.repository';
-// import { nkeyAuthenticator } from 'nats';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -14,10 +14,8 @@ import { LedgerRepository } from './repositories/ledger.repository';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-          // authenticator: nkeyAuthenticator(new TextEncoder().encode(process.env.LEDGER_NKEY_SEED)),
-        }
+        options: getNatsOptions()
+
       }
     ]),
     SchemaModule, CredentialDefinitionModule

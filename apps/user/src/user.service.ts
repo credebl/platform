@@ -669,4 +669,31 @@ export class UserService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async getPlatformEcosystemSettings(): Promise<object> {
+      try {
+
+        const platformSettings = {};
+        const platformConfigSettings = await this.userRepository.getPlatformSettings();
+        
+        if (!platformConfigSettings) {
+          throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound);
+        }
+  
+        const ecosystemConfigSettings = await this.userRepository.getEcosystemSettings();
+  
+        if (!ecosystemConfigSettings) {
+          throw new BadRequestException(ResponseMessages.user.error.ecosystemSetttingsNotFound);
+        }
+
+        platformSettings['platform_config'] = platformConfigSettings;
+        platformSettings['ecosystem_config'] = ecosystemConfigSettings;
+
+        return platformSettings;
+  
+      } catch (error) {
+        this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
+      }
+  }
 }

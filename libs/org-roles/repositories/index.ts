@@ -3,6 +3,7 @@ import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { org_roles } from '@prisma/client';
+import { OrgRoles } from '../enums';
 
 @Injectable()
 export class OrgRolesRepository {
@@ -28,7 +29,8 @@ export class OrgRolesRepository {
     async getOrgRoles(): Promise<org_roles[]> {
         try {
             const roleDetails = await this.prisma.org_roles.findMany();
-            return roleDetails;
+            const filteredRoles = roleDetails.filter(role => role.name !== OrgRoles.PLATFORM_ADMIN);
+            return filteredRoles;
         } catch (error) {
             this.logger.error(`In get org-roles repository: ${JSON.stringify(error)}`);
             throw new InternalServerErrorException('Bad Request');

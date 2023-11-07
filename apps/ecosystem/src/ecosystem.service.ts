@@ -37,10 +37,24 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<object> {
-    const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
-    if (checkOrganization) {
-      throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-    };
+
+    const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
+
+    if (ecosystemExist) {
+      throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+    }
+
+    const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(EcosystemConfigSettings.MULTI_ECOSYSTEM);
+
+    if (isMultiEcosystemEnabled && 'false' === isMultiEcosystemEnabled.value) {
+      const ecoOrganizationList = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
+      
+      for (const organization of ecoOrganizationList) {
+        if (organization['ecosystemRole']['name'] === EcosystemRoles.ECOSYSTEM_MEMBER) {
+          throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+        }
+      }
+    }   
     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
     if (!createEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);

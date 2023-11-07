@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, credentials, file_data, file_upload, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { FileUpload, FileUploadData, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUpload, FileUploadData, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 @Injectable()
 export class IssuanceRepository {
 
@@ -236,6 +236,88 @@ export class IssuanceRepository {
             throw error;
         }
     }
+
+    async getAllFileDetails(orgId: string, getAllfileDetails: PreviewRequest): Promise<{
+        fileCount: number
+        fileList: {
+            id: string;
+            name: string;
+            status: string;
+            upload_type: string;
+            orgId: string;
+            createDateTime: Date;
+            createdBy: string;
+            lastChangedDateTime: Date;
+            lastChangedBy: string;
+            deletedAt: Date;
+        }[]
+    }> {
+        try {
+            const fileList = await this.prisma.file_upload.findMany({
+                where: {
+                    orgId: String(orgId),
+                    OR: [
+                        { name: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
+                        { status: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
+                        { upload_type: { contains: getAllfileDetails?.search, mode: 'insensitive' } }
+                    ]
+                },
+                take: Number(getAllfileDetails?.pageSize),
+                skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize
+            });
+            const fileCount = await this.prisma.file_upload.count({
+                where: {
+                    orgId: String(orgId)
+                }
+            });
+            return { fileCount, fileList };
+        } catch (error) {
+            this.logger.error(`[getFileUploadDetails] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getFileDetailsByFileId(fileId: unknown, getAllfileDetails: PreviewRequest): Promise<{
+        fileCount: number
+        fileList: {
+            id: string;
+            referenceId: string;
+            isError: boolean;
+            error: string;
+            detailError: string;
+            createDateTime: Date;
+            createdBy: string;
+            lastChangedDateTime: Date;
+            lastChangedBy: string;
+            deletedAt: Date;
+            fileUploadId: string;
+        }[]
+    }> {
+        try {
+            const fileList = await this.prisma.file_data.findMany({
+                where: {
+                    fileUploadId: fileId,
+                    OR: [
+                        { error: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
+                        { referenceId: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
+                        { detailError: { contains: getAllfileDetails?.search, mode: 'insensitive' } }
+                    ]
+                },
+                take: Number(getAllfileDetails?.pageSize),
+                skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize
+            });
+            const fileCount = await this.prisma.file_data.count({
+                where: {
+                    fileUploadId: fileId
+                }
+            });
+            return { fileCount, fileList };
+        } catch (error) {
+            this.logger.error(`[getFileDetailsByFileId] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
 
     async saveFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
         try {

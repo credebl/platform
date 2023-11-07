@@ -163,7 +163,8 @@ export const ResponseMessages = {
             fetch: 'Issue-credential fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
-            bulkIssuance: 'Bulk-issunace process started'
+            bulkIssuance: 'Bulk-issunace process started',
+            notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',

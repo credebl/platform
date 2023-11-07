@@ -511,11 +511,13 @@ export class IssuanceService {
 
 
   async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
-    this.logger.log(`START importAndPreviewDataForIssuance`, importFileDetails);
+    this.logger.log(`START importAndPreviewDataForIssuance----${JSON.stringify(importFileDetails)}`);
     try {
+
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
 
+    this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
 
       const csvFile = readFileSync(importFileDetails.filePath);
       const csvData = csvFile.toString();
@@ -526,6 +528,7 @@ export class IssuanceService {
         complete: (results) => results.data
       });
 
+      this.logger.log(`parsedData----${JSON.stringify(parsedData)}`);
 
       if (0 >= parsedData.data.length) {
         throw new BadRequestException(`File data is empty`);

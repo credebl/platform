@@ -520,6 +520,7 @@ export class IssuanceService {
     this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
 
       const csvFile = readFileSync(importFileDetails.filePath);
+      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
       const csvData = csvFile.toString();
       const parsedData = paParse(csvData, {
         header: true,

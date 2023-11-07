@@ -23,7 +23,7 @@ async function bootstrap(): Promise<void> {
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)
     .setVersion('1.0')
     .addBearerAuth()
-    .addServer('http://192.168.1.83:5000')
+    .addServer('http://localhost:5000')
     .addServer('https://devapi.credebl.id')
     .addServer('https://qa-api.credebl.id')
     .addServer('https://api.credebl.id')

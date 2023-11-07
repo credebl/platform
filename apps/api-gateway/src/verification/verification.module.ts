@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
-// import { nkeyAuthenticator } from 'nats';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -13,10 +13,7 @@ import { VerificationService } from './verification.service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-          // authenticator: nkeyAuthenticator(new TextEncoder().encode(process.env.VERIFICATION_NKEY_SEED)),
-        }
+        options: getNatsOptions()
       }
     ])
   ],

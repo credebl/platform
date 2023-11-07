@@ -3,7 +3,7 @@ import { Logger, Module } from '@nestjs/common';
 
 import { CredentialDefinitionController } from './credential-definition.controller';
 import { CredentialDefinitionService } from './credential-definition.service';
-// import { nkeyAuthenticator } from 'nats';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports:[
@@ -11,10 +11,7 @@ import { CredentialDefinitionService } from './credential-definition.service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-          
-        }
+        options: getNatsOptions()
       }
     ])
   ],

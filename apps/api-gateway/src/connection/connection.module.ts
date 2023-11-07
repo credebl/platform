@@ -1,4 +1,4 @@
-// import { nkeyAuthenticator } from 'nats';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { ConnectionController } from './connection.controller';
 import { ConnectionService } from './connection.service';
 import { Module } from '@nestjs/common';
@@ -11,10 +11,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
             {
                 name: 'NATS_CLIENT',
                 transport: Transport.NATS,
-                options: {
-                  servers: [`${process.env.NATS_URL}`]
-                  // authenticator: nkeyAuthenticator(new TextEncoder().encode(process.env.CONNECTION_NKEY_SEED)),
-                }
+                options: getNatsOptions()
               }
         ])
     ],

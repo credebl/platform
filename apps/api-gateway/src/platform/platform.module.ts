@@ -3,7 +3,7 @@ import { PlatformController } from './platform.controller';
 import { PlatformService } from './platform.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
-// import { nkeyAuthenticator } from 'nats';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -12,10 +12,7 @@ import { ConfigModule } from '@nestjs/config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-          
-        }
+        options: getNatsOptions()
       }
     ])
   ],

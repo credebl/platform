@@ -239,8 +239,8 @@ export class IssuanceController {
       const newFilename = `${file.filename}-${timestamp}${ext}`;
 
       fs.rename(
-        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
-        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        `./uploadedFiles/import/${file.filename}`,
+        `./uploadedFiles/import/${newFilename}`,
         async (err: any) => {
           if (err) {
             throw err;
@@ -250,7 +250,7 @@ export class IssuanceController {
 
       const reqPayload: RequestPayload = {
         credDefId: credentialDefinitionId,
-        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        filePath: `./uploadedFiles/import/${newFilename}`,
         fileName: newFilename
       };
       const importCsvDetails = await this.issueCredentialService.importCsv(

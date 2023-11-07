@@ -76,11 +76,11 @@ export interface ImportFileDetails {
 }
 
 export interface PreviewRequest {
-    pageNumber: number,
-    search: string,
-    pageSize: number,
-    sortBy: string,
-    sortValue: string
+    pageNumber?: number,
+    search?: string,
+    pageSize?: number,
+    sortBy?: string,
+    sortValue?: string
 }
 
 export interface FileUpload {

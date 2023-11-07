@@ -3,7 +3,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
+import { FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
 import { FileExportResponse, RequestPayload } from './interfaces';
 
 @Injectable()
@@ -85,7 +85,31 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'preview-csv-details', payload);
     }
 
-    async issueBulkCredential(requestId: string, orgId: string): Promise<{ response: object }> {
+    async issuedFileDetails(
+        orgId: number,
+        fileParameter: FileParameter
+    ): Promise<{ response: object }> {
+        const payload = {
+            orgId,
+            fileParameter
+        };
+        return this.sendNats(this.issuanceProxy, 'issued-file-details', payload);
+    }
+
+    async getFileDetailsByFileId(
+        orgId: number,
+        fileId: string,
+        fileParameter: FileParameter
+    ): Promise<{ response: object }> {
+        const payload = {
+            orgId,
+            fileId,
+            fileParameter
+        };
+        return this.sendNats(this.issuanceProxy, 'issued-file-data', payload);
+    }
+
+    async issueBulkCredential(requestId: string, orgId: number): Promise<{ response: object }> {
         const payload = { requestId, orgId };
         return this.sendNats(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }

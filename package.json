@@ -65,6 +65,7 @@
     "express": "^4.18.2",
     "fs": "0.0.1-security",
     "generate-password": "^1.7.0",
+    "helmet": "^7.0.0",
     "html-pdf": "^3.0.1",
     "json2csv": "^5.0.7",
     "jsonwebtoken": "^9.0.1",

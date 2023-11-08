@@ -236,7 +236,10 @@ export class IssuanceController {
       this.logger.log(`Uploaded file : ${file.filename}`);
       const timestamp = Math.floor(Date.now() / 1000);
       const ext = extname(file.filename);
-      const newFilename = `${file.filename}-${timestamp}${ext}`;
+      const parts = file.filename.split("-");
+      // eslint-disable-next-line prefer-destructuring
+      const resultString = parts[0];
+      const newFilename = `${resultString}-${timestamp}${ext}`;
 
       fs.rename(
         `./uploadedFiles/import/${file.filename}`,

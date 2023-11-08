@@ -50,7 +50,7 @@ export class ConnectionService {
       if (connectionInvitationExist) {
         return connectionInvitationExist;
       }
- 
+
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
 
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
@@ -69,16 +69,17 @@ export class ConnectionService {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-         imageUrl: logoImageUrl ? logoImageUrl : undefined,
+        imageUrl: logoImageUrl ? logoImageUrl : undefined,
         label: label || undefined
       };
 
-      const url = await this.getAgentUrl(agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const apiKey = platformConfig?.sgApiKey;
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-      
+
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
 
       let shortenedUrl;
@@ -89,7 +90,7 @@ export class ConnectionService {
       }
 
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(shortenedUrl, agentId, orgId);
-      
+
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
@@ -126,7 +127,7 @@ export class ConnectionService {
   async _createConnectionInvitation(connectionPayload: object, url: string, apiKey: string): Promise<ConnectionInvitationResponse> {
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
     const payload = { connectionPayload, url, apiKey };
-    
+
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
@@ -183,6 +184,7 @@ export class ConnectionService {
   async getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<string> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
@@ -199,11 +201,11 @@ export class ConnectionService {
       };
 
       let url;
-      if (agentDetails?.orgAgentTypeId === OrgAgentType.DEDICATED) {
+      if (orgAgentType === OrgAgentType.DEDICATED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
 
-      } else if (agentDetails?.orgAgentTypeId === OrgAgentType.SHARED) {
+      } else if (orgAgentType === OrgAgentType.SHARED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace('#', agentDetails.tenantId);
       } else {
@@ -260,7 +262,7 @@ export class ConnectionService {
     try {
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-     
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
@@ -269,10 +271,10 @@ export class ConnectionService {
       }
 
       let url;
-      if (agentDetails?.orgAgentTypeId === OrgAgentType.DEDICATED) {
+      if (orgAgentType === OrgAgentType.DEDICATED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTION_BY_ID}`.replace('#', connectionId);
-      } else if (agentDetails?.orgAgentTypeId === OrgAgentType.SHARED) {
+      } else if (orgAgentType === OrgAgentType.SHARED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID}`.replace('#', connectionId).replace('@', agentDetails.tenantId);
       } else {
@@ -322,17 +324,17 @@ export class ConnectionService {
   * @returns agent URL
   */
   async getAgentUrl(
-    orgAgentTypeId: string,
+    orgAgentType: string,
     agentEndPoint: string,
     tenantId?: string
   ): Promise<string> {
     try {
 
       let url;
-      if (orgAgentTypeId === OrgAgentType.DEDICATED) {
+      if (orgAgentType === OrgAgentType.DEDICATED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_CONN_LEGACY_INVITE}`;
-      } else if (orgAgentTypeId === OrgAgentType.SHARED) {
+      } else if (orgAgentType === OrgAgentType.SHARED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_INVITATION}`.replace('#', tenantId);
       } else {

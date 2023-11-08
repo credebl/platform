@@ -1,6 +1,6 @@
 import { ResponseMessages } from "@credebl/common/response-messages";
 import { PrismaService } from "@credebl/prisma-service";
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 // eslint-disable-next-line camelcase
 import { org_agents, organisation, platform_config, presentations } from "@prisma/client";
 import { IWebhookProofPresentation } from "../interfaces/verification.interface";
@@ -76,7 +76,7 @@ export class VerificationRepository {
 
         } catch (error) {
             this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`);
-            throw new InternalServerErrorException(error);
+            throw error;
         }
     }
 
@@ -91,7 +91,23 @@ export class VerificationRepository {
 
         } catch (error) {
             this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`);
-            throw new InternalServerErrorException(error);
+            throw error;
+        }
+    }
+
+    async getOrgAgentType(orgAgentId: string): Promise<string> {
+        try {
+
+            const { agent } = await this.prisma.org_agents_type.findFirst({
+                where: {
+                    id: orgAgentId
+                }
+            });
+
+            return agent;
+        } catch (error) {
+            this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+            throw error;
         }
     }
 }

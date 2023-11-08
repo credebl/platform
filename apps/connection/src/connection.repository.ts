@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, connections, platform_config, shortening_url } from '@prisma/client';
@@ -50,7 +50,7 @@ export class ConnectionRepository {
 
             const agentDetails = await this.prisma.agent_invitations.create({
                 data: {
-                    orgId:String(orgId),
+                    orgId: String(orgId),
                     agentId,
                     connectionInvitation,
                     multiUse: true
@@ -186,7 +186,23 @@ export class ConnectionRepository {
 
         } catch (error) {
             this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`);
-            throw new InternalServerErrorException(error);
+            throw error;
+        }
+    }
+
+    async getOrgAgentType(orgAgentId: string): Promise<string> {
+        try {
+
+            const { agent } = await this.prisma.org_agents_type.findFirst({
+                where: {
+                    id: orgAgentId
+                }
+            });
+
+            return agent;
+        } catch (error) {
+            this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+            throw error;
         }
     }
 }

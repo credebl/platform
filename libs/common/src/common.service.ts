@@ -11,6 +11,8 @@ import {
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
+import { readFileSync } from 'fs';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class CommonService {
@@ -322,6 +324,21 @@ export class CommonService {
       return decryptedPassword;
     } catch (error) {
       throw new BadRequestException('Invalid Credentials');
+    }
+    
+  }
+
+
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  readFileDetails(filePath: string) {
+    try {
+      const csvFile = readFileSync(filePath);
+
+      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
+      const csvData: string = csvFile.toString();
+      return csvData;
+    } catch (error) {
+      throw new RpcException(error.response);
     }
     
   }

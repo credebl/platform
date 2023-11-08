@@ -17,7 +17,6 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
 import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
-import { readFileSync } from 'fs';
 import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
@@ -520,10 +519,10 @@ export class IssuanceService {
       this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
 
       this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.filePath)}`);
-      const csvFile = readFileSync(importFileDetails.filePath);
 
-      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
-      const csvData = csvFile.toString();
+      const csvData = await this.commonService.readFileDetails(importFileDetails.filePath);
+
+      this.logger.log(`csvFile----${JSON.stringify(csvData)}`);
       const parsedData = paParse(csvData, {
         header: true,
         skipEmptyLines: true,

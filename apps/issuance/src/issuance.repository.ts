@@ -279,7 +279,7 @@ export class IssuanceRepository {
 
     async getFileDetailsByFileId(fileId: unknown, getAllfileDetails: PreviewRequest): Promise<{
         fileCount: number
-        fileList: {
+        fileDataList: {
             id: string;
             referenceId: string;
             isError: boolean;
@@ -294,7 +294,7 @@ export class IssuanceRepository {
         }[]
     }> {
         try {
-            const fileList = await this.prisma.file_data.findMany({
+            const fileDataList = await this.prisma.file_data.findMany({
                 where: {
                     fileUploadId: fileId,
                     OR: [
@@ -311,7 +311,7 @@ export class IssuanceRepository {
                     fileUploadId: fileId
                 }
             });
-            return { fileCount, fileList };
+            return { fileCount, fileDataList };
         } catch (error) {
             this.logger.error(`[getFileDetailsByFileId] - error: ${JSON.stringify(error)}`);
             throw error;

@@ -606,19 +606,19 @@ export class IssuanceService {
   ): Promise<object> {
     try {
  
-      const fileDetails = await this.issuanceRepository.getFileDetailsByFileId(fileId, getAllfileDetails);
+      const fileData = await this.issuanceRepository.getFileDetailsByFileId(fileId, getAllfileDetails);
 
       const fileResponse = {
-        totalItems: fileDetails.fileCount,
-        hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
+        totalItems: fileData.fileCount,
+        hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileData.fileCount,
         hasPreviousPage: 1 < getAllfileDetails.pageNumber,
         nextPage: getAllfileDetails.pageNumber + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
-        lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
-        data: fileDetails.fileList
+        lastPage: Math.ceil(fileData.fileCount / getAllfileDetails.pageSize),
+        data: fileData.fileDataList
       };
 
-      if (0 !== fileDetails.fileCount) {
+      if (0 !== fileData.fileCount) {
         return fileResponse;
       } else {
         throw new NotFoundException(ResponseMessages.issuance.error.notFound);
@@ -637,7 +637,6 @@ export class IssuanceService {
     try {
  
       const fileDetails = await this.issuanceRepository.getAllFileDetails(orgId, getAllfileDetails);
-
       const fileResponse = {
         totalItems: fileDetails.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,

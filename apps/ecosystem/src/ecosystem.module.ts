@@ -13,7 +13,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions()
+        options: getNatsOptions(process.env.ECOSYSTEM_NKEY_SEED)
       }
     ]),
 

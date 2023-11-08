@@ -15,7 +15,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions()
+        options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED)
 
       }
     ]),

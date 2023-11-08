@@ -21,7 +21,7 @@ import { BulkIssuanceProcessor } from './issuance.processor';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions()
+        options: getNatsOptions(process.env.ISSUANCE_NKEY_SEED)
       }
     ]),
     CommonModule,

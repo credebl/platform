@@ -9,7 +9,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(LedgerModule, {
     transport: Transport.NATS,
-    options: getNatsOptions()
+    options: getNatsOptions(process.env.LEDGER_NKEY_SEED)
 
   });
   app.useGlobalFilters(new HttpExceptionFilter());

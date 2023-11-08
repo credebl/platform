@@ -10,7 +10,7 @@ const logger = new Logger();
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(UserModule, {
     transport: Transport.NATS,
-    options: getNatsOptions()
+    options: getNatsOptions(process.env.USER_NKEY_SEED)
   });
 
   app.useGlobalFilters(new HttpExceptionFilter());

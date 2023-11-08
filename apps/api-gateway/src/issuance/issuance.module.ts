@@ -14,7 +14,7 @@ import { ImageServiceService } from '@credebl/image-service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions()
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
       }
     ])
   ],

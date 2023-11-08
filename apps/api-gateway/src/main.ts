@@ -21,7 +21,7 @@ async function bootstrap(): Promise<void> {
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
-    options: getNatsOptions()
+    options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
   });
 
   const expressApp = app.getHttpAdapter().getInstance();

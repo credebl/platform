@@ -25,6 +25,7 @@ import { orderValues, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
+import { readFileSync } from 'fs';
 
 
 @Injectable()
@@ -520,9 +521,12 @@ export class IssuanceService {
 
       this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.filePath)}`);
 
-      const csvData = await this.commonService.readFileDetails(importFileDetails.filePath);
+      // const csvData = await this.commonService.readFileDetails(importFileDetails.filePath);
 
-      this.logger.log(`csvFile----${JSON.stringify(csvData)}`);
+      const csvFile = readFileSync(importFileDetails.filePath);
+
+      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
+      const csvData: string = csvFile.toString();
       const parsedData = paParse(csvData, {
         header: true,
         skipEmptyLines: true,

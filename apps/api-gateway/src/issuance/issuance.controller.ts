@@ -242,8 +242,8 @@ export class IssuanceController {
       this.logger.log(`newFilename file : ${newFilename}`);
       //Testing on dev
       fs.rename(
-        `./uploadedFiles/import/${file.filename}`,
-        `./uploadedFiles/import/${newFilename}`,
+        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
+        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
         async (err: any) => {
           if (err) {
             throw err;
@@ -253,7 +253,7 @@ export class IssuanceController {
 
       const reqPayload: RequestPayload = {
         credDefId: credentialDefinitionId,
-        filePath: `./uploadedFiles/import/${newFilename}`,
+        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
         fileName: newFilename
       };
       this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);

@@ -33,6 +33,7 @@ import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
+import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -261,6 +262,24 @@ export class UserController {
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
+  }
+
+  @Post('/certificate')
+  @ApiOperation({
+    summary: 'Share user certificate',
+    description: 'Share user certificate'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async shareUserCertificate (@Body() shareUserCredentials: CreateUserCertificateDto, @Res() res: Response): Promise<object> {
+    const userCertificateDetails = await this.userService.shareUserCertificate(shareUserCredentials);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: 'Certificate created successfully',
+      data: userCertificateDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Put('/')

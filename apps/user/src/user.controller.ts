@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, PlatformSettingsI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, PlatformSettingsI, ShareUserCertificateI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -78,6 +78,18 @@ export class UserController {
     userId: string;
   }): Promise<string> {
     return this.userService.acceptRejectInvitations(payload.acceptRejectInvitation, payload.userId);
+  }
+
+  /**
+   *
+   * @param payload
+   * @returns Share user certificate
+   */
+  @MessagePattern({ cmd: 'share-user-certificate' })
+  async shareUserCertificate(payload: {
+    shareUserCertificate: ShareUserCertificateI;
+  }): Promise<string> {
+    return this.userService.shareUserCertificate(payload.shareUserCertificate);
   }
 
   /**

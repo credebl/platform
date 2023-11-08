@@ -52,7 +52,7 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('genesis-file'));
   app.use(express.static('invoice-pdf'));
   app.use(express.static('uploadedFiles/bulk-verification-templates'));
-  app.use(express.static('app/uploadedFiles/exports'));
+  app.use(express.static('app/uploadedFiles/import'));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);

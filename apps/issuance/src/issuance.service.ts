@@ -232,6 +232,20 @@ export class IssuanceService {
     }
   }
 
+  async readCsvPath(path:string): Promise<string> {
+    try {
+      
+      const csvFile = readFileSync(path);
+
+      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
+      const csvData: string = csvFile.toString();
+      return csvData;
+    } catch (error) {
+      this.logger.error(`[fecth files] - error in get fetching file detils : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async _getIssueCredentialsbyCredentialRecordId(url: string, apiKey: string): Promise<{
     response: string;
   }> {

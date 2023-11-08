@@ -56,6 +56,33 @@ export class OrganizationController {
     return res.send(getImageBuffer);
   }
 
+  @Get('/certificate')
+  async convertHtmlToImage(@Res() res: Response): Promise<Response> {
+
+    const htmlString = `<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <div class="container" style="height:200px;width: 200px;border: 1px solid red">
+        <header style="height:50px">
+            Header
+        </header>
+        <footer style="height:100px">
+            footer
+        </footer>
+    </div>
+</body>
+</html>`;
+
+    const imageBuffer = await this.organizationService.convertHtmlToImage(htmlString);
+
+    res.set('Content-Type', 'image/png');
+    return res.status(HttpStatus.OK).send(imageBuffer);
+
+  }
+
+
   /**
  * 
  * @param user 

@@ -50,10 +50,9 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { ImageServiceService } from '@credebl/image-service';
 import { FileExportResponse, RequestPayload } from './interfaces';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerCSVOptions } from '../config/multer.config';
 import { extname } from 'path';
 import * as fs from 'fs';
-
+import { multerCSVOptions } from '../config/multer.config';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -187,7 +186,29 @@ export class IssuanceController {
     }
 
   }
+  @Get('/orgs/:orgId/:path/path')
+  @ApiOperation({
+    summary: `readCSV file`,
+    description: `readCsv file`
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async readFile(
+    @User() user: IUserRequest,
+    @Param('path') path: string,
+    @Param('orgId') orgId: number,
 
+    @Res() res: Response
+  ): Promise<Response> {
+
+    const getCredentialDetails = await this.issueCredentialService.readCsvFile(path, orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.fetch,
+      data: getCredentialDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
   @Post('/orgs/:orgId/bulk/upload')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
@@ -236,14 +257,15 @@ export class IssuanceController {
       this.logger.log(`Uploaded file : ${file.filename}`);
       const timestamp = Math.floor(Date.now() / 1000);
       const ext = extname(file.filename);
-      const parts = file.filename.split("-");
+      const parts = file.filename.split('-');
       // eslint-disable-next-line prefer-destructuring
       const resultString = parts[0];
       const newFilename = `${resultString}-${timestamp}${ext}`;
-
+      this.logger.log(`newFilename file : ${newFilename}`);
+      //Testing on dev
       fs.rename(
-        `./uploadedFiles/import/${file.filename}`,
-        `./uploadedFiles/import/${newFilename}`,
+        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
+        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
         async (err: any) => {
           if (err) {
             throw err;
@@ -253,9 +275,10 @@ export class IssuanceController {
 
       const reqPayload: RequestPayload = {
         credDefId: credentialDefinitionId,
-        filePath: `./uploadedFiles/import/${newFilename}`,
+        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
         fileName: newFilename
       };
+      this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
       const importCsvDetails = await this.issueCredentialService.importCsv(
         reqPayload
       );

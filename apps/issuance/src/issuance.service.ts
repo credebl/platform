@@ -17,7 +17,6 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
 import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
-import { readFileSync } from 'fs';
 import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
@@ -26,6 +25,7 @@ import { orderValues, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
+import { readFileSync } from 'fs';
 
 
 @Injectable()
@@ -228,6 +228,20 @@ export class IssuanceService {
       return agentDetails;
     } catch (error) {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async readCsvPath(path:string): Promise<string> {
+    try {
+      
+      const csvFile = readFileSync(path);
+
+      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
+      const csvData: string = csvFile.toString();
+      return csvData;
+    } catch (error) {
+      this.logger.error(`[fecth files] - error in get fetching file detils : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -517,11 +531,16 @@ export class IssuanceService {
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
 
-    this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
+      this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
+
+      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.filePath)}`);
+
+      // const csvData = await this.commonService.readFileDetails(importFileDetails.filePath);
 
       const csvFile = readFileSync(importFileDetails.filePath);
+
       this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
-      const csvData = csvFile.toString();
+      const csvData: string = csvFile.toString();
       const parsedData = paParse(csvData, {
         header: true,
         skipEmptyLines: true,
@@ -631,7 +650,7 @@ export class IssuanceService {
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
-     
+
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
       fileUpload.orgId = orgId;
@@ -642,7 +661,7 @@ export class IssuanceService {
       }
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
-      
+
 
       await parsedData.forEach(async (element, index) => {
         this.bulkIssuanceQueue.add(
@@ -659,7 +678,7 @@ export class IssuanceService {
           { delay: 5000 }
         );
       });
-      
+
       return 'Process completed for bulk issuance';
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;

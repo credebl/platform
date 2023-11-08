@@ -253,7 +253,7 @@ export class IssuanceController {
 
       const reqPayload: RequestPayload = {
         credDefId: credentialDefinitionId,
-        filePath: `./uploadedFiles/import/${file.filename}`,
+        filePath: `./uploadedFiles/import/${newFilename}`,
         fileName: newFilename
       };
       this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);

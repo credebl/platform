@@ -11,7 +11,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(VerificationModule, {
     transport: Transport.NATS,
-    options: getNatsOptions()
+    options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED)
 
   });
 

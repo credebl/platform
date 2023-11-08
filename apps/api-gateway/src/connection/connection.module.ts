@@ -11,7 +11,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
             {
                 name: 'NATS_CLIENT',
                 transport: Transport.NATS,
-                options: getNatsOptions()
+                options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
               }
         ])
     ],

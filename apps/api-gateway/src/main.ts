@@ -14,6 +14,12 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     // httpsOptions,
   });
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.NATS,
+    options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+  });
+
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set('x-powered-by', false);
   app.use(express.json({ limit: '50mb' }));

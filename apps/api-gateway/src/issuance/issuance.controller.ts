@@ -186,7 +186,29 @@ export class IssuanceController {
     }
 
   }
+  @Get('/orgs/:orgId/:path/path')
+  @ApiOperation({
+    summary: `readCSV file`,
+    description: `readCsv file`
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async readFile(
+    @User() user: IUserRequest,
+    @Param('path') path: string,
+    @Param('orgId') orgId: number,
 
+    @Res() res: Response
+  ): Promise<Response> {
+
+    const getCredentialDetails = await this.issueCredentialService.readCsvFile(path, orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.fetch,
+      data: getCredentialDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
   @Post('/orgs/:orgId/bulk/upload')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)

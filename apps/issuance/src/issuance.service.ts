@@ -52,8 +52,9 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'create-offer';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const apiKey = platformConfig?.sgApiKey;
       const issueData = {
@@ -90,8 +91,9 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'create-offer-oob';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const apiKey = platformConfig?.sgApiKey;
       const issueData = {
@@ -168,8 +170,9 @@ export class IssuanceService {
         state
       };
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'get-issue-credentials';
-      let url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      let url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       Object.keys(params).forEach((element: string) => {
         const appendParams: string = url.includes('?') ? '&' : '?';
@@ -211,8 +214,9 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'get-issue-credential-by-credential-id';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
 
       const apiKey = platformConfig?.sgApiKey;
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
@@ -268,8 +272,9 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'create-offer-oob';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails.orgAgentTypeId, agentDetails.agentEndPoint, agentDetails.tenantId);
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentDetails.agentEndPoint, agentDetails.tenantId);
       const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
 
       if (!organizationDetails) {
@@ -400,7 +405,7 @@ export class IssuanceService {
   */
   async getAgentUrl(
     issuanceMethodLabel: string,
-    orgAgentTypeId: string,
+    orgAgentType: string,
     agentEndPoint: string,
     tenantId: string,
     credentialRecordId?: string
@@ -410,27 +415,27 @@ export class IssuanceService {
       let url;
       switch (issuanceMethodLabel) {
         case 'create-offer': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'create-offer-oob': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'get-issue-credentials': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
               : null;
           break;
@@ -438,9 +443,9 @@ export class IssuanceService {
 
         case 'get-issue-credential-by-credential-id': {
 
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`.replace('#', credentialRecordId).replace('@', tenantId)
               : null;
           break;

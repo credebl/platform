@@ -1,4 +1,3 @@
-import { AgentType, OrgAgentType } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
@@ -6,13 +5,15 @@ export interface IAgentSpinupDto {
     walletName: string;
     walletPassword: string;
     seed: string;
-    orgId: string;
+    orgId?: string;
+    orgName?: string;
     ledgerId?: string[];
     did?: string;
-    agentType?: AgentType;
+    agentType?: string;
     transactionApproval?: boolean;
     clientSocketId?: string
     tenant?: boolean;
+    ledgerName?: string[];
 }
 
 export interface OutOfBandCredentialOffer {
@@ -114,7 +115,7 @@ export interface IWalletProvision {
     walletStoragePassword: string;
     internalIp: string;
     containerName: string;
-    agentType: AgentType;
+    agentType: string;
     orgName: string;
     indyLedger: string;
     afjVersion: string;
@@ -134,6 +135,7 @@ export interface IPlatformConfigDto {
 }
 
 export interface IStoreOrgAgentDetails {
+    id?: string;
     clientSocketId?: string;
     agentEndPoint?: string;
     apiKey?: string;
@@ -143,12 +145,13 @@ export interface IStoreOrgAgentDetails {
     isDidPublic?: boolean;
     agentSpinUpStatus?: number;
     walletName?: string;
-    agentsTypeId?: AgentType;
+    agentsTypeId?: string;
     orgId?: string;
     agentId?: string;
-    orgAgentTypeId?: OrgAgentType;
+    orgAgentTypeId?: string;
     tenantId?: string;
     ledgerId?: string[];
+    agentType?: string;
 }
 
 

@@ -408,7 +408,8 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemOrgNotFound);
       }
 
-      const url = await this.getAgentUrl(ecosystemMemberDetails.orgAgentTypeId, ecosystemMemberDetails.agentEndPoint, endorsementTransactionType.SCHEMA, ecosystemMemberDetails.tenantId);
+      const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberDetails.orgAgentTypeId);
+      const url = await this.getAgentUrl(orgAgentType, ecosystemMemberDetails.agentEndPoint, endorsementTransactionType.SCHEMA, ecosystemMemberDetails.tenantId);
 
       const attributeArray = requestSchemaPayload.attributes.map(item => item.attributeName);
 
@@ -480,7 +481,8 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemOrgNotFound);
       }
 
-      const url = await this.getAgentUrl(ecosystemMemberDetails.orgAgentTypeId, ecosystemMemberDetails.agentEndPoint, endorsementTransactionType.CREDENTIAL_DEFINITION, ecosystemMemberDetails.tenantId);
+      const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberDetails.orgAgentTypeId);
+      const url = await this.getAgentUrl(orgAgentType, ecosystemMemberDetails.agentEndPoint, endorsementTransactionType.CREDENTIAL_DEFINITION, ecosystemMemberDetails.tenantId);
 
       const credDefTransactionPayload = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
@@ -593,7 +595,8 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.leadNotFound);
       }
 
-      const url = await this.getAgentUrl(ecosystemLeadAgentDetails?.orgAgentTypeId, ecosystemLeadAgentDetails.agentEndPoint, endorsementTransactionType.SIGN, ecosystemLeadAgentDetails?.tenantId);
+      const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemLeadAgentDetails?.orgAgentTypeId);
+      const url = await this.getAgentUrl(orgAgentType, ecosystemLeadAgentDetails.agentEndPoint, endorsementTransactionType.SIGN, ecosystemLeadAgentDetails?.tenantId);
 
       const jsonString = endorsementTransactionPayload.requestPayload.toString();
       const payload = {
@@ -804,7 +807,9 @@ export class EcosystemService {
       const platformConfig = await this.getPlatformConfig();
 
       const agentEndPoint = ecosystemLeadAgentEndPoint ? ecosystemLeadAgentEndPoint : ecosystemMemberDetails.agentEndPoint;
-      const url = await this.getAgentUrl(ecosystemMemberDetails?.orgAgentTypeId, agentEndPoint, endorsementTransactionType.SUBMIT, ecosystemMemberDetails?.tenantId);
+
+      const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberDetails?.orgAgentTypeId);
+      const url = await this.getAgentUrl(orgAgentType, agentEndPoint, endorsementTransactionType.SUBMIT, ecosystemMemberDetails?.tenantId);
       const payload = await this.submitTransactionPayload(endorsementTransactionPayload, ecosystemMemberDetails, ecosystemLeadAgentDetails);
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, platformConfig.sgApiKey);

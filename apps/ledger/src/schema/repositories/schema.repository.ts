@@ -266,4 +266,20 @@ export class SchemaRepository {
       throw error;
     }
   }
+
+  async getOrgAgentType(orgAgentId: string): Promise<string> {
+    try {
+
+      const { agent } = await this.prisma.org_agents_type.findFirst({
+        where: {
+          id: orgAgentId
+        }
+      });
+
+      return agent;
+    } catch (error) {
+      this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

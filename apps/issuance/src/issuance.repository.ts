@@ -49,7 +49,7 @@ export class IssuanceRepository {
     // eslint-disable-next-line camelcase
     async saveIssuedCredentialDetails(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: object[], orgId: string): Promise<credentials> {
         try {
-            
+
             const credentialDetails = await this.prisma.credentials.upsert({
                 where: {
                     connectionId
@@ -60,7 +60,7 @@ export class IssuanceRepository {
                     threadId,
                     protocolVersion,
                     credentialAttributes,
-                    orgId :String(orgId)
+                    orgId: String(orgId)
                 },
                 create: {
                     createDateTime,
@@ -69,7 +69,7 @@ export class IssuanceRepository {
                     threadId,
                     protocolVersion,
                     credentialAttributes,
-                    orgId :String(orgId)
+                    orgId: String(orgId)
                 }
             });
             return credentialDetails;
@@ -252,6 +252,22 @@ export class IssuanceRepository {
 
         } catch (error) {
             this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getOrgAgentType(orgAgentId: string): Promise<string> {
+        try {
+
+            const { agent } = await this.prisma.org_agents_type.findFirst({
+                where: {
+                    id: orgAgentId
+                }
+            });
+
+            return agent;
+        } catch (error) {
+            this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
             throw error;
         }
     }

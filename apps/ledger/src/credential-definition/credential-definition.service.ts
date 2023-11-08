@@ -14,6 +14,7 @@ import { credential_definition } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CreateCredDefAgentRedirection, CredDefSchema, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
+import { OrgAgentType } from '@credebl/enum/enum';
 
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
@@ -44,19 +45,21 @@ export class CredentialDefinitionService extends BaseService {
                 throw new ConflictException(ResponseMessages.credentialDefinition.error.Conflict);
             }
             let credDefResponseFromAgentService;
-            if (`1` === getAgentDetails.org_agents[0].orgAgentTypeId) {
+
+            const orgAgentType = await this.credentialDefinitionRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
+            if (OrgAgentType.DEDICATED === orgAgentType) {
                 const CredDefPayload = {
                     tag: credDef.tag,
                     schemaId: credDef.schemaLedgerId,
                     issuerId: did,
                     agentEndPoint,
                     apiKey,
-                    agentType: `1`
+                    agentType: OrgAgentType.DEDICATED
                 };
-               
+
                 credDefResponseFromAgentService = await this._createCredentialDefinition(CredDefPayload);
 
-            } else if (`2` === getAgentDetails.org_agents[0].orgAgentTypeId) {
+            } else if (OrgAgentType.SHARED === orgAgentType) {
                 const { tenantId } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(credDef.orgId);
 
                 const CredDefPayload = {
@@ -69,7 +72,7 @@ export class CredentialDefinitionService extends BaseService {
                     },
                     agentEndPoint,
                     apiKey,
-                    agentType: `2`
+                    agentType: OrgAgentType.SHARED
                 };
                 credDefResponseFromAgentService = await this._createCredentialDefinition(CredDefPayload);
             }
@@ -126,7 +129,7 @@ export class CredentialDefinitionService extends BaseService {
             const pattern = {
                 cmd: 'agent-create-credential-definition'
             };
-           
+
             const credDefResponse = await this.credDefServiceProxy
                 .send(pattern, payload)
                 .pipe(
@@ -155,23 +158,24 @@ export class CredentialDefinitionService extends BaseService {
             const { credentialDefinitionId, orgId } = payload;
             const { agentEndPoint } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(String(orgId));
             const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(String(orgId));
+            const orgAgentType = await this.credentialDefinitionRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
             const apiKey = '';
             let credDefResponse;
-            if (`1` === getAgentDetails.org_agents[0].orgAgentTypeId) {
+            if (OrgAgentType.DEDICATED === orgAgentType) {
                 const getSchemaPayload = {
                     credentialDefinitionId,
                     apiKey,
                     agentEndPoint,
-                    agentType: `1`
+                    agentType: OrgAgentType.DEDICATED
                 };
                 credDefResponse = await this._getCredentialDefinitionById(getSchemaPayload);
-            } else if (`2` === getAgentDetails.org_agents[0].orgAgentTypeId) {
+            } else if (OrgAgentType.SHARED === orgAgentType) {
                 const { tenantId } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(String(orgId));
                 const getSchemaPayload = {
                     tenantId,
                     method: 'getCredentialDefinitionById',
                     payload: { credentialDefinitionId },
-                    agentType: `2`,
+                    agentType: OrgAgentType.SHARED,
                     agentEndPoint
                 };
                 credDefResponse = await this._getCredentialDefinitionById(getSchemaPayload);
@@ -281,9 +285,9 @@ export class CredentialDefinitionService extends BaseService {
                 await this.credentialDefinitionRepository.getAllCredDefsByOrgIdForBulk(
                     payload
                 );
-                if (!credDefSchemaList) {
-                    throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
-                }    
+            if (!credDefSchemaList) {
+                throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
+            }
             return credDefSchemaList;
         } catch (error) {
             this.logger.error(

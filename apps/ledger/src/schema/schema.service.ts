@@ -16,6 +16,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
+import { OrgAgentType } from '@credebl/enum/enum';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -77,10 +78,10 @@ export class SchemaService extends BaseService {
           // eslint-disable-next-line yoda
           const did = schema.orgDid?.split(':').length >= 4 ? schema.orgDid : orgDid;
 
-
+          const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
           const attributeArray = schema.attributes.map(item => item.attributeName);
           let schemaResponseFromAgentService;
-          if (`1` === getAgentDetails.org_agents[0].orgAgentTypeId) {
+          if (OrgAgentType.DEDICATED === orgAgentType) {
             const issuerId = did;
 
             const schemaPayload = {
@@ -90,11 +91,11 @@ export class SchemaService extends BaseService {
               issuerId,
               agentEndPoint,
               apiKey,
-              agentType: `1`
+              agentType: OrgAgentType.DEDICATED
             };
             schemaResponseFromAgentService = await this._createSchema(schemaPayload);
 
-          } else if (`2` === getAgentDetails.org_agents[0].orgAgentTypeId) {
+          } else if (OrgAgentType.SHARED === orgAgentType) {
             const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
 
             const schemaPayload = {
@@ -108,7 +109,7 @@ export class SchemaService extends BaseService {
               },
               agentEndPoint,
               apiKey,
-              agentType: `2`
+              agentType: OrgAgentType.SHARED
             };
             schemaResponseFromAgentService = await this._createSchema(schemaPayload);
           }
@@ -217,30 +218,31 @@ export class SchemaService extends BaseService {
 
   async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
     try {
-        const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-        const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
-        const apiKey = '';
-        let schemaResponse;
-        if (`1` === getAgentDetails.org_agents[0].orgAgentTypeId) {
-          const getSchemaPayload = {
-            schemaId,
-            apiKey,
-            agentEndPoint,
-            agentType: `1`
-          };
-          schemaResponse = await this._getSchemaById(getSchemaPayload);
-        } else if (`2` === getAgentDetails.org_agents[0].orgAgentTypeId) {
-          const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-          const getSchemaPayload = {
-            tenantId,
-            method: 'getSchemaById',
-            payload: { schemaId },
-            agentType: `2`,
-            agentEndPoint
-          };
-          schemaResponse = await this._getSchemaById(getSchemaPayload);
-        }
-        return schemaResponse.response;
+      const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+      const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
+      const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
+      const apiKey = '';
+      let schemaResponse;
+      if (OrgAgentType.DEDICATED === orgAgentType) {
+        const getSchemaPayload = {
+          schemaId,
+          apiKey,
+          agentEndPoint,
+          agentType: OrgAgentType.DEDICATED
+        };
+        schemaResponse = await this._getSchemaById(getSchemaPayload);
+      } else if (OrgAgentType.SHARED === orgAgentType) {
+        const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+        const getSchemaPayload = {
+          tenantId,
+          method: 'getSchemaById',
+          payload: { schemaId },
+          agentType: OrgAgentType.SHARED,
+          agentEndPoint
+        };
+        schemaResponse = await this._getSchemaById(getSchemaPayload);
+      }
+      return schemaResponse.response;
 
     } catch (error) {
       this.logger.error(`Error in getting schema by id: ${error}`);

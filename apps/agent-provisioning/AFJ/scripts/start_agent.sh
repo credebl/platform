@@ -31,8 +31,6 @@ echo "-----$PROTOCOL-----"
 echo "-----$TENANT-----"
 echo "-----$AFJ_VERSION-----"
 echo "-----$INDY_LEDGER-----"
-
-NETWORK_NAME="credebl-network"
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
@@ -141,7 +139,7 @@ services:
   agent:
     image: $AFJ_VERSION
 
-    container_name: agent${AGENCY}_${CONTAINER_NAME}
+    container_name: ${AGENCY}_${CONTAINER_NAME}
     restart: always
     environment:
       AFJ_REST_LOG_LEVEL: 1
@@ -169,7 +167,7 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker-compose -f $FILE_NAME --project-name agent${AGENCY}_${CONTAINER_NAME} up -d
+  docker-compose -f $FILE_NAME --project-name ${AGENCY}_${CONTAINER_NAME} up -d
   if [ $? -eq 0 ]; then
 
     n=0

@@ -36,12 +36,13 @@ export class VerificationService {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
        
+      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'get-proof-presentation';
       let url;
       if (threadId) {
-        url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, threadId);
+        url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, threadId);
       } else {
-        url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
+        url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
       }
 
       const payload = { apiKey: getAgentDetails.apiKey, url };
@@ -101,8 +102,9 @@ export class VerificationService {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
 
+      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'get-proof-presentation-by-id';
-      const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
+      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
 
       const payload = { apiKey: '', url };
 
@@ -196,8 +198,9 @@ export class VerificationService {
 
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
 
+      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'request-proof';
-      const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
+      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
 
       const payload = { apiKey: '', url, proofRequestPayload };
 
@@ -256,7 +259,9 @@ export class VerificationService {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
       const verificationMethodLabel = 'accept-presentation';
-      const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
+
+      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
+      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
 
       const payload = { apiKey: '', url };
       const getProofPresentationById = await this._verifyPresentation(payload);
@@ -334,8 +339,9 @@ export class VerificationService {
         this.verificationRepository.getOrganization(outOfBandRequestProof.orgId)
       ]);
 
+      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'create-request-out-of-band';
-      const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
+      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
 
       const payload: IProofRequestPayload
         = {
@@ -570,7 +576,7 @@ export class VerificationService {
   */
   async getAgentUrl(
     verificationMethodLabel: string,
-    orgAgentTypeId: string,
+    orgAgentType: string,
     agentEndPoint: string,
     tenantId: string,
     threadId?: string,
@@ -582,58 +588,58 @@ export class VerificationService {
       let url;
       switch (verificationMethodLabel) {
         case 'get-proof-presentation': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED && threadId
+          url = orgAgentType === OrgAgentType.DEDICATED && threadId
             ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATIONS}?threadId=${threadId}`
-            : orgAgentTypeId === OrgAgentType.SHARED && threadId
+            : orgAgentType === OrgAgentType.SHARED && threadId
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}?threadId=${threadId}`.replace('#', tenantId)
-              : orgAgentTypeId === OrgAgentType.DEDICATED
+              : orgAgentType === OrgAgentType.DEDICATED
                 ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATIONS}`
-                : orgAgentTypeId === OrgAgentType.SHARED
+                : orgAgentType === OrgAgentType.SHARED
                   ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}`.replace('#', tenantId)
                   : null;
           break;
         }
 
         case 'get-proof-presentation-by-id': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID}`.replace('#', proofPresentationId)
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID}`.replace('#', proofPresentationId).replace('@', tenantId)
               : null;
           break;
         }
 
         case 'request-proof': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_SEND_PROOF_REQUEST}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_REQUEST_PROOF}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'accept-presentation': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_VERIFY_PRESENTATION}`.replace('#', proofPresentationId)
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_ACCEPT_PRESENTATION}`.replace('@', proofPresentationId).replace('#', tenantId)
               : null;
           break;
         }
 
         case 'create-request-out-of-band': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_SEND_OUT_OF_BAND_CREATE_REQUEST}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'proof-form-data': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_PROOF_FORM_DATA}`.replace('#', proofPresentationId)
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_PROOF_FORM_DATA}`.replace('@', proofPresentationId).replace('#', tenantId)
               : null;
           break;
@@ -661,7 +667,8 @@ export class VerificationService {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
       const verificationMethodLabel = 'proof-form-data';
 
-      const url = await this.getAgentUrl(verificationMethodLabel, getAgentDetails?.orgAgentTypeId, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
+      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
+      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
       
       const payload = { apiKey: '', url };
 

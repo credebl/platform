@@ -4,9 +4,17 @@ export enum SortValue {
 }
 
 export enum AgentType {
-    AFJ = '1',
-    ACAPY = '2'
+    AFJ = 'AFJ',
+    ACAPY = 'ACAPY'
 }
+
+export enum Ledgers {
+    Bcovrin_Testnet = 'Bcovrin Testnet',
+    Indicio_Testnet = 'Indicio Testnet',
+    Indicio_Demonet = 'Indicio Demonet',
+    Indicio_Mainnet = 'Indicio Mainnet',
+}
+
 export enum Invitation {
     ACCEPTED = 'accepted',
     REJECTED = 'rejected',
@@ -34,6 +42,12 @@ export enum EndorserTransactionType{
 }
 
 export enum OrgAgentType {
-    DEDICATED = `1`,
-    SHARED = `2`
+    DEDICATED = 'DEDICATED',
+    SHARED = 'SHARED'
+}
+
+export enum AgentSpinUpStatus {
+    PENDING = 0,
+    PROCESSED = 1,
+    COMPLETED = 2
 }

@@ -8,6 +8,7 @@ import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetails } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
+import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -48,6 +49,13 @@ export class UserService extends BaseService {
   ): Promise<{ response: string }> {
     const payload = { acceptRejectInvitation, userId };
     return this.sendNats(this.serviceProxy, 'accept-reject-invitations', payload);
+  }
+
+  async shareUserCertificate(
+    shareUserCredentials: CreateUserCertificateDto
+  ): Promise<{ response: object }> {
+    const payload = { shareUserCredentials};
+    return this.sendNats(this.serviceProxy, 'share-user-certificate', payload);
   }
 
   async get(

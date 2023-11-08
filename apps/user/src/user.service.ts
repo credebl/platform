@@ -30,6 +30,7 @@ import {
   AddPasskeyDetails,
   InvitationsI,
   PlatformSettingsI,
+  ShareUserCertificateI,
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
@@ -575,6 +576,30 @@ export class UserService {
       this.logger.error(`acceptRejectInvitations: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+   /**
+   *
+   * @returns
+   */
+  async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<string> {
+    const userWinnerTemplate = new WinnerTemplate();
+    const userParticipantTemplate = new ParticipantTemplate();
+    const userArbiterTemplate = new ArbiterTemplate();
+
+    const getWinnerTemplate = await userWinnerTemplate.getWinnerTemplate();
+    const getParticipantTemplate = await userParticipantTemplate.getParticipantTemplate();
+    const getArbiterTemplate = await userArbiterTemplate.getArbiterTemplate();
+
+     if (shareUserCertificate.schemaId === UserCertificateId.WINNER) {
+      return getWinnerTemplate;
+     } else if (shareUserCertificate.schemaId === UserCertificateId.PARTICIPANT) {
+      return getParticipantTemplate;
+     } else if (shareUserCertificate.schemaId === UserCertificateId.ARBITER) {
+      return getArbiterTemplate;
+     } else {
+      throw new NotFoundException(ResponseMessages.schema.error.invalidSchemaId);
+    } 
   }
 
   /**

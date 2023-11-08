@@ -10,7 +10,7 @@ import { AllExceptionsFilter } from '@credebl/common/exception-handler';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 
-
+import helmet from "helmet";
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -24,9 +24,11 @@ async function bootstrap(): Promise<void> {
     options: getNatsOptions()
   });
 
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('x-powered-by', false);
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb' }));
-
+  app.use(helmet());
   app.useGlobalPipes(new ValidationPipe());
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)

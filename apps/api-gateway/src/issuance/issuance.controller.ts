@@ -236,11 +236,14 @@ export class IssuanceController {
       this.logger.log(`Uploaded file : ${file.filename}`);
       const timestamp = Math.floor(Date.now() / 1000);
       const ext = extname(file.filename);
-      const newFilename = `${file.filename}-${timestamp}${ext}`;
+      const parts = file.filename.split("-");
+      // eslint-disable-next-line prefer-destructuring
+      const resultString = parts[0];
+      const newFilename = `${resultString}-${timestamp}${ext}`;
 
       fs.rename(
-        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
-        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        `./uploadedFiles/import/${file.filename}`,
+        `./uploadedFiles/import/${newFilename}`,
         async (err: any) => {
           if (err) {
             throw err;
@@ -250,7 +253,7 @@ export class IssuanceController {
 
       const reqPayload: RequestPayload = {
         credDefId: credentialDefinitionId,
-        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        filePath: `./uploadedFiles/import/${newFilename}`,
         fileName: newFilename
       };
       const importCsvDetails = await this.issueCredentialService.importCsv(

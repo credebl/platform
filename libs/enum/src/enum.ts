@@ -37,3 +37,10 @@ export enum OrgAgentType {
     DEDICATED = 1,
     SHARED = 2
 }
+
+export enum UserCertificateId {
+    WINNER = 'schemaId1',
+    PARTICIPANT = 'schemaId2',
+    ARBITER = 'schemaId3',
+    WORLD_RECORD = 'schemaId4'
+}

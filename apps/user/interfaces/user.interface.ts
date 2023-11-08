@@ -62,3 +62,8 @@ export interface PlatformSettingsI {
     enableEcosystem: boolean;
     multiEcosystemSupport: boolean;
 }
+
+export interface ShareUserCertificateI {
+    schemaId: string;
+    attributes: string[]
+}

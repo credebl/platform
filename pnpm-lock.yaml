@@ -122,6 +122,9 @@ dependencies:
   generate-password:
     specifier: ^1.7.0
     version: 1.7.0
+  helmet:
+    specifier: ^7.0.0
+    version: 7.1.0
   html-pdf:
     specifier: ^3.0.1
     version: 3.0.1
@@ -4823,6 +4826,11 @@ packages:
       pinkie-promise: 2.0.1
     dev: false
     optional: true
+
+  /helmet@7.1.0:
+    resolution: {integrity: sha512-g+HZqgfbpXdCkme/Cd/mZkV0aV3BZZZSugecH03kl38m/Kmdx8jKjBikpDj2cr+Iynv4KpYEviojNdTJActJAg==}
+    engines: {node: '>=16.0.0'}
+    dev: false
 
   /hexoid@1.0.0:
     resolution: {integrity: sha512-QFLV0taWQOZtvIRIAdBChesmogZrtuXvVWsFHZTk2SU+anspqZ2vMnoLg7IE1+Uk16N19APic1BuF8bC8c2m5g==}

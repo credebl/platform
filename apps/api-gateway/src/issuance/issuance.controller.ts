@@ -50,10 +50,9 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { ImageServiceService } from '@credebl/image-service';
 import { FileExportResponse, RequestPayload } from './interfaces';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerCSVOptions } from '../config/multer.config';
 import { extname } from 'path';
 import * as fs from 'fs';
-
+import { multerCSVOptions } from '../config/multer.config';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -241,9 +240,10 @@ export class IssuanceController {
       const resultString = parts[0];
       const newFilename = `${resultString}-${timestamp}${ext}`;
       this.logger.log(`newFilename file : ${newFilename}`);
+      //Testing on dev
       fs.rename(
-        `./libs/uploadedFiles/import/${file.filename}`,
-        `./libs/uploadedFiles/import/${newFilename}`,
+        `./uploadedFiles/import/${file.filename}`,
+        `./uploadedFiles/import/${newFilename}`,
         async (err: any) => {
           if (err) {
             throw err;
@@ -253,7 +253,7 @@ export class IssuanceController {
 
       const reqPayload: RequestPayload = {
         credDefId: credentialDefinitionId,
-        filePath: `./libs/uploadedFiles/import/${newFilename}`,
+        filePath: `./uploadedFiles/import/${file.filename}`,
         fileName: newFilename
       };
       this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);

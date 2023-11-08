@@ -330,16 +330,16 @@ export class CommonService {
 
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  readFileDetails(filePath: string) {
-    try {
-      const csvFile = readFileSync(filePath);
+  // readFileDetails(filePath: string) {
+  //   try {
+  //     const csvFile = readFileSync(filePath);
 
-      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
-      const csvData: string = csvFile.toString();
-      return csvData;
-    } catch (error) {
-      throw new RpcException(error.response);
-    }
+  //     this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
+  //     const csvData: string = csvFile.toString();
+  //     return csvData;
+  //   } catch (error) {
+  //     throw new RpcException(error.response);
+  //   }
     
-  }
+  // }
 }

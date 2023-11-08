@@ -517,9 +517,11 @@ export class IssuanceService {
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
 
-    this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
+      this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
 
+      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.filePath)}`);
       const csvFile = readFileSync(importFileDetails.filePath);
+
       this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
       const csvData = csvFile.toString();
       const parsedData = paParse(csvData, {
@@ -631,7 +633,7 @@ export class IssuanceService {
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
-     
+
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
       fileUpload.orgId = orgId;
@@ -642,7 +644,7 @@ export class IssuanceService {
       }
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
-      
+
 
       await parsedData.forEach(async (element, index) => {
         this.bulkIssuanceQueue.add(
@@ -659,7 +661,7 @@ export class IssuanceService {
           { delay: 5000 }
         );
       });
-      
+
       return 'Process completed for bulk issuance';
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;

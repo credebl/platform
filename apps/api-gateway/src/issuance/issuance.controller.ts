@@ -50,10 +50,9 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { ImageServiceService } from '@credebl/image-service';
 import { FileExportResponse, RequestPayload } from './interfaces';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerCSVOptions } from '../config/multer.config';
 import { extname } from 'path';
 import * as fs from 'fs';
-
+import { multerCSVOptions } from '../config/multer.config';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -236,11 +235,12 @@ export class IssuanceController {
       this.logger.log(`Uploaded file : ${file.filename}`);
       const timestamp = Math.floor(Date.now() / 1000);
       const ext = extname(file.filename);
-      const parts = file.filename.split("-");
+      const parts = file.filename.split('-');
       // eslint-disable-next-line prefer-destructuring
       const resultString = parts[0];
       const newFilename = `${resultString}-${timestamp}${ext}`;
-
+      this.logger.log(`newFilename file : ${newFilename}`);
+      //Testing on dev
       fs.rename(
         `./uploadedFiles/import/${file.filename}`,
         `./uploadedFiles/import/${newFilename}`,
@@ -256,6 +256,7 @@ export class IssuanceController {
         filePath: `./uploadedFiles/import/${newFilename}`,
         fileName: newFilename
       };
+      this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
       const importCsvDetails = await this.issueCredentialService.importCsv(
         reqPayload
       );

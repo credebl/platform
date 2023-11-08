@@ -230,37 +230,44 @@ export class IssuanceController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
-    try {
-      if (file) {
-        const fileKey: string = uuidv4();
-        try {
-
-          await this.awsService.uploadCsvFile(fileKey, file?.buffer);
-
-        } catch (error) {
-
-          throw new RpcException(error.response ? error.response : error);
-
+    if (file) {
+      this.logger.log(`file:${file.path}`);
+      this.logger.log(`Uploaded file : ${file.filename}`);
+      const timestamp = Math.floor(Date.now() / 1000);
+      const ext = extname(file.filename);
+      const parts = file.filename.split('-');
+      // eslint-disable-next-line prefer-destructuring
+      const resultString = parts[0];
+      const newFilename = `${resultString}-${timestamp}${ext}`;
+      this.logger.log(`newFilename file : ${newFilename}`);
+      //Testing on dev
+      fs.rename(
+        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
+        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        async (err: any) => {
+          if (err) {
+            throw err;
+          }
         }
-        const reqPayload: RequestPayload = {
-          credDefId: credentialDefinitionId,
-          fileKey,
-          fileName:file?.filename
-        };
-        this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
-        const importCsvDetails = await this.issueCredentialService.importCsv(
-          reqPayload
-        );
-        const finalResponse: IResponseType = {
-          statusCode: HttpStatus.CREATED,
-          message: ResponseMessages.issuance.success.importCSV,
-          data: importCsvDetails.response
-        };
-        return res.status(HttpStatus.CREATED).json(finalResponse);
-      }
-    } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
-    }
+      );
+
+      const reqPayload: RequestPayload = {
+        credDefId: credentialDefinitionId,
+        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
+        fileName: newFilename
+      };
+      this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
+      const importCsvDetails = await this.issueCredentialService.importCsv(
+        reqPayload
+      );
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.importCSV,
+        data: importCsvDetails.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+
+    } 
   }
 
 

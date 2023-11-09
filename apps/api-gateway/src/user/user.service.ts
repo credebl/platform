@@ -7,6 +7,7 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetails } from './dto/add-user.dto';
+import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -70,5 +71,14 @@ export class UserService extends BaseService {
   async addPasskey(userEmail: string, userInfo: AddPasskeyDetails): Promise<{ response: string }> {
     const payload = { userEmail, userInfo };
     return this.sendNats(this.serviceProxy, 'add-passkey', payload);
+  }
+
+  async updatePlatformSettings(platformSettings: UpdatePlatformSettingsDto): Promise<{ response: string }> {
+    const payload = { platformSettings };
+    return this.sendNats(this.serviceProxy, 'update-platform-settings', payload);
+  }
+
+  async getPlatformSettings(): Promise<{ response: object }> {
+    return this.sendNats(this.serviceProxy, 'fetch-platform-settings', '');
   }
 }

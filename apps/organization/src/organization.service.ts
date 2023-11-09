@@ -190,6 +190,9 @@ export class OrganizationService {
       if (!organizationDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
       }
+
+      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
+      organizationDetails['credential_definitions'] = credentials;
       return organizationDetails;
 
     } catch (error) {
@@ -296,7 +299,7 @@ export class OrganizationService {
     }
   }
 
-  /**
+   /**
    *
    * @Body sendInvitationDto
    * @returns createInvitation
@@ -327,7 +330,6 @@ export class OrganizationService {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
         }
-
       }
       await this.userActivityService.createActivity(userId, organizationDetails.id, `Invitations sent for ${organizationDetails.name}`, 'Get started with user role management once invitations accepted');
       return ResponseMessages.organisation.success.createInvitation;

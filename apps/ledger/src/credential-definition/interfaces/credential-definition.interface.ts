@@ -29,3 +29,14 @@ export interface GetCredDefAgentRedirection {
 export interface GetCredDefFromTenantPayload {
     credentialDefinitionId: string;
 }
+
+export interface CredDefSchema {
+    credentialDefinitionId: string;
+    schemaCredDefName: string;
+}
+
+export interface BulkCredDefSchema {
+    orgId: number
+    sortValue: string,
+    credDefSortBy: string
+}

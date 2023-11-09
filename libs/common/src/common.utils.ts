@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export function paginator<T>(
   items: T[],
   current_page: number,
@@ -11,7 +13,7 @@ export function paginator<T>(
 
   return {
     page,
-    items_per_page: per_page,
+    pageSize: per_page,
     previousPage: page - 1 ? page - 1 : null,
     nextPage: total_pages > page ? page + 1 : null,
     totalItems: items.length,
@@ -21,6 +23,7 @@ export function paginator<T>(
 }
 
 export function orderValues(key, order = 'asc') {
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types
   return function innerSort(a, b) {
     if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
       // property doesn't exist on either object

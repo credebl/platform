@@ -33,7 +33,7 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { IssuanceDto, IssueCredentialDto } from './dtos/issuance.dto';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -42,7 +42,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-
+import { ImageServiceService } from '@credebl/image-service';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -52,10 +52,12 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
+    private readonly imageServiceService: ImageServiceService,
     private readonly commonService: CommonService
 
   ) { }
   private readonly logger = new Logger('IssuanceController');
+  private readonly PAGE: number = 1;
 
   /**
     * Description: Get all issued credentials
@@ -178,6 +180,42 @@ export class IssuanceController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,
+      data: getCredentialDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Description: credential issuance out-of-band
+   * @param user 
+   * @param outOfBandCredentialDto 
+   * @param orgId 
+   * @param res 
+   * @returns 
+   */
+  @Post('/orgs/:orgId/credentials/oob')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: `Create out-of-band credential offer`,
+    description: `Create out-of-band credential offer`
+  })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  async outOfBandCredentialOffer(
+    @User() user: IUserRequest,
+    @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
+    @Param('orgId') orgId: number,
+    @Res() res: Response
+  ): Promise<Response> {
+
+    outOfBandCredentialDto.orgId = orgId;
+    const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(user, outOfBandCredentialDto);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.fetch,
       data: getCredentialDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);

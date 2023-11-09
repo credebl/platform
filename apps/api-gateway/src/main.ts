@@ -49,12 +49,10 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('uploadedFiles/holder-profile'));
   app.use(express.static('uploadedFiles/org-logo'));
   app.use(express.static('uploadedFiles/tenant-logo'));
-  app.use(express.static('uploadedFiles/exports'));
   app.use(express.static('resources'));
   app.use(express.static('genesis-file'));
   app.use(express.static('invoice-pdf'));
   app.use(express.static('uploadedFiles/bulk-verification-templates'));
-  app.use(express.static('uploadedFiles/import'));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);

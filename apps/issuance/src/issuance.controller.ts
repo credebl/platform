@@ -33,13 +33,7 @@ export class IssuanceController {
     const { user, credentialRecordId, orgId } = payload;
     return this.issuanceService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
   }
-
-  @MessagePattern({ cmd: 'read-csv-path' })
-  async fetchCsv(payload): Promise<string> {
-    const { path } = payload;
-    return this.issuanceService.readCsvPath(path);
-  }
-
+  
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
   async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
     const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;

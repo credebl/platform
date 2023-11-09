@@ -12,6 +12,7 @@ import { BullModule } from '@nestjs/bull';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { BulkIssuanceProcessor } from './issuance.processor';
+import { AwsService } from '@credebl/aws';
 
 @Module({
   imports: [
@@ -30,6 +31,6 @@ import { BulkIssuanceProcessor } from './issuance.processor';
     })
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor]
+  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService]
 })
 export class IssuanceModule { }

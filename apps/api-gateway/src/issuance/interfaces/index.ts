@@ -64,6 +64,6 @@ export interface FileExportResponse {
 
 export interface RequestPayload {
     credDefId: string;
-    filePath: string;
+    fileKey: string;
     fileName: string;
   }

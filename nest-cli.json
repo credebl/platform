@@ -250,6 +250,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/image-service/tsconfig.lib.json"
       }
+    },
+    "aws": {
+      "type": "library",
+      "root": "libs/aws",
+      "entryFile": "index",
+      "sourceRoot": "libs/aws/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/aws/tsconfig.lib.json"
+      }
     }
   }
 }

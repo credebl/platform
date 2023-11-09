@@ -275,6 +275,13 @@ export class UserService {
     }
   }
 
+
+  private validateEmail(email: string): void {
+    if (!validator.isEmail(email)) {
+      throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+    }
+  }
+
   /**
    *
    * @param loginUserDto
@@ -282,10 +289,9 @@ export class UserService {
    */
   async login(loginUserDto: LoginUserDto): Promise<object> {
     const { email, password, isPasskey } = loginUserDto;
-    if (!validator.isEmail(email)) {
-       throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
-    } else {
+
       try {
+        await this.validateEmail(email);
         const userData = await this.userRepository.checkUserExist(email);
         if (!userData) {
           throw new NotFoundException(ResponseMessages.user.error.notFound);
@@ -311,7 +317,7 @@ export class UserService {
         this.logger.error(`In Login User : ${JSON.stringify(error)}`);
         throw new RpcException(error.response ? error.response : error);
       }
-    }
+    
    
   }
 

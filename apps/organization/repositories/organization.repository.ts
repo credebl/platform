@@ -375,6 +375,7 @@ export class OrganizationRepository {
     pageSize: number
   ): Promise<object> {
     try {
+      const sortByName = 'asc'; 
       const result = await this.prisma.$transaction([
         this.prisma.organisation.findMany({
           where: {
@@ -394,7 +395,8 @@ export class OrganizationRepository {
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
           orderBy: {
-            createDateTime: 'desc'
+            name: sortByName
+            
           }
         }),
         this.prisma.organisation.count({

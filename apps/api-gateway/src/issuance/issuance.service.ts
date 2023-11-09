@@ -45,13 +45,6 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'get-issued-credentials-by-credentialDefinitionId', payload);
     }
 
-    readCsvFile(path: string, orgId: number): Promise<{
-        response: object;
-    }> {
-        const payload = { path, orgId };
-        return this.sendNats(this.issuanceProxy, 'read-csv-path', payload);
-    }
-
     getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: number): Promise<{
         response: object;
     }> {

@@ -578,13 +578,21 @@ export class UserService {
    * @returns
    */
   async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<string> {
+    const getWinnerAttributes = await this.userRepository.getWinnerAttributesBySchemaId(shareUserCertificate);
+    const getParticipantAttributes = await this.userRepository.getParticipantAttributesBySchemaId(shareUserCertificate);
+    const getArbiterAttributes = await this.userRepository.getArbiterAttributesBySchemaId(shareUserCertificate);
+    
+    if (!getWinnerAttributes || !getParticipantAttributes || !getArbiterAttributes) {
+      throw new NotFoundException(ResponseMessages.schema.error.invalidSchemaId);
+    }
+
     const userWinnerTemplate = new WinnerTemplate();
     const userParticipantTemplate = new ParticipantTemplate();
     const userArbiterTemplate = new ArbiterTemplate();
 
-    const getWinnerTemplate = await userWinnerTemplate.getWinnerTemplate();
-    const getParticipantTemplate = await userParticipantTemplate.getParticipantTemplate();
-    const getArbiterTemplate = await userArbiterTemplate.getArbiterTemplate();
+    const getWinnerTemplate = await userWinnerTemplate.getWinnerTemplate(getWinnerAttributes);
+    const getParticipantTemplate = await userParticipantTemplate.getParticipantTemplate(getParticipantAttributes);
+    const getArbiterTemplate = await userArbiterTemplate.getArbiterTemplate(getArbiterAttributes);
 
      if (shareUserCertificate.schemaId === UserCertificateId.WINNER) {
       return getWinnerTemplate;

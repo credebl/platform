@@ -25,8 +25,7 @@ import { orderValues, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
-import { readFileSync } from 'fs';
-
+import { AwsService } from '@credebl/aws';
 
 @Injectable()
 export class IssuanceService {
@@ -38,6 +37,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
+    private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
   ) { }
 
@@ -228,20 +228,6 @@ export class IssuanceService {
       return agentDetails;
     } catch (error) {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
-  async readCsvPath(path:string): Promise<string> {
-    try {
-      
-      const csvFile = readFileSync(path);
-
-      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
-      const csvData: string = csvFile.toString();
-      return csvData;
-    } catch (error) {
-      this.logger.error(`[fecth files] - error in get fetching file detils : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -533,14 +519,11 @@ export class IssuanceService {
 
       this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
 
-      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.filePath)}`);
+      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.fileKey)}`);
 
-      // const csvData = await this.commonService.readFileDetails(importFileDetails.filePath);
+      const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
+      const csvData: string = getFileDetails.Body.toString();
 
-      const csvFile = readFileSync(importFileDetails.filePath);
-
-      this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
-      const csvData: string = csvFile.toString();
       const parsedData = paParse(csvData, {
         header: true,
         skipEmptyLines: true,

@@ -40,7 +40,7 @@ import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
 import { EcosystemConfigSettings } from '@credebl/enum/enum';
-
+import validator from 'validator';
 @Injectable()
 export class UserService {
   constructor(
@@ -282,32 +282,37 @@ export class UserService {
    */
   async login(loginUserDto: LoginUserDto): Promise<object> {
     const { email, password, isPasskey } = loginUserDto;
-    try {
-      const userData = await this.userRepository.checkUserExist(email);
-      if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
+    if (!validator.isEmail(email)) {
+       throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+    } else {
+      try {
+        const userData = await this.userRepository.checkUserExist(email);
+        if (!userData) {
+          throw new NotFoundException(ResponseMessages.user.error.notFound);
+        }
+  
+        if (userData && !userData.isEmailVerified) {
+          throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+        }
+  
+        if (true === isPasskey && false === userData?.isFidoVerified) {
+          throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
+        }
+  
+        if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
+          const getUserDetails = await this.userRepository.getUserDetails(userData.email);
+          const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
+          return this.generateToken(email, decryptedPassword);
+        } else {
+          const decryptedPassword = await this.commonService.decryptPassword(password);
+          return this.generateToken(email, decryptedPassword);
+        }
+      } catch (error) {
+        this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
       }
-
-      if (userData && !userData.isEmailVerified) {
-        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
-      }
-
-      if (true === isPasskey && false === userData?.isFidoVerified) {
-        throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
-      }
-
-      if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-        const getUserDetails = await this.userRepository.getUserDetails(userData.email);
-        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return this.generateToken(email, decryptedPassword);
-      } else {
-        const decryptedPassword = await this.commonService.decryptPassword(password);
-        return this.generateToken(email, decryptedPassword);
-      }
-    } catch (error) {
-      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
     }
+   
   }
 
   async generateToken(email: string, password: string): Promise<object> {

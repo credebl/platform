@@ -3,6 +3,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   PlatformSettingsI,
+  ShareUserCertificateI,
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
@@ -438,6 +439,50 @@ export class UserRepository {
     return { totalPages, users };
   }
 
+  async getWinnerAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<object> {
+    try {
+      const getWinnerAttributes = await this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId: shareUserCertificate.schemaId
+        }
+      });
+     return getWinnerAttributes;
+    } catch (error) {
+      this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getParticipantAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<object> {
+    try {
+      const getParticipantAttributes = await this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId: shareUserCertificate.schemaId
+        }
+      });
+      
+      return getParticipantAttributes;
+
+    } catch (error) {
+      this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getArbiterAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<object> {
+    try {
+      const getArbiterAttributes = await this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId: shareUserCertificate.schemaId
+        }
+      });
+      return getArbiterAttributes;
+    } catch (error) {
+      this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   async checkUniqueUserExist(email: string): Promise<user> {
     try {
       return this.prisma.user.findUnique({
@@ -491,7 +536,7 @@ export class UserRepository {
     }
   }
 
-   /**
+  /**
    *
    * @Body updatePlatformSettings
    * @returns Update platform settings
@@ -519,21 +564,20 @@ export class UserRepository {
     }
   }
 
-/**
+  /**
    *
    * @Body updatePlatformSettings
    * @returns Update ecosystem settings
    */
-  async updateEcosystemSettings(eosystemKeys: string[], ecosystemObj: object): Promise<boolean> {  
+  async updateEcosystemSettings(eosystemKeys: string[], ecosystemObj: object): Promise<boolean> {
     try {
       for (const key of eosystemKeys) {
-
         const ecosystemKey = await this.prisma.ecosystem_config.findFirst({
           where: {
             key
           }
         });
-  
+
         await this.prisma.ecosystem_config.update({
           where: {
             id: ecosystemKey.id
@@ -545,7 +589,6 @@ export class UserRepository {
       }
 
       return true;
-  
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -571,5 +614,4 @@ export class UserRepository {
       throw new InternalServerErrorException(error);
     }
   }
- 
 }

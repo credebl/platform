@@ -3,8 +3,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
-import { FileExportResponse, RequestPayload } from './interfaces';
+import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -45,13 +44,6 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'get-issued-credentials-by-credentialDefinitionId', payload);
     }
 
-    readCsvFile(path: string, orgId: number): Promise<{
-        response: object;
-    }> {
-        const payload = { path, orgId };
-        return this.sendNats(this.issuanceProxy, 'read-csv-path', payload);
-    }
-
     getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: number): Promise<{
         response: object;
     }> {
@@ -66,32 +58,4 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
     }
 
-    async exportSchemaToCSV(credentialDefinitionId: string
-    ): Promise<FileExportResponse> {
-        const payload = { credentialDefinitionId };
-        return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
-    }
-
-    async importCsv(importFileDetails: RequestPayload
-    ): Promise<{ response: object }> {
-        const payload = { importFileDetails };
-        return this.sendNats(this.issuanceProxy, 'import-and-preview-data-for-issuance', payload);
-    }
-
-    async previewCSVDetails(requestId: string,
-        orgId: number,
-        previewFileDetails: PreviewFileDetails
-    ): Promise<string> {
-        const payload = {
-            requestId,
-            orgId,
-            previewFileDetails
-        };
-        return this.sendNats(this.issuanceProxy, 'preview-csv-details', payload);
-    }
-
-    async issueBulkCredential(requestId: string, orgId: number): Promise<{ response: object }> {
-        const payload = { requestId, orgId };
-        return this.sendNats(this.issuanceProxy, 'issue-bulk-credentials', payload);
-    }
 }

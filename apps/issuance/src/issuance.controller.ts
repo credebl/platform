@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
+import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, OutOfBandCredentialOffer } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 
 @Controller()
@@ -32,12 +32,6 @@ export class IssuanceController {
     return this.issuanceService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
   }
 
-  @MessagePattern({ cmd: 'read-csv-path' })
-  async fetchCsv(payload): Promise<string> {
-    const { path } = payload;
-    return this.issuanceService.readCsvPath(path);
-  }
-
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
   async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
     const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
@@ -50,31 +44,4 @@ export class IssuanceController {
     return this.issuanceService.outOfBandCredentialOffer(outOfBandCredentialDto);
   }
 
-  @MessagePattern({ cmd: 'export-schema-to-csv-by-credDefId' })
-  async exportSchemaToCSV(payload: {
-    credentialDefinitionId: string
-  }): Promise<object> {
-    return this.issuanceService.exportSchemaToCSV(payload.credentialDefinitionId);
-  }
-
-  @MessagePattern({ cmd: 'import-and-preview-data-for-issuance' })
-  async importCSV(payload: {
-    importFileDetails: ImportFileDetails
-  }): Promise<string> {
-    this.logger.log(`payload.importFileDetails----${payload.importFileDetails}`);
-    return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
-  }
-
-  @MessagePattern({ cmd: 'preview-csv-details' })
-  async previewCSVDetails(payload: { requestId: string, previewFileDetails: PreviewRequest }): Promise<object> {
-    return this.issuanceService.previewFileDataForIssuance(
-      payload.requestId,
-      payload.previewFileDetails
-    );
-  }
-
-  @MessagePattern({ cmd: 'issue-bulk-credentials' })
-  async issueBulkCredentials(payload: { requestId: string, orgId: number }): Promise<string> {
-    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId);
-  }
 }

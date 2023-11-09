@@ -31,7 +31,7 @@ COPY --from=build /app/dist/apps/issuance/ ./dist/apps/issuance/
 COPY --from=build /app/libs/ ./libs/
 #COPY --from=build /app/package.json ./  
 COPY --from=build /app/node_modules  ./node_modules
-COPY --from=build /app/uploadedFiles ./uploadedFiles
+# COPY --from=build /app/uploadedFiles ./uploadedFiles
 
 
 # Set the command to run the microservice

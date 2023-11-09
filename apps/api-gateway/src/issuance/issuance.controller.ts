@@ -57,17 +57,6 @@ export class IssuanceController {
   private readonly logger = new Logger('IssuanceController');
   private readonly PAGE: number = 1;
 
-  @Get('/issuance/oob/qr')
-  @ApiOperation({ summary: 'Out-Of-Band issuance QR', description: 'Out-Of-Band issuance QR' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiExcludeEndpoint()
-  @ApiQuery({ name: 'base64Image', required: true })
-  async getQrCode(@Query('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
-    const getImageBuffer = await this.imageServiceService.getBase64Image(base64Image);
-    res.setHeader('Content-Type', 'image/png');
-    return res.send(getImageBuffer);
-  }
-
   /**
    * Description: Get all issued credentials
    * @param user

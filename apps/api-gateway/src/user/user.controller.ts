@@ -294,9 +294,7 @@ export class UserController {
       statusCode: HttpStatus.CREATED,
       message: invitationRes.response
     };
-
     return res.status(HttpStatus.CREATED).json(finalResponse);
-
   }
 
   @Post('/certificate')
@@ -311,7 +309,7 @@ export class UserController {
     const userCertificateDetails = await this.userService.shareUserCertificate(shareUserCredentials);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: 'Certificate created successfully',
+      message: 'Certificate shared successfully',
       data: userCertificateDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);

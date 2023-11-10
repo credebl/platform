@@ -67,6 +67,22 @@ export class IssuanceController {
     );
   }
 
+  @MessagePattern({ cmd: 'issued-file-details' })
+  async issuedFiles(payload: {orgId:string, fileParameter:PreviewRequest}): Promise<object> {
+    return this.issuanceService.issuedFileDetails(
+      payload.orgId, 
+      payload.fileParameter
+      );
+  }
+  @MessagePattern({ cmd: 'issued-file-data' })
+  async getFileDetailsByFileId(payload: {fileId:string, fileParameter:PreviewRequest}): Promise<object> {
+    return this.issuanceService.getFileDetailsByFileId( 
+      payload.fileId,
+      payload.fileParameter
+      );
+  }
+
+
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
   async issueBulkCredentials(payload: { requestId: string, orgId: number }): Promise<string> {
     return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId);

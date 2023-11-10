@@ -86,9 +86,9 @@ export class UserController {
    */
   @MessagePattern({ cmd: 'share-user-certificate' })
   async shareUserCertificate(payload: {
-    shareUserCertificate: ShareUserCertificateI;
-  }): Promise<string> {
-    return this.userService.shareUserCertificate(payload.shareUserCertificate);
+    shareUserCredentials: ShareUserCertificateI;
+  }): Promise<unknown> {
+    return this.userService.shareUserCertificate(payload.shareUserCredentials);
   }
 
   /**

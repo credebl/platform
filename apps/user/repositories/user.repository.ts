@@ -14,7 +14,7 @@ import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 // eslint-disable-next-line camelcase
-import { user } from '@prisma/client';
+import { schema, user } from '@prisma/client';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -440,44 +440,15 @@ export class UserRepository {
     return { totalPages, users };
   }
 
-  async getWinnerAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<object> {
+  async getAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<schema> {
     try {
-      const getWinnerAttributes = await this.prisma.schema.findFirst({
-        where: {
-          schemaLedgerId: shareUserCertificate.schemaId
-        }
-      });
-     return getWinnerAttributes;
-    } catch (error) {
-      this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
-  async getParticipantAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<object> {
-    try {
-      const getParticipantAttributes = await this.prisma.schema.findFirst({
-        where: {
-          schemaLedgerId: shareUserCertificate.schemaId
-        }
-      });
-      
-      return getParticipantAttributes;
-
-    } catch (error) {
-      this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
-  async getArbiterAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<object> {
-    try {
-      const getArbiterAttributes = await this.prisma.schema.findFirst({
-        where: {
-          schemaLedgerId: shareUserCertificate.schemaId
-        }
-      });
-      return getArbiterAttributes;
+      const getAttributes = await this.prisma.schema
+        .findFirst({
+          where: {
+            schemaLedgerId: shareUserCertificate.schemaId
+          }
+        });
+      return getAttributes;
     } catch (error) {
       this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

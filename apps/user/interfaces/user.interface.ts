@@ -66,5 +66,10 @@ export interface PlatformSettingsI {
 export interface ShareUserCertificateI {
     schemaId: string;
     credentialId: string;
-    attributes: object[];
+    attributes: Attribute[];
 }
+
+export interface Attribute {
+    [key: string]: string;
+    label: string
+  }

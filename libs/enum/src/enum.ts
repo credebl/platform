@@ -53,8 +53,8 @@ export enum AgentSpinUpStatus {
 }
 
 export enum UserCertificateId {
-    WINNER = 'schemaId1',
-    PARTICIPANT = 'schemaId2',
-    ARBITER = 'schemaId3',
-    WORLD_RECORD = 'schemaId4'
+    WINNER = 'Winner',
+    PARTICIPANT = 'Participant',
+    ARBITER = 'Arbiter',
+    WORLD_RECORD = 'WORLD_RECORD'
 }

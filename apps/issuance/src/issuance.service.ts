@@ -707,8 +707,10 @@ export class IssuanceService {
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
 
-
+      this.logger.log(`respFileUpload----${JSON.stringify(respFileUpload)}`);
       await parsedData.forEach(async (element, index) => {
+        this.logger.log(`element----${JSON.stringify(index)}`);
+        this.logger.log(`element----${JSON.stringify(element)}`);
         this.bulkIssuanceQueue.add(
           'issue-credential',
           {

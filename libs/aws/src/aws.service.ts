@@ -41,7 +41,7 @@ export class AwsService {
     }
   }
 
-  async deleteFile(bucketName: string, key: string): Promise<void> {
+  async deleteFile(key: string): Promise<void> {
     const params: AWS.S3.DeleteObjectRequest = {
       Bucket: process.env.AWS_BUCKET,
       Key: key

@@ -49,10 +49,10 @@ export class IssuanceRepository {
     // eslint-disable-next-line camelcase
     async saveIssuedCredentialDetails(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: object[], orgId: string): Promise<credentials> {
         try {
-
+            
             const credentialDetails = await this.prisma.credentials.upsert({
                 where: {
-                    connectionId
+                    threadId
                 },
                 update: {
                     lastChangedBy: `${orgId}`,

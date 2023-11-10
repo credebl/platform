@@ -42,7 +42,7 @@ export class VerificationRepository {
 
             return await this.prisma.presentations.upsert({
                 where: {
-                    connectionId: proofPresentationPayload.connectionId
+                    threadId: proofPresentationPayload.threadId
                 },
                 update: {
                     state: proofPresentationPayload.state,

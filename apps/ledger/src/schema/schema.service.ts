@@ -116,13 +116,15 @@ export class SchemaService extends BaseService {
 
           const responseObj = JSON.parse(JSON.stringify(schemaResponseFromAgentService.response));
 
+          const indyNamespace = `${did.split(':')[2]}:${did.split(':')[3]}`;
+          const getLedgerId = await this.schemaRepository.getLedgerByLedger(indyNamespace);
           const schemaDetails: ISchema = {
             schema: { schemaName: '', attributes: [], schemaVersion: '', id: '' },
             createdBy: `0`,
             issuerId: '',
             onLedgerStatus: 'Submitted on ledger',
             orgId,
-            ledgerId: "0"
+            ledgerId: getLedgerId.id
           };
 
           if ('finished' === responseObj.schema.state) {

@@ -21,6 +21,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ])
   ],
   controllers: [UserController],
-  providers: [UserService, CommonService]
+  providers: [UserService, CommonService, AwsService]
 })
 export class UserModule {}

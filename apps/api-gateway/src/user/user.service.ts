@@ -53,7 +53,7 @@ export class UserService extends BaseService {
 
   async shareUserCertificate(
     shareUserCredentials: CreateUserCertificateDto
-  ): Promise<{ response: object }> {
+  ): Promise<{ response: Buffer }> {
     const payload = { shareUserCredentials};
     return this.sendNats(this.serviceProxy, 'share-user-certificate', payload);
   }

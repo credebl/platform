@@ -10,7 +10,8 @@ import {
   BadRequestException,
   Get,
   Query,
-  UseGuards
+  UseGuards,
+  UploadedFile
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
@@ -47,6 +48,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
+import { AwsService } from '@credebl/aws/aws.service';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -56,7 +58,8 @@ import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly commonService: CommonService
+    private readonly commonService: CommonService,
+    private readonly awsService: AwsService
   ) {}
 
   /**
@@ -291,21 +294,22 @@ export class UserController {
     description: 'Share user certificate'
   })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
   async shareUserCertificate(
     @Body() shareUserCredentials: CreateUserCertificateDto,
+    @UploadedFile() file: Express.Multer.File,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<object> {                                    
     const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
-    res.set('Content-Type', 'image/png');
-    return res.status(HttpStatus.OK).send(imageBuffer);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: 'Certificate shared successfully',
-      data: await this.userService.shareUserCertificate(shareUserCredentials)
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    if (file) {
+      const certificateImageBuffer = imageBuffer.response;
+      const imageUrl = await this.awsService.uploads3(certificateImageBuffer, 'png', './certificates', 'base64');
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: 'Certificate url generated successfully',
+        data: imageUrl
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
   }
 
   @Put('/')

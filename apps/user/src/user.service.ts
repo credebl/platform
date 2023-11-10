@@ -560,6 +560,7 @@ export class UserService {
     await browser.close();
     return screenshot;
   }
+  
 
   /**
    *

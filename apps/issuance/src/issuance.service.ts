@@ -731,8 +731,10 @@ export class IssuanceService {
         `Param 'requestId' is missing from the request.`
       );
     }
+    this.logger.log(`requestId----${JSON.stringify(requestId)}`);
     try {
       const cachedData = await this.cacheManager.get(requestId);
+      this.logger.log(`cachedData----${JSON.stringify(cachedData)}`);
       if (cachedData === undefined) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
@@ -794,6 +796,7 @@ export class IssuanceService {
       error: '',
       detailError: ''
     };
+    this.logger.log(`jobDetails----${JSON.stringify(jobDetails)}`);
 
     fileUploadData.fileUpload = jobDetails.fileUploadId;
     fileUploadData.fileRow = JSON.stringify(jobDetails);

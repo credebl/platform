@@ -545,7 +545,6 @@ export class IssuanceService {
 
       // https required to download csv from frontend side
       const filePathToDownload = `${process.env.API_GATEWAY_PROTOCOL_SECURE}://${process.env.UPLOAD_LOGO_HOST}/${fileName}`;
-
       return {
         fileContent: filePathToDownload,
         fileName: processedFileName
@@ -620,8 +619,8 @@ export class IssuanceService {
       this.logger.error(`error in validating credentials : ${error}`);
       throw new RpcException(error.response);
     } finally {
+      // await this.awsService.deleteFile(importFileDetails.fileKey);
       // this.logger.error(`Deleted uploaded file after processing.`);
-      // await deleteFile(importFileDetails.filePath);
     }
   }
 
@@ -632,6 +631,9 @@ export class IssuanceService {
     try {
       if ('' !== requestId.trim()) {
         const cachedData = await this.cacheManager.get(requestId);
+        if (!cachedData) {
+          throw new NotFoundException(ResponseMessages.issuance.error.emptyFileData);
+        }
         if (cachedData === undefined || null) {
           throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
         }
@@ -654,7 +656,7 @@ export class IssuanceService {
     getAllfileDetails: PreviewRequest
   ): Promise<object> {
     try {
- 
+
       const fileData = await this.issuanceRepository.getFileDetailsByFileId(fileId, getAllfileDetails);
 
       const fileResponse = {
@@ -670,7 +672,7 @@ export class IssuanceService {
       if (0 !== fileData.fileCount) {
         return fileResponse;
       } else {
-        throw new NotFoundException(ResponseMessages.issuance.error.notFound);
+        throw new NotFoundException(ResponseMessages.issuance.error.fileNotFound);
       }
 
     } catch (error) {
@@ -684,7 +686,7 @@ export class IssuanceService {
     getAllfileDetails: PreviewRequest
   ): Promise<object> {
     try {
- 
+
       const fileDetails = await this.issuanceRepository.getAllFileDetails(orgId, getAllfileDetails);
       const fileResponse = {
         totalItems: fileDetails.fileCount,
@@ -766,7 +768,7 @@ export class IssuanceService {
         );
       });
 
-      return 'Process completed for bulk issuance';
+      return 'Process initiated for bulk issuance';
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;
       this.logger.error(`error in issueBulkCredential : ${error}`);

@@ -40,7 +40,8 @@ export const ResponseMessages = {
             adduser: 'Unable to add user details',
             verifyEmail: 'The verification link has already been sent to your email address. please verify',
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
-            userNotRegisterd: 'The user has not yet completed the registration process'
+            userNotRegisterd: 'The user has not yet completed the registration process',
+            InvalidEmailDomain :'Email from this domain is not allowed'
         }
     },
     organisation: {

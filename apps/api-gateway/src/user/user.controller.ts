@@ -1,4 +1,17 @@
-import { Controller, Post, Put, Body, Param, UseFilters, Res, HttpStatus, BadRequestException, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Put,
+  Body,
+  Param,
+  UseFilters,
+  Res,
+  HttpStatus,
+  BadRequestException,
+  Get,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import {
   ApiBearerAuth,
@@ -41,13 +54,16 @@ import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
 export class UserController {
-  constructor(private readonly userService: UserService, private readonly commonService: CommonService) { }
+  constructor(
+    private readonly userService: UserService,
+    private readonly commonService: CommonService
+  ) {}
 
   /**
-   * 
-   * @param user 
-   * @param orgId 
-   * @param res 
+   *
+   * @param user
+   * @param orgId
+   * @param res
    * @returns Users list of organization
    */
   @Get('/public-profiles')
@@ -68,8 +84,11 @@ export class UserController {
     type: String,
     required: false
   })
-  async get(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Res() res: Response): Promise<Response> {
-
+  async get(
+    @User() user: IUserRequestInterface,
+    @Query() getAllUsersDto: GetAllUsersDto,
+    @Res() res: Response
+  ): Promise<Response> {
     const users = await this.userService.get(getAllUsersDto);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -100,7 +119,6 @@ export class UserController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   @Get('/profile')
@@ -111,7 +129,6 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async getProfile(@User() reqUser: user, @Res() res: Response): Promise<object> {
-
     const userData = await this.userService.getProfile(reqUser.id);
 
     const finalResponse: IResponseType = {
@@ -121,11 +138,13 @@ export class UserController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   @Get('/platform-settings')
-  @ApiOperation({ summary: 'Get all platform and ecosystem settings', description: 'Get all platform and ecosystem settings' })
+  @ApiOperation({
+    summary: 'Get all platform and ecosystem settings',
+    description: 'Get all platform and ecosystem settings'
+  })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)
   @ApiBearerAuth()
@@ -139,7 +158,6 @@ export class UserController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   @Get('/activity')
@@ -150,8 +168,11 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiQuery({ name: 'limit', required: true })
-  async getUserActivities(@Query('limit') limit: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-
+  async getUserActivities(
+    @Query('limit') limit: number,
+    @Res() res: Response,
+    @User() reqUser: user
+  ): Promise<Response> {
     const userDetails = await this.userService.getUserActivities(reqUser.id, limit);
 
     const finalResponse: IResponseType = {
@@ -162,7 +183,6 @@ export class UserController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
 
   @Get('/org-invitations')
   @ApiOperation({
@@ -191,13 +211,20 @@ export class UserController {
     type: String,
     required: false
   })
-  async invitations(@Query() getAllInvitationsDto: GetAllInvitationsDto, @User() reqUser: user, @Res() res: Response): Promise<object> {
-
+  async invitations(
+    @Query() getAllInvitationsDto: GetAllInvitationsDto,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<object> {
     if (!Object.values(Invitation).includes(getAllInvitationsDto.status)) {
       throw new BadRequestException(ResponseMessages.user.error.invalidInvitationStatus);
     }
 
-    const invitations = await this.userService.invitations(reqUser.id, getAllInvitationsDto.status, getAllInvitationsDto);
+    const invitations = await this.userService.invitations(
+      reqUser.id,
+      getAllInvitationsDto.status,
+      getAllInvitationsDto
+    );
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -206,15 +233,14 @@ export class UserController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   /**
-  *
-  * @param email
-  * @param res
-  * @returns User email check
-  */
+   *
+   * @param email
+   * @param res
+   * @returns User email check
+   */
   @Get('/:email')
   @ApiOperation({ summary: 'Check user exist', description: 'check user existence' })
   async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
@@ -227,14 +253,13 @@ export class UserController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   /**
-   * 
-   * @param acceptRejectInvitation 
-   * @param reqUser 
-   * @param res 
+   *
+   * @param acceptRejectInvitation
+   * @param reqUser
+   * @param res
    * @returns Organization invitation status
    */
   @Post('/org-invitations/:invitationId')
@@ -244,7 +269,12 @@ export class UserController {
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async acceptRejectInvitaion(@Body() acceptRejectInvitation: AcceptRejectInvitationDto, @Param('invitationId') invitationId: string, @User() reqUser: user, @Res() res: Response): Promise<object> {
+  async acceptRejectInvitaion(
+    @Body() acceptRejectInvitation: AcceptRejectInvitationDto,
+    @Param('invitationId') invitationId: string,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<object> {
     acceptRejectInvitation.invitationId = parseInt(invitationId);
     const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);
 
@@ -263,12 +293,17 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async shareUserCertificate (@Body() shareUserCredentials: CreateUserCertificateDto, @Res() res: Response): Promise<object> {
-    const userCertificateDetails = await this.userService.shareUserCertificate(shareUserCredentials);
+  async shareUserCertificate(
+    @Body() shareUserCredentials: CreateUserCertificateDto,
+    @Res() res: Response
+  ): Promise<object> {
+    const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
+    res.set('Content-Type', 'image/png');
+    return res.status(HttpStatus.OK).send(imageBuffer);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: 'Certificate shared successfully',
-      data: userCertificateDetails.response
+      data: await this.userService.shareUserCertificate(shareUserCredentials)
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -281,8 +316,11 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  async updateUserProfile(@Body() updateUserProfileDto: UpdateUserProfileDto, @User() reqUser: user, @Res() res: Response): Promise<Response> {
-
+  async updateUserProfile(
+    @Body() updateUserProfileDto: UpdateUserProfileDto,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<Response> {
     const userId = reqUser.id;
     updateUserProfileDto.id = userId;
     await this.userService.updateUserProfile(updateUserProfileDto);
@@ -292,14 +330,17 @@ export class UserController {
       message: ResponseMessages.user.success.update
     };
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   @Put('/password/:email')
   @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async addPasskey(@Body() userInfo: AddPasskeyDetails, @Param('email') email: string, @Res() res: Response): Promise<Response> {
+  async addPasskey(
+    @Body() userInfo: AddPasskeyDetails,
+    @Param('email') email: string,
+    @Res() res: Response
+  ): Promise<Response> {
     const userDetails = await this.userService.addPasskey(email, userInfo);
     const finalResponse = {
       statusCode: HttpStatus.OK,
@@ -308,15 +349,20 @@ export class UserController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
-  
+
   @Put('/platform-settings')
-  @ApiOperation({ summary: 'Update platform and ecosystem settings', description: 'Update platform and ecosystem settings' })
+  @ApiOperation({
+    summary: 'Update platform and ecosystem settings',
+    description: 'Update platform and ecosystem settings'
+  })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)
   @ApiBearerAuth()
-  async updatePlatformSettings(@Body() platformSettings: UpdatePlatformSettingsDto, @Res() res: Response): Promise<Response> {
+  async updatePlatformSettings(
+    @Body() platformSettings: UpdatePlatformSettingsDto,
+    @Res() res: Response
+  ): Promise<Response> {
     const result = await this.userService.updatePlatformSettings(platformSettings);
 
     const finalResponse = {
@@ -325,7 +371,5 @@ export class UserController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
-
 }

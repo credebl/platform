@@ -390,7 +390,7 @@ export class IssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
   
-  @Get('/orgs/:orgId/bulk/file-data')
+  @Get('/orgs/:orgId/:fileId/bulk/file-data')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()

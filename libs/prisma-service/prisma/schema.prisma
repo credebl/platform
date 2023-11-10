@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+
 model user {
   // id                  Int               @id(map: "PK_cace4a159ff9f2512dd42373760") @default(autoincrement())
   id                  String            @id(map: "PK_cace4a159ff9f2512dd42373760") @default(uuid())
@@ -294,9 +296,9 @@ model credentials {
   createdBy            String       @default("1")
   lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
   lastChangedBy        String       @default("1")
-  connectionId         String       @unique
-  threadId             String
-  protocolVersion      String
+  connectionId         String?
+  threadId             String       @unique
+  protocolVersion      String?
   credentialAttributes Json[]
   orgId                String
   organisation         organisation @relation(fields: [orgId], references: [id])
@@ -308,9 +310,9 @@ model presentations {
   createdBy           String       @default("1")
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
   lastChangedBy       String       @default("1")
-  connectionId        String       @unique
+  connectionId        String?
   state               String?
-  threadId            String?
+  threadId            String       @unique
   isVerified          Boolean?
   orgId               String
   organisation        organisation @relation(fields: [orgId], references: [id])

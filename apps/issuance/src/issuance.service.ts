@@ -16,8 +16,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
-import { checkIfFileOrDirectoryExists, createFile, deleteFile } from '../../api-gateway/src/helper-files/file-operation.helper';
-import { readFileSync } from 'fs';
+import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
 import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
@@ -26,7 +25,7 @@ import { orderValues, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
-
+import { AwsService } from '@credebl/aws';
 
 @Injectable()
 export class IssuanceService {
@@ -38,6 +37,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
+    private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
   ) { }
 
@@ -517,10 +517,13 @@ export class IssuanceService {
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
 
-    this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
+      this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
 
-      const csvFile = readFileSync(importFileDetails.filePath);
-      const csvData = csvFile.toString();
+      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.fileKey)}`);
+
+      const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
+      const csvData: string = getFileDetails.Body.toString();
+
       const parsedData = paParse(csvData, {
         header: true,
         skipEmptyLines: true,
@@ -571,8 +574,8 @@ export class IssuanceService {
       this.logger.error(`error in validating credentials : ${error}`);
       throw new RpcException(error.response);
     } finally {
-      this.logger.error(`Deleted uploaded file after processing.`);
-      await deleteFile(importFileDetails.filePath);
+      // this.logger.error(`Deleted uploaded file after processing.`);
+      // await deleteFile(importFileDetails.filePath);
     }
   }
 
@@ -688,7 +691,7 @@ export class IssuanceService {
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
-     
+
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
       fileUpload.orgId = orgId;
@@ -699,7 +702,7 @@ export class IssuanceService {
       }
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
-      
+
 
       await parsedData.forEach(async (element, index) => {
         this.bulkIssuanceQueue.add(
@@ -716,7 +719,7 @@ export class IssuanceService {
           { delay: 5000 }
         );
       });
-      
+
       return 'Process completed for bulk issuance';
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;

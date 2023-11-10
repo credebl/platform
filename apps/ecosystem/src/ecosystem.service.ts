@@ -39,6 +39,12 @@ export class EcosystemService {
   // eslint-disable-next-line camelcase
   async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<object> {
 
+    const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
+
+    if (ecosystemExist) {
+      throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+    }
+
     const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(EcosystemConfigSettings.MULTI_ECOSYSTEM);
 
     if (isMultiEcosystemEnabled && 'false' === isMultiEcosystemEnabled.value) {

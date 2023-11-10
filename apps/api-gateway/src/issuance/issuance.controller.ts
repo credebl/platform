@@ -15,8 +15,8 @@ import {
   Param,
   UseFilters,
   Header,
-  UseInterceptors,
-  UploadedFile
+  UploadedFile,
+  UseInterceptors
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -49,11 +49,10 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
 import { FileExportResponse, RequestPayload } from './interfaces';
+import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerCSVOptions } from '../config/multer.config';
-import { extname } from 'path';
-import * as fs from 'fs';
-
+import { v4 as uuidv4 } from 'uuid';
+import { RpcException } from '@nestjs/microservices';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -64,6 +63,7 @@ export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
     private readonly imageServiceService: ImageServiceService,
+    private readonly awsService: AwsService,
     private readonly commonService: CommonService
 
   ) { }
@@ -188,7 +188,6 @@ export class IssuanceController {
 
   }
 
-
   @Post('/orgs/:orgId/bulk/upload')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -224,46 +223,44 @@ export class IssuanceController {
     },
     required: true
   })
-  @UseInterceptors(FileInterceptor('file', multerCSVOptions))
+  @UseInterceptors(FileInterceptor('file'))
   async importAndPreviewDataForIssuance(
     @Query('credDefId') credentialDefinitionId: string,
     @UploadedFile() file: Express.Multer.File,
     @Param('orgId') orgId: number,
     @Res() res: Response
   ): Promise<object> {
-    if (file) {
-      this.logger.log(`file:${file.path}`);
-      this.logger.log(`Uploaded file : ${file.filename}`);
-      const timestamp = Math.floor(Date.now() / 1000);
-      const ext = extname(file.filename);
-      const newFilename = `${file.filename}-${timestamp}${ext}`;
+    try {
+      if (file) {
+        const fileKey: string = uuidv4();
+        try {
 
-      fs.rename(
-        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
-        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
-        async (err: any) => {
-          if (err) {
-            throw err;
-          }
+          await this.awsService.uploadCsvFile(fileKey, file?.buffer);
+
+        } catch (error) {
+
+          throw new RpcException(error.response ? error.response : error);
+
         }
-      );
-
-      const reqPayload: RequestPayload = {
-        credDefId: credentialDefinitionId,
-        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
-        fileName: newFilename
-      };
-      const importCsvDetails = await this.issueCredentialService.importCsv(
-        reqPayload
-      );
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.issuance.success.importCSV,
-        data: importCsvDetails.response
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
-
-    } 
+        const reqPayload: RequestPayload = {
+          credDefId: credentialDefinitionId,
+          fileKey,
+          fileName:file?.filename
+        };
+        this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
+        const importCsvDetails = await this.issueCredentialService.importCsv(
+          reqPayload
+        );
+        const finalResponse: IResponseType = {
+          statusCode: HttpStatus.CREATED,
+          message: ResponseMessages.issuance.success.importCSV,
+          data: importCsvDetails.response
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+      }
+    } catch (error) {
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
 
@@ -476,7 +473,7 @@ export class IssuanceController {
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
-  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number,  @Res() res: Response): Promise<Response> {
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
     const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
@@ -593,5 +590,5 @@ export class IssuanceController {
 
   }
 
-  
+
 }

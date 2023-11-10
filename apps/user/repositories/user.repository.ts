@@ -551,5 +551,25 @@ export class UserRepository {
       throw new InternalServerErrorException(error);
     }
   }
-   
+
+  async getPlatformSettings(): Promise<object> {
+    try {
+      const getPlatformSettingsList = await this.prisma.platform_config.findMany();
+      return getPlatformSettingsList;
+    } catch (error) {
+      this.logger.error(`error in getPlatformSettings: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getEcosystemSettings(): Promise<object> {
+    try {
+      const getEcosystemSettingsList = await this.prisma.ecosystem_config.findMany();
+      return getEcosystemSettingsList;
+    } catch (error) {
+      this.logger.error(`error in getEcosystemSettings: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+ 
 }

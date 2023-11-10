@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { org_agents, org_agents_type, organisation, schema } from '@prisma/client';
+import { ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { ISchema, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 
@@ -35,7 +35,7 @@ export class SchemaRepository {
             issuerId: schemaResult.issuerId,
             createdBy: schemaResult.createdBy,
             lastChangedBy: schemaResult.changedBy,
-            publisherDid: schemaResult.issuerId.split(':')[3],
+            publisherDid: schemaResult.issuerId.split(':')[4],
             orgId: schemaResult.orgId,
             ledgerId: schemaResult.ledgerId
           }
@@ -279,6 +279,20 @@ export class SchemaRepository {
       return agent;
     } catch (error) {
       this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getLedgerByLedger(LedgerName: string): Promise<ledgers> {
+    try {
+      return this.prisma.ledgers.findFirst({
+        where: {
+          indyNamespace: LedgerName
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`Error in getting get schema by schema ledger id: ${error}`);
       throw error;
     }
   }

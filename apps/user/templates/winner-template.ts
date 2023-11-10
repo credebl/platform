@@ -1,7 +1,10 @@
+import { Attribute } from '../interfaces/user.interface';
+
 export class WinnerTemplate {
-    public getWinnerTemplate(attributes: object): string {
-        try {
-            return `<!DOCTYPE html>
+  public getWinnerTemplate(attributes: Attribute[]): string {
+    try {
+      const name = 0 < attributes.length ? attributes[0].name : '';
+      return `<!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
@@ -11,12 +14,11 @@ export class WinnerTemplate {
             <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
                 <div style="text-align: center; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); margin: 50px auto;">
                     <div style="font-size: 48px; margin-bottom: 20px;">🏆</div>
-                    <h1 style="color: #28a745;">Congratulations, ${attributes}!</h1>
-                    <p style="color: #333;">You're the ${attributes} of our contest.</p>
+                    <h1 style="color: #28a745;">Congratulations, ${name}!</h1>
+                    <p style="color: #333;">You're the Winner of our contest.</p>
                 </div>
             </body>
             </html>`;
-        } catch (error) {
-        }
-    }
+    } catch (error) {}
+  }
 }

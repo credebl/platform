@@ -28,6 +28,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import {
   AddPasskeyDetails,
+  Attribute,
   InvitationsI,
   PlatformSettingsI,
   ShareUserCertificateI,
@@ -45,6 +46,7 @@ import { EcosystemConfigSettings, UserCertificateId } from '@credebl/enum/enum';
 import { WinnerTemplate } from '../templates/winner-template';
 import { ParticipantTemplate } from '../templates/participant-template';
 import { ArbiterTemplate } from '../templates/arbiter-template';
+import * as puppeteer from 'puppeteer';
 
 @Injectable()
 export class UserService {
@@ -573,36 +575,60 @@ export class UserService {
     }
   }
 
-   /**
+  /**
    *
    * @returns
    */
-  async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<string> {
-    const getWinnerAttributes = await this.userRepository.getWinnerAttributesBySchemaId(shareUserCertificate);
-    const getParticipantAttributes = await this.userRepository.getParticipantAttributesBySchemaId(shareUserCertificate);
-    const getArbiterAttributes = await this.userRepository.getArbiterAttributesBySchemaId(shareUserCertificate);
-    
-    if (!getWinnerAttributes || !getParticipantAttributes || !getArbiterAttributes) {
+  async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<unknown> {
+    const getAttributes = await this.userRepository.getAttributesBySchemaId(shareUserCertificate);
+    if (!getAttributes) {
       throw new NotFoundException(ResponseMessages.schema.error.invalidSchemaId);
     }
 
-    const userWinnerTemplate = new WinnerTemplate();
-    const userParticipantTemplate = new ParticipantTemplate();
-    const userArbiterTemplate = new ArbiterTemplate();
+    const attributeArray = [];
+    let attributeJson = {};
+    const attributePromises = shareUserCertificate.attributes.map(async (iterator: Attribute) => {
+      attributeJson = {
+        [iterator.name]: iterator.value
+      };
+      attributeArray.push(attributeJson);
+    });
+    await Promise.all(attributePromises);
+    let template;
 
-    const getWinnerTemplate = await userWinnerTemplate.getWinnerTemplate(getWinnerAttributes);
-    const getParticipantTemplate = await userParticipantTemplate.getParticipantTemplate(getParticipantAttributes);
-    const getArbiterTemplate = await userArbiterTemplate.getArbiterTemplate(getArbiterAttributes);
+    switch (shareUserCertificate.schemaId.split(':')[2]) {
+      case UserCertificateId.WINNER:
+        // eslint-disable-next-line no-case-declarations
+        const userWinnerTemplate = new WinnerTemplate();
+        template = await userWinnerTemplate.getWinnerTemplate(attributeArray);
+        break;
+      case UserCertificateId.PARTICIPANT:
+        // eslint-disable-next-line no-case-declarations
+        const userParticipantTemplate = new ParticipantTemplate();
+        template = await userParticipantTemplate.getParticipantTemplate(attributeArray);
+        break;
+      case UserCertificateId.ARBITER:
+        // eslint-disable-next-line no-case-declarations
+        const userArbiterTemplate = new ArbiterTemplate();
+        template = await userArbiterTemplate.getArbiterTemplate(attributeArray);
+        break;
+      default:
+        throw new NotFoundException('error in get attributes');
+    }
 
-     if (shareUserCertificate.schemaId === UserCertificateId.WINNER) {
-      return getWinnerTemplate;
-     } else if (shareUserCertificate.schemaId === UserCertificateId.PARTICIPANT) {
-      return getParticipantTemplate;
-     } else if (shareUserCertificate.schemaId === UserCertificateId.ARBITER) {
-      return getArbiterTemplate;
-     } else {
-      throw new NotFoundException(ResponseMessages.schema.error.invalidSchemaId);
-    } 
+    const imageBuffer = await this.convertHtmlToImage(template);
+    return imageBuffer;
+  }
+
+  async convertHtmlToImage(template: string): Promise<unknown> {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    await page.setContent(template);
+    const screenshot = await page.screenshot({ path: 'cert1.png' });
+
+    await browser.close();
+    return screenshot;
   }
 
   /**

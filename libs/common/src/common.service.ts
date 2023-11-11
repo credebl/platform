@@ -81,7 +81,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Something went wrong.'
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.INTERNAL_SERVER_ERROR
         );
@@ -146,7 +146,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Something went wrong.'
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.INTERNAL_SERVER_ERROR
         );
@@ -215,7 +215,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Something went wrong.'
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.INTERNAL_SERVER_ERROR
         );

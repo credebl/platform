@@ -49,13 +49,13 @@ export class EcosystemService {
 
     if (isMultiEcosystemEnabled && 'false' === isMultiEcosystemEnabled.value) {
       const ecoOrganizationList = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
-      
+
       for (const organization of ecoOrganizationList) {
         if (organization['ecosystemRole']['name'] === EcosystemRoles.ECOSYSTEM_MEMBER) {
           throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
         }
       }
-    }   
+    }
     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
     if (!createEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
@@ -165,8 +165,8 @@ export class EcosystemService {
    */
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, ecosystemId } = bulkInvitationDto;
-   
-   
+
+
     try {
       const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
 
@@ -174,9 +174,8 @@ export class EcosystemService {
         const { email } = invitation;
 
         const isUserExist = await this.checkUserExistInPlatform(email);
- 
+
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
-       
 
         if (!isInvitationExist && userEmail !== invitation.email) {
         
@@ -190,7 +189,7 @@ export class EcosystemService {
       }
       return ResponseMessages.ecosystem.success.createInvitation;
     } catch (error) {
-   
+
       this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -204,7 +203,15 @@ export class EcosystemService {
    */
   async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
     try {
-      const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(acceptRejectInvitation.orgId);
+      const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(EcosystemConfigSettings.MULTI_ECOSYSTEM);
+      if (isMultiEcosystemEnabled
+        && 'false' === isMultiEcosystemEnabled.value
+        && acceptRejectInvitation.status !== Invitation.REJECTED) {
+        const checkOrganization = await this.ecosystemRepository.checkEcosystemOrgs(acceptRejectInvitation.orgId);
+        if (0 < checkOrganization.length) {
+          throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+        };
+      }
 
       if (checkOrganization) {
         throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
@@ -376,7 +383,7 @@ export class EcosystemService {
   async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: string, ecosystemId: string): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
-    
+
       const [schemaRequestExist, ecosystemMemberDetails, platformConfig, ecosystemLeadAgentDetails, getEcosystemOrgDetailsByOrgId] = await Promise.all([
         this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version),
         this.ecosystemRepository.getAgentDetails(orgId),
@@ -406,7 +413,7 @@ export class EcosystemService {
       }
 
       if (!getEcosystemOrgDetailsByOrgId) {
-      
+
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemOrgNotFound);
       }
 
@@ -442,7 +449,15 @@ export class EcosystemService {
       return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestSchemaPayload, endorsementTransactionType.SCHEMA);
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response || error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -518,7 +533,15 @@ export class EcosystemService {
       return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestCredDefPayload, endorsementTransactionType.CREDENTIAL_DEFINITION);
     } catch (error) {
       this.logger.error(`In request cred-def endorsement: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response || error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -637,7 +660,15 @@ export class EcosystemService {
       return updateSignedTransaction;
     } catch (error) {
       this.logger.error(`In sign transaction: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response || error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -691,7 +722,7 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async getEcosystemMemberDetails(endorsementTransactionPayload): Promise<org_agents> {
-    const orgId =  endorsementTransactionPayload.ecosystemOrgs.orgId;
+    const orgId = endorsementTransactionPayload.ecosystemOrgs.orgId;
     return this.ecosystemRepository.getAgentDetails(orgId);
   }
 
@@ -825,7 +856,7 @@ export class EcosystemService {
       if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
 
         const updateSchemaId = await this._updateResourceId(endorsementId, endorsementTransactionType.SCHEMA, submitTransactionRequest);
-        
+
         if (!updateSchemaId) {
 
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateSchemaId);
@@ -861,7 +892,15 @@ export class EcosystemService {
       }
     } catch (error) {
       this.logger.error(`In submit transaction: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -1039,7 +1078,7 @@ export class EcosystemService {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
       });
-      
+
       const schemasResponse = {
         totalItems: response.schemasCount,
         hasNextPage: ecosystemSchemas.pageSize * ecosystemSchemas.pageNumber < response.schemasCount,

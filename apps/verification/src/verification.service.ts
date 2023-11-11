@@ -35,7 +35,7 @@ export class VerificationService {
   async getProofPresentations(orgId: string, threadId: string): Promise<string> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-       
+
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'get-proof-presentation';
       let url;
@@ -51,7 +51,15 @@ export class VerificationService {
 
     } catch (error) {
       this.logger.error(`[getProofPresentations] - error in get proof presentation : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -112,7 +120,15 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[getProofPresentationById] - error in get proof presentation by id : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -208,7 +224,15 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -268,7 +292,15 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -368,7 +400,15 @@ export class VerificationService {
       return true;
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
-      throw new RpcException(error.message);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -584,7 +624,7 @@ export class VerificationService {
   ): Promise<string> {
     try {
 
-   
+
       let url;
       switch (verificationMethodLabel) {
         case 'get-proof-presentation': {
@@ -669,11 +709,11 @@ export class VerificationService {
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
-      
+
       const payload = { apiKey: '', url };
 
       const getProofPresentationById = await this._getProofFormData(payload);
-    if (!getProofPresentationById?.response?.presentation) {
+      if (!getProofPresentationById?.response?.presentation) {
         throw new NotFoundException("Proof presentation not found!");
       }
 
@@ -763,15 +803,23 @@ export class VerificationService {
       return extractedDataArray;
     } catch (error) {
       this.logger.error(`[getProofFormData] - error in get proof form data : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
   async _getProofFormData(payload: ProofFormDataPayload): Promise<{
     response;
   }> {
-   
-    
+
+
     try {
 
       const pattern = {

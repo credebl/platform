@@ -75,7 +75,15 @@ export class IssuanceService {
       return credentialCreateOfferDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -112,7 +120,15 @@ export class IssuanceService {
       return credentialCreateOfferDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -186,7 +202,15 @@ export class IssuanceService {
       return issueCredentialsDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -223,7 +247,15 @@ export class IssuanceService {
       return createConnectionInvitation?.response;
     } catch (error) {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -380,7 +412,15 @@ export class IssuanceService {
       return allSuccessful;
     } catch (error) {
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -523,7 +563,7 @@ export class IssuanceService {
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
 
-    this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
+      this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
 
       const csvFile = readFileSync(importFileDetails.filePath);
       this.logger.log(`csvFile----${JSON.stringify(csvFile)}`);
@@ -637,7 +677,7 @@ export class IssuanceService {
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
-     
+
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
       fileUpload.orgId = orgId;
@@ -648,7 +688,7 @@ export class IssuanceService {
       }
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
-      
+
 
       await parsedData.forEach(async (element, index) => {
         this.bulkIssuanceQueue.add(
@@ -665,7 +705,7 @@ export class IssuanceService {
           { delay: 5000 }
         );
       });
-      
+
       return 'Process completed for bulk issuance';
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;

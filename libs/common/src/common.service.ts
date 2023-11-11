@@ -53,7 +53,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.NOT_FOUND,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.NOT_FOUND
         );
@@ -62,7 +62,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.BAD_REQUEST
         );
@@ -73,7 +73,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
@@ -100,7 +100,7 @@ export class CommonService {
            data.data
         );
     } catch (error) {
-      this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`);
+      this.logger.error(`ERROR in GET : ${JSON.stringify(error.response.data)}`);
       if (
         error
           .toString()
@@ -118,7 +118,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.NOT_FOUND,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.NOT_FOUND
         );
@@ -127,7 +127,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.BAD_REQUEST
         );
@@ -138,7 +138,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
@@ -187,7 +187,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.NOT_FOUND,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.NOT_FOUND
         );
@@ -196,7 +196,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.BAD_REQUEST
         );
@@ -207,7 +207,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
@@ -281,7 +281,7 @@ export class CommonService {
       throw new HttpException(
         {
           statusCode: error.response.status,
-          error: error.message
+          error: error.response.data ? error.response.data : error.message
         },
         error.response.status
       );
@@ -289,7 +289,7 @@ export class CommonService {
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message
+          error: error.response.data ? error.response.data : error.message
         },
         HttpStatus.INTERNAL_SERVER_ERROR
       );

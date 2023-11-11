@@ -832,7 +832,7 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in connection Invitation in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -844,6 +844,7 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in sendCredentialCreateOffer in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
   async getProofPresentations(url: string, apiKey: string): Promise<object> {
@@ -855,7 +856,7 @@ export class AgentServiceService {
       return getProofPresentationsData;
     } catch (error) {
       this.logger.error(`Error in proof presentations in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -867,6 +868,7 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in getIssueCredentials in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
   async getProofPresentationById(url: string, apiKey: string): Promise<object> {
@@ -877,7 +879,7 @@ export class AgentServiceService {
       return getProofPresentationById;
     } catch (error) {
       this.logger.error(`Error in proof presentation by id in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -889,8 +891,10 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in getIssueCredentialsbyCredentialRecordId in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
+  
   async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
     try {
       const sendProofRequest = await this.commonService
@@ -899,7 +903,7 @@ export class AgentServiceService {
       return sendProofRequest;
     } catch (error) {
       this.logger.error(`Error in send proof request in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -911,7 +915,7 @@ export class AgentServiceService {
       return verifyPresentation;
     } catch (error) {
       this.logger.error(`Error in verify proof presentation in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -923,6 +927,7 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in getConnections in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -931,9 +936,11 @@ export class AgentServiceService {
       const data = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })
         .then(async response => response);
+    
       return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -955,7 +962,7 @@ export class AgentServiceService {
 
     } catch (error) {
       this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -967,7 +974,7 @@ export class AgentServiceService {
       return sendProofRequest;
     } catch (error) {
       this.logger.error(`Error in send out of band proof request in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -979,7 +986,7 @@ export class AgentServiceService {
       return getProofFormData;
     } catch (error) {
       this.logger.error(`Error in get proof form data in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -991,7 +998,7 @@ export class AgentServiceService {
       return schemaRequest;
     } catch (error) {
       this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -1003,7 +1010,7 @@ export class AgentServiceService {
       return credDefRequest;
     } catch (error) {
       this.logger.error(`Error in credential-definition endorsement request in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -1016,7 +1023,7 @@ export class AgentServiceService {
       return signEndorsementTransaction;
     } catch (error) {
       this.logger.error(`Error in sign transaction in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -1030,7 +1037,7 @@ export class AgentServiceService {
       return signEndorsementTransaction;
     } catch (error) {
       this.logger.error(`Error in sumbit transaction in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -1042,7 +1049,7 @@ export class AgentServiceService {
       return sendOutOfbandCredentialOffer;
     } catch (error) {
       this.logger.error(`Error in out-of-band credential in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw error;
     }
   }
 }

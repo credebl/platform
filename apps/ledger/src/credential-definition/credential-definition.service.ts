@@ -118,7 +118,15 @@ export class CredentialDefinitionService extends BaseService {
             this.logger.error(
                 `Error in creating credential definition: ${JSON.stringify(error)}`
             );
-            throw new RpcException(error.response ? error.response : error);
+            if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+                throw new RpcException({
+                    message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+                    statusCode: error?.status?.code
+                });
+
+            } else {
+                throw new RpcException(error.response ? error.response : error);
+            }
         }
     }
 
@@ -186,7 +194,15 @@ export class CredentialDefinitionService extends BaseService {
             return credDefResponse;
         } catch (error) {
             this.logger.error(`Error retrieving credential definition with id ${payload.credentialDefinitionId}`);
-            throw new RpcException(error.response ? error.response : error);
+            if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+                throw new RpcException({
+                    message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+                    statusCode: error?.status?.code
+                });
+
+            } else {
+                throw new RpcException(error.response ? error.response : error);
+            }
         }
     }
 

@@ -34,9 +34,12 @@ async function bootstrap(): Promise<void> {
   };
 
   const agentService = app.get(AgentServiceService);
-  await agentService.walletProvision(agentSpinupPayload, user)
-    .catch((error) => {
-      logger.error(error?.error?.response?.message);
-    });
+  await agentService.walletProvision(agentSpinupPayload, user);
 }
+
+process.on('unhandledRejection', (reason) => {
+  logger.error(reason);
+  process.exitCode = 1;
+});
+
 bootstrap();

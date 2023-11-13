@@ -303,7 +303,7 @@ export class UserService {
     const { email, password, isPasskey } = loginUserDto;
 
       try {
-        await this.validateEmail(email);
+         this.validateEmail(email);
         const userData = await this.userRepository.checkUserExist(email);
         if (!userData) {
           throw new NotFoundException(ResponseMessages.user.error.notFound);

@@ -22,7 +22,9 @@ async function bootstrap(): Promise<void> {
 
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb' }));
-  app.use(helmet());
+  app.use(helmet({
+    xssFilter:true
+  }));
   app.useGlobalPipes(new ValidationPipe());
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)

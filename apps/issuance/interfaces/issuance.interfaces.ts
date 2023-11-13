@@ -71,16 +71,16 @@ export interface SchemaDetails {
 }
 export interface ImportFileDetails {
     credDefId: string;
-    filePath: string;
+    fileKey: string;
     fileName: string;
 }
 
 export interface PreviewRequest {
-    pageNumber: number,
-    search: string,
-    pageSize: number,
-    sortBy: string,
-    sortValue: string
+    pageNumber?: number,
+    search?: string,
+    pageSize?: number,
+    sortBy?: string,
+    sortValue?: string
 }
 
 export interface FileUpload {

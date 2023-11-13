@@ -40,7 +40,8 @@ export const ResponseMessages = {
             adduser: 'Unable to add user details',
             verifyEmail: 'The verification link has already been sent to your email address. please verify',
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
-            userNotRegisterd: 'The user has not yet completed the registration process'
+            userNotRegisterd: 'The user has not yet completed the registration process',
+            InvalidEmailDomain :'Email from this domain is not allowed'
         }
     },
     organisation: {
@@ -163,7 +164,8 @@ export const ResponseMessages = {
             fetch: 'Issue-credential fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
-            bulkIssuance: 'Bulk-issunace process started'
+            bulkIssuance: 'Bulk-issunace process started',
+            notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -178,7 +180,9 @@ export const ResponseMessages = {
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',
             previewCachedData: 'Error while fetching cached data',
-            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request.'
+            emptyFileData: 'File details does not exit or removed',
+            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request',
+            fileNotFound: 'File details not found'
         }
     },
     verification: {

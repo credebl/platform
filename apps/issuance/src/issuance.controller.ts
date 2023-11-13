@@ -31,13 +31,7 @@ export class IssuanceController {
     const { user, credentialRecordId, orgId } = payload;
     return this.issuanceService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
   }
-
-  @MessagePattern({ cmd: 'read-csv-path' })
-  async fetchCsv(payload): Promise<string> {
-    const { path } = payload;
-    return this.issuanceService.readCsvPath(path);
-  }
-
+  
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
   async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
     const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
@@ -72,6 +66,22 @@ export class IssuanceController {
       payload.previewFileDetails
     );
   }
+
+  @MessagePattern({ cmd: 'issued-file-details' })
+  async issuedFiles(payload: {orgId:string, fileParameter:PreviewRequest}): Promise<object> {
+    return this.issuanceService.issuedFileDetails(
+      payload.orgId, 
+      payload.fileParameter
+      );
+  }
+  @MessagePattern({ cmd: 'issued-file-data' })
+  async getFileDetailsByFileId(payload: {fileId:string, fileParameter:PreviewRequest}): Promise<object> {
+    return this.issuanceService.getFileDetailsByFileId( 
+      payload.fileId,
+      payload.fileParameter
+      );
+  }
+
 
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
   async issueBulkCredentials(payload: { requestId: string, orgId: number }): Promise<string> {

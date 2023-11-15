@@ -9,16 +9,14 @@ export class BulkIssuanceProcessor {
   constructor(private readonly issuanceService: IssuanceService) {}
 
   @OnQueueActive()
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
-  onActive(job: Job) {
+  onActive(job: Job): void {
     this.logger.log(
       `Processing job ${job.id} of type ${job.name} with data ${JSON.stringify(job.data)}...`
     );
   }
 
   @Process('issue-credential')
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
-  async issueCredential(job: Job<unknown>) {
+  async issueCredential(job: Job<unknown>):Promise<void> {
     this.logger.log(
       `Processing job ${job.id} of type ${job.name} with data ${JSON.stringify(job.data)}...`
     );

@@ -49,6 +49,12 @@ import { BullModule } from '@nestjs/bull';
         host: process.env.REDIS_HOST,
         port: parseInt(process.env.REDIS_PORT)
       }
+    }),
+    BullModule.registerQueue({
+      name: 'bulk-issuance',
+      redis: {
+        port: parseInt(process.env.REDIS_PORT)
+      }
     })
   ],
   controllers: [AppController],

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   ConflictException,
@@ -40,7 +41,8 @@ import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
 import { EcosystemConfigSettings } from '@credebl/enum/enum';
-
+import validator from 'validator';
+import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 @Injectable()
 export class UserService {
   constructor(
@@ -64,6 +66,16 @@ export class UserService {
    */
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
+      const { email } = userEmailVerificationDto;
+
+      if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
+        // eslint-disable-next-line prefer-destructuring
+        const domain = email.split('@')[1];
+
+        if (DISALLOWED_EMAIL_DOMAIN.includes(domain)) {
+          throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
+        }
+      }
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
 
       if (userDetails && userDetails.isEmailVerified) {
@@ -213,7 +225,7 @@ export class UserService {
         const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email);
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
-        
+
         if (!resUser) {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
@@ -222,7 +234,7 @@ export class UserService {
           password: decryptedPassword
         });
       } else {
-        const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);       
+        const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
 
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
@@ -275,6 +287,13 @@ export class UserService {
     }
   }
 
+
+  private validateEmail(email: string): void {
+    if (!validator.isEmail(email)) {
+      throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+    }
+  }
+
   /**
    *
    * @param loginUserDto
@@ -282,44 +301,47 @@ export class UserService {
    */
   async login(loginUserDto: LoginUserDto): Promise<object> {
     const { email, password, isPasskey } = loginUserDto;
-    try {
-      const userData = await this.userRepository.checkUserExist(email);
-      if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
-      }
 
-      if (userData && !userData.isEmailVerified) {
-        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      try {
+         this.validateEmail(email);
+        const userData = await this.userRepository.checkUserExist(email);
+        if (!userData) {
+          throw new NotFoundException(ResponseMessages.user.error.notFound);
+        }
+  
+        if (userData && !userData.isEmailVerified) {
+          throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+        }
+  
+        if (true === isPasskey && false === userData?.isFidoVerified) {
+          throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
+        }
+  
+        if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
+          const getUserDetails = await this.userRepository.getUserDetails(userData.email);
+          const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
+          return this.generateToken(email, decryptedPassword);
+        } else {
+          const decryptedPassword = await this.commonService.decryptPassword(password);
+          return this.generateToken(email, decryptedPassword);
+        }
+      } catch (error) {
+        this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
       }
-
-      if (true === isPasskey && false === userData?.isFidoVerified) {
-        throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
-      }
-
-      if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-        const getUserDetails = await this.userRepository.getUserDetails(userData.email);
-        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return this.generateToken(email, decryptedPassword);
-      } else {
-        const decryptedPassword = await this.commonService.decryptPassword(password);
-        return this.generateToken(email, decryptedPassword);
-      }
-    } catch (error) {
-      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
+    
+   
   }
 
   async generateToken(email: string, password: string): Promise<object> {
     try {
-
       const supaInstance = await this.supabaseService.getClient();
       this.logger.error(`supaInstance::`, supaInstance);
-            
+
       const { data, error } = await supaInstance.auth.signInWithPassword({
         email,
         password
-      });   
+      });
 
       this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
@@ -337,21 +359,16 @@ export class UserService {
   async getProfile(payload: { id }): Promise<object> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-      const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany(
-        {
-          where:{
-            OR: [
-              { key: EcosystemConfigSettings.ENABLE_ECOSYSTEM },
-              { key: EcosystemConfigSettings.MULTI_ECOSYSTEM }
-            ]
-          }
+      const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany({
+        where: {
+          OR: [{ key: EcosystemConfigSettings.ENABLE_ECOSYSTEM }, { key: EcosystemConfigSettings.MULTI_ECOSYSTEM }]
         }
-      );      
+      });
 
       for (const setting of ecosystemSettingsList) {
         userData[setting.key] = 'true' === setting.value;
       }
-  
+
       return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
@@ -635,7 +652,7 @@ export class UserService {
   async updatePlatformSettings(platformSettings: PlatformSettingsI): Promise<string> {
     try {
       const platformConfigSettings = await this.userRepository.updatePlatformSettings(platformSettings);
-      
+
       if (!platformConfigSettings) {
         throw new BadRequestException(ResponseMessages.user.error.notUpdatePlatformSettings);
       }
@@ -655,7 +672,7 @@ export class UserService {
       if (0 === eosystemKeys.length) {
         return ResponseMessages.user.success.platformEcosystemettings;
       }
-      
+
       const ecosystemSettings = await this.userRepository.updateEcosystemSettings(eosystemKeys, ecosystemobj);
 
       if (!ecosystemSettings) {
@@ -663,7 +680,6 @@ export class UserService {
       }
 
       return ResponseMessages.user.success.platformEcosystemettings;
-
     } catch (error) {
       this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -671,29 +687,27 @@ export class UserService {
   }
 
   async getPlatformEcosystemSettings(): Promise<object> {
-      try {
+    try {
+      const platformSettings = {};
+      const platformConfigSettings = await this.userRepository.getPlatformSettings();
 
-        const platformSettings = {};
-        const platformConfigSettings = await this.userRepository.getPlatformSettings();
-        
-        if (!platformConfigSettings) {
-          throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound);
-        }
-  
-        const ecosystemConfigSettings = await this.userRepository.getEcosystemSettings();
-  
-        if (!ecosystemConfigSettings) {
-          throw new BadRequestException(ResponseMessages.user.error.ecosystemSetttingsNotFound);
-        }
-
-        platformSettings['platform_config'] = platformConfigSettings;
-        platformSettings['ecosystem_config'] = ecosystemConfigSettings;
-
-        return platformSettings;
-  
-      } catch (error) {
-        this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
-        throw new RpcException(error.response ? error.response : error);
+      if (!platformConfigSettings) {
+        throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound);
       }
+
+      const ecosystemConfigSettings = await this.userRepository.getEcosystemSettings();
+
+      if (!ecosystemConfigSettings) {
+        throw new BadRequestException(ResponseMessages.user.error.ecosystemSetttingsNotFound);
+      }
+
+      platformSettings['platform_config'] = platformConfigSettings;
+      platformSettings['ecosystem_config'] = ecosystemConfigSettings;
+
+      return platformSettings;
+    } catch (error) {
+      this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 }

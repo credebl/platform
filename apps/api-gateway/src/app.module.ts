@@ -50,6 +50,12 @@ import { getNatsOptions } from '@credebl/common/nats.config';
         host: process.env.REDIS_HOST,
         port: parseInt(process.env.REDIS_PORT)
       }
+    }),
+    BullModule.registerQueue({
+      name: 'bulk-issuance',
+      redis: {
+        port: parseInt(process.env.REDIS_PORT)
+      }
     })
   ],
   controllers: [AppController],

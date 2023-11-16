@@ -17,7 +17,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { UserService } from './user.service';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { AwsService } from '@credebl/aws';
 
 @Module({
   imports: [
@@ -28,12 +28,14 @@ import { getNatsOptions } from '@credebl/common/nats.config';
         options: getNatsOptions(process.env.USER_NKEY_SEED)
       }
     ]),
+    
     CommonModule,
     FidoModule,
     OrgRolesModule
 ],
   controllers: [UserController],
   providers: [
+    AwsService,
     UserService,
     UserRepository,
     PrismaService,

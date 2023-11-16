@@ -10,8 +10,7 @@ import {
   BadRequestException,
   Get,
   Query,
-  UseGuards,
-  UploadedFile
+  UseGuards
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
@@ -261,6 +260,21 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  @Get('/user-credentials/:id')
+  @ApiOperation({ summary: 'Get user credentials by Id', description: 'Get user credentials by Id' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async getUserCredentialsById (@Param('id') id: string, @Res() res: Response): Promise<Response> {
+    const getUserCrdentialsById = await this.userService.getUserCredentialsById(id);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.userCredentials,
+      data: getUserCrdentialsById.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+
   /**
    *
    * @param acceptRejectInvitation
@@ -299,20 +313,16 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async shareUserCertificate(
     @Body() shareUserCredentials: CreateUserCertificateDto,
-    @UploadedFile() file: Express.Multer.File,
     @Res() res: Response
-  ): Promise<object> {                                    
-    const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
-    if (file) {
-      const certificateImageBuffer = imageBuffer.response;
-      const imageUrl = await this.awsService.uploads3(certificateImageBuffer, 'png', './certificates', 'base64');
+  ): Promise<object> {                            
+   const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
+
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,
         message: 'Certificate url generated successfully',
-        data: imageUrl
+        data: imageBuffer.response
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
   }
 
   @Put('/')

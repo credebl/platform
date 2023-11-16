@@ -21,6 +21,17 @@ export class UserService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-user-profile', payload);
   }
 
+  async getPublicProfile(username: string): Promise<{ response: object }> {
+    const payload = { username };
+    return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
+  }
+
+
+  async getUserCredentialsById(id: string): Promise<{ response: object }> {
+    const payload = { id };
+    return this.sendNats(this.serviceProxy, 'get-user-credentials-by-id', payload);
+  }
+
   async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<{ response: object }> {
     const payload = { updateUserProfileDto };
     return this.sendNats(this.serviceProxy, 'update-user-profile', payload);
@@ -61,7 +72,7 @@ export class UserService extends BaseService {
     const payload = { shareUserCredentials};
     return this.sendNats(this.serviceProxy, 'share-user-certificate', payload);
   }
-
+  
   async get(
     getAllUsersDto: GetAllUsersDto
   ): Promise<{ response: object }> {

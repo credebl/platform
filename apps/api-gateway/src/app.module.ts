@@ -21,6 +21,8 @@ import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { EcosystemModule } from './ecosystem/ecosystem.module';
 import { BullModule } from '@nestjs/bull';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -44,9 +46,16 @@ import { BullModule } from '@nestjs/bull';
     ConnectionModule,
     IssuanceModule,
     EcosystemModule,
+    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     BullModule.forRoot({
       redis: {
         host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT)
+      }
+    }),
+    BullModule.registerQueue({
+      name: 'bulk-issuance',
+      redis: {
         port: parseInt(process.env.REDIS_PORT)
       }
     })

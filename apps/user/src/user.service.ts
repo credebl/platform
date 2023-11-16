@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   ConflictException,
@@ -46,7 +47,8 @@ import { WinnerTemplate } from '../templates/winner-template';
 import { ParticipantTemplate } from '../templates/participant-template';
 import { ArbiterTemplate } from '../templates/arbiter-template';
 import * as puppeteer from 'puppeteer';
-
+import validator from 'validator';
+import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 @Injectable()
 export class UserService {
   constructor(
@@ -70,6 +72,16 @@ export class UserService {
    */
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
+      const { email } = userEmailVerificationDto;
+
+      if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
+        // eslint-disable-next-line prefer-destructuring
+        const domain = email.split('@')[1];
+
+        if (DISALLOWED_EMAIL_DOMAIN.includes(domain)) {
+          throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
+        }
+      }
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
 
       if (userDetails && userDetails.isEmailVerified) {
@@ -281,6 +293,13 @@ export class UserService {
     }
   }
 
+
+  private validateEmail(email: string): void {
+    if (!validator.isEmail(email)) {
+      throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+    }
+  }
+
   /**
    *
    * @param loginUserDto
@@ -288,32 +307,36 @@ export class UserService {
    */
   async login(loginUserDto: LoginUserDto): Promise<object> {
     const { email, password, isPasskey } = loginUserDto;
-    try {
-      const userData = await this.userRepository.checkUserExist(email);
-      if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
-      }
 
-      if (userData && !userData.isEmailVerified) {
-        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      try {
+         this.validateEmail(email);
+        const userData = await this.userRepository.checkUserExist(email);
+        if (!userData) {
+          throw new NotFoundException(ResponseMessages.user.error.notFound);
+        }
+  
+        if (userData && !userData.isEmailVerified) {
+          throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+        }
+  
+        if (true === isPasskey && false === userData?.isFidoVerified) {
+          throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
+        }
+  
+        if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
+          const getUserDetails = await this.userRepository.getUserDetails(userData.email);
+          const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
+          return this.generateToken(email, decryptedPassword);
+        } else {
+          const decryptedPassword = await this.commonService.decryptPassword(password);
+          return this.generateToken(email, decryptedPassword);
+        }
+      } catch (error) {
+        this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
       }
-
-      if (true === isPasskey && false === userData?.isFidoVerified) {
-        throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
-      }
-
-      if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-        const getUserDetails = await this.userRepository.getUserDetails(userData.email);
-        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return this.generateToken(email, decryptedPassword);
-      } else {
-        const decryptedPassword = await this.commonService.decryptPassword(password);
-        return this.generateToken(email, decryptedPassword);
-      }
-    } catch (error) {
-      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
+    
+   
   }
 
   async generateToken(email: string, password: string): Promise<object> {

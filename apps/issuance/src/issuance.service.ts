@@ -707,21 +707,27 @@ export class IssuanceService {
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
 
-
+      this.logger.log(`respFileUpload----${JSON.stringify(respFileUpload)}`);
       await parsedData.forEach(async (element, index) => {
-        this.bulkIssuanceQueue.add(
-          'issue-credential',
-          {
-            data: element,
-            fileUploadId: respFileUpload.id,
-            cacheId: requestId,
-            credentialDefinitionId: parsedPrimeDetails.credentialDefinitionId,
-            schemaLedgerId: parsedPrimeDetails.schemaLedgerId,
-            orgId,
-            isLastData: index === parsedData.length - 1
-          },
-          { delay: 5000 }
-        );
+        this.logger.log(`element----${JSON.stringify(element)}`);
+        try {
+          this.bulkIssuanceQueue.add(
+            'issue-credential',
+            {
+              data: element,
+              fileUploadId: respFileUpload.id,
+              cacheId: requestId,
+              credentialDefinitionId: parsedPrimeDetails.credentialDefinitionId,
+              schemaLedgerId: parsedPrimeDetails.schemaLedgerId,
+              orgId,
+              isLastData: index === parsedData.length - 1
+            },
+            { delay: 5000 }
+          );
+        } catch (error) {
+          this.logger.error('Error adding item to the queue:', error);
+        }
+        
       });
 
       return 'Process initiated for bulk issuance';

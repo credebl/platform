@@ -49,6 +49,8 @@ import { ArbiterTemplate } from '../templates/arbiter-template';
 import * as puppeteer from 'puppeteer';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
+import { AwsService } from '@credebl/aws';
+import { readFileSync } from 'fs';
 @Injectable()
 export class UserService {
   constructor(
@@ -60,6 +62,7 @@ export class UserService {
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
+    private readonly awsService: AwsService,
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
@@ -397,6 +400,16 @@ export class UserService {
     }
   }
 
+  async getUserCredentialsById(payload: { id }): Promise<object> {
+    try {
+      const userCredentials = await this.userRepository.getUserCredentialsById(payload.id);
+      return userCredentials;
+    } catch (error) {
+      this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async updateUserProfile(updateUserProfileDto: UpdateUserProfile): Promise<user> {
     try {
       return this.userRepository.updateUserProfile(updateUserProfileDto);
@@ -569,22 +582,30 @@ export class UserService {
         throw new NotFoundException('error in get attributes');
     }
 
-    const imageBuffer = await this.convertHtmlToImage(template);
-    return imageBuffer;
+    const imageBuffer = await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
+    const verifyCode = uuidv4();
+    // const myFile = new File([readFileSync(imageBuffer)], `cert_${shareUserCertificate.credentialId}.jpeg`);
+
+    const imageUrl = await this.awsService.uploads3(imageBuffer, 'jpeg', verifyCode, 'certificates', 'base64');
+
+    return this.saveCertificateUrl(imageUrl, shareUserCertificate.credentialId);
   }
 
-  async convertHtmlToImage(template: string): Promise<unknown> {
+  async saveCertificateUrl(imageUrl: string, credentialId: string): Promise<unknown> {
+    return this.userRepository.saveCertificateImageUrl(imageUrl, credentialId);
+  }
+
+  async convertHtmlToImage(template: string, credentialId: string): Promise<Buffer> {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
     await page.setContent(template);
-    const screenshot = await page.screenshot({ path: 'cert1.png' });
-
+    const filename = `cert_${credentialId}.jpeg`;
+    const screenshot = await page.screenshot({ path: filename });
     await browser.close();
     return screenshot;
   }
   
-
   /**
    *
    * @param acceptRejectInvitation

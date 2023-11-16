@@ -61,6 +61,12 @@ export class UserController {
     return this.userService.findUserByEmail(payload);
   }
 
+
+  @MessagePattern({ cmd: 'get-user-credentials-by-id' })
+  async getUserCredentialsById(payload: { id }): Promise<object> {
+    return this.userService.getUserCredentialsById(payload);
+  }
+
   @MessagePattern({ cmd: 'get-org-invitations' })
   async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<object> {
     return this.userService.invitations(payload);

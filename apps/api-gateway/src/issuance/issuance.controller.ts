@@ -249,25 +249,25 @@ export class IssuanceController {
             throw err;
           }
         }
-      );
-
-      const reqPayload: RequestPayload = {
-        credDefId: credentialDefinitionId,
-        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
-        fileName: newFilename
-      };
-      this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
-      const importCsvDetails = await this.issueCredentialService.importCsv(
-        reqPayload
-      );
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.issuance.success.importCSV,
-        data: importCsvDetails.response
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
-
-    } 
+        const reqPayload: RequestPayload = {
+          credDefId: credentialDefinitionId,
+          fileKey,
+          fileName:file?.originalname
+        };
+        this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
+        const importCsvDetails = await this.issueCredentialService.importCsv(
+          reqPayload
+        );
+        const finalResponse: IResponseType = {
+          statusCode: HttpStatus.CREATED,
+          message: ResponseMessages.issuance.success.importCSV,
+          data: importCsvDetails.response
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+      }
+    } catch (error) {
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
 

@@ -741,10 +741,9 @@ export class IssuanceService {
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
-
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
-      fileUpload.orgId = orgId;
+      fileUpload.orgId = String(orgId);
       fileUpload.createDateTime = new Date();
 
       if (parsedPrimeDetails && parsedPrimeDetails.fileName) {
@@ -753,28 +752,29 @@ export class IssuanceService {
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
 
-      this.logger.log(`respFileUpload----${JSON.stringify(respFileUpload)}`);
-      await parsedData.forEach(async (element, index) => {
-        this.logger.log(`element----${JSON.stringify(element)}`);
-        try {
-          this.bulkIssuanceQueue.add(
-            'issue-credential',
-            {
-              data: element,
-              fileUploadId: respFileUpload.id,
-              cacheId: requestId,
-              credentialDefinitionId: parsedPrimeDetails.credentialDefinitionId,
-              schemaLedgerId: parsedPrimeDetails.schemaLedgerId,
-              orgId,
-              isLastData: index === parsedData.length - 1
-            },
-            { delay: 5000 }
-          );
-        } catch (error) {
-          this.logger.error('Error adding item to the queue:', error);
-        }
+
+      await parsedData.forEach(async (element) => {
         
+        await this.issuanceRepository.saveFileDetails(element);
       });
+
+      // this.logger.log(`respFileUpload----${JSON.stringify(respFileUpload)}`);
+      // await parsedData.forEach(async (element, index) => {
+      //   this.logger.log(`element11----${JSON.stringify(element)}`);
+      //   const payload =
+      //   {
+      //     data: element,
+      //     fileUploadId: respFileUpload.id,
+      //     cacheId: requestId,
+      //     credentialDefinitionId: parsedPrimeDetails.credentialDefinitionId,
+      //     schemaLedgerId: parsedPrimeDetails.schemaLedgerId,
+      //     orgId,
+      //     isLastData: index === parsedData.length - 1
+      //   };
+
+      //   this.processIssuanceData(payload);
+
+      // });
 
       return 'Process initiated for bulk issuance';
     } catch (error) {

@@ -442,4 +442,8 @@ model file_data {
   deletedAt           DateTime?   @db.Timestamp(6)
   fileUploadId        String
   fileUpload          file_upload @relation(fields: [fileUploadId], references: [id])
+  schemaId            String?
+  credDefId           String?
+  status              Boolean           @default(false)
+
 }

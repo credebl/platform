@@ -53,12 +53,6 @@ import * as redisStore from 'cache-manager-redis-store';
         host: process.env.REDIS_HOST,
         port: parseInt(process.env.REDIS_PORT)
       }
-    }),
-    BullModule.registerQueue({
-      name: 'bulk-issuance',
-      redis: {
-        port: parseInt(process.env.REDIS_PORT)
-      }
     })
   ],
   controllers: [AppController],

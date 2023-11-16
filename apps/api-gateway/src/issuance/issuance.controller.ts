@@ -245,7 +245,7 @@ export class IssuanceController {
         const reqPayload: RequestPayload = {
           credDefId: credentialDefinitionId,
           fileKey,
-          fileName:file?.filename
+          fileName:file?.originalname
         };
         this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
         const importCsvDetails = await this.issueCredentialService.importCsv(

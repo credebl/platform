@@ -87,7 +87,7 @@ export interface FileUpload {
     name?: string;
     upload_type?: string;
     status?: string;
-    orgId?: number | string;
+    orgId?:  string;
     createDateTime?: Date;
     lastChangedDateTime?: Date;
   }

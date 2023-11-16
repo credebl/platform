@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, credentials, file_data, file_upload, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { FileUpload, FileUploadData, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import {  FileUploadData, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 @Injectable()
 export class IssuanceRepository {
 
@@ -198,13 +198,13 @@ export class IssuanceRepository {
         }
     }
 
-    async saveFileUploadDetails(fileUploadPayload: FileUpload): Promise<file_upload> {
+    async saveFileUploadDetails(fileUploadPayload): Promise<file_upload> {
         try {
-            const { name, orgId, status, upload_type } = fileUploadPayload;
+            const { name, status, upload_type, orgId } = fileUploadPayload;
             return this.prisma.file_upload.create({
                 data: {
                     name,
-                    orgId: `${orgId}`,
+                    orgId: String(orgId),
                     status,
                     upload_type
                 }
@@ -216,18 +216,15 @@ export class IssuanceRepository {
         }
     }
 
-    async updateFileUploadDetails(fileId: string, fileUploadPayload: FileUpload): Promise<file_upload> {
+    async updateFileUploadDetails(fileId: string, fileUploadPayload): Promise<file_upload> {
         try {
-            const { name, orgId, status, upload_type } = fileUploadPayload;
+            const { status } = fileUploadPayload;
             return this.prisma.file_upload.update({
                 where: {
                     id: fileId
                 },
                 data: {
-                    name,
-                    orgId: `${orgId}`,
-                    status,
-                    upload_type
+                    status
                 }
             });
 
@@ -331,6 +328,26 @@ export class IssuanceRepository {
                     fileUploadId: fileUpload
                 }
             });
+
+        } catch (error) {
+            this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
+    async saveFileDetails(fileData) {
+        try {
+            // const { fileUpload, isError, referenceId, error, detailError } = fileData;
+            // return this.prisma.file_data.create({
+            //     data: {
+            //         detailError,
+            //         error,
+            //         isError,
+            //         referenceId,
+            //         fileUploadId: fileUpload
+            //     }
+            // });
 
         } catch (error) {
             this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);

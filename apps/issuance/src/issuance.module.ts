@@ -28,17 +28,8 @@ import { AwsService } from '@credebl/aws';
     ]),
     CommonModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
-    BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT)
-      }
-    }),
     BullModule.registerQueue({
-      name: 'bulk-issuance',
-      redis: {
-        port: parseInt(process.env.REDIS_PORT)
-      }
+      name: 'bulk-issuance'
     })
   ],
   controllers: [IssuanceController],

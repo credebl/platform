@@ -445,5 +445,5 @@ model file_data {
   schemaId            String?
   credDefId           String?
   status              Boolean           @default(false)
-
+  credential_data     Json?
 }

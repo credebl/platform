@@ -15,6 +15,7 @@ export const ResponseMessages = {
             checkEmail: 'User email checked successfully.',
             sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
             userActivity: 'User activities fetched successfully',
+            userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched'
         },

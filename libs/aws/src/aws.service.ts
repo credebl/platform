@@ -1,6 +1,7 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
+import { promisify } from 'util';
 
 @Injectable()
 export class AwsService {
@@ -17,39 +18,28 @@ export class AwsService {
   async uploads3(
     fileBuffer: Buffer,
     ext: string,
+    verifyCode: string,
     pathAWS: string = '',
     encoding = 'base64',
-    filename = 'nftp'
+    filename: string = 'cerficate'
   ): Promise<string> {
     const timestamp = Date.now();
-    await this.s3.putObject(
-      {
+    const putObjectAsync = promisify(this.s3.putObject).bind(this.s3);
+  
+    try {
+      await putObjectAsync({
         Bucket: process.env.AWS_PUBLIC_BUCKET_NAME,
         Key: `${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`,
-        Body: fileBuffer.toString(),
-        ContentEncoding: encoding
-      },
-      (err) => {
-        if (err) {
-          throw new HttpException('An error occurred while uploading the image', HttpStatus.SERVICE_UNAVAILABLE);
-        } else {
-          return 'photo is uploaded';
-        }
-      }
-    );
+        Body: fileBuffer,
+        ContentEncoding: encoding,
+        ContentType: `image/jpeg`
+      });
 
-    return `https://${process.env.AWS_PUBLIC_BUCKET_NAME}.s3.amazonaws.com/${pathAWS}/${encodeURIComponent(
-      filename
-    )}-${timestamp}.${ext}`;
-  }
+      // return `https://${process.env.AWS_PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;     
+      return `${process.env.FRONT_END_URL}/certificates/${verifyCode}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;
 
-  async fileUpload(file: Express.Multer.File): Promise<string> {
-    const fileExt = file['originalname'].split('.')[file['originalname'].split('.').length - 1];
-    if ('image/png' === file['mimetype'] || 'image/jpg' === file['mimetype'] || 'image/jpeg' === file['mimetype']) {
-      const awsResponse = await this.uploads3(file['buffer'], fileExt, file['mimetype'], 'images');
-      return awsResponse;
-    } else {
-      throw new BadRequestException('File format should be PNG,JPG,JPEG');
+    } catch (err) {
+      throw new HttpException('An error occurred while uploading the image', HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
 

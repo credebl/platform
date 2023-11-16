@@ -19,6 +19,7 @@ import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserService } from '../user.service';
+import { AwsService } from '@credebl/aws';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { UserService } from '../user.service';
 ],
   controllers: [FidoController],
   providers: [
+    AwsService,
     UserService,
     PrismaService,
     FidoService,

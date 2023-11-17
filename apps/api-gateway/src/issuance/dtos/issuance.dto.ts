@@ -206,3 +206,11 @@ export class FileParameter {
     sortValue = '';
 
 }
+
+export class ClientDetails {
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    clientId = '';
+
+}

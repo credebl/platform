@@ -775,23 +775,27 @@ export class IssuanceService {
       if (!respFile) {
         throw new BadRequestException('File data does not exist for the specific file');
       }
-      await respFile.forEach(async (element, index) => {
-        this.logger.log(`element11----${JSON.stringify(element)}`);
-        const payload =
-        {
-          data: element.credential_data,
-          fileUploadId: element.fileUploadId,
-          clientId,
-          cacheId: requestId,
-          credentialDefinitionId: element.credDefId,
-          schemaLedgerId: element.schemaId,
-          orgId,
-          id: element.id,
-          isLastData: index === respFile.length - 1
-        };
-        this.processIssuanceData(payload);
-
-      });
+      for (const element of respFile) {
+        try {
+          this.logger.log(`element11----${JSON.stringify(element)}`);
+          const payload = {
+            data: element.credential_data,
+            fileUploadId: element.fileUploadId,
+            clientId,
+            cacheId: requestId,
+            credentialDefinitionId: element.credDefId,
+            schemaLedgerId: element.schemaId,
+            orgId,
+            id: element.id,
+            isLastData: respFile.indexOf(element) === respFile.length - 1
+          };
+      
+           this.processIssuanceData(payload);
+        } catch (error) {
+          // Handle errors if needed
+          this.logger.error(`Error processing issuance data: ${error}`);
+        }
+      }
 
       return 'Process initiated for bulk issuance';
     } catch (error) {

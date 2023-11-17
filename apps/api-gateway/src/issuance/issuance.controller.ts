@@ -38,7 +38,7 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
+import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -245,7 +245,7 @@ export class IssuanceController {
         const reqPayload: RequestPayload = {
           credDefId: credentialDefinitionId,
           fileKey,
-          fileName:file?.originalname
+          fileName: file?.originalname
         };
         this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
         const importCsvDetails = await this.issueCredentialService.importCsv(
@@ -389,7 +389,7 @@ export class IssuanceController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-  
+
   @Get('/orgs/:orgId/:fileId/bulk/file-data')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -473,8 +473,8 @@ export class IssuanceController {
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
-  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
-    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId);
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
+    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails.clientId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,

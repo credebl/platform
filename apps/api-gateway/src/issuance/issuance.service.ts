@@ -107,8 +107,8 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'issued-file-data', payload);
     }
 
-    async issueBulkCredential(requestId: string, orgId: number): Promise<{ response: object }> {
-        const payload = { requestId, orgId };
+    async issueBulkCredential(requestId: string, orgId: number, clientId: string): Promise<{ response: object }> {
+        const payload = { requestId, orgId, clientId };
         return this.sendNats(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }
 }

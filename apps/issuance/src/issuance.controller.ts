@@ -84,7 +84,7 @@ export class IssuanceController {
 
 
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
-  async issueBulkCredentials(payload: { requestId: string, orgId: number }): Promise<string> {
-    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId);
+  async issueBulkCredentials(payload: { requestId: string, orgId: number, clientId: string }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientId);
   }
 }

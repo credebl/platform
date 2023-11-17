@@ -100,4 +100,6 @@ export interface FileUploadData {
     createDateTime: Date;
     error?: string;
     detailError?: string;
+    jobId: string;
+    clientId: string;
 }

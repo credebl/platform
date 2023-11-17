@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, credentials, file_data, file_upload, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import {  FileUploadData, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadData, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 @Injectable()
 export class IssuanceRepository {
 
@@ -316,19 +316,24 @@ export class IssuanceRepository {
     }
 
 
-    async saveFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
+    async updateFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
         try {
-            const { fileUpload, isError, referenceId, error, detailError } = fileUploadData;
-            return this.prisma.file_data.create({
-                data: {
-                    detailError,
-                    error,
-                    isError,
-                    referenceId,
-                    fileUploadId: fileUpload
-                }
-            });
+            const { jobId, fileUpload, isError, referenceId, error, detailError } = fileUploadData;
 
+            if (jobId) {
+                return this.prisma.file_data.update({
+                    where: { id: jobId },
+                    data: {
+                        detailError,
+                        error,
+                        isError,
+                        referenceId,
+                        fileUploadId: fileUpload
+                    }
+                });
+            } else {
+                throw error;
+            }
         } catch (error) {
             this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
             throw error;
@@ -338,19 +343,33 @@ export class IssuanceRepository {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
     async saveFileDetails(fileData) {
         try {
-            // const { fileUpload, isError, referenceId, error, detailError } = fileData;
-            // return this.prisma.file_data.create({
-            //     data: {
-            //         detailError,
-            //         error,
-            //         isError,
-            //         referenceId,
-            //         fileUploadId: fileUpload
-            //     }
-            // });
+            const { credential_data, schemaId, credDefId, status, isError, fileUploadId } = fileData;
+            return this.prisma.file_data.create({
+                data: {
+                    credential_data,
+                    schemaId,
+                    credDefId,
+                    status,
+                    fileUploadId,
+                    isError
+                }
+            });
 
         } catch (error) {
             this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getFileDetails(fileId: string): Promise<file_data[]> {
+        try {
+            return this.prisma.file_data.findMany({
+                where: {
+                    fileUploadId: fileId
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[getFileDetails] - error: ${JSON.stringify(error)}`);
             throw error;
         }
     }

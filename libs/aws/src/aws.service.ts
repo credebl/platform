@@ -6,9 +6,15 @@ import { promisify } from 'util';
 @Injectable()
 export class AwsService {
   private s3: S3;
+  private s4: S3;
 
   constructor() {
     this.s3 = new S3({
+      accessKeyId: process.env.AWS_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_SECRET_KEY,
+      region: process.env.AWS_REGION
+    });
+    this.s4 = new S3({
       accessKeyId: process.env.AWS_PUBLIC_ACCESS_KEY,
       secretAccessKey: process.env.AWS_PUBLIC_SECRET_KEY,
       region: process.env.AWS_PUBLIC_REGION
@@ -24,7 +30,7 @@ export class AwsService {
     filename: string = 'cerficate'
   ): Promise<string> {
     const timestamp = Date.now();
-    const putObjectAsync = promisify(this.s3.putObject).bind(this.s3);
+    const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
   
     try {
       await putObjectAsync({

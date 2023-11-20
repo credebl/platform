@@ -15,7 +15,7 @@ export class AwsService {
     });
   }
 
-  async uploads3(
+  async uploadUserCertificate(
     fileBuffer: Buffer,
     ext: string,
     verifyCode: string,
@@ -34,10 +34,7 @@ export class AwsService {
         ContentEncoding: encoding,
         ContentType: `image/jpeg`
       });
-
-      // return `https://${process.env.AWS_PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;     
-      return `${process.env.FRONT_END_URL}/certificates/${verifyCode}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;
-
+      return `https://${process.env.AWS_PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;     
     } catch (err) {
       throw new HttpException('An error occurred while uploading the image', HttpStatus.SERVICE_UNAVAILABLE);
     }

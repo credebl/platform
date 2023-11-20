@@ -27,8 +27,8 @@ export class UserService extends BaseService {
   }
 
 
-  async getUserCredentialsById(id: string): Promise<{ response: object }> {
-    const payload = { id };
+  async getUserCredentialsById(credentialId: string): Promise<{ response: object }> {
+    const payload = { credentialId };
     return this.sendNats(this.serviceProxy, 'get-user-credentials-by-id', payload);
   }
 

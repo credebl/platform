@@ -936,6 +936,8 @@ export class IssuanceService {
           });
         }
 
+        this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
+
         const socket = await io(`${process.env.SOCKET_HOST}`, {
           reconnection: true,
           reconnectionDelay: 5000,

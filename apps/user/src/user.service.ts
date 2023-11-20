@@ -613,7 +613,9 @@ export class UserService {
   }
 
   async convertHtmlToImage(template: string, credentialId: string): Promise<Buffer> {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless:'new'
+    });
     const page = await browser.newPage();
 
     await page.setContent(template);

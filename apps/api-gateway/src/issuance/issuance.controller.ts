@@ -365,9 +365,9 @@ export class IssuanceController {
   }
 
   @Get('/orgs/:orgId/bulk/files')
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  // @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,

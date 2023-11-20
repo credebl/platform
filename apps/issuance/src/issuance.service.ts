@@ -839,25 +839,19 @@ export class IssuanceService {
     fileUploadData.clientId = jobDetails.clientId;
     try {
 
-      const oobIssuancepayload: OutOfBandCredentialOfferPayload = {
-        credentialDefinitionId: '',
-        orgId: 0
+      const oobIssuancepayload = {
+        credentialDefinitionId: jobDetails.credentialDefinitionId,
+        orgId: jobDetails.orgId,
+        attributes: [],
+        emailId: jobDetails.data.email
       };
-
+      
       for (const key in jobDetails.data) {
-        if (jobDetails.data.hasOwnProperty(key)) {
+        if (jobDetails.data.hasOwnProperty(key) && 'email' !== key) {
           const value = jobDetails.data[key];
-          // eslint-disable-next-line no-unused-expressions
-          if ('email' !== key) {
-            oobIssuancepayload['attributes'] = [{ name: key, value }];
-          } else {
-            oobIssuancepayload['emailId'] = value;
-          }
-
+          oobIssuancepayload.attributes.push({ name: key, value });
         }
       }
-      oobIssuancepayload['credentialDefinitionId'] = jobDetails.credentialDefinitionId;
-      oobIssuancepayload['orgId'] = jobDetails.orgId;
 
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload

@@ -185,7 +185,9 @@ export const ResponseMessages = {
             previewCachedData: 'Error while fetching cached data',
             emptyFileData: 'File details does not exit or removed',
             cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request',
-            fileNotFound: 'File details not found'
+            fileNotFound: 'File details not found',
+            fileData: 'File data does not exist for the specific file',
+            retry: 'Credentials do not exist for retry'
         }
     },
     verification: {

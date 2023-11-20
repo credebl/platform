@@ -26,6 +26,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
+import { io } from 'socket.io-client';
 
 @Injectable()
 export class IssuanceService {
@@ -664,7 +665,7 @@ export class IssuanceService {
     }
   }
 
-  async issueBulkCredential(requestId: string, orgId: number): Promise<string> {
+  async issueBulkCredential(requestId: string, orgId: number, clientId: string): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -685,20 +686,21 @@ export class IssuanceService {
         `Param 'requestId' is missing from the request.`
       );
     }
+
     this.logger.log(`requestId----${JSON.stringify(requestId)}`);
+
     try {
       const cachedData = await this.cacheManager.get(requestId);
       this.logger.log(`cachedData----${JSON.stringify(cachedData)}`);
-      if (cachedData === undefined) {
+      if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
-
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
-      fileUpload.orgId = orgId;
+      fileUpload.orgId = String(orgId);
       fileUpload.createDateTime = new Date();
 
       if (parsedPrimeDetails && parsedPrimeDetails.fileName) {
@@ -707,28 +709,47 @@ export class IssuanceService {
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
 
-      this.logger.log(`respFileUpload----${JSON.stringify(respFileUpload)}`);
-      await parsedData.forEach(async (element, index) => {
-        this.logger.log(`element----${JSON.stringify(element)}`);
-        try {
-          this.bulkIssuanceQueue.add(
-            'issue-credential',
-            {
-              data: element,
-              fileUploadId: respFileUpload.id,
-              cacheId: requestId,
-              credentialDefinitionId: parsedPrimeDetails.credentialDefinitionId,
-              schemaLedgerId: parsedPrimeDetails.schemaLedgerId,
-              orgId,
-              isLastData: index === parsedData.length - 1
-            },
-            { delay: 5000 }
-          );
-        } catch (error) {
-          this.logger.error('Error adding item to the queue:', error);
-        }
-        
+      const saveFileDetailsPromises = parsedData.map(async (element) => {
+        const credentialPayload = {
+          credential_data: element,
+          schemaId: parsedPrimeDetails.schemaLedgerId,
+          credDefId: parsedPrimeDetails.credentialDefinitionId,
+          state: false,
+          isError: false,
+          fileUploadId: respFileUpload.id
+        };
+        return this.issuanceRepository.saveFileDetails(credentialPayload);
       });
+
+      // Wait for all saveFileDetails operations to complete
+      await Promise.all(saveFileDetailsPromises);
+
+      // Now fetch the file details
+      const respFile = await this.issuanceRepository.getFileDetails(respFileUpload.id);
+      if (!respFile) {
+        throw new BadRequestException(ResponseMessages.issuance.error.fileData);
+      }
+      for (const element of respFile) {
+        try {
+          this.logger.log(`element----${JSON.stringify(element)}`);
+          const payload = {
+            data: element.credential_data,
+            fileUploadId: element.fileUploadId,
+            clientId,
+            cacheId: requestId,
+            credentialDefinitionId: element.credDefId,
+            schemaLedgerId: element.schemaId,
+            isRetry: false,
+            orgId,
+            id: element.id,
+            isLastData: respFile.indexOf(element) === respFile.length - 1
+          };
+
+          this.processIssuanceData(payload);
+        } catch (error) {
+          this.logger.error(`Error processing issuance data: ${error}`);
+        }
+      }
 
       return 'Process initiated for bulk issuance';
     } catch (error) {
@@ -743,6 +764,55 @@ export class IssuanceService {
     }
   }
 
+  async retryBulkCredential(fileId: string, orgId: number, clientId: string): Promise<string> {
+    let respFile;
+    let respFileUpload;
+
+    try {
+      respFileUpload = await this.issuanceRepository.updateFileUploadStatus(fileId);
+      respFile = await this.issuanceRepository.getFailedCredentials(fileId);
+
+      if (!respFile || 0 === respFile.length) {
+        throw new BadRequestException(ResponseMessages.issuance.error.retry);
+      }
+
+      for (const element of respFile) {
+        try {
+          this.logger.log(`element----${JSON.stringify(element)}`);
+          const payload = {
+            data: element.credential_data,
+            fileUploadId: element.fileUploadId,
+            clientId,
+            credentialDefinitionId: element.credDefId,
+            schemaLedgerId: element.schemaId,
+            orgId,
+            id: element.id,
+            isRetry: true,
+            isLastData: respFile.indexOf(element) === respFile.length - 1
+          };
+
+          await this.processIssuanceData(payload);
+        } catch (error) {
+          // Handle errors if needed
+          this.logger.error(`Error processing issuance data: ${error}`);
+        }
+      }
+
+      return 'Process reinitiated for bulk issuance';
+    } catch (error) {
+      throw new error;
+    } finally {
+      // Update file upload details in the database
+      if (respFileUpload && respFileUpload.id) {
+        const fileUpload = {
+          status: FileUploadStatus.interrupted,
+          lastChangedDateTime: new Date()
+        };
+
+        await this.issuanceRepository.updateFileUploadDetails(respFileUpload.id, fileUpload);
+      }
+    }
+  }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async processIssuanceData(jobDetails): Promise<boolean | object[]> {
@@ -754,7 +824,9 @@ export class IssuanceService {
       referenceId: '',
       createDateTime: undefined,
       error: '',
-      detailError: ''
+      detailError: '',
+      jobId: '',
+      clientId: ''
     };
     this.logger.log(`jobDetails----${JSON.stringify(jobDetails)}`);
 
@@ -763,27 +835,23 @@ export class IssuanceService {
     fileUploadData.isError = false;
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
+    fileUploadData.jobId = jobDetails.id;
+    fileUploadData.clientId = jobDetails.clientId;
     try {
 
-      const oobIssuancepayload: OutOfBandCredentialOfferPayload = {
-        credentialDefinitionId: '',
-        orgId: 0
+      const oobIssuancepayload = {
+        credentialDefinitionId: jobDetails.credentialDefinitionId,
+        orgId: jobDetails.orgId,
+        attributes: [],
+        emailId: jobDetails.data.email
       };
-
+      
       for (const key in jobDetails.data) {
-        if (jobDetails.data.hasOwnProperty(key)) {
+        if (jobDetails.data.hasOwnProperty(key) && 'email' !== key) {
           const value = jobDetails.data[key];
-          // eslint-disable-next-line no-unused-expressions
-          if ('email' !== key) {
-            oobIssuancepayload['attributes'] = [{ name: key, value }];
-          } else {
-            oobIssuancepayload['emailId'] = value;
-          }
-
+          oobIssuancepayload.attributes.push({ name: key, value });
         }
       }
-      oobIssuancepayload['credentialDefinitionId'] = jobDetails.credentialDefinitionId;
-      oobIssuancepayload['orgId'] = jobDetails.orgId;
 
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload
@@ -797,15 +865,36 @@ export class IssuanceService {
       fileUploadData.error = error.message;
       fileUploadData.detailError = `${JSON.stringify(error)}`;
     }
-    this.issuanceRepository.saveFileUploadData(fileUploadData);
+    await this.issuanceRepository.updateFileUploadData(fileUploadData);
 
-    if (jobDetails.isLastData) {
-      this.cacheManager.del(jobDetails.cacheId);
-      this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
-        status: FileUploadStatus.completed,
-        lastChangedDateTime: new Date()
-      });
+    try {
+      if (jobDetails.isLastData) {
+        if (!jobDetails.isRetry) {
+          this.cacheManager.del(jobDetails.cacheId);
+          await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
+            status: FileUploadStatus.completed,
+            lastChangedDateTime: new Date()
+          });
+        } else {
+          await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
+            status: FileUploadStatus.completed,
+            lastChangedDateTime: new Date()
+          });
+        }
+
+        const socket = await io(`${process.env.SOCKET_HOST}`, {
+          reconnection: true,
+          reconnectionDelay: 5000,
+          reconnectionAttempts: Infinity,
+          autoConnect: true,
+          transports: ['websocket']
+        });
+        socket.emit('bulk-issuance-process-completed', { clientId: fileUploadData.clientId });
+      }
+    } catch (error) {
+      this.logger.error(`Error completing bulk issuance process: ${error}`);
     }
+
   }
 
   async validateFileHeaders(

@@ -1,13 +1,9 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
-import { Controller, Get, Put, Param, UseGuards, UseFilters } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
-import { Post } from '@nestjs/common';
-import { Body } from '@nestjs/common';
-import { Res } from '@nestjs/common';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
-import { HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -21,7 +17,6 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
-import { Query } from '@nestjs/common';
 import { GetAllOrganizationsDto } from './dtos/get-all-organizations.dto';
 import { GetAllSentInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
@@ -55,6 +50,33 @@ export class OrganizationController {
     res.setHeader('Content-Type', 'image/png'); 
     return res.send(getImageBuffer);
   }
+
+  @Get('/certificate')
+  async convertHtmlToImage(@Res() res: Response): Promise<Response> {
+
+    const htmlString = `<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <div class="container" style="height:200px;width: 200px;border: 1px solid red">
+        <header style="height:50px">
+            Header
+        </header>
+        <footer style="height:100px">
+            footer
+        </footer>
+    </div>
+</body>
+</html>`;
+
+    const imageBuffer = await this.organizationService.convertHtmlToImage(htmlString);
+
+    res.set('Content-Type', 'image/png');
+    return res.status(HttpStatus.OK).send(imageBuffer);
+
+  }
+
 
   /**
  * 

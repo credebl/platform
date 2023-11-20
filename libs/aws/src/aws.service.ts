@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
+import { promisify } from 'util';
 
 @Injectable()
 export class AwsService {
@@ -8,10 +9,35 @@ export class AwsService {
 
   constructor() {
     this.s3 = new S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_SECRET_KEY,
-      region: process.env.AWS_REGION
+      accessKeyId: process.env.AWS_PUBLIC_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_PUBLIC_SECRET_KEY,
+      region: process.env.AWS_PUBLIC_REGION
     });
+  }
+
+  async uploadUserCertificate(
+    fileBuffer: Buffer,
+    ext: string,
+    verifyCode: string,
+    pathAWS: string = '',
+    encoding = 'base64',
+    filename: string = 'cerficate'
+  ): Promise<string> {
+    const timestamp = Date.now();
+    const putObjectAsync = promisify(this.s3.putObject).bind(this.s3);
+  
+    try {
+      await putObjectAsync({
+        Bucket: process.env.AWS_PUBLIC_BUCKET_NAME,
+        Key: `${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`,
+        Body: fileBuffer,
+        ContentEncoding: encoding,
+        ContentType: `image/jpeg`
+      });
+      return `https://${process.env.AWS_PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;     
+    } catch (err) {
+      throw new HttpException('An error occurred while uploading the image', HttpStatus.SERVICE_UNAVAILABLE);
+    }
   }
 
   async uploadCsvFile(key: string, body: unknown): Promise<void> {
@@ -27,7 +53,6 @@ export class AwsService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
 
   async getFile(key: string): Promise<AWS.S3.GetObjectOutput> {
     const params: AWS.S3.GetObjectRequest = {

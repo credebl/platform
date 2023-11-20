@@ -148,12 +148,6 @@ export class OutOfBandCredentialDto {
 
 
 export class PreviewFileDetails {
-    @ApiProperty({ required: false, default: 1 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
-
     @ApiProperty({ required: false })
     @IsOptional()
     @Type(() => String)
@@ -168,13 +162,18 @@ export class PreviewFileDetails {
     @ApiProperty({ required: false })
     @IsOptional()
     @Type(() => String)
-    sortBy = '';
+    sortValue = '';
 
     @ApiProperty({ required: false })
     @IsOptional()
     @Type(() => String)
-    sortValue = '';
+    sortBy = '';
 
+    @ApiProperty({ required: false, default: 1 })
+    @IsOptional()
+    @Type(() => Number)
+    @Transform(({ value }) => toNumber(value))
+    pageNumber = 1;
 }
 
 export class FileParameter {

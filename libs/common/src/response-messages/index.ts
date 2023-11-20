@@ -15,6 +15,7 @@ export const ResponseMessages = {
             checkEmail: 'User email checked successfully.',
             sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
             userActivity: 'User activities fetched successfully',
+            userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched'
         },
@@ -41,7 +42,8 @@ export const ResponseMessages = {
             verifyEmail: 'The verification link has already been sent to your email address. please verify',
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
             userNotRegisterd: 'The user has not yet completed the registration process',
-            InvalidEmailDomain :'Email from this domain is not allowed'
+            InvalidEmailDomain :'Email from this domain is not allowed',
+            credentialNotFound: 'User credentials not found'
         }
     },
     organisation: {
@@ -106,7 +108,8 @@ export const ResponseMessages = {
             notCreated: 'Schema not created',
             notFound: 'Schema records not found',
             schemaIdNotFound: 'SchemaLedgerId not found',
-            credentialDefinitionNotFound: 'No credential definition exist'
+            credentialDefinitionNotFound: 'No credential definition exist',
+            notStoredCredential: 'User credential not stored'
         }
     },
     credentialDefinition: {

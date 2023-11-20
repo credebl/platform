@@ -28,8 +28,10 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import {
   AddPasskeyDetails,
+  Attribute,
   InvitationsI,
   PlatformSettingsI,
+  ShareUserCertificateI,
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
@@ -40,9 +42,15 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { EcosystemConfigSettings } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, UserCertificateId } from '@credebl/enum/enum';
+import { WinnerTemplate } from '../templates/winner-template';
+import { ParticipantTemplate } from '../templates/participant-template';
+import { ArbiterTemplate } from '../templates/arbiter-template';
+import * as puppeteer from 'puppeteer';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
+import { AwsService } from '@credebl/aws';
+import { readFileSync } from 'fs';
 @Injectable()
 export class UserService {
   constructor(
@@ -54,6 +62,7 @@ export class UserService {
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
+    private readonly awsService: AwsService,
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
@@ -287,7 +296,6 @@ export class UserService {
     }
   }
 
-
   private validateEmail(email: string): void {
     if (!validator.isEmail(email)) {
       throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
@@ -302,35 +310,33 @@ export class UserService {
   async login(loginUserDto: LoginUserDto): Promise<object> {
     const { email, password, isPasskey } = loginUserDto;
 
-      try {
-         this.validateEmail(email);
-        const userData = await this.userRepository.checkUserExist(email);
-        if (!userData) {
-          throw new NotFoundException(ResponseMessages.user.error.notFound);
-        }
-  
-        if (userData && !userData.isEmailVerified) {
-          throw new BadRequestException(ResponseMessages.user.error.verifyMail);
-        }
-  
-        if (true === isPasskey && false === userData?.isFidoVerified) {
-          throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
-        }
-  
-        if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-          const getUserDetails = await this.userRepository.getUserDetails(userData.email);
-          const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-          return this.generateToken(email, decryptedPassword);
-        } else {
-          const decryptedPassword = await this.commonService.decryptPassword(password);
-          return this.generateToken(email, decryptedPassword);
-        }
-      } catch (error) {
-        this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-        throw new RpcException(error.response ? error.response : error);
+    try {
+      this.validateEmail(email);
+      const userData = await this.userRepository.checkUserExist(email);
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
-    
-   
+
+      if (userData && !userData.isEmailVerified) {
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      }
+
+      if (true === isPasskey && false === userData?.isFidoVerified) {
+        throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
+      }
+
+      if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
+        const getUserDetails = await this.userRepository.getUserDetails(userData.email);
+        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
+        return this.generateToken(email, decryptedPassword);
+      } else {
+        const decryptedPassword = await this.commonService.decryptPassword(password);
+        return this.generateToken(email, decryptedPassword);
+      }
+    } catch (error) {
+      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
   async generateToken(email: string, password: string): Promise<object> {
@@ -385,6 +391,19 @@ export class UserService {
       }
 
       return userProfile;
+    } catch (error) {
+      this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getUserCredentialsById(payload: { credentialId }): Promise<object> {
+    try {
+      const userCredentials = await this.userRepository.getUserCredentialsById(payload.credentialId);
+      if (!userCredentials) {
+        throw new NotFoundException(ResponseMessages.user.error.credentialNotFound);
+      }
+      return userCredentials;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -520,6 +539,87 @@ export class UserService {
       this.logger.error(`acceptRejectInvitations: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  /**
+   *
+   * @returns
+   */
+  async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<unknown> {
+    const getAttributes = await this.userRepository.getAttributesBySchemaId(shareUserCertificate);
+    if (!getAttributes) {
+      throw new NotFoundException(ResponseMessages.schema.error.invalidSchemaId);
+    }
+
+    const attributeArray = [];
+    let attributeJson = {};
+    const attributePromises = shareUserCertificate.attributes.map(async (iterator: Attribute) => {
+      attributeJson = {
+        [iterator.name]: iterator.value
+      };
+      attributeArray.push(attributeJson);
+    });
+    await Promise.all(attributePromises);
+    let template;
+
+    switch (shareUserCertificate.schemaId.split(':')[2]) {
+      case UserCertificateId.WINNER:
+        // eslint-disable-next-line no-case-declarations
+        const userWinnerTemplate = new WinnerTemplate();
+        template = await userWinnerTemplate.getWinnerTemplate(attributeArray);
+        break;
+      case UserCertificateId.PARTICIPANT:
+        // eslint-disable-next-line no-case-declarations
+        const userParticipantTemplate = new ParticipantTemplate();
+        template = await userParticipantTemplate.getParticipantTemplate(attributeArray);
+        break;
+      case UserCertificateId.ARBITER:
+        // eslint-disable-next-line no-case-declarations
+        const userArbiterTemplate = new ArbiterTemplate();
+        template = await userArbiterTemplate.getArbiterTemplate(attributeArray);
+        break;
+      default:
+        throw new NotFoundException('error in get attributes');
+    }
+
+    const imageBuffer = await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
+    const verifyCode = uuidv4();
+
+    const imageUrl = await this.awsService.uploadUserCertificate(
+      imageBuffer,
+      'jpeg',
+      verifyCode,
+      'certificates',
+      'base64'
+    );
+
+    const existCredentialId = await this.userRepository.getUserCredentialsById(shareUserCertificate.credentialId);
+    
+    if (existCredentialId) {
+      return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
+    }
+
+    const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareUserCertificate.credentialId);
+
+    if (!saveCredentialData) {
+      throw new BadRequestException(ResponseMessages.schema.error.notStoredCredential);
+    }
+
+    return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
+  }
+
+  async saveCertificateUrl(imageUrl: string, credentialId: string): Promise<unknown> {
+    return this.userRepository.saveCertificateImageUrl(imageUrl, credentialId);
+  }
+
+  async convertHtmlToImage(template: string, credentialId: string): Promise<Buffer> {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    await page.setContent(template);
+    const screenshot = await page.screenshot();
+    await browser.close();
+    return screenshot;
   }
 
   /**

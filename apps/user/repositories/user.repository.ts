@@ -3,6 +3,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   PlatformSettingsI,
+  ShareUserCertificateI,
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
@@ -12,7 +13,7 @@ import {
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { user } from '@prisma/client';
+import { schema, user } from '@prisma/client';
 
 interface UserQueryOptions {
   id?: number; // Use the appropriate type based on your data model
@@ -100,6 +101,19 @@ export class UserRepository {
     };
 
     return this.findUser(queryOptions);
+  }
+
+  /**
+   *
+   * @param id
+   * @returns User profile data
+   */
+  async getUserCredentialsById(credentialId: string): Promise<object> {
+    return this.prisma.user_credentials.findUnique({
+      where: {
+        credentialId
+      }
+    });
   }
 
   /**
@@ -438,6 +452,34 @@ export class UserRepository {
     return { totalPages, users };
   }
 
+  async getAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<schema> {
+    try {
+      const getAttributes = await this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId: shareUserCertificate.schemaId
+        }
+      });
+      return getAttributes;
+    } catch (error) {
+      this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async saveCertificateImageUrl(imageUrl: string, credentialId: string): Promise<unknown> {
+    try {
+      const saveImageUrl = await this.prisma.user_credentials.create({
+        data: {
+          imageUrl,
+          credentialId
+        }
+      });
+      return saveImageUrl;
+    } catch (error) {
+      throw new Error(`Error saving certificate image URL: ${error.message}`);
+    }
+  }
+
   async checkUniqueUserExist(email: string): Promise<user> {
     try {
       return this.prisma.user.findUnique({
@@ -491,7 +533,7 @@ export class UserRepository {
     }
   }
 
-   /**
+  /**
    *
    * @Body updatePlatformSettings
    * @returns Update platform settings
@@ -519,21 +561,20 @@ export class UserRepository {
     }
   }
 
-/**
+  /**
    *
    * @Body updatePlatformSettings
    * @returns Update ecosystem settings
    */
-  async updateEcosystemSettings(eosystemKeys: string[], ecosystemObj: object): Promise<boolean> {  
+  async updateEcosystemSettings(eosystemKeys: string[], ecosystemObj: object): Promise<boolean> {
     try {
       for (const key of eosystemKeys) {
-
         const ecosystemKey = await this.prisma.ecosystem_config.findFirst({
           where: {
             key
           }
         });
-  
+
         await this.prisma.ecosystem_config.update({
           where: {
             id: ecosystemKey.id
@@ -545,7 +586,6 @@ export class UserRepository {
       }
 
       return true;
-  
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -571,5 +611,4 @@ export class UserRepository {
       throw new InternalServerErrorException(error);
     }
   }
- 
 }

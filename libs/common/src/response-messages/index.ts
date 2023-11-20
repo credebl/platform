@@ -271,7 +271,11 @@ export const ResponseMessages = {
             create: 'Issuance process successfully'
         },
         error: {
-            PathNotFound: 'Path to export data not found.'
+            PathNotFound: 'Path to export data not found.',
+            emailColumn: '1st column of the file should always be email.',
+            attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
+            mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
+            fileDetailsNotFound: 'File details not found.'
         }
     }
 };

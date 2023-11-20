@@ -371,6 +371,21 @@ export class IssuanceRepository {
             throw error;
         }
     }
+    async deleteFileDataByJobId(jobId: string): Promise<file_data> {
+        try {
+            if (jobId) {
+                return this.prisma.file_data.update({
+                    where: { id: jobId },
+                    data: {
+                       credential_data: null
+                    }
+                });
+            }
+        } catch (error) {
+            this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
     async saveFileDetails(fileData) {
@@ -428,6 +443,20 @@ export class IssuanceRepository {
                 },
                 data: {
                     status: FileUploadStatus.retry
+                }
+            });
+
+        } catch (error) {
+            this.logger.error(`[updateFileUploadStatus] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getFileDetailsById(fileId: string): Promise<file_upload> {
+        try {
+            return this.prisma.file_upload.findUnique({
+                where: {
+                    id: fileId
                 }
             });
 

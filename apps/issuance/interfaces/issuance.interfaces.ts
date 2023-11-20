@@ -101,5 +101,4 @@ export interface FileUploadData {
     error?: string;
     detailError?: string;
     jobId: string;
-    clientId: string;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
 import { BadRequestException, HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -601,8 +602,8 @@ export class IssuanceService {
         );
       }
 
-      this.validateFileHeaders(fileHeader, attributeNameArray, importFileDetails);
-      this.validateFileData(fileData);
+      await this.validateFileHeaders(fileHeader, attributeNameArray);
+      await this.validateFileData(fileData);
 
       const resData = {
         schemaLedgerId: credDefResponse.schemaLedgerId,
@@ -618,7 +619,7 @@ export class IssuanceService {
 
     } catch (error) {
       this.logger.error(`error in validating credentials : ${error}`);
-      throw new RpcException(error.response);
+      throw new RpcException(error.response ? error.response : error);
     } finally {
       // await this.awsService.deleteFile(importFileDetails.fileKey);
       // this.logger.error(`Deleted uploaded file after processing.`);
@@ -734,7 +735,6 @@ export class IssuanceService {
     }
 
     this.logger.log(`requestId----${JSON.stringify(requestId)}`);
-
     try {
       const cachedData = await this.cacheManager.get(requestId);
       this.logger.log(`cachedData----${JSON.stringify(cachedData)}`);
@@ -815,11 +815,18 @@ export class IssuanceService {
     let respFileUpload;
 
     try {
+
+      const fileDetails = await this.issuanceRepository.getFileDetailsById(fileId);
+      if (!fileDetails) {
+        throw new BadRequestException(ResponseMessages.issuance.error.retry);
+      }
+
       respFileUpload = await this.issuanceRepository.updateFileUploadStatus(fileId);
       respFile = await this.issuanceRepository.getFailedCredentials(fileId);
 
-      if (!respFile || 0 === respFile.length) {
-        throw new BadRequestException(ResponseMessages.issuance.error.retry);
+      if (0 === respFile.length) {
+        const errorMessage = ResponseMessages.bulkIssuance.error.fileDetailsNotFound;
+        throw new BadRequestException(`${errorMessage}`);
       }
 
       for (const element of respFile) {
@@ -846,7 +853,7 @@ export class IssuanceService {
 
       return 'Process reinitiated for bulk issuance';
     } catch (error) {
-      throw new error;
+      throw new RpcException(error.response ? error.response : error);
     } finally {
       // Update file upload details in the database
       if (respFileUpload && respFileUpload.id) {
@@ -871,8 +878,7 @@ export class IssuanceService {
       createDateTime: undefined,
       error: '',
       detailError: '',
-      jobId: '',
-      clientId: ''
+      jobId: ''
     };
     this.logger.log(`jobDetails----${JSON.stringify(jobDetails)}`);
 
@@ -882,7 +888,6 @@ export class IssuanceService {
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
     fileUploadData.jobId = jobDetails.id;
-    fileUploadData.clientId = jobDetails.clientId;
     try {
 
       const oobIssuancepayload = {
@@ -891,7 +896,7 @@ export class IssuanceService {
         attributes: [],
         emailId: jobDetails.data.email
       };
-      
+
       for (const key in jobDetails.data) {
         if (jobDetails.data.hasOwnProperty(key) && 'email' !== key) {
           const value = jobDetails.data[key];
@@ -902,6 +907,9 @@ export class IssuanceService {
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload
       );
+      if (oobCredentials) {
+        await this.issuanceRepository.deleteFileDataByJobId(jobDetails.id);
+      }
       return oobCredentials;
     } catch (error) {
       this.logger.error(
@@ -935,7 +943,7 @@ export class IssuanceService {
           autoConnect: true,
           transports: ['websocket']
         });
-        socket.emit('bulk-issuance-process-completed', { clientId: fileUploadData.clientId });
+        socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
       }
     } catch (error) {
       this.logger.error(`Error completing bulk issuance process: ${error}`);
@@ -945,46 +953,33 @@ export class IssuanceService {
 
   async validateFileHeaders(
     fileHeader: string[],
-    schemaAttributes,
-    payload
+    schemaAttributes: string[]
   ): Promise<void> {
     try {
-
       const fileSchemaHeader: string[] = fileHeader.slice();
+
       if ('email' === fileHeader[0]) {
         fileSchemaHeader.splice(0, 1);
       } else {
-        throw new BadRequestException(
-          `1st column of the file should always be 'reference_id'`
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.emailColumn
         );
       }
+
       if (schemaAttributes.length !== fileSchemaHeader.length) {
-        throw new BadRequestException(
-          `Number of supplied values is different from the number of schema attributes defined for '${payload.credDefId}'`
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.attributeNumber
         );
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      let attributeIndex: number = 0;
-      const isConflictAttribute = Object.values(fileSchemaHeader).some(
-        (value) => {
-          if (!schemaAttributes.includes(value)) {
-            attributeIndex++;
-            return true;
-          }
-          return false;
-        }
-      );
-      if (isConflictAttribute) {
-        throw new BadRequestException(
-          `Schema attributes are mismatched in the file header. Please check supplied headers in the file`
-        );
+
+      const mismatchedAttributes = fileSchemaHeader.filter(value => !schemaAttributes.includes(value));
+
+      if (0 < mismatchedAttributes.length) {
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.mismatchedAttributes);
       }
     } catch (error) {
-      // Handle exceptions here
-      // You can also throw a different exception or return an error response here if needed
+      throw error;
+
     }
   }
-
 
   async validateFileData(fileData: string[]): Promise<void> {
     let rowIndex: number = 0;

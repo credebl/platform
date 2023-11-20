@@ -96,7 +96,7 @@ export class SocketGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('error-in-wallet-creation-process')
-  async handleErrorResponse(payload: ISocketInterface): Promise<void> {
+  async handleErrorResponse(client:string, payload: ISocketInterface): Promise<void> {
     this.logger.log(`error-in-wallet-creation-process ${payload.clientId}`);
     this.server
       .to(payload.clientId)
@@ -104,7 +104,7 @@ export class SocketGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('bulk-issuance-process-completed')
-  async handleBulkIssuance(payload: ISocketInterface): Promise<void> {
+  async handleBulkIssuance(client:string, payload: ISocketInterface): Promise<void> {
     this.logger.log(`bulk-issuance-process-completed ${payload.clientId}`);
     this.server
       .to(payload.clientId)

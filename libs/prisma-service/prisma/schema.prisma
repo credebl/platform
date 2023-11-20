@@ -52,7 +52,7 @@ model user_activity {
 model user_credentials {
   id                  String      @id @default(uuid())
   imageUrl            String?
-  credentialId        String?
+  credentialId        String      @unique
   createDateTime      DateTime    @default(now()) @db.Timestamptz(6)
   createdBy           String      @default("1")
   lastChangedDateTime DateTime    @default(now()) @db.Timestamptz(6)

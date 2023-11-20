@@ -296,7 +296,6 @@ export class UserService {
     }
   }
 
-
   private validateEmail(email: string): void {
     if (!validator.isEmail(email)) {
       throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
@@ -311,35 +310,33 @@ export class UserService {
   async login(loginUserDto: LoginUserDto): Promise<object> {
     const { email, password, isPasskey } = loginUserDto;
 
-      try {
-         this.validateEmail(email);
-        const userData = await this.userRepository.checkUserExist(email);
-        if (!userData) {
-          throw new NotFoundException(ResponseMessages.user.error.notFound);
-        }
-  
-        if (userData && !userData.isEmailVerified) {
-          throw new BadRequestException(ResponseMessages.user.error.verifyMail);
-        }
-  
-        if (true === isPasskey && false === userData?.isFidoVerified) {
-          throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
-        }
-  
-        if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-          const getUserDetails = await this.userRepository.getUserDetails(userData.email);
-          const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-          return this.generateToken(email, decryptedPassword);
-        } else {
-          const decryptedPassword = await this.commonService.decryptPassword(password);
-          return this.generateToken(email, decryptedPassword);
-        }
-      } catch (error) {
-        this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-        throw new RpcException(error.response ? error.response : error);
+    try {
+      this.validateEmail(email);
+      const userData = await this.userRepository.checkUserExist(email);
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
-    
-   
+
+      if (userData && !userData.isEmailVerified) {
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      }
+
+      if (true === isPasskey && false === userData?.isFidoVerified) {
+        throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
+      }
+
+      if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
+        const getUserDetails = await this.userRepository.getUserDetails(userData.email);
+        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
+        return this.generateToken(email, decryptedPassword);
+      } else {
+        const decryptedPassword = await this.commonService.decryptPassword(password);
+        return this.generateToken(email, decryptedPassword);
+      }
+    } catch (error) {
+      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
   async generateToken(email: string, password: string): Promise<object> {
@@ -400,9 +397,12 @@ export class UserService {
     }
   }
 
-  async getUserCredentialsById(payload: { id }): Promise<object> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<object> {
     try {
-      const userCredentials = await this.userRepository.getUserCredentialsById(payload.id);
+      const userCredentials = await this.userRepository.getUserCredentialsById(payload.credentialId);
+      if (!userCredentials) {
+        throw new NotFoundException(ResponseMessages.user.error.credentialNotFound);
+      }
       return userCredentials;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
@@ -584,11 +584,28 @@ export class UserService {
 
     const imageBuffer = await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
     const verifyCode = uuidv4();
-    // const myFile = new File([readFileSync(imageBuffer)], `cert_${shareUserCertificate.credentialId}.jpeg`);
 
-    const imageUrl = await this.awsService.uploads3(imageBuffer, 'jpeg', verifyCode, 'certificates', 'base64');
+    const imageUrl = await this.awsService.uploadUserCertificate(
+      imageBuffer,
+      'jpeg',
+      verifyCode,
+      'certificates',
+      'base64'
+    );
 
-    return this.saveCertificateUrl(imageUrl, shareUserCertificate.credentialId);
+    const existCredentialId = await this.userRepository.getUserCredentialsById(shareUserCertificate.credentialId);
+    
+    if (existCredentialId) {
+      return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
+    }
+
+    const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareUserCertificate.credentialId);
+
+    if (!saveCredentialData) {
+      throw new BadRequestException(ResponseMessages.schema.error.notStoredCredential);
+    }
+
+    return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
   }
 
   async saveCertificateUrl(imageUrl: string, credentialId: string): Promise<unknown> {
@@ -600,12 +617,11 @@ export class UserService {
     const page = await browser.newPage();
 
     await page.setContent(template);
-    const filename = `cert_${credentialId}.jpeg`;
-    const screenshot = await page.screenshot({ path: filename });
+    const screenshot = await page.screenshot();
     await browser.close();
     return screenshot;
   }
-  
+
   /**
    *
    * @param acceptRejectInvitation

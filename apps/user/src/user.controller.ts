@@ -124,4 +124,10 @@ export class UserController {
   async updatePlatformSettings(payload: { platformSettings: PlatformSettingsI }): Promise<string> {
     return this.userService.updatePlatformSettings(payload.platformSettings);
   }
+
+  @MessagePattern({ cmd: 'fetch-platform-settings' })
+  async getPlatformEcosystemSettings(): Promise<object> {
+    return this.userService.getPlatformEcosystemSettings();
+  }
+
 }

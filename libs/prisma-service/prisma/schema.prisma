@@ -4,7 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("POOL_DATABASE_URL")
+  directUrl = env("DATABASE_URL")
 }
 
 
@@ -450,4 +451,8 @@ model file_data {
   deletedAt           DateTime?   @db.Timestamp(6)
   fileUploadId        String
   fileUpload          file_upload @relation(fields: [fileUploadId], references: [id])
+  schemaId            String?
+  credDefId           String?
+  status              Boolean           @default(false)
+  credential_data     Json?
 }

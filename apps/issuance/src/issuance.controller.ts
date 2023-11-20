@@ -33,7 +33,7 @@ export class IssuanceController {
     const { user, credentialRecordId, orgId } = payload;
     return this.issuanceService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
   }
-
+  
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
   async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
     const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
@@ -70,8 +70,29 @@ export class IssuanceController {
     );
   }
 
+  @MessagePattern({ cmd: 'issued-file-details' })
+  async issuedFiles(payload: {orgId:string, fileParameter:PreviewRequest}): Promise<object> {
+    return this.issuanceService.issuedFileDetails(
+      payload.orgId, 
+      payload.fileParameter
+      );
+  }
+  @MessagePattern({ cmd: 'issued-file-data' })
+  async getFileDetailsByFileId(payload: {fileId:string, fileParameter:PreviewRequest}): Promise<object> {
+    return this.issuanceService.getFileDetailsByFileId( 
+      payload.fileId,
+      payload.fileParameter
+      );
+  }
+
+
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
-  async issueBulkCredentials(payload: {requestId:string, orgId:string }): Promise<string> {
-    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId);
+  async issueBulkCredentials(payload: { requestId: string, orgId: number, clientId: string }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientId);
+  }
+
+  @MessagePattern({ cmd: 'retry-bulk-credentials' })
+  async retryeBulkCredentials(payload: { fileId: string, orgId: number, clientId: string }): Promise<string> {
+    return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientId);
   }
 }

@@ -15,8 +15,8 @@ import {
   Param,
   UseFilters,
   Header,
-  UseInterceptors,
-  UploadedFile
+  UploadedFile,
+  UseInterceptors
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -38,7 +38,7 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
+import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -49,11 +49,10 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
 import { FileExportResponse, RequestPayload } from './interfaces';
+import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerCSVOptions } from '../config/multer.config';
-import { extname } from 'path';
-import * as fs from 'fs';
-
+import { v4 as uuidv4 } from 'uuid';
+import { RpcException } from '@nestjs/microservices';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -64,6 +63,7 @@ export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
     private readonly imageServiceService: ImageServiceService,
+    private readonly awsService: AwsService,
     private readonly commonService: CommonService
 
   ) { }
@@ -188,7 +188,6 @@ export class IssuanceController {
 
   }
 
-
   @Post('/orgs/:orgId/bulk/upload')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -224,46 +223,44 @@ export class IssuanceController {
     },
     required: true
   })
-  @UseInterceptors(FileInterceptor('file', multerCSVOptions))
+  @UseInterceptors(FileInterceptor('file'))
   async importAndPreviewDataForIssuance(
     @Query('credDefId') credentialDefinitionId: string,
     @UploadedFile() file: Express.Multer.File,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
-    if (file) {
-      this.logger.log(`file:${file.path}`);
-      this.logger.log(`Uploaded file : ${file.filename}`);
-      const timestamp = Math.floor(Date.now() / 1000);
-      const ext = extname(file.filename);
-      const newFilename = `${file.filename}-${timestamp}${ext}`;
+    try {
+      if (file) {
+        const fileKey: string = uuidv4();
+        try {
 
-      fs.rename(
-        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
-        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
-        async (err: any) => {
-          if (err) {
-            throw err;
-          }
+          await this.awsService.uploadCsvFile(fileKey, file?.buffer);
+
+        } catch (error) {
+
+          throw new RpcException(error.response ? error.response : error);
+
         }
-      );
-
-      const reqPayload: RequestPayload = {
-        credDefId: credentialDefinitionId,
-        filePath: `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
-        fileName: newFilename
-      };
-      const importCsvDetails = await this.issueCredentialService.importCsv(
-        reqPayload
-      );
-      const finalResponse: IResponseType = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.issuance.success.importCSV,
-        data: importCsvDetails.response
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
-
-    } 
+        const reqPayload: RequestPayload = {
+          credDefId: credentialDefinitionId,
+          fileKey,
+          fileName: file?.originalname
+        };
+        this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
+        const importCsvDetails = await this.issueCredentialService.importCsv(
+          reqPayload
+        );
+        const finalResponse: IResponseType = {
+          statusCode: HttpStatus.CREATED,
+          message: ResponseMessages.issuance.success.importCSV,
+          data: importCsvDetails.response
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+      }
+    } catch (error) {
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
 
@@ -350,8 +347,8 @@ export class IssuanceController {
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
-  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: string,  @Res() res: Response): Promise<Response> {
-    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId);
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
+    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails.clientId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
@@ -359,6 +356,162 @@ export class IssuanceController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+  @Get('/orgs/:orgId/bulk/files')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'Get the file list for bulk operation',
+    description: 'Get all the file list for organization for bulk operation'
+  })
+
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortValue',
+    type: Number,
+    required: false
+  })
+  async issuedFileDetails(
+    @Param('orgId') orgId: number,
+    @Query() fileParameter: FileParameter,
+    @Res() res: Response
+  ): Promise<object> {
+    const issuedFileDetails = await this.issueCredentialService.issuedFileDetails(
+      orgId,
+      fileParameter
+    );
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.previewCSV,
+      data: issuedFileDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/:fileId/bulk/file-data')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'Get the file data',
+    description: 'Get the file data by file id'
+  })
+
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortValue',
+    type: Number,
+    required: false
+  })
+  async getFileDetailsByFileId(
+    @Param('orgId') orgId: number,
+    @Param('fileId') fileId: string,
+    @Query() fileParameter: FileParameter,
+    @Res() res: Response
+  ): Promise<object> {
+    const issuedFileDetails = await this.issueCredentialService.getFileDetailsByFileId(
+      orgId,
+      fileId,
+      fileParameter
+    );
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.previewCSV,
+      data: issuedFileDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/:fileId/retry/bulk')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'Retry bulk issue credential',
+    description: 'Retry bulk issue credential'
+  })
+  async retryBulkCredentials(@Param('fileId') fileId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
+    const bulkIssunaceDetails = await this.issueCredentialService.retryBulkCredential(fileId, orgId, clientDetails.clientId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.bulkIssuance,
+      data: bulkIssunaceDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
 
   /**
    * Description: Issuer send credential to create offer
@@ -470,5 +623,5 @@ export class IssuanceController {
 
   }
 
-  
+
 }

@@ -71,23 +71,23 @@ export interface SchemaDetails {
 }
 export interface ImportFileDetails {
     credDefId: string;
-    filePath: string;
+    fileKey: string;
     fileName: string;
 }
 
 export interface PreviewRequest {
-    pageNumber: number,
-    search: string,
-    pageSize: number,
-    sortBy: string,
-    sortValue: string
+    pageNumber?: number,
+    search?: string,
+    pageSize?: number,
+    sortBy?: string,
+    sortValue?: string
 }
 
 export interface FileUpload {
     name?: string;
     upload_type?: string;
     status?: string;
-    orgId?: number | string;
+    orgId?:  string;
     createDateTime?: Date;
     lastChangedDateTime?: Date;
   }
@@ -100,4 +100,6 @@ export interface FileUploadData {
     createDateTime: Date;
     error?: string;
     detailError?: string;
+    jobId: string;
+    clientId: string;
 }

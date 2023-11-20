@@ -16,8 +16,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
-import { checkIfFileOrDirectoryExists, createFile, deleteFile } from '../../api-gateway/src/helper-files/file-operation.helper';
-import { readFileSync } from 'fs';
+import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
 import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
@@ -26,7 +25,8 @@ import { orderValues, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
-
+import { AwsService } from '@credebl/aws';
+import { io } from 'socket.io-client';
 
 @Injectable()
 export class IssuanceService {
@@ -38,6 +38,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
+    private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
   ) { }
 
@@ -545,7 +546,6 @@ export class IssuanceService {
 
       // https required to download csv from frontend side
       const filePathToDownload = `${process.env.API_GATEWAY_PROTOCOL_SECURE}://${process.env.UPLOAD_LOGO_HOST}/${fileName}`;
-
       return {
         fileContent: filePathToDownload,
         fileName: processedFileName
@@ -565,8 +565,11 @@ export class IssuanceService {
 
       this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
 
-      const csvFile = readFileSync(importFileDetails.filePath);
-      const csvData = csvFile.toString();
+      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.fileKey)}`);
+
+      const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
+      const csvData: string = getFileDetails.Body.toString();
+
       const parsedData = paParse(csvData, {
         header: true,
         skipEmptyLines: true,
@@ -617,8 +620,8 @@ export class IssuanceService {
       this.logger.error(`error in validating credentials : ${error}`);
       throw new RpcException(error.response);
     } finally {
-      this.logger.error(`Deleted uploaded file after processing.`);
-      await deleteFile(importFileDetails.filePath);
+      // await this.awsService.deleteFile(importFileDetails.fileKey);
+      // this.logger.error(`Deleted uploaded file after processing.`);
     }
   }
 
@@ -629,6 +632,9 @@ export class IssuanceService {
     try {
       if ('' !== requestId.trim()) {
         const cachedData = await this.cacheManager.get(requestId);
+        if (!cachedData) {
+          throw new NotFoundException(ResponseMessages.issuance.error.emptyFileData);
+        }
         if (cachedData === undefined || null) {
           throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
         }
@@ -646,8 +652,66 @@ export class IssuanceService {
     }
   }
 
+  async getFileDetailsByFileId(
+    fileId: string,
+    getAllfileDetails: PreviewRequest
+  ): Promise<object> {
+    try {
 
-  async issueBulkCredential(requestId: string, orgId: string): Promise<string> {
+      const fileData = await this.issuanceRepository.getFileDetailsByFileId(fileId, getAllfileDetails);
+
+      const fileResponse = {
+        totalItems: fileData.fileCount,
+        hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileData.fileCount,
+        hasPreviousPage: 1 < getAllfileDetails.pageNumber,
+        nextPage: getAllfileDetails.pageNumber + 1,
+        previousPage: getAllfileDetails.pageNumber - 1,
+        lastPage: Math.ceil(fileData.fileCount / getAllfileDetails.pageSize),
+        data: fileData.fileDataList
+      };
+
+      if (0 !== fileData.fileCount) {
+        return fileResponse;
+      } else {
+        throw new NotFoundException(ResponseMessages.issuance.error.fileNotFound);
+      }
+
+    } catch (error) {
+      this.logger.error(`error in issuedFileDetails : ${error}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async issuedFileDetails(
+    orgId: string,
+    getAllfileDetails: PreviewRequest
+  ): Promise<object> {
+    try {
+
+      const fileDetails = await this.issuanceRepository.getAllFileDetails(orgId, getAllfileDetails);
+      const fileResponse = {
+        totalItems: fileDetails.fileCount,
+        hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
+        hasPreviousPage: 1 < getAllfileDetails.pageNumber,
+        nextPage: getAllfileDetails.pageNumber + 1,
+        previousPage: getAllfileDetails.pageNumber - 1,
+        lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
+        data: fileDetails.fileList
+      };
+
+      if (0 !== fileDetails.fileCount) {
+        return fileResponse;
+      } else {
+        throw new NotFoundException(ResponseMessages.issuance.error.notFound);
+      }
+
+    } catch (error) {
+      this.logger.error(`error in issuedFileDetails : ${error}`);
+      throw new RpcException(error.response);
+    }
+  }
+
+  async issueBulkCredential(requestId: string, orgId: number, clientId: string): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -668,9 +732,13 @@ export class IssuanceService {
         `Param 'requestId' is missing from the request.`
       );
     }
+
+    this.logger.log(`requestId----${JSON.stringify(requestId)}`);
+
     try {
       const cachedData = await this.cacheManager.get(requestId);
-      if (cachedData === undefined) {
+      this.logger.log(`cachedData----${JSON.stringify(cachedData)}`);
+      if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
 
@@ -679,7 +747,7 @@ export class IssuanceService {
 
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
-      fileUpload.orgId = orgId;
+      fileUpload.orgId = String(orgId);
       fileUpload.createDateTime = new Date();
 
       if (parsedPrimeDetails && parsedPrimeDetails.fileName) {
@@ -688,24 +756,49 @@ export class IssuanceService {
 
       respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
 
-
-      await parsedData.forEach(async (element, index) => {
-        this.bulkIssuanceQueue.add(
-          'issue-credential',
-          {
-            data: element,
-            fileUploadId: respFileUpload.id,
-            cacheId: requestId,
-            credentialDefinitionId: parsedPrimeDetails.credentialDefinitionId,
-            schemaLedgerId: parsedPrimeDetails.schemaLedgerId,
-            orgId,
-            isLastData: index === parsedData.length - 1
-          },
-          { delay: 5000 }
-        );
+      const saveFileDetailsPromises = parsedData.map(async (element) => {
+        const credentialPayload = {
+          credential_data: element,
+          schemaId: parsedPrimeDetails.schemaLedgerId,
+          credDefId: parsedPrimeDetails.credentialDefinitionId,
+          state: false,
+          isError: false,
+          fileUploadId: respFileUpload.id
+        };
+        return this.issuanceRepository.saveFileDetails(credentialPayload);
       });
 
-      return 'Process completed for bulk issuance';
+      // Wait for all saveFileDetails operations to complete
+      await Promise.all(saveFileDetailsPromises);
+
+      // Now fetch the file details
+      const respFile = await this.issuanceRepository.getFileDetails(respFileUpload.id);
+      if (!respFile) {
+        throw new BadRequestException(ResponseMessages.issuance.error.fileData);
+      }
+      for (const element of respFile) {
+        try {
+          this.logger.log(`element----${JSON.stringify(element)}`);
+          const payload = {
+            data: element.credential_data,
+            fileUploadId: element.fileUploadId,
+            clientId,
+            cacheId: requestId,
+            credentialDefinitionId: element.credDefId,
+            schemaLedgerId: element.schemaId,
+            isRetry: false,
+            orgId,
+            id: element.id,
+            isLastData: respFile.indexOf(element) === respFile.length - 1
+          };
+
+          this.processIssuanceData(payload);
+        } catch (error) {
+          this.logger.error(`Error processing issuance data: ${error}`);
+        }
+      }
+
+      return 'Process initiated for bulk issuance';
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;
       this.logger.error(`error in issueBulkCredential : ${error}`);
@@ -718,6 +811,55 @@ export class IssuanceService {
     }
   }
 
+  async retryBulkCredential(fileId: string, orgId: number, clientId: string): Promise<string> {
+    let respFile;
+    let respFileUpload;
+
+    try {
+      respFileUpload = await this.issuanceRepository.updateFileUploadStatus(fileId);
+      respFile = await this.issuanceRepository.getFailedCredentials(fileId);
+
+      if (!respFile || 0 === respFile.length) {
+        throw new BadRequestException(ResponseMessages.issuance.error.retry);
+      }
+
+      for (const element of respFile) {
+        try {
+          this.logger.log(`element----${JSON.stringify(element)}`);
+          const payload = {
+            data: element.credential_data,
+            fileUploadId: element.fileUploadId,
+            clientId,
+            credentialDefinitionId: element.credDefId,
+            schemaLedgerId: element.schemaId,
+            orgId,
+            id: element.id,
+            isRetry: true,
+            isLastData: respFile.indexOf(element) === respFile.length - 1
+          };
+
+          await this.processIssuanceData(payload);
+        } catch (error) {
+          // Handle errors if needed
+          this.logger.error(`Error processing issuance data: ${error}`);
+        }
+      }
+
+      return 'Process reinitiated for bulk issuance';
+    } catch (error) {
+      throw new error;
+    } finally {
+      // Update file upload details in the database
+      if (respFileUpload && respFileUpload.id) {
+        const fileUpload = {
+          status: FileUploadStatus.interrupted,
+          lastChangedDateTime: new Date()
+        };
+
+        await this.issuanceRepository.updateFileUploadDetails(respFileUpload.id, fileUpload);
+      }
+    }
+  }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async processIssuanceData(jobDetails): Promise<boolean | object[]> {
@@ -729,14 +871,19 @@ export class IssuanceService {
       referenceId: '',
       createDateTime: undefined,
       error: '',
-      detailError: ''
+      detailError: '',
+      jobId: '',
+      clientId: ''
     };
+    this.logger.log(`jobDetails----${JSON.stringify(jobDetails)}`);
 
     fileUploadData.fileUpload = jobDetails.fileUploadId;
     fileUploadData.fileRow = JSON.stringify(jobDetails);
     fileUploadData.isError = false;
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
+    fileUploadData.jobId = jobDetails.id;
+    fileUploadData.clientId = jobDetails.clientId;
     try {
 
       const oobIssuancepayload: OutOfBandCredentialOfferPayload = {
@@ -771,15 +918,36 @@ export class IssuanceService {
       fileUploadData.error = error.message;
       fileUploadData.detailError = `${JSON.stringify(error)}`;
     }
-    this.issuanceRepository.saveFileUploadData(fileUploadData);
+    await this.issuanceRepository.updateFileUploadData(fileUploadData);
 
-    if (jobDetails.isLastData) {
-      this.cacheManager.del(jobDetails.cacheId);
-      this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
-        status: FileUploadStatus.completed,
-        lastChangedDateTime: new Date()
-      });
+    try {
+      if (jobDetails.isLastData) {
+        if (!jobDetails.isRetry) {
+          this.cacheManager.del(jobDetails.cacheId);
+          await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
+            status: FileUploadStatus.completed,
+            lastChangedDateTime: new Date()
+          });
+        } else {
+          await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
+            status: FileUploadStatus.completed,
+            lastChangedDateTime: new Date()
+          });
+        }
+
+        const socket = await io(`${process.env.SOCKET_HOST}`, {
+          reconnection: true,
+          reconnectionDelay: 5000,
+          reconnectionAttempts: Infinity,
+          autoConnect: true,
+          transports: ['websocket']
+        });
+        socket.emit('bulk-issuance-process-completed', { clientId: fileUploadData.clientId });
+      }
+    } catch (error) {
+      this.logger.error(`Error completing bulk issuance process: ${error}`);
     }
+
   }
 
   async validateFileHeaders(

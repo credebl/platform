@@ -11,6 +11,8 @@ import {
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
+import { readFileSync } from 'fs';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class CommonService {
@@ -323,6 +325,5 @@ export class CommonService {
     } catch (error) {
       throw new BadRequestException('Invalid Credentials');
     }
-    
   }
 }

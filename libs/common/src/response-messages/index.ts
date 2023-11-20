@@ -15,12 +15,15 @@ export const ResponseMessages = {
             checkEmail: 'User email checked successfully.',
             sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
             userActivity: 'User activities fetched successfully',
-            platformEcosystemettings: 'Platform and ecosystem settings updated'
+            platformEcosystemettings: 'Platform and ecosystem settings updated',
+            fetchPlatformSettings: 'Platform settings fetched'
         },
         error: {
             exists: 'User already exists',
             profileNotFound: 'User public profile not found',
             notUpdatePlatformSettings: 'Unable to update platform config settings',
+            platformSetttingsNotFound: 'Unable to get platform settings',
+            ecosystemSetttingsNotFound: 'Unable to get ecosystem settings',
             notUpdateEcosystemSettings: 'Unable to update ecosystem config settings',
             verificationAlreadySent: 'The verification link has already been sent to your email address',
             emailSend: 'Unable to send email to the user',
@@ -37,7 +40,8 @@ export const ResponseMessages = {
             adduser: 'Unable to add user details',
             verifyEmail: 'The verification link has already been sent to your email address. please verify',
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
-            userNotRegisterd: 'The user has not yet completed the registration process'
+            userNotRegisterd: 'The user has not yet completed the registration process',
+            InvalidEmailDomain :'Email from this domain is not allowed'
         }
     },
     organisation: {
@@ -160,7 +164,8 @@ export const ResponseMessages = {
             fetch: 'Issue-credential fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
-            bulkIssuance: 'Bulk-issunace process started'
+            bulkIssuance: 'Bulk-issunace process started',
+            notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -175,7 +180,11 @@ export const ResponseMessages = {
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',
             previewCachedData: 'Error while fetching cached data',
-            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request.'
+            emptyFileData: 'File details does not exit or removed',
+            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request',
+            fileNotFound: 'File details not found',
+            fileData: 'File data does not exist for the specific file',
+            retry: 'Credentials do not exist for retry'
         }
     },
     verification: {
@@ -219,6 +228,7 @@ export const ResponseMessages = {
         },
         error: {
             notCreated: 'Error while creating ecosystem',
+            exists: 'An ecosystem name is already exist',
             update: 'Error while updating ecosystem',
             invalidInvitationStatus: 'Invalid invitation status',
             invitationNotFound: 'Ecosystem Invitation not found',

@@ -335,10 +335,39 @@ export class IssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/orgs/:orgId/bulk/files')
+  @Post('/orgs/:orgId/:requestId/bulk')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'bulk issue credential',
+    description: 'bulk issue credential'
+  })
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
+    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails.clientId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.bulkIssuance,
+      data: bulkIssunaceDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/bulk/files')
+  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  // @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,
@@ -461,7 +490,7 @@ export class IssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Post('/orgs/:orgId/:requestId/bulk')
+  @Post('/orgs/:orgId/:fileId/retry/bulk')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
@@ -477,11 +506,11 @@ export class IssuanceController {
     type: ForbiddenErrorDto
   })
   @ApiOperation({
-    summary: 'bulk issue credential',
-    description: 'bulk issue credential'
+    summary: 'Retry bulk issue credential',
+    description: 'Retry bulk issue credential'
   })
-  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
-    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails.clientId);
+  async retryBulkCredentials(@Param('fileId') fileId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
+    const bulkIssunaceDetails = await this.issueCredentialService.retryBulkCredential(fileId, orgId, clientDetails.clientId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
@@ -489,6 +518,7 @@ export class IssuanceController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
 
   /**
    * Description: Issuer send credential to create offer

@@ -5,6 +5,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { agent_invitations, credentials, file_data, file_upload, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { FileUploadData, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 @Injectable()
 export class IssuanceRepository {
 
@@ -234,8 +235,23 @@ export class IssuanceRepository {
         }
     }
 
+    async countErrorsForFile(fileUploadId: string): Promise<number> {
+        try {
+            const errorCount = await this.prisma.file_data.count({
+                where: {
+                    fileUploadId,
+                    isError: true
+                }
+            });
+    
+            return errorCount;
+        } catch (error) {
+            this.logger.error(`[countErrorsForFile] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
     async getAllFileDetails(orgId: string, getAllfileDetails: PreviewRequest): Promise<{
-        fileCount: number
+        fileCount: number;
         fileList: {
             id: string;
             name: string;
@@ -247,7 +263,9 @@ export class IssuanceRepository {
             lastChangedDateTime: Date;
             lastChangedBy: string;
             deletedAt: Date;
-        }[]
+            failedRecords: number;
+            totalRecords: number; 
+        }[];
     }> {
         try {
             const fileList = await this.prisma.file_upload.findMany({
@@ -262,12 +280,27 @@ export class IssuanceRepository {
                 take: Number(getAllfileDetails?.pageSize),
                 skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize
             });
+    
+            const fileListWithDetails = await Promise.all(
+                fileList.map(async (file) => {
+                    const failedRecords = await this.countErrorsForFile(file.id);
+                    const totalRecords = await this.prisma.file_data.count({
+                        where: {
+                            fileUploadId: file.id
+                        }
+                    });
+                    const successfulRecords = totalRecords - failedRecords;
+                    return { ...file, failedRecords, totalRecords, successfulRecords };
+                })
+            );
+    
             const fileCount = await this.prisma.file_upload.count({
                 where: {
                     orgId: String(orgId)
                 }
             });
-            return { fileCount, fileList };
+    
+            return { fileCount, fileList: fileListWithDetails };
         } catch (error) {
             this.logger.error(`[getFileUploadDetails] - error: ${JSON.stringify(error)}`);
             throw error;
@@ -319,7 +352,6 @@ export class IssuanceRepository {
     async updateFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
         try {
             const { jobId, fileUpload, isError, referenceId, error, detailError } = fileUploadData;
-
             if (jobId) {
                 return this.prisma.file_data.update({
                     where: { id: jobId },
@@ -370,6 +402,37 @@ export class IssuanceRepository {
             });
         } catch (error) {
             this.logger.error(`[getFileDetails] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getFailedCredentials(fileId: string): Promise<file_data[]> {
+        try {
+            return this.prisma.file_data.findMany({
+                where: {
+                    fileUploadId: fileId,
+                    isError: true
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[getFileDetails] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async updateFileUploadStatus(fileId: string): Promise<file_upload> {
+        try {
+            return this.prisma.file_upload.update({
+                where: {
+                    id: fileId
+                },
+                data: {
+                    status: FileUploadStatus.retry
+                }
+            });
+
+        } catch (error) {
+            this.logger.error(`[updateFileUploadStatus] - error: ${JSON.stringify(error)}`);
             throw error;
         }
     }

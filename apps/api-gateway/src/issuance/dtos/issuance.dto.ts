@@ -208,7 +208,7 @@ export class FileParameter {
 }
 
 export class ClientDetails {
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, example: '68y647ayAv79879' })
     @IsOptional()
     @Type(() => String)
     clientId = '';

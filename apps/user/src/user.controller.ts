@@ -64,7 +64,7 @@ export class UserController {
 
 
   @MessagePattern({ cmd: 'get-user-credentials-by-id' })
-  async getUserCredentialsById(payload: { id }): Promise<object> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<object> {
     return this.userService.getUserCredentialsById(payload);
   }
 

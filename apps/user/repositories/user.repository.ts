@@ -108,14 +108,14 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-    async getUserCredentialsById(id: string): Promise<object> {
-      return this.prisma.user_credentials.findUnique({
-        where: {
-          id
-        }
-      });
-    }
-  
+  async getUserCredentialsById(credentialId: string): Promise<object> {
+    return this.prisma.user_credentials.findUnique({
+      where: {
+        credentialId
+      }
+    });
+  }
+
   /**
    *
    * @param id
@@ -128,7 +128,6 @@ export class UserRepository {
 
     return this.findUserForPublicProfile(queryOptions);
   }
-  
 
   /**
    *

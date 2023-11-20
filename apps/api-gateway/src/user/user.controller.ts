@@ -260,11 +260,11 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/user-credentials/:id')
+  @Get('/user-credentials/:credentialId')
   @ApiOperation({ summary: 'Get user credentials by Id', description: 'Get user credentials by Id' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getUserCredentialsById (@Param('id') id: string, @Res() res: Response): Promise<Response> {
-    const getUserCrdentialsById = await this.userService.getUserCredentialsById(id);
+  async getUserCredentialsById (@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
+    const getUserCrdentialsById = await this.userService.getUserCredentialsById(credentialId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -273,7 +273,6 @@ export class UserController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
 
   /**
    *

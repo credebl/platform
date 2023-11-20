@@ -1,11 +1,6 @@
-import { BadRequestException } from '@nestjs/common/exceptions';
-
 export class WorldRecordTemplate {
-
-    public getWorldReccordTemplate(): string {
-  
-      try {
-        return `<!DOCTYPE html>
+  public getWorldReccordTemplate(): string {
+    return `<!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
@@ -23,9 +18,5 @@ export class WorldRecordTemplate {
             </div>
         </body>
         </html>`;
-       
-      } catch (error) {
-        throw new BadRequestException(`Template not found`);
-      }
-    }
   }
+}

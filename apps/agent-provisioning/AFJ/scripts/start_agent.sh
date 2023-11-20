@@ -16,21 +16,6 @@ TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 
-echo "-----$AGENCY-----"
-echo "-----$EXTERNAL_IP-----"
-echo "-----$WALLET_NAME-----"
-echo "-----$WALLET_PASSWORD-----"
-echo "-----$RANDOM_SEED-----"
-echo "-----$WEBHOOK_HOST-----"
-echo "-----$WALLET_STORAGE_HOST-----"
-echo "-----$WALLET_STORAGE_PORT-----"
-echo "-----$WALLET_STORAGE_USER-----"
-echo "-----$WALLET_STORAGE_PASSWORD-----"
-echo "-----$CONTAINER_NAME-----"
-echo "-----$PROTOCOL-----"
-echo "-----$TENANT-----"
-echo "-----$AFJ_VERSION-----"
-echo "-----$INDY_LEDGER-----"
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
@@ -195,9 +180,6 @@ if [ $? -eq 0 ]; then
     cat <<EOF >>${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
         "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
-        "CONTROLLER_IP" : "${CONTROLLER_IP}",
-        "CONTROLLER_PORT" : "${CONTROLLER_PORT}",
-        "POSTGRES_ENDPOINT" : "${POSTGRES_IP}:${POSTGRES_PORT}",
         "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
     }
 EOF

@@ -22,18 +22,63 @@ AWS_ACCOUNT_ID=${17}
 S3_BUCKET_ARN=${18}
 CLUSTER_NAME=${19}
 TESKDEFINITION_FAMILY=${20}
-ADMIN_PORT=$((8000 + AGENCY))
-INBOUND_PORT=$((9000 + AGENCY))
-CONTROLLER_PORT=$((3000 + AGENCY))
-POSTGRES_PORT=$((5432 + AGENCY))
 
 SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service"
 DESIRED_COUNT=1
-
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
+ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
+INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
+ADMIN_PORT=8001
+INBOUND_PORT=9001
+
+increment_port() {
+    local port="$1"
+    local lower_limit="$2"
+
+    while [ "$port" -le "$lower_limit" ]; do
+        port=$((port + 1))  # Increment the port using arithmetic expansion
+    done
+
+    echo "$port"
+}
+
+# Check if admin port file exists and if not, create and initialize it
+if [ ! -e "$ADMIN_PORT_FILE" ]; then
+    echo "$ADMIN_PORT" > "$ADMIN_PORT_FILE"
+fi
+
+# Read the last used admin port number from the file
+last_used_admin_port=$(cat "$ADMIN_PORT_FILE")
+echo "Last used admin port: $last_used_admin_port"
+
+# Increment the admin port number starting from the last used port
+last_used_admin_port=$(increment_port "$last_used_admin_port" "$last_used_admin_port")
+
+# Save the updated admin port number back to the file and update the global variable
+echo "$last_used_admin_port" > "$ADMIN_PORT_FILE"
+ADMIN_PORT="$last_used_admin_port"
+
+# Check if inbound port file exists and if not, create and initialize it
+if [ ! -e "$INBOUND_PORT_FILE" ]; then
+    echo "$INBOUND_PORT" > "$INBOUND_PORT_FILE"
+fi
+
+# Read the last used inbound port number from the file
+last_used_inbound_port=$(cat "$INBOUND_PORT_FILE")
+echo "Last used inbound port: $last_used_inbound_port"
+
+# Increment the inbound port number starting from the last used port
+last_used_inbound_port=$(increment_port "$last_used_inbound_port" "$last_used_inbound_port")
+
+# Save the updated inbound port number back to the file and update the global variable
+echo "$last_used_inbound_port" > "$INBOUND_PORT_FILE"
+INBOUND_PORT="$last_used_inbound_port"
+
+echo "Last used admin port: $ADMIN_PORT"
+echo "Last used inbound port: $INBOUND_PORT"
+echo "AGENT SPIN-UP STARTED"
 
 AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
-echo "AGENT SPIN-UP STARTED"
 
 cat <<EOF >>/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json
 {
@@ -89,11 +134,6 @@ CONTAINER_DEFINITIONS=$(
       {
         "containerPort": $INBOUND_PORT,
         "hostPort": $INBOUND_PORT,
-        "protocol": "tcp"
-      },
-      {
-        "containerPort": $CONTROLLER_PORT,
-        "hostPort": $CONTROLLER_PORT,
         "protocol": "tcp"
       }
     ],
@@ -196,9 +236,6 @@ if [ $? -eq 0 ]; then
   cat <<EOF >>${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
         "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
-        "CONTROLLER_IP" : "${CONTROLLER_IP}",
-        "CONTROLLER_PORT" : "${CONTROLLER_PORT}",
-        "POSTGRES_ENDPOINT" : "${POSTGRES_IP}:${POSTGRES_PORT}",
         "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
     }
 EOF

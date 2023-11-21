@@ -578,6 +578,23 @@ export class IssuanceService {
         throw new BadRequestException(`File header is empty`);
       }
 
+      // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+      const validateEmail = (email) => {
+        // Regular expression for a simple email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      };
+
+      // Extract and validate emails
+const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email));
+
+// Output invalid emails
+if (0 < invalidEmails.length) {
+  
+  throw new BadRequestException(`Invalid emails found in the chosen file`);
+  
+}
+
       const fileData: string[] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
 

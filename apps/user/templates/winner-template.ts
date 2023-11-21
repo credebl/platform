@@ -7,14 +7,15 @@ export class WinnerTemplate {
 
   async getWinnerTemplate(attributes: Attribute[]): Promise<string> {
     try {
-      const [name, issuedBy, date] = await Promise.all(attributes).then((attributes) => {
+      const [name, country, position, discipline, issuedBy, category] = await Promise.all(attributes).then((attributes) => {
         const name = this.findAttributeByName(attributes, 'full_name')?.full_name ?? '';
         const country = this.findAttributeByName(attributes, 'country')?.country ?? '';
         const position = this.findAttributeByName(attributes, 'position')?.position ?? '';
+        const discipline = this.findAttributeByName(attributes, 'discipline')?.discipline ?? '';
         const issuedBy = this.findAttributeByName(attributes, 'issued_by')?.issued_by ?? '';
         const category = this.findAttributeByName(attributes, 'category')?.category ?? '';
         const date = this.findAttributeByName(attributes, 'issued_date')?.issued_date ?? '';
-        return [name, country, position, issuedBy, category, date];
+        return [name, country, position, discipline, issuedBy, category, date];
       });
       return `<!DOCTYPE html>
       <html lang="en">
@@ -41,7 +42,7 @@ export class WinnerTemplate {
           }
       
           #textOverlay {
-          position: absolute;
+              position: absolute;
           top: 280px;
           left: 50%;
           transform: translateX(-50%);
@@ -55,31 +56,34 @@ export class WinnerTemplate {
       <body>
       
       <div id="container" style="">
-        <img id="backgroundImage" src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/background_image.png" alt="background"
-        style="height: 1000px; width: 770px;"
-        />
-        <div id="textOverlay" style="width: 760px; height: 450px;">
+      <img id="backgroundImage" src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/background_image.png" alt="background" 
+      style="height: 1000px; width: 770px;"/>
+        <div id="textOverlay" style="width: 780px; height: 450px;">
           <div>
               <p style="font-size: 50px; font-family: Inter; margin: 0;">CERTIFICATE</p>
-              <p style="font-size: 22px; font-family: Inter; margin: 0;"> OF ACHIEVEMENT</p>
+              <p style="font-size: 22px; font-family: Inter; margin: 0;"> OF EXCELLENCE</p>
           </div>
           
           <p style="font-size: 15px; font-family: Inter;margin: 15; margin-top: 15px;">IS PROUDLY PRESENTED TO</p>
-          <p style="font-size: 35px; font-style: italic;">${name}</p>
+          <p style="font-size: 30px; font-style: italic; ">${name}</p>
           
-          <span style="font-size: 16px;">You are the winner of our contest 
-              <span style="font-size: 16px; font-weight: bold; ">${issuedBy} World Memory Championship 2023.</span>
+          <p style="font-size: 16px; margin: 0;">has secured ${position} position for ${discipline} </p>
+              <p style="font-size: 16px; margin: 6px;">in ${category} category at the</p>
+              <p style="font-size: 16px;" >
+              <span style="font-size: 16px; font-weight: bold;"> ${issuedBy} World Memory Championship 2023.</span>
+              </p>
           </p>
           <p>
               <p style="font-size: 14px; margin: 0;">We acknowledge your dedication, hard work, and</p>
               <p style="font-size: 14px; margin: 0;">exceptional memory skills demonstrated during the competition.</p>
           </p>
-          <div style="font-family: Inter; font-weight: bold; font-size: 12px;">${date} | Place: Cidco Exhibition Centre, Navi Mumbai, India</div>
+          <div style="font-family: Inter; font-weight: bold; font-size: 12px;">Date: 24, 25, 26 November 2023 | Place: Cidco Exhibition Centre, Navi Mumbai, ${country}</div>
         </div>
       </div>
       
       </body>
-      </html>`;
+      </html>
+      `;
     } catch {}
   }
 }

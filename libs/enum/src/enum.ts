@@ -56,5 +56,5 @@ export enum UserCertificateId {
     WINNER = 'Winner',
     PARTICIPANT = 'Participant',
     ARBITER = 'Arbiter',
-    WORLD_RECORD = 'WORLD_RECORD'
+    WORLD_RECORD = 'WorldRecord'
 }

@@ -291,14 +291,60 @@ export class AgentServiceService {
       transports: ['websocket']
     });
 
-    return socket;
-  }
+        return agentSpinUpResponse.then(async (agentDetails) => {
+          if (agentDetails) {
+            const controllerEndpoints = JSON.parse(agentDetails);
+            const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${controllerEndpoints.CONTROLLER_ENDPOINT}`;
 
-  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus): Promise<org_agents> {
-    try {
-      const agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus);
-      this.logger.log(`Organization agent created with status: ${agentSpinUpStatus}`);
-      return agentProcess;
+            if (agentEndPoint && agentSpinupDto.clientSocketId) {
+              const socket = io(`${process.env.SOCKET_HOST}`, {
+                reconnection: true,
+                reconnectionDelay: 5000,
+                reconnectionAttempts: Infinity,
+                autoConnect: true,
+                transports: ['websocket']
+              });
+              socket.emit('agent-spinup-process-completed', { clientId: agentSpinupDto.clientSocketId });
+            }
+
+            const agentPayload: IStoreOrgAgentDetails = {
+              agentEndPoint,
+              seed: agentSpinupDto.seed,
+              apiKey: orgApiKey,
+              agentsTypeId: AgentType.AFJ,
+              orgId: orgData.id,
+              walletName: agentSpinupDto.walletName,
+              clientSocketId: agentSpinupDto.clientSocketId,
+              ledgerId,
+              did: agentSpinupDto.did
+            };
+
+            if (agentEndPoint && agentSpinupDto.clientSocketId) {
+              socket.emit('did-publish-process-initiated', { clientId: agentSpinupDto.clientSocketId });
+            }
+            const storeAgentDetails = await this._storeOrgAgentDetails(agentPayload);
+            if (agentSpinupDto.clientSocketId) {
+              socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
+            }
+
+            if (storeAgentDetails) {
+              if (agentSpinupDto.clientSocketId) {
+                socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
+              }
+              await this._createLegacyConnectionInvitation(orgData.id, user, walletProvisionPayload.orgName);
+              if (agentSpinupDto.clientSocketId) {
+                socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
+              }
+            }
+            resolve(storeAgentDetails);
+          } else {
+            throw new InternalServerErrorException('Agent not able to spin-up');
+          }
+        })
+          .catch((error) => {
+            _reject(error);
+          });
+      });
     } catch (error) {
 
       this.logger.error(`Error creating organization agent: ${error.message}`);

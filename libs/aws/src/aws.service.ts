@@ -15,30 +15,31 @@ export class AwsService {
       region: process.env.AWS_REGION
     });
     this.s4 = new S3({
+      
       accessKeyId: process.env.AWS_PUBLIC_ACCESS_KEY,
       secretAccessKey: process.env.AWS_PUBLIC_SECRET_KEY,
       region: process.env.AWS_PUBLIC_REGION
     });
   }
-
+ 
   async uploadUserCertificate(
     fileBuffer: Buffer,
     ext: string,
     verifyCode: string,
     pathAWS: string = '',
     encoding = 'base64',
-    filename: string = 'cerficate'
+    filename: string = 'certificate'
   ): Promise<string> {
     const timestamp = Date.now();
     const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
-  
     try {
       await putObjectAsync({
+
         Bucket: process.env.AWS_PUBLIC_BUCKET_NAME,
         Key: `${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`,
         Body: fileBuffer,
         ContentEncoding: encoding,
-        ContentType: `image/jpeg`
+        ContentType: `image/png`
       });
       return `https://${process.env.AWS_PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;     
     } catch (err) {

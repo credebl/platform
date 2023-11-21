@@ -376,6 +376,7 @@ export class IssuanceService {
 
       return allSuccessful;
     } catch (error) {
+      
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -903,6 +904,7 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(`Error completing bulk issuance process: ${error}`);
+      socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
       throw error;
     }
 

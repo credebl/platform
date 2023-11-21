@@ -915,7 +915,7 @@ export class IssuanceService {
         `error in issuanceBulkCredential for data ${JSON.stringify(jobDetails)} : ${JSON.stringify(error)}`
       );
       fileUploadData.isError = true;
-      fileUploadData.error = error.message;
+      fileUploadData.error = error.error;
       fileUploadData.detailError = `${JSON.stringify(error)}`;
     }
     await this.issuanceRepository.updateFileUploadData(fileUploadData);

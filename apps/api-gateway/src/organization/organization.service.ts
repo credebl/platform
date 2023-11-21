@@ -9,7 +9,6 @@ import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
-import * as puppeteer from 'puppeteer';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -144,14 +143,5 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
   }
 
-  async convertHtmlToImage(html: string): Promise<Buffer> {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
 
-    await page.setContent(html);
-    const screenshot = await page.screenshot({path: 'cert1.png'});
-
-    await browser.close();
-    return screenshot;
-  }
 }

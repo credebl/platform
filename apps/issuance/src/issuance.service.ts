@@ -293,7 +293,8 @@ export class IssuanceService {
               }
             },
             autoAcceptCredential: 'always',
-            comment
+            comment,
+            label: organizationDetails?.name
           };
 
 

@@ -43,7 +43,7 @@ export class IssuanceService {
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
   ) { }
 
- 
+
   async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -377,7 +377,7 @@ export class IssuanceService {
       return allSuccessful;
     } catch (error) {
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -486,11 +486,8 @@ export class IssuanceService {
 
       const filePath = join(process.cwd(), `uploadedFiles/exports`);
 
-
-      let processedFileName: string = credentialDefinitionId;
-      processedFileName = processedFileName.replace(/[\/:*?"<>|]/g, '_');
       const timestamp = Math.floor(Date.now() / 1000);
-      const fileName = `${processedFileName}-${timestamp}.csv`;
+      const fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       await createFile(filePath, fileName, csv);
       this.logger.log(`File created - ${fileName}`);
@@ -504,7 +501,7 @@ export class IssuanceService {
       const filePathToDownload = `${process.env.API_GATEWAY_PROTOCOL_SECURE}://${process.env.UPLOAD_LOGO_HOST}/${fileName}`;
       return {
         fileContent: filePathToDownload,
-        fileName: processedFileName
+        fileName
       };
     } catch (error) {
       throw new Error('An error occurred during CSV export.');
@@ -831,7 +828,7 @@ export class IssuanceService {
       autoConnect: true,
       transports: ['websocket']
     });
-  
+
     const fileUploadData: FileUploadData = {
       fileUpload: '',
       fileRow: '',
@@ -874,10 +871,10 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(
-        `error in issuanceBulkCredential for data ${jobDetails} : ${error}`
+        `error in issuanceBulkCredential for data ${JSON.stringify(jobDetails)} : ${JSON.stringify(error)}`
       );
       fileUploadData.isError = true;
-      fileUploadData.error = error.message;
+      fileUploadData.error = JSON.stringify(error.error) ? JSON.stringify(error.error) : JSON.stringify(error);
       fileUploadData.detailError = `${JSON.stringify(error)}`;
     }
     await this.issuanceRepository.updateFileUploadData(fileUploadData);
@@ -903,6 +900,7 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(`Error completing bulk issuance process: ${error}`);
+      throw error;
     }
 
   }

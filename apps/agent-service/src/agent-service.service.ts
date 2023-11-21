@@ -268,7 +268,7 @@ export class AgentServiceService {
         return agentSpinUpResponse.then(async (agentDetails) => {
           if (agentDetails) {
             const controllerEndpoints = JSON.parse(agentDetails);
-            const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${controllerEndpoints.CONTROLLER_ENDPOINT}`;
+            const agentEndPoint = `${process.env.AGENT_PROTOCOL}://${controllerEndpoints.CONTROLLER_ENDPOINT}`;
 
             if (agentEndPoint && agentSpinupDto.clientSocketId) {
               const socket = io(`${process.env.SOCKET_HOST}`, {
@@ -553,6 +553,9 @@ export class AgentServiceService {
                 ledgerId: payload.ledgerId
               };
 
+              const getOrgAgent = await this.agentServiceRepository.getOrgDetails(payload.orgId);
+              this.logger.log(`getOrgAgent::: ${JSON.stringify(getOrgAgent)}`);
+
               if (payload.clientSocketId) {
                 socket.emit('agent-spinup-process-completed', { clientId: payload.clientSocketId });
               }
@@ -563,7 +566,7 @@ export class AgentServiceService {
                 socket.emit('invitation-url-creation-started', { clientId: payload.clientSocketId });
               }
 
-              await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
+              await this._createLegacyConnectionInvitation(payload.orgId, user, getOrgAgent.name);
 
               if (payload.clientSocketId) {
                 socket.emit('invitation-url-creation-success', { clientId: payload.clientSocketId });

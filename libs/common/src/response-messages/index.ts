@@ -163,11 +163,11 @@ export const ResponseMessages = {
     },
     issuance: {
         success: {
-            create: 'Issue-credential offer created successfully',
-            fetch: 'Issue-credential fetched successfully',
+            create: 'Credentials offer created successfully',
+            fetch: 'Credentials fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
-            bulkIssuance: 'Bulk-issunace process started',
+            bulkIssuance: 'Issuance process started. It will take some time',
             notFound: 'Schema records not found'
         },
         error: {

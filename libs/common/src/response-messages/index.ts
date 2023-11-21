@@ -167,7 +167,7 @@ export const ResponseMessages = {
             fetch: 'Credentials fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
-            bulkIssuance: 'Issunace process started. It will take some time',
+            bulkIssuance: 'Issuance process started. It will take some time',
             notFound: 'Schema records not found'
         },
         error: {

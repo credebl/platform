@@ -1,54 +1,84 @@
 import { Attribute } from "../interfaces/user.interface";
 
 export class ParticipantTemplate {
-  public getParticipantTemplate(attributes: Attribute[]): string {
-    try {
-      const nameAttribute = attributes.find(attr => 'full_name' in attr);
-      const countryAttribute = attributes.find(attr => 'country' in attr);
-      const positionAttribute = attributes.find(attr => 'position' in attr);
-      const issuedByAttribute = attributes.find(attr => 'issued_by' in attr);
-      const categoryAttribute = attributes.find(attr => 'category' in attr);
-      const dateAttribute = attributes.find(attr => 'issued_date' in attr);
+  findAttributeByName(attributes: Attribute[], name: string): Attribute {
+    return attributes.find((attr) => name in attr);
+  }
 
-      const name = nameAttribute ? nameAttribute['full_name'] : '';
-      const country = countryAttribute ? countryAttribute['country'] : '';
-      const position = positionAttribute ? positionAttribute['position'] : '';
-      const issuedBy = issuedByAttribute ? issuedByAttribute['issued_by'] : '';
-      const category = categoryAttribute ? categoryAttribute['category'] : '';
-      const date = dateAttribute ? dateAttribute['issued_date'] : '';
+    async getParticipantTemplate(attributes: Attribute[]): Promise<string> {
+
+    try {
+      const [name, country, issuedBy] = await Promise.all(attributes).then((attributes) => {
+        const name = this.findAttributeByName(attributes, 'full_name')?.full_name ?? '';
+        const country = this.findAttributeByName(attributes, 'country')?.country ?? '';
+        const issuedBy = this.findAttributeByName(attributes, 'issued_by')?.issued_by ?? '';
+        return [name, country, issuedBy];
+      });
 
       return `<!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Certificate of Achievement</title>
-            </head>
-            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #000000;">
-
-                <div style="text-align: center; padding: 30px; background-color: #000000; border-radius: 12px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); margin: 50px auto; color: #ffffff;">
-                    <div style="font-size: 64px; margin-bottom: 20px; color: #ffd700;">🏆</div>
-                    <h1 style="color: #ffffff; margin-bottom: 15px; font-size: 32px;">Certificate of Achievement</h1>
-
-                    <h2 style="color: #ffffff; margin-bottom: 15px; font-size: 24px;">${name}</h2>
-                    <p style="color: #ffffff; margin-bottom: 30px; font-size: 18px;">has demonstrated outstanding performance and successfully completed the requirements for</p>
-
-                    <h3 style="color: #ffffff; margin-bottom: 15px; font-size: 28px;">Participant</h3>
-                    <p style="color: #ffffff; margin-bottom: 15px; font-size: 18px;">Position: ${position}</p>
-                    <p style="color: #ffffff; margin-bottom: 30px; font-size: 18px;">Issued by: ${issuedBy}</p>
-
-                    <div style="border-top: 2px solid #ffffff; margin: 30px 0;"></div>
-
-                    <p style="color: #ffffff; margin-top: 30px; font-size: 20px;">Country: ${country}</p>
-                    <p style="color: #ffffff; font-size: 20px;">Category: ${category}</p>
-
-                    <p style="color: #ffffff; margin-top: 30px; font-size: 20px;">Issued Date: ${date}</p>
-
-                    <p style="color: #ffffff; margin-top: 30px; font-size: 24px;">Congratulations!</p>
-                </div>
-
-            </body>
-            </html>`;
+      <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+        <style>
+          body {
+            margin: 0;
+            background-color: #f0f0f0; 
+          }
+      
+          #container {
+            padding: 0 20px; 
+          }
+      
+          #backgroundImage {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+          }
+      
+          #textOverlay {
+              position: absolute;
+          top: 280px;
+          left: 50%;
+          transform: translateX(-50%);
+          text-align: center;
+          color: #2B2B2A;
+          font-size: 24px; 
+            
+          }
+        </style>
+      </head>
+      <body>
+      
+      <div id="container" style="">
+      <img id="backgroundImage" src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/background_image.png" alt="background" 
+        style="height: 1000px; width: 770px;"
+        />
+        <div id="textOverlay" style="width: 760px; height: 450px;">
+          <div>
+              <p style="font-size: 50px; font-family: Inter; margin: 0;">CERTIFICATE</p>
+              <p style="font-size: 22px; font-family: Inter; margin: 0;"> OF ACHIEVEMENT</p>
+          </div>
+          
+          <p style="font-size: 15px; font-family: Inter;margin: 15; margin-top: 15px;">IS PROUDLY PRESENTED TO</p>
+          <p style="font-size: 35px; font-style: italic;">${name}</p>
+          
+          <span style="font-size: 16px;">for successfully participating in the 
+              <span style="font-size: 16px; font-weight: bold; ">${issuedBy} World Memory Championship 2023.</span>
+          </p>
+          <p>
+              <p style="font-size: 14px; margin: 0;">We acknowledge your dedication, hard work, and</p>
+              <p style="font-size: 14px; margin: 0;">exceptional memory skills demonstrated during the competition.</p>
+          </p>
+          <div style="font-family: Inter; font-weight: bold; font-size: 12px;">Date: 24, 25, 26 November 2023 | Place: Cidco Exhibition Centre, Navi Mumbai, ${country}</div>
+        </div>
+      </div>
+      
+      </body>
+      </html>`;
     } catch (error) {}
   }
 }

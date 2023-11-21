@@ -305,7 +305,9 @@ export class AgentServiceService {
               if (agentSpinupDto.clientSocketId) {
                 socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
               }
-              await this._createLegacyConnectionInvitation(orgData.id, user, agentPayload.walletName);
+
+              this.logger.log(`orgData.name ::: ${orgData.name}`);
+              await this._createLegacyConnectionInvitation(orgData.id, user, orgData.name);
               if (agentSpinupDto.clientSocketId) {
                 socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
               }

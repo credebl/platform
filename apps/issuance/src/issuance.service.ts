@@ -43,7 +43,7 @@ export class IssuanceService {
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
   ) { }
 
-
+ 
   async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -293,7 +293,8 @@ export class IssuanceService {
               }
             },
             autoAcceptCredential: 'always',
-            comment
+            comment,
+            label: organizationDetails?.name
           };
 
 
@@ -821,9 +822,16 @@ export class IssuanceService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  async processIssuanceData(jobDetails): Promise<boolean | object[]> {
-
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  async processIssuanceData(jobDetails) {
+    const socket = await io(`${process.env.SOCKET_HOST}`, {
+      reconnection: true,
+      reconnectionDelay: 5000,
+      reconnectionAttempts: Infinity,
+      autoConnect: true,
+      transports: ['websocket']
+    });
+  
     const fileUploadData: FileUploadData = {
       fileUpload: '',
       fileRow: '',
@@ -864,7 +872,6 @@ export class IssuanceService {
       if (oobCredentials) {
         await this.issuanceRepository.deleteFileDataByJobId(jobDetails.id);
       }
-      return oobCredentials;
     } catch (error) {
       this.logger.error(
         `error in issuanceBulkCredential for data ${jobDetails} : ${error}`
@@ -890,13 +897,8 @@ export class IssuanceService {
           });
         }
 
-        const socket = await io(`${process.env.SOCKET_HOST}`, {
-          reconnection: true,
-          reconnectionDelay: 5000,
-          reconnectionAttempts: Infinity,
-          autoConnect: true,
-          transports: ['websocket']
-        });
+        this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
+
         socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
       }
     } catch (error) {

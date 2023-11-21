@@ -43,7 +43,7 @@ export class IssuanceService {
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
   ) { }
 
- 
+
   async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -377,7 +377,7 @@ export class IssuanceService {
       return allSuccessful;
     } catch (error) {
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -831,7 +831,7 @@ export class IssuanceService {
       autoConnect: true,
       transports: ['websocket']
     });
-  
+
     const fileUploadData: FileUploadData = {
       fileUpload: '',
       fileRow: '',
@@ -874,7 +874,7 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(
-        `error in issuanceBulkCredential for data ${jobDetails} : ${error}`
+        `error in issuanceBulkCredential for data ${JSON.stringify(jobDetails)} : ${JSON.stringify(error)}`
       );
       fileUploadData.isError = true;
       fileUploadData.error = error.message;
@@ -903,6 +903,7 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(`Error completing bulk issuance process: ${error}`);
+      throw error;
     }
 
   }

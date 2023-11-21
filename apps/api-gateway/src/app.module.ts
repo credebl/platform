@@ -20,6 +20,9 @@ import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { EcosystemModule } from './ecosystem/ecosystem.module';
+import { BullModule } from '@nestjs/bull';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -42,7 +45,14 @@ import { EcosystemModule } from './ecosystem/ecosystem.module';
     UserModule,
     ConnectionModule,
     IssuanceModule,
-    EcosystemModule
+    EcosystemModule,
+    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT)
+      }
+    })
   ],
   controllers: [AppController],
   providers: [AppService]

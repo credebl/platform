@@ -344,6 +344,7 @@ export class VerificationService {
         proofRequestPayload: {
           protocolVersion,
           comment,
+          label: organizationDetails?.name,
           proofFormats: {
             indy: {
               name: 'Proof Request',

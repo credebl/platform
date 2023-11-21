@@ -59,11 +59,11 @@ export class IUserOrg {
 export interface FileExportResponse {
     response: unknown;
     fileContent: string;
-    fileName : string
+    fileName: string
 }
 
 export interface RequestPayload {
     credDefId: string;
-    filePath: string;
+    fileKey: string;
     fileName: string;
-  }
+}

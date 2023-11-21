@@ -599,7 +599,7 @@ export class UserService {
    *
    * @returns
    */
-  async shareUserCertificate(shareUserCertificate: ShareUserCertificate): Promise<string> {
+  async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<unknown> {
 
     const attributeArray = [];
     let attributeJson = {};

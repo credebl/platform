@@ -619,8 +619,46 @@ export class AgentServiceService {
 
       payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? ledgerIds : payload.ledgerId;
 
-      const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
-      const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
+            let tenantDetails;
+            const url = `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`;
+            for (const iterator of ledgerDetails) {
+              const { label, seed, did } = payload;
+              const createTenantOptions = {
+                config: {
+                  label
+                },
+                seed,
+                did: did ? did : undefined,
+                method: iterator.indyNamespace
+              };
+              const apiKey = '';
+              tenantDetails = await this.commonService
+                .httpPost(url, createTenantOptions, { headers: { 'x-api-key': apiKey } })
+                .then(async (tenant) => {
+                  this.logger.debug(`API Response Data: ${JSON.stringify(tenant)}`);
+                  return tenant;
+                });
+
+              const storeOrgAgentData: IStoreOrgAgentDetails = {
+                did: tenantDetails.did,
+                verkey: tenantDetails.verkey,
+                isDidPublic: true,
+                agentSpinUpStatus: 2,
+                agentsTypeId: AgentType.AFJ,
+                orgId: payload.orgId,
+                agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
+                orgAgentTypeId: OrgAgentType.SHARED,
+                tenantId: tenantDetails.tenantRecord.id,
+                walletName: label,
+                ledgerId: payload.ledgerId
+              };
+
+              const getOrgAgent = await this.agentServiceRepository.getOrgDetails(payload.orgId);
+              this.logger.log(`getOrgAgent::: ${JSON.stringify(getOrgAgent)}`);
+
+              if (payload.clientSocketId) {
+                socket.emit('agent-spinup-process-completed', { clientId: payload.clientSocketId });
+              }
 
       for (const iterator of ledgerDetails) {
         const tenantDetails = await this.createTenantAndNotify(payload, iterator, platformAdminSpinnedUp);
@@ -629,8 +667,7 @@ export class AgentServiceService {
           throw new NotFoundException('Platform-admin agent is not spun-up');
         }
 
-        const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-        const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
+              await this._createLegacyConnectionInvitation(payload.orgId, user, getOrgAgent.name);
 
         const storeOrgAgentData: IStoreOrgAgentDetails = {
           did: tenantDetails['did'],

@@ -51,3 +51,10 @@ export enum AgentSpinUpStatus {
     PROCESSED = 1,
     COMPLETED = 2
 }
+
+export enum UserCertificateId {
+    WINNER = 'Winner',
+    PARTICIPANT = 'Participant',
+    ARBITER = 'Arbiter',
+    WORLD_RECORD = 'WORLD_RECORD'
+}

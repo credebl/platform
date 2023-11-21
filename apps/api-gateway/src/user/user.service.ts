@@ -8,6 +8,7 @@ import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetails } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
+import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -23,6 +24,12 @@ export class UserService extends BaseService {
   async getPublicProfile(username: string): Promise<{ response: object }> {
     const payload = { username };
     return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
+  }
+
+
+  async getUserCredentialsById(credentialId: string): Promise<{ response: object }> {
+    const payload = { credentialId };
+    return this.sendNats(this.serviceProxy, 'get-user-credentials-by-id', payload);
   }
 
   async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<{ response: object }> {
@@ -50,6 +57,13 @@ export class UserService extends BaseService {
     return this.sendNats(this.serviceProxy, 'accept-reject-invitations', payload);
   }
 
+  async shareUserCertificate(
+    shareUserCredentials: CreateUserCertificateDto
+  ): Promise<{ response: Buffer }> {
+    const payload = { shareUserCredentials};
+    return this.sendNats(this.serviceProxy, 'share-user-certificate', payload);
+  }
+  
   async get(
     getAllUsersDto: GetAllUsersDto
   ): Promise<{ response: object }> {

@@ -553,6 +553,9 @@ export class AgentServiceService {
                 ledgerId: payload.ledgerId
               };
 
+              const getOrgAgent = await this.agentServiceRepository.getOrgDetails(payload.orgId);
+              this.logger.log(`getOrgAgent::: ${JSON.stringify(getOrgAgent)}`);
+
               if (payload.clientSocketId) {
                 socket.emit('agent-spinup-process-completed', { clientId: payload.clientSocketId });
               }
@@ -563,7 +566,7 @@ export class AgentServiceService {
                 socket.emit('invitation-url-creation-started', { clientId: payload.clientSocketId });
               }
 
-              await this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
+              await this._createLegacyConnectionInvitation(payload.orgId, user, getOrgAgent.name);
 
               if (payload.clientSocketId) {
                 socket.emit('invitation-url-creation-success', { clientId: payload.clientSocketId });

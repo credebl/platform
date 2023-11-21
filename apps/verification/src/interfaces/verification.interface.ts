@@ -84,12 +84,13 @@ export interface ISendProofRequestPayload {
     connectionId?: string;
     proofFormats: IProofFormats;
     autoAcceptProof: string;
+    label: string;
 }
 
 export interface IProofRequestPayload {
     url: string;
     apiKey: string;
-    proofRequestPayload: ISendProofRequestPayload
+    proofRequestPayload: ISendProofRequestPayload;
 }
 
 interface IWebhookPresentationProof {

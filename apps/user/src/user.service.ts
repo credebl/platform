@@ -547,10 +547,6 @@ export class UserService {
    * @returns
    */
   async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<unknown> {
-    const getAttributes = await this.userRepository.getAttributesBySchemaId(shareUserCertificate);
-    if (!getAttributes) {
-      throw new NotFoundException(ResponseMessages.schema.error.invalidSchemaId);
-    }
 
     const attributeArray = [];
     let attributeJson = {};

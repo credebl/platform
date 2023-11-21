@@ -486,11 +486,8 @@ export class IssuanceService {
 
       const filePath = join(process.cwd(), `uploadedFiles/exports`);
 
-
-      let processedFileName: string = credentialDefinitionId;
-      processedFileName = processedFileName.replace(/[\/:*?"<>|]/g, '_');
       const timestamp = Math.floor(Date.now() / 1000);
-      const fileName = `${processedFileName}-${timestamp}.csv`;
+      const fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       await createFile(filePath, fileName, csv);
       this.logger.log(`File created - ${fileName}`);
@@ -504,7 +501,7 @@ export class IssuanceService {
       const filePathToDownload = `${process.env.API_GATEWAY_PROTOCOL_SECURE}://${process.env.UPLOAD_LOGO_HOST}/${fileName}`;
       return {
         fileContent: filePathToDownload,
-        fileName: processedFileName
+        fileName
       };
     } catch (error) {
       throw new Error('An error occurred during CSV export.');

@@ -268,7 +268,7 @@ export class AgentServiceService {
         return agentSpinUpResponse.then(async (agentDetails) => {
           if (agentDetails) {
             const controllerEndpoints = JSON.parse(agentDetails);
-            const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${controllerEndpoints.CONTROLLER_ENDPOINT}`;
+            const agentEndPoint = `${process.env.AGENT_PROTOCOL}://${controllerEndpoints.CONTROLLER_ENDPOINT}`;
 
             if (agentEndPoint && agentSpinupDto.clientSocketId) {
               const socket = io(`${process.env.SOCKET_HOST}`, {

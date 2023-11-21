@@ -46,11 +46,11 @@ import { EcosystemConfigSettings, UserCertificateId } from '@credebl/enum/enum';
 import { WinnerTemplate } from '../templates/winner-template';
 import { ParticipantTemplate } from '../templates/participant-template';
 import { ArbiterTemplate } from '../templates/arbiter-template';
-import * as puppeteer from 'puppeteer';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { AwsService } from '@credebl/aws';
-import { readFileSync } from 'fs';
+import puppeteer from 'puppeteer';
+
 @Injectable()
 export class UserService {
   constructor(
@@ -639,7 +639,8 @@ export class UserService {
         throw new NotFoundException('error in get attributes');
     }
 
-    const imageBuffer = await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
+    const imageBuffer = 
+    await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
     const verifyCode = uuidv4();
 
     const imageUrl = await this.awsService.uploadUserCertificate(
@@ -649,7 +650,6 @@ export class UserService {
       'certificates',
       'base64'
     );
-
     const existCredentialId = await this.userRepository.getUserCredentialsById(shareUserCertificate.credentialId);
     
     if (existCredentialId) {
@@ -671,10 +671,12 @@ export class UserService {
 
   async convertHtmlToImage(template: string, credentialId: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
-      headless:'new'
+      executablePath: '/usr/bin/google-chrome', 
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true
     });
     const page = await browser.newPage();
-
+    await page.setViewport({ width: 1920, height: 1080 });
     await page.setContent(template);
     const screenshot = await page.screenshot();
     await browser.close();

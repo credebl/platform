@@ -337,7 +337,10 @@ export class IssuanceRepository {
                     ]
                 },
                 take: Number(getAllfileDetails?.pageSize),
-                skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize
+                skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
+                orderBy: {
+                    createDateTime: 'desc'
+                  }
             });
             const fileCount = await this.prisma.file_data.count({
                 where: {

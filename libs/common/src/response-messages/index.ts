@@ -15,6 +15,7 @@ export const ResponseMessages = {
             checkEmail: 'User email checked successfully.',
             sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
             userActivity: 'User activities fetched successfully',
+            userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched'
         },
@@ -40,7 +41,9 @@ export const ResponseMessages = {
             adduser: 'Unable to add user details',
             verifyEmail: 'The verification link has already been sent to your email address. please verify',
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
-            userNotRegisterd: 'The user has not yet completed the registration process'
+            userNotRegisterd: 'The user has not yet completed the registration process',
+            InvalidEmailDomain :'Email from this domain is not allowed',
+            credentialNotFound: 'User credentials not found'
         }
     },
     organisation: {
@@ -105,7 +108,8 @@ export const ResponseMessages = {
             notCreated: 'Schema not created',
             notFound: 'Schema records not found',
             schemaIdNotFound: 'SchemaLedgerId not found',
-            credentialDefinitionNotFound: 'No credential definition exist'
+            credentialDefinitionNotFound: 'No credential definition exist',
+            notStoredCredential: 'User credential not stored'
         }
     },
     credentialDefinition: {
@@ -159,11 +163,12 @@ export const ResponseMessages = {
     },
     issuance: {
         success: {
-            create: 'Issue-credential offer created successfully',
-            fetch: 'Issue-credential fetched successfully',
+            create: 'Credentials offer created successfully',
+            fetch: 'Credentials fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
-            bulkIssuance: 'Bulk-issunace process started'
+            bulkIssuance: 'Issuance process started. It will take some time',
+            notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -178,7 +183,11 @@ export const ResponseMessages = {
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',
             previewCachedData: 'Error while fetching cached data',
-            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request.'
+            emptyFileData: 'File details does not exit or removed',
+            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request',
+            fileNotFound: 'File details not found',
+            fileData: 'File data does not exist for the specific file',
+            retry: 'Credentials do not exist for retry'
         }
     },
     verification: {
@@ -265,7 +274,11 @@ export const ResponseMessages = {
             create: 'Issuance process successfully'
         },
         error: {
-            PathNotFound: 'Path to export data not found.'
+            PathNotFound: 'Path to export data not found.',
+            emailColumn: '1st column of the file should always be email.',
+            attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
+            mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
+            fileDetailsNotFound: 'File details not found.'
         }
     }
 };

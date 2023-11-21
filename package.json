@@ -49,6 +49,7 @@
     "@types/pdfkit": "^0.12.6",
     "async-retry": "^1.3.3",
     "auth0-js": "^9.22.1",
+    "aws-sdk": "^2.1492.0",
     "bcrypt": "^5.1.0",
     "blob-stream": "^0.1.3",
     "body-parser": "^1.20.1",
@@ -64,6 +65,7 @@
     "generate-password": "^1.7.0",
     "helmet": "^7.0.0",
     "html-pdf": "^3.0.1",
+    "html-to-image": "^1.11.11",
     "json2csv": "^5.0.7",
     "jsonwebtoken": "^9.0.1",
     "jwks-rsa": "^3.0.1",
@@ -74,6 +76,7 @@
     "nats": "^2.15.1",
     "nestjs-supabase-auth": "^1.0.9",
     "nestjs-typeorm-paginate": "^4.0.4",
+    "node-html-to-image": "^4.0.0",
     "node-qpdf2": "^2.0.0",
     "papaparse": "^5.4.1",
     "passport": "^0.6.0",
@@ -82,6 +85,7 @@
     "path": "^0.12.7",
     "pdfkit": "^0.13.0",
     "pg": "^8.11.2",
+    "puppeteer": "^21.5.0",
     "qrcode": "^1.5.3",
     "qs": "^6.11.2",
     "reflect-metadata": "^0.1.13",
@@ -93,6 +97,7 @@
     "typeorm": "^0.3.10",
     "unzipper": "^0.10.14",
     "uuid": "^9.0.0",
+    "validator": "^13.11.0",
     "web-push": "^3.6.4",
     "xml-js": "^1.6.11"
   },
@@ -170,7 +175,8 @@
       "^@credebl/user-org-roles(|/.*)$": "<rootDir>/libs/user-org-roles/src/$1",
       "^y/user-activity(|/.*)$": "<rootDir>/libs/user-activity/src/$1",
       "^@app/supabase(|/.*)$": "<rootDir>/libs/supabase/src/$1",
-      "^@credebl/image-service(|/.*)$": "<rootDir>/libs/image-service/src/$1"
+      "^@credebl/image-service(|/.*)$": "<rootDir>/libs/image-service/src/$1",
+      "^@credebl/aws(|/.*)$": "<rootDir>/libs/aws/src/$1"
     }
   }
 }

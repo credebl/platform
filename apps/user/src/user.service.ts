@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   ConflictException,
@@ -27,8 +28,10 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import {
   AddPasskeyDetails,
+  Attribute,
   InvitationsI,
   PlatformSettingsI,
+  ShareUserCertificateI,
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
@@ -39,7 +42,14 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { EcosystemConfigSettings } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, UserCertificateId } from '@credebl/enum/enum';
+import { WinnerTemplate } from '../templates/winner-template';
+import { ParticipantTemplate } from '../templates/participant-template';
+import { ArbiterTemplate } from '../templates/arbiter-template';
+import validator from 'validator';
+import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
+import { AwsService } from '@credebl/aws';
+import puppeteer from 'puppeteer';
 
 @Injectable()
 export class UserService {
@@ -52,6 +62,7 @@ export class UserService {
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
+    private readonly awsService: AwsService,
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
@@ -64,6 +75,16 @@ export class UserService {
    */
   async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
     try {
+      const { email } = userEmailVerificationDto;
+
+      if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
+        // eslint-disable-next-line prefer-destructuring
+        const domain = email.split('@')[1];
+
+        if (DISALLOWED_EMAIL_DOMAIN.includes(domain)) {
+          throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
+        }
+      }
       const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
 
       if (userDetails && userDetails.isEmailVerified) {
@@ -213,7 +234,7 @@ export class UserService {
         const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email);
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
-        
+
         if (!resUser) {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
@@ -222,7 +243,7 @@ export class UserService {
           password: decryptedPassword
         });
       } else {
-        const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);       
+        const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
 
         supaUser = await this.supabaseService.getClient().auth.signUp({
           email,
@@ -275,6 +296,12 @@ export class UserService {
     }
   }
 
+  private validateEmail(email: string): void {
+    if (!validator.isEmail(email)) {
+      throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+    }
+  }
+
   /**
    *
    * @param loginUserDto
@@ -282,7 +309,9 @@ export class UserService {
    */
   async login(loginUserDto: LoginUserDto): Promise<object> {
     const { email, password, isPasskey } = loginUserDto;
+
     try {
+      this.validateEmail(email);
       const userData = await this.userRepository.checkUserExist(email);
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
@@ -312,14 +341,13 @@ export class UserService {
 
   async generateToken(email: string, password: string): Promise<object> {
     try {
-
       const supaInstance = await this.supabaseService.getClient();
       this.logger.error(`supaInstance::`, supaInstance);
-            
+
       const { data, error } = await supaInstance.auth.signInWithPassword({
         email,
         password
-      });   
+      });
 
       this.logger.error(`Supa Login Error::`, JSON.stringify(error));
 
@@ -337,21 +365,16 @@ export class UserService {
   async getProfile(payload: { id }): Promise<object> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-      const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany(
-        {
-          where:{
-            OR: [
-              { key: EcosystemConfigSettings.ENABLE_ECOSYSTEM },
-              { key: EcosystemConfigSettings.MULTI_ECOSYSTEM }
-            ]
-          }
+      const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany({
+        where: {
+          OR: [{ key: EcosystemConfigSettings.ENABLE_ECOSYSTEM }, { key: EcosystemConfigSettings.MULTI_ECOSYSTEM }]
         }
-      );      
+      });
 
       for (const setting of ecosystemSettingsList) {
         userData[setting.key] = 'true' === setting.value;
       }
-  
+
       return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
@@ -368,6 +391,19 @@ export class UserService {
       }
 
       return userProfile;
+    } catch (error) {
+      this.logger.error(`get user: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getUserCredentialsById(payload: { credentialId }): Promise<object> {
+    try {
+      const userCredentials = await this.userRepository.getUserCredentialsById(payload.credentialId);
+      if (!userCredentials) {
+        throw new NotFoundException(ResponseMessages.user.error.credentialNotFound);
+      }
+      return userCredentials;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -507,6 +543,91 @@ export class UserService {
 
   /**
    *
+   * @returns
+   */
+  async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<unknown> {
+    const getAttributes = await this.userRepository.getAttributesBySchemaId(shareUserCertificate);
+    if (!getAttributes) {
+      throw new NotFoundException(ResponseMessages.schema.error.invalidSchemaId);
+    }
+
+    const attributeArray = [];
+    let attributeJson = {};
+    const attributePromises = shareUserCertificate.attributes.map(async (iterator: Attribute) => {
+      attributeJson = {
+        [iterator.name]: iterator.value
+      };
+      attributeArray.push(attributeJson);
+    });
+    await Promise.all(attributePromises);
+    let template;
+
+    switch (shareUserCertificate.schemaId.split(':')[2]) {
+      case UserCertificateId.WINNER:
+        // eslint-disable-next-line no-case-declarations
+        const userWinnerTemplate = new WinnerTemplate();
+        template = await userWinnerTemplate.getWinnerTemplate(attributeArray);
+        break;
+      case UserCertificateId.PARTICIPANT:
+        // eslint-disable-next-line no-case-declarations
+        const userParticipantTemplate = new ParticipantTemplate();
+        template = await userParticipantTemplate.getParticipantTemplate(attributeArray);
+        break;
+      case UserCertificateId.ARBITER:
+        // eslint-disable-next-line no-case-declarations
+        const userArbiterTemplate = new ArbiterTemplate();
+        template = await userArbiterTemplate.getArbiterTemplate(attributeArray);
+        break;
+      default:
+        throw new NotFoundException('error in get attributes');
+    }
+
+    const imageBuffer = 
+    await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
+    const verifyCode = uuidv4();
+
+    const imageUrl = await this.awsService.uploadUserCertificate(
+      imageBuffer,
+      'jpeg',
+      verifyCode,
+      'certificates',
+      'base64'
+    );
+    const existCredentialId = await this.userRepository.getUserCredentialsById(shareUserCertificate.credentialId);
+    
+    if (existCredentialId) {
+      return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
+    }
+
+    const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareUserCertificate.credentialId);
+
+    if (!saveCredentialData) {
+      throw new BadRequestException(ResponseMessages.schema.error.notStoredCredential);
+    }
+
+    return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
+  }
+
+  async saveCertificateUrl(imageUrl: string, credentialId: string): Promise<unknown> {
+    return this.userRepository.saveCertificateImageUrl(imageUrl, credentialId);
+  }
+
+  async convertHtmlToImage(template: string, credentialId: string): Promise<Buffer> {
+    const browser = await puppeteer.launch({
+      executablePath: '/usr/bin/google-chrome', 
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true
+    });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setContent(template);
+    const screenshot = await page.screenshot();
+    await browser.close();
+    return screenshot;
+  }
+
+  /**
+   *
    * @param acceptRejectInvitation
    * @param userId
    * @param email
@@ -635,7 +756,7 @@ export class UserService {
   async updatePlatformSettings(platformSettings: PlatformSettingsI): Promise<string> {
     try {
       const platformConfigSettings = await this.userRepository.updatePlatformSettings(platformSettings);
-      
+
       if (!platformConfigSettings) {
         throw new BadRequestException(ResponseMessages.user.error.notUpdatePlatformSettings);
       }
@@ -655,7 +776,7 @@ export class UserService {
       if (0 === eosystemKeys.length) {
         return ResponseMessages.user.success.platformEcosystemettings;
       }
-      
+
       const ecosystemSettings = await this.userRepository.updateEcosystemSettings(eosystemKeys, ecosystemobj);
 
       if (!ecosystemSettings) {
@@ -663,7 +784,6 @@ export class UserService {
       }
 
       return ResponseMessages.user.success.platformEcosystemettings;
-
     } catch (error) {
       this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -671,29 +791,27 @@ export class UserService {
   }
 
   async getPlatformEcosystemSettings(): Promise<object> {
-      try {
+    try {
+      const platformSettings = {};
+      const platformConfigSettings = await this.userRepository.getPlatformSettings();
 
-        const platformSettings = {};
-        const platformConfigSettings = await this.userRepository.getPlatformSettings();
-        
-        if (!platformConfigSettings) {
-          throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound);
-        }
-  
-        const ecosystemConfigSettings = await this.userRepository.getEcosystemSettings();
-  
-        if (!ecosystemConfigSettings) {
-          throw new BadRequestException(ResponseMessages.user.error.ecosystemSetttingsNotFound);
-        }
-
-        platformSettings['platform_config'] = platformConfigSettings;
-        platformSettings['ecosystem_config'] = ecosystemConfigSettings;
-
-        return platformSettings;
-  
-      } catch (error) {
-        this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
-        throw new RpcException(error.response ? error.response : error);
+      if (!platformConfigSettings) {
+        throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound);
       }
+
+      const ecosystemConfigSettings = await this.userRepository.getEcosystemSettings();
+
+      if (!ecosystemConfigSettings) {
+        throw new BadRequestException(ResponseMessages.user.error.ecosystemSetttingsNotFound);
+      }
+
+      platformSettings['platform_config'] = platformConfigSettings;
+      platformSettings['ecosystem_config'] = ecosystemConfigSettings;
+
+      return platformSettings;
+    } catch (error) {
+      this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 }

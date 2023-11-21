@@ -142,4 +142,6 @@ export class OrganizationService extends BaseService {
 
     return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
   }
+
+
 }

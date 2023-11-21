@@ -8,7 +8,8 @@ import { IssuanceRepository } from './issuance.repository';
 import { IssuanceService } from './issuance.service';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-
+import { BulkIssuanceProcessor } from './issuance.processor';
+import { AwsService } from '@credebl/aws';
 
 @Module({
   imports: [
@@ -25,6 +26,6 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
     CommonModule
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto]
+  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService]
 })
 export class IssuanceModule { }

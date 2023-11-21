@@ -168,7 +168,7 @@ export class CredentialDefinitionRepository {
         }
     }
 
- 
+
     async getAllCredDefsByOrgIdForBulk(payload: BulkCredDefSchema): Promise<CredDefSchema[]> {
         try {
             const { credDefSortBy, sortValue, orgId } = payload;
@@ -190,7 +190,7 @@ export class CredentialDefinitionRepository {
             });
 
             const schemaLedgerIdArray = credentialDefinitions.map((credDef) => credDef.schemaLedgerId);
-    
+
             const schemas = await this.prisma.schema.findMany({
                 where: {
                     schemaLedgerId: {
@@ -201,10 +201,11 @@ export class CredentialDefinitionRepository {
                     name: true,
                     version: true,
                     schemaLedgerId: true,
-                    orgId: true
+                    orgId: true,
+                    attributes: true
                 }
             });
-    
+
 
             // Match Credential Definitions with Schemas and map to CredDefSchema
             const matchingSchemas = credentialDefinitions.map((credDef) => {
@@ -213,12 +214,16 @@ export class CredentialDefinitionRepository {
                 if (matchingSchema) {
                     return {
                         credentialDefinitionId: credDef.credentialDefinitionId,
-                        schemaCredDefName: `${matchingSchema.name}:${matchingSchema.version}-${credDef.tag}`
+                        schemaCredDefName: `${matchingSchema.name}:${matchingSchema.version}-${credDef.tag}`,
+                        schemaName: matchingSchema.name,
+                        schemaVersion: matchingSchema.version,
+                        schemaAttributes: matchingSchema.attributes,
+                        credentialDefinition: credDef.tag
                     };
                 }
                 return null;
             });
-    
+
             // Filter out null values (missing schemas) and return the result
             return matchingSchemas.filter((schema) => null !== schema) as CredDefSchema[];
         } catch (error) {
@@ -226,20 +231,6 @@ export class CredentialDefinitionRepository {
             throw error;
         }
     }
-    
-    async getOrgAgentType(orgAgentId: string): Promise<string> {
-        try {
-    
-          const { agent } = await this.prisma.org_agents_type.findFirst({
-            where: {
-              id: orgAgentId
-            }
-          });
-    
-          return agent;
-        } catch (error) {
-          this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
-          throw error;
-        }
-      }
+
+
 }

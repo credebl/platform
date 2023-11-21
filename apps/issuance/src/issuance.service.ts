@@ -543,7 +543,7 @@ export class IssuanceService {
       // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
       const validateEmail = (email) => {
         // Regular expression for a simple email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
         return emailRegex.test(email);
       };
 

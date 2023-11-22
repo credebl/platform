@@ -619,6 +619,4 @@ export class IssuanceController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
-
-
 }

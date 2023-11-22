@@ -331,7 +331,8 @@ export class IssuanceService {
               }
             },
             autoAcceptCredential: 'always',
-            comment
+            comment,
+            label: organizationDetails?.name
           };
 
 
@@ -531,11 +532,8 @@ export class IssuanceService {
 
       const filePath = join(process.cwd(), `uploadedFiles/exports`);
 
-
-      let processedFileName: string = credentialDefinitionId;
-      processedFileName = processedFileName.replace(/[\/:*?"<>|]/g, '_');
       const timestamp = Math.floor(Date.now() / 1000);
-      const fileName = `${processedFileName}-${timestamp}.csv`;
+      const fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       await createFile(filePath, fileName, csv);
       this.logger.log(`File created - ${fileName}`);
@@ -549,7 +547,7 @@ export class IssuanceService {
       const filePathToDownload = `${process.env.API_GATEWAY_PROTOCOL_SECURE}://${process.env.UPLOAD_LOGO_HOST}/${fileName}`;
       return {
         fileContent: filePathToDownload,
-        fileName: processedFileName
+        fileName
       };
     } catch (error) {
       throw new Error('An error occurred during CSV export.');
@@ -587,6 +585,23 @@ export class IssuanceService {
       if (0 >= parsedData.meta.fields.length) {
         throw new BadRequestException(`File header is empty`);
       }
+
+      // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+      const validateEmail = (email) => {
+        // Regular expression for a simple email validation
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+        return emailRegex.test(email);
+      };
+
+      // Extract and validate emails
+const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email));
+
+// Output invalid emails
+if (0 < invalidEmails.length) {
+  
+  throw new BadRequestException(`Invalid emails found in the chosen file`);
+  
+}
 
       const fileData: string[] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
@@ -877,7 +892,7 @@ export class IssuanceService {
       autoConnect: true,
       transports: ['websocket']
     });
-  
+
     const fileUploadData: FileUploadData = {
       fileUpload: '',
       fileRow: '',
@@ -920,10 +935,10 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(
-        `error in issuanceBulkCredential for data ${jobDetails} : ${error}`
+        `error in issuanceBulkCredential for data ${JSON.stringify(jobDetails)} : ${JSON.stringify(error)}`
       );
       fileUploadData.isError = true;
-      fileUploadData.error = error.message;
+      fileUploadData.error = JSON.stringify(error.error) ? JSON.stringify(error.error) : JSON.stringify(error);
       fileUploadData.detailError = `${JSON.stringify(error)}`;
     }
     await this.issuanceRepository.updateFileUploadData(fileUploadData);
@@ -949,6 +964,7 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(`Error completing bulk issuance process: ${error}`);
+      throw error;
     }
 
   }

@@ -599,11 +599,13 @@ export class AgentServiceService {
           id: agentProcess.id
         };
 
+        const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
+
         this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
         const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
         this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
-        this._createLegacyConnectionInvitation(payload.orgId, user, storeOrgAgentData.walletName);
+        this._createLegacyConnectionInvitation(payload.orgId, user, getOrganization.name);
 
         this.notifyClientSocket('invitation-url-creation-success', payload.clientSocketId);
 
@@ -894,7 +896,7 @@ export class AgentServiceService {
       throw error;
     }
   }
-  
+
   async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
     try {
       const sendProofRequest = await this.commonService
@@ -936,7 +938,7 @@ export class AgentServiceService {
       const data = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })
         .then(async response => response);
-    
+
       return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);

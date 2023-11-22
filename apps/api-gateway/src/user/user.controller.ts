@@ -310,15 +310,19 @@ export class UserController {
   async shareUserCertificate(
     @Body() shareUserCredentials: CreateUserCertificateDto,
     @Res() res: Response
-  ): Promise<object> {
-    const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
+  ): Promise<object> {  
+    const schemaIdParts = shareUserCredentials.schemaId.split(':');
+    // eslint-disable-next-line prefer-destructuring
+    const title = schemaIdParts[2];
 
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: 'Certificate url generated successfully',
-      data: imageBuffer.response
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+   const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: 'Certificate url generated successfully',
+        label: title,
+        data: imageBuffer.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Put('/')

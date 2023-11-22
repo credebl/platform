@@ -1,6 +1,6 @@
 export class OutOfBandIssuance {
 
-    public outOfBandIssuance(email: string, orgName: string): string {
+    public outOfBandIssuance(email: string, orgName: string, agentEndPoint:string): string {
         try {
             return `<!DOCTYPE html>
             <html lang="en">
@@ -19,7 +19,7 @@ export class OutOfBandIssuance {
                     <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
                     font-size: 15px; line-height: 24px;color: #5E5873;">
                         <p style="margin-top:0px">
-                            Hello ${email} ,
+                            Hello user ,
                         </p>
                         <p>
                         The organization ${orgName} has requested your assistance in issuing your credentials. 
@@ -31,6 +31,12 @@ export class OutOfBandIssuance {
                                 <li>Accept the Credential Document request.</li>
                                 <li>Check your wallet to access the issued Credential Document.</li>
                             </ul>
+                            <div style="text-align: center; padding-bottom: 20px;">
+                            <a clicktracking=off href="${agentEndPoint}"
+                                style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
+                                Accept Credential
+                            </a>
+                        </div>
                             Should you require any assistance or have questions, feel free to contact our dedicated support team.
                          </p>
 

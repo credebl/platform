@@ -590,7 +590,7 @@ export class UserService {
 
     const imageUrl = await this.awsService.uploadUserCertificate(
       imageBuffer,
-      'png',
+      'svg',
       verifyCode,
       'certificates',
       'base64'
@@ -619,10 +619,11 @@ export class UserService {
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/google-chrome', 
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      protocolTimeout: 200000,
       headless: true
     });
     const page = await browser.newPage();
-    await page.setViewport({ width: 800, height: 1020, deviceScaleFactor: 6});
+    await page.setViewport({ width: 0, height: 1000, deviceScaleFactor: 2});
     await page.setContent(template);
     const screenshot = await page.screenshot();
     await browser.close();

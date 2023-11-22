@@ -32,6 +32,7 @@ import { io } from 'socket.io-client';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
+  private  isErrorOccurred: boolean;
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
@@ -41,7 +42,8 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
-  ) { }
+    
+  ) { this.isErrorOccurred = false; }
 
 
   async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
@@ -376,6 +378,7 @@ export class IssuanceService {
 
       return allSuccessful;
     } catch (error) {
+      
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -548,14 +551,14 @@ export class IssuanceService {
       };
 
       // Extract and validate emails
-const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email));
+      const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email));
 
-// Output invalid emails
-if (0 < invalidEmails.length) {
-  
-  throw new BadRequestException(`Invalid emails found in the chosen file`);
-  
-}
+      // Output invalid emails
+      if (0 < invalidEmails.length) {
+
+        throw new BadRequestException(`Invalid emails found in the chosen file`);
+
+      }
 
       const fileData: string[] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
@@ -781,7 +784,6 @@ if (0 < invalidEmails.length) {
 
   async retryBulkCredential(fileId: string, orgId: number, clientId: string): Promise<string> {
     let respFile;
-    let respFileUpload;
 
     try {
 
@@ -789,8 +791,6 @@ if (0 < invalidEmails.length) {
       if (!fileDetails) {
         throw new BadRequestException(ResponseMessages.issuance.error.retry);
       }
-
-      respFileUpload = await this.issuanceRepository.updateFileUploadStatus(fileId);
       respFile = await this.issuanceRepository.getFailedCredentials(fileId);
 
       if (0 === respFile.length) {
@@ -813,7 +813,7 @@ if (0 < invalidEmails.length) {
             isLastData: respFile.indexOf(element) === respFile.length - 1
           };
 
-          await this.processIssuanceData(payload);
+           this.processIssuanceData(payload);
         } catch (error) {
           // Handle errors if needed
           this.logger.error(`Error processing issuance data: ${error}`);
@@ -823,21 +823,12 @@ if (0 < invalidEmails.length) {
       return 'Process reinitiated for bulk issuance';
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
-    } finally {
-      // Update file upload details in the database
-      if (respFileUpload && respFileUpload.id) {
-        const fileUpload = {
-          status: FileUploadStatus.interrupted,
-          lastChangedDateTime: new Date()
-        };
-
-        await this.issuanceRepository.updateFileUploadDetails(respFileUpload.id, fileUpload);
-      }
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
   async processIssuanceData(jobDetails) {
+   
     const socket = await io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,
       reconnectionDelay: 5000,
@@ -864,8 +855,10 @@ if (0 < invalidEmails.length) {
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
     fileUploadData.jobId = jobDetails.id;
-    try {
 
+    let isErrorOccurred = false;
+    try {
+      
       const oobIssuancepayload = {
         credentialDefinitionId: jobDetails.credentialDefinitionId,
         orgId: jobDetails.orgId,
@@ -893,31 +886,41 @@ if (0 < invalidEmails.length) {
       fileUploadData.isError = true;
       fileUploadData.error = JSON.stringify(error.error) ? JSON.stringify(error.error) : JSON.stringify(error);
       fileUploadData.detailError = `${JSON.stringify(error)}`;
+      if (!isErrorOccurred) {
+        isErrorOccurred = true;
+        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
+      }
+
     }
     await this.issuanceRepository.updateFileUploadData(fileUploadData);
 
     try {
       if (jobDetails.isLastData) {
+        const errorCount = await this.issuanceRepository.countErrorsForFile(jobDetails.fileUploadId);
+        const status =
+          0 === errorCount ? FileUploadStatus.completed : FileUploadStatus.partially_completed;
+
         if (!jobDetails.isRetry) {
           this.cacheManager.del(jobDetails.cacheId);
-          await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
-            status: FileUploadStatus.completed,
-            lastChangedDateTime: new Date()
-          });
-        } else {
-          await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
-            status: FileUploadStatus.completed,
-            lastChangedDateTime: new Date()
-          });
         }
+
+        await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
+          status,
+          lastChangedDateTime: new Date()
+        });
 
         this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
 
         socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
       }
     } catch (error) {
-      this.logger.error(`Error completing bulk issuance process: ${error}`);
+      this.logger.error(`Error in completing bulk issuance process: ${error}`);
+      if (!isErrorOccurred) {
+        isErrorOccurred = true;
+        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
+      }
       throw error;
+     
     }
 
   }

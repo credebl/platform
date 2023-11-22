@@ -548,14 +548,14 @@ export class IssuanceService {
       };
 
       // Extract and validate emails
-const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email));
+      const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email));
 
-// Output invalid emails
-if (0 < invalidEmails.length) {
-  
-  throw new BadRequestException(`Invalid emails found in the chosen file`);
-  
-}
+      // Output invalid emails
+      if (0 < invalidEmails.length) {
+
+        throw new BadRequestException(`Invalid emails found in the chosen file`);
+
+      }
 
       const fileData: string[] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
@@ -781,7 +781,6 @@ if (0 < invalidEmails.length) {
 
   async retryBulkCredential(fileId: string, orgId: number, clientId: string): Promise<string> {
     let respFile;
-    let respFileUpload;
 
     try {
 
@@ -789,8 +788,6 @@ if (0 < invalidEmails.length) {
       if (!fileDetails) {
         throw new BadRequestException(ResponseMessages.issuance.error.retry);
       }
-
-      respFileUpload = await this.issuanceRepository.updateFileUploadStatus(fileId);
       respFile = await this.issuanceRepository.getFailedCredentials(fileId);
 
       if (0 === respFile.length) {
@@ -813,7 +810,7 @@ if (0 < invalidEmails.length) {
             isLastData: respFile.indexOf(element) === respFile.length - 1
           };
 
-          await this.processIssuanceData(payload);
+           this.processIssuanceData(payload);
         } catch (error) {
           // Handle errors if needed
           this.logger.error(`Error processing issuance data: ${error}`);
@@ -823,16 +820,6 @@ if (0 < invalidEmails.length) {
       return 'Process reinitiated for bulk issuance';
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
-    } finally {
-      // Update file upload details in the database
-      if (respFileUpload && respFileUpload.id) {
-        const fileUpload = {
-          status: FileUploadStatus.interrupted,
-          lastChangedDateTime: new Date()
-        };
-
-        await this.issuanceRepository.updateFileUploadDetails(respFileUpload.id, fileUpload);
-      }
     }
   }
 
@@ -898,18 +885,18 @@ if (0 < invalidEmails.length) {
 
     try {
       if (jobDetails.isLastData) {
+        const errorCount = await this.issuanceRepository.countErrorsForFile(jobDetails.fileUploadId);
+        const status =
+          0 === errorCount ? FileUploadStatus.completed : FileUploadStatus.partially_completed;
+
         if (!jobDetails.isRetry) {
           this.cacheManager.del(jobDetails.cacheId);
-          await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
-            status: FileUploadStatus.completed,
-            lastChangedDateTime: new Date()
-          });
-        } else {
-          await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
-            status: FileUploadStatus.completed,
-            lastChangedDateTime: new Date()
-          });
         }
+
+        await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
+          status,
+          lastChangedDateTime: new Date()
+        });
 
         this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
 

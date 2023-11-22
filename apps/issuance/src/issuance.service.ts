@@ -32,6 +32,7 @@ import { io } from 'socket.io-client';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
+  private  isErrorOccurred: boolean;
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
@@ -41,7 +42,8 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
-  ) { }
+    
+  ) { this.isErrorOccurred = false; }
 
 
   async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
@@ -912,8 +914,12 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(`Error in completing bulk issuance process: ${error}`);
-
+      if (!isErrorOccurred) {
+        isErrorOccurred = true;
+        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
+      }
       throw error;
+     
     }
 
   }

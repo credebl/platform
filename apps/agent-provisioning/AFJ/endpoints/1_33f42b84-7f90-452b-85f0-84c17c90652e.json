@@ -1,0 +1,7 @@
+    {
+        "CONTROLLER_ENDPOINT":"192.168.1.85:8001",
+        "CONTROLLER_IP" : "10.20.0.4",
+        "CONTROLLER_PORT" : "3001",
+        "POSTGRES_ENDPOINT" : "10.20.0.3:5433",
+        "AGENT_ENDPOINT" : "10.20.0.2:8001"
+    }

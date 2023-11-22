@@ -50,6 +50,7 @@ export const ResponseMessages = {
         success: {
             create: 'Organization created successfully',
             update: 'Organization updated successfully',
+            delete: 'Organization deleted successfully',
             fetchProfile: 'Organization profile fetched successfully',
             fetchOrgRoles: 'Organization roles fetched successfully',
             createInvitation: 'Organization invitations sent',
@@ -65,7 +66,9 @@ export const ResponseMessages = {
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
-            updateUserRoles: 'Unable to update user roles'
+            updateUserRoles: 'Unable to update user roles',
+            deleteOrg: 'Organization not found',
+            notFound: 'Organization agent not found'
         }
 
     },

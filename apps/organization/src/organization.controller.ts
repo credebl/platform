@@ -10,7 +10,7 @@ import { IUpdateOrganization } from '../interfaces/organization.interface';
 
 @Controller()
 export class OrganizationController {
-  constructor(private readonly organizationService: OrganizationService) {}
+  constructor(private readonly organizationService: OrganizationService) { }
   private readonly logger = new Logger('OrganizationController');
 
   /**
@@ -103,6 +103,7 @@ export class OrganizationController {
     return this.organizationService.getOrgRoles();
   }
 
+
   /**
    * Description: create new organization invitation
    * @param payload invitation Details
@@ -157,5 +158,10 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'fetch-organization-profile' })
   async getOgPofile(payload: { orgId: number }): Promise<object> {
     return this.organizationService.getOgPofile(payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'delete-organization' })
+  async deleteOrganization(payload: { orgId: number }): Promise<boolean> {
+    return this.organizationService.deleteOrganization(payload.orgId);
   }
 }

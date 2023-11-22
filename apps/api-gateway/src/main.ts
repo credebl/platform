@@ -7,7 +7,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AllExceptionsFilter } from '@credebl/common/exception-handler';
-import helmet from "helmet";
+// import helmet from "helmet";
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -18,16 +18,16 @@ async function bootstrap(): Promise<void> {
   expressApp.set('x-powered-by', false);
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb' }));
-  app.use(helmet({
-    xssFilter:true
-  }));
+  // app.use(helmet({
+  //   xssFilter:true
+  // }));
   app.useGlobalPipes(new ValidationPipe());
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)
     .setVersion('1.0')
     .addBearerAuth()
-    .addServer('http://localhost:5000')
+    .addServer('http://192.168.1.85:5000')
     .addServer('https://devapi.credebl.id')
     .addServer('https://qa-api.credebl.id')
     .addServer('https://api.credebl.id')

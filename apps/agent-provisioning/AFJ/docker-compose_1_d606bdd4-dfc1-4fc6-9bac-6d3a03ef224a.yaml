@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  agent:
+    image: afj-0.4.2:latest
+
+    container_name: agent1_d606bdd4-dfc1-4fc6-9bac-6d3a03ef224a
+    restart: always
+    environment:
+      AFJ_REST_LOG_LEVEL: 1
+    ports:
+     - 9001:9001
+     - 8001:8001
+   
+    volumes: 
+      - ./agent-config/1_d606bdd4-dfc1-4fc6-9bac-6d3a03ef224a.json:/config.json   
+      
+    command: --auto-accept-connections --config /config.json
+      
+volumes:
+  pgdata:
+  agent-indy_client:
+  agent-tmp:

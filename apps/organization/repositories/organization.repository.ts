@@ -1,9 +1,9 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable camelcase */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { org_invitations, user_org_roles } from '@prisma/client';
+import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IUpdateOrganization } from '../interfaces/organization.interface';
@@ -12,6 +12,7 @@ import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class OrganizationRepository {
@@ -478,4 +479,49 @@ export class OrganizationRepository {
     }
   }
 
+  async getAgentEndPoint(orgId: number): Promise<org_agents> {
+    try {
+
+        const agentDetails = await this.prisma.org_agents.findFirst({
+            where: {
+                orgId
+            }
+        });
+
+        if (!agentDetails) {
+            throw new NotFoundException(ResponseMessages.organisation.error.notFound);
+        }
+
+        return agentDetails;
+
+    } catch (error) {
+        this.logger.error(`Error in get getAgentEndPoint: ${error.message} `);
+        throw error;
+    }
+}
+
+  async deleteOrg(id: number): Promise<boolean> {
+    try {
+      await Promise.all([
+        this.prisma.user_activity.deleteMany({ where: { orgId: id } }),
+        this.prisma.user_org_roles.deleteMany({ where: { orgId: id } }),
+        this.prisma.org_invitations.deleteMany({ where: { orgId: id } }),
+        this.prisma.schema.deleteMany({ where: { orgId: id } }),
+        this.prisma.credential_definition.deleteMany({ where: { orgId: id } }),
+        this.prisma.agent_invitations.deleteMany({ where: { orgId: id } }),
+        this.prisma.org_agents.deleteMany({ where: { orgId: id } }),
+        this.prisma.connections.deleteMany({ where: { orgId: id } }),
+        this.prisma.credentials.deleteMany({ where: { orgId: id } }),
+        this.prisma.presentations.deleteMany({ where: { orgId: id } }),
+        this.prisma.ecosystem_invitations.deleteMany({ where: { orgId: `${id}` } }),
+        this.prisma.file_upload.deleteMany({ where: { orgId: `${id}` } }),
+        this.prisma.ecosystem_orgs.deleteMany({ where: { orgId: `${id}` } }),
+        this.prisma.organisation.deleteMany({ where: { id } })
+      ]);
+      return true;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

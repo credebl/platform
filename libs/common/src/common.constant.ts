@@ -108,6 +108,10 @@ export enum CommonConstants {
   URL_SEND_OUT_OF_BAND_CREATE_REQUEST = '/proofs/create-request-oob',
   URL_PROOF_FORM_DATA = '/proofs/#/form-data',
 
+  // delete wallet
+  URL_DELETE_WALLET = '/agent/wallet',
+  URL_DELETE_SHARED_WALLET = '/multi-tenancy/#',
+
   // server or agent
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',

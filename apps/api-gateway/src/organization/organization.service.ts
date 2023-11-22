@@ -143,5 +143,11 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
   }
 
+  async deleteOrganization(
+    orgId: number
+  ): Promise<{ response: object }> {
+    const payload = { orgId };
 
+    return this.sendNats(this.serviceProxy, 'delete-organization', payload);
+  }
 }

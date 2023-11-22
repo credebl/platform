@@ -1,6 +1,6 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
-import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
@@ -355,5 +355,21 @@ export class OrganizationController {
       message: ResponseMessages.organisation.success.update
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/:orgId')
+  @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  async deleteOrganization(@Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+
+    await this.organizationService.deleteOrganization(orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.ACCEPTED,
+      message: ResponseMessages.organisation.success.delete
+    };
+    return res.status(HttpStatus.ACCEPTED).json(finalResponse);
   }
 }

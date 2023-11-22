@@ -110,4 +110,12 @@ export class SocketGateway implements OnGatewayConnection {
       .to(payload.clientId)
       .emit('bulk-issuance-process-completed', payload.error);
   }
+
+  @SubscribeMessage('bulk-issuance-process-retry-completed')
+  async handleBulkIssuanceRetry(client:string, payload: ISocketInterface): Promise<void> {
+    this.logger.log(`bulk-issuance-process-retry-completed ${payload.clientId}`);
+    this.server
+      .to(payload.clientId)
+      .emit('bulk-issuance-process-retry-completed', payload.error);
+  }
 }

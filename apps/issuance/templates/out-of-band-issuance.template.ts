@@ -1,6 +1,6 @@
 export class OutOfBandIssuance {
 
-    public outOfBandIssuance(email: string, orgName: string, issuanceQrCode: string): string {
+    public outOfBandIssuance(email: string, orgName: string): string {
         try {
             return `<!DOCTYPE html>
             <html lang="en">
@@ -14,7 +14,7 @@ export class OutOfBandIssuance {
             <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
                 <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
                     <div style="display: block; text-align:center;">
-                    <img src="${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/${process.env.PLATFORM_LOGO}" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+                    <img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/CREDEBL_LOGO.svg" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
                     </div>
                     <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
                     font-size: 15px; line-height: 24px;color: #5E5873;">
@@ -33,7 +33,7 @@ export class OutOfBandIssuance {
                             </ul>
                             Should you require any assistance or have questions, feel free to contact our dedicated support team.
                          </p>
-                         <img src="${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/issuance/oob/qr?base64Image=${issuanceQrCode}" alt="QR Code" class="CToWUd" width="200" height="200 data-bit="iit"">
+
                         <hr style="border-top:1px solid #e8e8e8" />
                         <footer style="padding-top: 20px;">
                             <div>

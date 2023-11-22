@@ -32,7 +32,6 @@ import { io } from 'socket.io-client';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
-  private  isErrorOccurred: boolean;
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
@@ -42,8 +41,8 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
-    
-  ) { this.isErrorOccurred = false; }
+
+  ) { }
 
 
   async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
@@ -384,7 +383,11 @@ export class IssuanceService {
 
           return isEmailSent;
         } catch (error) {
-          errors.push(error.message);
+          if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+            errors.push(error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error);
+          } else {
+            errors.push(error.message);
+          }
           return false;
         }
       };
@@ -416,7 +419,7 @@ export class IssuanceService {
 
       return allSuccessful;
     } catch (error) {
-      
+
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -722,7 +725,7 @@ export class IssuanceService {
     }
   }
 
-  async issueBulkCredential(requestId: string, orgId: number, clientId: string): Promise<string> {
+  async issueBulkCredential(requestId: string, orgId: string, clientId: string): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -756,7 +759,7 @@ export class IssuanceService {
       const parsedPrimeDetails = JSON.parse(cachedData as string);
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
-      fileUpload.orgId = String(orgId);
+      fileUpload.orgId = orgId;
       fileUpload.createDateTime = new Date();
 
       if (parsedPrimeDetails && parsedPrimeDetails.fileName) {
@@ -820,7 +823,7 @@ export class IssuanceService {
     }
   }
 
-  async retryBulkCredential(fileId: string, orgId: number, clientId: string): Promise<string> {
+  async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<string> {
     let respFile;
 
     try {
@@ -851,7 +854,7 @@ export class IssuanceService {
             isLastData: respFile.indexOf(element) === respFile.length - 1
           };
 
-           this.processIssuanceData(payload);
+          this.processIssuanceData(payload);
         } catch (error) {
           // Handle errors if needed
           this.logger.error(`Error processing issuance data: ${error}`);
@@ -866,7 +869,7 @@ export class IssuanceService {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
   async processIssuanceData(jobDetails) {
-   
+
     const socket = await io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,
       reconnectionDelay: 5000,
@@ -896,7 +899,7 @@ export class IssuanceService {
 
     let isErrorOccurred = false;
     try {
-      
+
       const oobIssuancepayload = {
         credentialDefinitionId: jobDetails.credentialDefinitionId,
         orgId: jobDetails.orgId,
@@ -952,7 +955,7 @@ export class IssuanceService {
 
         this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
 
-        
+
       }
     } catch (error) {
       this.logger.error(`Error in completing bulk issuance process: ${error}`);
@@ -961,7 +964,7 @@ export class IssuanceService {
         socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
       }
       throw error;
-     
+
     }
 
   }

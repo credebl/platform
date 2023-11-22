@@ -144,15 +144,16 @@ export class AgentServiceService {
 
   private async processWalletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface, agentProcess: org_agents): Promise<void> {
     try {
-      const [getOrgAgent, platformConfig, getAgentType, ledgerIdData, ledgerDetails, orgData] = await Promise.all([
+      const [getOrgAgent, platformConfig, getAgentType, ledgerIdData, orgData] = await Promise.all([
         this.agentServiceRepository.getAgentDetails(agentSpinupDto.orgId),
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]),
-        this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId),
         this.agentServiceRepository.getOrgDetails(agentSpinupDto.orgId)
       ]);
-
+      
+      agentSpinupDto.ledgerId = agentSpinupDto.ledgerId?.length ? agentSpinupDto.ledgerId : ledgerIdData.map(ledger => ledger.id);
+      const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
 
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
         throw new BadRequestException('Your wallet has already been created.');
@@ -173,7 +174,6 @@ export class AgentServiceService {
       agentSpinupDto.agentType = agentSpinupDto.agentType || getAgentType;
       agentSpinupDto.tenant = agentSpinupDto.tenant || false;
       agentSpinupDto.ledgerName = agentSpinupDto.ledgerName?.length ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet];
-      agentSpinupDto.ledgerId = agentSpinupDto.ledgerId?.length ? agentSpinupDto.ledgerId : ledgerIdData.map(ledger => ledger.id);
 
       this.validatePlatformConfig(platformConfig);
 
@@ -615,11 +615,11 @@ export class AgentServiceService {
 
       const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(Ledgers.Indicio_Demonet);
       const ledgerIds = ledgerIdData.map(ledger => ledger.id);
-
+      
+      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? ledgerIds : payload.ledgerId;
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
       agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus);
 
-      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? ledgerIds : payload.ledgerId;
 
             let tenantDetails;
             const url = `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`;

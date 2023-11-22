@@ -158,4 +158,9 @@ export class OrganizationController {
   async getOgPofile(payload: { orgId: string }): Promise<object> {
     return this.organizationService.getOgPofile(payload.orgId);
   }
+
+  @MessagePattern({ cmd: 'delete-organization' })
+  async deleteOrganization(payload: { orgId: string }): Promise<boolean> {
+    return this.organizationService.deleteOrganization(payload.orgId);
+  }
 }

@@ -34,7 +34,7 @@ export class AgentServiceController {
 
   @MessagePattern({ cmd: 'agent-create-credential-definition' })
   async createCredentialDefinition(payload: ITenantCredDef): Promise<object> {
-    
+
     return this.agentServiceService.createCredentialDefinition(payload);
   }
 
@@ -106,30 +106,35 @@ export class AgentServiceController {
 
   @MessagePattern({ cmd: 'agent-proof-form-data' })
   async getProofFormData(payload: { url: string, apiKey: string }): Promise<object> {
-   
+
     return this.agentServiceService.getProofFormData(payload.url, payload.apiKey);
   }
 
   @MessagePattern({ cmd: 'agent-schema-endorsement-request' })
-  async schemaEndorsementRequest(payload: { url: string, apiKey: string, requestSchemaPayload:object }): Promise<object> {
+  async schemaEndorsementRequest(payload: { url: string, apiKey: string, requestSchemaPayload: object }): Promise<object> {
     return this.agentServiceService.schemaEndorsementRequest(payload.url, payload.apiKey, payload.requestSchemaPayload);
   }
   @MessagePattern({ cmd: 'agent-credDef-endorsement-request' })
-  async credDefEndorsementRequest(payload: { url: string, apiKey: string, requestSchemaPayload:object }): Promise<object> {
+  async credDefEndorsementRequest(payload: { url: string, apiKey: string, requestSchemaPayload: object }): Promise<object> {
     return this.agentServiceService.credDefEndorsementRequest(payload.url, payload.apiKey, payload.requestSchemaPayload);
   }
 
   @MessagePattern({ cmd: 'agent-sign-transaction' })
-  async signTransaction(payload: { url: string, apiKey: string, signEndorsementPayload:object }): Promise<object> {
+  async signTransaction(payload: { url: string, apiKey: string, signEndorsementPayload: object }): Promise<object> {
     return this.agentServiceService.signTransaction(payload.url, payload.apiKey, payload.signEndorsementPayload);
   }
   @MessagePattern({ cmd: 'agent-submit-transaction' })
-  async submitTransaction(payload: { url: string, apiKey: string, submitEndorsementPayload:object }): Promise<object> {
+  async submitTransaction(payload: { url: string, apiKey: string, submitEndorsementPayload: object }): Promise<object> {
     return this.agentServiceService.sumbitTransaction(payload.url, payload.apiKey, payload.submitEndorsementPayload);
   }
 
   @MessagePattern({ cmd: 'agent-out-of-band-credential-offer' })
   async outOfBandCredentialOffer(payload: { outOfBandIssuancePayload: OutOfBandCredentialOffer, url: string, apiKey: string }): Promise<object> {
     return this.agentServiceService.outOfBandCredentialOffer(payload.outOfBandIssuancePayload, payload.url, payload.apiKey);
+  }
+
+  @MessagePattern({ cmd: 'delete-wallet' })
+  async deleteWallet(payload: { url, apiKey }): Promise<object> {
+    return this.agentServiceService.deleteWallet(payload.url, payload.apiKey);
   }
 }

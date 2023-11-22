@@ -216,6 +216,10 @@ export enum CommonConstants {
   ENDORSE_TRANSACTION = '/transactions/#/endorse',
   WRITE_TRANSACTION = '/transactions/#/write',
 
+  // delete wallet
+  URL_DELETE_WALLET = '/agent/wallet',
+  URL_DELETE_SHARED_WALLET = '/multi-tenancy/#',
+  
   // Tenant Status
   PENDING_STATE = 0,
   REJECT_STATE = 2,

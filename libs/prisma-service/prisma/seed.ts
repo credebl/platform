@@ -2,8 +2,8 @@ import * as fs from 'fs';
 
 import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { CommonConstants } from '../../common/src/common.constant';
 
-// import {} from './data/'
 const prisma = new PrismaClient();
 const logger = new Logger('Init seed DB');
 
@@ -89,9 +89,31 @@ const createPlatformOrganization = async (): Promise<void> => {
 
 const createPlatformUserOrgRoles = async (): Promise<void> => {
     try {
-        const { userOrgRoleData } = JSON.parse(configData);
+
+        const userId = await prisma.user.findUnique({
+            where: {
+                email: `${CommonConstants.PLATFORM_ADMIN_EMAIL}`
+            }
+        })
+
+        const orgId = await prisma.organisation.findFirst({
+            where: {
+                name: `${CommonConstants.PLATFORM_ADMIN_ORG}`
+            }
+        })
+
+        const orgRoleId = await prisma.org_roles.findUnique({
+            where: {
+                name: `${CommonConstants.PLATFORM_ADMIN_ORG_ROLE}`
+            }
+        })
+
         const platformOrganization = await prisma.user_org_roles.create({
-            data: userOrgRoleData
+            data: {
+                userId: userId.id,
+                orgRoleId: orgRoleId.id,
+                orgId: orgId.id
+            },
         });
 
         logger.log(platformOrganization);

@@ -59,7 +59,7 @@ export class UserController {
     private readonly userService: UserService,
     private readonly commonService: CommonService,
     private readonly awsService: AwsService
-  ) {}
+  ) { }
 
   /**
    *
@@ -260,7 +260,7 @@ export class UserController {
   @Get('/user-credentials/:credentialId')
   @ApiOperation({ summary: 'Get user credentials by Id', description: 'Get user credentials by Id' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getUserCredentialsById (@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
+  async getUserCredentialsById(@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
     const getUserCrdentialsById = await this.userService.getUserCredentialsById(credentialId);
 
     const finalResponse: IResponseType = {
@@ -291,7 +291,7 @@ export class UserController {
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<object> {
-    acceptRejectInvitation.invitationId = parseInt(invitationId);
+    acceptRejectInvitation.invitationId = invitationId;
     const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);
 
     const finalResponse: IResponseType = {

@@ -4,7 +4,7 @@ import { ApiExtraModels } from '@nestjs/swagger';
 
 @ApiExtraModels()
 export class CreateUserDto {
-  id?: number;
+  id?: string;
   username?: string;
   email: string;
   password: string;
@@ -15,7 +15,7 @@ export class CreateUserDto {
   lastName?: string;
   // role?: Role;
   isEmailVerified?: boolean;
-  createdBy?: number;
+  createdBy?: string;
   clientId?: string;
   clientSecret?: string;
   supabaseUserId?: string;

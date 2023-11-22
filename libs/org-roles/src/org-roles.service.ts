@@ -20,7 +20,7 @@ export class OrgRolesService {
     }
 
     // eslint-disable-next-line camelcase
-    async getOrgRolesByIds(orgRoleIds: number[]): Promise<object[]> {
+    async getOrgRolesByIds(orgRoleIds: string[]): Promise<object[]> {
         return this.orgRoleRepository.getOrgRolesByIds(orgRoleIds);
     }
 }

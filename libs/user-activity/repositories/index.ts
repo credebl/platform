@@ -9,7 +9,7 @@ export class UserActivityRepository {
     constructor(private readonly prisma: PrismaService, private readonly logger: Logger) { }
 
 
-    async logActivity(userId: number, orgId: number, action: string, details: string): Promise<user_activity> {
+    async logActivity(userId: string, orgId: string, action: string, details: string): Promise<user_activity> {
         return this.prisma.user_activity.create({
             data: {
                 userId,
@@ -21,7 +21,7 @@ export class UserActivityRepository {
     }
 
 
-    async getRecentActivities(userId: number, limit: number): Promise<user_activity[]> {
+    async getRecentActivities(userId: string, limit: number): Promise<user_activity[]> {
         return this.prisma.user_activity.findMany({
             where: {
                 userId

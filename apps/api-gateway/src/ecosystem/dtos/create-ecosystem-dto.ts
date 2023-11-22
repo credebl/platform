@@ -30,8 +30,8 @@ export class CreateEcosystemDto {
     tags?: string;
   
     @ApiPropertyOptional()
-    @IsInt({ message: 'UserId must be in number format.' })
-    userId: number;
+    
+    userId: string;
   
     @ApiPropertyOptional()
     @IsOptional()

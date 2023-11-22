@@ -24,11 +24,6 @@
     "logoUrl": "",
     "website": ""
   },
-  "userOrgRoleData": {
-    "userId": 1,
-    "orgRoleId": 1,
-    "orgId": 1
-  },
   "orgRoleData": [
     {
       "name": "owner",
@@ -177,10 +172,6 @@
     },
     {
       "key": "enableEcosystem",
-      "value": "false"
-    },
-    {
-      "key": "autoEndorsement",
       "value": "false"
     },
     {

@@ -21,13 +21,21 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
 
     let errorResponse;
     if (exception && exception["statusCode"] === HttpStatus.INTERNAL_SERVER_ERROR) {
-      errorResponse = {
-        statusCode: status,
-        message: 'Oops! Something went wrong. Please try again',
-        error: 'Oops! Something went wrong. Please try again'
-      };
+      if (exception.message && exception.message["message"]) {
+        errorResponse = {
+          statusCode: status,
+          message: exception.message["message"],
+          error: exception.message["message"]
+        };
+      } else {
+        errorResponse = {
+          statusCode: status,
+          message: 'Oops! Something went wrong. Please try again',
+          error: 'Oops! Something went wrong. Please try again'
+        };
+      }
     } else if (exception && exception["error"] && exception["error"].message && (exception["error"].statusCode || exception["error"].code)) {
-      
+
       const statusCode = exception["error"].statusCode || exception["error"].code || status;
       errorResponse = {
         statusCode,
@@ -44,7 +52,7 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
       if (exception && exception["response"] && exception.message) {
 
         if (Array.isArray(exception["response"].message)) {
-          
+
           errorResponse = {
             statusCode: exception["statusCode"] ? exception["statusCode"] : status,
             message: exception.message ? exception.message : 'Internal server error',

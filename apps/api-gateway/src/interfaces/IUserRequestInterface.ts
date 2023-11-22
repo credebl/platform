@@ -1,14 +1,14 @@
 import { UserRoleOrgPermsDto } from '../authz/dtos/user-role-org-perms.dto';
 
 export interface IUserRequestInterface {
-    userId: number;    
+    userId: string;    
     email: string; 
-    orgId: number;  
+    orgId: string;  
     agentEndPoint?: string;
     apiKey?: string;
-    tenantId?: number;
+    tenantId?: string;
     tenantName?: string;
-    tenantOrgId?: number; 
+    tenantOrgId?: string; 
     userRoleOrgPermissions?: UserRoleOrgPermsDto[];  
     orgName?:string
 }

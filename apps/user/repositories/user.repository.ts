@@ -16,7 +16,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { schema, user } from '@prisma/client';
 
 interface UserQueryOptions {
-  id?: number; // Use the appropriate type based on your data model
+  id?: string; // Use the appropriate type based on your data model
   email?: string; // Use the appropriate type based on your data model
   username?: string;
   // Add more properties if needed for other unique identifier fields
@@ -95,7 +95,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserById(id: number): Promise<UserI> {
+  async getUserById(id: string): Promise<UserI> {
     const queryOptions: UserQueryOptions = {
       id
     };
@@ -138,7 +138,7 @@ export class UserRepository {
     try {
       const userdetails = await this.prisma.user.update({
         where: {
-          id: Number(updateUserProfile.id)
+          id: String(updateUserProfile.id)
         },
         data: {
           profileImg: updateUserProfile.profileImg,
@@ -251,7 +251,7 @@ export class UserRepository {
         publicProfile: true,
         OR: [
           {
-            id: queryOptions.id
+            id: String(queryOptions.id)
           },
           {
             email: queryOptions.email
@@ -297,7 +297,7 @@ export class UserRepository {
    * @returns Updates organization details
    */
   // eslint-disable-next-line camelcase
-  async updateUserDetails(id: number, supabaseUserId: string): Promise<user> {
+  async updateUserDetails(id: string, supabaseUserId: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {

@@ -216,6 +216,10 @@ export enum CommonConstants {
   ENDORSE_TRANSACTION = '/transactions/#/endorse',
   WRITE_TRANSACTION = '/transactions/#/write',
 
+  // delete wallet
+  URL_DELETE_WALLET = '/agent/wallet',
+  URL_DELETE_SHARED_WALLET = '/multi-tenancy/#',
+  
   // Tenant Status
   PENDING_STATE = 0,
   REJECT_STATE = 2,
@@ -250,6 +254,11 @@ export enum CommonConstants {
 
   LOGIN_PASSWORDLESS = 'passwordless',
   LOGIN_PASSWORD = 'password',
+
+  // Platform admin Details
+  PLATFORM_ADMIN_EMAIL='platform.admin@yopmail.com',
+  PLATFORM_ADMIN_ORG='Platform-admin',
+  PLATFORM_ADMIN_ORG_ROLE='platform_admin',
 
   //onBoarding Type
   ONBOARDING_TYPE_ADMIN = 0,

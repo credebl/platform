@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsArray, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsArray } from 'class-validator';
 
 export class CreateTenantSchemaDto {
     @ApiProperty()
@@ -21,7 +21,7 @@ export class CreateTenantSchemaDto {
     attributes: string[];
 
     @ApiProperty()
-    @IsNumber()
+  
     @IsNotEmpty({ message: 'please provide orgId' })
-    orgId: number;
+    orgId: string;
 }

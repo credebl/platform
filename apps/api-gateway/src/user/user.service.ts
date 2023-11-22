@@ -16,7 +16,7 @@ export class UserService extends BaseService {
     super('User Service');
   }
 
-  async getProfile(id: number): Promise<{ response: object }> {
+  async getProfile(id: string): Promise<{ response: object }> {
     const payload = { id };
     return this.sendNats(this.serviceProxy, 'get-user-profile', payload);
   }
@@ -43,7 +43,7 @@ export class UserService extends BaseService {
   }
 
 
-  async invitations(id: number, status: string, getAllInvitationsDto: GetAllInvitationsDto): Promise<{ response: object }> {
+  async invitations(id: string, status: string, getAllInvitationsDto: GetAllInvitationsDto): Promise<{ response: object }> {
     const { pageNumber, pageSize, search } = getAllInvitationsDto;
     const payload = { id, status, pageNumber, pageSize, search };
     return this.sendNats(this.serviceProxy, 'get-org-invitations', payload);
@@ -51,7 +51,7 @@ export class UserService extends BaseService {
 
   async acceptRejectInvitaion(
     acceptRejectInvitation: AcceptRejectInvitationDto,
-    userId: number
+    userId: string
   ): Promise<{ response: string }> {
     const payload = { acceptRejectInvitation, userId };
     return this.sendNats(this.serviceProxy, 'accept-reject-invitations', payload);
@@ -77,7 +77,7 @@ export class UserService extends BaseService {
     return this.sendNats(this.serviceProxy, 'check-user-exist', payload);
   }
 
-  async getUserActivities(userId: number, limit: number): Promise<{ response: object }> {
+  async getUserActivities(userId: string, limit: number): Promise<{ response: object }> {
     const payload = { userId, limit };
     return this.sendNats(this.serviceProxy, 'get-user-activity', payload);
   }

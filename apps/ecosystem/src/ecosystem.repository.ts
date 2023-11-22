@@ -393,6 +393,7 @@ export class EcosystemRepository {
     // eslint-disable-next-line camelcase
   ): Promise<ecosystem_invitations> {
     try {
+     
       return this.prisma.ecosystem_invitations.create({
         data: {
           email,
@@ -590,14 +591,14 @@ export class EcosystemRepository {
     schemasCount: number;
     schemasResult: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       version: string;
       attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
       issuerId: string;
-      orgId: number;
+      orgId: string;
     }[];
   }> {
     try {
@@ -656,14 +657,14 @@ export class EcosystemRepository {
   * @returns Get getAgentEndPoint details
   */
   // eslint-disable-next-line camelcase
-  async getAgentDetails(orgId: number): Promise<org_agents> {
+  async getAgentDetails(orgId: string): Promise<org_agents> {
     try {
       if (!orgId) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidOrgId);
       }
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
-          orgId
+          orgId:orgId.toString()
         }
       });
       return agentDetails;
@@ -920,10 +921,10 @@ export class EcosystemRepository {
           attributes,
           schemaLedgerId,
           issuerId,
-          createdBy: Number(createdBy),
-          lastChangedBy: Number(lastChangedBy),
+          createdBy,
+          lastChangedBy,
           publisherDid,
-          orgId: Number(orgId),
+          orgId: String(orgId),
           ledgerId
         }
       });
@@ -944,8 +945,8 @@ export class EcosystemRepository {
           tag,
           credentialDefinitionId,
           revocable,
-          createdBy: Number(createdBy),
-          orgId: Number(orgId),
+          createdBy,
+          orgId,
           schemaId
         }
       });
@@ -1040,4 +1041,20 @@ export class EcosystemRepository {
       throw error;
     }
   }
+
+  async getOrgAgentType(orgAgentId: string): Promise<string> {
+    try {
+
+        const { agent } = await this.prisma.org_agents_type.findFirst({
+            where: {
+                id: orgAgentId
+            }
+        });
+
+        return agent;
+    } catch (error) {
+        this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+        throw error;
+    }
+}
 }

@@ -1139,5 +1139,20 @@ export class AgentServiceService {
       throw error;
     }
   }
+
+  async deleteWallet(
+    url: string,
+    apiKey: string
+  ): Promise<object> {
+    try {
+      const deleteWallet = await this.commonService
+        .httpDelete(url, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response);
+      return deleteWallet;
+    } catch (error) {
+      this.logger.error(`Error in delete wallet in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
 }
 

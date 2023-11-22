@@ -17,9 +17,11 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
-import { Invitation } from '@credebl/enum/enum';
-import { IUpdateOrganization } from '../interfaces/organization.interface';
+import { Invitation, OrgAgentType } from '@credebl/enum/enum';
+import { IUpdateOrganization, OrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
+import { CommonConstants } from '@credebl/common/common.constant';
+import { map } from 'rxjs/operators';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -300,10 +302,10 @@ export class OrganizationService {
   }
 
   /**
-   *
-   * @Body sendInvitationDto
-   * @returns createInvitation
-   */
+  *
+  * @Body sendInvitationDto
+  * @returns createInvitation
+  */
 
   // eslint-disable-next-line camelcase
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
@@ -494,6 +496,70 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async deleteOrganization(orgId: string): Promise<boolean> {
+    try {
+      const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
+
+      let url;
+      if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {
+        url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
+
+      } else if (getAgent.orgAgentTypeId === OrgAgentType.SHARED) {
+        url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_SHARED_WALLET}`.replace('#', getAgent.tenantId);
+      }
+
+      const payload = {
+        url,
+        apiKey: getAgent.apiKey
+      };
+
+      const deleteWallet = await this._deleteWallet(payload);
+      if (deleteWallet) {
+
+        const orgDelete = await this.organizationRepository.deleteOrg(orgId);
+        if (false === orgDelete) {
+          throw new NotFoundException(ResponseMessages.organisation.error.deleteOrg);
+        }
+      }
+
+
+      return true;
+    } catch (error) {
+      this.logger.error(`delete organization: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async _deleteWallet(payload: OrgAgent): Promise<{
+    response;
+  }> {
+    try {
+      const pattern = {
+        cmd: 'delete-wallet'
+      };
+
+      return this.organizationServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 }

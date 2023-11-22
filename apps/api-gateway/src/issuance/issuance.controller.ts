@@ -347,7 +347,7 @@ export class IssuanceController {
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
-  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: string, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
     const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails.clientId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
@@ -502,7 +502,7 @@ export class IssuanceController {
     summary: 'Retry bulk issue credential',
     description: 'Retry bulk issue credential'
   })
-  async retryBulkCredentials(@Param('fileId') fileId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
+  async retryBulkCredentials(@Param('fileId') fileId: string, @Param('orgId') orgId: string, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
     const bulkIssunaceDetails = await this.issueCredentialService.retryBulkCredential(fileId, orgId, clientDetails.clientId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

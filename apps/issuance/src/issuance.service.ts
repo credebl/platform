@@ -902,6 +902,9 @@ export class IssuanceService {
 
         if (!jobDetails.isRetry) {
           this.cacheManager.del(jobDetails.cacheId);
+          socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
+        } else {
+          socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId });
         }
 
         await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
@@ -911,7 +914,7 @@ export class IssuanceService {
 
         this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
 
-        socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
+        
       }
     } catch (error) {
       this.logger.error(`Error in completing bulk issuance process: ${error}`);

@@ -40,6 +40,7 @@ export class AgentServiceRepository {
                     }
                 }
             });
+
             return genesisData;
         } catch (error) {
             this.logger.error(`[getGenesisUrl] - get genesis URL: ${JSON.stringify(error)}`);

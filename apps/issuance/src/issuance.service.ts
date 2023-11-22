@@ -328,7 +328,7 @@ export class IssuanceService {
           this.emailData.emailFrom = platformConfigData.emailFrom;
           this.emailData.emailTo = emailId;
           this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credentials`;
-          this.emailData.emailHtml = await this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, outOfBandIssuanceQrCode);
+          this.emailData.emailHtml = await this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name);
           this.emailData.emailAttachments = [
             {
               filename: 'qrcode.png',

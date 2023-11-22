@@ -52,7 +52,7 @@ export class ArbiterTemplate {
       <body>
       
       <div id="container" style="">
-      <img id="backgroundImage" src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/background_image.png" alt="background" 
+      <img id="backgroundImage" src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/background_image.svg" alt="background" 
         style="height: 1000px; width: 770px;"
         />
         <div id="textOverlay" style="width: 760px; height: 450px;">
@@ -62,7 +62,7 @@ export class ArbiterTemplate {
           </div>
           
           <p style="font-size: 15px; font-family: Inter;margin: 15; margin-top: 15px;">IS PROUDLY PRESENTED TO</p>
-          <p style="font-size: 35px; font-style: italic; ">${name}</p>
+          <p style="font-size: 35px; font-style: italic; margin: 0">${name}</p>
           
           <span >
               <p style="font-size: 16px; " >has served as an Arbiter at the
@@ -78,6 +78,7 @@ export class ArbiterTemplate {
       
           </p>
           <div style="font-family: Inter; font-weight: bold; font-size: 12px;">Date: 24, 25, 26 November 2023 | Place: Cidco Exhibition Centre, Navi Mumbai, ${country}</div>
+          <div style="font-family: Inter; font-weight: bold; font-size: 12px; margin-top:316px">Blockchain-based certificate issued using "credebl.id", by Blockster Labs Pvt. Ltd.</div>
         </div>
       </div>
       

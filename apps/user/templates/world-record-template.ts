@@ -53,7 +53,7 @@ export class WorldRecordTemplate {
       <body>
       
       <div id="container" style="">
-      <img id="backgroundImage" src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/background_image.png" alt="background" 
+      <img id="backgroundImage" src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/background_image.svg" alt="background" 
         style="height: 1000px; width: 770px;"
         />
         <div id="textOverlay" style="width: 760px; height: 450px;">
@@ -76,6 +76,7 @@ export class WorldRecordTemplate {
               <p style="font-size: 14px; margin: 0;">exceptional memory skills demonstrated during the competition.</p>
           </p>
           <div style="font-family: Inter; font-weight: bold; font-size: 12px;">Date: 24, 25, 26 November 2023 | Place: Cidco Exhibition Centre, Navi Mumbai, ${country}</div>
+          <div style="font-family: Inter; font-weight: bold; font-size: 12px; margin-top:316px">Blockchain-based certificate issued using "credebl.id", by Blockster Labs Pvt. Ltd.</div>
         </div>
       </div>
       

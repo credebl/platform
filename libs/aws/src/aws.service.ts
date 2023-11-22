@@ -39,7 +39,7 @@ export class AwsService {
         Key: `${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`,
         Body: fileBuffer,
         ContentEncoding: encoding,
-        ContentType: `image/png`
+        ContentType: `image/svg`
       });
       return `https://${process.env.AWS_PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;     
     } catch (err) {

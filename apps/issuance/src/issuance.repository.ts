@@ -204,7 +204,7 @@ export class IssuanceRepository {
             const { name, status, upload_type, orgId } = fileUploadPayload;
             return this.prisma.file_upload.create({
                 data: {
-                    name,
+                    name: String(name),
                     orgId: String(orgId),
                     status,
                     upload_type

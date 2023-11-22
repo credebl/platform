@@ -417,7 +417,9 @@ export class AgentServiceService {
           socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
         }
 
-        await this._createLegacyConnectionInvitation(orgData.id, user, agentPayload.walletName);
+        const getOrganization = await this.agentServiceRepository.getOrgDetails(orgData.id);
+
+        await this._createLegacyConnectionInvitation(orgData.id, user, getOrganization.name);
 
         if (agentSpinupDto.clientSocketId) {
           socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });

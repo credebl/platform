@@ -825,6 +825,7 @@ export class IssuanceService {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
   async processIssuanceData(jobDetails) {
+   
     const socket = await io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,
       reconnectionDelay: 5000,
@@ -851,8 +852,10 @@ export class IssuanceService {
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
     fileUploadData.jobId = jobDetails.id;
-    try {
 
+    let isErrorOccurred = false;
+    try {
+      
       const oobIssuancepayload = {
         credentialDefinitionId: jobDetails.credentialDefinitionId,
         orgId: jobDetails.orgId,
@@ -880,6 +883,11 @@ export class IssuanceService {
       fileUploadData.isError = true;
       fileUploadData.error = JSON.stringify(error.error) ? JSON.stringify(error.error) : JSON.stringify(error);
       fileUploadData.detailError = `${JSON.stringify(error)}`;
+      if (!isErrorOccurred) {
+        isErrorOccurred = true;
+        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
+      }
+
     }
     await this.issuanceRepository.updateFileUploadData(fileUploadData);
 
@@ -903,8 +911,8 @@ export class IssuanceService {
         socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
       }
     } catch (error) {
-      this.logger.error(`Error completing bulk issuance process: ${error}`);
-      socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
+      this.logger.error(`Error in completing bulk issuance process: ${error}`);
+
       throw error;
     }
 

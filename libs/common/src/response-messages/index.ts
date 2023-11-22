@@ -57,7 +57,8 @@ export const ResponseMessages = {
             getOrganization: 'Organization details fetched successfully',
             getOrgDashboard: 'Organization dashboard details fetched',
             getOrganizations: 'Organizations details fetched successfully',
-            updateUserRoles: 'User roles updated successfully'
+            updateUserRoles: 'User roles updated successfully',
+            delete: 'Organization deleted successfully',
         },
         error: {
             exists: 'An organization name is already exist',
@@ -65,7 +66,9 @@ export const ResponseMessages = {
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
-            updateUserRoles: 'Unable to update user roles'
+            updateUserRoles: 'Unable to update user roles',
+            deleteOrg: 'Organization not found',
+            notFound: 'Organization agent not found'
         }
 
     },

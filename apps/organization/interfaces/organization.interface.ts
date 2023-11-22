@@ -21,3 +21,8 @@ export interface IUpdateOrganization {
   orgSlug?: string;
   isPublic?:boolean
 }
+
+export interface OrgAgent {
+  url: string;
+  apiKey: string;
+}

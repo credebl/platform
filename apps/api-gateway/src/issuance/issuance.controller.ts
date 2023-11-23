@@ -227,34 +227,30 @@ export class IssuanceController {
   async importAndPreviewDataForIssuance(
     @Query('credDefId') credentialDefinitionId: string,
     @UploadedFile() file: Express.Multer.File,
+    @Body() fileDetails: object,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
-    if (file) {
-      this.logger.log(`file:${file.path}`);
-      this.logger.log(`Uploaded file : ${file.filename}`);
-      const timestamp = Math.floor(Date.now() / 1000);
-      const ext = extname(file.filename);
-      const parts = file.filename.split('-');
-      // eslint-disable-next-line prefer-destructuring
-      const resultString = parts[0];
-      const newFilename = `${resultString}-${timestamp}${ext}`;
-      this.logger.log(`newFilename file : ${newFilename}`);
-      //Testing on dev
-      fs.rename(
-        `${process.env.PWD}/uploadedFiles/import/${file.filename}`,
-        `${process.env.PWD}/uploadedFiles/import/${newFilename}`,
-        async (err: any) => {
-          if (err) {
-            throw err;
-          }
+    try {
+
+      if (file) {
+        const fileKey: string = uuidv4();
+        try {
+
+          await this.awsService.uploadCsvFile(fileKey, file?.buffer);
+
+        } catch (error) {
+
+          throw new RpcException(error.response ? error.response : error);
+
         }
+
         const reqPayload: RequestPayload = {
           credDefId: credentialDefinitionId,
           fileKey,
-          fileName: file?.filename || file?.originalname
+          fileName: fileDetails["fileName"].split('.csv')[0]
         };
-        this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
+
         const importCsvDetails = await this.issueCredentialService.importCsv(
           reqPayload
         );
@@ -410,7 +406,7 @@ export class IssuanceController {
     required: false
   })
   async issuedFileDetails(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
   ): Promise<object> {
@@ -472,7 +468,7 @@ export class IssuanceController {
     required: false
   })
   async getFileDetailsByFileId(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Param('fileId') fileId: string,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
@@ -551,7 +547,7 @@ export class IssuanceController {
         throw new BadRequestException(`Value must be required at position of ${data['name']}`);
       }
     });
- 
+
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(
       issueCredentialDto,
       user
@@ -618,8 +614,8 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
-    
-   
+
+
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

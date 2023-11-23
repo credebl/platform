@@ -131,7 +131,7 @@ export class AgentServiceService {
     let agentProcess: org_agents;
     try {
 
-      this.processWalletProvision(agentSpinupDto, user, agentProcess);
+      this.processWalletProvision(agentSpinupDto, user);
       const agentStatusResponse = {
         agentSpinupStatus: AgentSpinUpStatus.PROCESSED
       };
@@ -143,9 +143,10 @@ export class AgentServiceService {
     }
   }
 
-  private async processWalletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface, agentProcess: org_agents): Promise<void> {
+  private async processWalletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<void> {
     let platformAdminUser;
     let userId: string;
+    let agentProcess: org_agents;
     try {
       const [getOrgAgent, platformConfig, getAgentType, ledgerIdData, orgData] = await Promise.all([
         this.agentServiceRepository.getAgentDetails(agentSpinupDto.orgId),

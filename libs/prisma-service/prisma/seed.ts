@@ -6,6 +6,7 @@ import { CommonConstants } from '../../common/src/common.constant';
 
 const prisma = new PrismaClient();
 const logger = new Logger('Init seed DB');
+let platformUserId = '';
 
 const configData = fs.readFileSync(`${process.env.PWD}/prisma/data/credebl-master-table.json`, 'utf8');
 const createPlatformConfig = async (): Promise<void> => {
@@ -63,9 +64,13 @@ const createOrgAgentTypes = async (): Promise<void> => {
 const createPlatformUser = async (): Promise<void> => {
     try {
         const { platformAdminData } = JSON.parse(configData);
+        platformAdminData.email = process.env.PLATFORM_ADMIN_EMAIL;
+        platformAdminData.username = process.env.PLATFORM_ADMIN_EMAIL;
         const platformUser = await prisma.user.create({
             data: platformAdminData
         });
+
+        platformUserId = platformUser.id;
 
         logger.log(platformUser);
     } catch (e) {
@@ -77,6 +82,8 @@ const createPlatformUser = async (): Promise<void> => {
 const createPlatformOrganization = async (): Promise<void> => {
     try {
         const { platformAdminOrganizationData } = JSON.parse(configData);
+        platformAdminOrganizationData.createdBy = platformUserId;
+        platformAdminOrganizationData.lastChangedBy = platformUserId;
         const platformOrganization = await prisma.organisation.create({
             data: platformAdminOrganizationData
         });
@@ -166,8 +173,8 @@ async function main(): Promise<void> {
     await createPlatformConfig();
     await createOrgRoles();
     await createAgentTypes();
-    await createPlatformOrganization();
     await createPlatformUser();
+    await createPlatformOrganization();
     await createPlatformUserOrgRoles();
     await createOrgAgentTypes();
     await createLedger();

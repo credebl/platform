@@ -19,6 +19,7 @@ import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsem
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
+import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 
 
 @Injectable()
@@ -213,10 +214,7 @@ export class EcosystemService {
         };
       }
 
-      if (checkOrganization) {
-        throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-      };
-      const { orgId, status, invitationId, orgName, orgDid } = acceptRejectInvitation;
+      const { orgId, status, invitationId, orgName, orgDid, userId } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
 
       if (!invitation) {
@@ -233,7 +231,7 @@ export class EcosystemService {
       }
 
       const ecosystemRole = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
-      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, orgName, orgDid, invitation.ecosystemId, ecosystemRole.id);
+      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, orgName, orgDid, invitation.ecosystemId, ecosystemRole.id, userId);
 
       if (!updateEcosystemOrgs) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgsNotUpdate);
@@ -246,15 +244,17 @@ export class EcosystemService {
     }
   }
 
-  async updatedEcosystemOrgs(orgId: string, orgName: string, orgDid: string, ecosystemId: string, ecosystemRoleId: string): Promise<object> {
+  async updatedEcosystemOrgs(orgId: string, orgName: string, orgDid: string, ecosystemId: string, ecosystemRoleId: string, userId: string): Promise<object> {
     try {
-      const data = {
+      const data: updateEcosystemOrgsDto = {
         orgId,
         status: EcosystemOrgStatus.ACTIVE,
         ecosystemId,
         ecosystemRoleId,
         orgName,
-        orgDid
+        orgDid,
+        createdBy: userId,
+        lastChangedBy: userId
       };
       return await this.ecosystemRepository.updateEcosystemOrgs(data);
     } catch (error) {
@@ -438,7 +438,8 @@ export class EcosystemService {
         authorDid: ecosystemMemberDetails.orgDid,
         requestPayload: schemaTransactionRequest.message.schemaState.schemaRequest,
         status: endorsementTransactionStatus.REQUESTED,
-        ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
+        ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id,
+        userId: requestSchemaPayload.userId
       };
 
 
@@ -527,7 +528,8 @@ export class EcosystemService {
         authorDid: ecosystemMemberDetails.orgDid,
         requestPayload: credDefTransactionRequest.message.credentialDefinitionState.credentialDefinitionRequest,
         status: endorsementTransactionStatus.REQUESTED,
-        ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id
+        ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id,
+        userId: requestCredDefPayload.userId
       };
 
       return this.ecosystemRepository.storeTransactionRequest(schemaTransactionResponse, requestCredDefPayload, endorsementTransactionType.CREDENTIAL_DEFINITION);
@@ -809,6 +811,7 @@ export class EcosystemService {
       credentialDefinitionId: submitTransactionRequest['message'].credentialDefinitionId,
       revocable: false,
       createdBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
+      lastChangedBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
       orgId: ecosystemMemberDetails.orgId,
       schemaId: schemaDetails.id
     };

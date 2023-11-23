@@ -8,7 +8,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -730,7 +730,7 @@ export class IssuanceService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async issueBulkCredential(requestId: string, orgId: string, clientId: string): Promise<string> {
+  async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -771,7 +771,7 @@ export class IssuanceService {
         fileUpload.name = parsedPrimeDetails.fileName;
       }
 
-      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
+      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
       const saveFileDetailsPromises = parsedData.map(async (element) => {
         const credentialPayload = {
@@ -782,7 +782,7 @@ export class IssuanceService {
           isError: false,
           fileUploadId: respFileUpload.id
         };
-        return this.issuanceRepository.saveFileDetails(credentialPayload);
+        return this.issuanceRepository.saveFileDetails(credentialPayload, clientDetails.userId);
       });
 
       // Wait for all saveFileDetails operations to complete
@@ -799,7 +799,7 @@ export class IssuanceService {
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
-            clientId,
+            clientId: clientDetails.clientId,
             cacheId: requestId,
             credentialDefinitionId: element.credDefId,
             schemaLedgerId: element.schemaId,
@@ -862,6 +862,9 @@ export class IssuanceService {
 
           await this.delay(500); // Wait for 0.5 secends
           this.processIssuanceData(payload);
+          if (0 === respFile.length) {
+            return FileUploadStatus.completed;
+          }
         } catch (error) {
           // Handle errors if needed
           this.logger.error(`Error processing issuance data: ${error}`);

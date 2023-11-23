@@ -27,7 +27,8 @@ export class CredentialDefinitionRepository {
                         tag: credDef.tag,
                         credentialDefinitionId: credDef.credentialDefinitionId,
                         revocable: credDef.revocable,
-                        createdBy: credDef.userId,
+                        createdBy: credDef.createdBy,
+                        lastChangedBy: credDef.lastChangedBy,
                         orgId: credDef.orgId,
                         schemaId: credDef.schemaId
                     }

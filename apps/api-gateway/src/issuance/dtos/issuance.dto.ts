@@ -212,4 +212,6 @@ export class ClientDetails {
     @Type(() => String)
     clientId = '';
 
+    userId?: string;
+
 }

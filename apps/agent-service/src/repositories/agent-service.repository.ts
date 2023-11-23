@@ -1,7 +1,7 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, ledgers, org_agents, organisation, platform_config } from '@prisma/client';
+import { Prisma, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { IStoreOrgAgentDetails } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
@@ -69,12 +69,14 @@ export class AgentServiceRepository {
     }
 
     // eslint-disable-next-line camelcase
-    async createOrgAgent(agentSpinUpStatus: number): Promise<org_agents> {
+    async createOrgAgent(agentSpinUpStatus: number, userId: string): Promise<org_agents> {
         try {
 
             return this.prisma.org_agents.create({
                 data: {
-                    agentSpinUpStatus
+                    agentSpinUpStatus,
+                    createdBy: userId,
+                    lastChangedBy: userId
                 }
             });
         } catch (error) {
@@ -185,7 +187,7 @@ export class AgentServiceRepository {
             });
             return oranizationAgentDetails;
         } catch (error) {
-            this.logger.error(`[getAgentDetails] - get org agent health details: ${JSON.stringify(error)}`);
+            this.logger.error(`[getOrgAgentDetails] - get org agent health details: ${JSON.stringify(error)}`);
             throw error;
         }
     }
@@ -199,7 +201,7 @@ export class AgentServiceRepository {
             });
             return id;
         } catch (error) {
-            this.logger.error(`[getAgentDetails] - get org agent health details: ${JSON.stringify(error)}`);
+            this.logger.error(`[getAgentTypeDetails] - get org agent health details: ${JSON.stringify(error)}`);
             throw error;
         }
     }
@@ -207,9 +209,7 @@ export class AgentServiceRepository {
     async getLedgerDetails(name: string[] | string): Promise<{
         id: string;
         createDateTime: Date;
-        createdBy: string;
         lastChangedDateTime: Date;
-        lastChangedBy: string;
         name: string;
         networkType: string;
         poolConfig: string;
@@ -268,6 +268,20 @@ export class AgentServiceRepository {
             return id;
         } catch (error) {
             this.logger.error(`[getPlatfomOrg] - get platform org details: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getPlatfomAdminUser(platformAdminUserEmail: string): Promise<user> {
+        try {
+            const platformAdminUser = await this.prisma.user.findUnique({
+                where: {
+                    email: platformAdminUserEmail
+                }
+            });
+            return platformAdminUser;
+        } catch (error) {
+            this.logger.error(`[getPlatfomAdminUser] - get platform admin user: ${JSON.stringify(error)}`);
             throw error;
         }
     }

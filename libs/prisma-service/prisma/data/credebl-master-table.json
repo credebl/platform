@@ -1,0 +1,190 @@
+{
+  "platformConfigData": {
+    "externalIp": "##Machine Ip Address for agent setup##",
+    "lastInternalId": "##Docker Network Ip Address##",
+    "username": "credebl",
+    "sgApiKey": "###Sendgrid Key###",
+    "emailFrom": "##Senders Mail ID##",
+    "apiEndpoint": "## Platform API Ip Address##",
+    "tailsFileServer": "##Machine Ip Address for agent setup##"
+  },
+  "platformAdminData": {
+    "firstName": "CREDEBL",
+    "lastName": "CREDEBL",
+    "email": "",
+    "username": "",
+    "password": "####Please provide encrypted password using crypto-js###",
+    "verificationCode": "",
+    "isEmailVerified": true,
+    "supabaseUserId": "96cef763-e106-46c1-ac78-fadf2803b11f"
+  },
+  "platformAdminOrganizationData": {
+    "name": "Platform-admin",
+    "description": "Platform-admin",
+    "logoUrl": "",
+    "website": "",
+    "createdBy": "",
+    "lastChangedBy": ""
+  },
+  "orgRoleData": [
+    {
+      "name": "owner",
+      "description": "Organization Owner"
+    },
+    {
+      "name": "admin",
+      "description": "Organization Admin"
+    },
+    {
+      "name": "issuer",
+      "description": "Organization Credential Issuer"
+    },
+    {
+      "name": "verifier",
+      "description": "Organization Credential Verifier"
+    },
+    {
+      "name": "holder",
+      "description": "Receives credentials issued by organization"
+    },
+    {
+      "name": "member",
+      "description": "Joins the organization as member"
+    },
+    {
+      "name": "platform_admin",
+      "description": "To setup all the platform of the user"
+    }
+  ],
+  "ecosystemRoleData": [
+    {
+      "name": "Ecosystem Owner",
+      "description": "Ecosystem Owner"
+     
+    },
+    {
+      "name": "Ecosystem Lead",
+      "description": "Ecosystem Lead"
+     
+    },
+    {
+      "name": "Ecosystem Member",
+      "description": "Ecosystem Member"
+    }
+  ],
+
+  "agentTypeData": [
+    {
+      "agent": "AFJ"
+    },
+    {
+      "agent": "ACAPY"
+    }
+  ],
+  "orgAgentTypeData": [
+    {
+      "agent": "DEDICATED"
+    },
+    {
+      "agent": "SHARED"
+    }
+  ],
+  "ledgerData": [
+    {
+      "name": "Bcovrin Testnet",
+      "networkType": "testnet",
+      "poolConfig": "http://test.bcovrin.vonx.io/genesis",
+      "isActive": true,
+      "networkString": "testnet",
+      "registerDIDEndpoint": "http://test.bcovrin.vonx.io/register",
+      "registerDIDPayload": "",
+      "indyNamespace": "bcovrin:testnet"
+    },
+    {
+      "name": "Indicio Testnet",
+      "networkType": "testnet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_testnet_genesis",
+      "isActive": true,
+      "networkString": "testnet",
+      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registerDIDPayload": "",
+      "indyNamespace": "indicio:testnet"
+    },
+    {
+      "name": "Indicio Demonet",
+      "networkType": "demonet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_demonet_genesis",
+      "isActive": true,
+      "networkString": "demonet",
+      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registerDIDPayload": "",
+      "indyNamespace": "indicio:demonet"
+    },
+    {
+      "name": "Indicio Mainnet",
+      "networkType": "mainnet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_mainnet_genesis",
+      "isActive": true,
+      "networkString": "mainnet",
+      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registerDIDPayload": "",
+      "indyNamespace": "indicio:mainnet"
+    }
+  ],
+  "endorseData": [
+    {
+      "id": "0f8fad5b-d9cb-469f-a165-70867728950f",
+      "endorserDid": "endorser123",
+      "authorDid": "author456",
+      "requestPayload": "{\"type\": \"dummy_request_1\"}",
+      "responsePayload": "{\"type\": \"dummy_response_1\"}",
+      "status": "Requested",
+      "ecosystemOrgId": "1c247b4a-e2f6-48c0-8aa2-65ea47474294"
+    },
+    {
+      "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "endorserDid": "endorser789",
+      "authorDid": "author101",
+      "requestPayload": "{\"type\": \"dummy_request_2\"}",
+      "responsePayload": "{\"type\": \"dummy_response_2\"}",
+      "status": "Signed",
+      "ecosystemOrgId": "1c247b4a-e2f6-48c0-8aa2-65ea47474294"
+    },
+    {
+      "id": "a89b6e81-a1ff-4d13-a9e2-17176e707aac",
+      "endorserDid": "endorser321",
+      "authorDid": "author654",
+      "requestPayload": "{\"type\": \"dummy_request_3\"}",
+      "responsePayload": "{\"type\": \"dummy_response_3\"}",
+      "status": "Declined",
+      "ecosystemOrgId": "a2443e09-45be-4739-b8b3-0d4ffaecea94"
+    },
+    {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d47c",
+      "endorserDid": "endorser999",
+      "authorDid": "author777",
+      "requestPayload": "{\"type\": \"dummy_request_4\"}",
+      "responsePayload": "{\"type\": \"dummy_response_4\"}",
+      "status": "Submitted",
+      "ecosystemOrgId": "ca6ee687-a3a9-42ce-9e49-02bf62f5c93a"
+    }
+  ],
+  "ecosystemConfigData": [
+    {
+      "key": "url",
+      "value": "https://dummyurl.tk"
+    },
+    {
+      "key": "enableEcosystem",
+      "value": "false"
+    },
+    {
+      "key": "participateInEcosystem",
+      "value": "false"
+    },
+    {
+      "key": "multiEcosystemSupport",
+      "value": "false"
+    }
+  ]
+}

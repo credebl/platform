@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters } from '@nestjs/common';
+import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
@@ -12,17 +12,16 @@ import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
 import { ICredDeffSchemaSearchInterface, ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { GetAllSchemaByPlatformDto, GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
+import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
-import { TransformStreamDefaultController } from 'node:stream/web';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)
-@Controller('schemas')
+@Controller('orgs')
 @ApiTags('schemas')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -32,15 +31,148 @@ export class SchemaController {
   ) { }
   private readonly logger = new Logger('SchemaController');
 
-  @Post('/')
+  @Get('/:orgId/schemas/:schemaId')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
-    summary: 'Sends a schema to the ledger',
+    summary: 'Get schema information from the ledger using its schema ID.',
+    description: 'Get schema information from the ledger using its schema ID.'
+  })
+
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async getSchemaById(
+    @Res() res: Response,
+    @Param('orgId') orgId: string,
+    @Param('schemaId') schemaId: string
+  ): Promise<object> {
+
+    if (!schemaId) {
+      throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
+    }
+    const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.fetch,
+      data: schemaDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/:orgId/schemas/:schemaId/cred-defs')
+  @ApiOperation({
+    summary: 'Get credential definition list by schema Id',
+    description: 'Get credential definition list by schema Id'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sorting',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortByValue',
+    type: String,
+    required: false
+  })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getcredDeffListBySchemaId(
+    @Param('orgId') orgId: string,
+    @Param('schemaId') schemaId: string,
+    @Query() GetCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
+    @Res() res: Response,
+    @User() user: IUserRequestInterface): Promise<object> {
+
+    if (!schemaId) {
+      throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
+    }
+
+    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, GetCredentialDefinitionBySchemaIdDto, user, orgId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.fetch,
+      data: credentialDefinitionList.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/:orgId/schemas')
+  @ApiOperation({
+    summary: 'Get all schemas by org id.',
+    description: 'Get all schemas by org id.'
+  })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'searchByText',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sorting',
+    type: String,
+    required: false
+  })
+  @ApiQuery({
+    name: 'sortByValue',
+    type: String,
+    required: false
+  })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  async getSchemas(
+    @Query() getAllSchemaDto: GetAllSchemaDto,
+    @Param('orgId') orgId: string,
+    @Res() res: Response,
+    @User() user: IUserRequestInterface
+  ): Promise<object> {
+
+    const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
+    const schemaSearchCriteria: ISchemaSearchInterface = {
+      pageNumber,
+      searchByText,
+      pageSize,
+      sorting,
+      sortByValue
+    };
+    const schemasResponse = await this.appService.getSchemas(schemaSearchCriteria, user, orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.fetch,
+      data: schemasResponse.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/:orgId/schemas')
+  @ApiOperation({
+    summary: 'Create and sends a schema to the ledger.',
     description: 'Create and sends a schema to the ledger.'
   })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @User() user: IUserRequestInterface): Promise<object> {
+  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<object> {
 
     schema.attributes.forEach((attribute) => {
       if (attribute.hasOwnProperty('attributeName') && attribute.hasOwnProperty('schemaDataType') && attribute.hasOwnProperty('displayName')) {
@@ -59,6 +191,8 @@ export class SchemaController {
         throw new BadRequestException('Please provide a valid attributes');
       }
     });
+
+    schema.orgId = orgId;
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
 
     const finalResponse: IResponseType = {
@@ -67,136 +201,5 @@ export class SchemaController {
       data: schemaDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
-  @Get('/')
-  @ApiOperation({
-    summary: 'Get all schemas by org id.',
-    description: 'Get all schemas by org id.'
-  })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getSchemas(
-    @Query() getAllSchemaDto: GetAllSchemaDto,
-    @Res() res: Response,
-    @User() user: IUserRequestInterface
-  ): Promise<object> {
-
-    const { orgId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
-    const schemaSearchCriteria: ISchemaSearchInterface = {
-      pageNumber,
-      searchByText,
-      pageSize,
-      sorting,
-      sortByValue
-    };
-    const schemasResponse = await this.appService.getSchemas(schemaSearchCriteria, user, orgId);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.schema.success.fetch,
-      data: schemasResponse.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
-  @Get('/id')
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiOperation({
-    summary: 'Retrieve an existing schema from the ledger using its schemaId',
-    description: 'Retrieve an existing schema from the ledger using its schemaId'
-  })
-  @ApiQuery(
-    { name: 'schemaId', required: true }
-  )
-
-  @ApiQuery(
-    { name: 'orgId', required: true }
-  )
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getSchemaById(
-    @Res() res: Response,
-    @Query('schemaId') schemaId: string,
-    @Query('orgId') orgId: number
-  ): Promise<object> {
-
-    if (!schemaId) {
-      throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
-    }
-    const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.schema.success.fetch,
-      data: schemaDetails.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
-  @Get('/credential-definitions')
-  @ApiOperation({
-    summary: 'Get an existing credential definition list by schemaId',
-    description: 'Get an existing credential definition list by schemaId'
-  })
-  @ApiQuery(
-    { name: 'schemaId', required: true }
-  )
-  @ApiQuery(
-    { name: 'orgId', required: false }
-  )
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getcredDeffListBySchemaId(
-    @Query('schemaId') schemaId: string,
-    @Query() GetCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
-    @Res() res: Response,
-    @User() user: IUserRequestInterface): Promise<object> {
-
-    if (!schemaId) {
-      throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
-    }
-    const { orgId, pageSize, pageNumber, sorting, sortByValue } = GetCredentialDefinitionBySchemaIdDto;
-    const schemaSearchCriteria: ICredDeffSchemaSearchInterface = {
-      pageNumber,
-      pageSize,
-      sorting,
-      sortByValue
-    };
-    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, schemaSearchCriteria, user, orgId);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.schema.success.fetch,
-      data: credentialDefinitionList.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
-  @Get('/platform')
-  @ApiOperation({
-    summary: 'Get all schemas from platform.',
-    description: 'Get all schemas from platform.'
-  })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getAllSchema(
-    @Query() getAllSchemaDto: GetAllSchemaByPlatformDto,
-    @Res() res: Response,
-    @User() user: IUserRequestInterface
-  ): Promise<object> {
-    const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
-    const schemaSearchCriteria: ISchemaSearchInterface = {
-      pageNumber,
-      searchByText,
-      pageSize,
-      sorting,
-      sortByValue
-    };
-    const schemasResponse = await this.appService.getAllSchema(schemaSearchCriteria, user);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.schema.success.fetch,
-      data: schemasResponse.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

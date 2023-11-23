@@ -232,6 +232,33 @@
       "compilerOptions": {
         "tsConfigPath": "libs/supabase/tsconfig.lib.json"
       }
+    },
+    "ecosystem": {
+      "type": "application",
+      "root": "apps/ecosystem",
+      "entryFile": "main",
+      "sourceRoot": "apps/ecosystem/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ecosystem/tsconfig.app.json"
+      }
+    },
+    "image-service": {
+      "type": "library",
+      "root": "libs/image-service",
+      "entryFile": "index",
+      "sourceRoot": "libs/image-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/image-service/tsconfig.lib.json"
+      }
+    },
+    "aws": {
+      "type": "library",
+      "root": "libs/aws",
+      "entryFile": "index",
+      "sourceRoot": "libs/aws/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/aws/tsconfig.lib.json"
+      }
     }
   }
 }

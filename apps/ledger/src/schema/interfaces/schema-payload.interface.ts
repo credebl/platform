@@ -4,11 +4,11 @@ import { IUserRequestInterface } from './schema.interface';
 export interface ISchema {
     schema?: ISchemaPayload;
     user?: IUserRequestInterface;
-    createdBy?: number;
+    createdBy?: string;
     issuerId?: string;
-    changedBy?: number;
-    ledgerId?: number;
-    orgId?: number;
+    changedBy?: string;
+    ledgerId?: string;
+    orgId?: string;
     onLedgerStatus?: string;
     credDefSortBy?: string;
     supportRevocation?: string;
@@ -44,7 +44,7 @@ export interface ISchemaPayload {
 export interface ISchemaSearchInterface {
     schemaSearchCriteria: ISchemaSearchCriteria,
     user: IUserRequestInterface,
-    orgId: number
+    orgId: string
 }
 
 export interface ISchemaSearchCriteria {
@@ -60,6 +60,6 @@ export interface ISchemaCredDeffSearchInterface {
     schemaId: string;
     schemaSearchCriteria?: ISchemaSearchCriteria,
     user: IUserRequestInterface,
-    orgId?: number
+    orgId?: string
 }
 

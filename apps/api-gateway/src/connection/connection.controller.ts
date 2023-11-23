@@ -14,40 +14,52 @@ import { Response } from 'express';
 import { Connections } from './enums/connections.enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { OrgRoles } from 'libs/org-roles/enums';
+import { Roles } from '../authz/decorators/roles.decorator';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
+@ApiBearerAuth()
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
 export class ConnectionController {
 
     private readonly logger = new Logger('Connection');
     constructor(private readonly connectionService: ConnectionService
-    ) {
-        /**
-        * Create out-of-band connection legacy invitation
-        * @param connectionDto 
-        * @param res 
-        * @returns Created out-of-band connection invitation url
-        */
-    }
-    @Post('/connections')
-    @ApiOperation({ summary: 'Create outbound out-of-band connection (Legacy Invitation)', description: 'Create outbound out-of-band connection (Legacy Invitation)' })
-    @UseGuards(AuthGuard('jwt'))
-    @ApiBearerAuth()
+    ) { }
+
+    /**
+        * Description: Get connection by connectionId
+        * @param user
+        * @param connectionId
+        * @param orgId
+        * 
+    */
+    @Get('orgs/:orgId/connections/:connectionId')
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+    @ApiOperation({
+        summary: `Get connections by connection Id`,
+        description: `Get connections by connection Id`
+    })
     @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
-    async createLegacyConnectionInvitation(@Body() connectionDto: CreateConnectionDto, @User() reqUser: IUserRequestInterface, @Res() res: Response): Promise<Response> {
-        const connectionData = await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
+    async getConnectionsById(
+        @User() user: IUserRequest,
+        @Param('connectionId') connectionId: string,
+        @Param('orgId') orgId: string,
+        @Res() res: Response
+    ): Promise<Response> {
+        const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
+
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.connection.success.create,
-            data: connectionData.response
+            message: ResponseMessages.connection.success.fetch,
+            data: connectionsDetails.response
         };
         return res.status(HttpStatus.OK).json(finalResponse);
-
     }
-
 
     /**
     * Description: Get all connections
@@ -58,14 +70,14 @@ export class ConnectionController {
     * @param orgId
     * 
     */
-    @Get('/connections')
-    @UseGuards(AuthGuard('jwt'))
-    @ApiBearerAuth()
+    @Get('/orgs/:orgId/connections')
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiOperation({
-        summary: `Fetch all connections details`,
-        description: `Fetch all connections details`
+        summary: `Fetch all connection details`,
+        description: `Fetch all connection details`
     })
-    @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
     @ApiQuery(
         { name: 'outOfBandId', required: false }
     )
@@ -84,10 +96,6 @@ export class ConnectionController {
     @ApiQuery(
         { name: 'theirLabel', required: false }
     )
-    @ApiQuery(
-        { name: 'orgId', required: true }
-    )
-
     async getConnections(
         @User() user: IUserRequest,
         @Query('outOfBandId') outOfBandId: string,
@@ -96,7 +104,7 @@ export class ConnectionController {
         @Query('myDid') myDid: string,
         @Query('theirDid') theirDid: string,
         @Query('theirLabel') theirLabel: string,
-        @Query('orgId') orgId: number,
+        @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
 
@@ -112,6 +120,34 @@ export class ConnectionController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
+    /**
+        * Create out-of-band connection legacy invitation
+        * @param connectionDto 
+        * @param res 
+        * @returns Created out-of-band connection invitation url
+    */
+    @Post('/orgs/:orgId/connections')
+    @ApiOperation({ summary: 'Create outbound out-of-band connection (Legacy Invitation)', description: 'Create outbound out-of-band connection (Legacy Invitation)' })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+    @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
+    async createLegacyConnectionInvitation(
+        @Param('orgId') orgId: string,
+        @Body() connectionDto: CreateConnectionDto,
+        @User() reqUser: IUserRequestInterface,
+        @Res() res: Response
+    ): Promise<Response> {
+
+        connectionDto.orgId = orgId;
+        const connectionData = await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
+        const finalResponse: IResponseType = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.connection.success.create,
+            data: connectionData.response
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+
+    }
 
     /**
       * Catch connection webhook responses. 
@@ -132,70 +168,13 @@ export class ConnectionController {
         @Param('id') id: number,
         @Res() res: Response
     ): Promise<object> {
+        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)}`);
         const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
         const finalResponse: IResponseType = {
-            statusCode: HttpStatus.OK,
+            statusCode: HttpStatus.CREATED,
             message: ResponseMessages.connection.success.create,
             data: connectionData
         };
-        return res.status(HttpStatus.OK).json(finalResponse);
-    }
-
-    /**
-      * Shortening url based on reference Id. 
-      * @param referenceId The referenceId is set as a request parameter.
-      * @param res The current url is set as a header in the response parameter.
-      */
-    @Get('connections/url/:referenceId')
-    @ApiOperation({
-        summary: 'Shortening url based on reference Id',
-        description: 'Shortening url based on reference Id'
-    })
-    async getPresentproofRequestUrl(
-        @Param('referenceId') referenceId: string,
-        @Res() res: Response
-    ): Promise<Response> {
-        const originalUrlData = await this.connectionService.getUrl(referenceId);
-
-        const finalResponse: IResponseType = {
-            statusCode: HttpStatus.OK,
-            message: ResponseMessages.connection.success.create,
-            data: originalUrlData.response
-        };
-        return res.status(HttpStatus.OK).json(finalResponse.data);
-    }
-
-    /**
-* Description: Get all connections by connectionId
-* @param user
-* @param connectionId
-* @param orgId
-* 
-*/
-    @Get('connections/:connectionId')
-    @UseGuards(AuthGuard('jwt'))
-    @ApiBearerAuth()
-    @ApiOperation({
-        summary: `Fetch all connections details by connectionId`,
-        description: `Fetch all connections details by connectionId`
-    })
-    @ApiQuery(
-        { name: 'orgId', required: true }
-    )
-    @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
-    async getConnectionsById(
-        @User() user: IUserRequest,
-        @Param('connectionId') connectionId: string,
-        @Query('orgId') orgId: number,
-        @Res() res: Response
-    ): Promise<Response> {
-        const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
-
-        const finalResponse: IResponseType = {
-            statusCode: HttpStatus.OK,
-            message: ResponseMessages.connection.success.fetch,
-            data: connectionsDetails.response
-        };
-        return res.status(HttpStatus.OK).json(finalResponse);
+        return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 }

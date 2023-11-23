@@ -1,7 +1,5 @@
-
-
 export interface UserI {
-    id?: number,
+    id?: string,
     username?: string,
     email?: string,
     firstName?: string,
@@ -14,21 +12,23 @@ export interface UserI {
 }
 
 export interface InvitationsI {
-    id: number,
-    userId: number,
-    orgId?: number,
+    id: string,
+    userId: string,
+    orgId?: string,
     organisation?: object
-    orgRoleId?: number,
+    orgRoleId?: string,
     status: string,
     email?: string
-    orgRoles: number[]
+    orgRoles: string[]
 }
 
 export interface UserEmailVerificationDto{
  email:string
+ username?:string
 }
 
 export interface userInfo{
+    email: string,
     password: string,
     firstName: string,
     lastName: string,
@@ -40,15 +40,36 @@ export interface AddPasskeyDetails{
 }
 
 export interface UserWhereUniqueInput{
-    id?: number
+    id?: string
 }
 
 export interface UserWhereInput{
     email?: string
 }
 export interface UpdateUserProfile {
-    id: number,
+    id: string,
     profileImg?: string;
     firstName: string,
     lastName: string,
+    isPublic: boolean,
 }
+export interface PlatformSettingsI {
+    externalIp: string,
+    lastInternalId: string,
+    sgApiKey: string;
+    emailFrom: string,
+    apiEndPoint: string;
+    enableEcosystem: boolean;
+    multiEcosystemSupport: boolean;
+}
+
+export interface ShareUserCertificateI {
+    schemaId: string;
+    credentialId: string;
+    attributes: Attribute[];
+}
+
+export interface Attribute {
+    [key: string]: string;
+    label: string
+  }

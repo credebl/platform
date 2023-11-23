@@ -1,6 +1,6 @@
 import { ResponseMessages } from "@credebl/common/response-messages";
 import { PrismaService } from "@credebl/prisma-service";
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 // eslint-disable-next-line camelcase
 import { org_agents, organisation, platform_config, presentations } from "@prisma/client";
 import { IWebhookProofPresentation } from "../interfaces/verification.interface";
@@ -16,7 +16,7 @@ export class VerificationRepository {
      * @returns 
      */
     // eslint-disable-next-line camelcase
-    async getAgentEndPoint(orgId: number): Promise<org_agents> {
+    async getAgentEndPoint(orgId: string): Promise<org_agents> {
         try {
 
             const agentDetails = await this.prisma.org_agents.findFirst({
@@ -42,7 +42,7 @@ export class VerificationRepository {
 
             return await this.prisma.presentations.upsert({
                 where: {
-                    connectionId: proofPresentationPayload.connectionId
+                    threadId: proofPresentationPayload.threadId
                 },
                 update: {
                     state: proofPresentationPayload.state,
@@ -51,10 +51,12 @@ export class VerificationRepository {
                 },
                 create: {
                     connectionId: proofPresentationPayload.connectionId,
+                    createdBy: id,
+                    lastChangedBy: id,
                     state: proofPresentationPayload.state,
                     threadId: proofPresentationPayload.threadId,
                     isVerified: proofPresentationPayload.isVerified,
-                    orgId: parseInt(id)
+                    orgId: id
                 }
             });
 
@@ -76,7 +78,7 @@ export class VerificationRepository {
 
         } catch (error) {
             this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`);
-            throw new InternalServerErrorException(error);
+            throw error;
         }
     }
 
@@ -84,14 +86,30 @@ export class VerificationRepository {
   * Get organization details
   * @returns 
   */
-    async getOrganization(orgId: number): Promise<organisation> {
+    async getOrganization(orgId: string): Promise<organisation> {
         try {
 
             return this.prisma.organisation.findFirst({ where: { id: orgId } });
 
         } catch (error) {
             this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`);
-            throw new InternalServerErrorException(error);
+            throw error;
+        }
+    }
+
+    async getOrgAgentType(orgAgentId: string): Promise<string> {
+        try {
+
+            const { agent } = await this.prisma.org_agents_type.findFirst({
+                where: {
+                    id: orgAgentId
+                }
+            });
+
+            return agent;
+        } catch (error) {
+            this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+            throw error;
         }
     }
 }

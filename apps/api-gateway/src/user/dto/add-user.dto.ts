@@ -1,18 +1,25 @@
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString} from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AddUserDetails {
+
+    @ApiProperty({ example: 'awqx@getnada.com' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
+    @IsNotEmpty({ message: 'Email is required' })
+    @IsString({ message: 'Email should be a string' })
+    email: string;
+
     @ApiProperty({ example: 'Alen' })
-    @IsString({ message: 'firstName should be string' })
-    @IsOptional()
-    firstName?: string;
+    @IsNotEmpty({ message: 'First name is required' })
+    @IsString({ message: 'First name should be a string' })
+    firstName: string;
 
     @ApiProperty({ example: 'Harvey' })
-    @IsString({ message: 'lastName should be string' })
-    @IsOptional()
-    lastName?: string;
+    @IsNotEmpty({ message: 'Last name is required' })
+    @IsString({ message: 'Last name should be a string' })
+    lastName: string;
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))

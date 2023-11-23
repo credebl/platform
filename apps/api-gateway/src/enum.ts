@@ -116,3 +116,15 @@ export enum ExpiredSubscriptionSortBy {
     endDate = 'endDate',
     id = 'id',
 }
+
+export enum FileUploadType {
+    Issuance = 'ISSUANCE'
+}
+
+export enum FileUploadStatus {
+    started = 'PROCESS_STARTED',
+    completed = 'PROCESS_COMPLETED',
+    interrupted= 'PROCESS_INTERRUPTED',
+    retry= 'PROCESS_REINITIATED',
+    partially_completed= 'PARTIALLY_COMPLETED'
+}

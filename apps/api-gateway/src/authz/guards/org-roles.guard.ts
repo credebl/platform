@@ -9,7 +9,7 @@ import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class OrgRolesGuard implements CanActivate {
-    constructor(private reflector: Reflector) { }            // eslint-disable-next-line array-callback-return
+  constructor(private reflector: Reflector) { }            // eslint-disable-next-line array-callback-return
 
 
   private logger = new Logger('Org Role Guard');
@@ -29,8 +29,8 @@ export class OrgRolesGuard implements CanActivate {
 
     const { user } = req;
 
-    if (req.query.orgId || req.body.orgId) {
-      const orgId = req.query.orgId || req.body.orgId;
+    if (req.params.orgId || req.query.orgId || req.body.orgId) {
+      const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
 
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
@@ -44,8 +44,28 @@ export class OrgRolesGuard implements CanActivate {
       }
 
       user.selectedOrg = specificOrg;
-      user.selectedOrg.orgRoles = user.userOrgRoles.map(roleItem => roleItem.orgRole.name);
-      
+      // eslint-disable-next-line array-callback-return
+      user.selectedOrg.orgRoles = user.userOrgRoles.map((orgRoleItem) => {
+        if (orgRoleItem.orgId && orgRoleItem.orgId.toString() === orgId.toString()) {
+          return orgRoleItem.orgRole.name;
+        }
+      });
+
+    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {      
+
+      // eslint-disable-next-line array-callback-return
+      const isPlatformAdmin = user.userOrgRoles.find((orgDetails) => {
+        if (orgDetails.orgRole.name === OrgRoles.PLATFORM_ADMIN) {
+          return true;
+        }
+      });
+
+      if (isPlatformAdmin) {
+        return true;
+      }
+
+      return false;
+
     } else {
       throw new HttpException('organization is required', HttpStatus.BAD_REQUEST);
     }

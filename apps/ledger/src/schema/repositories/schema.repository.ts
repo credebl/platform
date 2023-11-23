@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { org_agents, org_agents_type, organisation, schema } from '@prisma/client';
+import { ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { ISchema, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 
@@ -35,7 +35,7 @@ export class SchemaRepository {
             issuerId: schemaResult.issuerId,
             createdBy: schemaResult.createdBy,
             lastChangedBy: schemaResult.changedBy,
-            publisherDid: schemaResult.issuerId.split(':')[3],
+            publisherDid: schemaResult.issuerId.split(':')[4],
             orgId: schemaResult.orgId,
             ledgerId: schemaResult.ledgerId
           }
@@ -68,18 +68,18 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemas(payload: ISchemaSearchCriteria, orgId: number): Promise<{
+  async getSchemas(payload: ISchemaSearchCriteria, orgId: string): Promise<{
     schemasCount: number;
     schemasResult: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       version: string;
       attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
       issuerId: string;
-      orgId: number;
+      orgId: string;
     }[];
   }> {
     try {
@@ -124,7 +124,7 @@ export class SchemaRepository {
     }
   }
 
-  async getAgentDetailsByOrgId(orgId: number): Promise<{
+  async getAgentDetailsByOrgId(orgId: string): Promise<{
     orgDid: string;
     agentEndPoint: string;
     tenantId: string
@@ -147,7 +147,7 @@ export class SchemaRepository {
     }
   }
 
-  async getAgentType(orgId: number): Promise<organisation & {
+  async getAgentType(orgId: string): Promise<organisation & {
     org_agents: (org_agents & {
       org_agent_type: org_agents_type;
     })[];
@@ -172,7 +172,7 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: number, schemaId: string): Promise<{
+  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: string, schemaId: string): Promise<{
     tag: string;
     credentialDefinitionId: string;
     schemaLedgerId: string;
@@ -207,14 +207,14 @@ export class SchemaRepository {
     schemasCount: number;
     schemasResult: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       version: string;
       attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
       issuerId: string;
-      orgId: number;
+      orgId: string;
     }[];
   }> {
     try {
@@ -258,6 +258,36 @@ export class SchemaRepository {
       return this.prisma.schema.findFirst({
         where: {
           schemaLedgerId: schemaId
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`Error in getting get schema by schema ledger id: ${error}`);
+      throw error;
+    }
+  }
+
+  async getOrgAgentType(orgAgentId: string): Promise<string> {
+    try {
+
+      const { agent } = await this.prisma.org_agents_type.findFirst({
+        where: {
+          id: orgAgentId
+        }
+      });
+
+      return agent;
+    } catch (error) {
+      this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getLedgerByLedger(LedgerName: string): Promise<ledgers> {
+    try {
+      return this.prisma.ledgers.findFirst({
+        where: {
+          indyNamespace: LedgerName
         }
       });
 

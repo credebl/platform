@@ -5,7 +5,7 @@ export interface CreateCredDefAgentRedirection {
     issuerId?: string;
     payload?: ITenantCredDef;
     method?: string;
-    agentType?: number;
+    agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
 }
@@ -22,10 +22,21 @@ export interface GetCredDefAgentRedirection {
     payload?: GetCredDefFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
-    agentType?: number;
+    agentType?: string;
     method?: string;
 }
 
 export interface GetCredDefFromTenantPayload {
     credentialDefinitionId: string;
+}
+
+export interface CredDefSchema {
+    credentialDefinitionId: string;
+    schemaCredDefName: string;
+}
+
+export interface BulkCredDefSchema {
+    orgId: string
+    sortValue: string,
+    credDefSortBy: string
 }

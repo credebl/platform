@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { GetAllOrganizationsDto } from './dtos/get-all-organizations.dto';
@@ -8,6 +8,7 @@ import { GetAllSentInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
+import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -20,14 +21,9 @@ export class OrganizationService extends BaseService {
    * @param createOrgDto
    * @returns Organization creation Success
    */
-  async createOrganization(createOrgDto: CreateOrganizationDto, userId: number): Promise<object> {
-    try {
-      const payload = { createOrgDto, userId };
-      return this.sendNats(this.serviceProxy, 'create-organization', payload);
-    } catch (error) {
-      this.logger.error(`In service Error: ${error}`);
-      throw new RpcException(error.response);
-    }
+  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<object> {
+    const payload = { createOrgDto, userId };
+    return this.sendNats(this.serviceProxy, 'create-organization', payload);
   }
 
   /**
@@ -35,14 +31,9 @@ export class OrganizationService extends BaseService {
    * @param updateOrgDto
    * @returns Organization update Success
    */
-  async updateOrganization(updateOrgDto: UpdateOrganizationDto, userId: number): Promise<object> {
-    try {
-      const payload = { updateOrgDto, userId };
-      return this.sendNats(this.serviceProxy, 'update-organization', payload);
-    } catch (error) {
-      this.logger.error(`In service Error: ${error}`);
-      throw new RpcException(error.response);
-    }
+  async updateOrganization(updateOrgDto: UpdateOrganizationDto, userId: string, orgId: string): Promise<object> {
+    const payload = { updateOrgDto, userId, orgId };
+    return this.sendNats(this.serviceProxy, 'update-organization', payload);
   }
 
   /**
@@ -50,7 +41,7 @@ export class OrganizationService extends BaseService {
    * @param
    * @returns Organizations details
    */
-  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: number): Promise<{ response: object }> {
+  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: string): Promise<{ response: object }> {
     const payload = { userId, ...getAllOrgsDto };
     return this.sendNats(this.serviceProxy, 'get-organizations', payload);
   }
@@ -65,8 +56,8 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-public-organizations', payload);
   }
 
-  async getPublicProfile(id: number): Promise<{ response: object }> {
-    const payload = { id };
+  async getPublicProfile(orgSlug: string): Promise<{ response: object }> {
+    const payload = { orgSlug };
     try {
       return this.sendNats(this.serviceProxy, 'get-organization-public-profile', payload);
     } catch (error) {
@@ -79,7 +70,7 @@ export class OrganizationService extends BaseService {
    * @param orgId
    * @returns Organization get Success
    */
-  async getOrganization(orgId: number, userId: number): Promise<{ response: object }> {
+  async getOrganization(orgId: string, userId: string): Promise<{ response: object }> {
     const payload = { orgId, userId };
     return this.sendNats(this.serviceProxy, 'get-organization-by-id', payload);
   }
@@ -90,7 +81,7 @@ export class OrganizationService extends BaseService {
    * @returns Invitations details
    */
   async getInvitationsByOrgId(
-    orgId: number,
+    orgId: string,
     getAllInvitationsDto: GetAllSentInvitationsDto
   ): Promise<{ response: object }> {
     const { pageNumber, pageSize, search } = getAllInvitationsDto;
@@ -98,7 +89,7 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-invitations-by-orgId', payload);
   }
 
-  async getOrganizationDashboard(orgId: number, userId: number): Promise<{ response: object }> {
+  async getOrganizationDashboard(orgId: string, userId: string): Promise<{ response: object }> {
     const payload = { orgId, userId };
     return this.sendNats(this.serviceProxy, 'get-organization-dashboard', payload);
   }
@@ -109,13 +100,8 @@ export class OrganizationService extends BaseService {
    * @returns get organization roles
    */
   async getOrgRoles(): Promise<object> {
-    try {
-      const payload = {};
-      return this.sendNats(this.serviceProxy, 'get-org-roles', payload);
-    } catch (error) {
-      this.logger.error(`In service Error: ${error}`);
-      throw new RpcException(error.response);
-    }
+    const payload = {};
+    return this.sendNats(this.serviceProxy, 'get-org-roles', payload);
   }
 
   /**
@@ -123,14 +109,9 @@ export class OrganizationService extends BaseService {
    * @param sendInvitationDto
    * @returns Organization invitation creation Success
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number): Promise<object> {
-    try {
-      const payload = { bulkInvitationDto, userId };
-      return this.sendNats(this.serviceProxy, 'send-invitation', payload);
-    } catch (error) {
-      this.logger.error(`In service Error: ${error}`);
-      throw new RpcException(error.response);
-    }
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<object> {
+    const payload = { bulkInvitationDto, userId, userEmail };
+    return this.sendNats(this.serviceProxy, 'send-invitation', payload);
   }
 
   /**
@@ -139,8 +120,34 @@ export class OrganizationService extends BaseService {
    * @param userId
    * @returns User roles update response
    */
-  async updateUserRoles(updateUserDto: UpdateUserRolesDto, userId: number): Promise<{ response: boolean }> {
+  async updateUserRoles(updateUserDto: UpdateUserRolesDto, userId: string): Promise<{ response: boolean }> {
     const payload = { orgId: updateUserDto.orgId, roleIds: updateUserDto.orgRoleId, userId };
     return this.sendNats(this.serviceProxy, 'update-user-roles', payload);
+  }
+
+  async getOrgUsers(
+    orgId: string,
+    getAllUsersDto: GetAllUsersDto
+  ): Promise<{ response: object }> {
+    const { pageNumber, pageSize, search } = getAllUsersDto;
+    const payload = { orgId, pageNumber, pageSize, search };
+
+    return this.sendNats(this.serviceProxy, 'fetch-organization-user', payload);
+  }
+
+  async getOgPofile(
+    orgId: string
+  ): Promise<{ response: object }> {
+    const payload = { orgId };
+
+    return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
+  }
+
+  async deleteOrganization(
+    orgId: number
+  ): Promise<{ response: object }> {
+    const payload = { orgId };
+
+    return this.sendNats(this.serviceProxy, 'delete-organization', payload);
   }
 }

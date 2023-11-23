@@ -1,24 +1,31 @@
-import { IsArray, IsEmail, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-// import { IProofRequestAttribute } from '../interfaces/verification.interface';
 
-class IProofRequestAttribute {
+export class ProofRequestAttribute {
     @IsString()
+    @IsNotEmpty({ message: 'attributeName is required.' })
     attributeName: string;
 
     @IsString()
+    @IsNotEmpty({ message: 'schemaId is required.' })
+    schemaId: string;
+
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'condition is required.' })
     condition?: string;
 
     @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'value is required.' })
     value?: string;
 
     @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'credDefId is required.' })
     credDefId?: string;
-
-    @IsString()
-    schemaId: string;
 }
 
 export class RequestProof {
@@ -43,16 +50,12 @@ export class RequestProof {
     @IsArray({ message: 'attributes must be in array' })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
-    attributes: IProofRequestAttribute[];
+    attributes: ProofRequestAttribute[];
 
     @ApiProperty()
     @IsOptional()
     comment: string;
-
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
-    orgId: number;
+    orgId: string;
 
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
@@ -80,25 +83,16 @@ export class OutOfBandRequestProof {
     @IsArray({ message: 'attributes must be in array' })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
-    attributes: IProofRequestAttribute[];
+    attributes: ProofRequestAttribute[];
 
-    @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid emailId' })
-    @Transform(({ value }) => trim(value))
-    @Transform(({ value }) => toLowerCase(value))
-    @IsNotEmpty({ message: 'Email is required.' })
-    @MaxLength(256, { message: 'Email must be at most 256 character.' })
-    @IsEmail()
-    emailId: string;
-    
+    @ApiProperty()
+    @IsString({ each: true, message: 'Each emailId in the array should be a string' })
+    emailId: string | string[];
+
     @ApiProperty()
     @IsOptional()
     comment: string;
-
-    @ApiProperty()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide orgId' })
-    orgId: number;
+    orgId: string;
 
     @IsString({ message: 'autoAcceptProof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })

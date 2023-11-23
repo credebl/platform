@@ -1,37 +1,47 @@
 /* eslint-disable prefer-destructuring */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import {
+  PlatformSettingsI,
+  ShareUserCertificateI,
+  UpdateUserProfile,
+  UserEmailVerificationDto,
+  UserI,
+  userInfo
+} from '../interfaces/user.interface';
 
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { user } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
+import { schema, user } from '@prisma/client';
 
 interface UserQueryOptions {
-  id?: number; // Use the appropriate type based on your data model
+  id?: string; // Use the appropriate type based on your data model
   email?: string; // Use the appropriate type based on your data model
+  username?: string;
   // Add more properties if needed for other unique identifier fields
-};
+}
 
 @Injectable()
 export class UserRepository {
-  constructor(private readonly prisma: PrismaService, private readonly logger: Logger) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: Logger
+  ) {}
 
   /**
    *
    * @param userEmailVerificationDto
    * @returns user email
    */
-  async createUser(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
+  async createUser(userEmailVerificationDto: UserEmailVerificationDto, verifyCode: string): Promise<user> {
     try {
-      const verifyCode = uuidv4();
       const saveResponse = await this.prisma.user.create({
         data: {
-          username: userEmailVerificationDto.email,
+          username: userEmailVerificationDto.username,
           email: userEmailVerificationDto.email,
-          verificationCode: verifyCode.toString()
+          verificationCode: verifyCode.toString(),
+          publicProfile: true
         }
       });
 
@@ -78,7 +88,6 @@ export class UserRepository {
       this.logger.error(`Not Found: ${JSON.stringify(error)}`);
       throw new NotFoundException(error);
     }
-
   }
 
   /**
@@ -86,7 +95,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserById(id: number): Promise<UserI> {
+  async getUserById(id: string): Promise<UserI> {
     const queryOptions: UserQueryOptions = {
       id
     };
@@ -94,37 +103,51 @@ export class UserRepository {
     return this.findUser(queryOptions);
   }
 
-    /**
+  /**
    *
    * @param id
    * @returns User profile data
    */
-    async getUserPublicProfile(id: number): Promise<UserI> {
-          const queryOptions: UserQueryOptions = {
-            id
-          };
-          return this.findUserForPublicProfile(queryOptions);
-        }
+  async getUserCredentialsById(credentialId: string): Promise<object> {
+    return this.prisma.user_credentials.findUnique({
+      where: {
+        credentialId
+      }
+    });
+  }
+
+  /**
+   *
+   * @param id
+   * @returns User profile data
+   */
+  async getUserPublicProfile(username: string): Promise<UserI> {
+    const queryOptions: UserQueryOptions = {
+      username
+    };
+
+    return this.findUserForPublicProfile(queryOptions);
+  }
 
   /**
    *
    * @Body updateUserProfile
    * @returns Update user profile data
    */
-  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<UpdateUserProfile> {
+  async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<user> {
     try {
       const userdetails = await this.prisma.user.update({
         where: {
-          id: Number(updateUserProfile.id)
+          id: String(updateUserProfile.id)
         },
         data: {
           profileImg: updateUserProfile.profileImg,
           firstName: updateUserProfile.firstName,
-          lastName: updateUserProfile.lastName
+          lastName: updateUserProfile.lastName,
+          publicProfile: updateUserProfile?.isPublic
         }
       });
       return userdetails;
-
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -169,7 +192,6 @@ export class UserRepository {
       this.logger.error(`Not Found: ${JSON.stringify(error)}`);
       throw new NotFoundException(error);
     }
-
   }
 
   async findUserByEmail(email: string): Promise<object> {
@@ -198,7 +220,7 @@ export class UserRepository {
         firstName: true,
         lastName: true,
         profileImg: true,
-        publicProfile:true,
+        publicProfile: true,
         isEmailVerified: true,
         clientId: true,
         clientSecret: true,
@@ -225,14 +247,17 @@ export class UserRepository {
 
   async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<UserI> {
     return this.prisma.user.findFirst({
-      where: {       
+      where: {
         publicProfile: true,
         OR: [
           {
-            id: queryOptions.id
+            id: String(queryOptions.id)
           },
           {
             email: queryOptions.email
+          },
+          {
+            username: queryOptions.username
           }
         ]
       },
@@ -253,9 +278,10 @@ export class UserRepository {
                 name: true,
                 description: true,
                 logoUrl: true,
-                website: true
+                website: true,
+                orgSlug: true
               },
-              where:{
+              where: {
                 publicProfile: true
               }
             }
@@ -271,7 +297,7 @@ export class UserRepository {
    * @returns Updates organization details
    */
   // eslint-disable-next-line camelcase
-  async updateUserDetails(id: number, supabaseUserId: string): Promise<user> {
+  async updateUserDetails(id: string, supabaseUserId: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
@@ -314,13 +340,17 @@ export class UserRepository {
   }
 
   /**
-   * 
-   * @param queryOptions 
-   * @param filterOptions 
+   *
+   * @param queryOptions
+   * @param filterOptions
    * @returns users list
    */
-  async findOrgUsers(queryOptions: object, pageNumber: number, pageSize: number, filterOptions?: object): Promise<object> {
-
+  async findOrgUsers(
+    queryOptions: object,
+    pageNumber: number,
+    pageSize: number,
+    filterOptions?: object
+  ): Promise<object> {
     const result = await this.prisma.$transaction([
       this.prisma.user.findMany({
         where: {
@@ -377,50 +407,78 @@ export class UserRepository {
     return { totalPages, users };
   }
 
-    /**
-   * 
-   * @param queryOptions 
-   * @param filterOptions 
+  /**
+   *
+   * @param queryOptions
+   * @param filterOptions
    * @returns users list
    */
-    async findUsers(queryOptions: object, pageNumber: number, pageSize: number): Promise<object> {
+  async findUsers(queryOptions: object, pageNumber: number, pageSize: number): Promise<object> {
+    const result = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where: {
+          ...queryOptions, // Spread the dynamic condition object
+          publicProfile: true
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          profileImg: true,
+          isEmailVerified: true,
+          clientId: false,
+          clientSecret: false,
+          supabaseUserId: false
+        },
+        take: pageSize,
+        skip: (pageNumber - 1) * pageSize,
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      }),
+      this.prisma.user.count({
+        where: {
+          ...queryOptions
+        }
+      })
+    ]);
 
-      const result = await this.prisma.$transaction([
-        this.prisma.user.findMany({
-          where: {
-            ...queryOptions, // Spread the dynamic condition object
-            publicProfile: true
-          },
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            isEmailVerified: true,
-            clientId: false,
-            clientSecret: false,
-            supabaseUserId: false
-          },
-          take: pageSize,
-          skip: (pageNumber - 1) * pageSize,
-          orderBy: {
-            createDateTime: 'desc'
-          }
-        }),
-        this.prisma.user.count({
-          where: {
-            ...queryOptions
-          }
-        })
-      ]);
-  
-      const users = result[0];
-      const totalCount = result[1];
-      const totalPages = Math.ceil(totalCount / pageSize);
-  
-      return { totalPages, users };
+    const users = result[0];
+    const totalCount = result[1];
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    return { totalPages, users };
+  }
+
+  async getAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<schema> {
+    try {
+      const getAttributes = await this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId: shareUserCertificate.schemaId
+        }
+      });
+      return getAttributes;
+    } catch (error) {
+      this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
     }
+  }
+
+  async saveCertificateImageUrl(imageUrl: string, credentialId: string): Promise<unknown> {
+    try {
+      const saveImageUrl = await this.prisma.user_credentials.create({
+        data: {
+          imageUrl,
+          credentialId
+        }
+      });
+      return saveImageUrl;
+    } catch (error) {
+      throw new Error(`Error saving certificate image URL: ${error.message}`);
+    }
+  }
 
   async checkUniqueUserExist(email: string): Promise<user> {
     try {
@@ -452,7 +510,7 @@ export class UserRepository {
     }
   }
 
-   /**
+  /**
    *
    * @param userInfo
    * @returns Updates user credentials
@@ -475,4 +533,82 @@ export class UserRepository {
     }
   }
 
+  /**
+   *
+   * @Body updatePlatformSettings
+   * @returns Update platform settings
+   */
+  async updatePlatformSettings(updatePlatformSettings: PlatformSettingsI): Promise<object> {
+    try {
+      const getPlatformDetails = await this.prisma.platform_config.findFirst();
+      const platformDetails = await this.prisma.platform_config.update({
+        where: {
+          id: getPlatformDetails.id
+        },
+        data: {
+          externalIp: updatePlatformSettings.externalIp,
+          lastInternalId: updatePlatformSettings.lastInternalId,
+          sgApiKey: updatePlatformSettings.sgApiKey,
+          emailFrom: updatePlatformSettings.emailFrom,
+          apiEndpoint: updatePlatformSettings.apiEndPoint
+        }
+      });
+
+      return platformDetails;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  /**
+   *
+   * @Body updatePlatformSettings
+   * @returns Update ecosystem settings
+   */
+  async updateEcosystemSettings(eosystemKeys: string[], ecosystemObj: object): Promise<boolean> {
+    try {
+      for (const key of eosystemKeys) {
+        const ecosystemKey = await this.prisma.ecosystem_config.findFirst({
+          where: {
+            key
+          }
+        });
+
+        await this.prisma.ecosystem_config.update({
+          where: {
+            id: ecosystemKey.id
+          },
+          data: {
+            value: ecosystemObj[key].toString()
+          }
+        });
+      }
+
+      return true;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getPlatformSettings(): Promise<object> {
+    try {
+      const getPlatformSettingsList = await this.prisma.platform_config.findMany();
+      return getPlatformSettingsList;
+    } catch (error) {
+      this.logger.error(`error in getPlatformSettings: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getEcosystemSettings(): Promise<object> {
+    try {
+      const getEcosystemSettingsList = await this.prisma.ecosystem_config.findMany();
+      return getEcosystemSettingsList;
+    } catch (error) {
+      this.logger.error(`error in getEcosystemSettings: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
 }

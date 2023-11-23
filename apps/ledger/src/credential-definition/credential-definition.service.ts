@@ -87,6 +87,7 @@ export class CredentialDefinitionService extends BaseService {
                 issuerId: '',
                 revocable: credDef.revocable,
                 createdBy: `0`,
+                lastChangedBy: `0`,
                 orgId: '0',
                 schemaId: '0',
                 credentialDefinitionId: ''
@@ -101,6 +102,7 @@ export class CredentialDefinitionService extends BaseService {
                 credDefData.revocable = credDef.revocable;
                 credDefData.schemaId = schemaDetails.id;
                 credDefData.createdBy = userId;
+                credDefData.lastChangedBy = userId;
             } else if ('finished' === response.credentialDefinition.state) {
                 credDefData.tag = response.credentialDefinition.credentialDefinition.tag;
                 credDefData.schemaLedgerId = response.credentialDefinition.credentialDefinition.schemaId;
@@ -110,6 +112,7 @@ export class CredentialDefinitionService extends BaseService {
                 credDefData.revocable = credDef.revocable;
                 credDefData.schemaId = schemaDetails.id;
                 credDefData.createdBy = userId;
+                credDefData.lastChangedBy = userId;
             }
             const credDefResponse = await this.credentialDefinitionRepository.saveCredentialDefinition(credDefData);
             return credDefResponse;

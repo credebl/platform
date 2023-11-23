@@ -3,7 +3,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
+import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
 import { FileExportResponse, RequestPayload } from './interfaces';
 
 @Injectable()
@@ -109,8 +109,8 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'issued-file-data', payload);
     }
 
-    async issueBulkCredential(requestId: string, orgId: string, clientId: string): Promise<{ response: object }> {
-        const payload = { requestId, orgId, clientId };
+    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails): Promise<{ response: object }> {
+        const payload = { requestId, orgId, clientDetails };
         return this.sendNats(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }
 

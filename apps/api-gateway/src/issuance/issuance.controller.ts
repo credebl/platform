@@ -53,6 +53,9 @@ import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
 import { RpcException } from '@nestjs/microservices';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { user } from '@prisma/client';
+
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -350,8 +353,9 @@ export class IssuanceController {
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
-  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: string, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
-    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails.clientId);
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: string, @Res() res: Response, @Body() clientDetails: ClientDetails, @User() user: user): Promise<Response> {
+    clientDetails.userId = user.id;
+    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,

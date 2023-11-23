@@ -17,7 +17,6 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
-import { GetUser } from '../authz/decorators/get-user.decorator';
 import { VerificationService } from './verification.service';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -30,6 +29,7 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { WebhookPresentationProof } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
+import { User } from '../authz/decorators/user.decorator';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -69,7 +69,7 @@ export class VerificationController {
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
     async getProofFormData(
         @Res() res: Response,
-        @GetUser() user: IUserRequest,
+        @User() user: IUserRequest,
         @Param('proofId') id: string,
         @Param('orgId') orgId: string
     ): Promise<object> { 
@@ -102,7 +102,7 @@ export class VerificationController {
     @ApiBearerAuth()
     async getProofPresentationById(
         @Res() res: Response,
-        @GetUser() user: IUserRequest,
+        @User() user: IUserRequest,
         @Param('proofId') id: string,
         @Param('orgId') orgId: string
     ): Promise<object> {
@@ -137,7 +137,7 @@ export class VerificationController {
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async getProofPresentations(
         @Res() res: Response,
-        @GetUser() user: IUserRequest,
+        @User() user: IUserRequest,
         @Param('orgId') orgId: string,
         @Query('threadId') threadId: string
     ): Promise<object> {
@@ -170,7 +170,7 @@ export class VerificationController {
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     async sendPresentationRequest(
         @Res() res: Response,
-        @GetUser() user: IUserRequest,
+        @User() user: IUserRequest,
         @Param('orgId') orgId: string,
         @Body() requestProof: RequestProof
     ): Promise<object> {
@@ -209,7 +209,7 @@ export class VerificationController {
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async verifyPresentation(
         @Res() res: Response,
-        @GetUser() user: IUserRequest,
+        @User() user: IUserRequest,
         @Param('proofId') id: string,
         @Param('orgId') orgId: string
     ): Promise<object> {
@@ -242,7 +242,7 @@ export class VerificationController {
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async sendOutOfBandPresentationRequest(
         @Res() res: Response,
-        @GetUser() user: IUserRequest,
+        @User() user: IUserRequest,
         @Body() outOfBandRequestProof: OutOfBandRequestProof,
         @Param('orgId') orgId: string
     ): Promise<object> {

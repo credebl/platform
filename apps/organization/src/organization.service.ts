@@ -52,6 +52,8 @@ export class OrganizationService {
 
       const orgSlug = this.createOrgSlug(createOrgDto.name);
       createOrgDto.orgSlug = orgSlug;
+      createOrgDto.createdBy = userId;
+      createOrgDto.lastChangedBy = userId;
 
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
@@ -101,7 +103,7 @@ export class OrganizationService {
 
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
-
+      updateOrgDto.userId  = userId;
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;

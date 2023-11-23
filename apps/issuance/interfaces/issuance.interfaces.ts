@@ -12,7 +12,7 @@ export interface IIssuance {
     comment: string;
     connectionId: string;
     attributes: Attributes[];
-    orgId: number;
+    orgId: string;
     protocolVersion: string;
 }
 
@@ -20,14 +20,14 @@ export interface IIssueCredentials {
     user: IUserRequest;
     connectionId: string;
     threadId: string;
-    orgId: number;
+    orgId: string;
     state: string;
 }
 
 export interface IIssueCredentialsDefinitions {
     user: IUserRequest;
     credentialRecordId: string;
-    orgId: number;
+    orgId: string;
 }
 
 export interface IIssuanceWebhookInterface {
@@ -36,7 +36,7 @@ export interface IIssuanceWebhookInterface {
     threadId: string;
     protocolVersion: string;
     credentialAttributes: ICredentialAttributesInterface[];
-    orgId: number;
+    orgId: string;
 }
 
 export interface ICredentialAttributesInterface {
@@ -51,7 +51,7 @@ export interface CredentialOffer {
 }
 export interface OutOfBandCredentialOfferPayload {
     credentialDefinitionId: string;
-    orgId: number;
+    orgId: string;
     comment?: string;
     credentialOffer?: CredentialOffer[];
     emailId?: string;
@@ -101,4 +101,12 @@ export interface FileUploadData {
     error?: string;
     detailError?: string;
     jobId: string;
+}
+
+export interface ClientDetails {
+   
+    clientId: string;
+
+    userId?: string;
+
 }

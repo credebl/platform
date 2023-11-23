@@ -53,6 +53,9 @@ import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
 import { RpcException } from '@nestjs/microservices';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { user } from '@prisma/client';
+
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -104,7 +107,7 @@ export class IssuanceController {
     @Query('threadId') threadId: string,
     @Query('connectionId') connectionId: string,
     @Query('state') state: string,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
 
@@ -137,7 +140,7 @@ export class IssuanceController {
   async getIssueCredentialsbyCredentialRecordId(
     @User() user: IUserRequest,
     @Param('credentialRecordId') credentialRecordId: string,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
 
     @Res() res: Response
   ): Promise<Response> {
@@ -163,7 +166,7 @@ export class IssuanceController {
   })
   async downloadBulkIssuanceCSVTemplate(
     @Param('credentialDefinitionId') credentialDefinitionId: string,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
     try {
@@ -213,10 +216,12 @@ export class IssuanceController {
   async importAndPreviewDataForIssuance(
     @Query('credDefId') credentialDefinitionId: string,
     @UploadedFile() file: Express.Multer.File,
-    @Param('orgId') orgId: number,
+    @Body() fileDetails: object,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
     try {
+
       if (file) {
         const fileKey: string = uuidv4();
         try {
@@ -228,12 +233,13 @@ export class IssuanceController {
           throw new RpcException(error.response ? error.response : error);
 
         }
+
         const reqPayload: RequestPayload = {
           credDefId: credentialDefinitionId,
           fileKey,
-          fileName: file?.filename || file?.originalname
+          fileName: fileDetails["fileName"].split('.csv')[0]
         };
-        this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
+
         const importCsvDetails = await this.issueCredentialService.importCsv(
           reqPayload
         );
@@ -297,7 +303,7 @@ export class IssuanceController {
   })
   async previewFileDataForIssuance(
     @Param('requestId') requestId: string,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<object> {
@@ -333,8 +339,9 @@ export class IssuanceController {
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
-  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
-    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails.clientId);
+  async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: string, @Res() res: Response, @Body() clientDetails: ClientDetails, @User() user: user): Promise<Response> {
+    clientDetails.userId = user.id;
+    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
@@ -389,7 +396,7 @@ export class IssuanceController {
     required: false
   })
   async issuedFileDetails(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
   ): Promise<object> {
@@ -451,7 +458,7 @@ export class IssuanceController {
     required: false
   })
   async getFileDetailsByFileId(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Param('fileId') fileId: string,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
@@ -488,7 +495,7 @@ export class IssuanceController {
     summary: 'Retry bulk issue credential',
     description: 'Retry bulk issue credential'
   })
-  async retryBulkCredentials(@Param('fileId') fileId: string, @Param('orgId') orgId: number, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
+  async retryBulkCredentials(@Param('fileId') fileId: string, @Param('orgId') orgId: string, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
     const bulkIssunaceDetails = await this.issueCredentialService.retryBulkCredential(fileId, orgId, clientDetails.clientId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
@@ -515,7 +522,7 @@ export class IssuanceController {
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Body() issueCredentialDto: IssueCredentialDto,
     @Res() res: Response
   ): Promise<Response> {
@@ -530,6 +537,7 @@ export class IssuanceController {
         throw new BadRequestException(`Value must be required at position of ${data['name']}`);
       }
     });
+
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(
       issueCredentialDto,
       user
@@ -564,7 +572,7 @@ export class IssuanceController {
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
 
@@ -592,10 +600,12 @@ export class IssuanceController {
   })
   async getIssueCredentialWebhook(
     @Body() issueCredentialDto: IssuanceDto,
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    this.logger.debug(`issueCredentialDto ::: ${issueCredentialDto}`);
+    this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
+
+
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

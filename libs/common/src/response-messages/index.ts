@@ -57,7 +57,8 @@ export const ResponseMessages = {
             getOrganization: 'Organization details fetched successfully',
             getOrgDashboard: 'Organization dashboard details fetched',
             getOrganizations: 'Organizations details fetched successfully',
-            updateUserRoles: 'User roles updated successfully'
+            updateUserRoles: 'User roles updated successfully',
+            delete: 'Organization deleted successfully',
         },
         error: {
             exists: 'An organization name is already exist',
@@ -65,7 +66,9 @@ export const ResponseMessages = {
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
-            updateUserRoles: 'Unable to update user roles'
+            updateUserRoles: 'Unable to update user roles',
+            deleteOrg: 'Organization not found',
+            notFound: 'Organization agent not found'
         }
 
     },
@@ -136,7 +139,7 @@ export const ResponseMessages = {
     },
     agent: {
         success: {
-            create: 'Agent spin-up successfully',
+            create: 'Agent process initiated successfully. Please wait',
             health: 'Agent health details retrieved successfully.'
         },
         error: {
@@ -176,7 +179,7 @@ export const ResponseMessages = {
             agentEndPointNotFound: 'agentEndPoint Not Found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
-            notFound: 'Organization agent not found',
+            notFound: 'History not found',
             credentialOfferNotFound: 'Credential offer not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config details not found',
@@ -187,7 +190,8 @@ export const ResponseMessages = {
             cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request',
             fileNotFound: 'File details not found',
             fileData: 'File data does not exist for the specific file',
-            retry: 'Credentials do not exist for retry'
+            retry: 'Credentials do not exist for retry',
+            walletError: 'Credential Issuance failed due to error in Wallet Agent'
         }
     },
     verification: {

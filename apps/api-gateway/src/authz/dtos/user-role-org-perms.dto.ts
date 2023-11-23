@@ -1,12 +1,12 @@
 
 export class UserRoleOrgPermsDto {
-   id :number;
+   id :string;
    role : userRoleDto;            
    Organization: userOrgDto;
 }
 
 export class userRoleDto {
-    id: number;
+    id: string;
     name : string;
     permissions :string[];
 

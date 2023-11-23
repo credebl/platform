@@ -5,4 +5,6 @@ export class updateEcosystemOrgsDto {
     status: string;
     ecosystemId: string;
     ecosystemRoleId: string;
+    createdBy?: string;
+    lastChangedBy?: string;
 }

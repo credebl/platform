@@ -511,7 +511,7 @@ export class UserService {
     for (const invitation of invitations) {
       const { status, id, organisation, orgId, userId, orgRoles } = invitation;
 
-      const roles = await this.orgRoleService.getOrgRolesByIds(orgRoles as number[]);
+      const roles = await this.orgRoleService.getOrgRolesByIds(orgRoles as string[]);
 
       updatedInvitations.push({
         orgRoles: roles,
@@ -532,7 +532,7 @@ export class UserService {
    * @param userId
    * @returns Organization invitation status
    */
-  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: number): Promise<string> {
+  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<string> {
     try {
       const userData = await this.userRepository.getUserById(userId);
       return this.fetchInvitationsStatus(acceptRejectInvitation, userId, userData.email);
@@ -639,7 +639,7 @@ export class UserService {
    */
   async fetchInvitationsStatus(
     acceptRejectInvitation: AcceptRejectInvitationDto,
-    userId: number,
+    userId: string,
     email: string
   ): Promise<string> {
     try {
@@ -675,7 +675,7 @@ export class UserService {
    * @param orgId
    * @returns users list
    */
-  async getOrgUsers(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getOrgUsers(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
       const query = {
         userOrgRoles: {
@@ -747,7 +747,8 @@ export class UserService {
     }
   }
 
-  async getUserActivity(userId: number, limit: number): Promise<object[]> {
+
+  async getUserActivity(userId: string, limit: number): Promise<object[]> {
     try {
       return this.userActivityService.getUserActivity(userId, limit);
     } catch (error) {

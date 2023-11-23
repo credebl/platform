@@ -18,7 +18,9 @@ export class ConnectionService extends BaseService {
         response: object;
     }> {
         try {
+           
             const connectionDetails = { orgId: connectionDto.orgId, alias: connectionDto.alias, label: connectionDto.label, imageUrl: connectionDto.imageUrl, multiUseInvitation: connectionDto.multiUseInvitation, autoAcceptConnection: connectionDto.autoAcceptConnection, user };
+
             return this.sendNats(this.connectionServiceProxy, 'create-connection', connectionDetails);
         } catch (error) {
             throw new RpcException(error.response);
@@ -45,14 +47,14 @@ export class ConnectionService extends BaseService {
         }
     }
 
-    getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: number): Promise<{
+    getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<{
         response: object;
     }> {
         const payload = { user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId };
         return this.sendNats(this.connectionServiceProxy, 'get-all-connections', payload);
     }
 
-    getConnectionsById(user: IUserRequest, connectionId: string, orgId: number): Promise<{
+    getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<{
         response: object;
     }> {
         const payload = { user, connectionId, orgId };

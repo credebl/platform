@@ -15,7 +15,6 @@ import {
   Param
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { GetUser } from '../authz/decorators/get-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -51,7 +50,7 @@ export class AgentController {
     description: 'Get the agent health details'
   })
   @UseGuards(AuthGuard('jwt'))
-  async getAgentHealth(@User() reqUser: user, @Param('orgId') orgId: number, @Res() res: Response): Promise<object> {
+  async getAgentHealth(@User() reqUser: user, @Param('orgId') orgId: string, @Res() res: Response): Promise<object> {
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
     const finalResponse: IResponseType = {
@@ -80,8 +79,8 @@ export class AgentController {
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async agentSpinup(
     @Body() agentSpinupDto: AgentSpinupDto,
-    @Param('orgId') orgId: number,
-    @GetUser() user: user,
+    @Param('orgId') orgId: string,
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response<object, Record<string, object>>> {
 
@@ -100,6 +99,7 @@ export class AgentController {
     agentSpinupDto.orgId = orgId;
     const agentDetails = await this.agentService.agentSpinup(agentSpinupDto, user);
 
+    
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.create,
@@ -118,9 +118,9 @@ export class AgentController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async createTenant(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Body() createTenantDto: CreateTenantDto,
-    @GetUser() user: user,
+    @User() user: user,
     @Res() res: Response
   ): Promise<object> {
 

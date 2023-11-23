@@ -1,7 +1,7 @@
 export class UpdateInvitationDto {
-    invitationId: number;
-    orgId: number;
+    invitationId: string;
+    orgId: string;
     status: string;
-    userId: number;
+    userId: string;
     email: string;
 }

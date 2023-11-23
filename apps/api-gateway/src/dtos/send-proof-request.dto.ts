@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString, IsNotEmpty, IsObject, IsOptional } from 'class-validator';
+import { IsArray, IsString, IsNotEmpty, IsObject} from 'class-validator';
 
 
 export class SendProofRequest {    

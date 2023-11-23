@@ -1,7 +1,7 @@
 export interface IUserRequestInterface {
-  userId: number;
+  userId: string;
   email: string;
-  orgId: number;
+  orgId: string;
   agentEndPoint?: string;
   apiKey?: string;
   orgName?: string;
@@ -9,10 +9,10 @@ export interface IUserRequestInterface {
 }
 
 export interface ISelectedOrgInterface {
-    id: number;
-    userId: number;
-    orgRoleId: number;
-    orgId: number;
+    id: string;
+    userId: string;
+    orgRoleId: string;
+    orgId: string;
     orgRole: object;
     organisation: IOrganizationInterface;
 }

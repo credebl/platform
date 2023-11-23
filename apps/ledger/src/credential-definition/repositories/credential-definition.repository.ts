@@ -27,7 +27,8 @@ export class CredentialDefinitionRepository {
                         tag: credDef.tag,
                         credentialDefinitionId: credDef.credentialDefinitionId,
                         revocable: credDef.revocable,
-                        createdBy: credDef.userId,
+                        createdBy: credDef.createdBy,
+                        lastChangedBy: credDef.lastChangedBy,
                         orgId: credDef.orgId,
                         schemaId: credDef.schemaId
                     }
@@ -63,14 +64,14 @@ export class CredentialDefinitionRepository {
         }
     }
 
-    async getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, orgId: number): Promise<{
+    async getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, orgId: string): Promise<{
         createDateTime: Date;
-        createdBy: number;
+        createdBy: string;
         credentialDefinitionId: string;
         tag: string;
         schemaLedgerId: string;
-        schemaId: number;
-        orgId: number;
+        schemaId: string;
+        orgId: string;
         revocable: boolean;
     }[]> {
         try {
@@ -106,7 +107,7 @@ export class CredentialDefinitionRepository {
         }
     }
 
-    async getAgentDetailsByOrgId(orgId: number): Promise<{
+    async getAgentDetailsByOrgId(orgId: string): Promise<{
         orgDid: string;
         agentEndPoint: string;
         tenantId: string
@@ -129,7 +130,7 @@ export class CredentialDefinitionRepository {
         }
     }
 
-    async getAgentType(orgId: number): Promise<organisation & {
+    async getAgentType(orgId: string): Promise<organisation & {
         org_agents: (org_agents & {
             org_agent_type: org_agents_type;
         })[];
@@ -231,6 +232,22 @@ export class CredentialDefinitionRepository {
             throw error;
         }
     }
+    
+    async getOrgAgentType(orgAgentId: string): Promise<string> {
+        try {
+    
+          const { agent } = await this.prisma.org_agents_type.findFirst({
+            where: {
+              id: orgAgentId
+            }
+          });
+    
+          return agent;
+        } catch (error) {
+          this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+          throw error;
+        }
+      }
 
 
 }

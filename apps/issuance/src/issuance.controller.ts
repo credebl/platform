@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
+import { ClientDetails, IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 
 @Controller()
@@ -10,6 +10,7 @@ export class IssuanceController {
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
   async sendCredentialCreateOffer(payload: IIssuance): Promise<string> {
+   
     const { orgId, user, credentialDefinitionId, comment, connectionId, attributes } = payload;
     return this.issuanceService.sendCredentialCreateOffer(orgId, user, credentialDefinitionId, comment, connectionId, attributes);
   }
@@ -17,6 +18,7 @@ export class IssuanceController {
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })
   async sendCredentialOutOfBand(payload: IIssuance): Promise<string> {
     const { orgId, user, credentialDefinitionId, comment, connectionId, attributes } = payload;
+   
     return this.issuanceService.sendCredentialOutOfBand(orgId, user, credentialDefinitionId, comment, connectionId, attributes);
   }
 
@@ -36,6 +38,7 @@ export class IssuanceController {
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
   async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
     const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
+  
     return this.issuanceService.getIssueCredentialWebhook(createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId);
   }
 
@@ -85,12 +88,12 @@ export class IssuanceController {
 
 
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
-  async issueBulkCredentials(payload: { requestId: string, orgId: number, clientId: string }): Promise<string> {
-    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientId);
+  async issueBulkCredentials(payload: { requestId: string, orgId: string, clientDetails: ClientDetails }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientDetails);
   }
 
   @MessagePattern({ cmd: 'retry-bulk-credentials' })
-  async retryeBulkCredentials(payload: { fileId: string, orgId: number, clientId: string }): Promise<string> {
+  async retryeBulkCredentials(payload: { fileId: string, orgId: string, clientId: string }): Promise<string> {
     return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientId);
   }
 }

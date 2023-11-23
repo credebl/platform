@@ -80,7 +80,7 @@ export class UserController {
   @MessagePattern({ cmd: 'accept-reject-invitations' })
   async acceptRejectInvitations(payload: {
     acceptRejectInvitation: AcceptRejectInvitationDto;
-    userId: number;
+    userId: string;
   }): Promise<string> {
     return this.userService.acceptRejectInvitations(payload.acceptRejectInvitation, payload.userId);
   }
@@ -103,7 +103,7 @@ export class UserController {
    * @returns organization users list
    */
   @MessagePattern({ cmd: 'fetch-organization-user' })
-  async getOrganizationUsers(payload: { orgId: number, pageNumber: number, pageSize: number, search: string }): Promise<object> {
+  async getOrganizationUsers(payload: { orgId: string, pageNumber: number, pageSize: number, search: string }): Promise<object> {
     return this.userService.getOrgUsers(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
   }
 
@@ -129,7 +129,7 @@ export class UserController {
 
   // Fetch Users recent activities
   @MessagePattern({ cmd: 'get-user-activity' })
-  async getUserActivity(payload: { userId: number, limit: number }): Promise<object[]> {
+  async getUserActivity(payload: { userId: string, limit: number }): Promise<object[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
   }
 

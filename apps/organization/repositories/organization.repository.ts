@@ -1,9 +1,9 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable camelcase */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { org_invitations, user_org_roles } from '@prisma/client';
+import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IUpdateOrganization } from '../interfaces/organization.interface';
@@ -12,6 +12,7 @@ import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class OrganizationRepository {
@@ -55,8 +56,9 @@ export class OrganizationRepository {
           description: createOrgDto.description,
           website: createOrgDto.website,
           orgSlug: createOrgDto.orgSlug,
-          publicProfile: true
-
+          publicProfile: true,
+          createdBy: createOrgDto.createdBy,
+          lastChangedBy: createOrgDto.lastChangedBy
         }
       });
     } catch (error) {
@@ -66,7 +68,7 @@ export class OrganizationRepository {
   }
 
   /**
-   *
+   *  
    * @Body updateOrgDt0
    * @returns update Organization
    */
@@ -75,7 +77,7 @@ export class OrganizationRepository {
     try {
       return this.prisma.organisation.update({
         where: {
-          id: Number(updateOrgDto.orgId)
+          id: String(updateOrgDto.orgId)
         },
         data: {
           name: updateOrgDto.name,
@@ -83,7 +85,8 @@ export class OrganizationRepository {
           description: updateOrgDto.description,
           website: updateOrgDto.website,
           orgSlug: updateOrgDto.orgSlug,
-          publicProfile: updateOrgDto.isPublic
+          publicProfile: updateOrgDto.isPublic,
+          lastChangedBy: updateOrgDto.userId
         }
       });
     } catch (error) {
@@ -102,13 +105,16 @@ export class OrganizationRepository {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async createUserOrgRole(userOrgRoleDto): Promise<user_org_roles> {
     try {
+
       return this.prisma.user_org_roles.create({
         data: {
           userId: userOrgRoleDto.userId,
           orgRoleId: userOrgRoleDto.orgRoleId,
           orgId: userOrgRoleDto.orgId
         }
+
       });
+
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -123,9 +129,9 @@ export class OrganizationRepository {
 
   async createSendInvitation(
     email: string,
-    orgId: number,
-    userId: number,
-    orgRoleId: number[]
+    orgId: string,
+    userId: string,
+    orgRoleId: string[]
   ): Promise<org_invitations> {
     try {
       return this.prisma.org_invitations.create({
@@ -134,7 +140,9 @@ export class OrganizationRepository {
           user: { connect: { id: userId } },
           organisation: { connect: { id: orgId } },
           orgRoles: orgRoleId,
-          status: Invitation.PENDING
+          status: Invitation.PENDING,
+          createdBy: userId,
+          lastChangedBy: userId
         }
       });
     } catch (error) {
@@ -149,7 +157,7 @@ export class OrganizationRepository {
    * @returns OrganizationDetails
    */
 
-  async getOrganizationDetails(orgId: number): Promise<organisation> {
+  async getOrganizationDetails(orgId: string): Promise<organisation> {
     try {
       return this.prisma.organisation.findFirst({
         where: {
@@ -230,7 +238,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getInvitationsByOrgId(orgId: number, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
     try {
       const query = {
         orgId,
@@ -277,7 +285,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgDashboard(orgId: number): Promise<object> {
+  async getOrgDashboard(orgId: string): Promise<object> {
 
     const query = {
       where: {
@@ -330,7 +338,7 @@ export class OrganizationRepository {
    * @param id
    * @returns Invitation details
    */
-  async getInvitationById(id: number): Promise<org_invitations> {
+  async getInvitationById(id: string): Promise<org_invitations> {
     try {
       return this.prisma.org_invitations.findUnique({
         where: {
@@ -352,7 +360,7 @@ export class OrganizationRepository {
    * @param data
    * @returns Updated org invitation response
    */
-  async updateOrgInvitation(id: number, data: object): Promise<object> {
+  async updateOrgInvitation(id: string, data: object): Promise<object> {
     try {
       return this.prisma.org_invitations.update({
         where: {
@@ -375,7 +383,7 @@ export class OrganizationRepository {
     pageSize: number
   ): Promise<object> {
     try {
-      const sortByName = 'asc'; 
+      const sortByName = 'asc';
       const result = await this.prisma.$transaction([
         this.prisma.organisation.findMany({
           where: {
@@ -396,7 +404,7 @@ export class OrganizationRepository {
           skip: (pageNumber - 1) * pageSize,
           orderBy: {
             name: sortByName
-            
+
           }
         }),
         this.prisma.organisation.count({
@@ -423,7 +431,7 @@ export class OrganizationRepository {
   * @returns Organization exist details
   */
 
-  async checkOrganizationExist(name: string, orgId: number): Promise<organisation[]> {
+  async checkOrganizationExist(name: string, orgId: string): Promise<organisation[]> {
     try {
       return this.prisma.organisation.findMany({
         where: {
@@ -437,7 +445,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgProfile(id: number): Promise<organisation> {
+  async getOrgProfile(id: string): Promise<organisation> {
     try {
       return this.prisma.organisation.findUnique({
         where: {
@@ -450,7 +458,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getCredDefByOrg(orgId: number): Promise<{
+  async getCredDefByOrg(orgId: string): Promise<{
     tag: string;
     credentialDefinitionId: string;
     schemaLedgerId: string;
@@ -474,6 +482,52 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getting agent DID: ${error}`);
+      throw error;
+    }
+  }
+
+  async getAgentEndPoint(orgId: string): Promise<org_agents> {
+    try {
+
+      const agentDetails = await this.prisma.org_agents.findFirst({
+        where: {
+          orgId
+        }
+      });
+
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.notFound);
+      }
+
+      return agentDetails;
+
+    } catch (error) {
+      this.logger.error(`Error in get getAgentEndPoint: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async deleteOrg(id: string): Promise<boolean> {
+    try {
+      await Promise.all([
+        this.prisma.user_activity.deleteMany({ where: { orgId: id } }),
+        this.prisma.user_org_roles.deleteMany({ where: { orgId: id } }),
+        this.prisma.org_invitations.deleteMany({ where: { orgId: id } }),
+        this.prisma.schema.deleteMany({ where: { orgId: id } }),
+        this.prisma.credential_definition.deleteMany({ where: { orgId: id } }),
+        this.prisma.agent_invitations.deleteMany({ where: { orgId: id } }),
+        this.prisma.org_agents.deleteMany({ where: { orgId: id } }),
+        this.prisma.connections.deleteMany({ where: { orgId: id } }),
+        this.prisma.credentials.deleteMany({ where: { orgId: id } }),
+        this.prisma.presentations.deleteMany({ where: { orgId: id } }),
+        this.prisma.ecosystem_invitations.deleteMany({ where: { orgId: `${id}` } }),
+        this.prisma.file_upload.deleteMany({ where: { orgId: `${id}` } }),
+        this.prisma.ecosystem_orgs.deleteMany({ where: { orgId: `${id}` } }),
+        this.prisma.organisation.deleteMany({ where: { id } })
+      ]);
+      return true;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

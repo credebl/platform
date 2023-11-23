@@ -8,7 +8,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -32,7 +32,6 @@ import { io } from 'socket.io-client';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
-  private  isErrorOccurred: boolean;
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
@@ -42,11 +41,11 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
-    
-  ) { this.isErrorOccurred = false; }
+
+  ) { }
 
 
-  async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
+  async sendCredentialCreateOffer(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
@@ -56,8 +55,9 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'create-offer';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const apiKey = platformConfig?.sgApiKey;
       const issueData = {
@@ -78,12 +78,20 @@ export class IssuanceService {
       return credentialCreateOfferDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
 
-  async sendCredentialOutOfBand(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
+  async sendCredentialOutOfBand(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
@@ -94,8 +102,9 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'create-offer-oob';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const apiKey = platformConfig?.sgApiKey;
       const issueData = {
@@ -110,10 +119,19 @@ export class IssuanceService {
         comment
       };
       const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
+
       return credentialCreateOfferDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -156,7 +174,7 @@ export class IssuanceService {
     }
   }
 
-  async getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: number): Promise<string> {
+  async getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
@@ -171,8 +189,9 @@ export class IssuanceService {
         state
       };
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'get-issue-credentials';
-      let url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      let url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       Object.keys(params).forEach((element: string) => {
         const appendParams: string = url.includes('?') ? '&' : '?';
@@ -186,7 +205,15 @@ export class IssuanceService {
       return issueCredentialsDetails?.response;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -203,7 +230,7 @@ export class IssuanceService {
     }
   }
 
-  async getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: number): Promise<string> {
+  async getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<string> {
     try {
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -214,19 +241,28 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'get-issue-credential-by-credential-id';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
 
       const apiKey = platformConfig?.sgApiKey;
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
       return createConnectionInvitation?.response;
     } catch (error) {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
-  async getIssueCredentialWebhook(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: ICredentialAttributesInterface[], orgId: number): Promise<object> {
+  async getIssueCredentialWebhook(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: ICredentialAttributesInterface[], orgId: string): Promise<object> {
     try {
       const agentDetails = await this.issuanceRepository.saveIssuedCredentialDetails(createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId);
       return agentDetails;
@@ -271,8 +307,9 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'create-offer-oob';
-      const url = await this.getAgentUrl(issuanceMethodLabel, agentDetails.orgAgentTypeId, agentDetails.agentEndPoint, agentDetails.tenantId);
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentDetails.agentEndPoint, agentDetails.tenantId);
       const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
 
       if (!organizationDetails) {
@@ -327,8 +364,8 @@ export class IssuanceService {
 
           this.emailData.emailFrom = platformConfigData.emailFrom;
           this.emailData.emailTo = emailId;
-          this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credentials`;
-          this.emailData.emailHtml = await this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, outOfBandIssuanceQrCode);
+          this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
+          this.emailData.emailHtml = await this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, agentEndPoint);
           this.emailData.emailAttachments = [
             {
               filename: 'qrcode.png',
@@ -346,7 +383,11 @@ export class IssuanceService {
 
           return isEmailSent;
         } catch (error) {
-          errors.push(error.message);
+          if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+            errors.push(ResponseMessages.issuance.error.walletError);
+          } else {
+            errors.push(error.message);
+          }
           return false;
         }
       };
@@ -378,9 +419,17 @@ export class IssuanceService {
 
       return allSuccessful;
     } catch (error) {
-      
+
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -405,7 +454,7 @@ export class IssuanceService {
   */
   async getAgentUrl(
     issuanceMethodLabel: string,
-    orgAgentTypeId: number,
+    orgAgentType: string,
     agentEndPoint: string,
     tenantId: string,
     credentialRecordId?: string
@@ -415,27 +464,27 @@ export class IssuanceService {
       let url;
       switch (issuanceMethodLabel) {
         case 'create-offer': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'create-offer-oob': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'get-issue-credentials': {
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
               : null;
           break;
@@ -443,9 +492,9 @@ export class IssuanceService {
 
         case 'get-issue-credential-by-credential-id': {
 
-          url = orgAgentTypeId === OrgAgentType.DEDICATED
+          url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
-            : orgAgentTypeId === OrgAgentType.SHARED
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`.replace('#', credentialRecordId).replace('@', tenantId)
               : null;
           break;
@@ -575,7 +624,7 @@ export class IssuanceService {
       }
 
       await this.validateFileHeaders(fileHeader, attributeNameArray);
-      await this.validateFileData(fileData);
+      await this.validateFileData(fileData);      
 
       const resData = {
         schemaLedgerId: credDefResponse.schemaLedgerId,
@@ -583,6 +632,7 @@ export class IssuanceService {
         fileData: parsedData,
         fileName: importFileDetails.fileName
       };
+      
       const newCacheKey = uuidv4();
 
       await this.cacheManager.set(newCacheKey, JSON.stringify(resData), 3600);
@@ -684,7 +734,11 @@ export class IssuanceService {
     }
   }
 
-  async issueBulkCredential(requestId: string, orgId: number, clientId: string): Promise<string> {
+  async delay(ms): Promise<unknown> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -716,16 +770,17 @@ export class IssuanceService {
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
+
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
-      fileUpload.orgId = String(orgId);
+      fileUpload.orgId = orgId;
       fileUpload.createDateTime = new Date();
 
       if (parsedPrimeDetails && parsedPrimeDetails.fileName) {
         fileUpload.name = parsedPrimeDetails.fileName;
       }
 
-      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
+      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
       const saveFileDetailsPromises = parsedData.map(async (element) => {
         const credentialPayload = {
@@ -736,7 +791,7 @@ export class IssuanceService {
           isError: false,
           fileUploadId: respFileUpload.id
         };
-        return this.issuanceRepository.saveFileDetails(credentialPayload);
+        return this.issuanceRepository.saveFileDetails(credentialPayload, clientDetails.userId);
       });
 
       // Wait for all saveFileDetails operations to complete
@@ -753,7 +808,7 @@ export class IssuanceService {
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
-            clientId,
+            clientId: clientDetails.clientId,
             cacheId: requestId,
             credentialDefinitionId: element.credDefId,
             schemaLedgerId: element.schemaId,
@@ -763,6 +818,7 @@ export class IssuanceService {
             isLastData: respFile.indexOf(element) === respFile.length - 1
           };
 
+          await this.delay(500); // Wait for 0.5 secends
           this.processIssuanceData(payload);
         } catch (error) {
           this.logger.error(`Error processing issuance data: ${error}`);
@@ -782,7 +838,7 @@ export class IssuanceService {
     }
   }
 
-  async retryBulkCredential(fileId: string, orgId: number, clientId: string): Promise<string> {
+  async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<string> {
     let respFile;
 
     try {
@@ -813,7 +869,11 @@ export class IssuanceService {
             isLastData: respFile.indexOf(element) === respFile.length - 1
           };
 
-           this.processIssuanceData(payload);
+          await this.delay(500); // Wait for 0.5 secends
+          this.processIssuanceData(payload);
+          if (0 === respFile.length) {
+            return FileUploadStatus.completed;
+          }
         } catch (error) {
           // Handle errors if needed
           this.logger.error(`Error processing issuance data: ${error}`);
@@ -828,7 +888,7 @@ export class IssuanceService {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
   async processIssuanceData(jobDetails) {
-   
+
     const socket = await io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,
       reconnectionDelay: 5000,
@@ -858,7 +918,7 @@ export class IssuanceService {
 
     let isErrorOccurred = false;
     try {
-      
+
       const oobIssuancepayload = {
         credentialDefinitionId: jobDetails.credentialDefinitionId,
         orgId: jobDetails.orgId,
@@ -902,6 +962,9 @@ export class IssuanceService {
 
         if (!jobDetails.isRetry) {
           this.cacheManager.del(jobDetails.cacheId);
+          socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
+        } else {
+          socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId });
         }
 
         await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
@@ -911,16 +974,16 @@ export class IssuanceService {
 
         this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
 
-        socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
+
       }
     } catch (error) {
       this.logger.error(`Error in completing bulk issuance process: ${error}`);
       if (!isErrorOccurred) {
         isErrorOccurred = true;
-        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
+        socket.emit('error-in-bulk-issuance-retry-process', { clientId: jobDetails.clientId, error });
       }
       throw error;
-     
+
     }
 
   }

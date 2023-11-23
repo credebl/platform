@@ -40,7 +40,7 @@ export class IssueCredentialDto {
     @IsNotEmpty({ message: 'Please provide valid protocol-version' })
     @IsString({ message: 'protocol-version should be string' })
     protocolVersion?: string;
-    orgId: number;
+    orgId: string;
 }
 
 
@@ -143,7 +143,7 @@ export class OutOfBandCredentialDto {
     @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
 
-    orgId: number;
+    orgId: string;
 }
 
 
@@ -211,5 +211,7 @@ export class ClientDetails {
     @IsOptional()
     @Type(() => String)
     clientId = '';
+
+    userId?: string;
 
 }

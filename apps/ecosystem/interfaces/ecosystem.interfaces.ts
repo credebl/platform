@@ -7,6 +7,7 @@ export interface AttributeValue {
 
 export interface RequestSchemaEndorsement {
   orgId: string
+  userId?: string
   name: string;
   version: string;
   attributes: AttributeValue[];
@@ -18,6 +19,7 @@ export interface RequestCredDeffEndorsement {
   tag: string;
   endorse?: boolean;
   schemaDetails?: object;
+  userId?: string;
 }
 
 export interface IAttributeValue {
@@ -79,6 +81,7 @@ export interface SchemaTransactionResponse {
   requestPayload: string;
   status: string;
   ecosystemOrgId: string;
+  userId?: string
 }
 
 export interface SignedTransactionMessage {
@@ -149,6 +152,7 @@ export interface saveCredDef {
   credentialDefinitionId: string;
   revocable: boolean;
   createdBy: string;
+  lastChangedBy: string;
   orgId: string;
   schemaId: string;
 }

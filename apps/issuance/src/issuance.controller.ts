@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
+import { ClientDetails, IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 
 @Controller()
@@ -87,8 +87,8 @@ export class IssuanceController {
 
 
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
-  async issueBulkCredentials(payload: { requestId: string, orgId: string, clientId: string }): Promise<string> {
-    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientId);
+  async issueBulkCredentials(payload: { requestId: string, orgId: string, clientDetails: ClientDetails }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientDetails);
   }
 
   @MessagePattern({ cmd: 'retry-bulk-credentials' })

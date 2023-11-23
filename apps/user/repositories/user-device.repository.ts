@@ -50,7 +50,9 @@ export class UserDevicesRepository {
       const saveResponse = await this.prisma.user_devices.create({
         data: {
           devices: newDevice,
-          userId:String(userId)
+          userId:String(userId),
+          createdBy: userId,
+          lastChangedBy: userId
         }
       });
 

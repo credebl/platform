@@ -114,7 +114,7 @@ cat <<EOF >>/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}
   "tenancy": $TENANT
 }
 EOF
-scp ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json ${AGENT_HOST}:/home/ec2-user/config/
+# scp ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json ${AGENT_HOST}:/home/ec2-user/config/
 
 # Construct the container definitions dynamically
 CONTAINER_DEFINITIONS=$(
@@ -239,7 +239,6 @@ if [ $? -eq 0 ]; then
         "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
     }
 EOF
-  sudo rm -rf ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json
   echo "Agent config created"
 else
   echo "==============="

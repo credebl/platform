@@ -14,6 +14,7 @@ export interface IAgentSpinupDto {
     clientSocketId?: string
     tenant?: boolean;
     ledgerName?: string[];
+    platformAdminEmail?: string;
 }
 
 export interface OutOfBandCredentialOffer {
@@ -160,7 +161,8 @@ export interface IConnectionDetails {
 }
 
 export interface IUserRequestInterface {
-    userId: string;
+    userId?: string;
+    id?: string;
     email: string;
     orgId: string;
     agentEndPoint?: string;

@@ -51,6 +51,8 @@ export class VerificationRepository {
                 },
                 create: {
                     connectionId: proofPresentationPayload.connectionId,
+                    createdBy: id,
+                    lastChangedBy: id,
                     state: proofPresentationPayload.state,
                     threadId: proofPresentationPayload.threadId,
                     isVerified: proofPresentationPayload.isVerified,

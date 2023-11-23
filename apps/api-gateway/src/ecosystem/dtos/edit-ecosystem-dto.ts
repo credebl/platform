@@ -40,5 +40,8 @@ export class EditEcosystemDto {
     @IsOptional()
     @IsNotEmpty({ message: 'autoEndorsement should be boolean value' })
     autoEndorsement = false;
+
+    userId?: string;
+
   }
   

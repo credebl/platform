@@ -15,7 +15,6 @@ import {
   Param
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { GetUser } from '../authz/decorators/get-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -81,7 +80,7 @@ export class AgentController {
   async agentSpinup(
     @Body() agentSpinupDto: AgentSpinupDto,
     @Param('orgId') orgId: string,
-    @GetUser() user: user,
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response<object, Record<string, object>>> {
 
@@ -121,7 +120,7 @@ export class AgentController {
   async createTenant(
     @Param('orgId') orgId: string,
     @Body() createTenantDto: CreateTenantDto,
-    @GetUser() user: user,
+    @User() user: user,
     @Res() res: Response
   ): Promise<object> {
 

@@ -15,7 +15,9 @@ export class UserActivityRepository {
                 userId,
                 orgId,
                 action,
-                details
+                details,
+                createdBy: userId,
+                lastChangedBy: userId
             }
         });
     }

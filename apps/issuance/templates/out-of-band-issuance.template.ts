@@ -1,8 +1,7 @@
 export class OutOfBandIssuance {
-
-    public outOfBandIssuance(email: string, orgName: string, agentEndPoint:string): string {
-        try {
-            return `<!DOCTYPE html>
+  public outOfBandIssuance(email: string, orgName: string, agentEndPoint: string): string {
+    try {
+      return `<!DOCTYPE html>
             <html lang="en">
             
             <head>
@@ -22,22 +21,23 @@ export class OutOfBandIssuance {
                             Hello user ,
                         </p>
                         <p>
-                        The organization ${orgName} has requested your assistance in issuing your credentials. 
-                        We are delighted to notify you that a credential document has been successfully issued to you. To acknowledge and access the document, kindly proceed with the instructions outlined below:
+                        The organization ${orgName} has requested your assistance in issuing your credential. 
+                        We are delighted to notify you that a credential has been successfully issued to you. To acknowledge and access it, kindly proceed with the instructions outlined below:
                             <ul>
                                 <li>Download the ADEYA Wallet from the Play Store.</li>
                                 <li>Create an Account.</li>
                                 <li>Scan the QR code provided below.</li>
-                                <li>Accept the Credential Document request.</li>
-                                <li>Check your wallet to access the issued Credential Document.</li>
+                                <li>Accept the Credential request.</li>
+                                <li>Check your wallet to access the issued Credential.</li>
+                                <li> To obtain your credential, you can either click the button below or scan the QR code provided in the attachment.</li>
                             </ul>
                             <div style="text-align: center; padding-bottom: 20px;">
                             <a clicktracking=off href="${agentEndPoint}"
                                 style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
-                                Accept Credential
+                                Get Credential
                             </a>
                         </div>
-                            Should you require any assistance or have questions, feel free to contact our dedicated support team.
+                        If you need help or have any questions, don't hesitate to reach out to our dedicated support team.
                          </p>
 
                         <hr style="border-top:1px solid #e8e8e8" />
@@ -57,8 +57,6 @@ export class OutOfBandIssuance {
                 </div>
             </body>
             </html>`;
-
-        } catch (error) {
-        }
-    }
+    } catch (error) {}
+  }
 }

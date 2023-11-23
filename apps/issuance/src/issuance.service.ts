@@ -384,7 +384,7 @@ export class IssuanceService {
           return isEmailSent;
         } catch (error) {
           if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-            errors.push(error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error);
+            errors.push(ResponseMessages.issuance.error.walletError);
           } else {
             errors.push(error.message);
           }
@@ -624,7 +624,7 @@ export class IssuanceService {
       }
 
       await this.validateFileHeaders(fileHeader, attributeNameArray);
-      await this.validateFileData(fileData);
+      await this.validateFileData(fileData);      
 
       const resData = {
         schemaLedgerId: credDefResponse.schemaLedgerId,
@@ -632,6 +632,7 @@ export class IssuanceService {
         fileData: parsedData,
         fileName: importFileDetails.fileName
       };
+      
       const newCacheKey = uuidv4();
 
       await this.cacheManager.set(newCacheKey, JSON.stringify(resData), 3600);
@@ -733,6 +734,10 @@ export class IssuanceService {
     }
   }
 
+  async delay(ms): Promise<unknown> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async issueBulkCredential(requestId: string, orgId: string, clientId: string): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
@@ -813,6 +818,7 @@ export class IssuanceService {
             isLastData: respFile.indexOf(element) === respFile.length - 1
           };
 
+          await this.delay(500); // Wait for 0.5 secends
           this.processIssuanceData(payload);
         } catch (error) {
           this.logger.error(`Error processing issuance data: ${error}`);
@@ -863,6 +869,7 @@ export class IssuanceService {
             isLastData: respFile.indexOf(element) === respFile.length - 1
           };
 
+          await this.delay(500); // Wait for 0.5 secends
           this.processIssuanceData(payload);
         } catch (error) {
           // Handle errors if needed
@@ -970,7 +977,7 @@ export class IssuanceService {
       this.logger.error(`Error in completing bulk issuance process: ${error}`);
       if (!isErrorOccurred) {
         isErrorOccurred = true;
-        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
+        socket.emit('error-in-bulk-issuance-retry-process', { clientId: jobDetails.clientId, error });
       }
       throw error;
 

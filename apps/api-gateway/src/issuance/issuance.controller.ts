@@ -227,10 +227,12 @@ export class IssuanceController {
   async importAndPreviewDataForIssuance(
     @Query('credDefId') credentialDefinitionId: string,
     @UploadedFile() file: Express.Multer.File,
+    @Body() fileDetails: object,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
     try {
+
       if (file) {
         const fileKey: string = uuidv4();
         try {
@@ -242,12 +244,13 @@ export class IssuanceController {
           throw new RpcException(error.response ? error.response : error);
 
         }
+
         const reqPayload: RequestPayload = {
           credDefId: credentialDefinitionId,
           fileKey,
-          fileName: file?.filename || file?.originalname
+          fileName: fileDetails["fileName"].split('.csv')[0]
         };
-        this.logger.log(`reqPayload::::::${JSON.stringify(reqPayload)}`);
+
         const importCsvDetails = await this.issueCredentialService.importCsv(
           reqPayload
         );
@@ -403,7 +406,7 @@ export class IssuanceController {
     required: false
   })
   async issuedFileDetails(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
   ): Promise<object> {
@@ -465,7 +468,7 @@ export class IssuanceController {
     required: false
   })
   async getFileDetailsByFileId(
-    @Param('orgId') orgId: number,
+    @Param('orgId') orgId: string,
     @Param('fileId') fileId: string,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
@@ -544,7 +547,7 @@ export class IssuanceController {
         throw new BadRequestException(`Value must be required at position of ${data['name']}`);
       }
     });
- 
+
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(
       issueCredentialDto,
       user
@@ -611,8 +614,8 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
-    
-   
+
+
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

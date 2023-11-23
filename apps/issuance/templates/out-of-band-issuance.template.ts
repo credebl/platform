@@ -2,61 +2,75 @@ export class OutOfBandIssuance {
   public outOfBandIssuance(email: string, orgName: string, agentEndPoint: string): string {
     try {
       return `<!DOCTYPE html>
-            <html lang="en">
-            
-            <head>
-                <title></title>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-            </head>
-            
-            <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
-                <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
-                    <div style="display: block; text-align:center;">
-                    <img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/CREDEBL_LOGO.svg" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
-                    </div>
-                    <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
-                    font-size: 15px; line-height: 24px;color: #5E5873;">
-                        <p style="margin-top:0px">
-                            Hello user ,
-                        </p>
-                        <p>
-                        The organization ${orgName} has requested your assistance in issuing your credential. 
-                        We are delighted to notify you that a credential has been successfully issued to you. To acknowledge and access it, kindly proceed with the instructions outlined below:
-                            <ul>
-                                <li>Download the ADEYA Wallet from the Play Store.</li>
-                                <li>Create an Account.</li>
-                                <li>Scan the QR code provided below.</li>
-                                <li>Accept the Credential request.</li>
-                                <li>Check your wallet to access the issued Credential.</li>
-                                <li> To obtain your credential, you can either click the button below or scan the QR code provided in the attachment.</li>
-                            </ul>
-                            <div style="text-align: center; padding-bottom: 20px;">
-                            <a clicktracking=off href="${agentEndPoint}"
-                                style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
-                                Get Credential
-                            </a>
-                        </div>
-                        If you need help or have any questions, don't hesitate to reach out to our dedicated support team.
-                         </p>
+      <html lang="en">
+      
+      <head>
+          <title></title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+      </head>
+      
+      <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
+          <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
+              <div style="display: block; text-align:center;">
+              <img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/CREDEBL_LOGO.svg" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+              </div>
+              <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
+              font-size: 15px; line-height: 24px;color: #5E5873;">
+                  <p style="margin-top:0px">
+                      Hello user,
+                  </p>
+                  <p>
+                  The organization <b>${orgName}</b> has initiated issuance of your digital credential.
+                  
+                  To acknowledge and access your credential, kindly proceed with following steps:
+                      <ul>
+                          <li>Download the <b>ADEYA SSI</b>  
+                            <a href="https://play.google.com/store/apps/details?id=id.credebl.adeya&pli=1" target="_blank">Android Play Store</a> /
+<a href="https://apps.apple.com/in/app/adeya-ssi-wallet/id6463845498" target="_blank">iOS App Store</a>.</li>
+                          <li>Complete the onboarding process.</li>
+                          <li>Open the link provided in the ADEYA SSI App.</li>
+                          <li>Accept the Credential.</li>
+                          <li>Check <b>"Credentials"</b> tab in the ADEYA SSI App to view the issued Credential.</li>
+                      </ul>
+                      <div style="text-align: center; padding-bottom: 20px;">
+                      <a clicktracking=off href="${agentEndPoint}"
+                          style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
+                          Accept Credential
+                      </a>
+                  </div>
+                  
+                   </p>
+                   <p>
+                     <b>Note:</b> If the above steps do not work for you, please open the <b>attached QR Code image</b> on another device, and scan the QR code using the ADEYA SSI App from your mobile device.
+                     The QR Code is single-use.
+                   </p>
+                   
+                   <hr/>
+                   <p>
+                    If you need help, don't hesitate to reach out to our dedicated support team at <i>support@blockster.global</i>.   
+                   </p>
 
-                        <hr style="border-top:1px solid #e8e8e8" />
-                        <footer style="padding-top: 20px;">
-                            <div>
-                                <a href="http://www.facebook.com/">
-                                    <img src="https://assets.codepen.io/210284/facebook_1.png" width="18" height="18" alt="f"
-                                        style="color:#cccccc; padding-right: 10px;"></a>
-                                <a href="http://www.twitter.com/"><img src="https://assets.codepen.io/210284/twitter_1.png"
-                                        width="18" height="18" alt="t" style="color:#cccccc;"></a>
-                            </div>
-                            <p style="margin-top: 2px;">
-                                Best Regards,The CREDEBL Team
-                            </p>
-                        </footer>
-                    </div>
-                </div>
-            </body>
-            </html>`;
+                  <hr style="border-top:1px solid #e8e8e8" />
+                  <footer style="padding-top: 20px;">
+                      <div style="display: block; text-align:center;">
+                          <a href="https://twitter.com/credebl">
+                              <img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/twitter.svg" width="18" height="18" alt="f"
+                                  style="color:#cccccc; padding-right: 10px;"></a>
+                          <a href="https://github.com/credebl"><img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/github.svg"
+                                  width="18" height="18" alt="t" style="color:#cccccc;padding-right: 10px;"></a>
+                                  <a href="https://discord.com/invite/w4hnQT7NJG"><img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/discord.svg"
+                                  width="18" height="18" alt="t" style="color:#cccccc;padding-right: 10px;"></a>
+                                  
+                      </div>
+                      <p style="margin-top: 2px;">
+                          CREDEBL - by Blockster Labs Pvt. Ltd.
+                      </p>
+                  </footer>
+              </div>
+          </div>
+      </body>
+      </html>`;
     } catch (error) {}
   }
 }

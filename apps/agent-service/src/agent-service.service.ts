@@ -130,6 +130,7 @@ export class AgentServiceService {
   async walletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<{ agentSpinupStatus: number }> {
     let agentProcess: org_agents;
     try {
+
       this.processWalletProvision(agentSpinupDto, user, agentProcess);
       const agentStatusResponse = {
         agentSpinupStatus: AgentSpinUpStatus.PROCESSED
@@ -143,6 +144,8 @@ export class AgentServiceService {
   }
 
   private async processWalletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface, agentProcess: org_agents): Promise<void> {
+    let platformAdminUser;
+    let userId: string;
     try {
       const [getOrgAgent, platformConfig, getAgentType, ledgerIdData, orgData] = await Promise.all([
         this.agentServiceRepository.getAgentDetails(agentSpinupDto.orgId),
@@ -151,7 +154,16 @@ export class AgentServiceService {
         this.agentServiceRepository.getLedgerDetails(agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]),
         this.agentServiceRepository.getOrgDetails(agentSpinupDto.orgId)
       ]);
-      
+
+      if (!user?.userId && agentSpinupDto?.platformAdminEmail) {
+
+        platformAdminUser = await this.agentServiceRepository.getPlatfomAdminUser(agentSpinupDto?.platformAdminEmail);
+
+        userId = platformAdminUser?.id;
+      } else {
+        userId = user?.userId;
+      }
+
       agentSpinupDto.ledgerId = agentSpinupDto.ledgerId?.length ? agentSpinupDto.ledgerId : ledgerIdData.map(ledger => ledger.id);
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
 
@@ -187,7 +199,7 @@ export class AgentServiceService {
 
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
       /* eslint-disable no-param-reassign */
-      agentProcess = await this.createOrgAgent(agentSpinUpStatus);
+      agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId);
       this.validateAgentProcess(agentProcess);
 
       this._agentSpinup(walletProvisionPayload, agentSpinupDto, platformConfig?.sgApiKey, orgData, user, socket, agentSpinupDto.ledgerId, agentProcess);
@@ -294,9 +306,9 @@ export class AgentServiceService {
     return socket;
   }
 
-  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus): Promise<org_agents> {
+  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus, userId: string): Promise<org_agents> {
     try {
-      const agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus);
+      const agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, userId);
       this.logger.log(`Organization agent created with status: ${agentSpinUpStatus}`);
       return agentProcess;
     } catch (error) {
@@ -567,10 +579,10 @@ export class AgentServiceService {
 
       const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(Ledgers.Indicio_Demonet);
       const ledgerIds = ledgerIdData.map(ledger => ledger.id);
-      
+
       payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? ledgerIds : payload.ledgerId;
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
-      agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus);
+      agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user.id);
 
 
       const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);

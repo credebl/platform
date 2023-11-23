@@ -6,4 +6,5 @@ export class AcceptRejectEcosystemInvitationDto {
     status: Invitation;
     orgName: string;
     orgDid: string;
+    userId?: string;
 }

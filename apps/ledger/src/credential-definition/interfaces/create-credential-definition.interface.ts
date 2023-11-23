@@ -32,6 +32,7 @@ export interface CredDefPayload {
   schemaLedgerId?: string;
   orgId?: string;
   createdBy?: string;
+  lastChangedBy?: string;
   autoIssue?: boolean;
   revocable?: boolean;
   orgDid?: string;

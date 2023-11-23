@@ -33,4 +33,7 @@ export class AcceptRejectEcosystemInvitationDto {
     @IsEnum(Invitation)
     status: Invitation.ACCEPTED | Invitation.REJECTED;
 
+    userId?: string;
+
+
 }

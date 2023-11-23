@@ -112,6 +112,8 @@ export class ConnectionRepository {
                 create: {
                     createDateTime,
                     lastChangedDateTime,
+                    createdBy: orgId,
+                    lastChangedBy: orgId,
                     connectionId,
                     state,
                     orgDid,

@@ -25,7 +25,7 @@ export class OutOfBandIssuance {
                         We are delighted to notify you that a credential has been successfully issued to you. To acknowledge and access it, kindly proceed with the instructions outlined below:
                             <ul>
                                 <li>Download the ADEYA Wallet from the Play Store.</li>
-                                <li>Create an Account.</li>
+                                <li>Complete the onboarding process.</li>
                                 <li>Scan the QR code provided below.</li>
                                 <li>Accept the Credential request.</li>
                                 <li>Check your wallet to access the issued Credential.</li>

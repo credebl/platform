@@ -179,7 +179,7 @@ export const ResponseMessages = {
             agentEndPointNotFound: 'agentEndPoint Not Found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
-            notFound: 'Organization agent not found',
+            notFound: 'History not found',
             credentialOfferNotFound: 'Credential offer not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config details not found',
@@ -190,7 +190,8 @@ export const ResponseMessages = {
             cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request',
             fileNotFound: 'File details not found',
             fileData: 'File data does not exist for the specific file',
-            retry: 'Credentials do not exist for retry'
+            retry: 'Credentials do not exist for retry',
+            walletError: 'Credential Issuance failed due to error in Wallet Agent'
         }
     },
     verification: {

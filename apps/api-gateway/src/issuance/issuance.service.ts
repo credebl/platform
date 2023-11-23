@@ -86,7 +86,7 @@ export class IssuanceService extends BaseService {
     }
 
     async issuedFileDetails(
-        orgId: number,
+        orgId: string,
         fileParameter: FileParameter
     ): Promise<{ response: object }> {
         const payload = {
@@ -97,7 +97,7 @@ export class IssuanceService extends BaseService {
     }
 
     async getFileDetailsByFileId(
-        orgId: number,
+        orgId: string,
         fileId: string,
         fileParameter: FileParameter
     ): Promise<{ response: object }> {

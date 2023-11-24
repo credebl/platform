@@ -416,4 +416,23 @@ export class AgentServiceRepository {
             throw error;
         }
     }
+
+
+    async getAgentApiKey(orgId: string): Promise<string> {
+        try {
+
+            const agent = await this.prisma.org_agents.findFirst({
+                where: {
+                    orgId
+                }
+            });
+
+            return agent.apiKey;
+
+        } catch (error) {
+
+            this.logger.error(`[getAgentApiKey] - get api key: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
 }

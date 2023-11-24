@@ -19,7 +19,7 @@ import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsem
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
-
+import { getAgentApiKey } from '@credebl/common/common.service';
 
 @Injectable()
 export class EcosystemService {
@@ -416,7 +416,7 @@ export class EcosystemService {
 
       const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberDetails.orgAgentTypeId);
       const url = await this.getAgentUrl(orgAgentType, ecosystemMemberDetails.agentEndPoint, endorsementTransactionType.SCHEMA, ecosystemMemberDetails.tenantId);
-
+      const apiKey = await getAgentApiKey(orgId);
       const attributeArray = requestSchemaPayload.attributes.map(item => item.attributeName);
 
       const schemaTransactionPayload = {
@@ -428,7 +428,7 @@ export class EcosystemService {
         issuerId: ecosystemMemberDetails.orgDid
       };
 
-      const schemaTransactionRequest: SchemaMessage = await this._requestSchemaEndorsement(schemaTransactionPayload, url, platformConfig?.sgApiKey);
+      const schemaTransactionRequest: SchemaMessage = await this._requestSchemaEndorsement(schemaTransactionPayload, url, apiKey);
 
       const schemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
@@ -497,7 +497,7 @@ export class EcosystemService {
 
       const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberDetails.orgAgentTypeId);
       const url = await this.getAgentUrl(orgAgentType, ecosystemMemberDetails.agentEndPoint, endorsementTransactionType.CREDENTIAL_DEFINITION, ecosystemMemberDetails.tenantId);
-
+      const apiKey = await getAgentApiKey(orgId);
       const credDefTransactionPayload = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         endorse: requestCredDefPayload.endorse,
@@ -506,7 +506,7 @@ export class EcosystemService {
         issuerId: ecosystemMemberDetails.orgDid
       };
 
-      const credDefTransactionRequest: CredDefMessage = await this._requestCredDeffEndorsement(credDefTransactionPayload, url, platformConfig?.sgApiKey);
+      const credDefTransactionRequest: CredDefMessage = await this._requestCredDeffEndorsement(credDefTransactionPayload, url, apiKey);
 
       if ('failed' === credDefTransactionRequest.message.credentialDefinitionState.state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestCredDefTransaction);
@@ -619,21 +619,21 @@ export class EcosystemService {
 
       const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemLeadAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(orgAgentType, ecosystemLeadAgentDetails.agentEndPoint, endorsementTransactionType.SIGN, ecosystemLeadAgentDetails?.tenantId);
-
+      const apiKey = await getAgentApiKey(ecosystemLeadDetails.orgId);
       const jsonString = endorsementTransactionPayload.requestPayload.toString();
       const payload = {
         transaction: jsonString,
         endorserDid: endorsementTransactionPayload.endorserDid
       };
 
-      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, platformConfig.sgApiKey);
+      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, apiKey);
 
       if (!schemaTransactionRequest) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
       }
 
       const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
-
+   
       if (!ecosystemDetails) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
       }

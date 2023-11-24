@@ -149,7 +149,8 @@ export const ResponseMessages = {
             notAbleToSpinUpAgent: 'Agent not able to spin-up',
             alreadySpinUp: 'Agent already spin-up',
             agentUrl: 'Agent url not exist',
-            agentNotExists: 'Agent not spinned up for this organization'
+            agentNotExists: 'Agent not spinned up for this organization',
+            apiKeyNotExist:'Api key is not found'
         }
     },
     connection: {

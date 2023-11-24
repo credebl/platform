@@ -1071,5 +1071,19 @@ export class AgentServiceService {
       throw new RpcException(error);
     }
   }
+  async getOrgAgentApiKey(orgId: string): Promise<string> {
+    try {
+      const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
+
+      if (!orgAgentApiKey) {
+        throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
+      }
+      return orgAgentApiKey;
+
+    } catch (error) {
+      this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }
 

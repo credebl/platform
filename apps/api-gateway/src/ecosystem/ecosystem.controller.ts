@@ -122,7 +122,7 @@ export class EcosystemController {
   @ApiOperation({ summary: 'Get all organization ecosystems', description: 'Get all existing ecosystems of an specific organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @ApiBearerAuth()
   async getEcosystem(
     @Param('orgId') orgId: string,

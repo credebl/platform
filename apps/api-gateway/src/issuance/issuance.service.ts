@@ -50,7 +50,7 @@ export class IssuanceService extends BaseService {
     getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: string): Promise<{
         response: object;
     }> {
-        const payload = { createDateTime: issueCredentialDto.createdAt, connectionId: issueCredentialDto.connectionId, threadId: issueCredentialDto.threadId, protocolVersion: issueCredentialDto.protocolVersion, credentialAttributes: issueCredentialDto.credentialAttributes, orgId: id };
+        const payload = { issueCredentialDto, id };
         return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
     }
 

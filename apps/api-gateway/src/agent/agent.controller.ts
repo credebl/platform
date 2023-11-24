@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable no-param-reassign */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -15,7 +16,6 @@ import {
 } from '@nestjs/common';
 import { AgentService } from './agent.service';
 import { ApiTags, ApiResponse, ApiOperation, ApiQuery, ApiBearerAuth, ApiParam, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiExcludeEndpoint } from '@nestjs/swagger';
-import { GetUser } from '../authz/decorators/get-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { WalletDetailsDto } from '../dtos/wallet-details.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -27,6 +27,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { CommonService } from '@credebl/common';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
+import { User } from '../authz/decorators/user.decorator';
 
 @ApiBearerAuth()
 @Controller('agent')
@@ -56,7 +57,7 @@ export class AgentController {
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   getAllDid(
-    @GetUser() user: any,
+    @User() user: any,
     @Query('_public') _public: boolean,
     @Query('verkey') verkey: string,
     @Query('did') did: string
@@ -79,7 +80,7 @@ export class AgentController {
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   createLocalDid(
-    @GetUser() user: any
+    @User() user: any
   ): Promise<object> {
     this.logger.log(`**** Create Local Did...`);
     return this.agentService.createLocalDid(user);
@@ -104,7 +105,7 @@ export class AgentController {
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   walletProvision(
     @Body() walletUserDetails: WalletDetailsDto,
-    @GetUser() user: object
+    @User() user: object
   ): Promise<object> {
     this.logger.log(`**** Spin up the agent...${JSON.stringify(walletUserDetails)}`);
 
@@ -130,7 +131,7 @@ export class AgentController {
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   getPublicDid(
-    @GetUser() user: any
+    @User() user: any
   ): Promise<object> {
     this.logger.log(`**** Fetch public Did...`);
     return this.agentService.getPublicDid(user);
@@ -150,7 +151,7 @@ export class AgentController {
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   assignPublicDid(
     @Param('id') id: number,
-    @GetUser() user: any
+    @User() user: any
   ): Promise<object> {
     this.logger.log(`**** Assign public DID...`);
     this.logger.log(`user: ${user.orgId} == id: ${Number(id)}`);
@@ -180,12 +181,12 @@ export class AgentController {
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   registerNym(
-    @Param('id') id: number,
-    @GetUser() user: IUserRequestInterface
+    @Param('id') id: string,
+    @User() user: IUserRequestInterface
   ): Promise<object> {
     this.logger.log(`user: ${typeof user.orgId} == id: ${typeof Number(id)}`);
 
-    if (user.orgId !== Number(id)) {
+    if (user.orgId !== id) {
       return this.agentService.registerNym(id, user);
     } else {
       this.logger.error(`Cannot register nym of requested organization.`);
@@ -205,7 +206,7 @@ export class AgentController {
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
   @ApiParam({ name: 'action', enum: AgentActions })
-  restartStopAgent(@Param('orgId') orgId: number, @Param('action') action: string): Promise<object> {
+  restartStopAgent(@Param('orgId') orgId: string, @Param('action') action: string): Promise<object> {
     return this.agentService.restartStopAgent(action, orgId);
   }
 
@@ -220,7 +221,7 @@ export class AgentController {
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-  getAgentServerStatus(@GetUser() user: any): Promise<object> {
+  getAgentServerStatus(@User() user: any): Promise<object> {
     this.logger.log(`**** getPlatformConfig called...`);
     return this.agentService.getAgentServerStatus(user);
   }
@@ -261,7 +262,7 @@ export class AgentController {
     @Query('search_text') search_text: string,
     @Query('sortValue') sortValue: any,
     @Query('status') status: any,
-    @GetUser() user: any
+    @User() user: any
   ): Promise<object> {
 
     this.logger.log(`status: ${typeof status} ${status}`);

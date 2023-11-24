@@ -18,12 +18,13 @@ export class UserOrgRolesRepository {
    * @returns user details
    */
   // eslint-disable-next-line camelcase
-  async createUserOrgRole(userId: number, roleId: number, orgId?: number): Promise<user_org_roles> {
+  async createUserOrgRole(userId: string, roleId: string, orgId?: string): Promise<user_org_roles> {
+    
     try {
       const data: {
-        orgRole: { connect: { id: number } };
-        user: { connect: { id: number } };
-        organisation?: { connect: { id: number } };
+        orgRole: { connect: { id: string } };
+        user: { connect: { id: string } };
+        organisation?: { connect: { id: string } };
       } = {
         orgRole: { connect: { id: roleId } },
         user: { connect: { id: userId } }
@@ -36,8 +37,9 @@ export class UserOrgRolesRepository {
       const saveResponse = await this.prisma.user_org_roles.create({
         data
       });
-
+     
       return saveResponse;
+     
     } catch (error) {
       this.logger.error(`UserOrgRolesRepository:: createUserOrgRole: ${error}`);
       throw new InternalServerErrorException('User Org Role not created');

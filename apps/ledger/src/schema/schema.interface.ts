@@ -20,7 +20,7 @@ export interface CreateSchemaAgentRedirection {
     issuerId?: string;
     payload?: ITenantSchemaDto;
     method?: string;
-    agentType?: number;
+    agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
 }
@@ -38,7 +38,7 @@ export interface GetSchemaAgentRedirection {
     payload?: GetSchemaFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
-    agentType?: number;
+    agentType?: string;
     method?: string;
 }
 

@@ -15,6 +15,7 @@ export class ConnectionController {
   @MessagePattern({ cmd: 'create-connection' })
   async createLegacyConnectionInvitation(payload: IConnection): Promise<object> {
     const { orgId, user, multiUseInvitation, autoAcceptConnection, alias, imageUrl, label } = payload;
+
     return this.connectionService.createLegacyConnectionInvitation(orgId, user, multiUseInvitation, autoAcceptConnection, alias, imageUrl, label);
   }
 

@@ -11,8 +11,8 @@
   "platformAdminData": {
     "firstName": "CREDEBL",
     "lastName": "CREDEBL",
-    "email": "platform.admin@yopmail.com",
-    "username": "platform.admin@yopmail.com",
+    "email": "",
+    "username": "",
     "password": "####Please provide encrypted password using crypto-js###",
     "verificationCode": "",
     "isEmailVerified": true,
@@ -22,12 +22,9 @@
     "name": "Platform-admin",
     "description": "Platform-admin",
     "logoUrl": "",
-    "website": ""
-  },
-  "userOrgRoleData": {
-    "userId": 1,
-    "orgRoleId": 1,
-    "orgId": 1
+    "website": "",
+    "createdBy": "",
+    "lastChangedBy": ""
   },
   "orgRoleData": [
     {
@@ -63,10 +60,12 @@
     {
       "name": "Ecosystem Owner",
       "description": "Ecosystem Owner"
+     
     },
     {
       "name": "Ecosystem Lead",
       "description": "Ecosystem Lead"
+     
     },
     {
       "name": "Ecosystem Member",
@@ -177,10 +176,6 @@
     },
     {
       "key": "enableEcosystem",
-      "value": "false"
-    },
-    {
-      "key": "autoEndorsement",
       "value": "false"
     },
     {

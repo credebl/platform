@@ -46,6 +46,8 @@ export class RequestSchemaDto {
   @IsOptional()
   endorse?: boolean;
 
+  userId?: string;
+
 }
 
 export class SchemaDetails {
@@ -75,6 +77,8 @@ export class RequestCredDefDto {
   @ApiProperty()
   @IsString({ message: 'tag must be a string.' })
   tag: string;
+
+  userId?: string;
 
   @ApiProperty()
   @IsString({ message: 'schemaId must be a string.' })

@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 import { AgentType } from "@credebl/enum/enum";
 
 export interface IWalletProvision {
@@ -42,7 +43,7 @@ export interface IAgentSpinUp {
 
 export interface IStartStopAgent {
     action: string;
-    orgId: number;
+    orgId: string;
     orgName: string;
 }
 

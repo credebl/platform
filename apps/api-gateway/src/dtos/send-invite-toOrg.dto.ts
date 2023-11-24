@@ -20,6 +20,6 @@ export class InvitationEmailIds {
 
   orgName : string;
   orgEmail : string;
-  orgRole : number[];
+  orgRole : string[];
 
 }

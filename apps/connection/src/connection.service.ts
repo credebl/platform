@@ -41,7 +41,7 @@ export class ConnectionService {
    * @returns Connection legacy invitation URL
    */
   async createLegacyConnectionInvitation(
-    orgId: number, user: IUserRequestInterface, multiUseInvitation: boolean, autoAcceptConnection: boolean, alias: string, imageUrl: string, label: string
+    orgId: string, user: IUserRequestInterface, multiUseInvitation: boolean, autoAcceptConnection: boolean, alias: string, imageUrl: string, label: string
   ): Promise<object> {
     try {
 
@@ -52,6 +52,7 @@ export class ConnectionService {
       }
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
@@ -72,11 +73,13 @@ export class ConnectionService {
         label: label || undefined
       };
 
-      const url = await this.getAgentUrl(agentDetails?.orgAgentTypeId, agentEndPoint, agentDetails?.tenantId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const apiKey = platformConfig?.sgApiKey;
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
+
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
 
       let shortenedUrl;
@@ -87,10 +90,19 @@ export class ConnectionService {
       }
 
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(shortenedUrl, agentId, orgId);
+
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -102,7 +114,7 @@ export class ConnectionService {
    * @returns Connection legacy invitation URL
    */
   async getConnectionWebhook(
-    createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: number
+    createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: string
   ): Promise<object> {
     try {
       const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(createDateTime, lastChangedDateTime, connectionId, state, orgDid, theirLabel, autoAcceptConnection, outOfBandId, orgId);
@@ -177,9 +189,10 @@ export class ConnectionService {
  *  
  * @returns get all connections details
  */
-  async getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: number): Promise<string> {
+  async getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<string> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
@@ -196,11 +209,11 @@ export class ConnectionService {
       };
 
       let url;
-      if (agentDetails?.orgAgentTypeId === OrgAgentType.DEDICATED) {
+      if (orgAgentType === OrgAgentType.DEDICATED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
 
-      } else if (agentDetails?.orgAgentTypeId === OrgAgentType.SHARED) {
+      } else if (orgAgentType === OrgAgentType.SHARED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace('#', agentDetails.tenantId);
       } else {
@@ -220,7 +233,15 @@ export class ConnectionService {
       return connectionsDetails?.response;
     } catch (error) {
       this.logger.error(`Error in get url in connection service: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -253,10 +274,11 @@ export class ConnectionService {
     }
   }
 
-  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: number): Promise<string> {
+  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<string> {
     try {
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
@@ -265,10 +287,10 @@ export class ConnectionService {
       }
 
       let url;
-      if (agentDetails?.orgAgentTypeId === OrgAgentType.DEDICATED) {
+      if (orgAgentType === OrgAgentType.DEDICATED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTION_BY_ID}`.replace('#', connectionId);
-      } else if (agentDetails?.orgAgentTypeId === OrgAgentType.SHARED) {
+      } else if (orgAgentType === OrgAgentType.SHARED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID}`.replace('#', connectionId).replace('@', agentDetails.tenantId);
       } else {
@@ -280,8 +302,18 @@ export class ConnectionService {
       const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
       return createConnectionInvitation?.response;
     } catch (error) {
+
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -318,17 +350,17 @@ export class ConnectionService {
   * @returns agent URL
   */
   async getAgentUrl(
-    orgAgentTypeId: number,
+    orgAgentType: string,
     agentEndPoint: string,
     tenantId?: string
   ): Promise<string> {
     try {
 
       let url;
-      if (orgAgentTypeId === OrgAgentType.DEDICATED) {
+      if (orgAgentType === OrgAgentType.DEDICATED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_CONN_LEGACY_INVITE}`;
-      } else if (orgAgentTypeId === OrgAgentType.SHARED) {
+      } else if (orgAgentType === OrgAgentType.SHARED) {
 
         url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_INVITATION}`.replace('#', tenantId);
       } else {

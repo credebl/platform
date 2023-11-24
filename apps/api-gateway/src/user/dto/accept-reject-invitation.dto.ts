@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsEnum, IsNotEmpty } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 import { Invitation } from '@credebl/enum/enum';
@@ -6,12 +6,12 @@ import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 
 export class AcceptRejectInvitationDto {
-    invitationId: number;
+    invitationId: string;
 
     @ApiProperty({ example: 1 })
     @IsNotEmpty({ message: 'Please provide valid orgId' })
-    @IsNumber()
-    orgId: number;
+   
+    orgId: string;
 
     @ApiProperty({
         enum: [Invitation.ACCEPTED, Invitation.REJECTED]

@@ -5,6 +5,7 @@ import { IssuanceService } from './issuance.service';
 import { CommonService } from '@credebl/common';
 import { HttpModule } from '@nestjs/axios';
 import { ImageServiceService } from '@credebl/image-service';
+import { AwsService } from '@credebl/aws';
 
 @Module({
   imports: [
@@ -20,6 +21,6 @@ import { ImageServiceService } from '@credebl/image-service';
     ])
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, ImageServiceService, CommonService]
+  providers: [IssuanceService, ImageServiceService, CommonService, AwsService]
 })
 export class IssuanceModule { }

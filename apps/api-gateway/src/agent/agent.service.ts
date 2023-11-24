@@ -1,7 +1,12 @@
-import { Injectable, Logger, Inject, HttpException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable camelcase */
+/* eslint-disable no-return-await */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+import { Injectable,  Inject  } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { map } from 'rxjs/operators';
+
 import { WalletDetailsDto } from '../dtos/wallet-details.dto';
 
 @Injectable()
@@ -65,13 +70,13 @@ export class AgentService extends BaseService {
      * @param verkey 
      * @param did 
      */
-    registerNym(id: number, user: any) {
+    registerNym(id: string, user: any) {
         this.logger.log('**** registerNym called...');
         const payload = { id, user };
         return this.sendNats(this.agentServiceProxy, 'register-nym-org', payload);
     }
 
-    restartStopAgent(action: string, orgId: number) {
+    restartStopAgent(action: string, orgId: string) {
         const payload = { action, orgId };
         return this.sendNats(this.agentServiceProxy, 'restart-stop-agent', payload);
     }

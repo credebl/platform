@@ -1,9 +1,9 @@
-import { Injectable, Logger, Res } from '@nestjs/common';
+import { Injectable, Logger} from '@nestjs/common';
 
 @Injectable()
 export class ImageServiceService {
 
-    private readonly logger = new Logger("Base64ImageService")
+    private readonly logger = new Logger("Base64ImageService");
     constructor(
     ) { }
 

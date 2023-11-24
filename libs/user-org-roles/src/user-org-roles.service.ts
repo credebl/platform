@@ -13,7 +13,7 @@ export class UserOrgRolesService {
    * @returns user details
    */
   // eslint-disable-next-line camelcase
-  async createUserOrgRole(userId: number, roleId: number, orgId?: number): Promise<user_org_roles> {
+  async createUserOrgRole(userId: string, roleId: string, orgId?: string): Promise<user_org_roles> {
     return this.userOrgRoleRepository.createUserOrgRole(userId, roleId, orgId);
   }
 
@@ -24,7 +24,7 @@ export class UserOrgRolesService {
    * @param orgId 
    * @returns Boolean response for user exist
    */
-  async checkUserOrgExist(userId: number, orgId: number): Promise<boolean> {
+  async checkUserOrgExist(userId: string, orgId: string): Promise<boolean> {
     const queryOptions = {
       userId,
       orgId
@@ -46,7 +46,7 @@ export class UserOrgRolesService {
    * @param roleIds 
    * @returns 
    */
-  async updateUserOrgRole(userId: number, orgId: number, roleIds: number[]): Promise<boolean> {
+  async updateUserOrgRole(userId: string, orgId: string, roleIds: string[]): Promise<boolean> {
   
     for (const role of roleIds) {
       this.userOrgRoleRepository.createUserOrgRole(userId, role, orgId);
@@ -61,7 +61,7 @@ export class UserOrgRolesService {
    * @param orgId 
    * @returns Delete user org roles
    */
-  async deleteOrgRoles(userId: number, orgId: number): Promise<object> {
+  async deleteOrgRoles(userId: string, orgId: string): Promise<object> {
 
     const queryOptions = {
       userId,

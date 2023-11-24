@@ -39,7 +39,7 @@ export class CreateSchemaDto {
     @IsNotEmpty({ message: 'please provide valid attributes' })
     attributes: AttributeValue[];
 
-    orgId: number;
+    orgId: string;
 
     @ApiProperty()
     @IsOptional()

@@ -2,19 +2,19 @@
 import { UserRoleOrgPermsDto } from './user-role-org-perms.dto';
 
 export class RequestingUser {
-    userId: number;
+    userId: string;
     username: string;
     //roleId: number;
     email: string;
     //permissions: string[];
-    orgId: number;
+    orgId: string;
     //org?: OrganizationDto;
     name?: string;
     agentEndPoint?: string;
     apiKey?: string;
-    tenant_id?: number;
+    tenant_id?: string;
     tenant_name?: string;
     userRoleOrgPermissions: UserRoleOrgPermsDto[];
-    tenantOrgId?: number;
+    tenantOrgId?: string;
 }
 

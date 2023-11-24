@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -18,9 +18,9 @@ export class CreateSchemaDto {
     attributes: string[];
 
     @ApiProperty()
-    @IsNumber()
+    
     @IsNotEmpty({ message: 'please provide orgId' })
-    orgId: number;
+    orgId: string;
 
     @ApiProperty()
     @IsString({ message: 'orgDid must be a string' }) @IsNotEmpty({ message: 'please provide valid orgDid' })

@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { AwsService } from '@credebl/aws';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { UserService } from './user.service';
     ])
   ],
   controllers: [UserController],
-  providers: [UserService, CommonService]
+  providers: [UserService, CommonService, AwsService]
 })
 export class UserModule {}

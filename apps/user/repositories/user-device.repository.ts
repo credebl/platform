@@ -6,13 +6,13 @@ import { Prisma, user_devices } from '@prisma/client';
 
 type FidoMultiDevicePayload = {
   createDateTime: Date;
-  createdBy: number;
+  createdBy: string;
   lastChangedDateTime: Date;
-  lastChangedBy: number;
+  lastChangedBy: string;
   devices: Prisma.JsonValue;
   credentialId: string;
   deviceFriendlyName: string;
-  id: number;
+  id: string;
 }[];
 @Injectable()
 export class UserDevicesRepository {
@@ -25,11 +25,11 @@ export class UserDevicesRepository {
    */
 
   // eslint-disable-next-line camelcase
-  async checkUserDevice(userId: number): Promise<user_devices> {
+  async checkUserDevice(userId: string): Promise<user_devices> {
     try {
       return this.prisma.user_devices.findFirst({
         where: {
-          userId
+          userId:String(userId)
         }
       });
     } catch (error) {
@@ -44,13 +44,15 @@ export class UserDevicesRepository {
      * @returns Device details
      */
   // eslint-disable-next-line camelcase
-  async createMultiDevice(newDevice: Prisma.JsonValue, userId: number): Promise<user_devices> {
+  async createMultiDevice(newDevice: Prisma.JsonValue, userId: string): Promise<user_devices> {
     try {
 
       const saveResponse = await this.prisma.user_devices.create({
         data: {
           devices: newDevice,
-          userId
+          userId:String(userId),
+          createdBy: userId,
+          lastChangedBy: userId
         }
       });
 
@@ -68,11 +70,11 @@ export class UserDevicesRepository {
      * @returns Device details
      */
   // eslint-disable-next-line camelcase
-  async fidoMultiDevice(userId: number): Promise<user_devices[]> {
+  async fidoMultiDevice(userId: string): Promise<user_devices[]> {
     try {
       const userDetails = await this.prisma.user_devices.findMany({
         where: {
-          userId,
+          userId:String(userId),
           deletedAt: null
         },
         orderBy: {
@@ -93,12 +95,12 @@ export class UserDevicesRepository {
      * @returns Get all device details
      */
   // eslint-disable-next-line camelcase, @typescript-eslint/no-explicit-any
-  async getfidoMultiDevice(userId: number): Promise<user_devices[]> {
+  async getfidoMultiDevice(userId: string): Promise<user_devices[]> {
     try {
 
       const fidoMultiDevice = await this.prisma.user_devices.findMany({
         where: {
-          userId
+          userId:String(userId)
         }
       });
       return fidoMultiDevice;
@@ -113,11 +115,11 @@ export class UserDevicesRepository {
      * @param userId
      * @returns Get all active device details
      */
-  async getfidoMultiDeviceDetails(userId: number): Promise<FidoMultiDevicePayload> {
+  async getfidoMultiDeviceDetails(userId: string): Promise<FidoMultiDevicePayload> {
     try {
       const fidoMultiDevice = await this.prisma.user_devices.findMany({
         where: {
-          userId,
+          userId:String(userId),
           deletedAt: null
         },
         select: {
@@ -228,7 +230,7 @@ export class UserDevicesRepository {
      * @param deviceName
      * @returns Update device name
      */
-  async updateUserDeviceByCredentialId(id: number, deviceName: string): Promise<Prisma.BatchPayload> {
+  async updateUserDeviceByCredentialId(id: string, deviceName: string): Promise<Prisma.BatchPayload> {
     try {
       return await this.prisma.user_devices.updateMany({
         where: {
@@ -270,7 +272,7 @@ export class UserDevicesRepository {
      * @returns Update device name for specific credentialId
      */
   // eslint-disable-next-line camelcase
-  async addCredentialIdAndNameById(id: number, updateFidoUserDetails: string): Promise<user_devices> {
+  async addCredentialIdAndNameById(id: string, updateFidoUserDetails: string): Promise<user_devices> {
 
     try {
       return await this.prisma.user_devices.update({

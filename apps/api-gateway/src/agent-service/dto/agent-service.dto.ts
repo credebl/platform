@@ -5,7 +5,7 @@ import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLen
 const regex = /^[a-zA-Z0-9 ]*$/;
 export class AgentSpinupDto {
 
-    orgId: number;
+    orgId: string;
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))
@@ -43,7 +43,7 @@ export class AgentSpinupDto {
     @IsOptional()
     @IsArray({ message: 'ledgerId must be an array' })
     @IsNotEmpty({ message: 'please provide valid ledgerId' })
-    ledgerId?: number[];
+    ledgerId?: string[];
 
     @ApiProperty()
     @IsOptional()

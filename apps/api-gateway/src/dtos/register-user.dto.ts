@@ -92,7 +92,7 @@ export class RegisterUserDto {
 
     @IsOptional()
     // @IsInt({message:'TenantId should be number'})
-    tenantId?: number;
+    tenantId?: string;
 
     @IsOptional()
     @IsString({message:'Tags should be string'})

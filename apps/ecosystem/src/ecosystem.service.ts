@@ -998,15 +998,15 @@ export class EcosystemService {
 
       const ecosystemMemberDetails = await this.getEcosystemMemberDetails(endorsementTransactionPayload);
       const ecosystemLeadAgentDetails = await this.getEcosystemLeadAgentDetails(ecosystemId);
-      const platformConfig = await this.getPlatformConfig();
+      
 
       const agentEndPoint = ecosystemLeadAgentEndPoint ? ecosystemLeadAgentEndPoint : ecosystemMemberDetails.agentEndPoint;
 
       const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(orgAgentType, agentEndPoint, endorsementTransactionType.SUBMIT, ecosystemMemberDetails?.tenantId);
       const payload = await this.submitTransactionPayload(endorsementTransactionPayload, ecosystemMemberDetails, ecosystemLeadAgentDetails);
-
-      const submitTransactionRequest = await this._submitTransaction(payload, url, platformConfig.sgApiKey);
+      const apiKey = await getAgentApiKey(endorsementTransactionPayload.ecosystemOrgs.orgId);
+      const submitTransactionRequest = await this._submitTransaction(payload, url, apiKey);
 
       if ('failed' === submitTransactionRequest['message'].state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);

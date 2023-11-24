@@ -28,7 +28,7 @@ export class ConnectionService extends BaseService {
         }
     }
 
-    getConnectionWebhook(connectionDto: ConnectionDto, id: number): Promise<{
+    getConnectionWebhook(connectionDto: ConnectionDto, id: string): Promise<{
         response: object;
     }> {
         const payload = { connectionId: connectionDto.id, state: connectionDto.state, orgDid: connectionDto.theirDid, theirLabel: connectionDto.theirLabel, autoAcceptConnection: connectionDto.autoAcceptConnection, outOfBandId: connectionDto.outOfBandId, createDateTime: connectionDto.createdAt, lastChangedDateTime: connectionDto.updatedAt, orgId: id };

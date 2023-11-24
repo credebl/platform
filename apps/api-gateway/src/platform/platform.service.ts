@@ -26,4 +26,13 @@ export class PlatformService extends BaseService {
         const payload = {};
         return this.sendNats(this.platformServiceProxy, 'get-all-ledgers', payload);
     }
+
+    async getNetworkUrl(indyNamespace: string): Promise<{
+        response: object;
+    }> {
+        const payload = {
+            indyNamespace
+        };
+        return this.sendNats(this.platformServiceProxy, 'get-network-url', payload);
+    }
 }

@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, credentials, file_data, file_upload, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { FileUploadData, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadData, IIssuanceWebhookInterface, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 @Injectable()
 export class IssuanceRepository {
@@ -48,9 +48,10 @@ export class IssuanceRepository {
  * @returns Get saved credential details
  */
     // eslint-disable-next-line camelcase
-    async saveIssuedCredentialDetails(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: object[], orgId: string): Promise<credentials> {
+    async saveIssuedCredentialDetails(payload: IIssuanceWebhookInterface, orgId: string): Promise<credentials> {
         try {
-            
+
+            const { connectionId, createDateTime, id, threadId, state } = payload;
             const credentialDetails = await this.prisma.credentials.upsert({
                 where: {
                     threadId
@@ -59,19 +60,17 @@ export class IssuanceRepository {
                     lastChangedBy: orgId,
                     createDateTime,
                     threadId,
-                    protocolVersion,
-                    credentialAttributes,
-                    orgId: String(orgId)
+                    state
                 },
                 create: {
                     createDateTime,
                     lastChangedBy: orgId,
                     createdBy: orgId,
                     connectionId,
+                    state,
                     threadId,
-                    protocolVersion,
-                    credentialAttributes,
-                    orgId: String(orgId)
+                    credentialExchangeId: id,
+                    orgId
                 }
             });
             return credentialDetails;
@@ -284,7 +283,7 @@ export class IssuanceRepository {
                 skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
                 orderBy: {
                     createDateTime: 'desc'
-                  }
+                }
             });
     
             const fileListWithDetails = await Promise.all(
@@ -343,7 +342,7 @@ export class IssuanceRepository {
                 skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
                 orderBy: {
                     createDateTime: 'desc'
-                  }
+                }
             });
             const fileCount = await this.prisma.file_data.count({
                 where: {
@@ -386,7 +385,7 @@ export class IssuanceRepository {
                 return this.prisma.file_data.update({
                     where: { id: jobId },
                     data: {
-                       credential_data: null
+                        credential_data: null
                     }
                 });
             }

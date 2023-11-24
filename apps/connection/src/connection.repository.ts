@@ -96,6 +96,7 @@ export class ConnectionRepository {
     // eslint-disable-next-line camelcase
     async saveConnectionWebhook(createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: string): Promise<connections> {
         try {
+
             const agentDetails = await this.prisma.connections.upsert({
                 where: {
                     connectionId
@@ -103,11 +104,7 @@ export class ConnectionRepository {
                 update: {
                     lastChangedDateTime,
                     lastChangedBy: orgId,
-                    state,
-                    orgDid,
-                    theirLabel,
-                    autoAcceptConnection,
-                    outOfBandId
+                    state
                 },
                 create: {
                     createDateTime,
@@ -116,10 +113,6 @@ export class ConnectionRepository {
                     lastChangedBy: orgId,
                     connectionId,
                     state,
-                    orgDid,
-                    theirLabel,
-                    autoAcceptConnection,
-                    outOfBandId,
                     orgId
                 }
             });

@@ -13,13 +13,14 @@ import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
 import { readFileSync } from 'fs';
 import { RpcException } from '@nestjs/microservices';
+import { AgentServiceService } from '../../../apps/agent-service/src/agent-service.service';
 
 @Injectable()
 export class CommonService {
   private readonly logger = new Logger('CommonService');
   result: ResponseService = new ResponseService();
-
-  constructor(private readonly httpService: HttpService) { }
+  agentServiceService :AgentServiceService ;
+  constructor(private readonly httpService: HttpService ) { }
 
   async httpPost(url: string, payload?: any, apiKey?: any) {
     try {
@@ -389,5 +390,10 @@ export class CommonService {
     } catch (error) {
       throw new BadRequestException('Invalid Credentials');
     }
+  }
+
+  async getAgentApiKey(orgId: string): Promise<object | string> {
+    const apiKey = await this.agentServiceService.getOrgAgentApiKey(orgId);
+    return apiKey;
   }
 }

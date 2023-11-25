@@ -53,16 +53,7 @@ export class OutOfBandIssuance {
 
                   <hr style="border-top:1px solid #e8e8e8" />
                   <footer style="padding-top: 20px;">
-                      <div style="display: block; text-align:center;">
-                          <a href="https://twitter.com/credebl">
-                              <img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/twitter.svg" width="18" height="18" alt="f"
-                                  style="color:#cccccc; padding-right: 10px;"></a>
-                          <a href="https://github.com/credebl"><img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/github.svg"
-                                  width="18" height="18" alt="t" style="color:#cccccc;padding-right: 10px;"></a>
-                                  <a href="https://discord.com/invite/w4hnQT7NJG"><img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/discord.svg"
-                                  width="18" height="18" alt="t" style="color:#cccccc;padding-right: 10px;"></a>
-                                  
-                      </div>
+                     
                       <p style="margin-top: 2px;">
                           CREDEBL - by Blockster Labs Pvt. Ltd.
                       </p>

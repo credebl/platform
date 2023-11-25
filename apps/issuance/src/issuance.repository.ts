@@ -60,6 +60,7 @@ export class IssuanceRepository {
                     lastChangedBy: orgId,
                     createDateTime,
                     threadId,
+                    connectionId,
                     state
                 },
                 create: {

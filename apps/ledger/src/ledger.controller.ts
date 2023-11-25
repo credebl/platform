@@ -11,4 +11,11 @@ export class LedgerController {
   async getAllLedgers(): Promise<ledgers[]> {
     return this.ledgerService.getAllLedgers();
   }
+
+  @MessagePattern({ cmd: 'get-network-url' })
+  async getNetworkUrl(payload: object): Promise<{
+    networkUrl: string;
+  }> {
+    return this.ledgerService.getNetworkUrl(payload);
+  }
 }

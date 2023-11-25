@@ -165,10 +165,10 @@ export class ConnectionController {
     @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
     async getConnectionWebhook(
         @Body() connectionDto: ConnectionDto,
-        @Param('id') id: number,
+        @Param('id') id: string,
         @Res() res: Response
     ): Promise<object> {
-        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)}`);
+        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${id}`);
         const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,

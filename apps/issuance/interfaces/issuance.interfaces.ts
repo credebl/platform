@@ -37,6 +37,13 @@ export interface IIssuanceWebhookInterface {
     protocolVersion: string;
     credentialAttributes: ICredentialAttributesInterface[];
     orgId: string;
+    id: string;
+    state: string;
+}
+
+export interface IssueCredentialWebhookPayload {
+    issueCredentialDto: IIssuanceWebhookInterface;
+    id: string;
 }
 
 export interface ICredentialAttributesInterface {
@@ -87,10 +94,10 @@ export interface FileUpload {
     name?: string;
     upload_type?: string;
     status?: string;
-    orgId?:  string;
+    orgId?: string;
     createDateTime?: Date;
     lastChangedDateTime?: Date;
-  }
+}
 
 export interface FileUploadData {
     fileUpload: string;
@@ -104,7 +111,7 @@ export interface FileUploadData {
 }
 
 export interface ClientDetails {
-   
+
     clientId: string;
 
     userId?: string;

@@ -19,4 +19,23 @@ export class LedgerRepository {
             throw error;
         }
     }
+
+    async getNetworkUrl(payload: object): Promise<{
+        networkUrl: string;
+    }> {
+
+        try {
+            return this.prisma.ledgers.findFirst({
+                where: {
+                    indyNamespace: payload["indyNamespace"]
+                },
+                select: {
+                    networkUrl: true
+                }
+            });
+        } catch (error) {
+            this.logger.error(`Error in getNetworkUrl: ${error}`);
+            throw error;
+        }
+    }
 }

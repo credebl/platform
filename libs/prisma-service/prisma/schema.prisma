@@ -206,6 +206,7 @@ model ledgers {
   registerDIDEndpoint String       @db.VarChar
   registerDIDPayload  Json?
   indyNamespace       String?      @db.VarChar
+  networkUrl          String?      @db.VarChar
   org_agents          org_agents[]
   schema              schema[]
 }
@@ -275,47 +276,43 @@ model agent_invitations {
 }
 
 model connections {
-  id                   String       @id @default(uuid()) @db.Uuid
-  createDateTime       DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy            String       @db.Uuid
-  lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy        String       @db.Uuid
-  connectionId         String       @unique
-  state                String
-  orgDid               String
-  theirLabel           String
-  autoAcceptConnection Boolean
-  outOfBandId          String
-  orgId                String       @db.Uuid
-  organisation         organisation @relation(fields: [orgId], references: [id])
+  id                  String        @id @default(uuid()) @db.Uuid
+  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy           String        @db.Uuid
+  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String        @db.Uuid
+  connectionId        String        @unique
+  state               String
+  orgId               String?       @db.Uuid
+  organisation        organisation? @relation(fields: [orgId], references: [id])
 }
 
 model credentials {
-  id                   String       @id @default(uuid()) @db.Uuid
-  createDateTime       DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy            String       @db.Uuid
-  lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy        String       @db.Uuid
+  id                   String        @id @default(uuid()) @db.Uuid
+  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy            String        @db.Uuid
+  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy        String        @db.Uuid
   connectionId         String?
-  threadId             String       @unique
-  protocolVersion      String?
-  credentialAttributes Json[]
-  orgId                String       @db.Uuid
-  organisation         organisation @relation(fields: [orgId], references: [id])
+  threadId             String        @unique
+  credentialExchangeId String        @default("")
+  state                String        @default("")
+  orgId                String?       @db.Uuid
+  organisation         organisation? @relation(fields: [orgId], references: [id])
 }
 
 model presentations {
-  id                  String       @id @default(uuid()) @db.Uuid
-  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           String       @db.Uuid
-  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String       @db.Uuid
+  id                  String        @id @default(uuid()) @db.Uuid
+  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy           String        @db.Uuid
+  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String        @db.Uuid
   connectionId        String?
   state               String?
-  threadId            String       @unique
+  threadId            String        @unique
   isVerified          Boolean?
-  orgId               String       @db.Uuid
-  organisation        organisation @relation(fields: [orgId], references: [id])
+  orgId               String?       @db.Uuid
+  organisation        organisation? @relation(fields: [orgId], references: [id])
 }
 
 model ecosystem_roles {
@@ -433,7 +430,7 @@ model file_upload {
   deletedAt           DateTime?     @db.Timestamp(6)
   file_data           file_data[]
   organisation        organisation? @relation(fields: [orgId], references: [id])
-  orgId      String?       @db.Uuid
+  orgId               String?       @db.Uuid
 }
 
 model file_data {

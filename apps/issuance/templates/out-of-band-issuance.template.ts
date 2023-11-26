@@ -13,7 +13,7 @@ export class OutOfBandIssuance {
       <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
           <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
               <div style="display: block; text-align:center;">
-              <img src="${process.env.PLATFORM_URL}/images/CREDEBL_Logo_Web.svg" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+              <img src="${process.env.FRONT_END_URL}/images/CREDEBL_LOGO.png" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
               </div>
               <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
               font-size: 15px; line-height: 24px;color: #5E5873;">

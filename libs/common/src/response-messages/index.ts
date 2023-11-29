@@ -58,7 +58,7 @@ export const ResponseMessages = {
             getOrgDashboard: 'Organization dashboard details fetched',
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
-            delete: 'Organization deleted successfully',
+            delete: 'Organization deleted successfully'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -235,6 +235,8 @@ export const ResponseMessages = {
         },
         error: {
             notCreated: 'Error while creating ecosystem',
+            orgNotExist: 'Organization does not exist',
+            orgDidNotExist: 'Organization did does not exist',
             exists: 'An ecosystem name is already exist',
             update: 'Error while updating ecosystem',
             invalidInvitationStatus: 'Invalid invitation status',

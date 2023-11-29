@@ -7,10 +7,11 @@
 
 */
 -- AlterTable
-ALTER TABLE "ecosystem_orgs" DROP COLUMN "orgDid",
+ALTER TABLE "ecosystem_orgs" 
+DROP COLUMN "orgDid",
 DROP COLUMN "orgName",
-DROP COLUMN "orgId",
-ADD COLUMN     "orgId" UUID NOT NULL;
+ALTER COLUMN "orgId" TYPE uuid USING "orgId"::uuid;
+
 
 -- AddForeignKey
 ALTER TABLE "ecosystem_orgs" ADD CONSTRAINT "ecosystem_orgs_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

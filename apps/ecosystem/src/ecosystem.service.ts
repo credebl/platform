@@ -14,7 +14,7 @@ import { EcosystemConfigSettings, Invitation, OrgAgentType } from '@credebl/enum
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -57,11 +57,43 @@ export class EcosystemService {
         }
       }
     }
+
+    const orgDetails: OrganizationData = await this.getOrganizationDetails(createEcosystemDto.orgId, createEcosystemDto.userId);
+
+    if (!orgDetails) {
+      throw new NotFoundException(ResponseMessages.ecosystem.error.orgNotExist);
+    }
+
+    if (0  === orgDetails.org_agents.length) {
+      throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
+    }
+    
     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
     if (!createEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
     }
     return createEcosystem;
+  }
+
+  async getOrganizationDetails(orgId: string, userId: string): Promise<OrganizationData> {
+    const pattern = { cmd: 'get-organization-by-id' };
+    const payload = { orgId, userId };
+
+    const orgData = await this.ecosystemServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return orgData;
   }
 
 
@@ -122,7 +154,7 @@ export class EcosystemService {
         endorsementsCount: endorseMemberCount.endorsementsCount,
         ecosystemLead: {
           role: ecosystemDetails['ecosystemRole']['name'],
-          orgName: ecosystemDetails['orgName'],
+          orgName: ecosystemDetails['organisation']['name'],
           config: endorseMemberCount.ecosystemConfigData
         }
       };
@@ -214,11 +246,21 @@ export class EcosystemService {
         };
       }
 
-      const { orgId, status, invitationId, orgName, orgDid, userId } = acceptRejectInvitation;
+      const { orgId, status, invitationId, userId } = acceptRejectInvitation;
       const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
 
       if (!invitation) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotFound);
+      }
+
+      const orgDetails: OrganizationData = await this.getOrganizationDetails(acceptRejectInvitation.orgId, acceptRejectInvitation.userId);
+  
+      if (!orgDetails) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.orgNotExist);
+      }
+  
+      if (0  === orgDetails.org_agents.length) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
       }
 
       const updatedInvitation = await this.updateEcosystemInvitation(invitationId, orgId, status);
@@ -231,7 +273,7 @@ export class EcosystemService {
       }
 
       const ecosystemRole = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
-      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, orgName, orgDid, invitation.ecosystemId, ecosystemRole.id, userId);
+      const updateEcosystemOrgs = await this.updatedEcosystemOrgs(orgId, invitation.ecosystemId, ecosystemRole.id, userId);
 
       if (!updateEcosystemOrgs) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgsNotUpdate);
@@ -244,15 +286,13 @@ export class EcosystemService {
     }
   }
 
-  async updatedEcosystemOrgs(orgId: string, orgName: string, orgDid: string, ecosystemId: string, ecosystemRoleId: string, userId: string): Promise<object> {
+  async updatedEcosystemOrgs(orgId: string, ecosystemId: string, ecosystemRoleId: string, userId: string): Promise<object> {
     try {
       const data: updateEcosystemOrgsDto = {
         orgId,
         status: EcosystemOrgStatus.ACTIVE,
         ecosystemId,
         ecosystemRoleId,
-        orgName,
-        orgDid,
         createdBy: userId,
         lastChangedBy: userId
       };

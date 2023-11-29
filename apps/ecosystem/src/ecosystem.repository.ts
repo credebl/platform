@@ -28,7 +28,7 @@ export class EcosystemRepository {
   async createNewEcosystem(createEcosystemDto): Promise<ecosystem> {
     try {
       const transaction = await this.prisma.$transaction(async (prisma) => {
-        const { name, description, userId, logo, tags, orgId, orgName, orgDid, autoEndorsement } = createEcosystemDto;
+        const { name, description, userId, logo, tags, orgId, autoEndorsement } = createEcosystemDto;
         const createdEcosystem = await prisma.ecosystem.create({
           data: {
             name,
@@ -64,8 +64,6 @@ export class EcosystemRepository {
               status: EcosystemOrgStatus.ACTIVE,
               ecosystemId: createdEcosystem.id,
               ecosystemRoleId: ecosystemRoleDetails.id,
-              orgName,
-              orgDid,
               deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
               createdBy: userId,
               lastChangedBy: userId
@@ -367,7 +365,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateEcosystemOrgs(createEcosystemOrgsDto: updateEcosystemOrgsDto): Promise<ecosystem_orgs> {
     try {
-      const { orgId, status, ecosystemRoleId, ecosystemId, orgName, orgDid, createdBy, lastChangedBy } = createEcosystemOrgsDto;
+      const { orgId, status, ecosystemRoleId, ecosystemId, createdBy, lastChangedBy } = createEcosystemOrgsDto;
 
       return this.prisma.ecosystem_orgs.create({
         data: {
@@ -375,8 +373,6 @@ export class EcosystemRepository {
           ecosystemId,
           status,
           ecosystemRoleId,
-          orgName,
-          orgDid,
           deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
           createdBy,
           lastChangedBy
@@ -449,10 +445,10 @@ export class EcosystemRepository {
     try {
       const query = {
         ecosystemId,
-        OR:
-          [{ orgId: { contains: search, mode: 'insensitive' } }]
+        OR: [{ organisation: { name: { contains: search, mode: 'insensitive' } } }]
       };
       return await this.getEcosystemMembersPagination(query, pageNumber, pageSize);
+
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -468,7 +464,16 @@ export class EcosystemRepository {
           },
           include: {
             ecosystem: true,
-            ecosystemRole: true
+            ecosystemRole: true,
+            organisation: {
+              select:{
+                name: true,
+                orgSlug: true,
+                // eslint-disable-next-line camelcase
+                org_agents: true
+
+              }
+            }
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -545,7 +550,7 @@ export class EcosystemRepository {
       select: {
         ecosystem: true,
         ecosystemRole: true,
-        orgName: true
+        organisation: true
       }
     });
 
@@ -565,7 +570,16 @@ export class EcosystemRepository {
             authorDid: true,
             status: true,
             type: true,
-            ecosystemOrgs: true,
+            ecosystemOrgs: {
+              include:{
+                organisation: {
+                  select:{
+                    name: true,
+                    orgSlug: true
+                  }
+                }
+              }
+            },
             requestPayload: true,
             responsePayload: true,
             createDateTime: true,

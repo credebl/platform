@@ -28,4 +28,21 @@ export class LedgerService extends BaseService {
             throw new RpcException(error.response ? error.response : error);
         }
     }
+
+    async getNetworkUrl(payload: object): Promise<{
+        networkUrl: string;
+    }> {
+        try {
+            const getNetworkUrl = await this.ledgerRepository.getNetworkUrl(payload);
+
+            if (!getNetworkUrl) {
+                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+            }
+
+            return getNetworkUrl;
+        } catch (error) {
+            this.logger.error(`Error in retrieving network url: ${error}`);
+            throw new RpcException(error.response ? error.response : error);
+        }
+    }
 }

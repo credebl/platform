@@ -48,7 +48,7 @@ export class ConnectionController {
     async getConnectionsById(
         @User() user: IUserRequest,
         @Param('connectionId') connectionId: string,
-        @Param('orgId') orgId: number,
+        @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
@@ -104,7 +104,7 @@ export class ConnectionController {
         @Query('myDid') myDid: string,
         @Query('theirDid') theirDid: string,
         @Query('theirLabel') theirLabel: string,
-        @Param('orgId') orgId: number,
+        @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
 
@@ -132,7 +132,7 @@ export class ConnectionController {
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
     async createLegacyConnectionInvitation(
-        @Param('orgId') orgId: number,
+        @Param('orgId') orgId: string,
         @Body() connectionDto: CreateConnectionDto,
         @User() reqUser: IUserRequestInterface,
         @Res() res: Response
@@ -165,10 +165,10 @@ export class ConnectionController {
     @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
     async getConnectionWebhook(
         @Body() connectionDto: ConnectionDto,
-        @Param('id') id: number,
+        @Param('id') id: string,
         @Res() res: Response
     ): Promise<object> {
-        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)}`);
+        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${id}`);
         const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,

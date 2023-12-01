@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { toNumber } from '@credebl/common/cast.helper';
@@ -40,7 +40,7 @@ export class IssueCredentialDto {
     @IsNotEmpty({ message: 'Please provide valid protocol-version' })
     @IsString({ message: 'protocol-version should be string' })
     protocolVersion?: string;
-    orgId: number;
+    orgId: string;
 }
 
 
@@ -109,7 +109,8 @@ export class OutOfBandCredentialDto {
 
     @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attribute': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
+    @IsArray({ message: 'attributes should be array'})
+    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads`})
     @IsOptional()
     credentialOffer: CredentialOffer[];
 
@@ -143,11 +144,40 @@ export class OutOfBandCredentialDto {
     @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
 
-    orgId: number;
+    orgId: string;
 }
 
 
 export class PreviewFileDetails {
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    search = '';
+
+    @ApiProperty({ required: false, default: 10 })
+    @IsOptional()
+    @Type(() => Number)
+    @Transform(({ value }) => toNumber(value))
+    pageSize = 10;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    sortValue = '';
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => String)
+    sortBy = '';
+
+    @ApiProperty({ required: false, default: 1 })
+    @IsOptional()
+    @Type(() => Number)
+    @Transform(({ value }) => toNumber(value))
+    pageNumber = 1;
+}
+
+export class FileParameter {
     @ApiProperty({ required: false, default: 1 })
     @IsOptional()
     @Type(() => Number)
@@ -174,5 +204,15 @@ export class PreviewFileDetails {
     @IsOptional()
     @Type(() => String)
     sortValue = '';
+
+}
+
+export class ClientDetails {
+    @ApiProperty({ required: false, example: '68y647ayAv79879' })
+    @IsOptional()
+    @Type(() => String)
+    clientId = '';
+
+    userId?: string;
 
 }

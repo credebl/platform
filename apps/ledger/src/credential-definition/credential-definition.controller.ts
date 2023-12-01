@@ -35,12 +35,12 @@ export class CredentialDefinitionController {
         lastPage: number;
         data: {
             createDateTime: Date;
-            createdBy: number;
+            createdBy: string;
             credentialDefinitionId: string;
             tag: string;
             schemaLedgerId: string;
-            schemaId: number;
-            orgId: number;
+            schemaId: string;
+            orgId: string;
             revocable: boolean;
         }[]
     }> {
@@ -53,7 +53,7 @@ export class CredentialDefinitionController {
     }
 
     @MessagePattern({ cmd: 'get-all-schema-cred-defs-for-bulk-operation' })
-    async getAllCredDefAndSchemaForBulkOperation (payload: {orgId : number}): Promise<CredDefSchema[]> {
+    async getAllCredDefAndSchemaForBulkOperation (payload: {orgId : string}): Promise<CredDefSchema[]> {
         return this.credDefService.getAllCredDefAndSchemaForBulkOperation(payload.orgId);
     }
 }

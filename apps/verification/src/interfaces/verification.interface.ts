@@ -10,7 +10,7 @@ interface IProofRequestAttribute {
 }
 
 export interface IRequestProof {
-    orgId: number;
+    orgId: string;
     connectionId?: string;
     attributes: IProofRequestAttribute[];
     comment: string;
@@ -41,7 +41,7 @@ export interface ProofFormDataPayload {
 
 export interface ProofFormData {
     id: string;
-    orgId: number; 
+    orgId: string; 
     user: IUserRequest;
 }
 
@@ -84,12 +84,13 @@ export interface ISendProofRequestPayload {
     connectionId?: string;
     proofFormats: IProofFormats;
     autoAcceptProof: string;
+    label?: string;
 }
 
 export interface IProofRequestPayload {
     url: string;
     apiKey: string;
-    proofRequestPayload: ISendProofRequestPayload
+    proofRequestPayload: ISendProofRequestPayload;
 }
 
 interface IWebhookPresentationProof {

@@ -55,7 +55,7 @@ export class RequestProof {
     @ApiProperty()
     @IsOptional()
     comment: string;
-    orgId: number;
+    orgId: string;
 
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
@@ -92,7 +92,7 @@ export class OutOfBandRequestProof {
     @ApiProperty()
     @IsOptional()
     comment: string;
-    orgId: number;
+    orgId: string;
 
     @IsString({ message: 'autoAcceptProof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })

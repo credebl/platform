@@ -9,7 +9,7 @@ export class WalletDetailsDto {
     walletPassword: string;
 
     @ApiProperty()
-    ledgerId: number;
+    ledgerId: string;
 
     @ApiProperty()
     transactionApproval?: string;

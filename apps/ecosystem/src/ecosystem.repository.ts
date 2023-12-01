@@ -28,14 +28,16 @@ export class EcosystemRepository {
   async createNewEcosystem(createEcosystemDto): Promise<ecosystem> {
     try {
       const transaction = await this.prisma.$transaction(async (prisma) => {
-        const { name, description, userId, logo, tags, orgId, orgName, orgDid, autoEndorsement } = createEcosystemDto;
+        const { name, description, userId, logo, tags, orgId, autoEndorsement } = createEcosystemDto;
         const createdEcosystem = await prisma.ecosystem.create({
           data: {
             name,
             description,
             tags,
             autoEndorsement,
-            logoUrl: logo
+            logoUrl: logo,
+            createdBy: userId,
+            lastChangedBy: userId
           }
         });
         let ecosystemUser;
@@ -43,7 +45,9 @@ export class EcosystemRepository {
           ecosystemUser = await prisma.ecosystem_users.create({
             data: {
               userId: String(userId),
-              ecosystemId: createdEcosystem.id
+              ecosystemId: createdEcosystem.id,
+              createdBy: userId,
+              lastChangedBy: userId
             }
           });
         }
@@ -60,9 +64,9 @@ export class EcosystemRepository {
               status: EcosystemOrgStatus.ACTIVE,
               ecosystemId: createdEcosystem.id,
               ecosystemRoleId: ecosystemRoleDetails.id,
-              orgName,
-              orgDid,
-              deploymentMode: DeploymentModeType.PROVIDER_HOSTED
+              deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
+              createdBy: userId,
+              lastChangedBy: userId
             }
           });
         }
@@ -84,7 +88,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateEcosystemById(createEcosystemDto, ecosystemId): Promise<ecosystem> {
     try {
-      const { name, description, tags, logo, autoEndorsement } = createEcosystemDto;
+      const { name, description, tags, logo, autoEndorsement, userId } = createEcosystemDto;
       const editEcosystem = await this.prisma.ecosystem.update({
         where: { id: ecosystemId },
         data: {
@@ -92,7 +96,8 @@ export class EcosystemRepository {
           description,
           autoEndorsement,
           tags,
-          logoUrl: logo
+          logoUrl: logo,
+          lastChangedBy: userId
         }
       });
       return editEcosystem;
@@ -360,7 +365,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateEcosystemOrgs(createEcosystemOrgsDto: updateEcosystemOrgsDto): Promise<ecosystem_orgs> {
     try {
-      const { orgId, status, ecosystemRoleId, ecosystemId, orgName, orgDid } = createEcosystemOrgsDto;
+      const { orgId, status, ecosystemRoleId, ecosystemId, createdBy, lastChangedBy } = createEcosystemOrgsDto;
 
       return this.prisma.ecosystem_orgs.create({
         data: {
@@ -368,9 +373,9 @@ export class EcosystemRepository {
           ecosystemId,
           status,
           ecosystemRoleId,
-          orgName,
-          orgDid,
-          deploymentMode: DeploymentModeType.PROVIDER_HOSTED
+          deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
+          createdBy,
+          lastChangedBy
         }
       });
     } catch (error) {
@@ -393,13 +398,16 @@ export class EcosystemRepository {
     // eslint-disable-next-line camelcase
   ): Promise<ecosystem_invitations> {
     try {
+     
       return this.prisma.ecosystem_invitations.create({
         data: {
           email,
           userId,
           ecosystem: { connect: { id: ecosystemId } },
           status: EcosystemInvitationStatus.PENDING,
-          orgId: ''
+          orgId: '',
+          createdBy: userId,
+          lastChangedBy: userId
         }
       });
     } catch (error) {
@@ -437,10 +445,10 @@ export class EcosystemRepository {
     try {
       const query = {
         ecosystemId,
-        OR:
-          [{ orgId: { contains: search, mode: 'insensitive' } }]
+        OR: [{ organisation: { name: { contains: search, mode: 'insensitive' } } }]
       };
       return await this.getEcosystemMembersPagination(query, pageNumber, pageSize);
+
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -456,7 +464,16 @@ export class EcosystemRepository {
           },
           include: {
             ecosystem: true,
-            ecosystemRole: true
+            ecosystemRole: true,
+            organisation: {
+              select:{
+                name: true,
+                orgSlug: true,
+                // eslint-disable-next-line camelcase
+                org_agents: true
+
+              }
+            }
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -533,7 +550,7 @@ export class EcosystemRepository {
       select: {
         ecosystem: true,
         ecosystemRole: true,
-        orgName: true
+        organisation: true
       }
     });
 
@@ -553,7 +570,16 @@ export class EcosystemRepository {
             authorDid: true,
             status: true,
             type: true,
-            ecosystemOrgs: true,
+            ecosystemOrgs: {
+              include:{
+                organisation: {
+                  select:{
+                    name: true,
+                    orgSlug: true
+                  }
+                }
+              }
+            },
             requestPayload: true,
             responsePayload: true,
             createDateTime: true,
@@ -590,14 +616,14 @@ export class EcosystemRepository {
     schemasCount: number;
     schemasResult: {
       createDateTime: Date;
-      createdBy: number;
+      createdBy: string;
       name: string;
       version: string;
       attributes: string;
       schemaLedgerId: string;
       publisherDid: string;
       issuerId: string;
-      orgId: number;
+      orgId: string;
     }[];
   }> {
     try {
@@ -656,14 +682,14 @@ export class EcosystemRepository {
   * @returns Get getAgentEndPoint details
   */
   // eslint-disable-next-line camelcase
-  async getAgentDetails(orgId: number): Promise<org_agents> {
+  async getAgentDetails(orgId: string): Promise<org_agents> {
     try {
       if (!orgId) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidOrgId);
       }
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
-          orgId
+          orgId:orgId.toString()
         }
       });
       return agentDetails;
@@ -746,7 +772,7 @@ export class EcosystemRepository {
     type: endorsementTransactionType
   ): Promise<object> {
     try {
-      const { endorserDid, authorDid, requestPayload, status, ecosystemOrgId } = schemaTransactionResponse;
+      const { endorserDid, authorDid, requestPayload, status, ecosystemOrgId, userId } = schemaTransactionResponse;
       return await this.prisma.endorsement_transaction.create({
         data: {
           endorserDid,
@@ -757,7 +783,9 @@ export class EcosystemRepository {
           responsePayload: '',
           type,
           requestBody,
-          resourceId: ''
+          resourceId: '',
+          createdBy: userId,
+          lastChangedBy: userId
         }
       });
     } catch (error) {
@@ -920,10 +948,10 @@ export class EcosystemRepository {
           attributes,
           schemaLedgerId,
           issuerId,
-          createdBy: Number(createdBy),
-          lastChangedBy: Number(lastChangedBy),
+          createdBy,
+          lastChangedBy,
           publisherDid,
-          orgId: Number(orgId),
+          orgId: String(orgId),
           ledgerId
         }
       });
@@ -937,15 +965,16 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async saveCredDef(credDefResult: saveCredDef): Promise<credential_definition> {
     try {
-      const { schemaLedgerId, tag, credentialDefinitionId, revocable, createdBy, orgId, schemaId } = credDefResult;
+      const { schemaLedgerId, tag, credentialDefinitionId, revocable, createdBy, lastChangedBy, orgId, schemaId } = credDefResult;
       const saveResult = await this.prisma.credential_definition.create({
         data: {
           schemaLedgerId,
           tag,
           credentialDefinitionId,
           revocable,
-          createdBy: Number(createdBy),
-          orgId: Number(orgId),
+          createdBy,
+          lastChangedBy,
+          orgId,
           schemaId
         }
       });
@@ -1040,4 +1069,20 @@ export class EcosystemRepository {
       throw error;
     }
   }
+
+  async getOrgAgentType(orgAgentId: string): Promise<string> {
+    try {
+
+        const { agent } = await this.prisma.org_agents_type.findFirst({
+            where: {
+                id: orgAgentId
+            }
+        });
+
+        return agent;
+    } catch (error) {
+        this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+        throw error;
+    }
+}
 }

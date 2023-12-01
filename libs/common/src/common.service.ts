@@ -11,13 +11,15 @@ import {
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
+import { readFileSync } from 'fs';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class CommonService {
   private readonly logger = new Logger('CommonService');
   result: ResponseService = new ResponseService();
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) { }
 
   async httpPost(url: string, payload?: any, apiKey?: any) {
     try {
@@ -53,7 +55,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.NOT_FOUND,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.NOT_FOUND
         );
@@ -62,7 +64,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.BAD_REQUEST
         );
@@ -73,7 +75,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
@@ -81,7 +83,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Something went wrong.'
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.INTERNAL_SERVER_ERROR
         );
@@ -95,12 +97,12 @@ export class CommonService {
       return await this.httpService
         .get(url, config)
         .toPromise()
-        .then((data) => 
+        .then((data) =>
           // this.logger.log(`Success Data: ${JSON.stringify(data.data)}`);
-           data.data
+          data.data
         );
     } catch (error) {
-      this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`);
+      this.logger.error(`ERROR in GET : ${JSON.stringify(error.response.data)}`);
       if (
         error
           .toString()
@@ -118,7 +120,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.NOT_FOUND,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.NOT_FOUND
         );
@@ -127,7 +129,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.BAD_REQUEST
         );
@@ -138,7 +140,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
@@ -146,7 +148,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Something went wrong.'
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.INTERNAL_SERVER_ERROR
         );
@@ -187,7 +189,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.NOT_FOUND,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.NOT_FOUND
         );
@@ -196,7 +198,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.BAD_REQUEST
         );
@@ -207,7 +209,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.message
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
@@ -215,7 +217,71 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Something went wrong.'
+            error: error.response.data ? error.response.data : error.message
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+    }
+  }
+
+  async httpDelete(url: string, config?: unknown): Promise<object> {
+    try {
+      this.logger.debug(`httpDelete service URL: ${url}`);
+      return await this.httpService
+        .delete(url, config)
+        .toPromise()
+        .then((data) => {
+          return data.data;
+        });
+    } catch (error) {
+      this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);
+      if (
+        error
+          .toString()
+          .includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)
+      ) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.UNAUTHORIZED,
+            error: CommonConstants.UNAUTH_MSG
+          },
+          HttpStatus.UNAUTHORIZED
+        );
+      }
+      if (error.toString().includes(CommonConstants.RESP_ERR_NOT_FOUND)) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            error: error.response.data ? error.response.data : error.message
+          },
+          HttpStatus.NOT_FOUND
+        );
+      }
+      if (error.toString().includes(CommonConstants.RESP_BAD_REQUEST)) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            error: error.response.data ? error.response.data : error.message
+          },
+          HttpStatus.BAD_REQUEST
+        );
+      }
+      if (
+        error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)
+      ) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            error: error.response.data ? error.response.data : error.message
+          },
+          HttpStatus.UNPROCESSABLE_ENTITY
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.INTERNAL_SERVER_ERROR
         );
@@ -281,7 +347,7 @@ export class CommonService {
       throw new HttpException(
         {
           statusCode: error.response.status,
-          error: error.message
+          error: error.response.data ? error.response.data : error.message
         },
         error.response.status
       );
@@ -289,7 +355,7 @@ export class CommonService {
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message
+          error: error.response.data ? error.response.data : error.message
         },
         HttpStatus.INTERNAL_SERVER_ERROR
       );
@@ -323,6 +389,5 @@ export class CommonService {
     } catch (error) {
       throw new BadRequestException('Invalid Credentials');
     }
-    
   }
 }

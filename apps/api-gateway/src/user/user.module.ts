@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { AwsService } from '@credebl/aws';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ])
   ],
   controllers: [UserController],
-  providers: [UserService, CommonService]
+  providers: [UserService, CommonService, AwsService]
 })
 export class UserModule {}

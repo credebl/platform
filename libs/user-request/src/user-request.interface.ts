@@ -1,22 +1,22 @@
 export interface IUserRequest {
-    userId: number;
+    userId: string;
     email: string;
-    orgId: number;
+    orgId: string;
     agentEndPoint?: string;
     apiKey?: string;
-    tenantId?: number;
+    tenantId?: string;
     tenantName?: string;
-    tenantOrgId?: number;
+    tenantOrgId?: string;
     userRoleOrgPermissions?: IUserRoleOrgPerms[];
     orgName?: string;
     selectedOrg: ISelectedOrg;
 }
 
 export interface ISelectedOrg {
-    id: number;
-    userId: number;
-    orgRoleId: number;
-    orgId: number;
+    id: string;
+    userId: string;
+    orgRoleId: string;
+    orgId: string;
     orgRole: object;
     organisation: object;
 }
@@ -39,19 +39,19 @@ export interface IOrgAgent {
 }
 
 export class IUserRoleOrgPerms {
-    id: number;
+    id: string;
     role: IUserRole;
     Organization: IUserOrg;
 }
 
 export class IUserRole {
-    id: number;
+    id: string;
     name: string;
     permissions: string[];
 
 }
 
 export class IUserOrg {
-    id: number;
+    id: string;
     orgName: string;
 }

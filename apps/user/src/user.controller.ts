@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, PlatformSettingsI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, PlatformSettingsI, ShareUserCertificateI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -61,6 +61,12 @@ export class UserController {
     return this.userService.findUserByEmail(payload);
   }
 
+
+  @MessagePattern({ cmd: 'get-user-credentials-by-id' })
+  async getUserCredentialsById(payload: { credentialId }): Promise<object> {
+    return this.userService.getUserCredentialsById(payload);
+  }
+
   @MessagePattern({ cmd: 'get-org-invitations' })
   async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<object> {
     return this.userService.invitations(payload);
@@ -74,9 +80,21 @@ export class UserController {
   @MessagePattern({ cmd: 'accept-reject-invitations' })
   async acceptRejectInvitations(payload: {
     acceptRejectInvitation: AcceptRejectInvitationDto;
-    userId: number;
+    userId: string;
   }): Promise<string> {
     return this.userService.acceptRejectInvitations(payload.acceptRejectInvitation, payload.userId);
+  }
+
+  /**
+   *
+   * @param payload
+   * @returns Share user certificate
+   */
+  @MessagePattern({ cmd: 'share-user-certificate' })
+  async shareUserCertificate(payload: {
+    shareUserCredentials: ShareUserCertificateI;
+  }): Promise<unknown> {
+    return this.userService.shareUserCertificate(payload.shareUserCredentials);
   }
 
   /**
@@ -85,7 +103,7 @@ export class UserController {
    * @returns organization users list
    */
   @MessagePattern({ cmd: 'fetch-organization-user' })
-  async getOrganizationUsers(payload: { orgId: number, pageNumber: number, pageSize: number, search: string }): Promise<object> {
+  async getOrganizationUsers(payload: { orgId: string, pageNumber: number, pageSize: number, search: string }): Promise<object> {
     return this.userService.getOrgUsers(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
   }
 
@@ -111,7 +129,7 @@ export class UserController {
 
   // Fetch Users recent activities
   @MessagePattern({ cmd: 'get-user-activity' })
-  async getUserActivity(payload: { userId: number, limit: number }): Promise<object[]> {
+  async getUserActivity(payload: { userId: string, limit: number }): Promise<object[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
   }
 

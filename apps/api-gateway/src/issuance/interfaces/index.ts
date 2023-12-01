@@ -1,22 +1,22 @@
 export interface IUserRequestInterface {
-    userId: number;
+    userId: string;
     email: string;
-    orgId: number;
+    orgId: string;
     agentEndPoint?: string;
     apiKey?: string;
-    tenantId?: number;
+    tenantId?: string;
     tenantName?: string;
-    tenantOrgId?: number;
+    tenantOrgId?: string;
     userRoleOrgPermissions?: IUserRoleOrgPerms[];
     orgName?: string;
     selectedOrg: ISelectedOrg;
 }
 
 export interface ISelectedOrg {
-    id: number;
-    userId: number;
-    orgRoleId: number;
-    orgId: number;
+    id: string;
+    userId: string;
+    orgRoleId: string;
+    orgId: string;
     orgRole: object;
     organisation: object;
 }
@@ -59,11 +59,11 @@ export class IUserOrg {
 export interface FileExportResponse {
     response: unknown;
     fileContent: string;
-    fileName : string
+    fileName: string
 }
 
 export interface RequestPayload {
     credDefId: string;
-    filePath: string;
+    fileKey: string;
     fileName: string;
-  }
+}

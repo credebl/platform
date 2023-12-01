@@ -1,13 +1,9 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
-import { Controller, Get, Put, Param, UseGuards, UseFilters } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
-import { Post } from '@nestjs/common';
-import { Body } from '@nestjs/common';
-import { Res } from '@nestjs/common';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
-import { HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -21,7 +17,6 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
-import { Query } from '@nestjs/common';
 import { GetAllOrganizationsDto } from './dtos/get-all-organizations.dto';
 import { GetAllSentInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
@@ -46,7 +41,7 @@ export class OrganizationController {
   @Get('/profile/:orgId')
   @ApiOperation({ summary: 'Organization Profile', description: 'Update an organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getOgPofile(@Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  async getOgPofile(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
     const orgProfile = await this.organizationService.getOgPofile(orgId);
 
     const base64Data = orgProfile.response["logoUrl"];
@@ -146,7 +141,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
 
-  async getOrganizationDashboard(@Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async getOrganizationDashboard(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganizationDashboard(orgId, reqUser.id);
 
@@ -180,7 +175,7 @@ export class OrganizationController {
     required: false
   })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  async getInvitationsByOrgId(@Param('orgId') orgId: number, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<Response> {
+  async getInvitationsByOrgId(@Param('orgId') orgId: string, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<Response> {
 
     const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
 
@@ -235,7 +230,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  async getOrganization(@Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async getOrganization(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganization(orgId, reqUser.id);
 
@@ -276,7 +271,7 @@ export class OrganizationController {
     type: String,
     required: false
   })
-  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
     const users = await this.organizationService.getOrgUsers(orgId, getAllUsersDto);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -310,7 +305,7 @@ export class OrganizationController {
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: number, @User() user: user, @Res() res: Response): Promise<Response> {
+  async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: string, @User() user: user, @Res() res: Response): Promise<Response> {
 
     bulkInvitationDto.orgId = orgId;
     await this.organizationService.createInvitation(bulkInvitationDto, user.id, user.email);
@@ -330,7 +325,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Update user roles', description: 'update user roles' })
-  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: number, @Param('userId') userId: number, @Res() res: Response): Promise<Response> {
+  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId') userId: string, @Res() res: Response): Promise<Response> {
 
     updateUserDto.orgId = orgId;
     updateUserDto.userId = userId;
@@ -350,7 +345,7 @@ export class OrganizationController {
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: number, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     updateOrgDto.orgId = orgId;
     await this.organizationService.updateOrganization(updateOrgDto, reqUser.id, orgId);
@@ -360,5 +355,21 @@ export class OrganizationController {
       message: ResponseMessages.organisation.success.update
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/:orgId')
+  @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  async deleteOrganization(@Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+
+    await this.organizationService.deleteOrganization(orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.ACCEPTED,
+      message: ResponseMessages.organisation.success.delete
+    };
+    return res.status(HttpStatus.ACCEPTED).json(finalResponse);
   }
 }

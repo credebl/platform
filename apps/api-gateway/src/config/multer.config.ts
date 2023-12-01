@@ -7,6 +7,7 @@ import * as fs from 'fs';
 export const multerCSVOptions =  {      
     storage: diskStorage({
         destination: (req, file, cb) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id } = req.body;
             const path = `./uploadedFiles/import`;
             fs.mkdirSync(path, { recursive: true });

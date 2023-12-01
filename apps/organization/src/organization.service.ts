@@ -17,9 +17,11 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
-import { Invitation } from '@credebl/enum/enum';
-import { IUpdateOrganization } from '../interfaces/organization.interface';
+import { Invitation, OrgAgentType } from '@credebl/enum/enum';
+import { IUpdateOrganization, OrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
+import { CommonConstants } from '@credebl/common/common.constant';
+import { map } from 'rxjs/operators';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -40,7 +42,7 @@ export class OrganizationService {
    */
 
   // eslint-disable-next-line camelcase
-  async createOrganization(createOrgDto: CreateOrganizationDto, userId: number): Promise<organisation> {
+  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<organisation> {
     try {
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
 
@@ -50,6 +52,8 @@ export class OrganizationService {
 
       const orgSlug = this.createOrgSlug(createOrgDto.name);
       createOrgDto.orgSlug = orgSlug;
+      createOrgDto.createdBy = userId;
+      createOrgDto.lastChangedBy = userId;
 
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
@@ -85,7 +89,7 @@ export class OrganizationService {
  */
 
   // eslint-disable-next-line camelcase
-  async updateOrganization(updateOrgDto: IUpdateOrganization, userId: number, orgId: number): Promise<organisation> {
+  async updateOrganization(updateOrgDto: IUpdateOrganization, userId: string, orgId: string): Promise<organisation> {
     try {
 
       const organizationExist = await this.organizationRepository.checkOrganizationExist(updateOrgDto.name, orgId);
@@ -99,7 +103,7 @@ export class OrganizationService {
 
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
-
+      updateOrgDto.userId  = userId;
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
@@ -115,7 +119,7 @@ export class OrganizationService {
    * @returns Get created organizations details
    */
   // eslint-disable-next-line camelcase
-  async getOrganizations(userId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
 
       const query = {
@@ -207,7 +211,7 @@ export class OrganizationService {
      * @returns Get created organization details
      */
   // eslint-disable-next-line camelcase
-  async getOrganization(orgId: number): Promise<object> {
+  async getOrganization(orgId: string): Promise<object> {
     try {
 
       const query = {
@@ -228,7 +232,7 @@ export class OrganizationService {
     * @returns Get created invitation details
     */
   // eslint-disable-next-line camelcase
-  async getInvitationsByOrgId(orgId: number, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
       for await (const item of getOrganization['invitations']) {
@@ -265,7 +269,7 @@ export class OrganizationService {
    */
   async checkInvitationExist(
     email: string,
-    orgId: number
+    orgId: string
   ): Promise<boolean> {
     try {
 
@@ -299,14 +303,14 @@ export class OrganizationService {
     }
   }
 
-   /**
-   *
-   * @Body sendInvitationDto
-   * @returns createInvitation
-   */
+  /**
+  *
+  * @Body sendInvitationDto
+  * @returns createInvitation
+  */
 
   // eslint-disable-next-line camelcase
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: number, userEmail: string): Promise<string> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, orgId } = bulkInvitationDto;
 
     try {
@@ -321,7 +325,7 @@ export class OrganizationService {
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
-          await this.organizationRepository.createSendInvitation(email, orgId, userId, orgRoleId);
+          await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
 
           const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
           try {
@@ -411,7 +415,7 @@ export class OrganizationService {
     try {
       const { orgId, status, invitationId, userId } = payload;
 
-      const invitation = await this.organizationRepository.getInvitationById(invitationId);
+      const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
       if (!invitation) {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
@@ -445,7 +449,7 @@ export class OrganizationService {
    * @param userId 
    * @returns 
    */
-  async updateUserRoles(orgId: number, roleIds: number[], userId: number): Promise<boolean> {
+  async updateUserRoles(orgId: string, roleIds: string[], userId: string): Promise<boolean> {
     try {
 
       const isUserExistForOrg = await this.userOrgRoleService.checkUserOrgExist(userId, orgId);
@@ -474,7 +478,7 @@ export class OrganizationService {
     }
   }
 
-  async getOrgDashboard(orgId: number): Promise<object> {
+  async getOrgDashboard(orgId: string): Promise<object> {
     try {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
@@ -483,7 +487,7 @@ export class OrganizationService {
     }
   }
 
-  async getOgPofile(orgId: number): Promise<organisation> {
+  async getOgPofile(orgId: string): Promise<organisation> {
     try {
       const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
       if (!orgProfile.logoUrl || '' === orgProfile.logoUrl) {
@@ -493,6 +497,70 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async deleteOrganization(orgId: string): Promise<boolean> {
+    try {
+      const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
+
+      let url;
+      if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {
+        url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
+
+      } else if (getAgent.orgAgentTypeId === OrgAgentType.SHARED) {
+        url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_SHARED_WALLET}`.replace('#', getAgent.tenantId);
+      }
+
+      const payload = {
+        url,
+        apiKey: getAgent.apiKey
+      };
+
+      const deleteWallet = await this._deleteWallet(payload);
+      if (deleteWallet) {
+
+        const orgDelete = await this.organizationRepository.deleteOrg(orgId);
+        if (false === orgDelete) {
+          throw new NotFoundException(ResponseMessages.organisation.error.deleteOrg);
+        }
+      }
+
+
+      return true;
+    } catch (error) {
+      this.logger.error(`delete organization: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async _deleteWallet(payload: OrgAgent): Promise<{
+    response;
+  }> {
+    try {
+      const pattern = {
+        cmd: 'delete-wallet'
+      };
+
+      return this.organizationServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 }

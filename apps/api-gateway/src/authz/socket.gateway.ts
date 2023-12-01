@@ -96,10 +96,34 @@ export class SocketGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('error-in-wallet-creation-process')
-  async handleErrorResponse(payload: ISocketInterface): Promise<void> {
+  async handleErrorResponse(client:string, payload: ISocketInterface): Promise<void> {
     this.logger.log(`error-in-wallet-creation-process ${payload.clientId}`);
     this.server
       .to(payload.clientId)
       .emit('error-in-wallet-creation-process', payload.error);
+  }
+
+  @SubscribeMessage('bulk-issuance-process-completed')
+  async handleBulkIssuance(client:string, payload: ISocketInterface): Promise<void> {
+    this.logger.log(`bulk-issuance-process-completed ${payload.clientId}`);
+    this.server
+      .to(payload.clientId)
+      .emit('bulk-issuance-process-completed');
+  }
+
+  @SubscribeMessage('error-in-bulk-issuance-process')
+  async handleBulkIssuanceErrorResponse(client:string, payload: ISocketInterface): Promise<void> {
+    this.logger.log(`error-in-bulk-issuance-process ${payload.clientId}`);
+    this.server
+      .to(payload.clientId)
+      .emit('error-in-bulk-issuance-process', payload.error);
+  }
+
+  @SubscribeMessage('bulk-issuance-process-retry-completed')
+  async handleBulkIssuanceRetry(client:string, payload: ISocketInterface): Promise<void> {
+    this.logger.log(`bulk-issuance-process-retry-completed ${payload.clientId}`);
+    this.server
+      .to(payload.clientId)
+      .emit('bulk-issuance-process-retry-completed');
   }
 }

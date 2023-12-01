@@ -6,19 +6,19 @@ import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-vali
 export class AddUserDetails {
 
     @ApiProperty({ example: 'awqx@getnada.com' })
-    @IsEmail()
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'email should be string' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
+    @IsNotEmpty({ message: 'Email is required' })
+    @IsString({ message: 'Email should be a string' })
     email: string;
 
     @ApiProperty({ example: 'Alen' })
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'firstName should be string' })
+    @IsNotEmpty({ message: 'First name is required' })
+    @IsString({ message: 'First name should be a string' })
     firstName: string;
 
     @ApiProperty({ example: 'Harvey' })
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'lastName should be string' })
+    @IsNotEmpty({ message: 'Last name is required' })
+    @IsString({ message: 'Last name should be a string' })
     lastName: string;
 
     @ApiProperty()

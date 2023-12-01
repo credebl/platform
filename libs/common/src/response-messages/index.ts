@@ -15,6 +15,7 @@ export const ResponseMessages = {
             checkEmail: 'User email checked successfully.',
             sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
             userActivity: 'User activities fetched successfully',
+            userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched'
         },
@@ -40,7 +41,9 @@ export const ResponseMessages = {
             adduser: 'Unable to add user details',
             verifyEmail: 'The verification link has already been sent to your email address. please verify',
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
-            userNotRegisterd: 'The user has not yet completed the registration process'
+            userNotRegisterd: 'The user has not yet completed the registration process',
+            InvalidEmailDomain :'Email from this domain is not allowed',
+            credentialNotFound: 'User credentials not found'
         }
     },
     organisation: {
@@ -54,7 +57,8 @@ export const ResponseMessages = {
             getOrganization: 'Organization details fetched successfully',
             getOrgDashboard: 'Organization dashboard details fetched',
             getOrganizations: 'Organizations details fetched successfully',
-            updateUserRoles: 'User roles updated successfully'
+            updateUserRoles: 'User roles updated successfully',
+            delete: 'Organization deleted successfully'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -62,7 +66,9 @@ export const ResponseMessages = {
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
-            updateUserRoles: 'Unable to update user roles'
+            updateUserRoles: 'Unable to update user roles',
+            deleteOrg: 'Organization not found',
+            notFound: 'Organization agent not found'
         }
 
     },
@@ -105,7 +111,8 @@ export const ResponseMessages = {
             notCreated: 'Schema not created',
             notFound: 'Schema records not found',
             schemaIdNotFound: 'SchemaLedgerId not found',
-            credentialDefinitionNotFound: 'No credential definition exist'
+            credentialDefinitionNotFound: 'No credential definition exist',
+            notStoredCredential: 'User credential not stored'
         }
     },
     credentialDefinition: {
@@ -132,7 +139,7 @@ export const ResponseMessages = {
     },
     agent: {
         success: {
-            create: 'Agent spin-up successfully',
+            create: 'Agent process initiated successfully. Please wait',
             health: 'Agent health details retrieved successfully.'
         },
         error: {
@@ -159,11 +166,12 @@ export const ResponseMessages = {
     },
     issuance: {
         success: {
-            create: 'Issue-credential offer created successfully',
-            fetch: 'Issue-credential fetched successfully',
+            create: 'Credentials offer created successfully',
+            fetch: 'Credentials offer send successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
-            bulkIssuance: 'Bulk-issunace process started'
+            bulkIssuance: 'Issuance process started. It will take some time',
+            notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -171,14 +179,21 @@ export const ResponseMessages = {
             agentEndPointNotFound: 'agentEndPoint Not Found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
-            notFound: 'Organization agent not found',
+            notFound: 'History not found',
             credentialOfferNotFound: 'Credential offer not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config details not found',
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',
             previewCachedData: 'Error while fetching cached data',
-            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request.'
+            emptyFileData: 'File details does not exit or removed',
+            cacheTimeOut: 'Timeout for reviewing data, re-upload your file and generate new request',
+            fileNotFound: 'File details not found',
+            fileData: 'File data does not exist for the specific file',
+            retry: 'Credentials do not exist for retry',
+            walletError: 'Credential Issuance failed due to error in Wallet Agent',
+            emailIdNotPresent: 'EmailId is empty or not present',
+            attributesNotPresent: 'Attributes are not present or not empty'
         }
     },
     verification: {
@@ -222,6 +237,8 @@ export const ResponseMessages = {
         },
         error: {
             notCreated: 'Error while creating ecosystem',
+            orgNotExist: 'Organization does not exist',
+            orgDidNotExist: 'Organization did does not exist',
             exists: 'An ecosystem name is already exist',
             update: 'Error while updating ecosystem',
             invalidInvitationStatus: 'Invalid invitation status',
@@ -265,7 +282,11 @@ export const ResponseMessages = {
             create: 'Issuance process successfully'
         },
         error: {
-            PathNotFound: 'Path to export data not found.'
+            PathNotFound: 'Path to export data not found.',
+            emailColumn: '1st column of the file should always be email.',
+            attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
+            mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
+            fileDetailsNotFound: 'File details not found.'
         }
     }
 };

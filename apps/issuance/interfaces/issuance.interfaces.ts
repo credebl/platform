@@ -12,7 +12,7 @@ export interface IIssuance {
     comment: string;
     connectionId: string;
     attributes: Attributes[];
-    orgId: number;
+    orgId: string;
     protocolVersion: string;
 }
 
@@ -20,14 +20,14 @@ export interface IIssueCredentials {
     user: IUserRequest;
     connectionId: string;
     threadId: string;
-    orgId: number;
+    orgId: string;
     state: string;
 }
 
 export interface IIssueCredentialsDefinitions {
     user: IUserRequest;
     credentialRecordId: string;
-    orgId: number;
+    orgId: string;
 }
 
 export interface IIssuanceWebhookInterface {
@@ -36,7 +36,14 @@ export interface IIssuanceWebhookInterface {
     threadId: string;
     protocolVersion: string;
     credentialAttributes: ICredentialAttributesInterface[];
-    orgId: number;
+    orgId: string;
+    id: string;
+    state: string;
+}
+
+export interface IssueCredentialWebhookPayload {
+    issueCredentialDto: IIssuanceWebhookInterface;
+    id: string;
 }
 
 export interface ICredentialAttributesInterface {
@@ -51,7 +58,7 @@ export interface CredentialOffer {
 }
 export interface OutOfBandCredentialOfferPayload {
     credentialDefinitionId: string;
-    orgId: number;
+    orgId: string;
     comment?: string;
     credentialOffer?: CredentialOffer[];
     emailId?: string;
@@ -71,26 +78,26 @@ export interface SchemaDetails {
 }
 export interface ImportFileDetails {
     credDefId: string;
-    filePath: string;
+    fileKey: string;
     fileName: string;
 }
 
 export interface PreviewRequest {
-    pageNumber: number,
-    search: string,
-    pageSize: number,
-    sortBy: string,
-    sortValue: string
+    pageNumber?: number,
+    search?: string,
+    pageSize?: number,
+    sortBy?: string,
+    sortValue?: string
 }
 
 export interface FileUpload {
     name?: string;
     upload_type?: string;
     status?: string;
-    orgId?: number | string;
+    orgId?: string;
     createDateTime?: Date;
     lastChangedDateTime?: Date;
-  }
+}
 
 export interface FileUploadData {
     fileUpload: string;
@@ -100,4 +107,13 @@ export interface FileUploadData {
     createDateTime: Date;
     error?: string;
     detailError?: string;
+    jobId: string;
+}
+
+export interface ClientDetails {
+
+    clientId: string;
+
+    userId?: string;
+
 }

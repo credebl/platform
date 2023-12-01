@@ -4,7 +4,8 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, credentials, file_data, file_upload, org_agents, organisation, platform_config, shortening_url } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { FileUpload, FileUploadData, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadData, IIssuanceWebhookInterface, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 @Injectable()
 export class IssuanceRepository {
 
@@ -19,7 +20,7 @@ export class IssuanceRepository {
      * @returns Get getAgentEndPoint details
      */
     // eslint-disable-next-line camelcase
-    async getAgentEndPoint(orgId: number): Promise<org_agents> {
+    async getAgentEndPoint(orgId: string): Promise<org_agents> {
         try {
 
             const agentDetails = await this.prisma.org_agents.findFirst({
@@ -47,28 +48,29 @@ export class IssuanceRepository {
  * @returns Get saved credential details
  */
     // eslint-disable-next-line camelcase
-    async saveIssuedCredentialDetails(createDateTime: string, connectionId: string, threadId: string, protocolVersion: string, credentialAttributes: object[], orgId: number): Promise<credentials> {
+    async saveIssuedCredentialDetails(payload: IIssuanceWebhookInterface, orgId: string): Promise<credentials> {
         try {
 
+            const { connectionId, createDateTime, id, threadId, state } = payload;
             const credentialDetails = await this.prisma.credentials.upsert({
                 where: {
-                    connectionId
+                    threadId
                 },
                 update: {
                     lastChangedBy: orgId,
                     createDateTime,
                     threadId,
-                    protocolVersion,
-                    credentialAttributes,
-                    orgId
+                    connectionId,
+                    state
                 },
                 create: {
                     createDateTime,
                     lastChangedBy: orgId,
+                    createdBy: orgId,
                     connectionId,
+                    state,
                     threadId,
-                    protocolVersion,
-                    credentialAttributes,
+                    credentialExchangeId: id,
                     orgId
                 }
             });
@@ -88,7 +90,7 @@ export class IssuanceRepository {
        * @returns Get connection details
        */
     // eslint-disable-next-line camelcase
-    async saveAgentConnectionInvitations(connectionInvitation: string, agentId: number, orgId: number): Promise<agent_invitations> {
+    async saveAgentConnectionInvitations(connectionInvitation: string, agentId: string, orgId: string): Promise<agent_invitations> {
         try {
 
             const agentInvitationData = await this.prisma.agent_invitations.create({
@@ -150,7 +152,7 @@ export class IssuanceRepository {
     * Get organization details
     * @returns 
     */
-    async getOrganization(orgId: number): Promise<organisation> {
+    async getOrganization(orgId: string): Promise<organisation> {
         try {
 
             const organizationDetails = await this.prisma.organisation.findUnique({ where: { id: orgId } });
@@ -198,15 +200,17 @@ export class IssuanceRepository {
         }
     }
 
-    async saveFileUploadDetails(fileUploadPayload: FileUpload): Promise<file_upload> {
+    async saveFileUploadDetails(fileUploadPayload, userId: string): Promise<file_upload> {
         try {
-            const { name, orgId, status, upload_type } = fileUploadPayload;
+            const { name, status, upload_type, orgId } = fileUploadPayload;
             return this.prisma.file_upload.create({
                 data: {
-                    name,
-                    orgId: `${orgId}`,
+                    name: String(name),
+                    orgId: String(orgId),
                     status,
-                    upload_type
+                    upload_type,
+                    createdBy: userId,
+                    lastChangedBy: userId
                 }
             });
 
@@ -216,18 +220,15 @@ export class IssuanceRepository {
         }
     }
 
-    async updateFileUploadDetails(fileId: string, fileUploadPayload: FileUpload): Promise<file_upload> {
+    async updateFileUploadDetails(fileId: string, fileUploadPayload): Promise<file_upload> {
         try {
-            const { name, orgId, status, upload_type } = fileUploadPayload;
+            const { status } = fileUploadPayload;
             return this.prisma.file_upload.update({
                 where: {
                     id: fileId
                 },
                 data: {
-                    name,
-                    orgId: `${orgId}`,
-                    status,
-                    upload_type
+                    status
                 }
             });
 
@@ -237,21 +238,256 @@ export class IssuanceRepository {
         }
     }
 
-    async saveFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
+    async countErrorsForFile(fileUploadId: string): Promise<number> {
         try {
-            const { fileUpload, isError, referenceId, error, detailError } = fileUploadData;
+            const errorCount = await this.prisma.file_data.count({
+                where: {
+                    fileUploadId,
+                    isError: true
+                }
+            });
+
+            return errorCount;
+        } catch (error) {
+            this.logger.error(`[countErrorsForFile] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+    async getAllFileDetails(orgId: string, getAllfileDetails: PreviewRequest): Promise<{
+        fileCount: number;
+        fileList: {
+            id: string;
+            name: string;
+            status: string;
+            upload_type: string;
+            orgId: string;
+            createDateTime: Date;
+            createdBy: string;
+            lastChangedDateTime: Date;
+            lastChangedBy: string;
+            deletedAt: Date;
+            failedRecords: number;
+            totalRecords: number;
+        }[];
+    }> {
+        try {
+            const fileList = await this.prisma.file_upload.findMany({
+                where: {
+                    orgId: String(orgId),
+                    OR: [
+                        { name: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
+                        { status: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
+                        { upload_type: { contains: getAllfileDetails?.search, mode: 'insensitive' } }
+                    ]
+                },
+                take: Number(getAllfileDetails?.pageSize),
+                skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
+                orderBy: {
+                    createDateTime: 'desc'
+                }
+            });
+
+            const fileListWithDetails = await Promise.all(
+                fileList.map(async (file) => {
+                    const failedRecords = await this.countErrorsForFile(file.id);
+                    const totalRecords = await this.prisma.file_data.count({
+                        where: {
+                            fileUploadId: file.id
+                        }
+                    });
+                    const successfulRecords = totalRecords - failedRecords;
+                    return { ...file, failedRecords, totalRecords, successfulRecords };
+                })
+            );
+
+            const fileCount = await this.prisma.file_upload.count({
+                where: {
+                    orgId: String(orgId)
+                }
+            });
+
+            return { fileCount, fileList: fileListWithDetails };
+        } catch (error) {
+            this.logger.error(`[getFileUploadDetails] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getFileDetailsByFileId(fileId: unknown, getAllfileDetails: PreviewRequest): Promise<{
+        fileCount: number
+        fileDataList: {
+            id: string;
+            referenceId: string;
+            isError: boolean;
+            error: string;
+            detailError: string;
+            createDateTime: Date;
+            createdBy: string;
+            lastChangedDateTime: Date;
+            lastChangedBy: string;
+            deletedAt: Date;
+            fileUploadId: string;
+        }[]
+    }> {
+        try {
+            const fileDataList = await this.prisma.file_data.findMany({
+                where: {
+                    fileUploadId: fileId,
+                    OR: [
+                        { error: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
+                        { referenceId: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
+                        { detailError: { contains: getAllfileDetails?.search, mode: 'insensitive' } }
+                    ]
+                },
+                take: Number(getAllfileDetails?.pageSize),
+                skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
+                orderBy: {
+                    createDateTime: 'desc'
+                }
+            });
+            const fileCount = await this.prisma.file_data.count({
+                where: {
+                    fileUploadId: fileId
+                }
+            });
+            return { fileCount, fileDataList };
+        } catch (error) {
+            this.logger.error(`[getFileDetailsByFileId] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+
+    async updateFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
+        try {
+            const { jobId, fileUpload, isError, referenceId, error, detailError } = fileUploadData;
+            if (jobId) {
+                return this.prisma.file_data.update({
+                    where: { id: jobId },
+                    data: {
+                        detailError,
+                        error,
+                        isError,
+                        referenceId,
+                        fileUploadId: fileUpload
+                    }
+                });
+            } else {
+                throw error;
+            }
+        } catch (error) {
+            this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+    async deleteFileDataByJobId(jobId: string): Promise<file_data> {
+        try {
+            if (jobId) {
+                return this.prisma.file_data.update({
+                    where: { id: jobId },
+                    data: {
+                        credential_data: null
+                    }
+                });
+            }
+        } catch (error) {
+            this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
+    async saveFileDetails(fileData, userId: string) {
+        try {
+            const { credential_data, schemaId, credDefId, status, isError, fileUploadId } = fileData;
             return this.prisma.file_data.create({
                 data: {
-                    detailError,
-                    error,
+                    credential_data,
+                    schemaId,
+                    credDefId,
+                    status,
+                    fileUploadId,
                     isError,
-                    referenceId,
-                    fileUploadId: fileUpload
+                    createdBy: userId,
+                    lastChangedBy: userId
                 }
             });
 
         } catch (error) {
             this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getOrgAgentType(orgAgentId: string): Promise<string> {
+        try {
+
+            const { agent } = await this.prisma.org_agents_type.findFirst({
+                where: {
+                    id: orgAgentId
+                }
+            });
+
+            return agent;
+        } catch (error) {
+            this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+        }
+    }
+
+    async getFileDetails(fileId: string): Promise<file_data[]> {
+        try {
+            return this.prisma.file_data.findMany({
+                where: {
+                    fileUploadId: fileId
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[getFileDetails] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getFailedCredentials(fileId: string): Promise<file_data[]> {
+        try {
+            return this.prisma.file_data.findMany({
+                where: {
+                    fileUploadId: fileId,
+                    isError: true
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[getFileDetails] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async updateFileUploadStatus(fileId: string): Promise<file_upload> {
+        try {
+            return this.prisma.file_upload.update({
+                where: {
+                    id: fileId
+                },
+                data: {
+                    status: FileUploadStatus.retry
+                }
+            });
+
+        } catch (error) {
+            this.logger.error(`[updateFileUploadStatus] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    async getFileDetailsById(fileId: string): Promise<file_upload> {
+        try {
+            return this.prisma.file_upload.findUnique({
+                where: {
+                    id: fileId
+                }
+            });
+
+        } catch (error) {
+            this.logger.error(`[updateFileUploadStatus] - error: ${JSON.stringify(error)}`);
             throw error;
         }
     }

@@ -1,4 +1,3 @@
-import { AgentType, OrgAgentType } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
@@ -6,13 +5,16 @@ export interface IAgentSpinupDto {
     walletName: string;
     walletPassword: string;
     seed: string;
-    orgId: number;
+    orgId?: string;
+    orgName?: string;
+    ledgerId?: string[];
     did?: string;
-    ledgerId?: number[];
-    agentType?: AgentType;
+    agentType?: string;
     transactionApproval?: boolean;
     clientSocketId?: string
     tenant?: boolean;
+    ledgerName?: string[];
+    platformAdminEmail?: string;
 }
 
 export interface OutOfBandCredentialOffer {
@@ -21,16 +23,16 @@ export interface OutOfBandCredentialOffer {
     credentialDefinitionId: string;
     comment: string;
     protocolVersion?: string;
-    orgId: number;
+    orgId: string;
 }
 
 export interface ITenantDto {
     label: string;
     seed: string;
+    ledgerId?: string[];
     method: string;
-    orgId: number;
+    orgId: string;
     did?: string;
-    ledgerId?: number[];
     tenantId?: string;
     clientSocketId?: string;
 }
@@ -43,7 +45,7 @@ export interface ITenantSchema {
     issuerId?: string;
     payload?: ITenantSchemaDto;
     method?: string;
-    agentType?: number;
+    agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
 }
@@ -61,7 +63,7 @@ export interface GetSchemaAgentRedirection {
     payload?: GetSchemaFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
-    agentType?: number;
+    agentType?: string;
     method?: string;
 }
 
@@ -76,7 +78,7 @@ export interface ITenantCredDef {
     issuerId?: string;
     payload?: ITenantCredDef;
     method?: string;
-    agentType?: number;
+    agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
 }
@@ -93,7 +95,7 @@ export interface GetCredDefAgentRedirection {
     payload?: GetCredDefFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
-    agentType?: number;
+    agentType?: string;
     method?: string;
 }
 
@@ -114,7 +116,7 @@ export interface IWalletProvision {
     walletStoragePassword: string;
     internalIp: string;
     containerName: string;
-    agentType: AgentType;
+    agentType: string;
     orgName: string;
     indyLedger: string;
     afjVersion: string;
@@ -134,6 +136,7 @@ export interface IPlatformConfigDto {
 }
 
 export interface IStoreOrgAgentDetails {
+    id?: string;
     clientSocketId?: string;
     agentEndPoint?: string;
     apiKey?: string;
@@ -143,12 +146,13 @@ export interface IStoreOrgAgentDetails {
     isDidPublic?: boolean;
     agentSpinUpStatus?: number;
     walletName?: string;
-    agentsTypeId?: AgentType;
-    orgId?: number;
-    agentId?: number;
-    orgAgentTypeId?: OrgAgentType;
+    agentsTypeId?: string;
+    orgId?: string;
+    agentId?: string;
+    orgAgentTypeId?: string;
     tenantId?: string;
-    ledgerId?: number[];
+    ledgerId?: string[];
+    agentType?: string;
 }
 
 
@@ -158,24 +162,25 @@ export interface IConnectionDetails {
 }
 
 export interface IUserRequestInterface {
-    userId: number;
+    userId?: string;
+    id?: string;
     email: string;
-    orgId: number;
+    orgId: string;
     agentEndPoint?: string;
     apiKey?: string;
-    tenantId?: number;
+    tenantId?: string;
     tenantName?: string;
-    tenantOrgId?: number;
+    tenantOrgId?: string;
     userRoleOrgPermissions?: UserRoleOrgPermsDto[];
     orgName?: string;
     selectedOrg: ISelectedOrgInterface;
 }
 
 export interface ISelectedOrgInterface {
-    id: number;
-    userId: number;
-    orgRoleId: number;
-    orgId: number;
+    id: string;
+    userId: string;
+    orgRoleId: string;
+    orgId: string;
     orgRole: object;
     organisation: IOrganizationInterface;
 }
@@ -204,7 +209,7 @@ export interface ITenantCredDef {
     issuerId?: string;
     payload?: ITenantCredDef;
     method?: string;
-    agentType?: number;
+    agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
 }
@@ -221,7 +226,7 @@ export interface GetCredDefAgentRedirection {
     payload?: GetCredDefFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
-    agentType?: number;
+    agentType?: string;
     method?: string;
 }
 

@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
+import { ClientDetails, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 
 @Controller()
@@ -10,6 +10,7 @@ export class IssuanceController {
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
   async sendCredentialCreateOffer(payload: IIssuance): Promise<string> {
+   
     const { orgId, user, credentialDefinitionId, comment, connectionId, attributes } = payload;
     return this.issuanceService.sendCredentialCreateOffer(orgId, user, credentialDefinitionId, comment, connectionId, attributes);
   }
@@ -17,6 +18,7 @@ export class IssuanceController {
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })
   async sendCredentialOutOfBand(payload: IIssuance): Promise<string> {
     const { orgId, user, credentialDefinitionId, comment, connectionId, attributes } = payload;
+   
     return this.issuanceService.sendCredentialOutOfBand(orgId, user, credentialDefinitionId, comment, connectionId, attributes);
   }
 
@@ -31,11 +33,11 @@ export class IssuanceController {
     const { user, credentialRecordId, orgId } = payload;
     return this.issuanceService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
   }
-
+  
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
-  async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface): Promise<object> {
-    const { createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId } = payload;
-    return this.issuanceService.getIssueCredentialWebhook(createDateTime, connectionId, threadId, protocolVersion, credentialAttributes, orgId);
+  async getIssueCredentialWebhook(payload: IssueCredentialWebhookPayload): Promise<object> { 
+    const { issueCredentialDto, id } = payload;
+    return this.issuanceService.getIssueCredentialWebhook(issueCredentialDto, id);
   }
 
   @MessagePattern({ cmd: 'out-of-band-credential-offer' })
@@ -67,8 +69,29 @@ export class IssuanceController {
     );
   }
 
+  @MessagePattern({ cmd: 'issued-file-details' })
+  async issuedFiles(payload: {orgId:string, fileParameter:PreviewRequest}): Promise<object> {
+    return this.issuanceService.issuedFileDetails(
+      payload.orgId, 
+      payload.fileParameter
+      );
+  }
+  @MessagePattern({ cmd: 'issued-file-data' })
+  async getFileDetailsByFileId(payload: {fileId:string, fileParameter:PreviewRequest}): Promise<object> {
+    return this.issuanceService.getFileDetailsByFileId( 
+      payload.fileId,
+      payload.fileParameter
+      );
+  }
+
+
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
-  async issueBulkCredentials(payload: { requestId: string, orgId: number }): Promise<string> {
-    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId);
+  async issueBulkCredentials(payload: { requestId: string, orgId: string, clientDetails: ClientDetails }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientDetails);
+  }
+
+  @MessagePattern({ cmd: 'retry-bulk-credentials' })
+  async retryeBulkCredentials(payload: { fileId: string, orgId: string, clientId: string }): Promise<string> {
+    return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientId);
   }
 }

@@ -299,9 +299,6 @@ export class IssuanceService {
         emailId
       } = outOfBandCredential;
 
-      // Define a batch size
-      const batchSize = 100; // Adjust this based on your needs
-
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -335,7 +332,6 @@ export class IssuanceService {
             comment,
             label: organizationDetails?.name
           };
-
 
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
           if (!credentialCreateOfferDetails) {
@@ -393,8 +389,9 @@ export class IssuanceService {
       };
 
       if (credentialOffer) {
-        for (let i = 0; i < credentialOffer.length; i += batchSize) {
-          const batch = credentialOffer.slice(i, i + batchSize);
+
+          for (let i = 0; i < credentialOffer.length; i += Number(process.env.OOB_BATCH_SIZE)) {
+          const batch = credentialOffer.slice(i, i + Number(process.env.OOB_BATCH_SIZE));
 
           // Process each batch in parallel
           const batchPromises = batch.map((iterator) => sendEmailForCredentialOffer(iterator, iterator.emailId));

@@ -1,5 +1,6 @@
 import { Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
+import { isArray } from 'class-validator';
 
 @Catch()
 export class CustomExceptionFilter extends BaseExceptionFilter {
@@ -20,12 +21,18 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
     }
 
     let errorResponse;
-    if (exception && exception["statusCode"] === HttpStatus.INTERNAL_SERVER_ERROR) {
-      if (exception.message && exception.message["message"]) {
+    if (isArray(exception)) {
+      errorResponse = {
+        statusCode: status,
+        message: exception[0],
+        error: exception[0]
+      };
+    } else if (exception && exception['statusCode'] === HttpStatus.INTERNAL_SERVER_ERROR) {
+      if (exception.message && exception.message['message']) {
         errorResponse = {
           statusCode: status,
-          message: exception.message["message"],
-          error: exception.message["message"]
+          message: exception.message['message'],
+          error: exception.message['message']
         };
       } else {
         errorResponse = {
@@ -34,45 +41,57 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
           error: 'Oops! Something went wrong. Please try again'
         };
       }
-    } else if (exception && exception["error"] && exception["error"].message && (exception["error"].statusCode || exception["error"].code)) {
-
-      const statusCode = exception["error"].statusCode || exception["error"].code || status;
+    } else if (
+      exception &&
+      exception['error'] &&
+      exception['error'].message &&
+      (exception['error'].statusCode || exception['error'].code)
+    ) {
+      const statusCode = exception['error'].statusCode || exception['error'].code || status;
       errorResponse = {
         statusCode,
-        message: exception["error"].message || 'Internal server error',
-        error: exception["error"].message || 'Internal server error'
+        message: exception['error'].message || 'Internal server error',
+        error: exception['error'].message || 'Internal server error'
       };
-    } else if (exception && exception["statusCode"] === undefined && status === HttpStatus.INTERNAL_SERVER_ERROR) {
+    } else if (exception && exception['statusCode'] === undefined && status === HttpStatus.INTERNAL_SERVER_ERROR) {
       errorResponse = {
         statusCode: status,
         message: 'Oops! Something went wrong. Please try again',
         error: 'Oops! Something went wrong. Please try again'
       };
     } else {
-      if (exception && exception["response"] && exception.message) {
-
-        if (Array.isArray(exception["response"].message)) {
-
+      if (exception && exception['response'] && exception.message) {
+        if (Array.isArray(exception['response'].message)) {
           errorResponse = {
-            statusCode: exception["statusCode"] ? exception["statusCode"] : status,
+            statusCode: exception['statusCode'] ? exception['statusCode'] : status,
             message: exception.message ? exception.message : 'Internal server error',
-            error: exception["response"].message ? exception["response"].message : exception["response"] ? exception["response"] : 'Internal server error'
+            error: exception['response'].message
+              ? exception['response'].message
+              : exception['response']
+              ? exception['response']
+              : 'Internal server error'
           };
         } else {
           errorResponse = {
-            statusCode: exception["statusCode"] ? exception["statusCode"] : status,
-            message: exception["response"].message ? exception["response"].message : exception["response"] ? exception["response"] : 'Internal server error',
-            error: exception["response"].message ? exception["response"].message : exception["response"] ? exception["response"] : 'Internal server error'
+            statusCode: exception['statusCode'] ? exception['statusCode'] : status,
+            message: exception['response'].message
+              ? exception['response'].message
+              : exception['response']
+              ? exception['response']
+              : 'Internal server error',
+            error: exception['response'].message
+              ? exception['response'].message
+              : exception['response']
+              ? exception['response']
+              : 'Internal server error'
           };
         }
       } else if (exception && exception.message) {
-
         errorResponse = {
-          statusCode: exception["statusCode"] ? exception["statusCode"] : status,
+          statusCode: exception['statusCode'] ? exception['statusCode'] : status,
           message: exception.message || 'Internal server error',
           error: exception.message || 'Internal server error'
         };
-
       }
     }
 

@@ -167,7 +167,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            fetch: 'Credentials fetched successfully',
+            fetch: 'Credentials offer send successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
             bulkIssuance: 'Issuance process started. It will take some time',
@@ -191,7 +191,9 @@ export const ResponseMessages = {
             fileNotFound: 'File details not found',
             fileData: 'File data does not exist for the specific file',
             retry: 'Credentials do not exist for retry',
-            walletError: 'Credential Issuance failed due to error in Wallet Agent'
+            walletError: 'Credential Issuance failed due to error in Wallet Agent',
+            emailIdNotPresent: 'EmailId is empty or not present',
+            attributesNotPresent: 'Attributes are not present or not empty'
         }
     },
     verification: {

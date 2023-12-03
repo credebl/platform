@@ -7,11 +7,10 @@ export class WorldRecordTemplate {
 
   async getWorldRecordTemplate(attributes: Attribute[]): Promise<string> {
     try {
-      const [name, discipline, issuedBy] = await Promise.all(attributes).then((attributes) => {
+      const [name, discipline] = await Promise.all(attributes).then((attributes) => {
         const name = this.findAttributeByName(attributes, 'full_name')?.full_name ?? '';
         const discipline = this.findAttributeByName(attributes, 'discipline')?.discipline ?? '';
-        const issuedBy = this.findAttributeByName(attributes, 'issued_by')?.issued_by ?? '';
-        return [name, discipline, issuedBy];
+        return [name, discipline];
       });
       return `<!DOCTYPE html>
       <html lang="en">
@@ -77,7 +76,7 @@ export class WorldRecordTemplate {
           <span style="font-size: 16px;">for successfully creating the world record in the 
              ${discipline}
               <p style="font-size: 16px; " >discipline during the
-              <span style="font-size: 16px; font-weight: bold;">${issuedBy} World Memory Championship 2023.</span>
+              <span style="font-size: 16px; font-weight: bold;">IAM World Memory Championship 2023.</span>
               </p>
           </p>
           <p>

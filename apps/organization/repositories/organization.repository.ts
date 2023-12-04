@@ -212,7 +212,13 @@ export class OrganizationRepository {
             ...queryObject
           },
           include: {
-            organisation: true
+            organisation: {
+              select: {
+                id: true,
+                name: true,
+                logoUrl: true
+              }
+            }
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -389,10 +395,20 @@ export class OrganizationRepository {
           where: {
             ...queryObject
           },
-          include: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            logoUrl: true,
             userOrgRoles: {
-              include: {
-                orgRole: true
+              select: {
+                id: true,
+                orgRole: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               },
               where: {
                 ...filterOptions

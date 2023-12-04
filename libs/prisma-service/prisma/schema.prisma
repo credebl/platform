@@ -283,6 +283,7 @@ model connections {
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String        @db.Uuid
   connectionId        String        @unique
+  theirLabel          String        
   state               String
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
@@ -298,6 +299,7 @@ model credentials {
   threadId             String        @unique
   credentialExchangeId String        @default("")
   state                String        @default("")
+  schemaId             String        
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
 }

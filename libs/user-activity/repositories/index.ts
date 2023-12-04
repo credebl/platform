@@ -28,6 +28,15 @@ export class UserActivityRepository {
             where: {
                 userId
             },
+            select: {
+                id: true,
+                userId: true,
+                orgId: true,
+                action: true,
+                details: true,
+                createDateTime:true,
+                lastChangedDateTime: true
+            },
             orderBy: {
                 createDateTime: 'desc'
             },

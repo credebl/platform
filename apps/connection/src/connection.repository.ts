@@ -113,6 +113,7 @@ export class ConnectionRepository {
                     lastChangedBy: orgId,
                     connectionId,
                     state,
+                    theirLabel,
                     orgId
                 }
             });

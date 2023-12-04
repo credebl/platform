@@ -37,6 +37,7 @@ export interface IIssuanceWebhookInterface {
     protocolVersion: string;
     credentialAttributes: ICredentialAttributesInterface[];
     orgId: string;
+    schemaName: string;
     id: string;
     state: string;
 }

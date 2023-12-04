@@ -510,7 +510,13 @@ export class EcosystemRepository {
             ...queryObject
           },
           include: {
-            ecosystem: true
+            ecosystem: {
+              select: {
+                id: true,
+                name: true,
+                logoUrl: true
+              }
+            }
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,

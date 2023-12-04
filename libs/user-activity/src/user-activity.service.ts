@@ -15,7 +15,7 @@ export class UserActivityService {
         return this.userActivityRepository.logActivity(userId, orgId, action, details);
     }
 
-    async getUserActivity(userId: string, limit: number): Promise<user_activity[]> {
+    async getUserActivity(userId: string, limit: number): Promise<object[]> {
         return this.userActivityRepository.getRecentActivities(userId, limit);
     }
 }

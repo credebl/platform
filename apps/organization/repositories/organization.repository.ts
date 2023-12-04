@@ -217,8 +217,6 @@ export class OrganizationRepository {
                 id: true,
                 name: true,
                 logoUrl: true
-                //orgSlug: true
-                // publicProfile: true
               }
             }
           },

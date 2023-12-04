@@ -78,7 +78,7 @@ export class WinnerTemplate {
           <p style="font-size: 16px; margin: 0;">has secured ${position} position for ${discipline} </p>
               <p style="font-size: 16px; margin: 6px;">in ${category} category at the</p>
               <p style="font-size: 16px;" >
-              <span style="font-size: 16px; font-weight: bold;"> IAM World Memory Championship 2023.</span>
+              <span style="font-size: 16px; font-weight: bold;">IAM World Memory Championship 2023.</span>
               </p>
           </p>
           <p>

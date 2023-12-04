@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { toNumber } from '@credebl/common/cast.helper';
@@ -109,7 +109,8 @@ export class OutOfBandCredentialDto {
 
     @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attribute': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
+    @IsArray({ message: 'attributes should be array'})
+    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads`})
     @IsOptional()
     credentialOffer: CredentialOffer[];
 

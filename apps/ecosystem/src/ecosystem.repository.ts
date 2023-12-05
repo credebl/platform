@@ -113,7 +113,18 @@ export class EcosystemRepository {
    * @returns Get all ecosystem details
    */
   // eslint-disable-next-line camelcase
-  async getAllEcosystemDetails(orgId: string): Promise<ecosystem[]> {
+  async getAllEcosystemDetails(orgId: string): Promise<{
+    ecosystemOrgs: {
+      ecosystemRole: {
+        id: string;
+        name: string;
+        description: string;
+        createDateTime: Date;
+        lastChangedDateTime: Date;
+        deletedAt: Date;
+      };
+    }[];
+  }[]> {
     try {
       const ecosystemDetails = await this.prisma.ecosystem.findMany({
         where: {
@@ -123,12 +134,17 @@ export class EcosystemRepository {
             }
           }
         },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          logoUrl: true,
+          autoEndorsement: true,
           ecosystemOrgs: {
             where: {
               orgId
             },
-            include: {
+            select: {
               ecosystemRole: true
             }
           }
@@ -188,7 +204,7 @@ export class EcosystemRepository {
         where: {
           orgId
         },
-        include:{
+        include: {
           ecosystemRole: true
         }
       });
@@ -230,21 +246,21 @@ export class EcosystemRepository {
     }
   }
 
-    // eslint-disable-next-line camelcase
-    async getSpecificEcosystemConfig(key: string): Promise<ecosystem_config> {
-      try {
-        return await this.prisma.ecosystem_config.findFirst(
-          {
-            where: {
-              key
-            }
+  // eslint-disable-next-line camelcase
+  async getSpecificEcosystemConfig(key: string): Promise<ecosystem_config> {
+    try {
+      return await this.prisma.ecosystem_config.findFirst(
+        {
+          where: {
+            key
           }
-        );
-      } catch (error) {
-        this.logger.error(`error: ${JSON.stringify(error)}`);
-        throw error;
-      }
+        }
+      );
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
     }
+  }
 
   async getEcosystemMembersCount(ecosystemId: string): Promise<number> {
     try {
@@ -398,7 +414,7 @@ export class EcosystemRepository {
     // eslint-disable-next-line camelcase
   ): Promise<ecosystem_invitations> {
     try {
-     
+
       return this.prisma.ecosystem_invitations.create({
         data: {
           email,
@@ -466,7 +482,7 @@ export class EcosystemRepository {
             ecosystem: true,
             ecosystemRole: true,
             organisation: {
-              select:{
+              select: {
                 name: true,
                 orgSlug: true,
                 // eslint-disable-next-line camelcase
@@ -577,9 +593,9 @@ export class EcosystemRepository {
             status: true,
             type: true,
             ecosystemOrgs: {
-              include:{
+              include: {
                 organisation: {
-                  select:{
+                  select: {
                     name: true,
                     orgSlug: true
                   }
@@ -672,7 +688,7 @@ export class EcosystemRepository {
         }
       });
       const schemasCount = schemaArray.length;
-      
+
       this.logger.error(`In error schemaDetails3: ${JSON.stringify(schemasResult)}`);
       return { schemasCount, schemasResult };
 
@@ -695,7 +711,7 @@ export class EcosystemRepository {
       }
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
-          orgId:orgId.toString()
+          orgId: orgId.toString()
         }
       });
       return agentDetails;
@@ -1079,16 +1095,16 @@ export class EcosystemRepository {
   async getOrgAgentType(orgAgentId: string): Promise<string> {
     try {
 
-        const { agent } = await this.prisma.org_agents_type.findFirst({
-            where: {
-                id: orgAgentId
-            }
-        });
+      const { agent } = await this.prisma.org_agents_type.findFirst({
+        where: {
+          id: orgAgentId
+        }
+      });
 
-        return agent;
+      return agent;
     } catch (error) {
-        this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
-        throw error;
+      this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
     }
-}
+  }
 }

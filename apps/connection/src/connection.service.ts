@@ -189,63 +189,71 @@ export class ConnectionService {
  *  
  * @returns get all connections details
  */
-  async getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<string> {
+  // async getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<string> {
+  //   try {
+  //     const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+  //     const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+  //     const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
+
+  //     const { agentEndPoint } = agentDetails;
+  //     if (!agentDetails) {
+  //       throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+  //     }
+  //     const params = {
+  //       outOfBandId,
+  //       alias,
+  //       state,
+  //       myDid,
+  //       theirDid,
+  //       theirLabel
+  //     };
+
+  //     let url;
+  //     if (orgAgentType === OrgAgentType.DEDICATED) {
+
+  //       url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
+
+  //     } else if (orgAgentType === OrgAgentType.SHARED) {
+
+  //       url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace('#', agentDetails.tenantId);
+  //     } else {
+
+  //       throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+  //     }
+
+  //     Object.keys(params).forEach((element: string) => {
+  //       const appendParams: string = url.includes('?') ? '&' : '?';
+
+  //       if (params[element] !== undefined) {
+  //         url = `${url + appendParams + element}=${params[element]}`;
+  //       }
+  //     });
+  //     const apiKey = platformConfig?.sgApiKey;
+  //     const connectionsDetails = await this._getAllConnections(url, apiKey);
+  //     return connectionsDetails?.response;
+  //   } catch (error) {
+  //     this.logger.error(`Error in get url in connection service: ${JSON.stringify(error)}`);
+  //     if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+  //       throw new RpcException({
+  //         message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+  //         statusCode: error?.status?.code
+  //       });
+
+  //     } else {
+  //       throw new RpcException(error.response ? error.response : error);
+  //     }
+  //   }
+  // }
+
+  async getConnections(user: IUserRequest, orgId: string): Promise<object> {
     try {
-      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
-
-      const { agentEndPoint } = agentDetails;
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-      }
-      const params = {
-        outOfBandId,
-        alias,
-        state,
-        myDid,
-        theirDid,
-        theirLabel
-      };
-
-      let url;
-      if (orgAgentType === OrgAgentType.DEDICATED) {
-
-        url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
-
-      } else if (orgAgentType === OrgAgentType.SHARED) {
-
-        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace('#', agentDetails.tenantId);
-      } else {
-
-        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-      }
-
-      Object.keys(params).forEach((element: string) => {
-        const appendParams: string = url.includes('?') ? '&' : '?';
-
-        if (params[element] !== undefined) {
-          url = `${url + appendParams + element}=${params[element]}`;
-        }
-      });
-      const apiKey = platformConfig?.sgApiKey;
-      const connectionsDetails = await this._getAllConnections(url, apiKey);
-      return connectionsDetails?.response;
-    } catch (error) {
-      this.logger.error(`Error in get url in connection service: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-
-      } else {
-        throw new RpcException(error.response ? error.response : error);
+         const getConnectionList = await this.connectionRepository.getAllConnections(user, orgId);
+         return getConnectionList;
+      } catch (error) {
+        throw new RpcException(`[_getAllConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`);
       }
     }
-  }
-
-
+  
   async _getAllConnections(url: string, apiKey: string): Promise<{
     response: string;
   }> {

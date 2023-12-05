@@ -3,6 +3,7 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, connections, platform_config, shortening_url } from '@prisma/client';
 import { OrgAgent } from './interfaces/connection.interfaces';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
 // import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
 export class ConnectionRepository {
@@ -186,6 +187,19 @@ export class ConnectionRepository {
         }
     }
 
+    async getAllConnections(user: IUserRequest, orgId: string): Promise<object> {
+        try {
+            const connectionsList = await this.prisma.connections.findMany({
+                where: {
+                  orgId
+                }
+              });                   
+              return connectionsList;
+        } catch (error) {
+            this.logger.error(`[getConnectionDetails] - error: ${JSON.stringify(error)}`);
+            throw error; 
+        }
+    }
     async getOrgAgentType(orgAgentId: string): Promise<string> {
         try {
 

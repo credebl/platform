@@ -288,6 +288,8 @@ export class OrganizationRepository {
               walletName: true,
               agentSpinUpStatus: true,
               agentsTypeId: true,
+              createDateTime: true,
+              orgAgentTypeId:true,
               agent_invitations: {
                 select: {
                   id: true,
@@ -297,6 +299,7 @@ export class OrganizationRepository {
                   lastChangedDateTime:true
                 }
               },
+              org_agent_type: true,
               ledgers: {
                 select: {
                   id: true,

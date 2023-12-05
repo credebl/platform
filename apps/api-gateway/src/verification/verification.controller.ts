@@ -30,6 +30,8 @@ import { WebhookPresentationProof } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
+import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
+import { IProofRequestsSearchCriteria } from './interfaces/verification.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -115,6 +117,69 @@ export class VerificationController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
+    // @Get('/orgs/:orgId/credentials')
+    // @UseGuards(AuthGuard('jwt'))
+    // @ApiBearerAuth()
+    // @ApiOperation({
+    //   summary: `Get all issued credentials for a specific organization`,
+    //   description: `Get all issued credentials for a specific organization`
+    // })
+    // @ApiQuery({
+    //   name: 'pageNumber',
+    //   type: Number,
+    //   required: false
+    // })
+    // @ApiQuery({
+    //   name: 'searchByText',
+    //   type: String,
+    //   required: false
+    // })
+    // @ApiQuery({
+    //   name: 'pageSize',
+    //   type: Number,
+    //   required: false
+    // })
+    // @ApiQuery({
+    //   name: 'sorting',
+    //   type: String,
+    //   required: false
+    // })
+    // @ApiQuery({
+    //   name: 'sortByValue',
+    //   type: String,
+    //   required: false
+    // })
+
+    // @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+    // @ApiBearerAuth()
+    // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
+    // async getIssueCredentials(
+    //   @Query() getAllIssuedCredentials: GetAllIssuedCredentialsDto,
+    //   @User() user: IUserRequest,
+    //   @Param('orgId') orgId: string,
+    //   @Res() res: Response
+    // ): Promise<Response> {
+
+    //   const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllIssuedCredentials;
+    //   const issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface = {
+    //       pageNumber,
+    //       searchByText,
+    //       pageSize,
+    //       sorting,
+    //       sortByValue
+    //     };
+
+    //   const getCredentialDetails = await this.issueCredentialService.getIssueCredentials(issuedCredentialsSearchCriteria, user, orgId);
+
+    //   const finalResponse: IResponseType = {
+    //     statusCode: HttpStatus.OK,
+    //     message: ResponseMessages.issuance.success.fetch,
+    //     data: getCredentialDetails.response
+    //   };
+    //   return res.status(HttpStatus.OK).json(finalResponse);
+    // }
+
     /**
     * Get all proof presentations
     * @param user 
@@ -126,6 +191,33 @@ export class VerificationController {
         summary: `Get all proof presentations`,
         description: `Get all proof presentations`
     })
+
+    @ApiQuery({
+      name: 'pageNumber',
+      type: Number,
+      required: false
+    })
+    @ApiQuery({
+      name: 'searchByText',
+      type: String,
+      required: false
+    })
+    @ApiQuery({
+      name: 'pageSize',
+      type: Number,
+      required: false
+    })
+    @ApiQuery({
+      name: 'sorting',
+      type: String,
+      required: false
+    })
+    @ApiQuery({
+      name: 'sortByValue',
+      type: String,
+      required: false
+    })
+
     @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
@@ -136,12 +228,21 @@ export class VerificationController {
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async getProofPresentations(
+        @Query() getAllProofRequests: GetAllProofRequestsDto,
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string,
-        @Query('threadId') threadId: string
+        @Param('orgId') orgId: string
     ): Promise<object> {
-        const proofPresentationDetails = await this.verificationService.getProofPresentations(orgId, threadId, user);
+      const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllProofRequests;
+      const proofRequestsSearchCriteria: IProofRequestsSearchCriteria = {
+          pageNumber,
+          searchByText,
+          pageSize,
+          sorting,
+          sortByValue
+        };
+
+        const proofPresentationDetails = await this.verificationService.getProofPresentations(proofRequestsSearchCriteria, user, orgId);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.fetch,

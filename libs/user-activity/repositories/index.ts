@@ -23,7 +23,7 @@ export class UserActivityRepository {
     }
 
 
-    async getRecentActivities(userId: string, limit: number): Promise<user_activity[]> {
+    async getRecentActivities(userId: string, limit: number): Promise<object[]> {
         return this.prisma.user_activity.findMany({
             where: {
                 userId

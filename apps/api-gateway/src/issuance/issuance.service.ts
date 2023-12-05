@@ -4,7 +4,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
-import { FileExportResponse, RequestPayload } from './interfaces';
+import { FileExportResponse, IIssuedCredentialSearchinterface, RequestPayload } from './interfaces';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -33,12 +33,20 @@ export class IssuanceService extends BaseService {
     }
 
 
-    getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<{
+    // getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<{
+    //     response: object;
+    // }> {
+    //     const payload = { user, threadId, connectionId, state, orgId };
+    //     return this.sendNats(this.issuanceProxy, 'get-all-issued-credentials', payload);
+    // }
+    
+    getIssueCredentials(issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface, user: IUserRequest, orgId: string): Promise<{
         response: object;
     }> {
-        const payload = { user, threadId, connectionId, state, orgId };
+        const payload = { issuedCredentialsSearchCriteria, user, orgId };
         return this.sendNats(this.issuanceProxy, 'get-all-issued-credentials', payload);
     }
+
 
     getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<{
         response: object;

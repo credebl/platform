@@ -1,8 +1,8 @@
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters } from '@nestjs/common';
+import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
 import { AuthTokenResponse } from '../authz/dtos/auth-token-res.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
@@ -17,6 +17,8 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
+import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -70,86 +72,6 @@ export class ConnectionController {
     * @param orgId
     * 
     */
-    // @Get('/orgs/:orgId/connections')
-    // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-    // @ApiOperation({
-    //     summary: `Fetch all connection details`,
-    //     description: `Fetch all connection details`
-    // })
-    // @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
-    // @ApiQuery(
-    //     { name: 'outOfBandId', required: false }
-    // )
-    // @ApiQuery(
-    //     { name: 'alias', required: false }
-    // )
-    // @ApiQuery(
-    //     { name: 'state', enum: Connections, required: false }
-    // )
-    // @ApiQuery(
-    //     { name: 'myDid', required: false }
-    // )
-    // @ApiQuery(
-    //     { name: 'theirDid', required: false }
-    // )
-    // @ApiQuery(
-    //     { name: 'theirLabel', required: false }
-    // )
-    // async getConnections(
-    //     @User() user: IUserRequest,
-    //     @Query('outOfBandId') outOfBandId: string,
-    //     @Query('alias') alias: string,
-    //     @Query('state') state: string,
-    //     @Query('myDid') myDid: string,
-    //     @Query('theirDid') theirDid: string,
-    //     @Query('theirLabel') theirLabel: string,
-    //     @Param('orgId') orgId: string,
-    //     @Res() res: Response
-    // ): Promise<Response> {
-
-    //     // eslint-disable-next-line no-param-reassign
-    //     state = state || undefined;
-    //     const connectionDetails = await this.connectionService.getConnections(user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId);
-
-    //     const finalResponse: IResponseType = {
-    //         statusCode: HttpStatus.OK,
-    //         message: ResponseMessages.connection.success.fetch,
-    //         data: connectionDetails.response
-    //     };
-    //     return res.status(HttpStatus.OK).json(finalResponse);
-    // }
-
-    // /**
-    //     * Create out-of-band connection legacy invitation
-    //     * @param connectionDto 
-    //     * @param res 
-    //     * @returns Created out-of-band connection invitation url
-    // */
-    // @Post('/orgs/:orgId/connections')
-    // @ApiOperation({ summary: 'Create outbound out-of-band connection (Legacy Invitation)', description: 'Create outbound out-of-band connection (Legacy Invitation)' })
-    // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-    // @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
-    // async createLegacyConnectionInvitation(
-    //     @Param('orgId') orgId: string,
-    //     @Body() connectionDto: CreateConnectionDto,
-    //     @User() reqUser: IUserRequestInterface,
-    //     @Res() res: Response
-    // ): Promise<Response> {
-
-    //     connectionDto.orgId = orgId;
-    //     const connectionData = await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
-    //     const finalResponse: IResponseType = {
-    //         statusCode: HttpStatus.CREATED,
-    //         message: ResponseMessages.connection.success.create,
-    //         data: connectionData.response
-    //     };
-    //     return res.status(HttpStatus.CREATED).json(finalResponse);
-
-    // }
-
-
     @Get('/orgs/:orgId/connections')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
@@ -157,14 +79,48 @@ export class ConnectionController {
         summary: `Fetch all connection details`,
         description: `Fetch all connection details`
     })
+    @ApiQuery({
+        name: 'pageNumber',
+        type: Number,
+        required: false
+      })
+      @ApiQuery({
+        name: 'searchByText',
+        type: String,
+        required: false
+      })
+      @ApiQuery({
+        name: 'pageSize',
+        type: Number,
+        required: false
+      })
+      @ApiQuery({
+        name: 'sorting',
+        type: String,
+        required: false
+      })
+      @ApiQuery({
+        name: 'sortByValue',
+        type: String,
+        required: false
+      })
     @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
     async getConnections(
+        @Query() getAllConnectionsDto: GetAllConnectionsDto,
         @User() user: IUserRequest,
         @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
 
-        const connectionDetails = await this.connectionService.getConnections(user, orgId);
+        const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllConnectionsDto;
+        const connectionSearchCriteria: IConnectionSearchinterface = {
+            pageNumber,
+            searchByText,
+            pageSize,
+            sorting,
+            sortByValue
+          };
+        const connectionDetails = await this.connectionService.getConnections(connectionSearchCriteria, user, orgId);
 
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,

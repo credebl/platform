@@ -4,6 +4,7 @@ import { BaseService } from 'libs/service/base.service';
 import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProof } from './dto/webhook-proof.dto';
+import { IProofRequestsSearchCriteria } from './interfaces/verification.interface';
 
 
 @Injectable()
@@ -20,8 +21,13 @@ export class VerificationService extends BaseService {
      * @param user 
      * @returns Get all proof presentation
      */
-    getProofPresentations(orgId: string, threadId: string, user: IUserRequest): Promise<{ response: object }> {
-        const payload = { user, threadId, orgId };
+    // getProofPresentations(orgId: string, threadId: string, user: IUserRequest): Promise<{ response: object }> {
+    //     const payload = { user, threadId, orgId };
+    //     return this.sendNats(this.verificationServiceProxy, 'get-proof-presentations', payload);
+    // }
+
+    getProofPresentations(proofRequestsSearchCriteria: IProofRequestsSearchCriteria, user: IUserRequest, orgId: string): Promise<{ response: object }> {
+        const payload = { proofRequestsSearchCriteria, user, orgId };
         return this.sendNats(this.verificationServiceProxy, 'get-proof-presentations', payload);
     }
 

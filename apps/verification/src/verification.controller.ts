@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { IRequestProof, IWebhookProofPresentation, ProofFormData } from './interfaces/verification.interface';
+import { IProofRequests, IRequestProof, ProofFormData, ProofPresentationPayload } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { presentations } from '@prisma/client';
 
@@ -14,9 +14,15 @@ export class VerificationController {
    * @param payload 
    * @returns Get all proof presentation
    */
+  // @MessagePattern({ cmd: 'get-proof-presentations' })
+  // async getProofPresentations(payload: { user: IUserRequest, threadId: string, orgId: string }): Promise<string> {
+  //   return this.verificationService.getProofPresentations(payload.orgId, payload.threadId);
+  // }
+
   @MessagePattern({ cmd: 'get-proof-presentations' })
-  async getProofPresentations(payload: { user: IUserRequest, threadId: string, orgId: string }): Promise<string> {
-    return this.verificationService.getProofPresentations(payload.orgId, payload.threadId);
+  async getProofPresentations(payload: IProofRequests): Promise<object> {
+    const { user, orgId, proofRequestsSearchCriteria} = payload;
+    return this.verificationService.getProofPresentations(user, orgId, proofRequestsSearchCriteria);
   }
 
   /**
@@ -50,8 +56,8 @@ export class VerificationController {
   }
 
   @MessagePattern({ cmd: 'webhook-proof-presentation' })
-  async webhookProofPresentation(payload: { id: string, proofPresentationPayload: IWebhookProofPresentation }): Promise<presentations> {
-    return this.verificationService.webhookProofPresentation(payload.id, payload.proofPresentationPayload);
+  async webhookProofPresentation(payload: ProofPresentationPayload): Promise<presentations> {
+    return this.verificationService.webhookProofPresentation(payload);
   }
 
   @MessagePattern({ cmd: 'send-out-of-band-proof-request' })

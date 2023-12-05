@@ -67,3 +67,12 @@ export interface RequestPayload {
     fileKey: string;
     fileName: string;
 }
+export interface IIssuedCredentialSearchinterface {
+    pageNumber: number;
+    pageSize: number;
+    sorting: string;
+    sortByValue: string;
+    searchByText: string;
+    // user: IUserRequestInterface
+}
+

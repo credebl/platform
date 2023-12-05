@@ -400,6 +400,7 @@ export class OrganizationRepository {
             name: true,
             description: true,
             logoUrl: true,
+            orgSlug: true,
             userOrgRoles: {
               select: {
                 id: true,

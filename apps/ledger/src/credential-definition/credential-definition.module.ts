@@ -7,16 +7,14 @@ import { CredentialDefinitionRepository } from './repositories/credential-defini
 import { CredentialDefinitionService } from './credential-definition.service';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from '@credebl/prisma-service';
-
+import { getNatsOptions } from '@credebl/common/nats.config';
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.CREDENTAILDEFINITION_NKEY_SEED)
       }
     ]),
     HttpModule,

@@ -226,3 +226,16 @@ export interface OrgAgent {
   orgAgentTypeId: string;
   ledgerId: string;
 }
+
+export interface EcosystemDetails {
+  ecosystemOrgs: {
+    ecosystemRole: {
+      id: string;
+      name: string;
+      description: string;
+      createDateTime: Date;
+      lastChangedDateTime: Date;
+      deletedAt: Date;
+    };
+  }[];
+}

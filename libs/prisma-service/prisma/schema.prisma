@@ -283,7 +283,7 @@ model connections {
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String        @db.Uuid
   connectionId        String        @unique
-  theirLabel          String        
+  theirLabel          String        @default("")
   state               String
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])

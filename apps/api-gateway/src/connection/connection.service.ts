@@ -47,12 +47,20 @@ export class ConnectionService extends BaseService {
         }
     }
 
-    getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<{
+    // getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<{
+    //     response: object;
+    // }> {
+    //     const payload = { user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId };
+    //     return this.sendNats(this.connectionServiceProxy, 'get-all-connections', payload);
+    // }
+
+    getConnections(user: IUserRequest, orgId: string): Promise<{
         response: object;
     }> {
-        const payload = { user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId };
+        const payload = { user, orgId };
         return this.sendNats(this.connectionServiceProxy, 'get-all-connections', payload);
     }
+
 
     getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<{
         response: object;

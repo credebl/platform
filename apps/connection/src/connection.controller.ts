@@ -40,11 +40,18 @@ export class ConnectionController {
     return this.connectionService.getUrl(payload.referenceId);
   }
 
+  // @MessagePattern({ cmd: 'get-all-connections' })
+  // async getConnections(payload: IFetchConnectionInterface): Promise<string> {
+  //   const { user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId } = payload;
+  //   return this.connectionService.getConnections(user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId);
+  // }
+
   @MessagePattern({ cmd: 'get-all-connections' })
-  async getConnections(payload: IFetchConnectionInterface): Promise<string> {
-    const { user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId } = payload;
-    return this.connectionService.getConnections(user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId);
+  async getConnections(payload: IFetchConnectionInterface): Promise<object> {
+    const { user, orgId } = payload;
+    return this.connectionService.getConnections(user, orgId);
   }
+
 
   @MessagePattern({ cmd: 'get-all-connections-by-connectionId' })
   async getConnectionsById(payload: IFetchConnectionById): Promise<string> {

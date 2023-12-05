@@ -6,6 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
 
 @Module({
@@ -16,9 +17,8 @@ import { ImageServiceService } from '@credebl/image-service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+
       },
       CommonModule
     ])

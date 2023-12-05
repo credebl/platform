@@ -261,26 +261,52 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrganization(queryObject: object): Promise<organisation> {
+  async getOrganization(queryObject: object): Promise<object> {
     try {
       return this.prisma.organisation.findFirst({
         where: {
           ...queryObject
         },
-        include: {
-          schema: true,
-          org_agents: {
-            include: {
-              agents_type: true,
-              agent_invitations: true,
-              org_agent_type: true,
-              ledgers: true
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          orgSlug: true,
+          logoUrl: true,
+          website: true,
+          publicProfile: true,
+          schema: {
+            select: {
+              id: true,
+              name: true
             }
           },
-          userOrgRoles: {
-            include: {
-              user: true,
-              orgRole: true
+          org_agents: {
+            select: {
+              orgDid: true,
+              id: true,
+              walletName: true,
+              agentSpinUpStatus: true,
+              agentsTypeId: true,
+              createDateTime: true,
+              orgAgentTypeId:true,
+              agent_invitations: {
+                select: {
+                  id: true,
+                  connectionInvitation: true,
+                  multiUse: true,
+                  createDateTime: true,
+                  lastChangedDateTime:true
+                }
+              },
+              org_agent_type: true,
+              ledgers: {
+                select: {
+                  id: true,
+                  name: true,
+                  networkType: true
+                }
+              }
             }
           }
         }
@@ -400,6 +426,7 @@ export class OrganizationRepository {
             name: true,
             description: true,
             logoUrl: true,
+            orgSlug: true,
             userOrgRoles: {
               select: {
                 id: true,

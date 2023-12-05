@@ -4,6 +4,7 @@ import { IssuanceController } from './issuance.controller';
 import { IssuanceService } from './issuance.service';
 import { CommonService } from '@credebl/common';
 import { HttpModule } from '@nestjs/axios';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
 import { AwsService } from '@credebl/aws';
 
@@ -14,9 +15,7 @@ import { AwsService } from '@credebl/aws';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
       }
     ])
   ],

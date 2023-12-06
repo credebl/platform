@@ -103,6 +103,8 @@ export const ResponseMessages = {
         },
         error: {
             invalidSchemaId: 'Invalid schema Id provided.',
+            nameNotEmpty: 'Schema name is required',
+            versionNotEmpty: 'Schema version is required',
             invalidVersion: 'Invalid schema version provided.',
             insufficientAttributes: 'Please provide at least one attribute.',
             invalidAttributes: 'Please provide unique attributes',

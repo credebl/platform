@@ -66,9 +66,6 @@ export class ConnectionController {
     /**
     * Description: Get all connections
     * @param user
-    * @param threadId
-    * @param connectionId
-    * @param state
     * @param orgId
     * 
     */

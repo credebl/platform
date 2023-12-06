@@ -104,6 +104,10 @@ export class IssuanceDto {
 
     @ApiProperty()
     @IsOptional()
+    credDefId: string;
+
+    @ApiProperty()
+    @IsOptional()
     credentialAttributes: CredentialAttributes[];
 
     @ApiProperty()

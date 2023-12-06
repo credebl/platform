@@ -31,14 +31,6 @@ export class IssuanceService extends BaseService {
         const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, user };
         return this.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
     }
-
-
-    // getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<{
-    //     response: object;
-    // }> {
-    //     const payload = { user, threadId, connectionId, state, orgId };
-    //     return this.sendNats(this.issuanceProxy, 'get-all-issued-credentials', payload);
-    // }
     
     getIssueCredentials(issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface, user: IUserRequest, orgId: string): Promise<{
         response: object;

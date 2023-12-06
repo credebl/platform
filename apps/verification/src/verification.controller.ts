@@ -14,11 +14,6 @@ export class VerificationController {
    * @param payload 
    * @returns Get all proof presentation
    */
-  // @MessagePattern({ cmd: 'get-proof-presentations' })
-  // async getProofPresentations(payload: { user: IUserRequest, threadId: string, orgId: string }): Promise<string> {
-  //   return this.verificationService.getProofPresentations(payload.orgId, payload.threadId);
-  // }
-
   @MessagePattern({ cmd: 'get-proof-presentations' })
   async getProofPresentations(payload: IProofRequests): Promise<object> {
     const { user, orgId, proofRequestsSearchCriteria} = payload;

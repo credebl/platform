@@ -299,7 +299,8 @@ model credentials {
   threadId             String        @unique
   credentialExchangeId String        @default("")
   state                String        @default("")
-  schemaId             String        
+  schemaId             String        @default("")
+  credDefId            String        @default("")
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
 }

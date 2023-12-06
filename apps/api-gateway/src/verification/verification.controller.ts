@@ -117,69 +117,6 @@ export class VerificationController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-    // @Get('/orgs/:orgId/credentials')
-    // @UseGuards(AuthGuard('jwt'))
-    // @ApiBearerAuth()
-    // @ApiOperation({
-    //   summary: `Get all issued credentials for a specific organization`,
-    //   description: `Get all issued credentials for a specific organization`
-    // })
-    // @ApiQuery({
-    //   name: 'pageNumber',
-    //   type: Number,
-    //   required: false
-    // })
-    // @ApiQuery({
-    //   name: 'searchByText',
-    //   type: String,
-    //   required: false
-    // })
-    // @ApiQuery({
-    //   name: 'pageSize',
-    //   type: Number,
-    //   required: false
-    // })
-    // @ApiQuery({
-    //   name: 'sorting',
-    //   type: String,
-    //   required: false
-    // })
-    // @ApiQuery({
-    //   name: 'sortByValue',
-    //   type: String,
-    //   required: false
-    // })
-
-    // @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-    // @ApiBearerAuth()
-    // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
-    // async getIssueCredentials(
-    //   @Query() getAllIssuedCredentials: GetAllIssuedCredentialsDto,
-    //   @User() user: IUserRequest,
-    //   @Param('orgId') orgId: string,
-    //   @Res() res: Response
-    // ): Promise<Response> {
-
-    //   const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllIssuedCredentials;
-    //   const issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface = {
-    //       pageNumber,
-    //       searchByText,
-    //       pageSize,
-    //       sorting,
-    //       sortByValue
-    //     };
-
-    //   const getCredentialDetails = await this.issueCredentialService.getIssueCredentials(issuedCredentialsSearchCriteria, user, orgId);
-
-    //   const finalResponse: IResponseType = {
-    //     statusCode: HttpStatus.OK,
-    //     message: ResponseMessages.issuance.success.fetch,
-    //     data: getCredentialDetails.response
-    //   };
-    //   return res.status(HttpStatus.OK).json(finalResponse);
-    // }
-
     /**
     * Get all proof presentations
     * @param user 
@@ -221,9 +158,6 @@ export class VerificationController {
     @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiQuery(
-        { name: 'threadId', required: false }
-    )
     @ApiBearerAuth()
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

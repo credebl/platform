@@ -89,60 +89,9 @@ export class IssuanceController {
     return res.send(getImageBuffer);
   }
 
-  // /**
-  //  * Description: Get all issued credentials
-  //  * @param user
-  //  * @param threadId
-  //  * @param connectionId
-  //  * @param state
-  //  * @param orgId
-  //  *
-  //  */
-  // @Get('/orgs/:orgId/credentials')
-  // @UseGuards(AuthGuard('jwt'))
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: `Get all issued credentials for a specific organization`,
-  //   description: `Get all issued credentials for a specific organization`
-  // })
-  // @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  // @ApiQuery({ name: 'threadId', required: false })
-  // @ApiQuery({ name: 'connectionId', required: false })
-  // @ApiQuery({ name: 'state', enum: IssueCredential, required: false })
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  // @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
-  // async getIssueCredentials(
-  //   @User() user: IUserRequest,
-  //   @Query('threadId') threadId: string,
-  //   @Query('connectionId') connectionId: string,
-  //   @Query('state') state: string,
-  //   @Param('orgId') orgId: string,
-  //   @Res() res: Response
-  // ): Promise<Response> {
-  //   const getCredentialDetails = await this.issueCredentialService.getIssueCredentials(
-  //     user,
-  //     threadId,
-  //     connectionId,
-  //     state,
-  //     orgId
-  //   );
-
-  //   const finalResponse: IResponseType = {
-  //     statusCode: HttpStatus.OK,
-  //     message: ResponseMessages.issuance.success.fetch,
-  //     data: getCredentialDetails.response
-  //   };
-  //   return res.status(HttpStatus.OK).json(finalResponse);
-  // }
-
-
   /**
    * Description: Get all issued credentials
    * @param user
-   * @param threadId
-   * @param connectionId
-   * @param state
    * @param orgId
    *
    */

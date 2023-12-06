@@ -71,7 +71,10 @@ export class VerificationRepository {
       const proofRequestsList = await this.prisma.presentations.findMany({
         where: {
           orgId,
-          OR: [{ connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }]
+          OR: [
+            { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
+            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
+        ]
         },
         select: {
           createDateTime: true,
@@ -105,35 +108,6 @@ export class VerificationRepository {
       throw error;
     }
   }
-
-  // async storeProofPresentation(id: string, proofPresentationPayload: IWebhookProofPresentation): Promise<presentations> {
-  //     try {
-
-  //         return await this.prisma.presentations.upsert({
-  //             where: {
-  //                 threadId: proofPresentationPayload.threadId
-  //             },
-  //             update: {
-  //                 state: proofPresentationPayload.state,
-  //                 threadId: proofPresentationPayload.threadId,
-  //                 isVerified: proofPresentationPayload.isVerified
-  //             },
-  //             create: {
-  //                 connectionId: proofPresentationPayload.connectionId,
-  //                 createdBy: id,
-  //                 lastChangedBy: id,
-  //                 state: proofPresentationPayload.state,
-  //                 threadId: proofPresentationPayload.threadId,
-  //                 isVerified: proofPresentationPayload.isVerified,
-  //                 orgId: id
-  //             }
-  //         });
-
-  //     } catch (error) {
-  //         this.logger.error(`[getProofPresentations] - error in get agent endpoint : ${error.message} `);
-  //         throw error;
-  //     }
-  // }
 
   async storeProofPresentation(payload: ProofPresentationPayload): Promise<presentations> {
     try {

@@ -22,12 +22,6 @@ export class IssuanceController {
     return this.issuanceService.sendCredentialOutOfBand(orgId, user, credentialDefinitionId, comment, connectionId, attributes);
   }
 
-  // @MessagePattern({ cmd: 'get-all-issued-credentials' })
-  // async getIssueCredentials(payload: IIssueCredentials): Promise<string> {
-  //   const { user, threadId, connectionId, state, orgId } = payload;
-  //   return this.issuanceService.getIssueCredentials(user, threadId, connectionId, state, orgId);
-  // }
-
   @MessagePattern({ cmd: 'get-all-issued-credentials' })
   async getIssueCredentials(payload: IIssueCredentials): Promise<object> {
     const { user, orgId, issuedCredentialsSearchCriteria} = payload;

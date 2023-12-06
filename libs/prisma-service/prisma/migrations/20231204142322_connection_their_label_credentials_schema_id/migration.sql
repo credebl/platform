@@ -9,3 +9,7 @@ ALTER TABLE "connections" ADD COLUMN     "theirLabel" TEXT NOT NULL DEFAULT '';
 
 -- AlterTable
 ALTER TABLE "credentials" ADD COLUMN     "schemaId" TEXT NOT NULL DEFAULT '';
+
+-- AlterTable
+ALTER TABLE "credentials" ADD COLUMN     "credDefId" TEXT NOT NULL DEFAULT '';
+

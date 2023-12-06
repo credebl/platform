@@ -34,36 +34,6 @@ export class VerificationService {
    * @param orgId 
    * @returns Get all proof presentation
    */
-  // async getProofPresentations(orgId: string, threadId: string): Promise<string> {
-  //   try {
-  //     const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-
-  //     const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-  //     const verificationMethodLabel = 'get-proof-presentation';
-  //     let url;
-  //     if (threadId) {
-  //       url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, threadId);
-  //     } else {
-  //       url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-  //     }
-
-  //     const payload = { apiKey: getAgentDetails.apiKey, url };
-  //     const getProofPresentationsDetails = await this._getProofPresentations(payload);
-  //     return getProofPresentationsDetails?.response;
-
-  //   } catch (error) {
-  //     this.logger.error(`[getProofPresentations] - error in get proof presentation : ${JSON.stringify(error)}`);
-  //     if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-  //       throw new RpcException({
-  //         message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-  //         statusCode: error?.status?.code
-  //       });
-
-  //     } else {
-  //       throw new RpcException(error.response ? error.response : error);
-  //     }
-  //   }
-  // }
 
   async getProofPresentations(
     user: IUserRequest,

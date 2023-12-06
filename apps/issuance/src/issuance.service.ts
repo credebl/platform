@@ -175,49 +175,6 @@ export class IssuanceService {
     }
   }
 
-  // async getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<string> {
-  //   try {
-  //     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-  //     const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
-
-  //     const { agentEndPoint } = agentDetails;
-  //     if (!agentDetails) {
-  //       throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-  //     }
-  //     const params = {
-  //       threadId,
-  //       connectionId,
-  //       state
-  //     };
-
-  //     const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-  //     const issuanceMethodLabel = 'get-issue-credentials';
-  //     let url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
-
-  //     Object.keys(params).forEach((element: string) => {
-  //       const appendParams: string = url.includes('?') ? '&' : '?';
-
-  //       if (params[element] !== undefined) {
-  //         url = `${url + appendParams + element}=${params[element]}`;
-  //       }
-  //     });
-  //     const apiKey = platformConfig?.sgApiKey;
-  //     const issueCredentialsDetails = await this._getIssueCredentials(url, apiKey);
-  //     return issueCredentialsDetails?.response;
-  //   } catch (error) {
-  //     this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-  //     if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-  //       throw new RpcException({
-  //         message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-  //         statusCode: error?.status?.code
-  //       });
-
-  //     } else {
-  //       throw new RpcException(error.response ? error.response : error);
-  //     }
-  //   }
-  // }
-
   async getIssueCredentials(
     user: IUserRequest,
     orgId: string,

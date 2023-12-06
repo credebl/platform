@@ -144,12 +144,18 @@ export class IssuanceRepository {
       }
 
       let schemaId = '';
+
       if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId) {
         schemaId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId;
+      } 
+    
+      let credDefId = '';
+      if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId) {
+        credDefId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId;
       }
 
       const credentialDetails = await this.prisma.credentials.upsert({
-        where: {
+        where: { 
           threadId: issueCredentialDto?.threadId
         },
         update: {
@@ -167,6 +173,7 @@ export class IssuanceRepository {
           state: issueCredentialDto?.state,
           threadId: issueCredentialDto?.threadId,
           schemaId,
+          credDefId,
           credentialExchangeId: issueCredentialDto?.id,
           orgId: organisationId
         }

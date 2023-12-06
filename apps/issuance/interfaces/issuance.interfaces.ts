@@ -39,6 +39,7 @@ export interface IIssuanceWebhookInterface {
   credentialAttributes: ICredentialAttributesInterface[];
   orgId: string;
   schemaId: string;
+  credDefId: string;
   id: string;
   state: string;
   contextCorrelationId: string;

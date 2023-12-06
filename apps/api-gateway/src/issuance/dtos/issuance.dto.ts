@@ -43,7 +43,6 @@ export class IssueCredentialDto {
     orgId: string;
 }
 
-
 export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
@@ -84,6 +83,10 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     schemaId: string;
+
+    @ApiProperty()
+    @IsOptional()
+    credDefId: string;
 
     @ApiProperty()
     @IsOptional()

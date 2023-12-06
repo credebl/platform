@@ -1,6 +1,6 @@
 /* eslint-disable prefer-destructuring */
 // eslint-disable-next-line camelcase
-import { ConflictException, ForbiddenException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { EcosystemRepository } from './ecosystem.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
@@ -423,6 +423,28 @@ export class EcosystemService {
   async requestSchemaEndorsement(requestSchemaPayload: RequestSchemaEndorsement, orgId: string, ecosystemId: string): Promise<object> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
+
+      const {name, version} = requestSchemaPayload;
+
+      if (0 === name.length) {        
+        throw new BadRequestException(ResponseMessages.schema.error.nameNotEmpty);
+      }
+
+      if (0 === version.length) {
+        throw new BadRequestException(ResponseMessages.schema.error.versionNotEmpty);
+      }
+
+      const schemaVersionIndexOf = -1;
+
+      if (
+        isNaN(parseFloat(version)) ||
+        version.toString().indexOf('.') ===
+        schemaVersionIndexOf
+      ) {
+        throw new NotAcceptableException(
+          ResponseMessages.schema.error.invalidVersion
+        );
+      }
 
       const [schemaRequestExist, ecosystemMemberDetails, platformConfig, ecosystemLeadAgentDetails, getEcosystemOrgDetailsByOrgId] = await Promise.all([
         this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version),

@@ -13,14 +13,7 @@ class Attribute {
 }
 
 class CredentialOffer {
-    @ApiProperty({ example: 'awqx@getnada.com' })
-    @IsEmail()
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'email should be string' })
-    @Transform(({ value }) => value.trim())
-    @IsOptional()
-    emailId: string;
-   
+
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
@@ -28,6 +21,14 @@ class CredentialOffer {
     @Type(() => Attribute)
     @IsOptional()
     attributes: Attribute[];
+
+    @ApiProperty({ example: 'awqx@getnada.com' })
+    @IsEmail()
+    @IsNotEmpty({ message: 'Please provide valid email' })
+    @IsString({ message: 'email should be string' })
+    @Transform(({ value }) => value.trim())
+    @IsOptional()
+    emailId: string;
 }
 
 export class IssueCredentialDto {

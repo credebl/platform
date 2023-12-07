@@ -63,23 +63,28 @@ export class SchemaService extends BaseService {
             ResponseMessages.schema.error.insufficientAttributes
           );
         } else if (schema.attributes.length > schemaAttributeLength) {
-          const schemaAttibute = schema.attributes;
+
+          const trimmedAttributes = schema.attributes.map(attribute => ({
+            attributeName: attribute.attributeName.trim(),
+            schemaDataType: attribute.schemaDataType,
+            displayName: attribute.displayName
+        }));
+    
           const findDuplicates: boolean =
-            new Set(schemaAttibute).size !== schemaAttibute.length;
+            new Set(trimmedAttributes).size !== trimmedAttributes.length;
           if (true === findDuplicates) {
             throw new NotAcceptableException(
               ResponseMessages.schema.error.invalidAttributes
             );
           }
           schema.schemaName = schema.schemaName.trim();
-
           const { agentEndPoint, orgDid } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
           const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
           // eslint-disable-next-line yoda
           const did = schema.orgDid?.split(':').length >= 4 ? schema.orgDid : orgDid;
 
           const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-          const attributeArray = schema.attributes.map(item => item.attributeName);
+          const attributeArray = trimmedAttributes.map(item => item.attributeName);
           let schemaResponseFromAgentService;
           if (OrgAgentType.DEDICATED === orgAgentType) {
             const issuerId = did;

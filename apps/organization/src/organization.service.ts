@@ -18,7 +18,7 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-import { IUpdateOrganization, OrgAgent } from '../interfaces/organization.interface';
+import { IUpdateOrganization, OrgAgent, RegisterOnPremAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
@@ -400,6 +400,23 @@ export class OrganizationService {
   async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
     try {
       return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search);
+    } catch (error) {
+      this.logger.error(`In fetchUserInvitation : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async registerOnPrem(registerOnPremAgent: RegisterOnPremAgent): Promise<void> {
+
+    const {orgId} = registerOnPremAgent;
+    try {
+      const orgDetails = this.organizationRepository.getOrganizationDetails(orgId);
+
+      if (!orgDetails) {
+        throw new NotFoundException('Organization not found');
+      }
+
+
     } catch (error) {
       this.logger.error(`In fetchUserInvitation : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

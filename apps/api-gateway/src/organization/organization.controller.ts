@@ -24,6 +24,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 import { ImageServiceService } from '@credebl/image-service';
+import { RegisterAgentDto } from './dtos/register-agent.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -295,6 +296,31 @@ export class OrganizationController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+  @Post('/:orgId/onprem-agent')
+  @ApiOperation({
+    summary: 'Register on-prem dedicated agent',
+    description: 'Register on-prem dedicated agent'
+  })
+  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async registerOnpremAgent(@Body() registerAgentDto: RegisterAgentDto, @Param('orgId') orgId: string, @User() user: user, @Res() res: Response): Promise<Response> {
+
+    registerAgentDto.orgId = orgId;
+    registerAgentDto.userId = user.id;
+    await this.organizationService.registerOnpremAgent(registerAgentDto);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: 'Agent registered successfully'
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+
+  }
+
 
   @Post('/:orgId/invitations')
   @ApiOperation({

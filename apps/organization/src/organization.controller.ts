@@ -6,7 +6,7 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IUpdateOrganization } from '../interfaces/organization.interface';
+import { IUpdateOrganization, RegisterOnPremAgent } from '../interfaces/organization.interface';
 
 @Controller()
 export class OrganizationController {
@@ -74,6 +74,11 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-organization-public-profile' })
   async getPublicProfile(payload: { orgSlug }): Promise<object> {
     return this.organizationService.getPublicProfile(payload);
+  }
+
+  @MessagePattern({ cmd: 'register-on-prem-agent' })
+  async registerOnPrem(payload: { registerOnPremAgent: RegisterOnPremAgent; }): Promise<object> {
+    return this.organizationService.registerOnPrem(payload.registerOnPremAgent);
   }
 
   /**

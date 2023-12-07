@@ -9,6 +9,7 @@ import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
+import { RegisterAgentDto } from './dtos/register-agent.dto';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -141,6 +142,14 @@ export class OrganizationService extends BaseService {
     const payload = { orgId };
 
     return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
+  }
+
+  async registerOnpremAgent(
+    registerAgentDto: RegisterAgentDto
+  ): Promise<{ response: object }> {
+    const payload = {registerAgentDto};
+
+    return this.sendNats(this.serviceProxy, 'register-on-prem-agent', payload);
   }
 
   async deleteOrganization(

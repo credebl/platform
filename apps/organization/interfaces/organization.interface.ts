@@ -28,3 +28,33 @@ export interface OrgAgent {
   url: string;
   apiKey: string;
 }
+
+export interface RegisterOnPremAgent {
+
+  ledgerId?: string[];
+  orgId?: string;
+  userId?: string;
+  did: string;
+  agentEndpoint?: string;
+  token?: string;
+}
+
+export interface OrgAgentDetails {
+  id?: string;
+  clientSocketId?: string;
+  agentEndPoint?: string;
+  apiKey?: string;
+  seed?: string;
+  did?: string;
+  verkey?: string;
+  isDidPublic?: boolean;
+  agentSpinUpStatus?: number;
+  walletName?: string;
+  agentsTypeId?: string;
+  orgId?: string;
+  agentId?: string;
+  orgAgentTypeId?: string;
+  tenantId?: string;
+  ledgerId?: string[];
+  agentType?: string;
+}

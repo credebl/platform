@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IUpdateOrganization } from '../interfaces/organization.interface';
+import { IUpdateOrganization, OrgAgentDetails } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -574,5 +574,34 @@ export class OrganizationRepository {
       throw error;
     }
   }
+
+  async storeOrgAgentDetails(orgAgentDetails: OrgAgentDetails): Promise<void> {
+    try {
+
+      this.prisma.org_agents.create({
+        data: {
+          orgDid: orgAgentDetails.did,
+          verkey: orgAgentDetails.verkey,
+          isDidPublic: orgAgentDetails.isDidPublic,
+          agentSpinUpStatus: orgAgentDetails.agentSpinUpStatus,
+          walletName: orgAgentDetails.walletName,
+          agentsTypeId: orgAgentDetails.agentsTypeId,
+          orgId: orgAgentDetails.orgId,
+          agentEndPoint: orgAgentDetails.agentEndPoint,
+          agentId: orgAgentDetails.agentId ? orgAgentDetails.agentId.toString() : '',
+          orgAgentTypeId: orgAgentDetails.orgAgentTypeId ? orgAgentDetails.orgAgentTypeId : null,
+          tenantId: orgAgentDetails.tenantId ? orgAgentDetails.tenantId : null,
+          ledgerId: orgAgentDetails.ledgerId[0],
+          createdBy: '',
+          lastChangedBy: ''
+        }
+    });
+
+
+    } catch (error) {
+        this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
+        throw error;
+    }
+}
 
 }

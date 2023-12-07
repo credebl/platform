@@ -157,9 +157,9 @@ CONTAINER_DEFINITIONS=$(
     ],
     "mountPoints": [
                 {
-                    "sourceVolume": "config",
-                    "containerPath": "/config.json",
-                    "readOnly": true
+                    "sourceVolume": "agent-configf-file",
+                    "containerPath": "/app/agent-provisioning/AFJ/agent-config",
+                    "readOnly": false
                 }
             ],
     "volumesFrom": [],
@@ -178,12 +178,13 @@ TASK_DEFINITION=$(
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
   "volumes": [
         {
-            "name": "config",
-            "host": {
-                "sourcePath": "/home/ec2-user/config/${AGENCY}_${CONTAINER_NAME}.json"
+            "name": "agent-configf-file",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "fs-0e9c347f845165eed",
+                "rootDirectory": "/"
             }
         }
-    ],
+    ]
   "networkMode": "host",
   "requiresCompatibilities": [
     "EC2"

@@ -135,7 +135,7 @@ export class OutOfBandCredentialDto {
     @IsEmail()
     @IsNotEmpty({ message: 'Please provide valid email' })
     @IsString({ message: 'email should be string' })
-    @Transform(({ value }) => value.trim())
+    @Transform(({ value }) => value.trim().toLowerCase())
     @IsOptional()
     emailId: string;
 

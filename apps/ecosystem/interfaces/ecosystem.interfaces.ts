@@ -178,23 +178,17 @@ export interface EndorsementTransactionPayloadDetails {
 }
 
 export interface CreateEcosystem {
-  name: string;
-
+  name?: string;
   description?: string;
-
   tags?: string;
-
-  userId: string;
-
+  userId?: string;
   logo?: string;
-
-  orgName: string;
-
-  orgDid: string;
-
+  orgName?: string;
+  orgDid?: string;
   orgId?: string;
-
-  autoEndorsement: boolean
+  autoEndorsement?: boolean;
+  lastChangedBy?: string;
+  ledgers?: string[];
 }
 
 export interface OrganizationData {
@@ -224,7 +218,8 @@ export interface OrgAgent {
   agentsTypeId: string;
   orgId: string;
   orgAgentTypeId: string;
-  ledgerId: string;
+  ledgerId?: string;
+  ledgers?: {id: string};
 }
 
 export interface EcosystemDetails {

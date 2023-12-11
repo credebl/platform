@@ -60,7 +60,7 @@ export class EcosystemService {
     }
 
     const orgDetails: OrganizationData = await this.getOrganizationDetails(createEcosystemDto.orgId, createEcosystemDto.userId);
-
+    
     if (!orgDetails) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.orgNotExist);
     }
@@ -69,7 +69,9 @@ export class EcosystemService {
       throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
     }
     
-    const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
+    const ecosystemLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
+    
+    const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, ecosystemLedgers);
     if (!createEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
     }
@@ -105,12 +107,28 @@ export class EcosystemService {
   */
 
   // eslint-disable-next-line camelcase
-  async editEcosystem(editEcosystemDto, ecosystemId): Promise<object> {
-    const editOrganization = await this.ecosystemRepository.updateEcosystemById(editEcosystemDto, ecosystemId);
-    if (!editOrganization) {
+  async editEcosystem(editEcosystemDto: CreateEcosystem, ecosystemId: string): Promise<object> {
+    const { name, description, tags, logo, autoEndorsement, userId } = editEcosystemDto;
+
+    const updateData : CreateEcosystem = {
+      lastChangedBy: userId
+    };
+
+    if (name) { updateData.name = name; }
+
+    if (description) { updateData.description = description; }
+
+    if (tags) { updateData.tags = tags; }
+
+    if (logo) { updateData.logo = tags; }
+    
+    if ('' !== autoEndorsement.toString()) { updateData.autoEndorsement = autoEndorsement; }
+
+    const editEcosystem = await this.ecosystemRepository.updateEcosystemById(updateData, ecosystemId);
+    if (!editEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.update);
     }
-    return editOrganization;
+    return editEcosystem;
   }
 
   /**
@@ -200,9 +218,25 @@ export class EcosystemService {
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, ecosystemId } = bulkInvitationDto;
 
-
     try {
-      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
+      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);  
+
+      if (!ecosystemDetails.ledgers
+        || (Array.isArray(ecosystemDetails.ledgers) 
+      && 0 === ecosystemDetails.ledgers.length)) {
+
+        const ecosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
+
+        const ecosystemAgents = await this.ecosystemRepository.getAllAgentDetails(ecosystemLeadDetails.orgId);
+        
+        const ecosystemLedgers = ecosystemAgents.map((agent) => agent.ledgerId);
+
+        const updateData : CreateEcosystem = {
+          ledgers: ecosystemLedgers
+        };
+
+        await this.ecosystemRepository.updateEcosystemById(updateData, ecosystemId);   
+      }
 
       for (const invitation of invitations) {
         const { email } = invitation;
@@ -263,6 +297,24 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
       }
 
+      const orgLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
+
+      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(invitation.ecosystemId);
+
+      let isLedgerFound = false;
+
+      for (const ledger of orgLedgers) {
+        // Check if the ledger is present in the ecosystem
+        if (Array.isArray(ecosystemDetails.ledgers) && ecosystemDetails.ledgers.includes(ledger)) {
+          // If a ledger is found, return true
+          isLedgerFound = true;
+        }
+      }
+
+      if (!isLedgerFound) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ledgerNotMatch);
+      }
+      
       const updatedInvitation = await this.updateEcosystemInvitation(invitationId, orgId, status);
       if (!updatedInvitation) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotUpdate);

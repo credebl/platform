@@ -246,6 +246,7 @@ export const ResponseMessages = {
             invalidInvitationStatus: 'Invalid invitation status',
             invitationNotFound: 'Ecosystem Invitation not found',
             invitationNotUpdate: 'Ecosystem Invitation not updated',
+            ledgerNotMatch: 'Organization ledger network not matched with Ecosystem',
             orgsNotUpdate: 'Ecosystem Orgs not updated',
             ecosystemNotEnabled: 'Ecosystem service is not enabled',
             sumbitTransaction: 'Error while submitting transaction',

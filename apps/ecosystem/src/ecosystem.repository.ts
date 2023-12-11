@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { EcosystemDetails, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, EcosystemDetails, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -25,7 +25,7 @@ export class EcosystemRepository {
    * @returns ecosystem
    */
   // eslint-disable-next-line camelcase
-  async createNewEcosystem(createEcosystemDto): Promise<ecosystem> {
+  async createNewEcosystem(createEcosystemDto: CreateEcosystem, ecosystemLedgers: string[]): Promise<ecosystem> {
     try {
       const transaction = await this.prisma.$transaction(async (prisma) => {
         const { name, description, userId, logo, tags, orgId, autoEndorsement } = createEcosystemDto;
@@ -37,7 +37,8 @@ export class EcosystemRepository {
             autoEndorsement,
             logoUrl: logo,
             createdBy: userId,
-            lastChangedBy: userId
+            lastChangedBy: userId,
+            ledgers: ecosystemLedgers
           }
         });
         let ecosystemUser;
@@ -86,19 +87,13 @@ export class EcosystemRepository {
    * @returns ecosystem details
    */
   // eslint-disable-next-line camelcase
-  async updateEcosystemById(createEcosystemDto, ecosystemId): Promise<ecosystem> {
+  async updateEcosystemById(
+    data: object,
+     ecosystemId: string): Promise<ecosystem> {
     try {
-      const { name, description, tags, logo, autoEndorsement, userId } = createEcosystemDto;
       const editEcosystem = await this.prisma.ecosystem.update({
         where: { id: ecosystemId },
-        data: {
-          name,
-          description,
-          autoEndorsement,
-          tags,
-          logoUrl: logo,
-          lastChangedBy: userId
-        }
+        data
       });
       return editEcosystem;
     } catch (error) {
@@ -717,6 +712,24 @@ export class EcosystemRepository {
 
     } catch (error) {
       this.logger.error(`Error in getting getAgentEndPoint for the ecosystem: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getAllAgentDetails(orgId: string): Promise<org_agents[]> {
+    try {
+      if (!orgId) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidOrgId);
+      }
+      return await this.prisma.org_agents.findMany({
+        where: {
+          orgId: orgId.toString()
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`Error in getAllAgentDetails for the ecosystem: ${error.message} `);
       throw error;
     }
   }

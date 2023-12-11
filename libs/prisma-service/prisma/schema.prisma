@@ -341,6 +341,7 @@ model ecosystem {
   ecosystemInvitations ecosystem_invitations[]
   ecosystemOrgs        ecosystem_orgs[]
   ecosystemUsers       ecosystem_users[]
+  ledgers              Json?
 }
 
 model ecosystem_invitations {

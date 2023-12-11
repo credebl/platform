@@ -128,12 +128,22 @@ export class EcosystemRepository {
           name: true,
           description: true,
           logoUrl: true,
+          createDateTime: true,
+          lastChangedDateTime: true,
+          createdBy: true,
           autoEndorsement: true,
           ecosystemOrgs: {
             where: {
               orgId
             },
             select: {
+              id: true,
+              orgId:true,
+              status: true,
+              createDateTime: true,
+              lastChangedDateTime: true,
+              ecosystemId: true,
+              ecosystemRoleId: true,
               ecosystemRole: true
             }
           }

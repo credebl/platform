@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 /* eslint-disable camelcase */
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SortValue } from '../../enum';
 import { Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
@@ -49,6 +49,11 @@ export class GetCredentialDefinitionBySchemaIdDto {
 }
 
 export class GetAllSchemaByPlatformDto {
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    ledgerId?: string;
+    
     @ApiProperty({ required: false })
     @IsOptional()
     pageNumber: number = 1;

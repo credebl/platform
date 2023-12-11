@@ -48,6 +48,7 @@ export interface ISchemaSearchInterface {
 }
 
 export interface ISchemaSearchCriteria {
+    ledgerId?: string;
     pageNumber: number;
     pageSize: number;
     sorting: string;

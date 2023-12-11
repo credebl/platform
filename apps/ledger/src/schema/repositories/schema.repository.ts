@@ -202,7 +202,7 @@ export class SchemaRepository {
       throw error;
     }
   }
-
+ 
   async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<{
     schemasCount: number;
     schemasResult: {
@@ -216,10 +216,11 @@ export class SchemaRepository {
       issuerId: string;
       orgId: string;
     }[];
-  }> {
+  }> { 
     try {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
+          ledgerId: payload.ledgerId,
           OR: [
             { name: { contains: payload.searchByText, mode: 'insensitive' } },
             { version: { contains: payload.searchByText, mode: 'insensitive' } },
@@ -245,7 +246,11 @@ export class SchemaRepository {
         skip: (payload.pageNumber - 1) * payload.pageSize
       });
 
-      const schemasCount = await this.prisma.schema.count();
+      const schemasCount = await this.prisma.schema.count({
+        where: {
+          ledgerId: payload.ledgerId
+        }
+      });
       return { schemasCount, schemasResult };
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);

@@ -1,6 +1,7 @@
 import { IUserRequestInterface } from '../schema/interfaces';
 
 export interface ISchemaSearchInterface {
+    ledgerId?: string;
     pageNumber: number;
     pageSize: number;
     sorting: string;

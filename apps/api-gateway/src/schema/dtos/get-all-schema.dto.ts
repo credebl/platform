@@ -50,6 +50,7 @@ export class GetCredentialDefinitionBySchemaIdDto {
 
 export class GetAllSchemaByPlatformDto {
 
+    @ApiProperty()
     @ApiPropertyOptional()
     @IsOptional()
     ledgerId?: string;

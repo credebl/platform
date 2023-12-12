@@ -219,7 +219,14 @@ export interface OrgAgent {
   orgId: string;
   orgAgentTypeId: string;
   ledgerId?: string;
-  ledgers?: {id: string};
+  ledgers?: LedgerDetails;
+}
+
+export interface LedgerDetails {
+  id: string,
+  name: string,
+  indyNamespace: string,
+  networkUrl: string
 }
 
 export interface EcosystemDetails {
@@ -234,3 +241,41 @@ export interface EcosystemDetails {
     };
   }[];
 }
+
+export interface EcosystemInvitationDetails {
+  name: string;
+  id: string;
+  logoUrl: string;
+  description?: string;
+  tags?: string;
+  createDateTime?: Date;
+  createdBy?: string;
+  lastChangedDateTime?: Date;
+  lastChangedBy?: string;
+  deletedAt?: Date;
+  autoEndorsement?: boolean;
+  ledgers: Prisma.JsonValue;  
+  networkDetails?: LedgerDetails[];            
+}
+
+
+export interface InvitationResponse {
+    id: string;
+    email: string;
+    status: string;
+    ecosystemId: string;
+    userId: string;
+    orgId: string;
+    deletedAt: Date;
+    ecosystem: EcosystemInvitationDetails;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+}
+
+export interface EcoInvitationsPagination {
+  invitations: InvitationResponse[];
+  totalPages: number;
+}
+

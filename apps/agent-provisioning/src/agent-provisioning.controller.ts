@@ -13,7 +13,7 @@ export class AgentProvisioningController {
    * @returns Get DID and verkey
    */
   @MessagePattern({ cmd: 'wallet-provisioning' })
-  walletProvision(payload: IWalletProvision): Promise<object> {
+  walletProvision(payload: IWalletProvision): Promise<string> {
     return this.agentProvisioningService.walletProvision(payload);
   }
 }

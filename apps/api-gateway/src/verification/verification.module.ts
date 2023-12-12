@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
 
 @Module({
@@ -13,9 +14,7 @@ import { ImageServiceService } from '@credebl/image-service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
       }
     ])
   ],

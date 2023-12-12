@@ -1,6 +1,9 @@
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { trim } from '@credebl/common/cast.helper';
+
+
 @ApiExtraModels()
 
 class AttributeValue {
@@ -20,11 +23,16 @@ class AttributeValue {
 
 
 export class RequestSchemaDto {
+
   @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'Schema name is required' })
   @IsString({ message: 'name must be in string format.' })
   name: string;
 
   @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'Schema version is required' })
   @IsString({ message: 'version must be in string format.' })
   version: string;
 

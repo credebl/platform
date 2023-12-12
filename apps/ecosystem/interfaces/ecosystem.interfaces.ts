@@ -196,3 +196,46 @@ export interface CreateEcosystem {
 
   autoEndorsement: boolean
 }
+
+export interface OrganizationData {
+  id: string;
+  createDateTime: string;
+  createdBy: string;
+  lastChangedDateTime: string;
+  lastChangedBy: string;
+  name: string;
+  description: string;
+  orgSlug: string;
+  logoUrl: string;
+  website: string;
+  publicProfile: boolean;
+  org_agents: OrgAgent[];
+}
+
+export interface OrgAgent {
+  id: string;
+  orgDid: string;
+  verkey: string;
+  agentEndPoint: string;
+  isDidPublic: boolean;
+  agentSpinUpStatus: number;
+  walletName: string;
+  tenantId: string;
+  agentsTypeId: string;
+  orgId: string;
+  orgAgentTypeId: string;
+  ledgerId: string;
+}
+
+export interface EcosystemDetails {
+  ecosystemOrgs: {
+    ecosystemRole: {
+      id: string;
+      name: string;
+      description: string;
+      createDateTime: Date;
+      lastChangedDateTime: Date;
+      deletedAt: Date;
+    };
+  }[];
+}

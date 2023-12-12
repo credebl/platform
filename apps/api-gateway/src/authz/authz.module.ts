@@ -17,8 +17,7 @@ import { UserModule } from '../user/user.module';
 import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';
 import { EcosystemService } from '../ecosystem/ecosystem.service';
-
-//import { WebhookService } from "../../../platform-service/src/webhook/webhook.service";
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -31,9 +30,7 @@ import { EcosystemService } from '../ecosystem/ecosystem.service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
       },
       CommonModule
     ]),

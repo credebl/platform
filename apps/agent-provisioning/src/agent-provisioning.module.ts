@@ -3,7 +3,7 @@ import { AgentProvisioningController } from './agent-provisioning.controller';
 import { AgentProvisioningService } from './agent-provisioning.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
-
+import { getNatsOptions } from '@credebl/common/nats.config';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -11,9 +11,8 @@ import { ConfigModule } from '@nestjs/config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.AGENT_PROVISIONING_NKEY_SEED)
+        
       }
     ])
   ],

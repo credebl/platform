@@ -8,3 +8,4 @@ libs/prisma-service/prisma/data/credebl-master-table.json
 uploadedFles/exports
 uploadedFles/import
 uploadedFles/export
+nats-server.conf

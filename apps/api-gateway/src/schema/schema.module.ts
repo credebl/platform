@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { SchemaController } from './schema.controller';
 import { SchemaService } from './schema.service';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -12,9 +13,8 @@ import { SchemaService } from './schema.service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+
       }
     ])
   ],

@@ -33,7 +33,7 @@ export class UserController {
 
   @MessagePattern({ cmd: 'user-holder-login' })
   async login(payload: LoginUserDto): Promise<object> {
-    return this.userService.login(payload);
+   return this.userService.login(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-profile' })

@@ -17,6 +17,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { UserService } from './user.service';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { AwsService } from '@credebl/aws';
 
 @Module({
@@ -25,9 +26,7 @@ import { AwsService } from '@credebl/aws';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.USER_NKEY_SEED)
       }
     ]),
     

@@ -14,7 +14,7 @@ import { EcosystemConfigSettings, Invitation, OrgAgentType } from '@credebl/enum
 import { EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -185,6 +185,26 @@ export class EcosystemService {
     }
   }
 
+  async fetchLedgerDetailsbyId(id: string): Promise<LedgerDetails> {
+    const pattern = { cmd: 'get-network-details-by-id' };
+    const payload = { id };
+
+    return this.ecosystemServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      }); 
+  }
+
+
   /**
     * Description: get an ecosystem invitation 
     * @returns Get sent ecosystem invitation details
@@ -201,7 +221,26 @@ export class EcosystemService {
         ]
       };
 
-      return await this.ecosystemRepository.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
+      const ecosystemInvitations = await this.ecosystemRepository.getEcosystemInvitationsPagination(query, pageNumber, pageSize);
+
+      for (const invitation of ecosystemInvitations.invitations) {
+
+        const ledgerNetworks = invitation.ecosystem.ledgers;
+
+        const ledgerData = [];
+
+        if (Array.isArray(ledgerNetworks)) {
+          for (const ledger of ledgerNetworks) {
+            const ledgerDetails = await this.fetchLedgerDetailsbyId(ledger.toString());
+            ledgerData.push(ledgerDetails);            
+          }
+          invitation.ecosystem.networkDetails = ledgerData;
+        }
+
+      }
+
+      return ecosystemInvitations;
+
     } catch (error) {
       this.logger.error(`In error getEcosystemInvitations: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

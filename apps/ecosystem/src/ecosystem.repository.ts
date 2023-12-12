@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, EcosystemDetails, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, EcoInvitationsPagination, EcosystemDetails, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -512,7 +512,7 @@ export class EcosystemRepository {
   }
 
 
-  async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+  async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<EcoInvitationsPagination> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.ecosystem_invitations.findMany({
@@ -524,7 +524,8 @@ export class EcosystemRepository {
               select: {
                 id: true,
                 name: true,
-                logoUrl: true
+                logoUrl: true,
+                ledgers: true
               }
             }
           },

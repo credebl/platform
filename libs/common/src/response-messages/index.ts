@@ -219,7 +219,7 @@ export const ResponseMessages = {
     ecosystem: {
         success: {
             create: 'Ecosystem created successfully',
-            update: 'Ecosystem updated successfully',
+            update: 'Ecosystem details updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
             getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',

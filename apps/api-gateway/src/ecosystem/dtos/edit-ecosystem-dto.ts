@@ -18,6 +18,7 @@ export class EditEcosystemDto {
     @ApiPropertyOptional()
     @Transform(({ value }) => trim(value))
     @IsOptional()
+    @IsNotEmpty({ message: 'Description is required.' })
     @MinLength(2, { message: 'Description must be at least 2 characters.' })
     @MaxLength(255, { message: 'Description must be at most 255 characters.' })
     @IsString({ message: 'Description must be in string format.' })
@@ -27,7 +28,7 @@ export class EditEcosystemDto {
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'tag must be in string format.' })
-    tags?: string;
+    tags? = '';
   
     @ApiPropertyOptional()
     @IsOptional()

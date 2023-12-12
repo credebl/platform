@@ -459,7 +459,7 @@ export class EcosystemController {
   @Put('/:ecosystemId/')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER)

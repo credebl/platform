@@ -73,6 +73,5 @@ export interface IIssuedCredentialSearchinterface {
     sorting: string;
     sortByValue: string;
     searchByText: string;
-    // user: IUserRequestInterface
 }
 

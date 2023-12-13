@@ -2,6 +2,7 @@
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
+  OrgUsers,
   PlatformSettingsI,
   ShareUserCertificateI,
   UpdateUserProfile,
@@ -213,36 +214,15 @@ export class UserRepository {
           }
         ]
       },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        profileImg: true,
-        publicProfile: true,
-        isEmailVerified: true,
-        clientId: true,
-        clientSecret: true,
-        supabaseUserId: true,
+      include: {
         userOrgRoles: {
           include: {
-            orgRole: true,
-            organisation: {
-              include: {
-                // eslint-disable-next-line camelcase
-                org_agents: {
-                  include: {
-                    // eslint-disable-next-line camelcase
-                    agents_type: true
-                  }
-                }
-              }
+            orgRole: {
             }
           }
         }
       }
-    });
+  });
   }
 
   async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<UserI> {
@@ -350,7 +330,7 @@ export class UserRepository {
     pageNumber: number,
     pageSize: number,
     filterOptions?: object
-  ): Promise<object> {
+  ): Promise<OrgUsers> {
     const result = await this.prisma.$transaction([
       this.prisma.user.findMany({
         where: {
@@ -363,23 +343,39 @@ export class UserRepository {
           firstName: true,
           lastName: true,
           isEmailVerified: true,
-          clientId: true,
-          clientSecret: true,
-          supabaseUserId: true,
           userOrgRoles: {
             where: {
               ...filterOptions
               // Additional filtering conditions if needed
             },
-            include: {
-              orgRole: true,
+            select: {
+              id: true,
+              orgId: true,
+              orgRoleId: true,
+              orgRole: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true
+                }
+              },
               organisation: {
-                include: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  orgSlug: true,
+                  logoUrl: true,
                   // eslint-disable-next-line camelcase
                   org_agents: {
-                    include: {
-                      // eslint-disable-next-line camelcase
-                      agents_type: true
+                    select: {
+                      id: true,
+                      orgDid: true,
+                      walletName: true,
+                      agentSpinUpStatus: true,
+                      agentsTypeId: true,
+                      createDateTime: true,
+                      orgAgentTypeId:true
                     }
                   }
                 }

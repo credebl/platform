@@ -119,7 +119,7 @@ export class OrganizationController {
   @ApiParam({
     name: 'orgSlug',
     type: String,
-    required: false
+    required: true
   })
   async getPublicProfile(@Param('orgSlug') orgSlug: string, @Res() res: Response): Promise<object> {
     const userData = await this.organizationService.getPublicProfile(orgSlug);

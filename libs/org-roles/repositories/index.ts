@@ -4,6 +4,8 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { org_roles } from '@prisma/client';
 import { OrgRoles } from '../enums';
+// eslint-disable-next-line camelcase
+import { Org_roles } from '../interfaces/org-roles.interface';
 
 @Injectable()
 export class OrgRolesRepository {
@@ -24,9 +26,9 @@ export class OrgRolesRepository {
     }
   }
   
-
+  
     // eslint-disable-next-line camelcase
-    async getOrgRoles(): Promise<org_roles[]> {
+    async getOrgRoles(): Promise<Org_roles[]> {
         try {
             const roleDetails = await this.prisma.org_roles.findMany();
             const filteredRoles = roleDetails.filter(role => role.name !== OrgRoles.PLATFORM_ADMIN);

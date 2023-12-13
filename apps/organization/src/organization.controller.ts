@@ -6,7 +6,11 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IUpdateOrganization } from '../interfaces/organization.interface';
+// eslint-disable-next-line camelcase
+import { GetOrgs, IUpdateOrganization, OrgInvitationsPagination, getOrgById, organization_dashboard } from '../interfaces/organization.interface';
+import { organisation } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { Org_roles } from 'libs/org-roles/interfaces/org-roles.interface';
 
 @Controller()
 export class OrganizationController {
@@ -20,7 +24,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'create-organization' })
-  async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string }): Promise<object> {
+  async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string }): Promise<organisation> {
     return this.organizationService.createOrganization(payload.createOrgDto, payload.userId);
   }
 
@@ -31,7 +35,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'update-organization' })
-  async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: string, orgId: string }): Promise<object> {
+  async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: string, orgId: string }): Promise<organisation> {
     return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId, payload.orgId);
   }
 
@@ -43,7 +47,7 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-organizations' })
   async getOrganizations(
     @Body() payload: { userId: string; pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+  ): Promise<GetOrgs> {
     const { userId, pageNumber, pageSize, search } = payload;
     return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search);
   }
@@ -56,7 +60,7 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-public-organizations' })
   async getPublicOrganizations(
     @Body() payload: { pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+  ): Promise<GetOrgs> {
     const { pageNumber, pageSize, search } = payload;
     return this.organizationService.getPublicOrganizations(pageNumber, pageSize, search);
   }
@@ -67,12 +71,12 @@ export class OrganizationController {
    * @returns Get created organization details
    */
   @MessagePattern({ cmd: 'get-organization-by-id' })
-  async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<object> {
+  async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<getOrgById> {
     return this.organizationService.getOrganization(payload.orgId);
   }
 
   @MessagePattern({ cmd: 'get-organization-public-profile' })
-  async getPublicProfile(payload: { orgSlug }): Promise<object> {
+  async getPublicProfile(payload: { orgSlug }): Promise<getOrgById> {
     return this.organizationService.getPublicProfile(payload);
   }
 
@@ -84,7 +88,7 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-invitations-by-orgId' })
   async getInvitationsByOrgId(
     @Body() payload: { orgId: string; pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+  ): Promise<OrgInvitationsPagination> {
     return this.organizationService.getInvitationsByOrgId(
       payload.orgId,
       payload.pageNumber,
@@ -99,7 +103,8 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'get-org-roles' })
-  async getOrgRoles(): Promise<object> {
+  // eslint-disable-next-line camelcase
+  async getOrgRoles(): Promise<Org_roles[]> {
     return this.organizationService.getOrgRoles();
   }
 
@@ -150,12 +155,13 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'get-organization-dashboard' })
-  async getOrgDashboard(payload: { orgId: string; userId: string }): Promise<object> {
+  // eslint-disable-next-line camelcase
+  async getOrgDashboard(payload: { orgId: string; userId: string }): Promise<organization_dashboard> {
     return this.organizationService.getOrgDashboard(payload.orgId);
   }
 
   @MessagePattern({ cmd: 'fetch-organization-profile' })
-  async getOgPofile(payload: { orgId: string }): Promise<object> {
+  async getOgPofile(payload: { orgId: string }): Promise<organisation> {
     return this.organizationService.getOgPofile(payload.orgId);
   }
 

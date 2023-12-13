@@ -1,5 +1,5 @@
 // eslint-disable-next-line camelcase
-import { organisation, org_roles, user } from '@prisma/client';
+import { organisation, user } from '@prisma/client';
 import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
@@ -18,10 +18,13 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-import { IUpdateOrganization, OrgAgent } from '../interfaces/organization.interface';
+// eslint-disable-next-line camelcase
+import { GetOrgs, IUpdateOrganization, OrgAgent, OrgInvitationsPagination, getOrgById, organization_dashboard } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
+// eslint-disable-next-line camelcase
+import { Org_roles } from 'libs/org-roles/interfaces/org-roles.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -119,7 +122,7 @@ export class OrganizationService {
    * @returns Get created organizations details
    */
   // eslint-disable-next-line camelcase
-  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<GetOrgs> {
     try {
 
       const query = {
@@ -155,7 +158,7 @@ export class OrganizationService {
   * @returns Get public organizations details
   */
   // eslint-disable-next-line camelcase
-  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<GetOrgs> {
     try {
 
       const query = {
@@ -181,7 +184,7 @@ export class OrganizationService {
     }
   }
 
-  async getPublicProfile(payload: { orgSlug: string }): Promise<object> {
+  async getPublicProfile(payload: { orgSlug: string }): Promise<getOrgById> {
     const { orgSlug } = payload;
     try {
       
@@ -195,7 +198,7 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
       }
 
-      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails['id']);
+      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
       organizationDetails['credential_definitions'] = credentials;
       return organizationDetails;
 
@@ -211,7 +214,7 @@ export class OrganizationService {
      * @returns Get created organization details
      */
   // eslint-disable-next-line camelcase
-  async getOrganization(orgId: string): Promise<object> {
+  async getOrganization(orgId: string): Promise<getOrgById> {
     try {
 
       const query = {
@@ -232,11 +235,11 @@ export class OrganizationService {
     * @returns Get created invitation details
     */
   // eslint-disable-next-line camelcase
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<OrgInvitationsPagination> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
       for await (const item of getOrganization['invitations']) {
-        const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item.orgRoles);
+        const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item['orgRoles']);
         (item['orgRoles'] as object) = getOrgRoles;
       };
       return getOrganization;
@@ -253,7 +256,7 @@ export class OrganizationService {
    */
 
   // eslint-disable-next-line camelcase
-  async getOrgRoles(): Promise<org_roles[]> {
+  async getOrgRoles(): Promise< Org_roles[]> {
     try {
       return this.orgRoleService.getOrgRoles();
     } catch (error) {
@@ -478,7 +481,8 @@ export class OrganizationService {
     }
   }
 
-  async getOrgDashboard(orgId: string): Promise<object> {
+  // eslint-disable-next-line camelcase
+  async getOrgDashboard(orgId: string): Promise<organization_dashboard> {
     try {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {

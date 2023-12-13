@@ -95,6 +95,7 @@ export class ConnectionRepository {
   // eslint-disable-next-line camelcase
   async saveConnectionWebhook(payload: IConnectionInterface): Promise<object> {
     try {
+
       let organisationId: string;
       const { connectionDto, orgId } = payload;
 
@@ -104,6 +105,14 @@ export class ConnectionRepository {
       } else {
         organisationId = orgId;
       }
+
+      const walletLabelabelName = connectionDto.theirLabel;
+
+      const firstThreeLetters = walletLabelabelName.slice(0, 3);
+      const lastThreeLetters = walletLabelabelName.slice(-3);
+      const middleMasked = walletLabelabelName.slice(3, -3).replace(/./g, '*');
+
+      const maskedTheirLabel = firstThreeLetters + middleMasked + lastThreeLetters;
 
       const agentDetails = await this.prisma.connections.upsert({
         where: {
@@ -121,7 +130,7 @@ export class ConnectionRepository {
           lastChangedBy: organisationId,
           connectionId: connectionDto?.id,
           state: connectionDto?.state,
-          theirLabel: connectionDto?.theirLabel,
+          theirLabel: maskedTheirLabel,
           orgId: organisationId
         }
       });
@@ -131,7 +140,7 @@ export class ConnectionRepository {
       throw error;
     }
   }
-
+    
   /**
    * Description: Save ShorteningUrl details
    * @param referenceId

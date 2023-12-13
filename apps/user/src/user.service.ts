@@ -35,7 +35,7 @@ import {
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
-  userInfo
+    userInfo
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -363,7 +363,7 @@ export class UserService {
     }
   }
 
-  async getProfile(payload: { id }): Promise<object> {
+  async getProfile(payload: { id }): Promise<UserI> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
       const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany({
@@ -677,6 +677,7 @@ export class UserService {
    */
   async getOrgUsers(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
     try {
+  
       const query = {
         userOrgRoles: {
           some: { orgId }

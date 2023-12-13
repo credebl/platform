@@ -7,7 +7,7 @@ import {
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
-  userInfo
+    userInfo
 } from '../interfaces/user.interface';
 
 import { InternalServerErrorException } from '@nestjs/common';
@@ -221,25 +221,32 @@ export class UserRepository {
         lastName: true,
         profileImg: true,
         publicProfile: true,
-        isEmailVerified: true,
-        clientId: true,
-        clientSecret: true,
         supabaseUserId: true,
         userOrgRoles: {
-          include: {
-            orgRole: true,
-            organisation: {
-              include: {
-                // eslint-disable-next-line camelcase
-                org_agents: {
-                  include: {
-                    // eslint-disable-next-line camelcase
-                    agents_type: true
-                  }
-                }
+          select:{
+            id: true,
+            userId:true,
+            orgRoleId:true,
+            orgId:true,
+            orgRole: {
+              select:{
+                id: true,
+                name: true,
+                description: true
               }
-            }
+            },
+            organisation: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                orgSlug:true,
+                logoUrl: true,
+                website: true,
+                publicProfile: true
+              }
           }
+          }   
         }
       }
     });
@@ -358,18 +365,18 @@ export class UserRepository {
         },
         select: {
           id: true,
-          username: true,
+username: true,
           email: true,
           firstName: true,
           lastName: true,
-          isEmailVerified: true,
+isEmailVerified: true,
           clientId: true,
           clientSecret: true,
           supabaseUserId: true,
           userOrgRoles: {
-            where: {
+                        where: {
               ...filterOptions
-              // Additional filtering conditions if needed
+// Additional filtering conditions if needed
             },
             include: {
               orgRole: true,

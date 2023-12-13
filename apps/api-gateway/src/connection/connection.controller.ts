@@ -11,7 +11,6 @@ import { ConnectionService } from './connection.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
-// import { Connections } from './enums/connections.enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { OrgRoles } from 'libs/org-roles/enums';

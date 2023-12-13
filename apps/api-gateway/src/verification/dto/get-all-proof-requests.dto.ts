@@ -19,9 +19,9 @@ export class GetAllProofRequestsDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    sorting: string = 'id';
+    sortByValue: string = SortValue.DESC;
 
     @ApiProperty({ required: false })
     @IsOptional()
-    sortByValue: string = SortValue.DESC;
+    sorting: string = 'id';
 }

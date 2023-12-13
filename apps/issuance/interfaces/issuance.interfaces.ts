@@ -19,10 +19,7 @@ export interface IIssuance {
 export interface IIssueCredentials {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
   user: IUserRequest;
-  // connectionId: string;
-  // threadId: string;
   orgId: string;
-  // state: string;
 }
 
 export interface IIssueCredentialsDefinitions {

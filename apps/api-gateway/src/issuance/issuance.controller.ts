@@ -118,16 +118,16 @@ export class IssuanceController {
       required: false
     })
     @ApiQuery({
-      name: 'sorting',
-      type: String,
-      required: false
-    })
-    @ApiQuery({
       name: 'sortByValue',
       type: String,
       required: false
     })
-
+    @ApiQuery({
+      name: 'sorting',
+      type: String,
+      required: false
+    })
+    
     @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

@@ -10,12 +10,12 @@ export class GetAllIssuedCredentialsDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    @Type(() => String)
-    searchByText: string = '';
+    pageSize: number = 10;
 
     @ApiProperty({ required: false })
     @IsOptional()
-    pageSize: number = 10;
+    @Type(() => String)
+    searchByText: string = '';
 
     @ApiProperty({ required: false })
     @IsOptional()

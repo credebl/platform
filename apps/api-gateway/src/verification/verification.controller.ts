@@ -135,15 +135,15 @@ export class VerificationController {
       required: false
     })
     @ApiQuery({
+        name: 'pageSize',
+        type: Number,
+        required: false
+    })
+    @ApiQuery({
       name: 'searchByText',
       type: String,
       required: false
-    })
-    @ApiQuery({
-      name: 'pageSize',
-      type: Number,
-      required: false
-    })
+    })   
     @ApiQuery({
       name: 'sorting',
       type: String,

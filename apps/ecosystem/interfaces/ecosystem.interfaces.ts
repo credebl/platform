@@ -178,23 +178,17 @@ export interface EndorsementTransactionPayloadDetails {
 }
 
 export interface CreateEcosystem {
-  name: string;
-
+  name?: string;
   description?: string;
-
   tags?: string;
-
-  userId: string;
-
+  userId?: string;
   logo?: string;
-
-  orgName: string;
-
-  orgDid: string;
-
+  orgName?: string;
+  orgDid?: string;
   orgId?: string;
-
-  autoEndorsement: boolean
+  autoEndorsement?: boolean;
+  lastChangedBy?: string;
+  ledgers?: string[];
 }
 
 export interface OrganizationData {
@@ -224,7 +218,15 @@ export interface OrgAgent {
   agentsTypeId: string;
   orgId: string;
   orgAgentTypeId: string;
-  ledgerId: string;
+  ledgerId?: string;
+  ledgers?: LedgerDetails;
+}
+
+export interface LedgerDetails {
+  id: string,
+  name: string,
+  indyNamespace: string,
+  networkUrl: string
 }
 
 export interface EcosystemDetails {
@@ -239,3 +241,41 @@ export interface EcosystemDetails {
     };
   }[];
 }
+
+export interface EcosystemInvitationDetails {
+  name: string;
+  id: string;
+  logoUrl: string;
+  description?: string;
+  tags?: string;
+  createDateTime?: Date;
+  createdBy?: string;
+  lastChangedDateTime?: Date;
+  lastChangedBy?: string;
+  deletedAt?: Date;
+  autoEndorsement?: boolean;
+  ledgers: Prisma.JsonValue;  
+  networkDetails?: LedgerDetails[];            
+}
+
+
+export interface InvitationResponse {
+    id: string;
+    email: string;
+    status: string;
+    ecosystemId: string;
+    userId: string;
+    orgId: string;
+    deletedAt: Date;
+    ecosystem: EcosystemInvitationDetails;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+}
+
+export interface EcoInvitationsPagination {
+  invitations: InvitationResponse[];
+  totalPages: number;
+}
+

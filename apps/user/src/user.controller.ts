@@ -37,7 +37,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-user-profile' })
-  async getProfile(payload: { id }): Promise<object> {
+  async getProfile(payload: { id }): Promise<UserI> {
     return this.userService.getProfile(payload);
   }
 

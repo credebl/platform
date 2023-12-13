@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { Injectable, Logger } from '@nestjs/common';
-
+import { user_Activity } from '../interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { user_activity } from '@prisma/client';
 
@@ -23,7 +23,7 @@ export class UserActivityRepository {
     }
 
 
-    async getRecentActivities(userId: string, limit: number): Promise<object[]> {
+    async getRecentActivities(userId: string, limit: number): Promise<user_Activity[]> {
         return this.prisma.user_activity.findMany({
             where: {
                 userId

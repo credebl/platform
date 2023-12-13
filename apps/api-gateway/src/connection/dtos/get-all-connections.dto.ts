@@ -6,12 +6,12 @@ import { SortValue } from "../../enum";
 export class GetAllConnectionsDto {
     @ApiProperty({ required: false })
     @IsOptional()
-    pageNumber: number = 1;
+    @Type(() => String)
+    searchByText: string = '';
 
     @ApiProperty({ required: false })
     @IsOptional()
-    @Type(() => String)
-    searchByText: string = '';
+    pageNumber: number = 1;
 
     @ApiProperty({ required: false })
     @IsOptional()

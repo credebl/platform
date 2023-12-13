@@ -85,21 +85,53 @@ export interface UsersProfile {
   
   export interface Attribute {
     [key: string]: string;
-    label: string;
-  }
-  
-  export interface CheckUserDetails {
-    isEmailVerified?: boolean;
-    isFidoVerified?: boolean;
-    isSupabase?: boolean;
-    isExist?: boolean;
+    label: string
   }
 
-  export interface UserCredentials {
+  export interface OrgUsers {
+    totalPages: number,
+    users: org_users[]
+  }
+
+  interface org_users {
     id: string;
-    imageUrl?: string;
-    credentialId?: string;
-    createDateTime: Date;
-    lastChangedDateTime: Date;
-    deletedAt: Date;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    isEmailVerified: boolean;
+    userOrgRoles: UserOrgRoles[];
+  }
+
+  interface UserOrgRoles {
+    id: string;
+    orgId: string;
+    orgRoleId: string;
+    orgRole: OrgRole;
+    organisation: Organization
+  }
+
+  interface OrgRole {
+    id: string;
+    name: string,
+    description: string  
+  }
+
+  interface Organization {
+    id: string,
+    name: string,
+    description: string,
+    orgSlug: string,
+    logoUrl: string,
+    org_agents: OrgAgents[];
+  }
+
+  interface OrgAgents {
+    id: string,
+    orgDid: string,
+    walletName: string,
+    agentSpinUpStatus: number,
+    agentsTypeId: string,
+    createDateTime: Date,
+    orgAgentTypeId:string
   }

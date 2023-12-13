@@ -72,12 +72,6 @@ export class ConnectionPayload {
 export class IFetchConnectionInterface {
   connectionSearchCriteria: IConnectionSearchCriteria;
   user: IUserRequest;
-  // outOfBandId: string;
-  // alias: string;
-  // state: string;
-  // myDid: string;
-  // theirDid: string;
-  // theirLabel: string;
   orgId: string;
 }
 

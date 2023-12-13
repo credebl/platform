@@ -106,14 +106,45 @@ export class ConnectionRepository {
         organisationId = orgId;
       }
 
-      const walletLabelabelName = connectionDto.theirLabel;
+      const walletLabelName = connectionDto?.theirLabel;
+      let maskedTheirLabel: string;   
+      let firstLetters: string;
+      let maskedMiddleLetters: string;
+      let lastLetters: string;
 
-      const firstThreeLetters = walletLabelabelName.slice(0, 3);
-      const lastThreeLetters = walletLabelabelName.slice(-3);
-      const middleMasked = walletLabelabelName.slice(3, -3).replace(/./g, '*');
-
-      const maskedTheirLabel = firstThreeLetters + middleMasked + lastThreeLetters;
-
+      switch (true) {
+        case 3 >= walletLabelName.length:
+          firstLetters = walletLabelName.slice(0, 1);
+          maskedMiddleLetters = walletLabelName.slice(1).replace(/./g, '*');
+          maskedTheirLabel = firstLetters + maskedMiddleLetters;
+        break;
+    
+        case 3 < walletLabelName.length && 6 > walletLabelName.length:
+          firstLetters = walletLabelName.slice(0, 1);
+          lastLetters = walletLabelName.slice(-1);
+          maskedMiddleLetters = walletLabelName.slice(1, -1).replace(/./g, '*');
+          maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
+        break;
+    
+        case 6 <= walletLabelName.length && 8 >= walletLabelName.length:
+          firstLetters = walletLabelName.slice(0, 2);
+          lastLetters = walletLabelName.slice(-2);
+          maskedMiddleLetters = walletLabelName.slice(2, -2).replace(/./g, '*');
+          maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
+        break;
+    
+        case 8 < walletLabelName.length:
+          firstLetters = walletLabelName.slice(0, 3);
+          lastLetters = walletLabelName.slice(-3);
+          maskedMiddleLetters = walletLabelName.slice(3, -3).replace(/./g, '*');
+          maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
+        break;
+    
+      default:
+        maskedTheirLabel = walletLabelName;
+        break;
+    }    
+       
       const agentDetails = await this.prisma.connections.upsert({
         where: {
           connectionId: connectionDto?.id

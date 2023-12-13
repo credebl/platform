@@ -17,3 +17,11 @@ export interface ICredDeffSchemaSearchInterface {
     sortByValue: string;
     user?: IUserRequestInterface
 }
+export interface IConnectionSearchinterface {
+    pageNumber: number;
+    pageSize: number;
+    sorting: string;
+    sortByValue: string;
+    searchByText: string;
+    user?: IUserRequestInterface
+}

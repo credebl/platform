@@ -100,11 +100,23 @@ export class IssuanceDto {
 
     @ApiProperty()
     @IsOptional()
+    schemaId: string;
+
+    @ApiProperty()
+    @IsOptional()
+    credDefId: string;
+
+    @ApiProperty()
+    @IsOptional()
     credentialAttributes: CredentialAttributes[];
 
     @ApiProperty()
     @IsOptional()
     autoAcceptCredential: string;
+    
+    @ApiProperty()
+    @IsOptional()
+    contextCorrelationId: string;
 }
 
 

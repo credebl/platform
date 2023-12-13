@@ -1,16 +1,34 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { toNumber } from '@credebl/common/cast.helper';
 
-interface CredentialOffer {
-    emailId: string;
-    attributes: Attribute[];
+class Attribute {
+
+    @IsNotEmpty({ message: 'Please provide a valid attribute name' })
+    @Transform(({ value }) => value.trim())
+    name: string;
+
+    value: string;
 }
 
-interface Attribute {
-    name: string;
-    value: string;
+class CredentialOffer {
+
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
+    @IsNotEmpty({ message: 'Please provide valid attributes' })
+    @IsArray({ message: 'attributes should be array' })
+    @ValidateNested({ each: true })
+    @Type(() => Attribute)
+    @IsOptional()
+    attributes: Attribute[];
+
+    @ApiProperty({ example: 'awqx@getnada.com' })
+    @IsEmail()
+    @IsNotEmpty({ message: 'Please provide valid email' })
+    @IsString({ message: 'email should be string' })
+    @Transform(({ value }) => value.trim())
+    @IsOptional()
+    emailId: string;
 }
 
 export class IssueCredentialDto {
@@ -42,7 +60,6 @@ export class IssueCredentialDto {
     protocolVersion?: string;
     orgId: string;
 }
-
 
 export class IssuanceDto {
     @ApiProperty()
@@ -83,11 +100,23 @@ export class IssuanceDto {
 
     @ApiProperty()
     @IsOptional()
+    schemaId: string;
+
+    @ApiProperty()
+    @IsOptional()
+    credDefId: string;
+
+    @ApiProperty()
+    @IsOptional()
     credentialAttributes: CredentialAttributes[];
 
     @ApiProperty()
     @IsOptional()
     autoAcceptCredential: string;
+    
+    @ApiProperty()
+    @IsOptional()
+    contextCorrelationId: string;
 }
 
 
@@ -118,18 +147,22 @@ export class OutOfBandCredentialDto {
     @IsEmail()
     @IsNotEmpty({ message: 'Please provide valid email' })
     @IsString({ message: 'email should be string' })
+    @Transform(({ value }) => value.trim().toLowerCase())
     @IsOptional()
     emailId: string;
 
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
+    @ValidateNested({ each: true })
+    @Type(() => Attribute)
     @IsOptional()
     attributes: Attribute[];
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid credential definition id' })
     @IsString({ message: 'credential definition id should be string' })
+    @Transform(({ value }) => value.trim())
     credentialDefinitionId: string;
 
     @ApiProperty({ example: 'string' })

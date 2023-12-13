@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { NatsOptions, Transport } from '@nestjs/microservices';
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const commonNatsOptions = (name: string, isClient = true) => {
   const common: NatsOptions = {
     transport: Transport.NATS,

@@ -33,8 +33,9 @@ export class PlatformController {
         @Res() res: Response,
         @User() user: IUserRequestInterface
     ): Promise<object> {
-        const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
+        const { ledgerId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
         const schemaSearchCriteria: ISchemaSearchInterface = {
+            ledgerId,
             pageNumber,
             searchByText,
             pageSize,
@@ -42,7 +43,6 @@ export class PlatformController {
             sortByValue
         };
         const schemasResponse = await this.platformService.getAllSchema(schemaSearchCriteria, user);
-
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.schema.success.fetch,

@@ -1,11 +1,13 @@
 import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 class AttributeValue {
 
     @IsString()
     @IsNotEmpty({ message: 'attributeName is required.' })
+    @Transform(({ value }) => value.trim())
     attributeName: string;
 
     @IsString()
@@ -19,11 +21,13 @@ class AttributeValue {
 
 export class CreateSchemaDto {
     @ApiProperty()
-    @IsString({ message: 'schema version must be a string' }) @IsNotEmpty({ message: 'please provide valid schema version' })
+    @IsString({ message: 'schema version must be a string' }) 
+    @IsNotEmpty({ message: 'please provide valid schema version' })
     schemaVersion: string;
 
     @ApiProperty()
-    @IsString({ message: 'schema name must be a string' }) @IsNotEmpty({ message: 'please provide valid schema name' })
+    @IsString({ message: 'schema name must be a string' })
+    @IsNotEmpty({ message: 'please provide valid schema name' })
     schemaName: string;
 
     @ApiProperty({

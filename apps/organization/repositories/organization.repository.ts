@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IUpdateOrganization } from '../interfaces/organization.interface';
+import { GetOrgs, IUpdateOrganization, OrgInvitationsPagination, getOrgById, organization_dashboard } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -204,21 +204,29 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
+  async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<OrgInvitationsPagination> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.org_invitations.findMany({
           where: {
             ...queryObject
           },
-          include: {
+          select: {
+            id: true,
+            orgId: true,
+            email: true,
+            userId: true,
+            status: true,
+            createDateTime: true,
+            createdBy: true,
             organisation: {
               select: {
                 id: true,
                 name: true,
                 logoUrl: true
               }
-            }
+            },
+            orgRoles: true
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
@@ -244,7 +252,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<OrgInvitationsPagination> {
     try {
       const query = {
         orgId,
@@ -261,7 +269,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrganization(queryObject: object): Promise<object> {
+  async getOrganization(queryObject: object): Promise<getOrgById> {
     try {
       return this.prisma.organisation.findFirst({
         where: {
@@ -283,20 +291,19 @@ export class OrganizationRepository {
           },
           org_agents: {
             select: {
-              orgDid: true,
               id: true,
+              orgDid: true,
               walletName: true,
+              agentEndPoint: true,
               agentSpinUpStatus: true,
               agentsTypeId: true,
+              orgAgentTypeId: true,
               createDateTime: true,
-              orgAgentTypeId:true,
               agent_invitations: {
                 select: {
                   id: true,
                   connectionInvitation: true,
-                  multiUse: true,
-                  createDateTime: true,
-                  lastChangedDateTime:true
+                  multiUse: true
                 }
               },
               org_agent_type: true,
@@ -317,7 +324,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgDashboard(orgId: string): Promise<object> {
+  async getOrgDashboard(orgId: string): Promise<organization_dashboard> {
 
     const query = {
       where: {
@@ -413,7 +420,7 @@ export class OrganizationRepository {
     filterOptions: object,
     pageNumber: number,
     pageSize: number
-  ): Promise<object> {
+  ): Promise<GetOrgs> {
     try {
       const sortByName = 'asc';
       const result = await this.prisma.$transaction([
@@ -433,7 +440,8 @@ export class OrganizationRepository {
                 orgRole: {
                   select: {
                     id: true,
-                    name: true
+                    name: true,
+                    description: true
                   }
                 }
               },
@@ -447,7 +455,7 @@ export class OrganizationRepository {
           skip: (pageNumber - 1) * pageSize,
           orderBy: {
             name: sortByName
-
+            
           }
         }),
         this.prisma.organisation.count({

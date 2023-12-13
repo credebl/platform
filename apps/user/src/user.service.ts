@@ -29,11 +29,10 @@ import { user } from '@prisma/client';
 import {
   AddPasskeyDetails,
   Attribute,
-  CheckUserDetails,
-  OrgInvitations,
-  PlatformSettings,
-  ShareUserCertificate,
-  UserInvitations,
+  InvitationsI,
+  OrgUsers,
+  PlatformSettingsI,
+  ShareUserCertificateI,
   UpdateUserProfile,
   UserCredentials,
   UserEmailVerificationDto,
@@ -729,7 +728,7 @@ export class UserService {
    * @param orgId
    * @returns users list
    */
-  async getOrgUsers(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getOrgUsers(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<OrgUsers> {
     try {
   
       const query = {

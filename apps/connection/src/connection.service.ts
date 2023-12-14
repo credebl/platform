@@ -242,6 +242,9 @@ export class ConnectionService {
         throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
       }
     } catch (error) {
+;      if (404 === error.status) {
+        throw new NotFoundException(error.response.message);
+      }
       throw new RpcException(
         `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
       );

@@ -85,21 +85,23 @@ export class VerificationRepository {
           id: true
         },
         orderBy: {
-          [proofRequestsSearchCriteria.sorting]:
-            'DESC' === proofRequestsSearchCriteria.sortByValue
+          [proofRequestsSearchCriteria?.sorting || 'createDateTime']:
+            'DESC' === proofRequestsSearchCriteria?.sortByValue
               ? 'desc'
-              : 'ASC' === proofRequestsSearchCriteria.sortByValue
+              : 'ASC' === proofRequestsSearchCriteria?.sortByValue
               ? 'asc'
-              : 'desc'
+              : 'asc'
         },
         take: Number(proofRequestsSearchCriteria.pageSize),
         skip: (proofRequestsSearchCriteria.pageNumber - 1) * proofRequestsSearchCriteria.pageSize
       });
       const proofRequestsCount = await this.prisma.presentations.count({
         where: {
-          organisation: {
-            id: orgId
-          }
+          orgId,
+          OR: [
+            { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
+            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
+        ]
         }
       });
 

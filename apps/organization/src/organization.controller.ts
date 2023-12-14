@@ -6,11 +6,9 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-// eslint-disable-next-line camelcase
-import { GetOrgs, IUpdateOrganization, OrgInvitationsPagination, getOrgById, organization_dashboard } from '../interfaces/organization.interface';
+import { GetOrgById, GetOrgs, IUpdateOrganization, OrgInvitationsPagination, OrganizationDashboard } from '../interfaces/organization.interface';
 import { organisation } from '@prisma/client';
-// eslint-disable-next-line camelcase
-import { Org_roles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 
 @Controller()
 export class OrganizationController {
@@ -71,12 +69,12 @@ export class OrganizationController {
    * @returns Get created organization details
    */
   @MessagePattern({ cmd: 'get-organization-by-id' })
-  async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<getOrgById> {
+  async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<GetOrgById> {
     return this.organizationService.getOrganization(payload.orgId);
   }
 
   @MessagePattern({ cmd: 'get-organization-public-profile' })
-  async getPublicProfile(payload: { orgSlug }): Promise<getOrgById> {
+  async getPublicProfile(payload: { orgSlug }): Promise<GetOrgById> {
     return this.organizationService.getPublicProfile(payload);
   }
 
@@ -103,8 +101,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'get-org-roles' })
-  // eslint-disable-next-line camelcase
-  async getOrgRoles(): Promise<Org_roles[]> {
+  async getOrgRoles(): Promise<IOrgRoles[]> {
     return this.organizationService.getOrgRoles();
   }
 
@@ -123,7 +120,7 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'fetch-user-invitations' })
   async fetchUserInvitation(
     @Body() payload: { email: string; status: string; pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+  ): Promise<OrgInvitationsPagination> {
     return this.organizationService.fetchUserInvitation(
       payload.email,
       payload.status,
@@ -155,8 +152,7 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'get-organization-dashboard' })
-  // eslint-disable-next-line camelcase
-  async getOrgDashboard(payload: { orgId: string; userId: string }): Promise<organization_dashboard> {
+  async getOrgDashboard(payload: { orgId: string; userId: string }): Promise<OrganizationDashboard> {
     return this.organizationService.getOrgDashboard(payload.orgId);
   }
 

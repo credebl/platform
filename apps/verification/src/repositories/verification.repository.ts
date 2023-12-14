@@ -81,7 +81,8 @@ export class VerificationRepository {
           createdBy: true,
           orgId: true,
           state: true,
-          connectionId: true
+          connectionId: true,
+          id: true
         },
         orderBy: {
           [proofRequestsSearchCriteria.sorting]:

@@ -181,6 +181,7 @@ export interface CreateEcosystem {
   name?: string;
   description?: string;
   tags?: string;
+  logoUrl?:string;
   userId?: string;
   logo?: string;
   orgName?: string;

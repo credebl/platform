@@ -96,3 +96,12 @@ export interface UserI {
     isSupabase?: boolean;
     isExist?: boolean;
   }
+
+  export interface UserCredentials {
+    id: string;
+    imageUrl?: string;
+    credentialId?: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    deletedAt: Date;
+  }

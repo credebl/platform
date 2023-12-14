@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, PlatformSettingsI, ShareUserCertificateI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, CheckUserDetails, PlatformSettingsI, ShareUserCertificateI, UInvitation, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -63,12 +63,12 @@ export class UserController {
 
 
   @MessagePattern({ cmd: 'get-user-credentials-by-id' })
-  async getUserCredentialsById(payload: { credentialId }): Promise<object> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
     return this.userService.getUserCredentialsById(payload);
   }
 
   @MessagePattern({ cmd: 'get-org-invitations' })
-  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<object> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UInvitation> {
     return this.userService.invitations(payload);
   }
 
@@ -119,7 +119,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'check-user-exist' })
-  async checkUserExist(payload: { userEmail: string }): Promise<string | object> {
+  async checkUserExist(payload: { userEmail: string }): Promise<string | CheckUserDetails> {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })

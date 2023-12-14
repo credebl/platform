@@ -36,7 +36,7 @@ export interface Org_Role {
   userOrgRoles: UserOrgRole;
 }
 
-export interface getOrgById {
+export interface GetOrgById {
   id: string;
   name: string;
   description: string;
@@ -131,7 +131,7 @@ interface OrganizationPagination {
   logoUrl: string;
 }
 
-export interface organization_dashboard {
+export interface OrganizationDashboard {
   usersCount: number,
   schemasCount: number,
   credentialsCount: number,

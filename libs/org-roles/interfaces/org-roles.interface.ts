@@ -1,4 +1,4 @@
-export interface Org_roles {
+export interface IOrgRoles {
     id: string;
     name: string;
     description: string;

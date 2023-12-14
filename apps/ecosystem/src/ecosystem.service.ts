@@ -119,7 +119,7 @@ export class EcosystemService {
 
     if (tags) { updateData.tags = tags; }
 
-    if (logo) { updateData.logo = logo; }
+    if (logo) { updateData.logoUrl = logo; }
     
     if ('' !== autoEndorsement.toString()) { updateData.autoEndorsement = autoEndorsement; }
 

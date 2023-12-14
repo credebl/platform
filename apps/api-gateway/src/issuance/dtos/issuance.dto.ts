@@ -136,7 +136,7 @@ export class CredentialAttributes {
 
 export class OutOfBandCredentialDto {
 
-    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attribute': [{ 'value': 'string', 'name': 'string' }] }] })
+    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array'})
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads`})

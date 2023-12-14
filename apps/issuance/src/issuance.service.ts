@@ -230,9 +230,12 @@ export class IssuanceService {
       if (0 !== getIssuedCredentialsList.issuedCredentialsCount) {
         return issuedCredentialsResponse;
       } else {
-        throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
+        throw new NotFoundException(ResponseMessages.issuance.error.credentialsNotFound);
       }
     } catch (error) {
+      if (404 === error.status) {
+        throw new NotFoundException(error.response.message);
+      }
       throw new RpcException(
         `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
       );

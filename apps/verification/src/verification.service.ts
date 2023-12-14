@@ -91,6 +91,9 @@ export class VerificationService {
         throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
       }
     } catch (error) {
+      if (404 === error.status) {
+        throw new NotFoundException(error.response.message);
+      }
       throw new RpcException(
         `[getConnections] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
       );

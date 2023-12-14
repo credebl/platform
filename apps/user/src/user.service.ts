@@ -29,9 +29,11 @@ import { user } from '@prisma/client';
 import {
   AddPasskeyDetails,
   Attribute,
+  CheckUserDetails,
   InvitationsI,
   PlatformSettingsI,
   ShareUserCertificateI,
+  UInvitation,
   UpdateUserProfile,
   UserEmailVerificationDto,
   UserI,
@@ -447,7 +449,7 @@ export class UserService {
     }
   }
 
-  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<object> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<UInvitation> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
 
@@ -722,7 +724,7 @@ export class UserService {
     }
   }
 
-  async checkUserExist(email: string): Promise<string | object> {
+  async checkUserExist(email: string): Promise<CheckUserDetails> {
     try {
       const userDetails = await this.userRepository.checkUniqueUserExist(email);
       if (userDetails && !userDetails.isEmailVerified) {

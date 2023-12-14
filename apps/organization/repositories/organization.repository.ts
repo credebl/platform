@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { GetOrgs, IUpdateOrganization, OrgInvitationsPagination, getOrgById, organization_dashboard } from '../interfaces/organization.interface';
+import { GetOrgById, GetOrgs, IUpdateOrganization, OrgInvitationsPagination, OrganizationDashboard } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -176,7 +176,7 @@ export class OrganizationRepository {
     pageNumber: number,
     pageSize: number,
     search = ''
-  ): Promise<object> {
+  ): Promise<OrgInvitationsPagination> {
 
     this.logger.log(search);
     const query = {
@@ -269,7 +269,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrganization(queryObject: object): Promise<getOrgById> {
+  async getOrganization(queryObject: object): Promise<GetOrgById> {
     try {
       return this.prisma.organisation.findFirst({
         where: {
@@ -324,7 +324,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgDashboard(orgId: string): Promise<organization_dashboard> {
+  async getOrgDashboard(orgId: string): Promise<OrganizationDashboard> {
 
     const query = {
       where: {

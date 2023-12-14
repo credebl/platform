@@ -9,11 +9,9 @@ import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
-// eslint-disable-next-line camelcase
-import { Org_roles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { organisation } from '@prisma/client';
-// eslint-disable-next-line camelcase
-import { GetOrgs, OrgInvitationsPagination, getOrgById, organization_dashboard } from 'apps/organization/interfaces/organization.interface';
+import { GetOrgById, GetOrgs, OrgInvitationsPagination, OrganizationDashboard } from 'apps/organization/interfaces/organization.interface';
 import { OrgUsers } from 'apps/user/interfaces/user.interface';
 
 @Injectable()
@@ -47,8 +45,8 @@ export class OrganizationService extends BaseService {
    * @param
    * @returns Organizations details
    */
-  // eslint-disable-next-line camelcase
-  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: string): Promise<{ response: Org_roles[] }> {
+
+  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: string): Promise<{ response: GetOrgs}> {
     const payload = { userId, ...getAllOrgsDto };
     return this.sendNats(this.serviceProxy, 'get-organizations', payload);
   }
@@ -63,7 +61,7 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-public-organizations', payload);
   }
 
-  async getPublicProfile(orgSlug: string): Promise<{ response: getOrgById }> {
+  async getPublicProfile(orgSlug: string): Promise<{ response: GetOrgById }> {
     const payload = { orgSlug };
     try {
       return this.sendNats(this.serviceProxy, 'get-organization-public-profile', payload);
@@ -77,7 +75,7 @@ export class OrganizationService extends BaseService {
    * @param orgId
    * @returns Organization get Success
    */
-  async getOrganization(orgId: string, userId: string): Promise<{ response: getOrgById }> {
+  async getOrganization(orgId: string, userId: string): Promise<{ response: GetOrgById }> {
     const payload = { orgId, userId };
     return this.sendNats(this.serviceProxy, 'get-organization-by-id', payload);
   }
@@ -96,8 +94,7 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-invitations-by-orgId', payload);
   }
 
-  // eslint-disable-next-line camelcase
-  async getOrganizationDashboard(orgId: string, userId: string): Promise<{ response: organization_dashboard }> {
+  async getOrganizationDashboard(orgId: string, userId: string): Promise<{ response: OrganizationDashboard }> {
     const payload = { orgId, userId };
     return this.sendNats(this.serviceProxy, 'get-organization-dashboard', payload);
   }
@@ -107,8 +104,8 @@ export class OrganizationService extends BaseService {
    * @param
    * @returns get organization roles
    */
-  // eslint-disable-next-line camelcase
-  async getOrgRoles(): Promise<Org_roles[]> {
+
+  async getOrgRoles(): Promise<IOrgRoles[]> {
     const payload = {};
     return this.sendNats(this.serviceProxy, 'get-org-roles', payload);
   }

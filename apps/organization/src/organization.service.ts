@@ -18,13 +18,11 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-// eslint-disable-next-line camelcase
-import { GetOrgs, IUpdateOrganization, OrgAgent, OrgInvitationsPagination, getOrgById, organization_dashboard } from '../interfaces/organization.interface';
+import { GetOrgById, GetOrgs, IUpdateOrganization, OrgAgent, OrgInvitationsPagination, OrganizationDashboard } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
-// eslint-disable-next-line camelcase
-import { Org_roles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -121,7 +119,7 @@ export class OrganizationService {
    * @param 
    * @returns Get created organizations details
    */
-  // eslint-disable-next-line camelcase
+
   async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<GetOrgs> {
     try {
 
@@ -157,7 +155,7 @@ export class OrganizationService {
   * @param 
   * @returns Get public organizations details
   */
-  // eslint-disable-next-line camelcase
+
   async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<GetOrgs> {
     try {
 
@@ -184,7 +182,7 @@ export class OrganizationService {
     }
   }
 
-  async getPublicProfile(payload: { orgSlug: string }): Promise<getOrgById> {
+  async getPublicProfile(payload: { orgSlug: string }): Promise<GetOrgById> {
     const { orgSlug } = payload;
     try {
       
@@ -213,8 +211,8 @@ export class OrganizationService {
      * @param orgId Registration Details
      * @returns Get created organization details
      */
-  // eslint-disable-next-line camelcase
-  async getOrganization(orgId: string): Promise<getOrgById> {
+
+  async getOrganization(orgId: string): Promise<GetOrgById> {
     try {
 
       const query = {
@@ -234,7 +232,7 @@ export class OrganizationService {
     * @param orgId Registration Details
     * @returns Get created invitation details
     */
-  // eslint-disable-next-line camelcase
+
   async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<OrgInvitationsPagination> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
@@ -255,8 +253,8 @@ export class OrganizationService {
    * @returns
    */
 
-  // eslint-disable-next-line camelcase
-  async getOrgRoles(): Promise< Org_roles[]> {
+
+  async getOrgRoles(): Promise< IOrgRoles[]> {
     try {
       return this.orgRoleService.getOrgRoles();
     } catch (error) {
@@ -312,7 +310,7 @@ export class OrganizationService {
   * @returns createInvitation
   */
 
-  // eslint-disable-next-line camelcase
+
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, orgId } = bulkInvitationDto;
 
@@ -400,7 +398,7 @@ export class OrganizationService {
     return false;
   }
 
-  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<OrgInvitationsPagination> {
     try {
       return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search);
     } catch (error) {
@@ -481,8 +479,7 @@ export class OrganizationService {
     }
   }
 
-  // eslint-disable-next-line camelcase
-  async getOrgDashboard(orgId: string): Promise<organization_dashboard> {
+  async getOrgDashboard(orgId: string): Promise<OrganizationDashboard> {
     try {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {

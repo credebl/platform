@@ -23,20 +23,8 @@ export interface OrgAgent {
   apiKey: string;
 }
 
-export interface Org_Role {
-  id: string;
-  name: string;
-  description: string;
-  orgSlug: string;
-  logoUrl: string;
-  website: string;
-  publicProfile: boolean;
-  schema: Schema[];
-  org_agents: OrgAgents;
-  userOrgRoles: UserOrgRole;
-}
 
-export interface GetOrgById {
+export interface GetOrgById { 
   id: string;
   name: string;
   description: string;
@@ -56,7 +44,7 @@ interface Schema {
 interface OrgAgents {
   agent_invitations: AgentInvitation[];
   ledgers: Ledgers;
-  org_agent_type: Org_agent_type;
+  org_agent_type: OrgAgentType;
 }
 
 interface AgentInvitation {
@@ -70,7 +58,7 @@ export interface UserOrgRole {
   orgRole: string;
 }
 
-interface Org_agent_type {
+interface OrgAgentType {
   id: string;
   createDateTime: Date;
   lastChangedDateTime: Date;

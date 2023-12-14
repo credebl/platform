@@ -356,7 +356,7 @@ export class EcosystemService {
 
       const isLedgerFound = await this.checkLedgerMatches(orgDetails, invitation.ecosystemId); 
 
-      if (!isLedgerFound && status !== Invitation.REJECTED) {
+      if (!isLedgerFound && Invitation.REJECTED !== status) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ledgerNotMatch);
       }
       

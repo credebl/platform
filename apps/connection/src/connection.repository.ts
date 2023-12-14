@@ -107,7 +107,7 @@ export class ConnectionRepository {
       }
 
       const walletLabelName = connectionDto?.theirLabel;
-      let maskedTheirLabel: string;   
+      let maskedTheirLabel: string;
       let firstLetters: string;
       let maskedMiddleLetters: string;
       let lastLetters: string;
@@ -117,34 +117,34 @@ export class ConnectionRepository {
           firstLetters = walletLabelName.slice(0, 1);
           maskedMiddleLetters = walletLabelName.slice(1).replace(/./g, '*');
           maskedTheirLabel = firstLetters + maskedMiddleLetters;
-        break;
-    
+          break;
+
         case 3 < walletLabelName.length && 6 > walletLabelName.length:
           firstLetters = walletLabelName.slice(0, 1);
           lastLetters = walletLabelName.slice(-1);
           maskedMiddleLetters = walletLabelName.slice(1, -1).replace(/./g, '*');
           maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
-        break;
-    
+          break;
+
         case 6 <= walletLabelName.length && 8 >= walletLabelName.length:
           firstLetters = walletLabelName.slice(0, 2);
           lastLetters = walletLabelName.slice(-2);
           maskedMiddleLetters = walletLabelName.slice(2, -2).replace(/./g, '*');
           maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
-        break;
-    
+          break;
+
         case 8 < walletLabelName.length:
           firstLetters = walletLabelName.slice(0, 3);
           lastLetters = walletLabelName.slice(-3);
           maskedMiddleLetters = walletLabelName.slice(3, -3).replace(/./g, '*');
           maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
-        break;
-    
-      default:
-        maskedTheirLabel = walletLabelName;
-        break;
-    }    
-       
+          break;
+
+        default:
+          maskedTheirLabel = walletLabelName;
+          break;
+      }
+
       const agentDetails = await this.prisma.connections.upsert({
         where: {
           connectionId: connectionDto?.id
@@ -171,7 +171,7 @@ export class ConnectionRepository {
       throw error;
     }
   }
-    
+
   /**
    * Description: Save ShorteningUrl details
    * @param referenceId
@@ -274,23 +274,25 @@ export class ConnectionRepository {
           connectionId: true
         },
         orderBy: {
-          [connectionSearchCriteria.sorting]:
-            'DESC' === connectionSearchCriteria.sortByValue
+          [connectionSearchCriteria?.sorting || 'createDateTime']:
+          'DESC' === connectionSearchCriteria?.sortByValue
               ? 'desc'
-              : 'ASC' === connectionSearchCriteria.sortByValue
+          : 'ASC' === connectionSearchCriteria?.sortByValue
               ? 'asc'
-              : 'desc'
+          : 'asc'
         },
         take: Number(connectionSearchCriteria.pageSize),
         skip: (connectionSearchCriteria.pageNumber - 1) * connectionSearchCriteria.pageSize
       });
       const connectionCount = await this.prisma.connections.count({
-        where: {
-          organisation: {
-            id: orgId
+          where: {
+            orgId,
+            OR: [
+              { theirLabel: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } },
+              { connectionId: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } }
+            ]
           }
-        }
-      });
+        });
 
       return { connectionCount, connectionsList };
     } catch (error) {

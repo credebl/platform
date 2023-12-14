@@ -1,3 +1,22 @@
+export  interface UInvitation {
+  orgRoles?: OrgRole[];
+  status?: string;
+  id?: string;
+  orgId?: string;
+  organisation?: Organisation;
+  userId?: string;
+}
+export interface Organisation {
+  id: string;
+  name: string;
+  logoUrl: string;
+}
+export interface OrgRole {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export interface UserI {
     id?: string;
     username?: string;
@@ -69,4 +88,11 @@ export interface UserI {
   export interface Attribute {
     [key: string]: string;
     label: string;
+  }
+  
+  export interface CheckUserDetails {
+    isEmailVerified?: boolean;
+    isFidoVerified?: boolean;
+    isSupabase?: boolean;
+    isExist?: boolean;
   }

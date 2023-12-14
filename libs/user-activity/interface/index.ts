@@ -1,4 +1,4 @@
-export interface user_Activity {
+export interface User_Activity {
     id: string,
     orgId: string,
     userId: string,

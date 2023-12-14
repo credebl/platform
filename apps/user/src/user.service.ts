@@ -35,6 +35,7 @@ import {
   ShareUserCertificateI,
   UInvitation,
   UpdateUserProfile,
+  UserCredentials,
   UserEmailVerificationDto,
   UserI,
     userInfo
@@ -457,7 +458,7 @@ export class UserService {
     }
   }
 
-  async getUserCredentialsById(payload: { credentialId }): Promise<object> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
     try {
       const userCredentials = await this.userRepository.getUserCredentialsById(payload.credentialId);
       if (!userCredentials) {

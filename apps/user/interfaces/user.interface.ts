@@ -90,10 +90,10 @@ export interface UsersProfile {
 
   export interface OrgUsers {
     totalPages: number,
-    users: org_users[]
+    users: OrgUser[]
   }
 
-  interface org_users {
+  interface OrgUser {
     id: string;
     username: string;
     email: string;

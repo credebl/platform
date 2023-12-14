@@ -120,7 +120,7 @@ export class EcosystemService {
 
     if (tags) { updateData.tags = tags; }
 
-    if (logo) { updateData.logo = tags; }
+    if (logo) { updateData.logo = logo; }
     
     if ('' !== autoEndorsement.toString()) { updateData.autoEndorsement = autoEndorsement; }
 
@@ -301,6 +301,24 @@ export class EcosystemService {
     }
   }
 
+  async checkLedgerMatches(orgDetails: OrganizationData, ecosystemId: string): Promise<boolean> {
+    const orgLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
+
+    const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
+
+    let isLedgerFound = false;
+
+    for (const ledger of orgLedgers) {
+      // Check if the ledger is present in the ecosystem
+      if (Array.isArray(ecosystemDetails.ledgers) && ecosystemDetails.ledgers.includes(ledger)) {
+        // If a ledger is found, return true
+        isLedgerFound = true;
+      }
+    }
+
+    return isLedgerFound; 
+  }
+
   /**
    *
    * @param acceptRejectEcosystemInvitation
@@ -336,21 +354,9 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
       }
 
-      const orgLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
+      const isLedgerFound = await this.checkLedgerMatches(orgDetails, invitation.ecosystemId); 
 
-      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(invitation.ecosystemId);
-
-      let isLedgerFound = false;
-
-      for (const ledger of orgLedgers) {
-        // Check if the ledger is present in the ecosystem
-        if (Array.isArray(ecosystemDetails.ledgers) && ecosystemDetails.ledgers.includes(ledger)) {
-          // If a ledger is found, return true
-          isLedgerFound = true;
-        }
-      }
-
-      if (!isLedgerFound) {
+      if (!isLedgerFound && Invitation.REJECTED !== status) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ledgerNotMatch);
       }
       

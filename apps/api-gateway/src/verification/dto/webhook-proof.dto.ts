@@ -52,4 +52,8 @@ export class WebhookPresentationProof {
     @ApiProperty()
     @IsOptional()
     isVerified: boolean;
+
+    @ApiProperty()
+    @IsOptional()
+    contextCorrelationId: string;
 }

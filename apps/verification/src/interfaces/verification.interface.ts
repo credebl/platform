@@ -99,6 +99,10 @@ interface IWebhookPresentationProof {
     connectionId
 }
 
+export interface IWebhookProofPresentationPayload {
+    proofPresentationDto: IWebhookProofPresentation;
+    id: string;
+}
 export interface IWebhookProofPresentation {
     metadata: object;
     _tags: IWebhookPresentationProof;
@@ -111,4 +115,25 @@ export interface IWebhookProofPresentation {
     autoAcceptProof: string;
     updatedAt: string;
     isVerified: boolean;
+    contextCorrelationId: string;
 }
+
+export interface ProofPresentationPayload {
+    proofPresentationPayload: IWebhookProofPresentation;
+    id: string;
+}
+
+export interface IProofRequests {
+    proofRequestsSearchCriteria: IProofRequestsSearchCriteria;
+    user: IUserRequest;
+    orgId: string;
+  }
+
+export interface IProofRequestsSearchCriteria {
+    pageNumber: number;
+    pageSize: number;
+    sorting: string;
+    sortByValue: string;
+    searchByText: string;
+  }  
+  

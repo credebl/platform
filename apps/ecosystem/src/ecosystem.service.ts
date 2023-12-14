@@ -120,7 +120,7 @@ export class EcosystemService {
 
     if (tags) { updateData.tags = tags; }
 
-    if (logo) { updateData.logo = tags; }
+    if (logo) { updateData.logo = logo; }
     
     if ('' !== autoEndorsement.toString()) { updateData.autoEndorsement = autoEndorsement; }
 
@@ -350,7 +350,7 @@ export class EcosystemService {
         }
       }
 
-      if (!isLedgerFound) {
+      if (!isLedgerFound && status !== Invitation.REJECTED) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ledgerNotMatch);
       }
       

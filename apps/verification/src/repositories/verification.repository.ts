@@ -82,24 +82,25 @@ export class VerificationRepository {
           orgId: true,
           state: true,
           connectionId: true,
-          id: true
+          id: true,
+          presentationId: true
         },
         orderBy: {
-          [proofRequestsSearchCriteria.sorting]:
-            'DESC' === proofRequestsSearchCriteria.sortByValue
+          [proofRequestsSearchCriteria?.sorting || 'createDateTime']:
+            'DESC' === proofRequestsSearchCriteria?.sortByValue
               ? 'desc'
-              : 'ASC' === proofRequestsSearchCriteria.sortByValue
-              ? 'asc'
-              : 'desc'
+              : 'asc'
         },
         take: Number(proofRequestsSearchCriteria.pageSize),
         skip: (proofRequestsSearchCriteria.pageNumber - 1) * proofRequestsSearchCriteria.pageSize
       });
       const proofRequestsCount = await this.prisma.presentations.count({
         where: {
-          organisation: {
-            id: orgId
-          }
+          orgId,
+          OR: [
+            { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
+            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
+        ]
         }
       });
 
@@ -139,6 +140,7 @@ export class VerificationRepository {
           state: proofPresentationPayload.state,
           threadId: proofPresentationPayload.threadId,
           isVerified: proofPresentationPayload.isVerified,
+          presentationId: proofPresentationPayload.id,
           orgId: organisationId
         }
       });

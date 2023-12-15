@@ -82,14 +82,13 @@ export class VerificationRepository {
           orgId: true,
           state: true,
           connectionId: true,
-          id: true
+          id: true,
+          presentationId: true
         },
         orderBy: {
           [proofRequestsSearchCriteria?.sorting || 'createDateTime']:
             'DESC' === proofRequestsSearchCriteria?.sortByValue
               ? 'desc'
-              : 'ASC' === proofRequestsSearchCriteria?.sortByValue
-              ? 'asc'
               : 'asc'
         },
         take: Number(proofRequestsSearchCriteria.pageSize),
@@ -141,6 +140,7 @@ export class VerificationRepository {
           state: proofPresentationPayload.state,
           threadId: proofPresentationPayload.threadId,
           isVerified: proofPresentationPayload.isVerified,
+          presentationId: proofPresentationPayload.id,
           orgId: organisationId
         }
       });

@@ -6,6 +6,8 @@ import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
+import { user } from '@prisma/client';
+import { UsersActivity } from 'libs/user-activity/interface';
 
 @Controller()
 export class UserController {
@@ -46,7 +48,7 @@ export class UserController {
     return this.userService.getPublicProfile(payload);
   }
   @MessagePattern({ cmd: 'update-user-profile' })
-  async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<object> {
+  async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<user> {
     return this.userService.updateUserProfile(payload.updateUserProfileDto);
   }
 
@@ -93,7 +95,7 @@ export class UserController {
   @MessagePattern({ cmd: 'share-user-certificate' })
   async shareUserCertificate(payload: {
     shareUserCredentials: ShareUserCertificate;
-  }): Promise<unknown> {
+  }): Promise<string> {
     return this.userService.shareUserCertificate(payload.shareUserCredentials);
   }
 
@@ -129,7 +131,7 @@ export class UserController {
 
   // Fetch Users recent activities
   @MessagePattern({ cmd: 'get-user-activity' })
-  async getUserActivity(payload: { userId: string, limit: number }): Promise<object[]> {
+  async getUserActivity(payload: { userId: string, limit: number }): Promise<UsersActivity[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
   }
 

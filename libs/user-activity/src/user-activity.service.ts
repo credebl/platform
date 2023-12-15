@@ -2,6 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserActivityRepository } from '../repositories';
 import { user_activity } from '@prisma/client';
+import { UsersActivity } from '../interface';
 
 @Injectable()
 export class UserActivityService {
@@ -15,7 +16,7 @@ export class UserActivityService {
         return this.userActivityRepository.logActivity(userId, orgId, action, details);
     }
 
-    async getUserActivity(userId: string, limit: number): Promise<object[]> {
+    async getUserActivity(userId: string, limit: number): Promise<UsersActivity[]> {
         return this.userActivityRepository.getRecentActivities(userId, limit);
     }
 }

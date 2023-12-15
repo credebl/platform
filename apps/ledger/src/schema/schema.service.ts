@@ -35,19 +35,20 @@ export class SchemaService extends BaseService {
     const apiKey = '';
     const { userId } = user.selectedOrg;
     try {
+      
       const schemaExists = await this.schemaRepository.schemaExists(
         schema.schemaName,
         schema.schemaVersion
-      );
-
-      if (0 !== schemaExists.length) {
-        this.logger.error(ResponseMessages.schema.error.exists);
-        throw new ConflictException(ResponseMessages.schema.error.exists);
-      }
-
-      if (null !== schema || schema !== undefined) {
-        const schemaVersionIndexOf = -1;
-        if (
+        );
+        
+        if (0 !== schemaExists.length) {
+          this.logger.error(ResponseMessages.schema.error.exists);
+          throw new ConflictException(ResponseMessages.schema.error.exists);
+        }
+        
+        if (null !== schema || schema !== undefined) {
+          const schemaVersionIndexOf = -1;
+          if (
           isNaN(parseFloat(schema.schemaVersion)) ||
           schema.schemaVersion.toString().indexOf('.') ===
           schemaVersionIndexOf
@@ -61,22 +62,32 @@ export class SchemaService extends BaseService {
         if (schema.attributes.length === schemaAttributeLength) {
           throw new NotAcceptableException(
             ResponseMessages.schema.error.insufficientAttributes
-          );
-        } else if (schema.attributes.length > schemaAttributeLength) {
-
-          const trimmedAttributes = schema.attributes.map(attribute => ({
-            attributeName: attribute.attributeName.trim(),
-            schemaDataType: attribute.schemaDataType,
-            displayName: attribute.displayName
-        }));
-    
-          const findDuplicates: boolean =
-            new Set(trimmedAttributes).size !== trimmedAttributes.length;
-          if (true === findDuplicates) {
-            throw new NotAcceptableException(
-              ResponseMessages.schema.error.invalidAttributes
             );
-          }
+          } else if (schema.attributes.length > schemaAttributeLength) {
+            
+            const trimmedAttributes = schema.attributes.map(attribute => ({
+              attributeName: attribute.attributeName.trim(),
+              schemaDataType: attribute.schemaDataType,
+              displayName: attribute.displayName.trim()
+            }));
+
+
+        const attributeNamesLowerCase = trimmedAttributes.map(attribute => attribute.attributeName.toLowerCase());
+        const duplicateAttributeNames = attributeNamesLowerCase
+        .filter((value, index, element) => element.indexOf(value) !== index);
+
+        if (0 < duplicateAttributeNames.length) {
+            throw new ConflictException(ResponseMessages.schema.error.uniqueAttributesnames);
+        }
+
+        const attributeDisplayNamesLowerCase = trimmedAttributes.map(attribute => attribute.displayName.toLocaleLowerCase());
+        const duplicateAttributeDisplayNames = attributeDisplayNamesLowerCase
+        .filter((value, index, element) => element.indexOf(value) !== index);
+
+        if (0 < duplicateAttributeDisplayNames.length) {
+            throw new ConflictException(ResponseMessages.schema.error.uniqueAttributesDisplaynames);
+        }
+
           schema.schemaName = schema.schemaName.trim();
           const { agentEndPoint, orgDid } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
           const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
@@ -134,7 +145,7 @@ export class SchemaService extends BaseService {
 
           if ('finished' === responseObj.schema.state) {
             schemaDetails.schema.schemaName = responseObj.schema.schema.name;
-            schemaDetails.schema.attributes = schema.attributes;
+            schemaDetails.schema.attributes = trimmedAttributes;
             schemaDetails.schema.schemaVersion = responseObj.schema.schema.version;
             schemaDetails.createdBy = userId;
             schemaDetails.schema.id = responseObj.schema.schemaId;
@@ -151,7 +162,7 @@ export class SchemaService extends BaseService {
 
           } else if ('finished' === responseObj.state) {
             schemaDetails.schema.schemaName = responseObj.schema.name;
-            schemaDetails.schema.attributes = schema.attributes;
+            schemaDetails.schema.attributes = trimmedAttributes;
             schemaDetails.schema.schemaVersion = responseObj.schema.version;
             schemaDetails.createdBy = userId;
             schemaDetails.schema.id = responseObj.schemaId;

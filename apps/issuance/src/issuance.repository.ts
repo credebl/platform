@@ -100,21 +100,22 @@ export class IssuanceRepository {
           connectionId: true
         },
         orderBy: {
-          [issuedCredentialsSearchCriteria.sorting]:
-            'DESC' === issuedCredentialsSearchCriteria.sortByValue
+          [issuedCredentialsSearchCriteria?.sorting || 'createDateTime']:
+            'DESC' === issuedCredentialsSearchCriteria?.sortByValue
               ? 'desc'
-              : 'ASC' === issuedCredentialsSearchCriteria.sortByValue
-              ? 'asc'
-              : 'desc'
+              : 'asc'
         },
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
+     
       const issuedCredentialsCount = await this.prisma.credentials.count({
         where: {
-          organisation: {
-            id: orgId
-          }
+          orgId,
+          OR: [
+            { schemaId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } }
+          ]
         }
       });
 

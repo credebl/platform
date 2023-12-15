@@ -107,7 +107,8 @@ export const ResponseMessages = {
             versionNotEmpty: 'Schema version is required',
             invalidVersion: 'Invalid schema version provided.',
             insufficientAttributes: 'Please provide at least one attribute.',
-            invalidAttributes: 'Please provide unique attributes',
+            uniqueAttributesnames: 'Please provide unique attribute names',
+            uniqueAttributesDisplaynames: 'Please provide unique display names for attributes',
             emptyData: 'Please provide data for creating schema.',
             exists: 'Schema already exists',
             notCreated: 'Schema not created',
@@ -161,7 +162,7 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'Connection is already exist',
-            connectionNotFound: 'ConnectionNotFound not found',
+            connectionNotFound: 'Connection not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
             agentUrlNotFound: 'agent url not found'
         }
@@ -169,7 +170,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            fetch: 'Credentials offer send successfully',
+            fetch: 'Issued Credential details fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
             bulkIssuance: 'Issuance process started. It will take some time',
@@ -200,7 +201,7 @@ export const ResponseMessages = {
     },
     verification: {
         success: {
-            fetch: 'Proof presentation received successfully.',
+            fetch: 'Proof presentations details fetched successfully.',
             proofFormData: 'Proof presentation form data received successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'
@@ -210,7 +211,7 @@ export const ResponseMessages = {
             agentUrlNotFound: 'agent url not found',
             schemaIdNotFound: 'Schema Id is required',
             predicatesValueNotNumber: 'The attribuite value is not a number',
-            proofPresentationNotFound: 'Proof presentation not found',
+            proofPresentationNotFound: 'Proof presentations not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'

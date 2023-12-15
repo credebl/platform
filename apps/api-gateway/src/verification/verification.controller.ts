@@ -75,7 +75,7 @@ export class VerificationController {
         @Param('proofId') id: string,
         @Param('orgId') orgId: string
     ): Promise<object> { 
-        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);      
+        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);   
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.proofFormData,

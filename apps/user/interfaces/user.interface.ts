@@ -1,15 +1,14 @@
-export  interface UInvitation {
-  orgRoles?: OrgRole[];
-  status?: string;
-  id?: string;
-  orgId?: string;
-  organisation?: Organisation;
-  userId?: string;
+export  interface UserInvitations {
+  totalPages:number;
+  userInvitationsData:UserInvitationsData[];
 }
-export interface Organisation {
+export  interface UserInvitationsData {
+  orgRoles: OrgRole[];
+  status: string;
   id: string;
-  name: string;
-  logoUrl: string;
+  orgId: string;
+  organisation: Organisation;
+  userId: string;
 }
 export interface OrgRole {
   id: string;
@@ -17,7 +16,13 @@ export interface OrgRole {
   description: string;
 }
 
-export interface UserI {
+export interface Organisation {
+  id: string;
+  name: string;
+  logoUrl: string;
+}
+
+export interface UsersProfile {
     id?: string;
     username?: string;
     email?: string;
@@ -27,7 +32,7 @@ export interface UserI {
     userOrgRoles?: object;
   }
   
-  export interface InvitationsI {
+  export interface OrgInvitations {
     id: string;
     userId: string;
     orgId?: string;
@@ -54,14 +59,7 @@ export interface UserI {
   export interface AddPasskeyDetails {
     password: string;
   }
-  
-  export interface UserWhereUniqueInput {
-    id?: string;
-  }
-  
-  export interface UserWhereInput {
-    email?: string;
-  }
+
   export interface UpdateUserProfile {
     id: string;
     profileImg?: string;
@@ -69,7 +67,7 @@ export interface UserI {
     lastName: string;
     isPublic: boolean;
   }
-  export interface PlatformSettingsI {
+  export interface PlatformSettings {
     externalIp: string;
     lastInternalId: string;
     sgApiKey: string;
@@ -79,7 +77,7 @@ export interface UserI {
     multiEcosystemSupport: boolean;
   }
   
-  export interface ShareUserCertificateI {
+  export interface ShareUserCertificate {
     schemaId: string;
     credentialId: string;
     attributes: Attribute[];

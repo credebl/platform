@@ -111,6 +111,7 @@ export interface IWebhookProofPresentation {
     protocolVersion: string;
     state: string;
     connectionId: string;
+    presentationId: string;
     threadId: string;
     autoAcceptProof: string;
     updatedAt: string;

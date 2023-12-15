@@ -103,13 +103,12 @@ export class IssuanceRepository {
           [issuedCredentialsSearchCriteria?.sorting || 'createDateTime']:
             'DESC' === issuedCredentialsSearchCriteria?.sortByValue
               ? 'desc'
-              : 'ASC' === issuedCredentialsSearchCriteria?.sortByValue
-              ? 'asc'
               : 'asc'
         },
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
+     
       const issuedCredentialsCount = await this.prisma.credentials.count({
         where: {
           orgId,

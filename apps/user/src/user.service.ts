@@ -30,15 +30,15 @@ import {
   AddPasskeyDetails,
   Attribute,
   CheckUserDetails,
-  InvitationsI,
-  PlatformSettingsI,
-  ShareUserCertificateI,
-  UInvitation,
+  OrgInvitations,
+  PlatformSettings,
+  ShareUserCertificate,
+  UserInvitations,
   UpdateUserProfile,
   UserCredentials,
   UserEmailVerificationDto,
-  UserI,
-    userInfo
+    userInfo,
+    UsersProfile
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -421,7 +421,7 @@ export class UserService {
     }
   }
 
-  async getProfile(payload: { id }): Promise<UserI> {
+  async getProfile(payload: { id }): Promise<UsersProfile> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
       const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany({
@@ -441,7 +441,7 @@ export class UserService {
     }
   }
 
-  async getPublicProfile(payload: { username }): Promise<UserI> {
+  async getPublicProfile(payload: { username }): Promise<UsersProfile> {
     try {
       const userProfile = await this.userRepository.getUserPublicProfile(payload.username);
 
@@ -505,10 +505,9 @@ export class UserService {
     }
   }
 
-  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<UInvitation> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<UserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
@@ -521,8 +520,10 @@ export class UserService {
         payload.search
       );
 
-      const invitations: InvitationsI[] = await this.updateOrgInvitations(invitationsData['invitations']);
+      const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
       invitationsData['invitations'] = invitations;
+      // console.log("{-----------------}",invitationsData);
+      
       return invitationsData;
     } catch (error) {
       this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
@@ -536,7 +537,7 @@ export class UserService {
     pageNumber: number,
     pageSize: number,
     search = ''
-  ): Promise<object> {
+  ): Promise<UserInvitations> {
     const pattern = { cmd: 'fetch-user-invitations' };
     const payload = {
       email,
@@ -563,7 +564,7 @@ export class UserService {
     return invitationsData;
   }
 
-  async updateOrgInvitations(invitations: InvitationsI[]): Promise<InvitationsI[]> {
+  async updateOrgInvitations(invitations: OrgInvitations[]): Promise<OrgInvitations[]> {
     const updatedInvitations = [];
 
     for (const invitation of invitations) {
@@ -604,7 +605,7 @@ export class UserService {
    *
    * @returns
    */
-  async shareUserCertificate(shareUserCertificate: ShareUserCertificateI): Promise<unknown> {
+  async shareUserCertificate(shareUserCertificate: ShareUserCertificate): Promise<unknown> {
 
     const attributeArray = [];
     let attributeJson = {};
@@ -817,7 +818,7 @@ export class UserService {
   }
 
   // eslint-disable-next-line camelcase
-  async updatePlatformSettings(platformSettings: PlatformSettingsI): Promise<string> {
+  async updatePlatformSettings(platformSettings: PlatformSettings): Promise<string> {
     try {
       const platformConfigSettings = await this.userRepository.updatePlatformSettings(platformSettings);
 

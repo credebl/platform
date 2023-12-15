@@ -123,21 +123,21 @@ export class ConnectionRepository {
           firstLetters = walletLabelName.slice(0, 1);
           lastLetters = walletLabelName.slice(-1);
           maskedMiddleLetters = walletLabelName.slice(1, -1).replace(/./g, '*');
-          maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
+          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
           break;
 
         case 6 <= walletLabelName.length && 8 >= walletLabelName.length:
           firstLetters = walletLabelName.slice(0, 2);
           lastLetters = walletLabelName.slice(-2);
           maskedMiddleLetters = walletLabelName.slice(2, -2).replace(/./g, '*');
-          maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
+          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
           break;
 
         case 8 < walletLabelName.length:
           firstLetters = walletLabelName.slice(0, 3);
           lastLetters = walletLabelName.slice(-3);
           maskedMiddleLetters = walletLabelName.slice(3, -3).replace(/./g, '*');
-          maskedTheirLabel = firstLetters + lastLetters + maskedMiddleLetters;
+          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
           break;
 
         default:
@@ -277,8 +277,6 @@ export class ConnectionRepository {
           [connectionSearchCriteria?.sorting || 'createDateTime']:
           'DESC' === connectionSearchCriteria?.sortByValue
               ? 'desc'
-          : 'ASC' === connectionSearchCriteria?.sortByValue
-              ? 'asc'
           : 'asc'
         },
         take: Number(connectionSearchCriteria.pageSize),

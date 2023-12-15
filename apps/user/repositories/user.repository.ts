@@ -2,12 +2,12 @@
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
-  PlatformSettingsI,
-  ShareUserCertificateI,
+  PlatformSettings,
+  ShareUserCertificate,
   UpdateUserProfile,
   UserCredentials,
   UserEmailVerificationDto,
-  UserI,
+    UsersProfile,
     userInfo
 } from '../interfaces/user.interface';
 
@@ -26,7 +26,7 @@ interface UserQueryOptions {
 @Injectable()
 export class UserRepository {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService, 
     private readonly logger: Logger
   ) {}
 
@@ -96,7 +96,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserById(id: string): Promise<UserI> {
+  async getUserById(id: string): Promise<UsersProfile> {
     const queryOptions: UserQueryOptions = {
       id
     };
@@ -122,7 +122,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserPublicProfile(username: string): Promise<UserI> {
+  async getUserPublicProfile(username: string): Promise<UsersProfile> {
     const queryOptions: UserQueryOptions = {
       username
     };
@@ -202,7 +202,7 @@ export class UserRepository {
     return this.findUser(queryOptions);
   }
 
-  async findUser(queryOptions: UserQueryOptions): Promise<UserI> {
+  async findUser(queryOptions: UserQueryOptions): Promise<UsersProfile> {
     return this.prisma.user.findFirst({
       where: {
         OR: [
@@ -253,7 +253,7 @@ export class UserRepository {
     });
   }
 
-  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<UserI> {
+  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<UsersProfile> {
     return this.prisma.user.findFirst({
       where: {
         publicProfile: true,
@@ -460,7 +460,7 @@ isEmailVerified: true,
     return { totalPages, users };
   }
 
-  async getAttributesBySchemaId(shareUserCertificate: ShareUserCertificateI): Promise<schema> {
+  async getAttributesBySchemaId(shareUserCertificate: ShareUserCertificate): Promise<schema> {
     try {
       const getAttributes = await this.prisma.schema.findFirst({
         where: {
@@ -546,7 +546,7 @@ isEmailVerified: true,
    * @Body updatePlatformSettings
    * @returns Update platform settings
    */
-  async updatePlatformSettings(updatePlatformSettings: PlatformSettingsI): Promise<object> {
+  async updatePlatformSettings(updatePlatformSettings: PlatformSettings): Promise<object> {
     try {
       const getPlatformDetails = await this.prisma.platform_config.findFirst();
       const platformDetails = await this.prisma.platform_config.update({

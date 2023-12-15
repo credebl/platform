@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, CheckUserDetails, PlatformSettingsI, ShareUserCertificateI, UInvitation, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, userInfo, UsersProfile } from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -37,12 +37,12 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-user-profile' })
-  async getProfile(payload: { id }): Promise<UserI> {
+  async getProfile(payload: { id }): Promise<UsersProfile> {
     return this.userService.getProfile(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-public-profile' })
-  async getPublicProfile(payload: { username }): Promise<UserI> {
+  async getPublicProfile(payload: { username }): Promise<UsersProfile> {
     return this.userService.getPublicProfile(payload);
   }
   @MessagePattern({ cmd: 'update-user-profile' })
@@ -68,7 +68,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-org-invitations' })
-  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UInvitation> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UserInvitations> {
     return this.userService.invitations(payload);
   }
 
@@ -92,7 +92,7 @@ export class UserController {
    */
   @MessagePattern({ cmd: 'share-user-certificate' })
   async shareUserCertificate(payload: {
-    shareUserCredentials: ShareUserCertificateI;
+    shareUserCredentials: ShareUserCertificate;
   }): Promise<unknown> {
     return this.userService.shareUserCertificate(payload.shareUserCredentials);
   }
@@ -139,7 +139,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'update-platform-settings' })
-  async updatePlatformSettings(payload: { platformSettings: PlatformSettingsI }): Promise<string> {
+  async updatePlatformSettings(payload: { platformSettings: PlatformSettings }): Promise<string> {
     return this.userService.updatePlatformSettings(payload.platformSettings);
   }
 

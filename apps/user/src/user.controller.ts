@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, PlatformSettingsI, ShareUserCertificateI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, userInfo, UsersProfile } from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -6,6 +6,8 @@ import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
+import { user } from '@prisma/client';
+import { UsersActivity } from 'libs/user-activity/interface';
 
 @Controller()
 export class UserController {
@@ -37,16 +39,16 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-user-profile' })
-  async getProfile(payload: { id }): Promise<object> {
+  async getProfile(payload: { id }): Promise<UsersProfile> {
     return this.userService.getProfile(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-public-profile' })
-  async getPublicProfile(payload: { username }): Promise<UserI> {
+  async getPublicProfile(payload: { username }): Promise<UsersProfile> {
     return this.userService.getPublicProfile(payload);
   }
   @MessagePattern({ cmd: 'update-user-profile' })
-  async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<object> {
+  async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<user> {
     return this.userService.updateUserProfile(payload.updateUserProfileDto);
   }
 
@@ -63,12 +65,12 @@ export class UserController {
 
 
   @MessagePattern({ cmd: 'get-user-credentials-by-id' })
-  async getUserCredentialsById(payload: { credentialId }): Promise<object> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
     return this.userService.getUserCredentialsById(payload);
   }
 
   @MessagePattern({ cmd: 'get-org-invitations' })
-  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<object> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UserInvitations> {
     return this.userService.invitations(payload);
   }
 
@@ -92,8 +94,8 @@ export class UserController {
    */
   @MessagePattern({ cmd: 'share-user-certificate' })
   async shareUserCertificate(payload: {
-    shareUserCredentials: ShareUserCertificateI;
-  }): Promise<unknown> {
+    shareUserCredentials: ShareUserCertificate;
+  }): Promise<string> {
     return this.userService.shareUserCertificate(payload.shareUserCredentials);
   }
 
@@ -119,7 +121,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'check-user-exist' })
-  async checkUserExist(payload: { userEmail: string }): Promise<string | object> {
+  async checkUserExist(payload: { userEmail: string }): Promise<string | CheckUserDetails> {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })
@@ -129,7 +131,7 @@ export class UserController {
 
   // Fetch Users recent activities
   @MessagePattern({ cmd: 'get-user-activity' })
-  async getUserActivity(payload: { userId: string, limit: number }): Promise<object[]> {
+  async getUserActivity(payload: { userId: string, limit: number }): Promise<UsersActivity[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
   }
 
@@ -139,7 +141,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'update-platform-settings' })
-  async updatePlatformSettings(payload: { platformSettings: PlatformSettingsI }): Promise<string> {
+  async updatePlatformSettings(payload: { platformSettings: PlatformSettings }): Promise<string> {
     return this.userService.updatePlatformSettings(payload.platformSettings);
   }
 

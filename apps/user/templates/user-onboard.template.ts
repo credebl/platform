@@ -24,7 +24,7 @@ export class OnBoardVerificationRequest {
                 >
                   <div style="display: block; text-align: center">
                     <img
-                      src="${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/${process.env.PLATFORM_LOGO}"
+                      src="${process.env.BRAND_LOGO}"
                       alt="Credebl Logo"
                       class="CToWUd"
                       data-bit="iit"

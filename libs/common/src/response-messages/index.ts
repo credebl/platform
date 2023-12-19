@@ -170,7 +170,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            fetch: 'Issued Credential details fetched successfully',
+            fetch: 'Issued Credentials details fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
             bulkIssuance: 'Issuance process started. It will take some time',

@@ -11,7 +11,7 @@ export class EmailVerificationDto {
     @Transform(({ value }) => toLowerCase(value))
     @IsNotEmpty({ message: 'Email is required.' })
     @MaxLength(256, { message: 'Email must be at most 256 character.' })
-    @IsEmail()
+    @IsEmail({}, { message: 'Please provide a valid email' })
     email: string;
 
     @ApiProperty()

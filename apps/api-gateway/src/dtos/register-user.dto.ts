@@ -1,14 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class RegisterUserDto {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     attribute: any;
 
 
-    @ApiProperty()
-    @IsNotEmpty({message:'Please provide valid adminEmail'})
-    @IsString({message:'AdminEmail should be string'})
+    @ApiProperty({ example: 'awqx@getnada.com' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
+    @IsNotEmpty({ message: 'Email is required' })
+    @IsString({ message: 'Email should be a string' })
+    @Transform(({ value }) =>  'string' === typeof value ? value.trim() : value)
     adminEmail: string;
 
     @ApiProperty()

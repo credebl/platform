@@ -24,7 +24,8 @@ export class VerificationService {
     @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
     private readonly verificationRepository: VerificationRepository,
     private readonly outOfBandVerification: OutOfBandVerification,
-    private readonly emailData: EmailDto
+    private readonly emailData: EmailDto,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
 
   ) { }
 
@@ -150,8 +151,13 @@ export class VerificationService {
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'get-proof-presentation-by-id';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
-
-      const payload = { apiKey: '', url };
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const payload = { apiKey, url };
 
       const getProofPresentationById = await this._getProofPresentationById(payload);
       return getProofPresentationById?.response;
@@ -254,8 +260,13 @@ export class VerificationService {
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'request-proof';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-
-      const payload = { apiKey: '', url, proofRequestPayload };
+      // const apiKey = await this._getOrgAgentApiKey(requestProof.orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(requestProof.orgId);
+      }
+      const payload = { apiKey, url, proofRequestPayload };
 
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;
@@ -323,8 +334,13 @@ export class VerificationService {
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
-
-      const payload = { apiKey: '', url };
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const payload = { apiKey, url };
       const getProofPresentationById = await this._verifyPresentation(payload);
       return getProofPresentationById?.response;
     } catch (error) {
@@ -411,10 +427,15 @@ export class VerificationService {
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'create-request-out-of-band';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-
+      // const apiKey = await this._getOrgAgentApiKey(outOfBandRequestProof.orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(outOfBandRequestProof.orgId);
+      }
       const payload: IProofRequestPayload
         = {
-        apiKey: '',
+        apiKey,
         url,
         proofRequestPayload: {
           protocolVersion,
@@ -479,6 +500,13 @@ export class VerificationService {
 
 
   async sendOutOfBandProofRequest(payload: IProofRequestPayload, email: string, getAgentDetails: org_agents, organizationDetails: organisation): Promise<boolean> {
+    // const apiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
+    let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    this.logger.log(`cachedApiKey----${apiKey}`);
+   if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+     apiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
+    }
+    payload.apiKey = apiKey;
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
 
     if (!getProofPresentation) {
@@ -747,8 +775,13 @@ export class VerificationService {
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
-
-      const payload = { apiKey: '', url };
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const payload = { apiKey, url };
 
       const getProofPresentationById = await this._getProofFormData(payload);
       if (!getProofPresentationById?.response?.presentation) {
@@ -885,4 +918,23 @@ export class VerificationService {
       throw error;
     }
   }
+
+
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.verificationServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
 }

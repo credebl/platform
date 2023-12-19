@@ -60,8 +60,7 @@ export const ResponseMessages = {
             getOrgDashboard: 'Organization dashboard details fetched',
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
-            delete: 'Organization deleted successfully',
-            orgInvitationDeleted: 'Organization invitation deleted successfully'
+            delete: 'Organization deleted successfully'
         },
         error: {
             exists: 'An organization name is already exist',

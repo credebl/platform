@@ -24,7 +24,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
         options: getNatsOptions(process.env.ORGANIZATION_NKEY_SEED)
       }
     ]),
-    CommonModule
+    CommonModule,
+    CacheModule.register()
   ],
   controllers: [OrganizationController],
   providers: [

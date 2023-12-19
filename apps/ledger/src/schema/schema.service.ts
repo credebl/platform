@@ -23,7 +23,8 @@ import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/
 export class SchemaService extends BaseService {
   constructor(
     private readonly schemaRepository: SchemaRepository,
-    @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy
+    @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {
     super('SchemaService');
   }
@@ -33,7 +34,13 @@ export class SchemaService extends BaseService {
     user: IUserRequestInterface,
     orgId: string
   ): Promise<schema> {
-    const apiKey = '';
+    // const apiKey = '';
+    // const apiKey = await this._getOrgAgentApiKey(orgId);
+    let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    this.logger.log(`cachedApiKey----${apiKey}`);
+   if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+     apiKey = await this._getOrgAgentApiKey(orgId);
+    }
     const { userId } = user.selectedOrg;
     try {
       
@@ -255,7 +262,14 @@ export class SchemaService extends BaseService {
       const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-      const apiKey = '';
+      // const apiKey = '';
+
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       let schemaResponse;
       if (OrgAgentType.DEDICATED === orgAgentType) {
         const getSchemaPayload = {
@@ -431,4 +445,23 @@ export class SchemaService extends BaseService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.schemaServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
+
 }

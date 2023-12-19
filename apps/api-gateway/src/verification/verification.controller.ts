@@ -30,8 +30,6 @@ import { WebhookPresentationProof } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
-import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
-import { IProofRequestsSearchCriteria } from './interfaces/verification.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -151,7 +149,8 @@ export class VerificationController {
         @Query() getAllProofRequests: GetAllProofRequestsDto,
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string
+        @Param('orgId') orgId: string,
+        @Query('threadId') threadId: string
     ): Promise<object> {
       const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllProofRequests;
       const proofRequestsSearchCriteria: IProofRequestsSearchCriteria = {

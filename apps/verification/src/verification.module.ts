@@ -18,7 +18,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       }
     ]),
 
-    CommonModule
+    CommonModule,
+    CacheModule.register()
   ],
   controllers: [VerificationController],
   providers: [VerificationService, VerificationRepository, PrismaService, Logger, OutOfBandVerification, EmailDto]

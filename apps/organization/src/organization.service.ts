@@ -33,7 +33,8 @@ export class OrganizationService {
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
   /**
@@ -506,7 +507,12 @@ export class OrganizationService {
   async deleteOrganization(orgId: string): Promise<boolean> {
     try {
       const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
-
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       let url;
       if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {
         url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
@@ -517,7 +523,7 @@ export class OrganizationService {
 
       const payload = {
         url,
-        apiKey: getAgent.apiKey
+        apiKey
       };
 
       const deleteWallet = await this._deleteWallet(payload);

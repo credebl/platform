@@ -87,84 +87,48 @@ export class ConnectionRepository {
     }
   }
 
-  /**
-   * Description: Save connection details
-   * @param connectionInvitation
-   * @param agentId
-   * @param orgId
-   * @returns Get connection details
-   */
-  // eslint-disable-next-line camelcase
-  async saveConnectionWebhook(payload: ICreateConnection): Promise<object> {
-    try {
+    /**
+    * Description: Save connection details
+    * @param connectionInvitation
+    * @param agentId
+    * @param orgId
+    * @returns Get connection details
+    */
+    // eslint-disable-next-line camelcase
+    async saveConnectionWebhook(createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: string): Promise<connections> {
+        try {
+            const agentDetails = await this.prisma.connections.upsert({
+                where: {
+                    connectionId
+                },
+                update: {
+                    lastChangedDateTime,
+                    lastChangedBy: orgId,
+                    state,
+                    orgDid,
+                    theirLabel,
+                    autoAcceptConnection,
+                    outOfBandId
+                },
+                create: {
+                    createDateTime,
+                    lastChangedDateTime,
+                    createdBy: orgId,
+                    lastChangedBy: orgId,
+                    connectionId,
+                    state,
+                    orgDid,
+                    theirLabel,
+                    autoAcceptConnection,
+                    outOfBandId,
+                    orgId
+                }
+            });
+            return agentDetails;
 
-      let organisationId: string;
-      const { connectionDto, orgId } = payload;
-
-      if (connectionDto?.contextCorrelationId) {
-        const getOrganizationId = await this.getOrganization(connectionDto?.contextCorrelationId);
-        organisationId = getOrganizationId?.orgId;
-      } else {
-        organisationId = orgId;
-      }
-
-      const walletLabelName = connectionDto?.theirLabel;
-      let maskedTheirLabel: string;
-      let firstLetters: string;
-      let maskedMiddleLetters: string;
-      let lastLetters: string;
-
-      switch (true) {
-        case 3 >= walletLabelName.length:
-          firstLetters = walletLabelName.slice(0, 1);
-          maskedMiddleLetters = walletLabelName.slice(1).replace(/./g, '*');
-          maskedTheirLabel = firstLetters + maskedMiddleLetters;
-          break;
-
-        case 3 < walletLabelName.length && 6 > walletLabelName.length:
-          firstLetters = walletLabelName.slice(0, 1);
-          lastLetters = walletLabelName.slice(-1);
-          maskedMiddleLetters = walletLabelName.slice(1, -1).replace(/./g, '*');
-          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
-          break;
-
-        case 6 <= walletLabelName.length && 8 >= walletLabelName.length:
-          firstLetters = walletLabelName.slice(0, 2);
-          lastLetters = walletLabelName.slice(-2);
-          maskedMiddleLetters = walletLabelName.slice(2, -2).replace(/./g, '*');
-          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
-          break;
-
-        case 8 < walletLabelName.length:
-          firstLetters = walletLabelName.slice(0, 3);
-          lastLetters = walletLabelName.slice(-3);
-          maskedMiddleLetters = walletLabelName.slice(3, -3).replace(/./g, '*');
-          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
-          break;
-
-        default:
-          maskedTheirLabel = walletLabelName;
-          break;
-      }
-
-      const agentDetails = await this.prisma.connections.upsert({
-        where: {
-          connectionId: connectionDto?.id
-        },
-        update: {
-          lastChangedDateTime: connectionDto?.lastChangedDateTime,
-          lastChangedBy: organisationId,
-          state: connectionDto?.state
-        },
-        create: {
-          createDateTime: connectionDto?.createDateTime,
-          lastChangedDateTime: connectionDto?.lastChangedDateTime,
-          createdBy: organisationId,
-          lastChangedBy: organisationId,
-          connectionId: connectionDto?.id,
-          state: connectionDto?.state,
-          theirLabel: maskedTheirLabel,
-          orgId: organisationId
+        } catch (error) {
+            this.logger.error(`Error in saveConnectionWebhook: ${error.message} `);
+            throw error;
         }
       });
       return agentDetails;

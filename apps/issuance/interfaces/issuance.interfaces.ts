@@ -111,31 +111,20 @@ export interface FileUpload {
 }
 
 export interface FileUploadData {
-  fileUpload: string;
-  fileRow: string;
-  isError: boolean;
-  referenceId: string;
-  createDateTime: Date;
-  error?: string;
-  detailError?: string;
-  jobId: string;
+    fileUpload: string;
+    fileRow: string;
+    isError: boolean;
+    referenceId: string;
+    createDateTime: Date;
+    error?: string;
+    detailError?: string;
+    jobId: string;
 }
 
 export interface ClientDetails {
-  clientId: string;
+   
+    clientId: string;
 
-  userId?: string;
-}
-export interface IIssuedCredentialsSearchInterface {
-  issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
-  user: IUserRequestInterface;
-  orgId: string;
-}
-export interface IIssuedCredentialsSearchCriteria {
-  pageNumber: number;
-  pageSize: number;
-  sorting: string;
-  sortByValue: string;
-  searchByText: string;
-  user?: IUserRequestInterface;
+    userId?: string;
+
 }

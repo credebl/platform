@@ -37,8 +37,7 @@ export class EcosystemRepository {
             autoEndorsement,
             logoUrl: logo,
             createdBy: userId,
-            lastChangedBy: userId,
-            ledgers: ecosystemLedgers
+            lastChangedBy: userId
           }
         });
         let ecosystemUser;
@@ -65,6 +64,8 @@ export class EcosystemRepository {
               status: EcosystemOrgStatus.ACTIVE,
               ecosystemId: createdEcosystem.id,
               ecosystemRoleId: ecosystemRoleDetails.id,
+              orgName,
+              orgDid,
               deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
               createdBy: userId,
               lastChangedBy: userId
@@ -91,9 +92,17 @@ export class EcosystemRepository {
     data: object,
      ecosystemId: string): Promise<ecosystem> {
     try {
+      const { name, description, tags, logo, autoEndorsement, userId } = createEcosystemDto;
       const editEcosystem = await this.prisma.ecosystem.update({
         where: { id: ecosystemId },
-        data
+        data: {
+          name,
+          description,
+          autoEndorsement,
+          tags,
+          logoUrl: logo,
+          lastChangedBy: userId
+        }
       });
       return editEcosystem;
     } catch (error) {
@@ -429,7 +438,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateEcosystemOrgs(createEcosystemOrgsDto: updateEcosystemOrgsDto): Promise<ecosystem_orgs> {
     try {
-      const { orgId, status, ecosystemRoleId, ecosystemId, createdBy, lastChangedBy } = createEcosystemOrgsDto;
+      const { orgId, status, ecosystemRoleId, ecosystemId, orgName, orgDid, createdBy, lastChangedBy } = createEcosystemOrgsDto;
 
       return this.prisma.ecosystem_orgs.create({
         data: {
@@ -437,6 +446,8 @@ export class EcosystemRepository {
           ecosystemId,
           status,
           ecosystemRoleId,
+          orgName,
+          orgDid,
           deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
           createdBy,
           lastChangedBy

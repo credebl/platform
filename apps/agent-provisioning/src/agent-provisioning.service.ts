@@ -22,13 +22,10 @@ export class AgentProvisioningService {
   async walletProvision(payload: IWalletProvision): Promise<object> {
     try {
 
-      const { containerName, externalIp, orgId, seed, walletName, walletPassword, walletStorageHost, walletStoragePassword, walletStoragePort, walletStorageUser, webhookEndpoint, agentType, protocol, afjVersion, tenant, indyLedger } = payload;
-
+      const { containerName, externalIp, orgId, seed, walletName, walletPassword, walletStorageHost, walletStoragePassword, walletStoragePort, walletStorageUser, webhookEndpoint, agentType, protocol, afjVersion, tenant, indyLedger, apiKey} = payload;
       if (agentType === AgentType.AFJ) {
         // The wallet provision command is used to invoke a shell script
-        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP
-          } "${orgId}" "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${afjVersion} ${indyLedger} ${process.env.AGENT_HOST} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN}`;
-
+        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP} ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${afjVersion} ${indyLedger} ${apiKey} ${process.env.AGENT_HOST} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${process.env.CLUSTER_NAME} ${process.env.TESKDEFINITION_FAMILY}`;
         const spinUpResponse: object = new Promise(async (resolve) => {
 
           await exec(walletProvision, async (err, stdout, stderr) => {

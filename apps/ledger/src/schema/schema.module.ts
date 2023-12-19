@@ -19,7 +19,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ]),
 
     HttpModule,
-    CommonModule
+    CommonModule,
+    CacheModule.register()
   ],
   providers: [
     SchemaService,

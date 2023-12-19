@@ -43,7 +43,10 @@ export class SchemaService extends BaseService {
         
         if (0 !== schemaExists.length) {
           this.logger.error(ResponseMessages.schema.error.exists);
-          throw new ConflictException(ResponseMessages.schema.error.exists);
+          throw new ConflictException(
+            ResponseMessages.schema.error.exists,
+            { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+          );
         }
         
         if (null !== schema || schema !== undefined) {
@@ -54,14 +57,16 @@ export class SchemaService extends BaseService {
           schemaVersionIndexOf
         ) {
           throw new NotAcceptableException(
-            ResponseMessages.schema.error.invalidVersion
+            ResponseMessages.schema.error.invalidVersion,
+            { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
           );
         }
 
         const schemaAttributeLength = 0;
         if (schema.attributes.length === schemaAttributeLength) {
-          throw new NotAcceptableException(
-            ResponseMessages.schema.error.insufficientAttributes
+            throw new NotAcceptableException(
+              ResponseMessages.schema.error.insufficientAttributes,
+              { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
             );
           } else if (schema.attributes.length > schemaAttributeLength) {
             
@@ -77,7 +82,10 @@ export class SchemaService extends BaseService {
         .filter((value, index, element) => element.indexOf(value) !== index);
 
         if (0 < duplicateAttributeNames.length) {
-            throw new ConflictException(ResponseMessages.schema.error.uniqueAttributesnames);
+            throw new ConflictException(
+              ResponseMessages.schema.error.uniqueAttributesnames,
+              { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+            );
         }
 
         const attributeDisplayNamesLowerCase = trimmedAttributes.map(attribute => attribute.displayName.toLocaleLowerCase());
@@ -85,7 +93,10 @@ export class SchemaService extends BaseService {
         .filter((value, index, element) => element.indexOf(value) !== index);
 
         if (0 < duplicateAttributeDisplayNames.length) {
-            throw new ConflictException(ResponseMessages.schema.error.uniqueAttributesDisplaynames);
+            throw new ConflictException(
+              ResponseMessages.schema.error.uniqueAttributesDisplaynames,
+              { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+            );
         }
 
           schema.schemaName = schema.schemaName.trim();
@@ -133,7 +144,7 @@ export class SchemaService extends BaseService {
           const responseObj = JSON.parse(JSON.stringify(schemaResponseFromAgentService.response));
 
           const indyNamespace = `${did.split(':')[2]}:${did.split(':')[3]}`;
-          const getLedgerId = await this.schemaRepository.getLedgerByLedger(indyNamespace);
+          const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
           const schemaDetails: ISchema = {
             schema: { schemaName: '', attributes: [], schemaVersion: '', id: '' },
             createdBy: `0`,
@@ -178,23 +189,23 @@ export class SchemaService extends BaseService {
             return saveResponse;
 
           } else {
-            throw new NotFoundException(ResponseMessages.schema.error.notCreated);
+            throw new NotFoundException(
+              ResponseMessages.schema.error.notCreated,
+              { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+            );
           }
         } else {
-          throw new RpcException(
-            new BadRequestException(
-              ResponseMessages.schema.error.emptyData
-            )
+          throw new BadRequestException(
+            ResponseMessages.schema.error.emptyData,
+            { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
           );
         }
-      } else {
-        throw new RpcException(
-          new BadRequestException(
-            ResponseMessages.schema.error.emptyData
-          )
+      } else {       
+        throw new BadRequestException(
+          ResponseMessages.schema.error.emptyData,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
         );
       }
-
     } catch (error) {
       this.logger.error(
         `[createSchema] - outer Error: ${JSON.stringify(error)}`

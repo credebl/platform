@@ -68,7 +68,8 @@ export const ResponseMessages = {
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
-            notFound: 'Organization agent not found'
+            notFound: 'Organization agent not found',
+            orgNotFound: 'Organization not found'
         }
 
     },
@@ -103,6 +104,7 @@ export const ResponseMessages = {
         },
         error: {
             invalidSchemaId: 'Invalid schema Id provided.',
+            invalidData: 'Invalid data provided.',
             nameNotEmpty: 'Schema name is required',
             versionNotEmpty: 'Schema version is required',
             invalidVersion: 'Invalid schema version provided.',
@@ -292,5 +294,12 @@ export const ResponseMessages = {
             mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
             fileDetailsNotFound: 'File details not found.'
         }
+    },
+    errorMessages: {
+        forbidden: 'Forbidden Resource',
+        badRequest: 'Bad Request',
+        conflict: 'Conflict',
+        notAcceptable: 'Not Acceptable',
+        notFound: 'Not Found'
     }
 };

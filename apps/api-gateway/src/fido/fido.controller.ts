@@ -46,7 +46,7 @@ export class FidoController {
     @ApiBadRequestResponse({ status: 400, description: 'Bad Request', type: BadRequestErrorDto })
     async fetchFidoUserDetails(@Request() req, @Param('email') email: string, @Res() res: Response): Promise<Response> {
         try {
-            const fidoUserDetails = await this.fidoService.fetchFidoUserDetails(req.params.email);
+            const fidoUserDetails = await this.fidoService.fetchFidoUserDetails(req.params.email.toLowerCase());
             const finalResponse: IResponseType = {
                 statusCode: HttpStatus.OK,
                 message: ResponseMessages.user.success.fetchUsers,
@@ -73,7 +73,7 @@ export class FidoController {
     async generateRegistrationOption(@Body() body: GenerateRegistrationDto, @Param('email') email: string, @Res() res: Response): Promise<Response> {
         try {
             const { deviceFlag } = body;
-            const registrationOption = await this.fidoService.generateRegistrationOption(deviceFlag, email);
+            const registrationOption = await this.fidoService.generateRegistrationOption(deviceFlag, email.toLowerCase());
             const finalResponse: IResponseType = {
                 statusCode: HttpStatus.CREATED,
                 message: ResponseMessages.fido.success.RegistrationOption,
@@ -96,7 +96,7 @@ export class FidoController {
     @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
     @ApiOperation({ summary: 'Verify registration' })
     async verifyRegistration(@Request() req, @Body() verifyRegistrationDto: VerifyRegistrationDto, @Param('email') email: string, @Res() res: Response): Promise<Response> {
-        const verifyRegistration = await this.fidoService.verifyRegistration(verifyRegistrationDto, req.params.email);
+        const verifyRegistration = await this.fidoService.verifyRegistration(verifyRegistrationDto, req.params.email.toLowerCase());
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.fido.success.verifyRegistration,
@@ -134,7 +134,7 @@ export class FidoController {
     @Post('/passkey/verify-authentication/:email')
     @ApiOperation({ summary: 'Verify authentication' })
     async verifyAuthentication(@Request() req, @Body() verifyAuthenticationDto: VerifyAuthenticationDto, @Param('email') email: string, @Res() res: Response): Promise<Response> {
-        const verifyAuthentication = await this.fidoService.verifyAuthentication(verifyAuthenticationDto, req.params.email);
+        const verifyAuthentication = await this.fidoService.verifyAuthentication(verifyAuthenticationDto, req.params.email.toLowerCase());
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.fido.success.login,

@@ -5,7 +5,7 @@ import { IsBoolean, IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
 export class GenerateRegistrationDto {
     @ApiProperty({ example: 'abc@vomoto.com' })
     @IsNotEmpty({ message: 'Email is required.' })
-    @IsEmail()
+    @IsEmail({}, { message: 'Please provide a valid email' })
     userName: string;
     
     @IsOptional()

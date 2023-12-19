@@ -58,7 +58,7 @@ export class AuthzController {
   * @returns User's verification email sent status
   */
   @Post('/verification-mail')
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Send verification email', description: 'Send verification email to new user' })
   async create(@Body() userEmailVerification: UserEmailVerificationDto, @Res() res: Response): Promise<Response> {
     await this.authzService.sendVerificationMail(userEmailVerification);

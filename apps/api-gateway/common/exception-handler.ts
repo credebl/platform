@@ -64,9 +64,9 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
         if (Array.isArray(exception['response'].message)) {
           errorResponse = {
             statusCode: exception['statusCode'] ? exception['statusCode'] : status,
-            message: exception.message ? exception.message : 'Internal server error',
-            error: exception['response'].message
-              ? exception['response'].message
+            message: exception['response'].message ? exception['response'].message : 'Internal server error',
+            error: exception['response'].error
+              ? exception['response'].error
               : exception['response']
               ? exception['response']
               : 'Internal server error'
@@ -79,8 +79,8 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
               : exception['response']
               ? exception['response']
               : 'Internal server error',
-            error: exception['response'].message
-              ? exception['response'].message
+            error: exception['response'].error
+              ? exception['response'].error
               : exception['response']
               ? exception['response']
               : 'Internal server error'

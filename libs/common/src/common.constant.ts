@@ -293,7 +293,10 @@ export enum CommonConstants {
   TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
   TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#',
 
- 
+
+ //CacheInfo
+CACHE_APIKEY_KEY = "apiKey",
+CACHE_TTL_SECONDS = 3600
 }
 
 export const postgresqlErrorCodes = [];

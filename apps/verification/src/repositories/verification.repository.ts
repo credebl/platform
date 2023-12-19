@@ -28,9 +28,25 @@ export class VerificationRepository {
         }
       });
 
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.verification.error.notFound);
-      }
+            return await this.prisma.presentations.upsert({
+                where: {
+                    threadId: proofPresentationPayload.threadId
+                },
+                update: {
+                    state: proofPresentationPayload.state,
+                    threadId: proofPresentationPayload.threadId,
+                    isVerified: proofPresentationPayload.isVerified
+                },
+                create: {
+                    connectionId: proofPresentationPayload.connectionId,
+                    createdBy: id,
+                    lastChangedBy: id,
+                    state: proofPresentationPayload.state,
+                    threadId: proofPresentationPayload.threadId,
+                    isVerified: proofPresentationPayload.isVerified,
+                    orgId: id
+                }
+            });
 
       return agentDetails;
     } catch (error) {

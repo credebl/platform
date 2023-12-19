@@ -101,7 +101,6 @@ model organisation {
   agent_invitations     agent_invitations[]
   credential_definition credential_definition[]
   file_upload           file_upload[]
-  ecosystemOrgs         ecosystem_orgs[]
 }
 
 model org_invitations {
@@ -290,11 +289,11 @@ model connections {
 }
 
 model credentials {
-  id                   String        @id @default(uuid()) @db.Uuid
-  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy            String        @db.Uuid
-  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy        String        @db.Uuid
+  id                   String       @id @default(uuid()) @db.Uuid
+  createDateTime       DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy            String       @db.Uuid
+  lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy        String       @db.Uuid
   connectionId         String?
   threadId             String        @unique
   credentialExchangeId String        @default("")
@@ -306,11 +305,11 @@ model credentials {
 }
 
 model presentations {
-  id                  String        @id @default(uuid()) @db.Uuid
-  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy           String        @db.Uuid
-  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String        @db.Uuid
+  id                  String       @id @default(uuid()) @db.Uuid
+  createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  createdBy           String       @db.Uuid
+  lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String       @db.Uuid
   connectionId        String?
   state               String?
   threadId            String        @unique
@@ -435,7 +434,7 @@ model file_upload {
   deletedAt           DateTime?     @db.Timestamp(6)
   file_data           file_data[]
   organisation        organisation? @relation(fields: [orgId], references: [id])
-  orgId               String?       @db.Uuid
+  orgId      String?       @db.Uuid
 }
 
 model file_data {

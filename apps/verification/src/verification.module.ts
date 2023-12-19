@@ -5,8 +5,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule } from '@credebl/common';
 import { VerificationRepository } from './repositories/verification.repository';
 import { PrismaService } from '@credebl/prisma-service';
-import { getNatsOptions } from '@credebl/common/nats.config';
-
+import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { CacheModule } from '@nestjs/cache-manager';
 @Module({
   imports: [
     ClientsModule.register([
@@ -18,7 +19,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       }
     ]),
 
-    CommonModule
+    CommonModule,
+    CacheModule.register()
   ],
   controllers: [VerificationController],
   providers: [VerificationService, VerificationRepository, PrismaService, Logger, OutOfBandVerification, EmailDto]

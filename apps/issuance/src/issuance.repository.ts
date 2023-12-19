@@ -252,19 +252,19 @@ export class IssuanceRepository {
     }
   }
 
-  /**
-   * Get organization details
-   * @returns
-   */
-  async getOrganization(orgId: string): Promise<organisation> {
-    try {
-      const organizationDetails = await this.prisma.organisation.findUnique({ where: { id: orgId } });
-      return organizationDetails;
-    } catch (error) {
-      this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
+    async saveFileUploadDetails(fileUploadPayload, userId: string): Promise<file_upload> {
+        try {
+            const { name, status, upload_type, orgId } = fileUploadPayload;
+            return this.prisma.file_upload.create({
+                data: {
+                    name: String(name),
+                    orgId: String(orgId),
+                    status,
+                    upload_type,
+                    createdBy: userId,
+                    lastChangedBy: userId
+                }
+            });
 
   async getCredentialDefinitionDetails(credentialDefinitionId: string): Promise<SchemaDetails> {
     try {
@@ -462,60 +462,27 @@ export class IssuanceRepository {
       this.logger.error(`[getFileDetailsByFileId] - error: ${JSON.stringify(error)}`);
       throw error;
     }
-  }
 
-  async updateFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
-    try {
-      const { jobId, fileUpload, isError, referenceId, error, detailError } = fileUploadData;
-      if (jobId) {
-        return this.prisma.file_data.update({
-          where: { id: jobId },
-          data: {
-            detailError,
-            error,
-            isError,
-            referenceId,
-            fileUploadId: fileUpload
-          }
-        });
-      } else {
-        throw error;
-      }
-    } catch (error) {
-      this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-  async deleteFileDataByJobId(jobId: string): Promise<file_data> {
-    try {
-      if (jobId) {
-        return this.prisma.file_data.update({
-          where: { id: jobId },
-          data: {
-            credential_data: null
-          }
-        });
-      }
-    } catch (error) {
-      this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
+    async saveFileDetails(fileData, userId: string) {
+        try {
+            const { credential_data, schemaId, credDefId, status, isError, fileUploadId } = fileData;
+            return this.prisma.file_data.create({
+                data: {
+                    credential_data,
+                    schemaId,
+                    credDefId,
+                    status,
+                    fileUploadId,
+                    isError,
+                    createdBy: userId,
+                    lastChangedBy: userId
+                }
+            });
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
-  async saveFileDetails(fileData, userId: string) {
-    try {
-      const { credential_data, schemaId, credDefId, status, isError, fileUploadId } = fileData;
-      return this.prisma.file_data.create({
-        data: {
-          credential_data,
-          schemaId,
-          credDefId,
-          status,
-          fileUploadId,
-          isError,
-          createdBy: userId,
-          lastChangedBy: userId
+        } catch (error) {
+            this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
     } catch (error) {

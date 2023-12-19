@@ -13,8 +13,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from 'apps/user/repositories/user.repository';
-import { getNatsOptions } from '@credebl/common/nats.config';
-
+import { CacheModule } from '@nestjs/cache-manager';
 @Module({
   imports: [
     ClientsModule.register([
@@ -24,7 +23,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
         options: getNatsOptions(process.env.ORGANIZATION_NKEY_SEED)
       }
     ]),
-    CommonModule
+    CommonModule,
+    CacheModule.register()
   ],
   controllers: [OrganizationController],
   providers: [

@@ -15,6 +15,7 @@ export interface IAgentSpinupDto {
     tenant?: boolean;
     ledgerName?: string[];
     platformAdminEmail?: string;
+    apiKey?:string;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -121,6 +122,7 @@ export interface IWalletProvision {
     afjVersion: string;
     protocol: string;
     tenant: boolean;
+    apiKey?:string;
 }
 
 export interface IPlatformConfigDto {

@@ -1,3 +1,9 @@
+/* eslint-disable arrow-body-style */
+/* eslint-disable implicit-arrow-linebreak */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable space-in-parens */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import * as CryptoJS from 'crypto-js';
 
 import {
@@ -11,16 +17,13 @@ import {
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
-import { readFileSync } from 'fs';
-import { RpcException } from '@nestjs/microservices';
-import { AgentServiceService } from '../../../apps/agent-service/src/agent-service.service';
 
 @Injectable()
 export class CommonService {
   private readonly logger = new Logger('CommonService');
   result: ResponseService = new ResponseService();
-  agentServiceService :AgentServiceService ;
-  constructor(private readonly httpService: HttpService ) { }
+
+  constructor(private readonly httpService: HttpService) { }
 
   async httpPost(url: string, payload?: any, apiKey?: any) {
     try {
@@ -392,8 +395,4 @@ export class CommonService {
     }
   }
 
-  async getAgentApiKey(orgId: string): Promise<object | string> {
-    const apiKey = await this.agentServiceService.getOrgAgentApiKey(orgId);
-    return apiKey;
-  }
 }

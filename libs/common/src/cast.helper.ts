@@ -9,7 +9,7 @@ export function toLowerCase(value: string): string {
 }
 
 export function trim(value: string): string {
-    return value.trim();
+    if ('string' === typeof value) { return value.trim(); }
 }
 
 export function toDate(value: string): Date {

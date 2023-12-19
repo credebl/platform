@@ -1,8 +1,9 @@
-import { Controller } from '@nestjs/common';
+import { BadRequestException, Controller } from '@nestjs/common';
 import { SchemaService } from './schema.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { ISchema, ISchemaCredDeffSearchInterface, ISchemaSearchInterface } from './interfaces/schema-payload.interface';
 import { schema } from '@prisma/client';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 
 @Controller('schema')
@@ -10,9 +11,16 @@ export class SchemaController {
     constructor(private readonly schemaService: SchemaService) { }
 
     @MessagePattern({ cmd: 'create-schema' })
-    async createSchema(payload: ISchema): Promise<schema> {
+    async createSchema(payload: ISchema): Promise<string> {
         const { schema, user, orgId } = payload;
-        return this.schemaService.createSchema(schema, user, orgId);
+        const schemaData = this.schemaService.createSchema(schema, user, orgId);
+        if (!schemaData) {
+            throw new BadRequestException(
+                ResponseMessages.schema.error.invalidData,
+                { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+              );
+        }
+        return ResponseMessages.schema.success.create;
     }
 
     @MessagePattern({ cmd: 'get-schema-by-id' })

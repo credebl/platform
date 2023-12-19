@@ -13,7 +13,7 @@ export class SchemaService extends BaseService {
   ) { super(`Schema Service`); }
 
   createSchema(schema: CreateSchemaDto, user: IUserRequestInterface, orgId: string): Promise<{
-    response: object;
+    response: string;
   }> {
     const payload = { schema, user, orgId };
     return this.sendNats(this.schemaServiceProxy, 'create-schema', payload);

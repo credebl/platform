@@ -39,3 +39,9 @@ export interface IOrgAgentInterface {
   agentsTypeId: string;
   orgId: string;
 }
+
+export interface AgentDetails {
+    orgDid: string;
+    agentEndPoint: string;
+    tenantId: string
+}

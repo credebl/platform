@@ -1,36 +1,45 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { trim } from '@credebl/common/cast.helper';
 
 class AttributeValue {
 
+    @ApiProperty()
     @IsString()
+    @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'attributeName is required.' })
-    @Transform(({ value }) => value.trim())
     attributeName: string;
 
+    @ApiProperty()
     @IsString()
+    @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'schemaDataType is required.' })
     schemaDataType: string;
 
+    @ApiProperty()
     @IsString()
+    @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'displayName is required.' })
     displayName: string;
 }
 
 export class CreateSchemaDto {
     @ApiProperty()
-    @IsString({ message: 'schema version must be a string' }) 
-    @IsNotEmpty({ message: 'please provide valid schema version' })
+    @IsString({ message: 'Schema version must be a string' }) 
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'schemaVersion is required' })
     schemaVersion: string;
 
     @ApiProperty()
-    @IsString({ message: 'schema name must be a string' })
-    @IsNotEmpty({ message: 'please provide valid schema name' })
+    @IsString({ message: 'schemaName should be string.' })
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'schemaName is required' })
     schemaName: string;
 
     @ApiProperty({
+        type: [AttributeValue],
         'example': [
             {
                 attributeName: 'name',
@@ -39,14 +48,18 @@ export class CreateSchemaDto {
             }
         ]
     })
-    @IsArray({ message: 'attributes must be an array' })
-    @IsNotEmpty({ message: 'please provide valid attributes' })
+    @IsArray({ message: 'Attributes must be an array' })
+    @IsNotEmpty({ message: 'attributes are required' })
+    @ValidateNested({ each: true })
+    @Type(() => AttributeValue)
     attributes: AttributeValue[];
 
     orgId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @Transform(({ value }) => trim(value))
     @IsOptional()
+    @IsNotEmpty({ message: 'orgDid should not be empty' })
     @IsString({ message: 'orgDid must be a string' })
     orgDid: string;
 }

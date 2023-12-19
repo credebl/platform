@@ -101,26 +101,26 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
             where: {
                 email: `${CommonConstants.PLATFORM_ADMIN_EMAIL}`
             }
-        })
+        });
 
         const orgId = await prisma.organisation.findFirst({
             where: {
                 name: `${CommonConstants.PLATFORM_ADMIN_ORG}`
             }
-        })
+        });
 
         const orgRoleId = await prisma.org_roles.findUnique({
             where: {
                 name: `${CommonConstants.PLATFORM_ADMIN_ORG_ROLE}`
             }
-        })
+        });
 
         const platformOrganization = await prisma.user_org_roles.create({
             data: {
                 userId: userId.id,
                 orgRoleId: orgRoleId.id,
                 orgId: orgId.id
-            },
+            }
         });
 
         logger.log(platformOrganization);

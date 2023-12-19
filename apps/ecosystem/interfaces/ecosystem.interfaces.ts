@@ -6,8 +6,8 @@ export interface AttributeValue {
 }
 
 export interface RequestSchemaEndorsement {
-  orgId: string;
-  userId?: string;
+  orgId: string
+  userId?: string
   name: string;
   version: string;
   attributes: AttributeValue[];
@@ -81,7 +81,7 @@ export interface SchemaTransactionResponse {
   requestPayload: string;
   status: string;
   ecosystemOrgId: string;
-  userId?: string;
+  userId?: string
 }
 
 export interface SignedTransactionMessage {
@@ -177,23 +177,106 @@ export interface EndorsementTransactionPayloadDetails {
 }
 
 export interface CreateEcosystem {
-  name: string;
-
+  name?: string;
   description?: string;
-
   tags?: string;
-
-  userId: string;
-
+  logoUrl?:string;
+  userId?: string;
   logo?: string;
-
-  orgName: string;
-
-  orgDid: string;
-
+  orgName?: string;
+  orgDid?: string;
   orgId?: string;
+  autoEndorsement?: boolean;
+  lastChangedBy?: string;
+  ledgers?: string[];
+}
 
-  autoEndorsement: boolean;
+export interface OrganizationData {
+  id: string;
+  createDateTime: string;
+  createdBy: string;
+  lastChangedDateTime: string;
+  lastChangedBy: string;
+  name: string;
+  description: string;
+  orgSlug: string;
+  logoUrl: string;
+  website: string;
+  publicProfile: boolean;
+  org_agents: OrgAgent[];
+}
+
+export interface OrgAgent {
+  id: string;
+  orgDid: string;
+  verkey: string;
+  agentEndPoint: string;
+  isDidPublic: boolean;
+  agentSpinUpStatus: number;
+  walletName: string;
+  tenantId: string;
+  agentsTypeId: string;
+  orgId: string;
+  orgAgentTypeId: string;
+  ledgerId?: string;
+  ledgers?: LedgerDetails;
+}
+
+export interface LedgerDetails {
+  id: string,
+  name: string,
+  indyNamespace: string,
+  networkUrl: string
+}
+
+export interface EcosystemDetails {
+  ecosystemOrgs: {
+    ecosystemRole: {
+      id: string;
+      name: string;
+      description: string;
+      createDateTime: Date;
+      lastChangedDateTime: Date;
+      deletedAt: Date;
+    };
+  }[];
+}
+
+export interface EcosystemInvitationDetails {
+  name: string;
+  id: string;
+  logoUrl: string;
+  description?: string;
+  tags?: string;
+  createDateTime?: Date;
+  createdBy?: string;
+  lastChangedDateTime?: Date;
+  lastChangedBy?: string;
+  deletedAt?: Date;
+  autoEndorsement?: boolean;
+  ledgers: Prisma.JsonValue;  
+  networkDetails?: LedgerDetails[];            
+}
+
+
+export interface InvitationResponse {
+    id: string;
+    email: string;
+    status: string;
+    ecosystemId: string;
+    userId: string;
+    orgId: string;
+    deletedAt: Date;
+    ecosystem: EcosystemInvitationDetails;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+}
+
+export interface EcoInvitationsPagination {
+  invitations: InvitationResponse[];
+  totalPages: number;
 }
 
 export interface TransactionPayload {

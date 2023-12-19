@@ -1,20 +1,13 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
 import { CommonConstants } from '@credebl/common/common.constant';
-import {
-  HttpException,
-  Inject,
-  Injectable,
-  Logger,
-  NotFoundException
-} from '@nestjs/common';
-import {
-  ClientProxy,
-  RpcException
-} from '@nestjs/microservices';
+import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
   ConnectionInvitationResponse,
+  IConnectionInterface,
+  IConnectionSearchCriteria,
   IUserRequestInterface
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
@@ -27,7 +20,6 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class ConnectionService {
-
   constructor(
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
@@ -37,16 +29,21 @@ export class ConnectionService {
   ) { }
 
   /**
-   * Description: create connection legacy invitation 
-   * @param orgId 
-   * @param user 
+   * Description: create connection legacy invitation
+   * @param orgId
+   * @param user
    * @returns Connection legacy invitation URL
    */
   async createLegacyConnectionInvitation(
-    orgId: string, user: IUserRequestInterface, multiUseInvitation: boolean, autoAcceptConnection: boolean, alias: string, imageUrl: string, label: string
+    orgId: string,
+    user: IUserRequestInterface,
+    multiUseInvitation: boolean,
+    autoAcceptConnection: boolean,
+    alias: string,
+    imageUrl: string,
+    label: string
   ): Promise<object> {
     try {
-
       const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
 
       if (connectionInvitationExist) {
@@ -97,35 +94,37 @@ export class ConnectionService {
         shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
       }
 
-      const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(shortenedUrl, agentId, orgId);
+      const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
+        shortenedUrl,
+        agentId,
+        orgId
+      );
 
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
           statusCode: error?.status?.code
         });
-
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
     }
   }
 
-
   /**
-   * Description: create connection legacy invitation 
-   * @param orgId 
-   * @param user 
+   * Description: create connection legacy invitation
+   * @param orgId
+   * @param user
    * @returns Connection legacy invitation URL
    */
-  async getConnectionWebhook(
-    createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: string
-  ): Promise<object> {
+  async getConnectionWebhook(payload: IConnectionInterface): Promise<object> {
     try {
-      const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(createDateTime, lastChangedDateTime, connectionId, state, orgDid, theirLabel, autoAcceptConnection, outOfBandId, orgId);
+      const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(payload);
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[getConnectionWebhook] - error in fetch connection webhook: ${error}`);
@@ -133,14 +132,17 @@ export class ConnectionService {
     }
   }
 
-
   /**
-   * Description: Store shortening URL 
-   * @param referenceId 
-   * @param url 
+   * Description: Store shortening URL
+   * @param referenceId
+   * @param url
    * @returns connection invitation URL
    */
-  async _createConnectionInvitation(connectionPayload: object, url: string, apiKey: string): Promise<ConnectionInvitationResponse> {
+  async _createConnectionInvitation(
+    connectionPayload: object,
+    url: string,
+    apiKey: string
+  ): Promise<ConnectionInvitationResponse> {
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
     const payload = { connectionPayload, url, apiKey };
 
@@ -150,18 +152,19 @@ export class ConnectionService {
       return { message };
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException({
-        status: error.status,
-        error: error.message
-      }, error.status);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
     }
   }
-
 
   async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<object> {
     try {
       return this.connectionRepository.storeShorteningUrl(referenceId, connectionInvitationUrl);
-
     } catch (error) {
       this.logger.error(`Error in store agent details : ${JSON.stringify(error)}`);
       throw error;
@@ -169,12 +172,11 @@ export class ConnectionService {
   }
 
   /**
-  * Description: Fetch connection invitaion by referenceId
-  * @param referenceId 
-  * @returns Connection legacy invitation URL
-  */
-  async getUrl(
-    referenceId: string): Promise<string> {
+   * Description: Fetch connection invitaion by referenceId
+   * @param referenceId
+   * @returns Connection legacy invitation URL
+   */
+  async getUrl(referenceId: string): Promise<string> {
     try {
       const urlDetails = await this.connectionRepository.getShorteningUrl(referenceId);
       return urlDetails.url;
@@ -185,83 +187,83 @@ export class ConnectionService {
   }
 
   /**
- * Description: Fetch all connections
- * @param outOfBandId
- * @param alias
- * @param state
- * @param myDid
- * @param theirDid
- * @param theirLabel
- * @param orgId
- * @param user
- *  
- * @returns get all connections details
- */
-  async getConnections(user: IUserRequest, outOfBandId: string, alias: string, state: string, myDid: string, theirDid: string, theirLabel: string, orgId: string): Promise<string> {
+   * Description: Fetch all connections
+   * @param orgId
+   * @param user
+   *
+   * @returns get all connections details
+   */
+  async getConnections(
+    user: IUserRequest,
+    orgId: string,
+    connectionSearchCriteria: IConnectionSearchCriteria
+  ): Promise<{
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    nextPage: number;
+    previousPage: number;
+    lastPage: number;
+    data: {
+      createDateTime: Date;
+      createdBy: string;
+      connectionId: string;
+      theirLabel: string;
+      state: string;
+      orgId: string;
+    }[];
+  }> {
     try {
-      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      // const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
-
-      const { agentEndPoint } = agentDetails;
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-      }
-      const params = {
-        outOfBandId,
-        alias,
-        state,
-        myDid,
-        theirDid,
-        theirLabel
+      const getConnectionList = await this.connectionRepository.getAllConnections(
+        user,
+        orgId,
+        connectionSearchCriteria
+      );
+      const connectionResponse: {
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        nextPage: number;
+        previousPage: number;
+        lastPage: number;
+        data: {
+          createDateTime: Date;
+          createdBy: string;
+          connectionId: string;
+          theirLabel: string;
+          state: string;
+          orgId: string;
+        }[];
+      } = {
+        totalItems: getConnectionList.connectionCount,
+        hasNextPage:
+          connectionSearchCriteria.pageSize * connectionSearchCriteria.pageNumber < getConnectionList.connectionCount,
+        hasPreviousPage: 1 < connectionSearchCriteria.pageNumber,
+        nextPage: Number(connectionSearchCriteria.pageNumber) + 1,
+        previousPage: connectionSearchCriteria.pageNumber - 1,
+        lastPage: Math.ceil(getConnectionList.connectionCount / connectionSearchCriteria.pageSize),
+        data: getConnectionList.connectionsList
       };
 
-      let url;
-      if (orgAgentType === OrgAgentType.DEDICATED) {
-
-        url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
-
-      } else if (orgAgentType === OrgAgentType.SHARED) {
-
-        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace('#', agentDetails.tenantId);
+      if (0 !== getConnectionList.connectionCount) {
+        return connectionResponse;
       } else {
-
-        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+        throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
       }
-
-      Object.keys(params).forEach((element: string) => {
-        const appendParams: string = url.includes('?') ? '&' : '?';
-
-        if (params[element] !== undefined) {
-          url = `${url + appendParams + element}=${params[element]}`;
-        }
-      });
-      
-
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----getConnections,${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const connectionsDetails = await this._getAllConnections(url, apiKey);
-      return connectionsDetails?.response;
     } catch (error) {
-      this.logger.error(`Error in get url in connection service: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-
-      } else {
-        throw new RpcException(error.response ? error.response : error);
+;      if (404 === error.status) {
+        throw new NotFoundException(error.response.message);
       }
+      throw new RpcException(
+        `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
+      );
     }
   }
 
-
-  async _getAllConnections(url: string, apiKey: string): Promise<{
+  async _getAllConnections(
+    url: string,
+    apiKey: string
+  ): Promise<{
     response: string;
   }> {
     try {
@@ -270,28 +272,31 @@ export class ConnectionService {
       return this.connectionServiceProxy
         .send<string>(pattern, payload)
         .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
+          map((response) => ({
+            response
+          }))
+        )
+        .toPromise()
+        .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(
             {
               status: error.statusCode,
               error: error.message
-            }, error.error);
+            },
+            error.error
+          );
         });
     } catch (error) {
-      this.logger.error(`[_getAllConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[_getAllConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
 
   async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<string> {
     try {
-
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       // const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
@@ -303,13 +308,12 @@ export class ConnectionService {
 
       let url;
       if (orgAgentType === OrgAgentType.DEDICATED) {
-
         url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTION_BY_ID}`.replace('#', connectionId);
       } else if (orgAgentType === OrgAgentType.SHARED) {
-
-        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID}`.replace('#', connectionId).replace('@', agentDetails.tenantId);
+        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID}`
+          .replace('#', connectionId)
+          .replace('@', agentDetails.tenantId);
       } else {
-
         throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
       }
 
@@ -323,22 +327,25 @@ export class ConnectionService {
       const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
       return createConnectionInvitation?.response;
     } catch (error) {
-
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
 
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
           statusCode: error?.status?.code
         });
-
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
     }
   }
 
-  async _getConnectionsByConnectionId(url: string, apiKey: string): Promise<{
+  async _getConnectionsByConnectionId(
+    url: string,
+    apiKey: string
+  ): Promise<{
     response: string;
   }> {
     try {
@@ -347,53 +354,47 @@ export class ConnectionService {
       return this.connectionServiceProxy
         .send<string>(pattern, payload)
         .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
+          map((response) => ({
+            response
+          }))
+        )
+        .toPromise()
+        .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(
             {
               status: error.statusCode,
               error: error.message
-            }, error.error);
+            },
+            error.error
+          );
         });
     } catch (error) {
-      this.logger.error(`[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
   /**
-  * Description: Fetch agent url 
-  * @param referenceId 
-  * @returns agent URL
-  */
-  async getAgentUrl(
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId?: string
-  ): Promise<string> {
+   * Description: Fetch agent url
+   * @param referenceId
+   * @returns agent URL
+   */
+  async getAgentUrl(orgAgentType: string, agentEndPoint: string, tenantId?: string): Promise<string> {
     try {
-
       let url;
       if (orgAgentType === OrgAgentType.DEDICATED) {
-
         url = `${agentEndPoint}${CommonConstants.URL_CONN_LEGACY_INVITE}`;
       } else if (orgAgentType === OrgAgentType.SHARED) {
-
         url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_INVITATION}`.replace('#', tenantId);
       } else {
-
         throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
       }
       return url;
-
     } catch (error) {
       this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
       throw error;
-
     }
   }
 

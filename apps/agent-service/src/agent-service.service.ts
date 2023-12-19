@@ -159,9 +159,11 @@ export class AgentServiceService {
         this.agentServiceRepository.getLedgerDetails(agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]),
         this.agentServiceRepository.getOrgDetails(agentSpinupDto.orgId)
       ]);
+
       if (!user?.userId && agentSpinupDto?.platformAdminEmail) {
 
         platformAdminUser = await this.agentServiceRepository.getPlatfomAdminUser(agentSpinupDto?.platformAdminEmail);
+
         userId = platformAdminUser?.id;
       } else {
         userId = user?.userId;

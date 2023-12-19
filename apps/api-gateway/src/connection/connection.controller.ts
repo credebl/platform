@@ -1,6 +1,6 @@
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, Query, UseFilters } from '@nestjs/common';
+import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
@@ -11,12 +11,13 @@ import { ConnectionService } from './connection.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
-import { Connections } from './enums/connections.enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
+import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -64,9 +65,6 @@ export class ConnectionController {
     /**
     * Description: Get all connections
     * @param user
-    * @param threadId
-    * @param connectionId
-    * @param state
     * @param orgId
     * 
     */
@@ -77,40 +75,48 @@ export class ConnectionController {
         summary: `Fetch all connection details`,
         description: `Fetch all connection details`
     })
+    @ApiQuery({
+        name: 'pageNumber',
+        type: Number,
+        required: false
+      })
+      @ApiQuery({
+        name: 'searchByText',
+        type: String,
+        required: false
+      })
+      @ApiQuery({
+        name: 'pageSize',
+        type: Number,
+        required: false
+      })
+      @ApiQuery({
+        name: 'sorting',
+        type: String,
+        required: false
+      })
+      @ApiQuery({
+        name: 'sortByValue',
+        type: String,
+        required: false
+      })
     @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
-    @ApiQuery(
-        { name: 'outOfBandId', required: false }
-    )
-    @ApiQuery(
-        { name: 'alias', required: false }
-    )
-    @ApiQuery(
-        { name: 'state', enum: Connections, required: false }
-    )
-    @ApiQuery(
-        { name: 'myDid', required: false }
-    )
-    @ApiQuery(
-        { name: 'theirDid', required: false }
-    )
-    @ApiQuery(
-        { name: 'theirLabel', required: false }
-    )
     async getConnections(
+        @Query() getAllConnectionsDto: GetAllConnectionsDto,
         @User() user: IUserRequest,
-        @Query('outOfBandId') outOfBandId: string,
-        @Query('alias') alias: string,
-        @Query('state') state: string,
-        @Query('myDid') myDid: string,
-        @Query('theirDid') theirDid: string,
-        @Query('theirLabel') theirLabel: string,
         @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
 
-        // eslint-disable-next-line no-param-reassign
-        state = state || undefined;
-        const connectionDetails = await this.connectionService.getConnections(user, outOfBandId, alias, state, myDid, theirDid, theirLabel, orgId);
+        const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllConnectionsDto;
+        const connectionSearchCriteria: IConnectionSearchinterface = {
+            pageNumber,
+            searchByText,
+            pageSize,
+            sorting,
+            sortByValue
+          };
+        const connectionDetails = await this.connectionService.getConnections(connectionSearchCriteria, user, orgId);
 
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
@@ -149,6 +155,7 @@ export class ConnectionController {
 
     }
 
+
     /**
       * Catch connection webhook responses. 
       * @Body connectionDto
@@ -165,10 +172,10 @@ export class ConnectionController {
     @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
     async getConnectionWebhook(
         @Body() connectionDto: ConnectionDto,
-        @Param('id') id: number,
+        @Param('id') id: string,
         @Res() res: Response
     ): Promise<object> {
-        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)}`);
+        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${id}`);
         const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,

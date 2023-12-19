@@ -184,10 +184,10 @@ export class OrganizationService {
     }
   }
 
-  async getPublicProfile(payload: { orgSlug: string }): Promise<organisation> {
+  async getPublicProfile(payload: { orgSlug: string }): Promise<object> {
     const { orgSlug } = payload;
     try {
-
+      
       const query = {
         orgSlug,
         publicProfile: true
@@ -198,7 +198,7 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
       }
 
-      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
+      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails['id']);
       organizationDetails['credential_definitions'] = credentials;
       return organizationDetails;
 

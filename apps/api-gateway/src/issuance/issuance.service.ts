@@ -4,7 +4,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
-import { FileExportResponse, RequestPayload } from './interfaces';
+import { FileExportResponse, IIssuedCredentialSearchinterface, RequestPayload } from './interfaces';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -31,14 +31,14 @@ export class IssuanceService extends BaseService {
         const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, user };
         return this.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
     }
-
-
-    getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<{
+    
+    getIssueCredentials(issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface, user: IUserRequest, orgId: string): Promise<{
         response: object;
     }> {
-        const payload = { user, threadId, connectionId, state, orgId };
+        const payload = { issuedCredentialsSearchCriteria, user, orgId };
         return this.sendNats(this.issuanceProxy, 'get-all-issued-credentials', payload);
     }
+
 
     getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<{
         response: object;
@@ -50,7 +50,7 @@ export class IssuanceService extends BaseService {
     getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: string): Promise<{
         response: object;
     }> {
-        const payload = { createDateTime: issueCredentialDto.createdAt, connectionId: issueCredentialDto.connectionId, threadId: issueCredentialDto.threadId, protocolVersion: issueCredentialDto.protocolVersion, credentialAttributes: issueCredentialDto.credentialAttributes, orgId: id };
+        const payload = { issueCredentialDto, id };
         return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
     }
 

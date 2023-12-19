@@ -5,6 +5,7 @@ import { AgentServiceModule } from './agent-service.module';
 import { AgentServiceService } from './agent-service.service';
 import { IAgentSpinupDto, IUserRequestInterface } from './interface/agent-service.interface';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { Ledgers } from '@credebl/enum/enum';
 
@@ -14,9 +15,8 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AgentServiceModule, {
     transport: Transport.NATS,
-    options: {
-      servers: [`${process.env.NATS_URL}`]
-    }
+    options: getNatsOptions(process.env.AGENT_SERVICE_NKEY_SEED)
+
   });
   app.useGlobalFilters(new HttpExceptionFilter());
 

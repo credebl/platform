@@ -7,10 +7,9 @@ export class ArbiterTemplate {
 
   async getArbiterTemplate(attributes: Attribute[]): Promise<string> {
     try {
-      const [name, issuedBy] = await Promise.all(attributes).then((attributes) => {
+      const [name] = await Promise.all(attributes).then((attributes) => {
         const name = this.findAttributeByName(attributes, 'full_name')?.full_name ?? '';
-        const issuedBy = this.findAttributeByName(attributes, 'issued_by')?.issued_by ?? '';
-        return [name, issuedBy];
+        return [name];
       });
       return `<!DOCTYPE html>
       <html lang="en">
@@ -75,7 +74,7 @@ export class ArbiterTemplate {
           
           <span >
               <p style="font-size: 16px; " >has served as an Arbiter at the
-              <span style="font-size: 16px; font-weight: bold;">${issuedBy} World Memory Championship 2023.</span>
+              <span style="font-size: 16px; font-weight: bold;">IAM World Memory Championship 2023.</span>
               </p>
           </p>
           <p>
@@ -87,7 +86,7 @@ export class ArbiterTemplate {
       
           </p>
           <div style="font-family: Inter; font-weight: bold; font-size: 12px;">Date: 24, 25, 26 November 2023 | Place: Cidco Exhibition Centre, Navi Mumbai, India</div>
-          <div style="font-family: Inter;font-weight: bold;font-size: 12px;position: absolute;bottom: 6px;left: 50%;transform: translateX(-50%);width: 100%;">Blockchain-based certificate issued using "credebl.id", by Blockster Labs Pvt. Ltd.</div>
+          <div style="font-family: Inter;font-weight: bold;font-size: 12px;position: absolute;bottom: 6px;left: 50%;transform: translateX(-50%);width: 100%;">Blockchain-based certificate issued using credebl.id, by Blockster Labs Pvt. Ltd.</div>
         </div>
       </div>
       

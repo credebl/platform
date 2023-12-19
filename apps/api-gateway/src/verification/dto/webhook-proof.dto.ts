@@ -43,6 +43,10 @@ export class WebhookPresentationProof {
 
     @ApiProperty()
     @IsOptional()
+    presentationId: string;
+
+    @ApiProperty()
+    @IsOptional()
     autoAcceptProof: string;
 
     @ApiProperty()
@@ -52,4 +56,8 @@ export class WebhookPresentationProof {
     @ApiProperty()
     @IsOptional()
     isVerified: boolean;
+
+    @ApiProperty()
+    @IsOptional()
+    contextCorrelationId: string;
 }

@@ -13,7 +13,7 @@ export class OutOfBandIssuance {
       <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
           <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
               <div style="display: block; text-align:center;">
-              <img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/CREDEBL_LOGO.svg" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+              <img src="${process.env.FRONT_END_URL}/images/CREDEBL_LOGO.png" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
               </div>
               <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
               font-size: 15px; line-height: 24px;color: #5E5873;">
@@ -53,16 +53,7 @@ export class OutOfBandIssuance {
 
                   <hr style="border-top:1px solid #e8e8e8" />
                   <footer style="padding-top: 20px;">
-                      <div style="display: block; text-align:center;">
-                          <a href="https://twitter.com/credebl">
-                              <img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/twitter.svg" width="18" height="18" alt="f"
-                                  style="color:#cccccc; padding-right: 10px;"></a>
-                          <a href="https://github.com/credebl"><img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/github.svg"
-                                  width="18" height="18" alt="t" style="color:#cccccc;padding-right: 10px;"></a>
-                                  <a href="https://discord.com/invite/w4hnQT7NJG"><img src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/discord.svg"
-                                  width="18" height="18" alt="t" style="color:#cccccc;padding-right: 10px;"></a>
-                                  
-                      </div>
+                     
                       <p style="margin-top: 2px;">
                           CREDEBL - by Blockster Labs Pvt. Ltd.
                       </p>

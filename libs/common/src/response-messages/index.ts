@@ -103,9 +103,12 @@ export const ResponseMessages = {
         },
         error: {
             invalidSchemaId: 'Invalid schema Id provided.',
+            nameNotEmpty: 'Schema name is required',
+            versionNotEmpty: 'Schema version is required',
             invalidVersion: 'Invalid schema version provided.',
             insufficientAttributes: 'Please provide at least one attribute.',
-            invalidAttributes: 'Please provide unique attributes',
+            uniqueAttributesnames: 'Please provide unique attribute names',
+            uniqueAttributesDisplaynames: 'Please provide unique display names for attributes',
             emptyData: 'Please provide data for creating schema.',
             exists: 'Schema already exists',
             notCreated: 'Schema not created',
@@ -160,7 +163,7 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'Connection is already exist',
-            connectionNotFound: 'ConnectionNotFound not found',
+            connectionNotFound: 'Connection not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
             agentUrlNotFound: 'agent url not found'
         }
@@ -168,7 +171,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            fetch: 'Credentials fetched successfully',
+            fetch: 'Issued Credential details fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
             bulkIssuance: 'Issuance process started. It will take some time',
@@ -192,12 +195,14 @@ export const ResponseMessages = {
             fileNotFound: 'File details not found',
             fileData: 'File data does not exist for the specific file',
             retry: 'Credentials do not exist for retry',
-            walletError: 'Credential Issuance failed due to error in Wallet Agent'
+            walletError: 'Credential Issuance failed due to error in Wallet Agent',
+            emailIdNotPresent: 'EmailId is empty or not present',
+            attributesNotPresent: 'Attributes are not present or not empty'
         }
     },
     verification: {
         success: {
-            fetch: 'Proof presentation received successfully.',
+            fetch: 'Proof presentations details fetched successfully.',
             proofFormData: 'Proof presentation form data received successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'
@@ -207,7 +212,7 @@ export const ResponseMessages = {
             agentUrlNotFound: 'agent url not found',
             schemaIdNotFound: 'Schema Id is required',
             predicatesValueNotNumber: 'The attribuite value is not a number',
-            proofPresentationNotFound: 'Proof presentation not found',
+            proofPresentationNotFound: 'Proof presentations not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'
@@ -216,7 +221,7 @@ export const ResponseMessages = {
     ecosystem: {
         success: {
             create: 'Ecosystem created successfully',
-            update: 'Ecosystem updated successfully',
+            update: 'Ecosystem details updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
             getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
@@ -236,11 +241,14 @@ export const ResponseMessages = {
         },
         error: {
             notCreated: 'Error while creating ecosystem',
+            orgNotExist: 'Organization does not exist',
+            orgDidNotExist: 'Organization did does not exist',
             exists: 'An ecosystem name is already exist',
             update: 'Error while updating ecosystem',
             invalidInvitationStatus: 'Invalid invitation status',
             invitationNotFound: 'Ecosystem Invitation not found',
             invitationNotUpdate: 'Ecosystem Invitation not updated',
+            ledgerNotMatch: 'Organization ledger network not matched with Ecosystem',
             orgsNotUpdate: 'Ecosystem Orgs not updated',
             ecosystemNotEnabled: 'Ecosystem service is not enabled',
             sumbitTransaction: 'Error while submitting transaction',

@@ -7,15 +7,16 @@ import { CommonModule } from '@credebl/common';
 import { ConnectionRepository } from './connection.repository';
 import { PrismaService } from '@credebl/prisma-service';
 import { CacheModule } from '@nestjs/cache-manager';
+import { getNatsOptions } from '@credebl/common/nats.config';
+// import { nkeyAuthenticator } from 'nats';
+
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.CONNECTION_NKEY_SEED)
       }
     ]),
 

@@ -122,7 +122,7 @@ export class EcosystemController {
   @ApiOperation({ summary: 'Get all organization ecosystems', description: 'Get all existing ecosystems of an specific organization' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiBearerAuth()
   async getEcosystem(
     @Param('orgId') orgId: string,
@@ -141,7 +141,7 @@ export class EcosystemController {
   @ApiOperation({ summary: 'Get ecosystem dashboard details', description: 'Get ecosystem dashboard details' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
   @ApiBearerAuth()
   async getEcosystemDashboardDetails(@Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
@@ -282,6 +282,25 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  @Post('/:ecosystemId/:orgId/transaction/schema')
+  @ApiOperation({ summary: 'Request new schema', description: 'Request new schema' })
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @ApiBearerAuth()
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_OWNER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
+    requestSchemaPayload.userId = user.id;
+    
+    await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId, ecosystemId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.schemaRequest
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+
   /**
    * 
    * @param createOrgDto 
@@ -305,23 +324,6 @@ export class EcosystemController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.create
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
-  @Post('/:ecosystemId/:orgId/transaction/schema')
-  @ApiOperation({ summary: 'Request new schema', description: 'Request new schema' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  @ApiBearerAuth()
-  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
-    requestSchemaPayload.userId = user.id;
-    await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId, ecosystemId);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.schemaRequest
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -472,7 +474,7 @@ export class EcosystemController {
   @Put('/:ecosystemId/:orgId')
   @ApiOperation({ summary: 'Edit ecosystem', description: 'Edit existing ecosystem' })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER)

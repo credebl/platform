@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Logger, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Logger, Param, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { PlatformService } from './platform.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -33,8 +33,9 @@ export class PlatformController {
         @Res() res: Response,
         @User() user: IUserRequestInterface
     ): Promise<object> {
-        const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
+        const { ledgerId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
         const schemaSearchCriteria: ISchemaSearchInterface = {
+            ledgerId,
             pageNumber,
             searchByText,
             pageSize,
@@ -42,7 +43,6 @@ export class PlatformController {
             sortByValue
         };
         const schemasResponse = await this.platformService.getAllSchema(schemaSearchCriteria, user);
-
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.schema.success.fetch,
@@ -63,6 +63,28 @@ export class PlatformController {
         @Res() res: Response
     ): Promise<object> {
         const networksResponse = await this.platformService.getAllLedgers();
+
+        const finalResponse: IResponseType = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.ledger.success.fetch,
+            data: networksResponse.response
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
+    }
+
+    @Get('/network/url/:indyNamespace')
+    @ApiTags('ledgers')
+    @ApiOperation({
+        summary: 'Get network url from platform.',
+        description: 'Get network url from platform.'
+    })
+    @UseGuards(AuthGuard('jwt'))
+    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+    async getNetwrkUrl(
+        @Param('indyNamespace') indyNamespace: string, 
+        @Res() res: Response
+    ): Promise<object> {
+        const networksResponse = await this.platformService.getNetworkUrl(indyNamespace);
 
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,

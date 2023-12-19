@@ -10,15 +10,15 @@ import { AgentServiceRepository } from 'apps/agent-service/src/repositories/agen
 import { ConnectionService } from 'apps/connection/src/connection.service';
 import { ConnectionRepository } from 'apps/connection/src/connection.repository';
 import { CacheModule } from '@nestjs/cache-manager';
+import { getNatsOptions } from '@credebl/common/nats.config';
+
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.ECOSYSTEM_NKEY_SEED)
       }
     ]),
 

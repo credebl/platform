@@ -9,6 +9,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ConnectionService } from 'apps/connection/src/connection.service';
 import { ConnectionRepository } from 'apps/connection/src/connection.repository';
 import { CacheModule } from '@nestjs/cache-manager';
+import { getNatsOptions } from '@credebl/common/nats.config';
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -16,9 +18,7 @@ import { CacheModule } from '@nestjs/cache-manager';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
+        options: getNatsOptions(process.env.AGENT_SERVICE_NKEY_SEED)
       }
     ]),
     CommonModule,

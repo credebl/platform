@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IWebhookProofPresentation, ProofFormDataPayload } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload, ProofPresentationPayload } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { org_agents, organisation, presentations } from '@prisma/client';
@@ -14,6 +14,9 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IProofRequestsSearchCriteria } from 'apps/api-gateway/src/verification/interfaces/verification.interface';
+
 @Injectable()
 export class VerificationService {
 
@@ -34,39 +37,79 @@ export class VerificationService {
    * @param orgId 
    * @returns Get all proof presentation
    */
-  async getProofPresentations(orgId: string, threadId: string): Promise<string> {
-    try {
-      const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
 
-      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      const verificationMethodLabel = 'get-proof-presentation';
-      let url;
-      if (threadId) {
-        url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, threadId);
+  async getProofPresentations(
+    user: IUserRequest,
+    orgId: string,
+    proofRequestsSearchCriteria: IProofRequestsSearchCriteria
+  ): Promise<{
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    nextPage: number;
+    previousPage: number;
+    lastPage: number;
+    data: {
+      createDateTime: Date;
+      createdBy: string;
+      connectionId: string;
+      state: string;
+      orgId: string;
+    }[];
+  }> {
+    try {
+      const getProofRequestsList = await this.verificationRepository.getAllProofRequests(
+        user,
+        orgId,
+        proofRequestsSearchCriteria
+      );
+      const issuedCredentialsResponse: {
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        nextPage: number;
+        previousPage: number;
+        lastPage: number;
+        data: {
+          createDateTime: Date;
+          createdBy: string;
+          connectionId: string;
+          state: string;
+          orgId: string;
+        }[];
+      } = {
+        totalItems: getProofRequestsList.proofRequestsCount,
+        hasNextPage:
+        proofRequestsSearchCriteria.pageSize * proofRequestsSearchCriteria.pageNumber < getProofRequestsList.proofRequestsCount,
+        hasPreviousPage: 1 < proofRequestsSearchCriteria.pageNumber,
+        nextPage: Number(proofRequestsSearchCriteria.pageNumber) + 1,
+        previousPage: proofRequestsSearchCriteria.pageNumber - 1,
+        lastPage: Math.ceil(getProofRequestsList.proofRequestsCount / proofRequestsSearchCriteria.pageSize),
+        data: getProofRequestsList.proofRequestsList
+      };
+
+      if (0 !== getProofRequestsList.proofRequestsCount) {
+        return issuedCredentialsResponse;
       } else {
-        url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
+        throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
       }
       // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const payload = { apiKey, url };
-      const getProofPresentationsDetails = await this._getProofPresentations(payload);
-      return getProofPresentationsDetails?.response;
+    //   let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    //   this.logger.log(`cachedApiKey----${apiKey}`);
+    //  if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+    //    apiKey = await this._getOrgAgentApiKey(orgId);
+    //   }
+    //   const payload = { apiKey, url };
+    //   const getProofPresentationsDetails = await this._getProofPresentations(payload);
+    //   return getProofPresentationsDetails?.response;
 
     } catch (error) {
-      this.logger.error(`[getProofPresentations] - error in get proof presentation : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-
-      } else {
-        throw new RpcException(error.response ? error.response : error);
+      if (404 === error.status) {
+        throw new NotFoundException(error.response.message);
       }
+      throw new RpcException(
+        `[getConnections] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
+      );
     }
   }
 
@@ -362,10 +405,10 @@ export class VerificationService {
     }
   }
 
-  async webhookProofPresentation(id: string, proofPresentationPayload: IWebhookProofPresentation): Promise<presentations> {
+  async webhookProofPresentation(proofPresentationPayload: ProofPresentationPayload): Promise<presentations> {
     try {
 
-      const proofPresentation = await this.verificationRepository.storeProofPresentation(id, proofPresentationPayload);
+      const proofPresentation = await this.verificationRepository.storeProofPresentation(proofPresentationPayload);
       return proofPresentation;
 
     } catch (error) {

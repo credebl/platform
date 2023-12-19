@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client';
 export interface AttributeValue {
   attributeName: string;
   schemaDataType: string;
@@ -6,7 +6,8 @@ export interface AttributeValue {
 }
 
 export interface RequestSchemaEndorsement {
-  orgId: string
+  orgId: string;
+  userId?: string;
   name: string;
   version: string;
   attributes: AttributeValue[];
@@ -14,16 +15,17 @@ export interface RequestSchemaEndorsement {
 }
 
 export interface RequestCredDeffEndorsement {
-  schemaId: string
+  schemaId: string;
   tag: string;
   endorse?: boolean;
   schemaDetails?: object;
+  userId?: string;
 }
 
 export interface IAttributeValue {
   attributeName: string;
   schemaDataType: string;
-  displayName: string
+  displayName: string;
 }
 
 export interface SchemaTransactionPayload {
@@ -79,6 +81,7 @@ export interface SchemaTransactionResponse {
   requestPayload: string;
   status: string;
   ecosystemOrgId: string;
+  userId?: string;
 }
 
 export interface SignedTransactionMessage {
@@ -93,7 +96,7 @@ export interface EndorsementTransactionPayload {
   authorDid: string;
   requestPayload: string;
   responsePayload: string;
-  requestBody: Prisma.JsonValue
+  requestBody: Prisma.JsonValue;
   status: string;
   ecosystemOrgId: string;
   createDateTime: Date;
@@ -129,7 +132,6 @@ export interface submitTransactionPayload {
   credentialDefinition?: CredentialDefinitionPayload;
 }
 
-
 export interface SaveSchema {
   name: string;
   version: string;
@@ -149,6 +151,7 @@ export interface saveCredDef {
   credentialDefinitionId: string;
   revocable: boolean;
   createdBy: string;
+  lastChangedBy: string;
   orgId: string;
   schemaId: string;
 }
@@ -161,7 +164,7 @@ export interface EndorsementTransactionPayloadDetails {
   responsePayload: string;
   type: string;
   createDateTime: Date;
-  createdBy:string;
+  createdBy: string;
   lastChangedDateTime: Date;
   lastChangedBy: string;
   deletedAt: Date | null;
@@ -190,5 +193,12 @@ export interface CreateEcosystem {
 
   orgId?: string;
 
-  autoEndorsement: boolean
+  autoEndorsement: boolean;
+}
+
+export interface TransactionPayload {
+  endorsementId: string;
+  ecosystemId: string;
+  ecosystemLeadAgentEndPoint?: string;
+  orgId?: string;
 }

@@ -30,6 +30,7 @@ async function bootstrap(): Promise<void> {
     walletPassword: process.env.PLATFORM_WALLET_PASSWORD,
     seed: process.env.PLATFORM_SEED,
     orgName: `${CommonConstants.PLATFORM_ADMIN_ORG}`,
+    platformAdminEmail: process.env.PLATFORM_ADMIN_EMAIL,
     tenant: true,
     ledgerName: [Ledgers.Bcovrin_Testnet, Ledgers.Indicio_Demonet, Ledgers.Indicio_Mainnet, Ledgers.Indicio_Testnet]
   };

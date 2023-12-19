@@ -102,3 +102,11 @@ export interface FileUploadData {
     detailError?: string;
     jobId: string;
 }
+
+export interface ClientDetails {
+   
+    clientId: string;
+
+    userId?: string;
+
+}

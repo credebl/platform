@@ -8,9 +8,9 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
-import { platform_config } from '@prisma/client';
+// import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -29,6 +29,7 @@ import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 
+
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
@@ -40,15 +41,15 @@ export class IssuanceService {
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
-    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
-
+    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
 
   async sendCredentialCreateOffer(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
@@ -59,7 +60,14 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = platformConfig?.sgApiKey;
+      // let apiKey = await this._getOrgAgentApiKey(orgId);
+     
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       const issueData = {
         protocolVersion: 'v1',
         connectionId,
@@ -95,7 +103,7 @@ export class IssuanceService {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
@@ -106,7 +114,15 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = platformConfig?.sgApiKey;
+
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+
       const issueData = {
         connectionId,
         credentialFormats: {
@@ -177,7 +193,7 @@ export class IssuanceService {
   async getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
@@ -200,7 +216,13 @@ export class IssuanceService {
           url = `${url + appendParams + element}=${params[element]}`;
         }
       });
-      const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       const issueCredentialsDetails = await this._getIssueCredentials(url, apiKey);
       return issueCredentialsDetails?.response;
     } catch (error) {
@@ -234,7 +256,7 @@ export class IssuanceService {
     try {
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
@@ -245,7 +267,13 @@ export class IssuanceService {
       const issuanceMethodLabel = 'get-issue-credential-by-credential-id';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
 
-      const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
       return createConnectionInvitation?.response;
     } catch (error) {
@@ -316,7 +344,13 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
       }
 
-      const { apiKey } = agentDetails;
+      // const { apiKey } = agentDetails;
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
 
       const errors = [];
       const emailPromises = [];
@@ -738,7 +772,7 @@ export class IssuanceService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async issueBulkCredential(requestId: string, orgId: string, clientId: string): Promise<string> {
+  async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -780,7 +814,7 @@ export class IssuanceService {
         fileUpload.name = parsedPrimeDetails.fileName;
       }
 
-      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload);
+      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
       const saveFileDetailsPromises = parsedData.map(async (element) => {
         const credentialPayload = {
@@ -791,7 +825,7 @@ export class IssuanceService {
           isError: false,
           fileUploadId: respFileUpload.id
         };
-        return this.issuanceRepository.saveFileDetails(credentialPayload);
+        return this.issuanceRepository.saveFileDetails(credentialPayload, clientDetails.userId);
       });
 
       // Wait for all saveFileDetails operations to complete
@@ -808,7 +842,7 @@ export class IssuanceService {
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
-            clientId,
+            clientId: clientDetails.clientId,
             cacheId: requestId,
             credentialDefinitionId: element.credDefId,
             schemaLedgerId: element.schemaId,
@@ -871,6 +905,9 @@ export class IssuanceService {
 
           await this.delay(500); // Wait for 0.5 secends
           this.processIssuanceData(payload);
+          if (0 === respFile.length) {
+            return FileUploadStatus.completed;
+          }
         } catch (error) {
           // Handle errors if needed
           this.logger.error(`Error processing issuance data: ${error}`);
@@ -1035,6 +1072,18 @@ export class IssuanceService {
       throw new BadRequestException(
         `Empty data found at row ${rowIndex} and column ${columnIndex}`
       );
+    }
+  }
+
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    try {
+      const pattern = { cmd: 'get-org-agent-api-key' };
+      const payload = {orgId };
+      const message = await this.natsCall(pattern, payload);
+      return String(message);
+    } catch (error) {
+      this.logger.error(`[_getOrgAgentApiKey] [NATS call]- error in getOrgApiKey : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

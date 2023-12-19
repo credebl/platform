@@ -56,8 +56,9 @@ export class OrganizationRepository {
           description: createOrgDto.description,
           website: createOrgDto.website,
           orgSlug: createOrgDto.orgSlug,
-          publicProfile: true
-
+          publicProfile: true,
+          createdBy: createOrgDto.createdBy,
+          lastChangedBy: createOrgDto.lastChangedBy
         }
       });
     } catch (error) {
@@ -84,7 +85,8 @@ export class OrganizationRepository {
           description: updateOrgDto.description,
           website: updateOrgDto.website,
           orgSlug: updateOrgDto.orgSlug,
-          publicProfile: updateOrgDto.isPublic
+          publicProfile: updateOrgDto.isPublic,
+          lastChangedBy: updateOrgDto.userId
         }
       });
     } catch (error) {
@@ -138,7 +140,9 @@ export class OrganizationRepository {
           user: { connect: { id: userId } },
           organisation: { connect: { id: orgId } },
           orgRoles: orgRoleId,
-          status: Invitation.PENDING
+          status: Invitation.PENDING,
+          createdBy: userId,
+          lastChangedBy: userId
         }
       });
     } catch (error) {

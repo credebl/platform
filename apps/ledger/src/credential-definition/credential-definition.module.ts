@@ -7,7 +7,7 @@ import { CredentialDefinitionRepository } from './repositories/credential-defini
 import { CredentialDefinitionService } from './credential-definition.service';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from '@credebl/prisma-service';
-
+import { CacheModule } from '@nestjs/cache-manager';
 @Module({
   imports: [
     ClientsModule.register([
@@ -20,7 +20,8 @@ import { PrismaService } from '@credebl/prisma-service';
       }
     ]),
     HttpModule,
-    CommonModule
+    CommonModule,
+    CacheModule.register()
   ],
   providers: [
     CredentialDefinitionService,

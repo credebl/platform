@@ -7,7 +7,7 @@ import { VerificationRepository } from './repositories/verification.repository';
 import { PrismaService } from '@credebl/prisma-service';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-
+import { CacheModule } from '@nestjs/cache-manager';
 @Module({
   imports: [
     ClientsModule.register([
@@ -20,7 +20,8 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
       }
     ]),
 
-    CommonModule
+    CommonModule,
+    CacheModule.register()
   ],
   controllers: [VerificationController],
   providers: [VerificationService, VerificationRepository, PrismaService, Logger, OutOfBandVerification, EmailDto]

@@ -19,7 +19,9 @@ export interface IUpdateOrganization {
   logo?: string;
   website?: string;
   orgSlug?: string;
-  isPublic?:boolean
+  isPublic?:boolean;
+  userId?: string;
+
 }
 
 export interface OrgAgent {

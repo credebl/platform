@@ -15,12 +15,15 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CreateCredDefAgentRedirection, CredDefSchema, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
 import { OrgAgentType } from '@credebl/enum/enum';
-
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { CommonConstants } from '@credebl/common/common.constant';
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
     constructor(
         private readonly credentialDefinitionRepository: CredentialDefinitionRepository,
-        @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy
+        @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy,
+        @Inject(CACHE_MANAGER) private cacheService: Cache
 
     ) {
         super('CredentialDefinitionService');
@@ -33,7 +36,12 @@ export class CredentialDefinitionService extends BaseService {
             // eslint-disable-next-line yoda
             const did = credDef.orgDid?.split(':').length >= 4 ? credDef.orgDid : orgDid;
             const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(credDef.orgId);
-            const apiKey = '';
+            // const apiKey = await this._getOrgAgentApiKey(credDef.orgId);
+            let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+            this.logger.log(`cachedApiKey----${apiKey}`);
+           if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+             apiKey = await this._getOrgAgentApiKey(credDef.orgId);
+            }
             const { userId } = user.selectedOrg;
             credDef.tag = credDef.tag.trim();
             const dbResult: credential_definition = await this.credentialDefinitionRepository.getByAttribute(
@@ -87,6 +95,7 @@ export class CredentialDefinitionService extends BaseService {
                 issuerId: '',
                 revocable: credDef.revocable,
                 createdBy: `0`,
+                lastChangedBy: `0`,
                 orgId: '0',
                 schemaId: '0',
                 credentialDefinitionId: ''
@@ -101,6 +110,7 @@ export class CredentialDefinitionService extends BaseService {
                 credDefData.revocable = credDef.revocable;
                 credDefData.schemaId = schemaDetails.id;
                 credDefData.createdBy = userId;
+                credDefData.lastChangedBy = userId;
             } else if ('finished' === response.credentialDefinition.state) {
                 credDefData.tag = response.credentialDefinition.credentialDefinition.tag;
                 credDefData.schemaLedgerId = response.credentialDefinition.credentialDefinition.schemaId;
@@ -110,6 +120,7 @@ export class CredentialDefinitionService extends BaseService {
                 credDefData.revocable = credDef.revocable;
                 credDefData.schemaId = schemaDetails.id;
                 credDefData.createdBy = userId;
+                credDefData.lastChangedBy = userId;
             }
             const credDefResponse = await this.credentialDefinitionRepository.saveCredentialDefinition(credDefData);
             return credDefResponse;
@@ -167,8 +178,13 @@ export class CredentialDefinitionService extends BaseService {
             const { agentEndPoint } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(String(orgId));
             const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(String(orgId));
             const orgAgentType = await this.credentialDefinitionRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-            const apiKey = '';
-            let credDefResponse;
+            // const apiKey = await this._getOrgAgentApiKey(String(orgId));
+            let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+            this.logger.log(`cachedApiKey----${apiKey}`);
+           if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+             apiKey = await this._getOrgAgentApiKey(String(orgId));
+            }
+            let  credDefResponse;
             if (OrgAgentType.DEDICATED === orgAgentType) {
                 const getSchemaPayload = {
                     credentialDefinitionId,
@@ -313,4 +329,20 @@ export class CredentialDefinitionService extends BaseService {
         }
     }
 
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.credDefServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
 }

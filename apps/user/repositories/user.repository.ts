@@ -2,7 +2,7 @@
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
-  OrgUsers,
+  IOrgUsers,
   PlatformSettingsI,
   ShareUserCertificateI,
   UpdateUserProfile,
@@ -330,7 +330,7 @@ export class UserRepository {
     pageNumber: number,
     pageSize: number,
     filterOptions?: object
-  ): Promise<OrgUsers> {
+  ): Promise<IOrgUsers> {
     const result = await this.prisma.$transaction([
       this.prisma.user.findMany({
         where: {

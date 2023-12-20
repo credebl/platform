@@ -74,7 +74,7 @@ export interface Attribute {
     label: string
   }
 
-  export interface OrgUsers {
+  export interface IOrgUsers {
     totalPages: number,
     users: OrgUser[]
   }
@@ -121,3 +121,16 @@ export interface Attribute {
     createDateTime: Date,
     orgAgentTypeId:string
   }
+
+  export interface Payload {
+    pageNumber: number;
+    pageSize: number;
+    search: string;
+  }
+
+  // export interface OrgUsersPayload {
+  //   orgId: string;
+  //   pageNumber: number;
+  //   pageSize: number;
+  //   search: string;
+  // }

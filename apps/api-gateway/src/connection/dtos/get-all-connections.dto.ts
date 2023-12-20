@@ -1,7 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
-import { IsOptional } from "class-validator";
-import { SortValue } from "../../enum";
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsOptional } from 'class-validator';
+import { SortValue } from '../../enum';
 
 export class GetAllConnectionsDto {
     @ApiProperty({ required: false })
@@ -19,7 +19,7 @@ export class GetAllConnectionsDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    sorting: string = 'id';
+    sorting: string;
 
     @ApiProperty({ required: false })
     @IsOptional()

@@ -16,6 +16,22 @@ TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 
+echo "AGENCY --- $AGENCY"
+echo "EXTERNAL_IP --- $EXTERNAL_IP"
+echo "WALLET_NAME --- $WALLET_NAME"
+echo "WALLET_PASSWORD --- $WALLET_PASSWORD"
+echo "RANDOM_SEED --- $RANDOM_SEED"
+echo "WEBHOOK_HOST --- $WEBHOOK_HOST"
+echo "WALLET_STORAGE_HOST --- $WALLET_STORAGE_HOST"
+echo "WALLET_STORAGE_PORT --- $WALLET_STORAGE_PORT"
+echo "WALLET_STORAGE_USER --- $WALLET_STORAGE_USER"
+echo "WALLET_STORAGE_PASSWORD --- $WALLET_STORAGE_PASSWORD"
+echo "CONTAINER_NAME --- $CONTAINER_NAME"
+echo "PROTOCOL --- $PROTOCOL"
+echo "TENANT --- $TENANT"
+echo "AFJ_VERSION --- $AFJ_VERSION"
+echo "INDY_LEDGER --- $INDY_LEDGER"
+
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
@@ -76,7 +92,7 @@ else
   mkdir ${PWD}/apps/agent-provisioning/AFJ/endpoints
 fi
 
-docker build . -t $AFJ_VERSION -f apps/agent-provisioning/AFJ/afj-controller/Dockerfile
+# docker build . -t $AFJ_VERSION -f apps/agent-provisioning/AFJ/afj-controller/Dockerfile
 
 AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
 

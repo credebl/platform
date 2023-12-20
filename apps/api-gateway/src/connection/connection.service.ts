@@ -5,6 +5,7 @@ import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
+import { IConnectionList } from 'apps/connection/src/interfaces/connection.interfaces';
 
 @Injectable()
 export class ConnectionService extends BaseService {
@@ -60,9 +61,7 @@ export class ConnectionService extends BaseService {
     connectionSearchCriteria: IConnectionSearchinterface,
     user: IUserRequest,
     orgId: string
-  ): Promise<{
-    response: object;
-  }> {
+  ): Promise<{response: IConnectionList}> {
     const payload = { connectionSearchCriteria, user, orgId };
     return this.sendNats(this.connectionServiceProxy, 'get-all-connections', payload);
   }

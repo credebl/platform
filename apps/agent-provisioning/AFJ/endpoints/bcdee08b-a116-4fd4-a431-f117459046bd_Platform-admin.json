@@ -1,0 +1,4 @@
+    {
+        "CONTROLLER_ENDPOINT":"192.168.1.63:8017",
+        "AGENT_ENDPOINT" : ":8017"
+    }

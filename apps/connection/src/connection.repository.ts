@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, org_agents, platform_config, shortening_url } from '@prisma/client';
-import { IConnectionInterface, IConnectionSearchCriteria, OrgAgent } from './interfaces/connection.interfaces';
+import { IConnectionInterface, IConnectionSearchCriteria, IConnectionsListCount, OrgAgent } from './interfaces/connection.interfaces';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 // import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
@@ -245,17 +245,7 @@ export class ConnectionRepository {
     user: IUserRequest,
     orgId: string,
     connectionSearchCriteria: IConnectionSearchCriteria
-  ): Promise<{
-    connectionCount: number;
-    connectionsList: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      theirLabel: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+  ): Promise<IConnectionsListCount> {
     try {
       const connectionsList = await this.prisma.connections.findMany({
         where: {
@@ -282,6 +272,7 @@ export class ConnectionRepository {
         take: Number(connectionSearchCriteria.pageSize),
         skip: (connectionSearchCriteria.pageNumber - 1) * connectionSearchCriteria.pageSize
       });
+
       const connectionCount = await this.prisma.connections.count({
           where: {
             orgId,

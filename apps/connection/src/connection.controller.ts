@@ -4,6 +4,7 @@ import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs mic
 import {
   IConnection,
   IConnectionInterface,
+  IConnectionList,
   IFetchConnectionById,
   IFetchConnectionInterface
 } from './interfaces/connection.interfaces';
@@ -53,7 +54,7 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'get-all-connections' })
-  async getConnections(payload: IFetchConnectionInterface): Promise<object> {
+  async getConnections(payload: IFetchConnectionInterface): Promise<IConnectionList> {
     const { user, orgId, connectionSearchCriteria } = payload;
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
   }

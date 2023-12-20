@@ -7,6 +7,7 @@ import { map } from 'rxjs';
 import {
   ConnectionInvitationResponse,
   IConnectionInterface,
+  IConnectionList,
   IConnectionSearchCriteria,
   IUserRequestInterface
 } from './interfaces/connection.interfaces';
@@ -188,22 +189,7 @@ export class ConnectionService {
     user: IUserRequest,
     orgId: string,
     connectionSearchCriteria: IConnectionSearchCriteria
-  ): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      theirLabel: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+  ): Promise<IConnectionList> {
     try {
       const getConnectionList = await this.connectionRepository.getAllConnections(
         user,
@@ -235,14 +221,15 @@ export class ConnectionService {
         lastPage: Math.ceil(getConnectionList.connectionCount / connectionSearchCriteria.pageSize),
         data: getConnectionList.connectionsList
       };
-
+      
       if (0 !== getConnectionList.connectionCount) {
         return connectionResponse;
       } else {
         throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
       }
+
     } catch (error) {
-;      if (404 === error.status) {
+      if (404 === error.status) {
         throw new NotFoundException(error.response.message);
       }
       throw new RpcException(

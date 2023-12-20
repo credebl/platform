@@ -77,30 +77,35 @@ export class ConnectionController {
     })
     @ApiQuery({
         name: 'pageNumber',
+        example: '1',
         type: Number,
         required: false
       })
       @ApiQuery({
         name: 'searchByText',
+        example: '',
         type: String,
         required: false
       })
       @ApiQuery({
         name: 'pageSize',
+        example: '10',
         type: Number,
         required: false
       })
       @ApiQuery({
         name: 'sorting',
+        example: 'createDateTime',
         type: String,
         required: false
       })
       @ApiQuery({
         name: 'sortByValue',
+        example: 'DESC',
         type: String,
         required: false
       })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
     async getConnections(
         @Query() getAllConnectionsDto: GetAllConnectionsDto,
         @User() user: IUserRequest,

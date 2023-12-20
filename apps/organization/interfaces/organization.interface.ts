@@ -3,7 +3,7 @@ export interface IUserOrgRoles {
   userId: string
   orgRoleId: string
   orgId: string | null,
-  orgRole: OrgRole
+  orgRole: IOrgRole
 }
 
 export interface IUpdateOrganization {
@@ -18,13 +18,13 @@ export interface IUpdateOrganization {
 
 }
 
-export interface OrgAgent {
+export interface IOrgAgent {
   url: string;
   apiKey: string;
 }
 
 
-export interface GetOrgById { 
+export interface IGetOrgById { 
   id: string;
   name: string;
   description: string;
@@ -32,76 +32,76 @@ export interface GetOrgById {
   logoUrl: string;
   website: string;
   publicProfile: boolean;
-  schema: Schema[];
-  org_agents: OrgAgents[];
+  schema: ISchema[];
+  org_agents: IOrgAgents[];
 }
 
-interface Schema {
+interface ISchema {
   id: string;
   name: string;
 }
 
-interface OrgAgents {
-  agent_invitations: AgentInvitation[];
-  ledgers: Ledgers;
-  org_agent_type: OrgAgentType;
+interface IOrgAgents {
+  agent_invitations: IAgentInvitation[];
+  ledgers: ILedgers;
+  org_agent_type: IOrgAgentType;
 }
 
-interface AgentInvitation {
+interface IAgentInvitation {
   id: string;
   connectionInvitation: string;
   multiUse: boolean;
 }
 
-export interface UserOrgRole {
+export interface IUserOrgRole {
   user: string;
   orgRole: string;
 }
 
-interface OrgAgentType {
+interface IOrgAgentType {
   id: string;
   createDateTime: Date;
   lastChangedDateTime: Date;
   agent: string;
 }
 
-interface Ledgers {
+interface ILedgers {
   id: string;
   name: string;
   networkType: string
 }
 
-export interface GetOrgs {
+export interface IGetOrgs {
   totalPages:number;
-  organizations : AllOrganizations[];
+  organizations : IAllOrganizations[];
 }
 
-interface AllOrganizations {
+interface IAllOrganizations {
   id: string,
   name: string,
   description: string,
   logoUrl: string,
   orgSlug: string,
-  userOrgRoles: UserOrgRoles[];
+  userOrgRoles: IUserOrganizationRoles[];
 }
 
-interface UserOrgRoles {
+interface IUserOrganizationRoles {
   id: string,
-  orgRole :OrgRole;
+  orgRole :IOrgRole;
 }
 
-export interface OrgRole {
+export interface IOrgRole {
   id: string
   name: string
   description: string
 }
 
-export interface OrgInvitationsPagination {
+export interface IOrgInvitationsPagination {
   totalPages: number;
-  invitations: Invitation[];
+  invitations: IInvitation[];
 }
 
-interface Invitation {
+interface IInvitation {
   id: string,
   orgId: string,
   email: string,
@@ -110,18 +110,24 @@ interface Invitation {
   orgRoles: string[],
   createDateTime: Date,
   createdBy:string,
-  organisation: OrganizationPagination;
+  organisation: IOrganizationPagination;
 }
 
-interface OrganizationPagination {
+interface IOrganizationPagination {
   id: string;
   name: string;
   logoUrl: string;
 }
 
-export interface OrganizationDashboard {
+export interface IOrganizationDashboard {
   usersCount: number,
   schemasCount: number,
   credentialsCount: number,
   presentationsCount:number
+}
+
+export interface Payload {
+  pageNumber: number;
+  pageSize: number;
+  search: string;
 }

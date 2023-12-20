@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { GetOrgById, GetOrgs, IUpdateOrganization, OrgInvitationsPagination, OrganizationDashboard } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -49,7 +49,7 @@ export class OrganizationRepository {
 
   async createOrganization(createOrgDto: CreateOrganizationDto): Promise<organisation> {
     try {
-      return this.prisma.organisation.create({
+      const orgData = this.prisma.organisation.create({
         data: {
           name: createOrgDto.name,
           logoUrl: createOrgDto.logo,
@@ -61,6 +61,7 @@ export class OrganizationRepository {
           lastChangedBy: createOrgDto.lastChangedBy
         }
       });
+      return orgData;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -176,7 +177,7 @@ export class OrganizationRepository {
     pageNumber: number,
     pageSize: number,
     search = ''
-  ): Promise<OrgInvitationsPagination> {
+  ): Promise<IOrgInvitationsPagination> {
 
     this.logger.log(search);
     const query = {
@@ -204,7 +205,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<OrgInvitationsPagination> {
+  async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IOrgInvitationsPagination> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.org_invitations.findMany({
@@ -252,7 +253,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<OrgInvitationsPagination> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrgInvitationsPagination> {
     try {
       const query = {
         orgId,
@@ -269,7 +270,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrganization(queryObject: object): Promise<GetOrgById> {
+  async getOrganization(queryObject: object): Promise<IGetOrgById> {
     try {
       return this.prisma.organisation.findFirst({
         where: {
@@ -316,6 +317,7 @@ export class OrganizationRepository {
               }
             }
           }
+          
         }
       });
     } catch (error) {
@@ -324,7 +326,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgDashboard(orgId: string): Promise<OrganizationDashboard> {
+  async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
 
     const query = {
       where: {
@@ -420,7 +422,7 @@ export class OrganizationRepository {
     filterOptions: object,
     pageNumber: number,
     pageSize: number
-  ): Promise<GetOrgs> {
+  ): Promise<IGetOrgs> {
     try {
       const sortByName = 'asc';
       const result = await this.prisma.$transaction([

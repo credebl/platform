@@ -100,7 +100,14 @@ export class SchemaService extends BaseService {
         }
 
           schema.schemaName = schema.schemaName.trim();
-          const { agentEndPoint, orgDid } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+          const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+          if (!agentDetails) {
+            throw new NotFoundException(
+              ResponseMessages.schema.error.agentDetailsNotFound,
+              { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+            );
+          }
+          const { agentEndPoint, orgDid } = agentDetails;
           const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
           // eslint-disable-next-line yoda
           const did = schema.orgDid?.split(':').length >= 4 ? schema.orgDid : orgDid;
@@ -218,7 +225,6 @@ export class SchemaService extends BaseService {
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {
-    try {
       const pattern = {
         cmd: 'agent-create-schema'
       };
@@ -231,18 +237,15 @@ export class SchemaService extends BaseService {
             }))
         ).toPromise()
         .catch(error => {
-          this.logger.error(`Catch : ${JSON.stringify(error)}`);
+          this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
           throw new HttpException(
             {
-              status: error.statusCode,
-              error: error.message
+              status: error.statusCode,  
+              error: error.error,
+              message: error.message
             }, error.error);
         });
-      return schemaResponse;
-    } catch (error) {
-      this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
-      throw error;
-    }
+      return schemaResponse;  
   }
 
 

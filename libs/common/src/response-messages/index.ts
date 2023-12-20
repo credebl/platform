@@ -117,7 +117,8 @@ export const ResponseMessages = {
             notFound: 'Schema records not found',
             schemaIdNotFound: 'SchemaLedgerId not found',
             credentialDefinitionNotFound: 'No credential definition exist',
-            notStoredCredential: 'User credential not stored'
+            notStoredCredential: 'User credential not stored',
+            agentDetailsNotFound: 'Agent details not found'
         }
     },
     credentialDefinition: {
@@ -154,7 +155,8 @@ export const ResponseMessages = {
             notAbleToSpinUpAgent: 'Agent not able to spin-up',
             alreadySpinUp: 'Agent already spin-up',
             agentUrl: 'Agent url not exist',
-            agentNotExists: 'Agent not spinned up for this organization'
+            agentNotExists: 'Agent not spinned up for this organization',
+            agentDown: 'Agent is down or not spinned up'
         }
     },
     connection: {
@@ -300,6 +302,7 @@ export const ResponseMessages = {
         badRequest: 'Bad Request',
         conflict: 'Conflict',
         notAcceptable: 'Not Acceptable',
-        notFound: 'Not Found'
+        notFound: 'Not Found',
+        serverError: 'Internal Server error'
     }
 };

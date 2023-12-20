@@ -1,4 +1,4 @@
-import { BadRequestException, Controller } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { SchemaService } from './schema.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { ISchema, ISchemaCredDeffSearchInterface, ISchemaSearchInterface } from './interfaces/schema-payload.interface';
@@ -13,13 +13,7 @@ export class SchemaController {
     @MessagePattern({ cmd: 'create-schema' })
     async createSchema(payload: ISchema): Promise<string> {
         const { schema, user, orgId } = payload;
-        const schemaData = this.schemaService.createSchema(schema, user, orgId);
-        if (!schemaData) {
-            throw new BadRequestException(
-                ResponseMessages.schema.error.invalidData,
-                { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-              );
-        }
+        await this.schemaService.createSchema(schema, user, orgId);
         return ResponseMessages.schema.success.create;
     }
 

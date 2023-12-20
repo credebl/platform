@@ -76,7 +76,7 @@ else
   mkdir ${PWD}/apps/agent-provisioning/AFJ/endpoints
 fi
 
-docker build . -t $AFJ_VERSION -f apps/agent-provisioning/AFJ/afj-controller/Dockerfile
+# docker build . -t $AFJ_VERSION -f apps/agent-provisioning/AFJ/afj-controller/Dockerfile
 
 AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
 
@@ -152,7 +152,7 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker-compose -f $FILE_NAME --project-name ${AGENCY}_${CONTAINER_NAME} up -d
+  docker compose -f ${FILE_NAME} up -d
   if [ $? -eq 0 ]; then
 
     n=0
@@ -177,10 +177,25 @@ if [ $? -eq 0 ]; then
     done
 
     echo "Creating agent config"
+
+    # Capture the logs from the container
+    container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
+
+    # Extract the token from the logs using grep and awk (modify the pattern as needed)
+    token=$(echo "$container_logs" | grep -oE 'token [^ ]+' | awk '{print $2}')
+
+    # Print the extracted token
+    echo "Token: $token"
+
     cat <<EOF >>${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
-        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
-        "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
+        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}"
+    }
+EOF
+
+    cat <<EOF >>${PWD}/token/${AGENCY}_${CONTAINER_NAME}.json
+    {
+        "token" : "$token"
     }
 EOF
     echo "Agent config created"

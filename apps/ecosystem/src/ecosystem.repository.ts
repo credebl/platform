@@ -64,8 +64,6 @@ export class EcosystemRepository {
               status: EcosystemOrgStatus.ACTIVE,
               ecosystemId: createdEcosystem.id,
               ecosystemRoleId: ecosystemRoleDetails.id,
-              orgName,
-              orgDid,
               deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
               createdBy: userId,
               lastChangedBy: userId

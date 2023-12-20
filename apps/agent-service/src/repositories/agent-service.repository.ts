@@ -68,14 +68,13 @@ export class AgentServiceRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async createOrgAgent(agentSpinUpStatus: number, userId: string, apiKey: string): Promise<org_agents> {
+  async createOrgAgent(agentSpinUpStatus: number, userId: string): Promise<org_agents> {
     try {
       return this.prisma.org_agents.create({
         data: {
           agentSpinUpStatus,
           createdBy: userId,
-          lastChangedBy: userId,
-          apiKey
+          lastChangedBy: userId
         }
       });
     } catch (error) {
@@ -122,7 +121,8 @@ export class AgentServiceRepository {
           agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
           orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
           tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
-          ledgerId: storeOrgAgentDetails.ledgerId[0]
+          ledgerId: storeOrgAgentDetails.ledgerId[0],
+          apiKey: storeOrgAgentDetails.apiKey
         }
       });
     } catch (error) {
@@ -139,13 +139,13 @@ export class AgentServiceRepository {
   // eslint-disable-next-line camelcase
   async getAgentDetails(orgId: string): Promise<org_agents> {
     try {
-      const x = await this.prisma.org_agents.findFirst({
+      const getAgentDetails = await this.prisma.org_agents.findFirst({
         where: {
           orgId
         }
       });
 
-      return x;
+      return getAgentDetails;
     } catch (error) {
       this.logger.error(`[getAgentDetails] - get agent details: ${JSON.stringify(error)}`);
       throw error;

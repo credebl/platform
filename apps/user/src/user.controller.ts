@@ -105,7 +105,7 @@ export class UserController {
    * @returns organization users list
    */
   @MessagePattern({ cmd: 'fetch-organization-user' })
-  async getOrganizationUsers(payload: { orgId: string, pageNumber: number, pageSize: number, search: string }): Promise<OrgUsers> {
+  async getOrganizationUsers(payload: {orgId:string} & Payload): Promise<IOrgUsers> {
     return this.userService.getOrgUsers(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
   }
 

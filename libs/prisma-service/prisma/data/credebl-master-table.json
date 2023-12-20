@@ -1,12 +1,12 @@
 {
   "platformConfigData": {
-    "externalIp": "192.168.1.63",
-    "lastInternalId": "192.168.1.63",
+    "externalIp": "##Machine Ip Address for agent setup##",
+    "lastInternalId": "##Docker Network Ip Address##",
     "username": "credebl",
     "sgApiKey": "###Sendgrid Key###",
-    "emailFrom": "nishad.shirsat@ayanworks.com",
-    "apiEndpoint": "http://192.168.1.63:5000",
-    "tailsFileServer": "http://192.168.1.63:5000"
+    "emailFrom": "##Senders Mail ID##",
+    "apiEndpoint": "## Platform API Ip Address##",
+    "tailsFileServer": "##Machine Ip Address for agent setup##"
   },
   "platformAdminData": {
     "firstName": "CREDEBL",

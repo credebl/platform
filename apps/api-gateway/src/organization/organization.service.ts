@@ -11,8 +11,8 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { organisation } from '@prisma/client';
-import { GetOrgById, GetOrgs, OrgInvitationsPagination, OrganizationDashboard } from 'apps/organization/interfaces/organization.interface';
-import { OrgUsers } from 'apps/user/interfaces/user.interface';
+import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard } from 'apps/organization/interfaces/organization.interface';
+import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -46,22 +46,23 @@ export class OrganizationService extends BaseService {
    * @returns Organizations details
    */
 
-  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: string): Promise<{ response: GetOrgs}> {
+  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: string): Promise<IGetOrgs> {
     const payload = { userId, ...getAllOrgsDto };
-    return this.sendNats(this.serviceProxy, 'get-organizations', payload);
+    const fetchOrgs = await this.sendNats(this.serviceProxy, 'get-organizations', payload);
+    return fetchOrgs;
   }
-
+  
   /**
    *
    * @param
    * @returns Public organizations list
    */
-  async getPublicOrganizations(getAllOrgsDto: GetAllOrganizationsDto): Promise<{ response: GetOrgs }> {
+  async getPublicOrganizations(getAllOrgsDto: GetAllOrganizationsDto): Promise<IGetOrgs> {
     const payload = { ...getAllOrgsDto };
     return this.sendNats(this.serviceProxy, 'get-public-organizations', payload);
   }
 
-  async getPublicProfile(orgSlug: string): Promise<{ response: GetOrgById }> {
+  async getPublicProfile(orgSlug: string): Promise<IGetOrgById> {
     const payload = { orgSlug };
     try {
       return this.sendNats(this.serviceProxy, 'get-organization-public-profile', payload);
@@ -75,7 +76,7 @@ export class OrganizationService extends BaseService {
    * @param orgId
    * @returns Organization get Success
    */
-  async getOrganization(orgId: string, userId: string): Promise<{ response: GetOrgById }> {
+  async getOrganization(orgId: string, userId: string): Promise<IGetOrgById> {
     const payload = { orgId, userId };
     return this.sendNats(this.serviceProxy, 'get-organization-by-id', payload);
   }
@@ -88,13 +89,13 @@ export class OrganizationService extends BaseService {
   async getInvitationsByOrgId(
     orgId: string,
     getAllInvitationsDto: GetAllSentInvitationsDto
-  ): Promise<{ response: OrgInvitationsPagination }> {
+  ): Promise<IOrgInvitationsPagination> {
     const { pageNumber, pageSize, search } = getAllInvitationsDto;
     const payload = { orgId, pageNumber, pageSize, search };
     return this.sendNats(this.serviceProxy, 'get-invitations-by-orgId', payload);
   }
 
-  async getOrganizationDashboard(orgId: string, userId: string): Promise<{ response: OrganizationDashboard }> {
+  async getOrganizationDashboard(orgId: string, userId: string): Promise<IOrganizationDashboard> {
     const payload = { orgId, userId };
     return this.sendNats(this.serviceProxy, 'get-organization-dashboard', payload);
   }
@@ -126,7 +127,7 @@ export class OrganizationService extends BaseService {
    * @param userId
    * @returns User roles update response
    */
-  async updateUserRoles(updateUserDto: UpdateUserRolesDto, userId: string): Promise<{ response: boolean }> {
+  async updateUserRoles(updateUserDto: UpdateUserRolesDto, userId: string): Promise<boolean> {
     const payload = { orgId: updateUserDto.orgId, roleIds: updateUserDto.orgRoleId, userId };
     return this.sendNats(this.serviceProxy, 'update-user-roles', payload);
   }
@@ -134,7 +135,7 @@ export class OrganizationService extends BaseService {
   async getOrgUsers(
     orgId: string,
     getAllUsersDto: GetAllUsersDto
-  ): Promise<{ response: OrgUsers }> {
+  ): Promise<IOrgUsers> {
     const { pageNumber, pageSize, search } = getAllUsersDto;
     const payload = { orgId, pageNumber, pageSize, search };
 
@@ -143,7 +144,7 @@ export class OrganizationService extends BaseService {
 
   async getOgPofile(
     orgId: string
-  ): Promise<{ response: organisation }> {
+  ): Promise<organisation> {
     const payload = { orgId };
 
     return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
@@ -151,7 +152,7 @@ export class OrganizationService extends BaseService {
 
   async deleteOrganization(
     orgId: number
-  ): Promise<{ response: boolean }> {
+  ): Promise<boolean> {
     const payload = { orgId };
 
     return this.sendNats(this.serviceProxy, 'delete-organization', payload);

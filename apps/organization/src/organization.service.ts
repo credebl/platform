@@ -18,7 +18,7 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-import { GetOrgById, GetOrgs, IUpdateOrganization, OrgAgent, OrgInvitationsPagination, OrganizationDashboard } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
@@ -120,7 +120,7 @@ export class OrganizationService {
    * @returns Get created organizations details
    */
 
-  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<GetOrgs> {
+  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
     try {
 
       const query = {
@@ -137,12 +137,13 @@ export class OrganizationService {
         userId
       };
 
-      return this.organizationRepository.getOrganizations(
+      const getOrgs = await this.organizationRepository.getOrganizations(
         query,
         filterOptions,
         pageNumber,
         pageSize
       );
+      return getOrgs;
 
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
@@ -156,7 +157,7 @@ export class OrganizationService {
   * @returns Get public organizations details
   */
 
-  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<GetOrgs> {
+  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
     try {
 
       const query = {
@@ -182,7 +183,7 @@ export class OrganizationService {
     }
   }
 
-  async getPublicProfile(payload: { orgSlug: string }): Promise<GetOrgById> {
+  async getPublicProfile(payload: { orgSlug: string }): Promise<IGetOrgById> {
     const { orgSlug } = payload;
     try {
       
@@ -196,8 +197,8 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
       }
 
-      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
-      organizationDetails['credential_definitions'] = credentials;
+      const credDefs = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
+      organizationDetails['credential_definitions'] = credDefs;
       return organizationDetails;
 
     } catch (error) {
@@ -212,7 +213,7 @@ export class OrganizationService {
      * @returns Get created organization details
      */
 
-  async getOrganization(orgId: string): Promise<GetOrgById> {
+  async getOrganization(orgId: string): Promise<IGetOrgById> {
     try {
 
       const query = {
@@ -233,7 +234,7 @@ export class OrganizationService {
     * @returns Get created invitation details
     */
 
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<OrgInvitationsPagination> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgInvitationsPagination> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
       for await (const item of getOrganization['invitations']) {
@@ -399,7 +400,7 @@ export class OrganizationService {
     return false;
   }
 
-  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<OrgInvitationsPagination> {
+  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrgInvitationsPagination> {
     try {
       return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search);
     } catch (error) {
@@ -480,7 +481,7 @@ export class OrganizationService {
     }
   }
 
-  async getOrgDashboard(orgId: string): Promise<OrganizationDashboard> {
+  async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
     try {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
@@ -536,7 +537,7 @@ export class OrganizationService {
     }
   }
 
-  async _deleteWallet(payload: OrgAgent): Promise<{
+  async _deleteWallet(payload: IOrgAgent): Promise<{
     response;
   }> {
     try {

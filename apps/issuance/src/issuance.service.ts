@@ -8,7 +8,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { ClientDetails, FileUploadData, IIssuanceWebhookInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { ClientDetails, FileUploadData, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -28,6 +28,7 @@ import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
+import { IIssuedCredentialSearchinterface } from 'apps/api-gateway/src/issuance/interfaces';
 
 @Injectable()
 export class IssuanceService {
@@ -174,46 +175,70 @@ export class IssuanceService {
     }
   }
 
-  async getIssueCredentials(user: IUserRequest, threadId: string, connectionId: string, state: string, orgId: string): Promise<string> {
+  async getIssueCredentials(
+    user: IUserRequest,
+    orgId: string,
+    issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface
+  ): Promise<{
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    nextPage: number;
+    previousPage: number;
+    lastPage: number;
+    data: {
+      createDateTime: Date;
+      createdBy: string;
+      connectionId: string;
+      schemaId: string;
+      state: string;
+      orgId: string;
+    }[];
+  }> {
     try {
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
-
-      const { agentEndPoint } = agentDetails;
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-      }
-      const params = {
-        threadId,
-        connectionId,
-        state
+      const getIssuedCredentialsList = await this.issuanceRepository.getAllIssuedCredentials(
+        user,
+        orgId,
+        issuedCredentialsSearchCriteria
+      );
+      const issuedCredentialsResponse: {
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        nextPage: number;
+        previousPage: number;
+        lastPage: number;
+        data: {
+          createDateTime: Date;
+          createdBy: string;
+          connectionId: string;
+          schemaId: string;
+          state: string;
+          orgId: string;
+        }[];
+      } = {
+        totalItems: getIssuedCredentialsList.issuedCredentialsCount,
+        hasNextPage:
+        issuedCredentialsSearchCriteria.pageSize * issuedCredentialsSearchCriteria.pageNumber < getIssuedCredentialsList.issuedCredentialsCount,
+        hasPreviousPage: 1 < issuedCredentialsSearchCriteria.pageNumber,
+        nextPage: Number(issuedCredentialsSearchCriteria.pageNumber) + 1,
+        previousPage: issuedCredentialsSearchCriteria.pageNumber - 1,
+        lastPage: Math.ceil(getIssuedCredentialsList.issuedCredentialsCount / issuedCredentialsSearchCriteria.pageSize),
+        data: getIssuedCredentialsList.issuedCredentialsList
       };
 
-      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const issuanceMethodLabel = 'get-issue-credentials';
-      let url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
-
-      Object.keys(params).forEach((element: string) => {
-        const appendParams: string = url.includes('?') ? '&' : '?';
-
-        if (params[element] !== undefined) {
-          url = `${url + appendParams + element}=${params[element]}`;
-        }
-      });
-      const apiKey = platformConfig?.sgApiKey;
-      const issueCredentialsDetails = await this._getIssueCredentials(url, apiKey);
-      return issueCredentialsDetails?.response;
-    } catch (error) {
-      this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-
+      if (0 !== getIssuedCredentialsList.issuedCredentialsCount) {
+        return issuedCredentialsResponse;
       } else {
-        throw new RpcException(error.response ? error.response : error);
+        throw new NotFoundException(ResponseMessages.issuance.error.credentialsNotFound);
       }
+    } catch (error) {
+      if (404 === error.status) {
+        throw new NotFoundException(error.response.message);
+      }
+      throw new RpcException(
+        `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
+      );
     }
   }
 
@@ -262,9 +287,9 @@ export class IssuanceService {
     }
   }
 
-  async getIssueCredentialWebhook(payload: IIssuanceWebhookInterface, id: string): Promise<object> {
+  async getIssueCredentialWebhook(payload: IssueCredentialWebhookPayload): Promise<object> {
     try {
-      const agentDetails = await this.issuanceRepository.saveIssuedCredentialDetails(payload, id);
+      const agentDetails = await this.issuanceRepository.saveIssuedCredentialDetails(payload);
       return agentDetails;
     } catch (error) {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
@@ -299,9 +324,6 @@ export class IssuanceService {
         emailId
       } = outOfBandCredential;
 
-      // Define a batch size
-      const batchSize = 100; // Adjust this based on your needs
-
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -335,7 +357,6 @@ export class IssuanceService {
             comment,
             label: organizationDetails?.name
           };
-
 
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
           if (!credentialCreateOfferDetails) {
@@ -393,8 +414,9 @@ export class IssuanceService {
       };
 
       if (credentialOffer) {
-        for (let i = 0; i < credentialOffer.length; i += batchSize) {
-          const batch = credentialOffer.slice(i, i + batchSize);
+
+          for (let i = 0; i < credentialOffer.length; i += Number(process.env.OOB_BATCH_SIZE)) {
+          const batch = credentialOffer.slice(i, i + Number(process.env.OOB_BATCH_SIZE));
 
           // Process each batch in parallel
           const batchPromises = batch.map((iterator) => sendEmailForCredentialOffer(iterator, iterator.emailId));

@@ -33,7 +33,6 @@ export class CreateConnectionDto {
     orgId: string;
 }
 
-
 export class ConnectionDto {
     @ApiProperty()
     @IsOptional()
@@ -94,4 +93,8 @@ export class ConnectionDto {
     @ApiProperty()
     @IsOptional()
     updatedAt: string;   
+
+    @ApiProperty()
+    @IsOptional()
+    contextCorrelationId: string;
 }

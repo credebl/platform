@@ -4,13 +4,13 @@ import { organisation } from '@prisma/client';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IConnection {
-    user: IUserRequestInterface,
-    alias: string;
-    label: string;
-    imageUrl: string;
-    multiUseInvitation: boolean;
-    autoAcceptConnection: boolean;
-    orgId: string;
+  user: IUserRequestInterface;
+  alias: string;
+  label: string;
+  imageUrl: string;
+  multiUseInvitation: boolean;
+  autoAcceptConnection: boolean;
+  orgId: string;
 }
 export interface IUserRequestInterface {
   userId: string;
@@ -38,8 +38,7 @@ export interface ISelectedOrgInterface {
 export interface IOrganizationInterface {
   name: string;
   description: string;
-  org_agents: IOrgAgentInterface[]
-  
+  org_agents: IOrgAgentInterface[];
 }
 
 export interface IOrgAgentInterface {
@@ -52,27 +51,27 @@ export interface IOrgAgentInterface {
   orgId: string;
 }
 
-
 export class IConnectionInterface {
+  connectionDto: ConnectionPayload;
+  orgId: string;
+}
+
+export class ConnectionPayload {
   createDateTime: string;
   lastChangedDateTime: string;
-  connectionId: string;
+  id: string;
   state: string;
   orgDid?: string;
   theirLabel: string;
   autoAcceptConnection: boolean;
   outOfBandId: string;
   orgId: string;
+  contextCorrelationId: string;
 }
 
 export class IFetchConnectionInterface {
+  connectionSearchCriteria: IConnectionSearchCriteria;
   user: IUserRequest;
-  outOfBandId: string;
-  alias: string;
-  state: string;
-  myDid: string;
-  theirDid: string;
-  theirLabel: string;
   orgId: string;
 }
 
@@ -110,3 +109,17 @@ export interface OrgAgent {
   orgAgentTypeId: string;
   tenantId: string;
 }
+export interface IConnectionSearchInterface {
+  schemaSearchCriteria: IConnectionSearchCriteria,
+  user: IUserRequestInterface,
+  orgId: string
+}
+export interface IConnectionSearchCriteria {
+  pageNumber: number;
+  pageSize: number;
+  sorting: string;
+  sortByValue: string;
+  searchByText: string;
+  user: IUserRequestInterface
+}
+

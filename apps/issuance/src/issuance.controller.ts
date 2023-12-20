@@ -23,9 +23,9 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'get-all-issued-credentials' })
-  async getIssueCredentials(payload: IIssueCredentials): Promise<string> {
-    const { user, threadId, connectionId, state, orgId } = payload;
-    return this.issuanceService.getIssueCredentials(user, threadId, connectionId, state, orgId);
+  async getIssueCredentials(payload: IIssueCredentials): Promise<object> {
+    const { user, orgId, issuedCredentialsSearchCriteria} = payload;
+    return this.issuanceService.getIssueCredentials(user, orgId, issuedCredentialsSearchCriteria);
   }
 
   @MessagePattern({ cmd: 'get-issued-credentials-by-credentialDefinitionId' })
@@ -37,8 +37,7 @@ export class IssuanceController {
   
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
   async getIssueCredentialWebhook(payload: IssueCredentialWebhookPayload): Promise<object> { 
-    const { issueCredentialDto, id } = payload;
-    return this.issuanceService.getIssueCredentialWebhook(issueCredentialDto, id);
+    return this.issuanceService.getIssueCredentialWebhook(payload);
   }
 
   @MessagePattern({ cmd: 'out-of-band-credential-offer' })

@@ -172,10 +172,9 @@ export class AgentServiceService {
       agentSpinupDto.ledgerId = agentSpinupDto.ledgerId?.length ? agentSpinupDto.ledgerId : ledgerIdData.map(ledger => ledger.id);
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        // throw new BadRequestException('Your wallet has already been created.');
+
         await this.getOrgAgentApiKey(agentSpinupDto.orgId);
         const data = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-        this.logger.debug(`API key from cache==============:::${data}`);
         throw new BadRequestException('Your wallet has already been created.');
       }
 
@@ -191,10 +190,6 @@ export class AgentServiceService {
         }
       }
 
-
-      // TODO Add logic to generate API key
-       agentSpinupDto.apiKey = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcwMDgzNzY3OSwiaWF0IjoxNzAwODM3Njc5fQ.bJlL2_QiNSzEMn3C-M0gLdQqa2wIzFY7WZMov6iBiyc";
-
       agentSpinupDto.agentType = agentSpinupDto.agentType || getAgentType;
       agentSpinupDto.tenant = agentSpinupDto.tenant || false;
       agentSpinupDto.ledgerName = agentSpinupDto.ledgerName?.length ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet];
@@ -204,20 +199,18 @@ export class AgentServiceService {
       const externalIp = platformConfig?.externalIp;
       const controllerIp = platformConfig?.lastInternalId !== 'false' ? platformConfig?.lastInternalId : '';
       const apiEndpoint = platformConfig?.apiEndpoint;
-      const apiKey = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcwMDgzNzY3OSwiaWF0IjoxNzAwODM3Njc5fQ.bJlL2_QiNSzEMn3C-M0gLdQqa2wIzFY7WZMov6iBiyc";
-     
+
       const walletProvisionPayload = await this.prepareWalletProvisionPayload(agentSpinupDto, externalIp, apiEndpoint, controllerIp, ledgerDetails, platformConfig, orgData);
 
       const socket: Socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
       this.emitAgentSpinupInitiatedEvent(agentSpinupDto, socket);
 
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
-      /* eslint-disable no-param-reassign */
-      agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId, apiKey);
+      agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId);
 
-  
+
       this.validateAgentProcess(agentProcess);
-       this._agentSpinup(walletProvisionPayload, agentSpinupDto, apiKey, orgData, user, socket, agentSpinupDto.ledgerId, agentProcess);
+      this._agentSpinup(walletProvisionPayload, agentSpinupDto, orgData, user, socket, agentSpinupDto.ledgerId, agentProcess);
 
     } catch (error) {
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
@@ -304,7 +297,7 @@ export class AgentServiceService {
       afjVersion: process.env.AFJ_VERSION || '',
       protocol: process.env.AGENT_PROTOCOL || '',
       tenant: agentSpinupDto.tenant || false,
-      apiKey:agentSpinupDto.apiKey
+      apiKey: agentSpinupDto.apiKey
     };
 
     return walletProvisionPayload;
@@ -322,9 +315,9 @@ export class AgentServiceService {
     return socket;
   }
 
-  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus, userId: string, apiKey:string): Promise<org_agents> {
+  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus, userId: string): Promise<org_agents> {
     try {
-      const agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, userId, apiKey);
+      const agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, userId);
       this.logger.log(`Organization agent created with status: ${agentSpinUpStatus}`);
       return agentProcess;
     } catch (error) {
@@ -357,7 +350,7 @@ export class AgentServiceService {
     }
   }
 
-  async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket: Socket, ledgerId: string[], agentProcess: org_agents): Promise<void> {
+  async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgData: organisation, user: IUserRequestInterface, socket: Socket, ledgerId: string[], agentProcess: org_agents): Promise<void> {
     try {
 
       const walletProvision = await this._walletProvision(walletProvisionPayload);
@@ -365,10 +358,8 @@ export class AgentServiceService {
       if (!walletProvision?.response) {
         throw new BadRequestException('Agent not able to spin-up');
       }
-
-      const agentDetails = JSON.parse(walletProvision.response);
-
-      const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.CONTROLLER_ENDPOINT}`;
+      const agentDetails = walletProvision.response;
+      const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.agentEndPoint}`;
 
       const socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
 
@@ -381,7 +372,7 @@ export class AgentServiceService {
       const agentPayload: IStoreOrgAgentDetails = {
         agentEndPoint,
         seed: agentSpinupDto.seed,
-        apiKey: orgApiKey,
+        apiKey: agentDetails.agentToken,
         agentsTypeId: agentSpinupDto?.agentType,
         orgId: orgData.id,
         walletName: agentSpinupDto.walletName,
@@ -394,6 +385,19 @@ export class AgentServiceService {
       const storeAgentDetails = await this._storeOrgAgentDetails(agentPayload);
 
       if (storeAgentDetails) {
+
+        const filePath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgData.id}_${orgData.name.split(' ').join('_')}.json`;
+        if (agentDetails?.agentToken) {
+          fs.unlink(filePath, (err) => {
+            if (err) {
+              this.logger.error(`Error removing file: ${err.message}`);
+              throw new InternalServerErrorException(err.message);
+            } else {
+              this.logger.log(`File ${filePath} has been removed successfully`);
+            }
+          });
+        }
+
         if (agentSpinupDto.clientSocketId) {
           socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
         }
@@ -438,7 +442,7 @@ export class AgentServiceService {
     }
   }
 
-  
+
   private async _getAgentDid(payload: IStoreOrgAgentDetails): Promise<object> {
     const { agentEndPoint, apiKey, seed, ledgerId, did } = payload;
     const writeDid = 'write-did';
@@ -466,7 +470,8 @@ export class AgentServiceService {
       agentId: payload.agentId,
       orgAgentTypeId,
       ledgerId: payload.ledgerId,
-      id: payload.id
+      id: payload.id,
+      apiKey: payload.apiKey
     };
   }
 
@@ -497,8 +502,6 @@ export class AgentServiceService {
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
-          // return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });
-          // eslint-disable-next-line object-shorthand
           return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });
         } else if (agentApiState === 'get-did-doc') {
           return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
@@ -603,8 +606,7 @@ export class AgentServiceService {
       payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? ledgerIds : payload.ledgerId;
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
       //TODO take API key from API gereration function 
-      const apiKey = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcwMDgzNzY3OSwiaWF0IjoxNzAwODM3Njc5fQ.bJlL2_QiNSzEMn3C-M0gLdQqa2wIzFY7WZMov6iBiyc";
-      agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user.id, apiKey);
+      agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user.id);
 
 
       const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
@@ -687,11 +689,10 @@ export class AgentServiceService {
       method: ledgerIds.indyNamespace
     };
 
-    const apiKey = 'eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcwMDgzNzY3OSwiaWF0IjoxNzAwODM3Njc5fQ.bJlL2_QiNSzEMn3C-M0gLdQqa2wIzFY7WZMov6iBiyc';
     const tenantDetails = await this.commonService.httpPost(
       `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
       createTenantOptions,
-      { headers: { 'authorization': apiKey } }
+      { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
     );
 
     this.logger.debug(`API Response Data: ${JSON.stringify(tenantDetails)}`);
@@ -986,16 +987,16 @@ export class AgentServiceService {
   async getAgentHealthDetails(orgId: string, apiKey: string): Promise<object> {
     try {
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this.getOrgAgentApiKey(orgId);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this.getOrgAgentApiKey(orgId);
       }
 
       if (apiKey === undefined || null) {
         apiKey = await this.getOrgAgentApiKey(orgId);
       }
-     
+
       if (!orgAgentDetails) {
         throw new NotFoundException(ResponseMessages.agent.error.agentNotExists);
       }
@@ -1119,7 +1120,7 @@ export class AgentServiceService {
   async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
-    
+
       if (!orgAgentApiKey) {
         throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }

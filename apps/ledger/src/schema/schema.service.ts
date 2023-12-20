@@ -210,15 +210,8 @@ export class SchemaService extends BaseService {
       this.logger.error(
         `[createSchema] - outer Error: ${JSON.stringify(error)}`
       );
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
 
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

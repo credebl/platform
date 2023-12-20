@@ -1,4 +1,5 @@
 import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, userInfo, UsersProfile } from '../interfaces/user.interface';
+import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -105,7 +106,7 @@ export class UserController {
    * @returns organization users list
    */
   @MessagePattern({ cmd: 'fetch-organization-user' })
-  async getOrganizationUsers(payload: { orgId: string, pageNumber: number, pageSize: number, search: string }): Promise<object> {
+  async getOrganizationUsers(payload: {orgId:string} & Payload): Promise<IOrgUsers> {
     return this.userService.getOrgUsers(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
   }
 

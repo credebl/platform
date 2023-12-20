@@ -101,6 +101,7 @@ model organisation {
   agent_invitations     agent_invitations[]
   credential_definition credential_definition[]
   file_upload           file_upload[]
+  ecosystemOrgs         ecosystem_orgs[]
 }
 
 model org_invitations {
@@ -282,6 +283,7 @@ model connections {
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String        @db.Uuid
   connectionId        String        @unique
+  theirLabel          String        @default("")
   state               String
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
@@ -297,6 +299,8 @@ model credentials {
   threadId             String        @unique
   credentialExchangeId String        @default("")
   state                String        @default("")
+  schemaId             String        @default("")
+  credDefId            String        @default("")
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
 }
@@ -311,6 +315,7 @@ model presentations {
   state               String?
   threadId            String        @unique
   isVerified          Boolean?
+  presentationId      String?
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
 }
@@ -340,6 +345,7 @@ model ecosystem {
   ecosystemInvitations ecosystem_invitations[]
   ecosystemOrgs        ecosystem_orgs[]
   ecosystemUsers       ecosystem_users[]
+  ledgers              Json?
 }
 
 model ecosystem_invitations {
@@ -371,9 +377,7 @@ model ecosystem_users {
 
 model ecosystem_orgs {
   id                     String                    @id @default(uuid()) @db.Uuid
-  orgId                  String
-  orgName                String?
-  orgDid                 String?                   @db.VarChar
+  orgId                  String                    @db.Uuid
   status                 String
   deploymentMode         String?
   ecosystemId            String                    @db.Uuid
@@ -386,6 +390,7 @@ model ecosystem_orgs {
   ecosystem              ecosystem                 @relation(fields: [ecosystemId], references: [id])
   ecosystemRole          ecosystem_roles           @relation(fields: [ecosystemRoleId], references: [id])
   endorsementTransaction endorsement_transaction[]
+  organisation           organisation?             @relation(fields: [orgId], references: [id])
 }
 
 model endorsement_transaction {

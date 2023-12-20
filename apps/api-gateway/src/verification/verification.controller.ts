@@ -30,6 +30,8 @@ import { WebhookPresentationProof } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
+import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
+import { IProofRequestsSearchCriteria } from './interfaces/verification.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -59,7 +61,7 @@ export class VerificationController {
         @Param('proofId') id: string,
         @Param('orgId') orgId: string
     ): Promise<object> { 
-        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);      
+        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);   
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.proofFormData,
@@ -112,22 +114,55 @@ export class VerificationController {
         summary: `Get all proof presentations`,
         description: `Get all proof presentations`
     })
+
+    @ApiQuery({
+      name: 'pageNumber',
+      type: Number,
+      required: false
+    })
+    @ApiQuery({
+        name: 'pageSize',
+        type: Number,
+        required: false
+    })
+    @ApiQuery({
+      name: 'searchByText',
+      type: String,
+      required: false
+    })   
+    @ApiQuery({
+      name: 'sorting',
+      type: String,
+      required: false
+    })
+    @ApiQuery({
+      name: 'sortByValue',
+      type: String,
+      required: false
+    })
+
     @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiQuery(
-        { name: 'threadId', required: false }
-    )
     @ApiBearerAuth()
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async getProofPresentations(
+        @Query() getAllProofRequests: GetAllProofRequestsDto,
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string,
-        @Query('threadId') threadId: string
+        @Param('orgId') orgId: string
     ): Promise<object> {
-        const proofPresentationDetails = await this.verificationService.getProofPresentations(orgId, threadId, user);
+      const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllProofRequests;
+      const proofRequestsSearchCriteria: IProofRequestsSearchCriteria = {
+          pageNumber,
+          searchByText,
+          pageSize,
+          sorting,
+          sortByValue
+        };
+
+        const proofPresentationDetails = await this.verificationService.getProofPresentations(proofRequestsSearchCriteria, user, orgId);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.fetch,

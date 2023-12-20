@@ -4,3 +4,9 @@ export interface ResponseType {
   data?: Record<string, unknown> | string;
   error?: Record<string, unknown> | string;
 }
+
+export interface ExceptionResponse {
+  message: string | string[]
+  error: string
+  statusCode: number
+}

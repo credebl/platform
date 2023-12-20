@@ -174,11 +174,11 @@ export class SchemaController {
   async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<object> {
 
     schema.orgId = orgId;
-    const schemaCreate = await this.appService.createSchema(schema, user, schema.orgId);
+    const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: schemaCreate.response
+      message: schemaDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

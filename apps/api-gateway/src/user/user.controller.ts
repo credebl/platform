@@ -15,6 +15,7 @@ import {
 import { UserService } from './user.service';
 import {
   ApiBearerAuth,
+  ApiExcludeEndpoint,
   ApiForbiddenResponse,
   ApiOperation,
   ApiParam,
@@ -68,10 +69,8 @@ export class UserController {
    * @param res
    * @returns Users list of organization
    */
-  @Get()
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Get('/public-profiles')
+  @ApiExcludeEndpoint()
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
   @ApiQuery({
@@ -105,6 +104,7 @@ export class UserController {
 }
 
   @Get('public-profiles/:username')
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Fetch user details',
     description: 'Fetch user details'
@@ -133,13 +133,13 @@ export class UserController {
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getProfile(@User() reqUser: user, @Res() res: Response): Promise<object> {
+  async getProfile(@User() reqUser: user, @Res() res: Response): Promise<IResponseType> {
     const userData = await this.userService.getProfile(reqUser.id);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchProfile,
-      data: userData.response
+      data: userData
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

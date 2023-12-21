@@ -1,4 +1,5 @@
-import { AddPasskeyDetails, IOrgUsers, Payload, PlatformSettingsI, ShareUserCertificateI, UpdateUserProfile, UserEmailVerificationDto, UserI, userInfo } from '../interfaces/user.interface';
+import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, UserInfo, UsersProfile } from '../interfaces/user.interface';
+import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
@@ -130,7 +131,7 @@ export class UserController {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userInfo: userInfo }): Promise<string | object> {
+  async addUserDetailsInKeyCloak(payload: { userInfo: UserInfo }): Promise<string | object> {
     return this.userService.createUserForToken(payload.userInfo);
   }
 

@@ -10,7 +10,7 @@ export class AgentServiceRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: Logger
-  ) {}
+  ) { }
 
   /**
    * Get platform config details
@@ -174,12 +174,14 @@ export class AgentServiceRepository {
   // eslint-disable-next-line camelcase
   async getOrgAgentDetails(orgId: string): Promise<org_agents> {
     try {
-      const oranizationAgentDetails = await this.prisma.org_agents.findFirst({
-        where: {
-          orgId
-        }
-      });
-      return oranizationAgentDetails;
+      if (orgId) {
+        const oranizationAgentDetails = await this.prisma.org_agents.findFirst({
+          where: {
+            orgId
+          }
+        });
+        return oranizationAgentDetails;
+      }
     } catch (error) {
       this.logger.error(`[getOrgAgentDetails] - get org agent health details: ${JSON.stringify(error)}`);
       throw error;
@@ -310,15 +312,18 @@ export class AgentServiceRepository {
     }
   }
 
-  async getAgentApiKey(orgId: string): Promise<string> {
+  // eslint-disable-next-line camelcase
+  async getAgentApiKey(orgId: string): Promise<org_agents> {
     try {
-      const agent = await this.prisma.org_agents.findFirst({
-        where: {
-          orgId
-        }
-      });
+      if (orgId) {
+        const agent = await this.prisma.org_agents.findFirst({
+          where: {
+            orgId
+          }
+        });
+        return agent;
+      }
 
-      return agent.apiKey;
     } catch (error) {
       this.logger.error(`[getAgentApiKey] - get api key: ${JSON.stringify(error)}`);
       throw error;

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 START_TIME=$(date +%s)
 
 AGENCY=$1

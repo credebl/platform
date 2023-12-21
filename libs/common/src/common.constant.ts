@@ -296,7 +296,7 @@ export enum CommonConstants {
 
  //CacheInfo
 CACHE_APIKEY_KEY = "apiKey",
-CACHE_TTL_SECONDS = 3600
+CACHE_TTL_SECONDS = 604800
 }
 
 export const postgresqlErrorCodes = [];

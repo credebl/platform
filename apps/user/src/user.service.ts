@@ -38,7 +38,7 @@ import {
   UpdateUserProfile,
   UserCredentials,
   UserEmailVerificationDto,
-    userInfo,
+    UserInfo,
     UsersProfile
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -208,7 +208,7 @@ export class UserService {
     }
   }
 
-  async createUserForToken(userInfo: userInfo): Promise<string> {
+  async createUserForToken(userInfo: UserInfo): Promise<string> {
     try {
       const { email } = userInfo;
       if (!userInfo.email) {

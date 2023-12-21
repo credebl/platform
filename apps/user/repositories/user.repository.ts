@@ -9,7 +9,7 @@ import {
   UserCredentials,
   UserEmailVerificationDto,
     UsersProfile,
-    userInfo
+    UserInfo
 } from '../interfaces/user.interface';
 
 import { InternalServerErrorException } from '@nestjs/common';
@@ -254,7 +254,7 @@ export class UserRepository {
   });
   }
 
-  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<UsersProfile> {
+  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<object> {
     return this.prisma.user.findFirst({
       where: {
         publicProfile: true,
@@ -330,7 +330,7 @@ export class UserRepository {
    * @returns Updates user details
    */
   // eslint-disable-next-line camelcase
-  async updateUserInfo(email: string, userInfo: userInfo): Promise<user> {
+  async updateUserInfo(email: string, userInfo: UserInfo): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {

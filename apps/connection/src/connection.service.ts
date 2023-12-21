@@ -5,8 +5,8 @@ import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@n
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
+  ConnectionInterface,
   ConnectionInvitationResponse,
-  IConnectionInterface,
   IConnectionSearchCriteria,
   IUserRequestInterface
 } from './interfaces/connection.interfaces';
@@ -113,7 +113,7 @@ export class ConnectionService {
    * @param user
    * @returns Connection legacy invitation URL
    */
-  async getConnectionWebhook(payload: IConnectionInterface): Promise<object> {
+  async getConnectionWebhook(payload: ConnectionInterface): Promise<object> {
     try {
       const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(payload);
       return saveConnectionDetails;

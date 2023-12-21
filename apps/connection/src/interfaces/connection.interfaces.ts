@@ -51,7 +51,7 @@ export interface IOrgAgentInterface {
   orgId: string;
 }
 
-export class IConnectionInterface {
+export class ConnectionInterface {
   connectionDto: ConnectionPayload;
   orgId: string;
 }

@@ -137,7 +137,6 @@ export class ConnectionController {
 
     }
 
-
     /**
       * Catch connection webhook responses. 
       * @Body connectionDto
@@ -145,20 +144,20 @@ export class ConnectionController {
       * @param res
       */
 
-    @Post('wh/:id/connections/')
+    @Post('wh/:orgId/connections/')
     @ApiExcludeEndpoint()
     @ApiOperation({
         summary: 'Catch connection webhook responses',
         description: 'Callback URL for connection'
     })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: AuthTokenResponse })
     async getConnectionWebhook(
         @Body() connectionDto: ConnectionDto,
-        @Param('id') id: string,
+        @Param('orgId') orgId: string,
         @Res() res: Response
-    ): Promise<object> {
-        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${id}`);
-        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
+    ): Promise<IResponseType> {
+        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
+        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.connection.success.create,

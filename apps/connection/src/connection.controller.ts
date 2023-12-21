@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common'; // Import the common service in the
 import { ConnectionService } from './connection.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
 import {
-  ConnectionInterface,
+  Connection,
   IConnection,
   IFetchConnectionById,
   IFetchConnectionInterface
@@ -38,7 +38,7 @@ export class ConnectionController {
    * @returns Callback URL for connection and created connections details
    */
   @MessagePattern({ cmd: 'webhook-get-connection' })
-  async getConnectionWebhook(payload: ConnectionInterface): Promise<object> {
+  async getConnectionWebhook(payload: Connection): Promise<object> {
     return this.connectionService.getConnectionWebhook(payload);
   }
 

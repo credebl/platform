@@ -17,7 +17,7 @@ export interface ICredDeffSchemaSearchInterface {
     sortByValue: string;
     user?: IUserRequestInterface
 }
-export interface IConnectionSearchinterface {
+export interface ConnectionSearchinterface {
     pageNumber: number;
     pageSize: number;
     sorting: string;

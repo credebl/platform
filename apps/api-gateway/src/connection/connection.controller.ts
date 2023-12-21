@@ -17,7 +17,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
-import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
+import { ConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -77,39 +77,44 @@ export class ConnectionController {
     })
     @ApiQuery({
         name: 'pageNumber',
+        example: '1',
         type: Number,
         required: false
       })
       @ApiQuery({
         name: 'searchByText',
+        example: '',
         type: String,
         required: false
       })
       @ApiQuery({
         name: 'pageSize',
+        example: '10',
         type: Number,
         required: false
       })
       @ApiQuery({
         name: 'sorting',
+        example: 'createDateTime',
         type: String,
         required: false
       })
       @ApiQuery({
         name: 'sortByValue',
+        example: 'DESC',
         type: String,
         required: false
       })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
     async getConnections(
         @Query() getAllConnectionsDto: GetAllConnectionsDto,
         @User() user: IUserRequest,
         @Param('orgId') orgId: string,
         @Res() res: Response
-    ): Promise<Response> {
+    ): Promise<IResponseType> {
 
         const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllConnectionsDto;
-        const connectionSearchCriteria: IConnectionSearchinterface = {
+        const connectionSearchCriteria: ConnectionSearchinterface = {
             pageNumber,
             searchByText,
             pageSize,
@@ -121,7 +126,7 @@ export class ConnectionController {
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.connection.success.fetch,
-            data: connectionDetails.response
+            data: connectionDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

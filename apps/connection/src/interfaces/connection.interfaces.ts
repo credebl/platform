@@ -69,8 +69,8 @@ export class ConnectionPayload {
   contextCorrelationId: string;
 }
 
-export class IFetchConnectionInterface {
-  connectionSearchCriteria: IConnectionSearchCriteria;
+export class FetchConnectionInterface {
+  connectionSearchCriteria: ConnectionSearchCriteria;
   user: IUserRequest;
   orgId: string;
 }
@@ -110,16 +110,38 @@ export interface OrgAgent {
   tenantId: string;
 }
 export interface IConnectionSearchInterface {
-  schemaSearchCriteria: IConnectionSearchCriteria,
+  schemaSearchCriteria: ConnectionSearchCriteria,
   user: IUserRequestInterface,
   orgId: string
 }
-export interface IConnectionSearchCriteria {
+export interface ConnectionSearchCriteria {
   pageNumber: number;
   pageSize: number;
   sorting: string;
   sortByValue: string;
   searchByText: string;
   user: IUserRequestInterface
+}
+
+export interface ConnectionsListCount {
+  connectionCount: number;
+  connectionsList: IConnectionItem[];
+}
+export interface IConnectionItem {
+  createDateTime: Date;
+  createdBy: string;
+  connectionId: string;
+  theirLabel: string;
+  state: string;
+  orgId: string;
+}
+export interface ConnectionList {
+  totalItems: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  nextPage: number;
+  previousPage: number;
+  lastPage: number;
+  data: IConnectionItem[];
 }
 

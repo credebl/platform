@@ -38,7 +38,6 @@ export class SchemaController {
     summary: 'Get schema information from the ledger using its schema ID.',
     description: 'Get schema information from the ledger using its schema ID.'
   })
-
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
     @Res() res: Response,
@@ -174,31 +173,12 @@ export class SchemaController {
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<object> {
 
-    schema.attributes.forEach((attribute) => {
-      if (attribute.hasOwnProperty('attributeName') && attribute.hasOwnProperty('schemaDataType') && attribute.hasOwnProperty('displayName')) {
-        if (attribute.hasOwnProperty('attributeName') && '' === attribute?.attributeName) {
-          throw new BadRequestException('Attribute must not be empty');
-        } else if (attribute.hasOwnProperty('attributeName') && '' === attribute?.attributeName?.trim()) {
-          throw new BadRequestException('Attributes should not contain space');
-        } else if (attribute.hasOwnProperty('schemaDataType') && '' === attribute?.schemaDataType) {
-          throw new BadRequestException('Schema Data Type should not contain space');
-        } else if (attribute.hasOwnProperty('schemaDataType') && '' === attribute?.schemaDataType?.trim()) {
-          throw new BadRequestException('Schema Data Type should not contain space');
-        } else if (attribute.hasOwnProperty('displayName') && '' === attribute?.displayName) {
-          throw new BadRequestException('Display Name Type should not contain space');
-        }
-      } else {
-        throw new BadRequestException('Please provide a valid attributes');
-      }
-    });
-
     schema.orgId = orgId;
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: 'Schema created successfully',
-      data: schemaDetails.response
+      message: schemaDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

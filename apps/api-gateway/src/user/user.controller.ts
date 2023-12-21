@@ -177,13 +177,13 @@ export class UserController {
     @Query('limit') limit: number,
     @Res() res: Response,
     @User() reqUser: user
-  ): Promise<Response> {
+  ): Promise<IResponseType> {
     const userDetails = await this.userService.getUserActivities(reqUser.id, limit);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.userActivity,
-      data: userDetails.response
+      data: userDetails
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

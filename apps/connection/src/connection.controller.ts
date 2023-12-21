@@ -2,10 +2,11 @@ import { Controller } from '@nestjs/common'; // Import the common service in the
 import { ConnectionService } from './connection.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
 import {
+  ConnectionList,
+  FetchConnectionInterface,
   IConnection,
   IConnectionInterface,
-  IFetchConnectionById,
-  IFetchConnectionInterface
+  IFetchConnectionById
 } from './interfaces/connection.interfaces';
 
 @Controller()
@@ -53,7 +54,7 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'get-all-connections' })
-  async getConnections(payload: IFetchConnectionInterface): Promise<object> {
+  async getConnections(payload: FetchConnectionInterface): Promise<ConnectionList> {
     const { user, orgId, connectionSearchCriteria } = payload;
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
   }

@@ -6,8 +6,9 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
   ConnectionInvitationResponse,
+  ConnectionList,
+  ConnectionSearchCriteria,
   IConnectionInterface,
-  IConnectionSearchCriteria,
   IUserRequestInterface
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
@@ -187,23 +188,8 @@ export class ConnectionService {
   async getConnections(
     user: IUserRequest,
     orgId: string,
-    connectionSearchCriteria: IConnectionSearchCriteria
-  ): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      theirLabel: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+    connectionSearchCriteria: ConnectionSearchCriteria
+  ): Promise<ConnectionList> {
     try {
       const getConnectionList = await this.connectionRepository.getAllConnections(
         user,
@@ -239,15 +225,17 @@ export class ConnectionService {
       if (0 !== getConnectionList.connectionCount) {
         return connectionResponse;
       } else {
-        throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
+        throw new NotFoundException(
+          ResponseMessages.connection.error.connectionNotFound
+        );
       }
     } catch (error) {
-;      if (404 === error.status) {
-        throw new NotFoundException(error.response.message);
-      }
-      throw new RpcException(
+
+      this.logger.error(
         `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
       );
+
+      throw new RpcException(error.response ? error.response : error);    
     }
   }
 

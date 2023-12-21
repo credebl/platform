@@ -170,7 +170,6 @@ export class AgentServiceService {
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
 
-        await this.getOrgAgentApiKey(agentSpinupDto.orgId);
         const data = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
         throw new BadRequestException('Your wallet has already been created.');
       }
@@ -1066,14 +1065,18 @@ export class AgentServiceService {
 
       // Get organization agent details
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this.getOrgAgentApiKey(orgId);
-      }
 
-      if (apiKey === undefined || null) {
-        apiKey = await this.getOrgAgentApiKey(orgId);
+      let agentApiKey;
+      if (orgAgentDetails) {
+
+        agentApiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+        if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
+          agentApiKey = await this.getOrgAgentApiKey(orgId);
+        }
+
+        if (agentApiKey === undefined || null) {
+          agentApiKey = await this.getOrgAgentApiKey(orgId);
+        }
       }
 
       if (!orgAgentDetails) {
@@ -1084,7 +1087,7 @@ export class AgentServiceService {
       }
       if (orgAgentDetails.agentEndPoint) {
         const data = await this.commonService
-          .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'authorization': apiKey } })
+          .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'authorization': agentApiKey } })
           .then(async response => response);
         return data;
       } else {
@@ -1208,16 +1211,32 @@ export class AgentServiceService {
 
   async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
+      let agentApiKey;
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
 
-      if (!orgAgentApiKey) {
+      const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
+      if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
+
+        const [orgAgentData] = platformAdminSpinnedUp.org_agents;
+        const { apiKey } = orgAgentData;
+        if (!platformAdminSpinnedUp) {
+          throw new InternalServerErrorException('Agent not able to spin-up');
+        }
+
+        agentApiKey = apiKey;
+      } else {
+        agentApiKey = orgAgentApiKey?.apiKey;
+      }
+
+      if (!agentApiKey) {
         throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }
-      await this.cacheService.set(CommonConstants.CACHE_APIKEY_KEY, orgAgentApiKey, CommonConstants.CACHE_TTL_SECONDS);
-      return orgAgentApiKey;
+      await this.cacheService.set(CommonConstants.CACHE_APIKEY_KEY, agentApiKey, CommonConstants.CACHE_TTL_SECONDS);
+      return agentApiKey;
 
     } catch (error) {
-      this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
+      this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
       throw error;
     }
   }

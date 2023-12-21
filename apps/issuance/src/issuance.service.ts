@@ -45,11 +45,11 @@ export class IssuanceService {
 
       // const apiKey = platformConfig?.sgApiKey;
       // let apiKey = await this._getOrgAgentApiKey(orgId);
-     
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
+
+      let apiKey;
+      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
       }
       const issueData = {
         protocolVersion: 'v1',
@@ -100,10 +100,11 @@ export class IssuanceService {
       // const apiKey = platformConfig?.sgApiKey;
 
       // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey;
+      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey---${apiKey}`);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
       }
 
       const issueData = {
@@ -217,7 +218,7 @@ export class IssuanceService {
       } = {
         totalItems: getIssuedCredentialsList.issuedCredentialsCount,
         hasNextPage:
-        issuedCredentialsSearchCriteria.pageSize * issuedCredentialsSearchCriteria.pageNumber < getIssuedCredentialsList.issuedCredentialsCount,
+          issuedCredentialsSearchCriteria.pageSize * issuedCredentialsSearchCriteria.pageNumber < getIssuedCredentialsList.issuedCredentialsCount,
         hasPreviousPage: 1 < issuedCredentialsSearchCriteria.pageNumber,
         nextPage: Number(issuedCredentialsSearchCriteria.pageNumber) + 1,
         previousPage: issuedCredentialsSearchCriteria.pageNumber - 1,
@@ -270,10 +271,10 @@ export class IssuanceService {
 
       // const apiKey = platformConfig?.sgApiKey;
       // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
       }
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
       return createConnectionInvitation?.response;
@@ -344,10 +345,10 @@ export class IssuanceService {
 
       // const { apiKey } = agentDetails;
       // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
       }
 
       const errors = [];
@@ -364,8 +365,7 @@ export class IssuanceService {
               }
             },
             autoAcceptCredential: 'always',
-            comment,
-            label: organizationDetails?.name
+            comment
           };
 
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
@@ -425,7 +425,7 @@ export class IssuanceService {
 
       if (credentialOffer) {
 
-          for (let i = 0; i < credentialOffer.length; i += Number(process.env.OOB_BATCH_SIZE)) {
+        for (let i = 0; i < credentialOffer.length; i += Number(process.env.OOB_BATCH_SIZE)) {
           const batch = credentialOffer.slice(i, i + Number(process.env.OOB_BATCH_SIZE));
 
           // Process each batch in parallel
@@ -1065,15 +1065,20 @@ export class IssuanceService {
     }
   }
 
-  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+   async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
     try {
-      const pattern = { cmd: 'get-org-agent-api-key' };
-      const payload = {orgId };
-      const message = await this.natsCall(pattern, payload);
-      return String(message);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.issuanceServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
     } catch (error) {
-      this.logger.error(`[_getOrgAgentApiKey] [NATS call]- error in getOrgApiKey : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
     }
   }
 

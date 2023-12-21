@@ -1,16 +1,18 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateConnectionDto {
     @ApiProperty()
     @IsOptional()
-    @IsString({ message: 'alias must be a string' }) @IsNotEmpty({ message: 'please provide valid alias' })
+    @IsString({ message: 'alias must be a string' })
+    @IsNotEmpty({ message: 'please provide valid alias' })
     alias: string;
 
     @ApiProperty()
     @IsOptional()
-    @IsString({ message: 'label must be a string' }) @IsNotEmpty({ message: 'please provide valid label' })
+    @IsString({ message: 'label must be a string' }) 
+    @IsNotEmpty({ message: 'please provide valid label' })
     label: string;
 
     @ApiProperty()
@@ -34,67 +36,55 @@ export class CreateConnectionDto {
 }
 
 export class ConnectionDto {
-    @ApiProperty()
-    @IsOptional()
-    _tags?: object;
-
-    @ApiProperty()
-    @IsOptional()
-    metadata: object;
-    
-    @ApiProperty()
-    @IsOptional()
-    connectionTypes: object[];
-    
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     id: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     createdAt: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     did: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     theirDid: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     theirLabel: string;
     
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     state: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     role: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     autoAcceptConnection: boolean;
     
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     threadId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     protocol: string;
     
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     outOfBandId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     updatedAt: string;   
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     contextCorrelationId: string;
 }

@@ -38,12 +38,10 @@ export class ConnectionService extends BaseService {
 
   getConnectionWebhook(
     connectionDto: ConnectionDto,
-    id: string
-  ): Promise<{
-    response: object;
-  }> {
-    const payload = { connectionDto, orgId: id };
-    return this.sendNats(this.connectionServiceProxy, 'webhook-get-connection', payload);
+    orgId: string
+  ): Promise<object> {
+    const payload = { connectionDto, orgId };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'webhook-get-connection', payload);
   }
 
   getUrl(referenceId: string): Promise<{

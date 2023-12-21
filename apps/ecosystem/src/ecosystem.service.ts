@@ -36,7 +36,6 @@ import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
 // import { CommonService } from '@credebl/common/common.service';
-import { AgentServiceService } from 'apps/agent-service/src/agent-service.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
@@ -49,8 +48,6 @@ export class EcosystemService {
     private readonly ecosystemRepository: EcosystemRepository,
     private readonly logger: Logger,
     private readonly prisma: PrismaService,
-    // private readonly agentAuthService: AgentAuthService
-    private readonly agentServiceService: AgentServiceService,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
 
@@ -614,7 +611,7 @@ export class EcosystemService {
         endorsementTransactionType.SCHEMA,
         ecosystemMemberDetails.tenantId
       );
-      const apiKey = await this.agentServiceService.getOrgAgentApiKey(orgId);
+      const apiKey = await this._getOrgAgentApiKey(orgId);
       const attributeArray = requestSchemaPayload.attributes.map((item) => item.attributeName);
 
       const schemaTransactionPayload = {
@@ -718,7 +715,7 @@ export class EcosystemService {
         endorsementTransactionType.CREDENTIAL_DEFINITION,
         ecosystemMemberDetails.tenantId
       );
-      const apiKey = await this.agentServiceService.getOrgAgentApiKey(orgId);
+      const apiKey = await this._getOrgAgentApiKey(orgId);
       const credDefTransactionPayload = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         endorse: requestCredDefPayload.endorse,
@@ -862,8 +859,6 @@ export class EcosystemService {
         endorsementTransactionType.SIGN,
         ecosystemLeadAgentDetails?.tenantId
       );
-      // const apiKey = await this.agentServiceService.getOrgAgentApiKey(ecosystemLeadDetails.orgId);
-      // const apiKey = await this._getOrgAgentApiKey(ecosystemLeadDetails.orgId);
       let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       this.logger.log(`cachedApiKey----${apiKey}`);
      if (!apiKey || null === apiKey  ||  undefined === apiKey) {

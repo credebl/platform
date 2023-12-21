@@ -9,6 +9,7 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetails } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
+import { UsersProfile } from 'apps/user/interfaces/user.interface';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -16,9 +17,9 @@ export class UserService extends BaseService {
     super('User Service');
   }
 
-  async getProfile(id: string): Promise<{ response: object }> {
+  async getProfile(id: string): Promise<UsersProfile> {
     const payload = { id };
-    return this.sendNats(this.serviceProxy, 'get-user-profile', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-user-profile', payload);
   }
 
   async getPublicProfile(username: string): Promise<{ response: object }> {

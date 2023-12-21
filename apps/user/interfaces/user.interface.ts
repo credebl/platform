@@ -23,14 +23,35 @@ export interface Organisation {
 }
 
 export interface UsersProfile {
-    id?: string;
-    username?: string;
-    email?: string;
-    firstName?: string;
-    lastName?: string;
-    supabaseUserId?: string;
-    userOrgRoles?: object;
-  }
+  id?: string;
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  supabaseUserId?: string;
+  userOrgRoles?: UserOrgRole[];
+}
+
+interface UserOrgRole {
+  id:  string;
+  userId:  string;
+  orgRoleId:  string;
+  orgId:  string;
+  orgRole: {
+    id:  string;
+    name: string;
+    description: string;
+  };
+  organisation: {
+    id:  string;
+    name: string;
+    description: string;
+    orgSlug: string;
+    logoUrl: string;
+    website: string;
+    publicProfile: boolean;
+  };
+}
   
   export interface OrgInvitations {
     id: string;
@@ -48,7 +69,7 @@ export interface UsersProfile {
     username?: string;
   }
   
-  export interface userInfo {
+  export interface UserInfo {
     email: string;
     password: string;
     firstName: string;

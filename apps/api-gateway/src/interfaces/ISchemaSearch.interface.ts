@@ -1,11 +1,11 @@
 import { IUserRequestInterface } from '../schema/interfaces';
 
-export interface ISchemaSearchInterface {
+export interface ISchemaSearchPayload {
     ledgerId?: string;
     pageNumber: number;
     pageSize: number;
-    sorting: string;
-    sortByValue: string;
+    sortField: string;
+    sortBy: string;
     searchByText: string;
     user?: IUserRequestInterface
 }

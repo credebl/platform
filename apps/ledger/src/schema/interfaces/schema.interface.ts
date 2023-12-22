@@ -45,3 +45,20 @@ export interface AgentDetails {
     agentEndPoint: string;
     tenantId: string
 }
+
+export interface ISchemaData {
+  createDateTime: Date;
+  createdBy: string;
+  name: string;
+  version: string;
+  attributes: string;
+  schemaLedgerId: string;
+  publisherDid: string;
+  issuerId: string;
+  orgId: string;
+}
+
+export interface ISchemasWithCount {
+  schemasCount: number;
+  schemasResult: ISchemaData[];
+}

@@ -118,7 +118,8 @@ export const ResponseMessages = {
             schemaIdNotFound: 'SchemaLedgerId not found',
             credentialDefinitionNotFound: 'No credential definition exist',
             notStoredCredential: 'User credential not stored',
-            agentDetailsNotFound: 'Agent details not found'
+            agentDetailsNotFound: 'Agent details not found',
+            failedFetchSchema: 'Failed to fetch schema data'
         }
     },
     credentialDefinition: {

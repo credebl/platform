@@ -171,7 +171,7 @@ export const ResponseMessages = {
     connection: {
         success: {
             create: 'Connection created successfully',
-            fetch: 'Connections details fetched successfully'
+            fetch: 'Connection details fetched successfully'
         },
         error: {
             exists: 'Connection is already exist',
@@ -192,7 +192,7 @@ export const ResponseMessages = {
         error: {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
-            agentEndPointNotFound: 'agentEndPoint Not Found',
+            agentEndPointNotFound: 'agent end point Not Found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
             notFound: 'History not found',

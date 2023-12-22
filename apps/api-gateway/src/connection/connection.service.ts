@@ -4,8 +4,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
-import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
-import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
+import { IConnectionDetailsById, IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
 
 @Injectable()
 export class ConnectionService extends BaseService {
@@ -68,10 +67,8 @@ export class ConnectionService extends BaseService {
     user: IUserRequest,
     connectionId: string,
     orgId: string
-  ): Promise<{
-    response: object;
-  }> {
+  ): Promise<IConnectionDetailsById> {
     const payload = { user, connectionId, orgId };
-    return this.sendNats(this.connectionServiceProxy, 'get-all-connections-by-connectionId', payload);
+    return this.sendNatsMessage(this.connectionServiceProxy, 'get-all-connections-by-connectionId', payload);
   }
 }

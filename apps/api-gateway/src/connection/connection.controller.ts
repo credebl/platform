@@ -18,7 +18,6 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
-import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import IResponse from '@credebl/common/interfaces/response.interface';
 
 @UseFilters(CustomExceptionFilter)
@@ -47,19 +46,18 @@ export class ConnectionController {
         summary: `Get connections by connection Id`,
         description: `Get connections by connection Id`
     })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
     async getConnectionsById(
         @User() user: IUserRequest,
         @Param('connectionId') connectionId: string,
         @Param('orgId') orgId: string,
         @Res() res: Response
-    ): Promise<Response> {
+    ): Promise<IResponse> {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
-
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.connection.success.fetch,
-            data: connectionsDetails.response
+            data: connectionsDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

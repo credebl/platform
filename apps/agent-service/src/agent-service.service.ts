@@ -32,6 +32,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
+import { IConnectionDetailsById } from 'apps/connection/src/interfaces/connection.interfaces';
 
 @Injectable()
 @WebSocketGateway()
@@ -1039,13 +1040,13 @@ export class AgentServiceService {
     }
   }
 
-  async getConnectionsByconnectionId(url: string, apiKey: string): Promise<object> {
+  async getConnectionsByconnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
     try {
       const data = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })
         .then(async response => response);
-    
       return data;
+
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
       throw error;

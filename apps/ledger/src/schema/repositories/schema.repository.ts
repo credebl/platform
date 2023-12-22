@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { ISchema, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { AgentDetails } from '../interfaces/schema.interface';
 
 @Injectable()
 export class SchemaRepository {
@@ -21,9 +22,10 @@ export class SchemaRepository {
         );
 
         const schemaLength = 0;
-        if (schema.length !== schemaLength) {
-          throw new BadRequestException(
-            ResponseMessages.schema.error.exists
+        if (schema.length !== schemaLength) {        
+          throw new ConflictException(
+            ResponseMessages.schema.error.exists,
+            { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
           );
         }
         const saveResult = await this.prisma.schema.create({
@@ -124,11 +126,7 @@ export class SchemaRepository {
     }
   }
 
-  async getAgentDetailsByOrgId(orgId: string): Promise<{
-    orgDid: string;
-    agentEndPoint: string;
-    tenantId: string
-  }> {
+  async getAgentDetailsByOrgId(orgId: string): Promise<AgentDetails> {
     try {
       const schemasResult = await this.prisma.org_agents.findFirst({
         where: {
@@ -288,7 +286,7 @@ export class SchemaRepository {
     }
   }
 
-  async getLedgerByLedger(LedgerName: string): Promise<ledgers> {
+  async getLedgerByNamespace(LedgerName: string): Promise<ledgers> {
     try {
       return this.prisma.ledgers.findFirst({
         where: {

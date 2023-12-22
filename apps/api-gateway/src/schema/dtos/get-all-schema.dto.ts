@@ -53,11 +53,11 @@ export class GetCredentialDefinitionBySchemaIdDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    sorting: string = 'id';
+    sortField: string = 'id';
 
     @ApiProperty({ required: false })
     @IsOptional()
-    sortByValue: string = SortValue.DESC;
+    sortBy: string = SortValue.DESC;
 }
 
 export class GetAllSchemaByPlatformDto {

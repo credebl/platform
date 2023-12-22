@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
-import { ICredDeffSchemaSearchInterface, ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
+import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from './interfaces';
 import { ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 
@@ -32,7 +32,7 @@ export class SchemaService extends BaseService {
     return this.sendNatsMessage(this.schemaServiceProxy, 'get-schemas', schemaSearch);
   }
 
-  getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ICredDeffSchemaSearchInterface, user: IUserRequestInterface, orgId: string): Promise<{
+  getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ISchemaSearchPayload, user: IUserRequestInterface, orgId: string): Promise<{
     response: object;
   }> {
     const payload = { schemaId, schemaSearchCriteria, user, orgId };

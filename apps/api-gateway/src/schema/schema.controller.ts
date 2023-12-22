@@ -10,7 +10,7 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
-import { ICredDeffSchemaSearchInterface, ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
+import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
@@ -75,12 +75,12 @@ export class SchemaController {
     required: false
   })
   @ApiQuery({
-    name: 'sorting',
+    name: 'sortField',
     type: String,
     required: false
   })
   @ApiQuery({
-    name: 'sortByValue',
+    name: 'sortBy',
     type: String,
     required: false
   })

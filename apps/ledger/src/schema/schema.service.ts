@@ -17,6 +17,7 @@ import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
 import { OrgAgentType } from '@credebl/enum/enum';
+import { ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -319,49 +320,32 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getSchemas(schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: string): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      version: string;
-      attributes: string;
-      schemaLedgerId: string;
-      publisherDid: string;
-      issuerId: string;
-      orgId: string;
-    }[];
-  }> {
+  async getSchemas(schemaSearchCriteria: ISchemaSearchCriteria, orgId: string): Promise<ISchemasWithPagination> {
     try {
       const response = await this.schemaRepository.getSchemas(schemaSearchCriteria, orgId);
 
+      if (0 === response.schemasCount) {
+        throw new NotFoundException(ResponseMessages.schema.error.notFound);
+      } 
+      
       const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
       });
 
-      const schemasResponse = {
+      const nextPage:number = Number(schemaSearchCriteria.pageNumber) + 1;      
+
+      const schemasResponse: ISchemasWithPagination = {
         totalItems: response.schemasCount,
         hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.schemasCount,
         hasPreviousPage: 1 < schemaSearchCriteria.pageNumber,
-        nextPage: schemaSearchCriteria.pageNumber + 1,
+        nextPage,
         previousPage: schemaSearchCriteria.pageNumber - 1,
         lastPage: Math.ceil(response.schemasCount / schemaSearchCriteria.pageSize),
         data: schemasDetails
       };
 
-      if (0 !== response.schemasCount) {
-        return schemasResponse;
-      } else {
-        throw new NotFoundException(ResponseMessages.schema.error.notFound);
-      }
-
+      return schemasResponse;
 
     } catch (error) {
       this.logger.error(`Error in retrieving schemas by org id: ${error}`);

@@ -47,57 +47,75 @@ export class SchemaService extends BaseService {
       const schemaExists = await this.schemaRepository.schemaExists(
         schema.schemaName,
         schema.schemaVersion
-      );
-
-      if (0 !== schemaExists.length) {
-        this.logger.error(ResponseMessages.schema.error.exists);
-        throw new ConflictException(ResponseMessages.schema.error.exists);
-      }
-
-      if (null !== schema || schema !== undefined) {
-        const schemaVersionIndexOf = -1;
-        if (
+        );
+        
+        if (0 !== schemaExists.length) {
+          this.logger.error(ResponseMessages.schema.error.exists);
+          throw new ConflictException(
+            ResponseMessages.schema.error.exists,
+            { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+          );
+        }
+        
+        if (null !== schema || schema !== undefined) {
+          const schemaVersionIndexOf = -1;
+          if (
           isNaN(parseFloat(schema.schemaVersion)) ||
           schema.schemaVersion.toString().indexOf('.') ===
           schemaVersionIndexOf
         ) {
           throw new NotAcceptableException(
-            ResponseMessages.schema.error.invalidVersion
+            ResponseMessages.schema.error.invalidVersion,
+            { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
           );
         }
 
         const schemaAttributeLength = 0;
         if (schema.attributes.length === schemaAttributeLength) {
-          throw new NotAcceptableException(
-            ResponseMessages.schema.error.insufficientAttributes
-          );
-        } else if (schema.attributes.length > schemaAttributeLength) {
-
-          const trimmedAttributes = schema.attributes.map(attribute => ({
-            attributeName: attribute.attributeName.trim(),
-            schemaDataType: attribute.schemaDataType,
-            displayName: attribute.displayName.trim()
-          }));
+            throw new NotAcceptableException(
+              ResponseMessages.schema.error.insufficientAttributes,
+              { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
+            );
+          } else if (schema.attributes.length > schemaAttributeLength) {
+            
+            const trimmedAttributes = schema.attributes.map(attribute => ({
+              attributeName: attribute.attributeName.trim(),
+              schemaDataType: attribute.schemaDataType,
+              displayName: attribute.displayName.trim()
+            }));
 
 
           const attributeNamesLowerCase = trimmedAttributes.map(attribute => attribute.attributeName.toLowerCase());
           const duplicateAttributeNames = attributeNamesLowerCase
             .filter((value, index, element) => element.indexOf(value) !== index);
 
-          if (0 < duplicateAttributeNames.length) {
-            throw new ConflictException(ResponseMessages.schema.error.uniqueAttributesnames);
-          }
+        if (0 < duplicateAttributeNames.length) {
+            throw new ConflictException(
+              ResponseMessages.schema.error.uniqueAttributesnames,
+              { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+            );
+        }
 
           const attributeDisplayNamesLowerCase = trimmedAttributes.map(attribute => attribute.displayName.toLocaleLowerCase());
           const duplicateAttributeDisplayNames = attributeDisplayNamesLowerCase
             .filter((value, index, element) => element.indexOf(value) !== index);
 
-          if (0 < duplicateAttributeDisplayNames.length) {
-            throw new ConflictException(ResponseMessages.schema.error.uniqueAttributesDisplaynames);
-          }
+        if (0 < duplicateAttributeDisplayNames.length) {
+            throw new ConflictException(
+              ResponseMessages.schema.error.uniqueAttributesDisplaynames,
+              { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+            );
+        }
 
           schema.schemaName = schema.schemaName.trim();
-          const { agentEndPoint, orgDid } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+          const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+          if (!agentDetails) {
+            throw new NotFoundException(
+              ResponseMessages.schema.error.agentDetailsNotFound,
+              { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+            );
+          }
+          const { agentEndPoint, orgDid } = agentDetails;
           const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
           // eslint-disable-next-line yoda
           const did = schema.orgDid?.split(':').length >= 4 ? schema.orgDid : orgDid;
@@ -141,7 +159,7 @@ export class SchemaService extends BaseService {
           const responseObj = JSON.parse(JSON.stringify(schemaResponseFromAgentService.response));
 
           const indyNamespace = `${did.split(':')[2]}:${did.split(':')[3]}`;
-          const getLedgerId = await this.schemaRepository.getLedgerByLedger(indyNamespace);
+          const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
           const schemaDetails: ISchema = {
             schema: { schemaName: '', attributes: [], schemaVersion: '', id: '' },
             createdBy: `0`,
@@ -186,43 +204,35 @@ export class SchemaService extends BaseService {
             return saveResponse;
 
           } else {
-            throw new NotFoundException(ResponseMessages.schema.error.notCreated);
+            throw new NotFoundException(
+              ResponseMessages.schema.error.notCreated,
+              { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+            );
           }
         } else {
-          throw new RpcException(
-            new BadRequestException(
-              ResponseMessages.schema.error.emptyData
-            )
+          throw new BadRequestException(
+            ResponseMessages.schema.error.emptyData,
+            { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
           );
         }
-      } else {
-        throw new RpcException(
-          new BadRequestException(
-            ResponseMessages.schema.error.emptyData
-          )
+      } else {       
+        throw new BadRequestException(
+          ResponseMessages.schema.error.emptyData,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
         );
       }
-
     } catch (error) {
       this.logger.error(
         `[createSchema] - outer Error: ${JSON.stringify(error)}`
       );
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
 
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {
-    try {
       const pattern = {
         cmd: 'agent-create-schema'
       };
@@ -235,18 +245,15 @@ export class SchemaService extends BaseService {
             }))
         ).toPromise()
         .catch(error => {
-          this.logger.error(`Catch : ${JSON.stringify(error)}`);
+          this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
           throw new HttpException(
             {
-              status: error.statusCode,
-              error: error.message
+              status: error.statusCode,  
+              error: error.error,
+              message: error.message
             }, error.error);
         });
-      return schemaResponse;
-    } catch (error) {
-      this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
-      throw error;
-    }
+      return schemaResponse;  
   }
 
 

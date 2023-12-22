@@ -741,6 +741,12 @@ export class AgentServiceService {
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
+          })
+          .catch(error => {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
           });
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
@@ -756,12 +762,18 @@ export class AgentServiceService {
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
+          })
+          .catch(error => {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
           });
       }
       return schemaResponse;
     } catch (error) {
       this.logger.error(`Error in creating schema: ${error}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

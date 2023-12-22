@@ -68,7 +68,8 @@ export const ResponseMessages = {
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
-            notFound: 'Organization agent not found'
+            notFound: 'Organization agent not found',
+            orgNotFound: 'Organization not found'
         }
 
     },
@@ -103,6 +104,7 @@ export const ResponseMessages = {
         },
         error: {
             invalidSchemaId: 'Invalid schema Id provided.',
+            invalidData: 'Invalid data provided.',
             nameNotEmpty: 'Schema name is required',
             versionNotEmpty: 'Schema version is required',
             invalidVersion: 'Invalid schema version provided.',
@@ -115,7 +117,8 @@ export const ResponseMessages = {
             notFound: 'Schema records not found',
             schemaIdNotFound: 'SchemaLedgerId not found',
             credentialDefinitionNotFound: 'No credential definition exist',
-            notStoredCredential: 'User credential not stored'
+            notStoredCredential: 'User credential not stored',
+            agentDetailsNotFound: 'Agent details not found'
         }
     },
     credentialDefinition: {
@@ -153,7 +156,8 @@ export const ResponseMessages = {
             alreadySpinUp: 'Agent already spin-up',
             agentUrl: 'Agent url not exist',
             agentNotExists: 'Agent not spinned up for this organization',
-            apiKeyNotExist:'Api key is not found'
+            apiKeyNotExist:'Api key is not found',
+            agentDown: 'Agent is down or not spinned up'
         }
     },
     connection: {
@@ -293,5 +297,13 @@ export const ResponseMessages = {
             mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
             fileDetailsNotFound: 'File details not found.'
         }
+    },
+    errorMessages: {
+        forbidden: 'Forbidden Resource',
+        badRequest: 'Bad Request',
+        conflict: 'Conflict',
+        notAcceptable: 'Not Acceptable',
+        notFound: 'Not Found',
+        serverError: 'Internal Server error'
     }
 };

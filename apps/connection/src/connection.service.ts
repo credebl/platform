@@ -6,6 +6,8 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
   ConnectionInvitationResponse,
+  IConnectionDetailsById,
+  IConnectionInterface,
   IConnectionSearchCriteria,
   ICreateConnection,
   IUserRequestInterface
@@ -271,7 +273,7 @@ export class ConnectionService {
     }
   }
 
-  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<string> {
+  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<IConnectionDetailsById> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
@@ -294,8 +296,9 @@ export class ConnectionService {
       }
 
       const apiKey = platformConfig?.sgApiKey;
-      const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
-      return createConnectionInvitation?.response;
+      const getConnectionDetailsByConnectionId = await this._getConnectionsByConnectionId(url, apiKey);
+      return getConnectionDetailsByConnectionId;
+
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
 
@@ -315,19 +318,12 @@ export class ConnectionService {
   async _getConnectionsByConnectionId(
     url: string,
     apiKey: string
-  ): Promise<{
-    response: string;
-  }> {
+  ): Promise<IConnectionDetailsById> {
     try {
       const pattern = { cmd: 'agent-get-connections-by-connectionId' };
       const payload = { url, apiKey };
       return this.connectionServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
+        .send<IConnectionDetailsById>(pattern, payload)
         .toPromise()
         .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);

@@ -2,8 +2,9 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
-import { ICredDeffSchemaSearchInterface, ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
+import { ICredDeffSchemaSearchInterface, ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from './interfaces';
+import { ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -26,11 +27,9 @@ export class SchemaService extends BaseService {
     return this.sendNats(this.schemaServiceProxy, 'get-schema-by-id', payload);
   }
 
-  getSchemas(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface, orgId: string): Promise<{
-    response: object;
-  }> {
+  getSchemas(schemaSearchCriteria: ISchemaSearchPayload, user: IUserRequestInterface, orgId: string): Promise<ISchemasWithPagination> {
     const schemaSearch = { schemaSearchCriteria, user, orgId };
-    return this.sendNats(this.schemaServiceProxy, 'get-schemas', schemaSearch);
+    return this.sendNatsMessage(this.schemaServiceProxy, 'get-schemas', schemaSearch);
   }
 
   getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ICredDeffSchemaSearchInterface, user: IUserRequestInterface, orgId: string): Promise<{

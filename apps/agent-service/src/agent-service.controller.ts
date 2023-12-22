@@ -5,6 +5,7 @@ import { GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto,
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { ISendProofRequestPayload } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
+import { IConnectionDetailsById } from 'apps/connection/src/interfaces/connection.interfaces';
 
 @Controller()
 export class AgentServiceController {
@@ -90,7 +91,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-get-connections-by-connectionId' })
-  async getConnectionsByconnectionId(payload: { url: string, apiKey: string }): Promise<object> {
+  async getConnectionsByconnectionId(payload: { url: string, apiKey: string }): Promise<IConnectionDetailsById> {
     return this.agentServiceService.getConnectionsByconnectionId(payload.url, payload.apiKey);
   }
 

@@ -53,7 +53,7 @@ import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
-import { UsersActivity } from 'libs/user-activity/interface';
+import { IUsersActivity } from 'libs/user-activity/interface';
 
 @Injectable()
 export class UserService {
@@ -802,7 +802,7 @@ export class UserService {
   }
 
 
-  async getUserActivity(userId: string, limit: number): Promise<UsersActivity[]> {
+  async getUserActivity(userId: string, limit: number): Promise<IUsersActivity[]> {
     try {
       return this.userActivityService.getUserActivity(userId, limit);
     } catch (error) {

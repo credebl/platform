@@ -167,8 +167,8 @@ export class UserController {
 
   @Get('/activity')
   @ApiOperation({
-    summary: 'organization invitations',
-    description: 'Fetch organization invitations'
+    summary: 'users activity',
+    description: 'Fetch users activity'
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
@@ -177,7 +177,7 @@ export class UserController {
     @Query('limit') limit: number,
     @Res() res: Response,
     @User() reqUser: user
-  ): Promise<IResponseType> {
+  ): Promise<Response> {
     const userDetails = await this.userService.getUserActivities(reqUser.id, limit);
 
     const finalResponse: IResponseType = {

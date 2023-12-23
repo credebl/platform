@@ -36,8 +36,8 @@ import {
   UpdateUserProfile,
   UserCredentials,
   UserEmailVerificationDto,
-    UserInfo,
-    UsersProfile
+   IUserInformation,
+    IUsersProfile
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -254,7 +254,7 @@ export class UserService {
     }
   }
 
-  async createUserForToken(userInfo: UserInfo): Promise<string> {
+  async createUserForToken(userInfo: IUserInformation): Promise<string> {
     try {
       const { email } = userInfo;
       if (!userInfo.email) {
@@ -414,7 +414,7 @@ export class UserService {
     }
   }
 
-  async getProfile(payload: { id }): Promise<UsersProfile> {
+  async getProfile(payload: { id }): Promise<IUsersProfile> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
       const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany({
@@ -435,7 +435,7 @@ export class UserService {
     }
   }
 
-  async getPublicProfile(payload: { username }): Promise<UsersProfile> {
+  async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     try {
       const userProfile = await this.userRepository.getUserPublicProfile(payload.username);
 

@@ -17,7 +17,10 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
-import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
+import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
+import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { ApiResponseDto } from '../dtos/apiResponse.dto';
+import IResponse from '@credebl/common/interfaces/response.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -72,56 +75,36 @@ export class ConnectionController {
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiOperation({
-        summary: `Fetch all connection details`,
-        description: `Fetch all connection details`
+        summary: `Fetch all connections by orgId`,
+        description: `Fetch all connections by orgId`
     })
     @ApiQuery({
-        name: 'pageNumber',
-        type: Number,
+        name: 'sortField',
+        enum: SortFields,
         required: false
-      })
-      @ApiQuery({
-        name: 'searchByText',
-        type: String,
-        required: false
-      })
-      @ApiQuery({
-        name: 'pageSize',
-        type: Number,
-        required: false
-      })
-      @ApiQuery({
-        name: 'sorting',
-        type: String,
-        required: false
-      })
-      @ApiQuery({
-        name: 'sortByValue',
-        type: String,
-        required: false
-      })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+      })    
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getConnections(
         @Query() getAllConnectionsDto: GetAllConnectionsDto,
         @User() user: IUserRequest,
         @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
-
-        const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllConnectionsDto;
-        const connectionSearchCriteria: IConnectionSearchinterface = {
+        
+        const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllConnectionsDto;
+        const connectionSearchCriteria: IConnectionSearchCriteria = {
             pageNumber,
             searchByText,
             pageSize,
-            sorting,
-            sortByValue
+            sortField,
+            sortBy
           };
         const connectionDetails = await this.connectionService.getConnections(connectionSearchCriteria, user, orgId);
 
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.connection.success.fetch,
-            data: connectionDetails.response
+            data: connectionDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

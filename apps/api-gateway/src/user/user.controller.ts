@@ -71,7 +71,7 @@ export class UserController {
    */
   @Get('/public-profiles')
   @ApiExcludeEndpoint()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get users list', description: 'Get users list.' })
   @ApiQuery({
     name: 'pageNumber',

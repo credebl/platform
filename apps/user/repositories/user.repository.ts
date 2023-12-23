@@ -8,8 +8,8 @@ import {
   UpdateUserProfile,
   UserCredentials,
   UserEmailVerificationDto,
-    UsersProfile,
-    UserInfo
+    IUsersProfile,
+    IUserInformation
 } from '../interfaces/user.interface';
 
 import { InternalServerErrorException } from '@nestjs/common';
@@ -97,7 +97,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserById(id: string): Promise<UsersProfile> {
+  async getUserById(id: string): Promise<IUsersProfile> {
     const queryOptions: UserQueryOptions = {
       id
     };
@@ -123,7 +123,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserPublicProfile(username: string): Promise<UsersProfile> {
+  async getUserPublicProfile(username: string): Promise<IUsersProfile> {
     const queryOptions: UserQueryOptions = {
       username
     };
@@ -203,7 +203,7 @@ export class UserRepository {
     return this.findUser(queryOptions);
   }
 
-  async findUser(queryOptions: UserQueryOptions): Promise<UsersProfile> {
+  async findUser(queryOptions: UserQueryOptions): Promise<IUsersProfile> {
     return this.prisma.user.findFirst({
       where: {
         OR: [
@@ -330,7 +330,7 @@ export class UserRepository {
    * @returns Updates user details
    */
   // eslint-disable-next-line camelcase
-  async updateUserInfo(email: string, userInfo: UserInfo): Promise<user> {
+  async updateUserInfo(email: string, userInfo: IUserInformation): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {

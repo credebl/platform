@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, UserInfo, UsersProfile } from '../interfaces/user.interface';
+import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, IUserInformation, IUsersProfile } from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -40,12 +40,12 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-user-profile' })
-  async getProfile(payload: { id }): Promise<UsersProfile> {
+  async getProfile(payload: { id }): Promise<IUsersProfile> {
     return this.userService.getProfile(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-public-profile' })
-  async getPublicProfile(payload: { username }): Promise<UsersProfile> {
+  async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     return this.userService.getPublicProfile(payload);
   }
   @MessagePattern({ cmd: 'update-user-profile' })
@@ -126,7 +126,7 @@ export class UserController {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userInfo: UserInfo }): Promise<string | object> {
+  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<string | object> {
     return this.userService.createUserForToken(payload.userInfo);
   }
 

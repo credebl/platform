@@ -23,7 +23,7 @@ export interface Organisation {
 }
 
 export interface IUsersProfile {
-  id?: string;
+  id: string;
   username?: string;
   email?: string;
   firstName?: string;

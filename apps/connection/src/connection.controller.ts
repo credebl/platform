@@ -5,8 +5,9 @@ import {
   IConnection,
   IConnectionInterface,
   IFetchConnectionById,
-  IFetchConnectionInterface
+  IFetchConnections
 } from './interfaces/connection.interfaces';
+import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
 
 @Controller()
 export class ConnectionController {
@@ -53,7 +54,7 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'get-all-connections' })
-  async getConnections(payload: IFetchConnectionInterface): Promise<object> {
+  async getConnections(payload: IFetchConnections): Promise<IConnectionList> {
     const { user, orgId, connectionSearchCriteria } = payload;
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
   }

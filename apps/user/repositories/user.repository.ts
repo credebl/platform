@@ -254,7 +254,7 @@ export class UserRepository {
   });
   }
 
-  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<object> {
+  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<IUsersProfile> {
     return this.prisma.user.findFirst({
       where: {
         publicProfile: true,
@@ -279,22 +279,30 @@ export class UserRepository {
         isEmailVerified: true,
         publicProfile: true,
         userOrgRoles: {
-          include: {
-            orgRole: true,
+          select:{
+            id: true,
+            userId:true,
+            orgRoleId:true,
+            orgId:true,
+            orgRole: {
+              select:{
+                id: true,
+                name: true,
+                description: true
+              }
+            },
             organisation: {
               select: {
                 id: true,
                 name: true,
                 description: true,
+                orgSlug:true,
                 logoUrl: true,
                 website: true,
-                orgSlug: true
-              },
-              where: {
                 publicProfile: true
               }
-            }
           }
+          }   
         }
       }
     });

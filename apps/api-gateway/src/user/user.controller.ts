@@ -175,7 +175,7 @@ export class UserController {
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getProfile(@User() reqUser: user, @Res() res: Response): Promise<IResponseType> {
+  async getProfile(@User() reqUser: user, @Res() res: Response): Promise<Response> {
     const userData = await this.userService.getProfile(reqUser.id);
 
     const finalResponse: IResponseType = {

@@ -8,7 +8,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
-import { UsersActivity } from 'libs/user-activity/interface';
+import { IUsersActivity } from 'libs/user-activity/interface';
 
 @Controller()
 export class UserController {
@@ -132,7 +132,7 @@ export class UserController {
 
   // Fetch Users recent activities
   @MessagePattern({ cmd: 'get-user-activity' })
-  async getUserActivity(payload: { userId: string, limit: number }): Promise<UsersActivity[]> {
+  async getUserActivity(payload: { userId: string, limit: number }): Promise<IUsersActivity[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
   }
 

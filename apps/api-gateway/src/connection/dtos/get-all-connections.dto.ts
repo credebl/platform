@@ -7,12 +7,6 @@ import { SortFields } from "apps/connection/src/enum/connection.enum";
 
 export class GetAllConnectionsDto {
     
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Transform(({ value }) => trim(value))
-    @Type(() => String)
-    searchByText: string = '';
-
     @ApiProperty({ required: false, example: '1' })
     @IsOptional()
     pageNumber: number = 1;
@@ -20,6 +14,12 @@ export class GetAllConnectionsDto {
     @ApiProperty({ required: false, example: '10' })
     @IsOptional()
     pageSize: number = 10;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Transform(({ value }) => trim(value))
+    @Type(() => String)
+    searchByText: string = '';
 
     @ApiProperty({
         required: false

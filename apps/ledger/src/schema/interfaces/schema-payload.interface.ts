@@ -41,7 +41,7 @@ export interface ISchemaPayload {
     schemaSortBy?: string;
 }
 
-export interface ISchemaSearchInterface {
+export interface ISchemaSearchPayload {
     schemaSearchCriteria: ISchemaSearchCriteria,
     user: IUserRequestInterface,
     orgId: string
@@ -51,8 +51,8 @@ export interface ISchemaSearchCriteria {
     ledgerId?: string;
     pageNumber: number;
     pageSize: number;
-    sorting: string;
-    sortByValue: string;
+    sortField: string;
+    sortBy: string;
     searchByText: string;
     user: IUserRequestInterface
 }

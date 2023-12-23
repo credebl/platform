@@ -25,7 +25,7 @@ export class UserService extends BaseService {
 
   async getPublicProfile(username: string): Promise<{ response: object }> {
   const payload = { username };
-  return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
+  return this.sendNatsMessage(this.serviceProxy, 'get-user-public-profile', payload);
   }
 
 
@@ -80,7 +80,7 @@ export class UserService extends BaseService {
   ): Promise<{ response: object }> {
     const { pageNumber, pageSize, search } = getAllUsersDto;
     const payload = { pageNumber, pageSize, search };
-    return this.sendNats(this.serviceProxy, 'fetch-users', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-users', payload);
   }
 
   async checkUserExist(userEmail: string): Promise<{ response: string }> {

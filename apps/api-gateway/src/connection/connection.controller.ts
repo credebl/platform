@@ -17,9 +17,9 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
-import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
-import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
+import IResponse from '@credebl/common/interfaces/response.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -150,15 +150,15 @@ export class ConnectionController {
         summary: 'Catch connection webhook responses',
         description: 'Callback URL for connection'
     })
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async getConnectionWebhook(
         @Body() connectionDto: ConnectionDto,
         @Param('orgId') orgId: string,
         @Res() res: Response
-    ): Promise<IResponseType> {
+    ): Promise<Response> {
         this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
         const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.connection.success.create,
             data: connectionData

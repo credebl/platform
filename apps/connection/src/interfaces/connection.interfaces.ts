@@ -51,12 +51,12 @@ export interface IOrgAgentInterface {
   orgId: string;
 }
 
-export class Connection {
-  connectionDto: ConnectionPayload;
+export class ICreateConnection {
+  connectionDto: ICreateConnectionPayload;
   orgId: string;
 }
 
-export class ConnectionPayload {
+export class ICreateConnectionPayload {
   createDateTime: string;
   lastChangedDateTime: string;
   id: string;

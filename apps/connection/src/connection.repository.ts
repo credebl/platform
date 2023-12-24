@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, org_agents, platform_config, shortening_url } from '@prisma/client';
-import { Connection, IConnectionSearchCriteria, OrgAgent } from './interfaces/connection.interfaces';
+import { IConnectionSearchCriteria, ICreateConnection, OrgAgent } from './interfaces/connection.interfaces';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IConnectionsListCount } from '@credebl/common/interfaces/connection.interface';
 import { SortValue } from '@credebl/enum/enum';
@@ -95,7 +95,7 @@ export class ConnectionRepository {
    * @returns Get connection details
    */
   // eslint-disable-next-line camelcase
-  async saveConnectionWebhook(payload: Connection): Promise<object> {
+  async saveConnectionWebhook(payload: ICreateConnection): Promise<object> {
     try {
 
       let organisationId: string;

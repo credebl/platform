@@ -1,8 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { SchemaService } from './schema.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { ISchema, ISchemaCredDeffSearchInterface, ISchemaSearchInterface } from './interfaces/schema-payload.interface';
+import { ISchema, ISchemaCredDeffSearchInterface, ISchemaSearchPayload } from './interfaces/schema-payload.interface';
 import { schema } from '@prisma/client';
+import { ResponseMessages } from '@credebl/common/response-messages';
+import { ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 
 
 @Controller('schema')
@@ -10,9 +12,10 @@ export class SchemaController {
     constructor(private readonly schemaService: SchemaService) { }
 
     @MessagePattern({ cmd: 'create-schema' })
-    async createSchema(payload: ISchema): Promise<schema> {
+    async createSchema(payload: ISchema): Promise<string> {
         const { schema, user, orgId } = payload;
-        return this.schemaService.createSchema(schema, user, orgId);
+        await this.schemaService.createSchema(schema, user, orgId);
+        return ResponseMessages.schema.success.create;
     }
 
     @MessagePattern({ cmd: 'get-schema-by-id' })
@@ -22,27 +25,9 @@ export class SchemaController {
     }
 
     @MessagePattern({ cmd: 'get-schemas' })
-    async getSchemas(schemaSearch: ISchemaSearchInterface): Promise<{
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-        nextPage: number;
-        previousPage: number;
-        lastPage: number;
-        data: {
-            createDateTime: Date;
-            createdBy: string;
-            name: string;
-            version: string;
-            attributes: string;
-            schemaLedgerId: string;
-            publisherDid: string;
-            issuerId: string;
-            orgId: string;
-        }[];
-    }> {
-        const { schemaSearchCriteria, user, orgId } = schemaSearch;
-        return this.schemaService.getSchemas(schemaSearchCriteria, user, orgId);
+    async getSchemas(schemaSearch: ISchemaSearchPayload): Promise<ISchemasWithPagination> {
+        const { schemaSearchCriteria, orgId } = schemaSearch;
+        return this.schemaService.getSchemas(schemaSearchCriteria, orgId);
     }
 
     @MessagePattern({ cmd: 'get-cred-deff-list-by-schemas-id' })
@@ -65,7 +50,7 @@ export class SchemaController {
     }
 
     @MessagePattern({ cmd: 'get-all-schemas' })
-    async getAllSchema(schemaSearch: ISchemaSearchInterface): Promise<{
+    async getAllSchema(schemaSearch: ISchemaSearchPayload): Promise<{
         totalItems: number;
         hasNextPage: boolean;
         hasPreviousPage: boolean;

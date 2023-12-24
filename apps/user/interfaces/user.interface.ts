@@ -112,7 +112,7 @@ interface IUserOrgRole {
     label: string;
   }
   
-  export interface CheckUserDetails {
+  export interface ICheckUserDetails {
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
     isSupabase?: boolean;

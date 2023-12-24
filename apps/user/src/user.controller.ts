@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, IUserInformation, IUsersProfile } from '../interfaces/user.interface';
+import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, IUserInformation, IUsersProfile, UserInvitations } from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -77,7 +77,7 @@ export class UserController {
 
   @MessagePattern({ cmd: 'get-org-invitations' })
   async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UserInvitations> {
-    return this.userService.invitations(payload);
+        return this.userService.invitations(payload);
   }
 
   /**
@@ -127,7 +127,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'check-user-exist' })
-  async checkUserExist(payload: { userEmail: string }): Promise<string | CheckUserDetails> {
+  async checkUserExist(payload: { userEmail: string }): Promise<string | ICheckUserDetails> {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })

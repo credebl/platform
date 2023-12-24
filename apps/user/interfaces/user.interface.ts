@@ -109,7 +109,23 @@ interface IUserOrgRole {
   
   export interface Attribute {
     [key: string]: string;
-    label: string
+    label: string;
+  }
+  
+  export interface ICheckUserDetails {
+    isEmailVerified?: boolean;
+    isFidoVerified?: boolean;
+    isSupabase?: boolean;
+    isExist?: boolean;
+  }
+
+  export interface UserCredentials {
+    id: string;
+    imageUrl?: string;
+    credentialId?: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    deletedAt: Date;
   }
 
   export interface IOrgUsers {

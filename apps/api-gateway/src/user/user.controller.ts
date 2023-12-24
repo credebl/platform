@@ -254,7 +254,7 @@ export class UserController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.checkEmail,
-      data: userDetails.response
+      data: userDetails
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

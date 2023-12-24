@@ -9,7 +9,7 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetails } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
-import { IUsersProfile } from 'apps/user/interfaces/user.interface';
+import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
 
 @Injectable()
@@ -83,9 +83,9 @@ export class UserService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'fetch-users', payload);
   }
 
-  async checkUserExist(userEmail: string): Promise<{ response: string }> {
+  async checkUserExist(userEmail: string): Promise<ICheckUserDetails> {
     const payload = { userEmail };
-    return this.sendNats(this.serviceProxy, 'check-user-exist', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'check-user-exist', payload);
   }
 
   async getUserActivities(userId: string, limit: number): Promise<IUsersActivity[]> {

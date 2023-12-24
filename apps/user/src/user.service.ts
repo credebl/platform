@@ -37,7 +37,8 @@ import {
   UserCredentials,
   UserEmailVerificationDto,
    IUserInformation,
-    IUsersProfile
+    IUsersProfile,
+    UserInvitations
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -511,7 +512,7 @@ export class UserService {
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
-
+      
       const invitationsData = await this.getOrgInvitations(
         userData.email,
         payload.status,
@@ -519,11 +520,11 @@ export class UserService {
         payload.pageSize,
         payload.search
       );
-
+      
       const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
       invitationsData['invitations'] = invitations;
       // console.log("{-----------------}",invitationsData);
-      
+
       return invitationsData;
     } catch (error) {
       this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
@@ -781,7 +782,7 @@ export class UserService {
     }
   }
 
-  async checkUserExist(email: string): Promise<CheckUserDetails> {
+  async checkUserExist(email: string): Promise<ICheckUserDetails> {
     try {
       const userDetails = await this.userRepository.checkUniqueUserExist(email);
       if (userDetails && !userDetails.isEmailVerified) {

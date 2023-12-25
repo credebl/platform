@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { AgentStatus, GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, OutOfBandCredentialOffer } from './interface/agent-service.interface';
+import { AgentSpinUpSatus, GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, OutOfBandCredentialOffer } from './interface/agent-service.interface';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { ISendProofRequestPayload } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
@@ -16,9 +16,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'create-tenant' })
-  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<{
-    agentSpinupStatus: number;
-  }> {
+  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<AgentSpinUpSatus> {
     return this.agentServiceService.createTenant(payload.createTenantDto, payload.user);
   }
 

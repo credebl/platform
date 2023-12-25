@@ -56,9 +56,23 @@ export class AgentServiceRepository {
   async getOrgDetails(id: string): Promise<organisation> {
     try {
 
-      const oranizationDetails = await this.prisma.organisation.findFirst({
-        where: {
-          id
+    /**
+     * Get organization details
+     * @param id 
+     * @returns 
+     */
+    async getOrgDetails(id: string): Promise<organisation> {
+        try {
+
+            const oranizationDetails = await this.prisma.organisation.findFirstOrThrow({
+                where: {
+                    id
+                }
+            });
+            return oranizationDetails;
+        } catch (error) {
+            this.logger.error(`[getOrgDetails] - get organization details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
       return oranizationDetails;
@@ -143,13 +157,13 @@ export class AgentServiceRepository {
   async getAgentDetails(orgId: string): Promise<org_agents> {
     try {
 
-      const x = await this.prisma.org_agents.findFirst({
-        where: {
-          orgId
-        }
-      });
+            const orgAgentDataByOrgId = await this.prisma.org_agents.findFirstOrThrow({
+                where: {
+                    orgId
+                }
+            });
 
-      return x;
+            return orgAgentDataByOrgId;
 
     } catch (error) {
 
@@ -158,28 +172,19 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
-  async platformAdminAgent(platformOrg: string): Promise<organisation & { org_agents: org_agents[] }> {
-    const platformAdminSpinnedUp = await this.prisma.organisation.findFirst({
-      where: {
-        name: platformOrg
-      },
-      include: {
-        // eslint-disable-next-line camelcase
-        org_agents: true
-      }
-    });
-    return platformAdminSpinnedUp;
-  }
-
-  /**
-  * Get agent details
-  * @param orgId 
-  * @returns Agent health details
-  */
-  // eslint-disable-next-line camelcase
-  async getOrgAgentDetails(orgId: string): Promise<org_agents> {
-    try {
+    // eslint-disable-next-line camelcase
+    async platformAdminAgent(platformOrg: string): Promise<organisation & { org_agents: org_agents[] }> {
+        const platformAdminSpinnedUp = await this.prisma.organisation.findFirstOrThrow({
+            where: {
+                name: platformOrg
+            },
+            include: {
+                // eslint-disable-next-line camelcase
+                org_agents: true
+            }
+        });
+        return platformAdminSpinnedUp;
+    }
 
       const oranizationAgentDetails = await this.prisma.org_agents.findFirstOrThrow({
         where: {
@@ -245,11 +250,17 @@ export class AgentServiceRepository {
     }
   }
 
-  async getOrgAgentTypeDetails(agentType: string): Promise<string> {
-    try {
-      const { id } = await this.prisma.org_agents_type.findFirst({
-        where: {
-          agent: agentType
+    async getOrgAgentTypeDetails(agentType: string): Promise<string> {
+        try {
+            const { id } = await this.prisma.org_agents_type.findFirstOrThrow({
+                where: {
+                    agent: agentType
+                }
+            });
+            return id;
+        } catch (error) {
+            this.logger.error(`[getOrgAgentTypeDetails] - get org agent type details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
       return id;
@@ -301,11 +312,17 @@ export class AgentServiceRepository {
     }
   }
 
-  async getAgentTypeId(agentType: string): Promise<string> {
-    try {
-      const { id } = await this.prisma.agents_type.findFirst({
-        where: {
-          agent: agentType
+    async getAgentTypeId(agentType: string): Promise<string> {
+        try {
+            const { id } = await this.prisma.agents_type.findFirstOrThrow({
+                where: {
+                    agent: agentType
+                }
+            });
+            return id;
+        } catch (error) {
+            this.logger.error(`[getAgentType] - get agent type details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
       return id;

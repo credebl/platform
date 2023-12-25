@@ -1,5 +1,3 @@
-export interface AgentStatus {
-    label: string;
-    endpoints: string[];
-    isInitialized: boolean;
+export interface AgentSpinUpSatus {
+    agentSpinupStatus: number;
 }

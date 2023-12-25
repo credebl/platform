@@ -44,19 +44,31 @@ export class AgentController {
   constructor(private readonly agentService: AgentService) { }
   private readonly logger = new Logger();
 
+  /**
+   * Get Organization agent health
+   * @param orgId 
+   * @param reqUser 
+   * @param res 
+   * @returns Get agent details
+   */
   @Get('/orgs/:orgId/agents/health')
   @ApiOperation({
     summary: 'Get the agent health details',
     description: 'Get the agent health details'
   })
   @UseGuards(AuthGuard('jwt'))
-  async getAgentHealth(@User() reqUser: user, @Param('orgId') orgId: string, @Res() res: Response): Promise<object> {
+  async getAgentHealth(
+    @Param('orgId') orgId: string,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<Response> {
+
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.agent.success.health,
-      data: agentData.response
+      data: agentData
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -99,7 +111,7 @@ export class AgentController {
     agentSpinupDto.orgId = orgId;
     const agentDetails = await this.agentService.agentSpinup(agentSpinupDto, user);
 
-    
+
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.create,

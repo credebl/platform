@@ -219,6 +219,9 @@ export enum CommonConstants {
   // delete wallet
   URL_DELETE_WALLET = '/agent/wallet',
   URL_DELETE_SHARED_WALLET = '/multi-tenancy/#',
+
+  // agent status
+  URL_AGENT_STATUS = '/agent',
   
   // Tenant Status
   PENDING_STATE = 0,

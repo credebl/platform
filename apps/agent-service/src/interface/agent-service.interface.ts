@@ -260,6 +260,12 @@ export interface ISendProofRequestPayload {
     autoAcceptProof: string;
 }
 
+export interface AgentStatus {
+    label: string;
+    endpoints: string[];
+    isInitialized: boolean;
+}
+
 interface IProofFormats {
     indy: IndyProof
 }
@@ -292,3 +298,4 @@ interface IRequestedPredicatesName {
 interface IRequestedRestriction {
     cred_def_id: string;
 }
+

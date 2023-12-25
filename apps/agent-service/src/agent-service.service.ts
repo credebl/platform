@@ -18,7 +18,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { catchError, map } from 'rxjs/operators';
 dotenv.config();
-import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, OutOfBandCredentialOffer } from './interface/agent-service.interface';
+import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, OutOfBandCredentialOffer, AgentSpinUpSatus, CreateTenant } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -550,53 +550,86 @@ export class AgentServiceService {
     }
   }
 
-  async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<{
-    agentSpinupStatus: number;
-  }> {
+  /**
+   * Create tenant (Shared agent)
+   * @param payload 
+   * @param user 
+   * @returns Get agent status
+   */
+  async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<AgentSpinUpSatus> {
 
     const agentStatusResponse = {
       agentSpinupStatus: AgentSpinUpStatus.PROCESSED
     };
 
+    // Create tenant
     this._createTenant(payload, user);
     return agentStatusResponse;
   }
 
+  /**
+   * Create tenant (Shared agent)
+   * @param payload 
+   * @param user 
+   * @returns Get agent status
+   */
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<org_agents> {
     let agentProcess;
 
     try {
+
+      // Get orgaization agent details by orgId
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
 
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
         this.logger.error(`Your wallet has already been created.`);
-        throw new BadRequestException('Your wallet has already been created.');
+        throw new BadRequestException(
+          ResponseMessages.agent.error.walletAlreadyCreated,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
 
       if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
         this.logger.error(`Your wallet has already processing.`);
-        throw new BadRequestException('Your wallet has already processing.');
+        throw new BadRequestException(
+          ResponseMessages.agent.error.walletAlreadyProcessing,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
 
+      // Get ledgers details
       const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(Ledgers.Indicio_Demonet);
       const ledgerIds = ledgerIdData.map(ledger => ledger.id);
 
       payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? ledgerIds : payload.ledgerId;
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
+
+      // Create and stored agent details  
       agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user.id);
 
-
+      // Get platform admin details
       const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
+
+      // Get genesis URLs by ledger Id
       const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
 
       for (const iterator of ledgerDetails) {
+
+        // Create tenant in agent controller
         const tenantDetails = await this.createTenantAndNotify(payload, iterator, platformAdminSpinnedUp);
 
         if (AgentSpinUpStatus.COMPLETED !== platformAdminSpinnedUp.org_agents[0].agentSpinUpStatus) {
-          throw new NotFoundException('Platform-admin agent is not spun-up');
+          this.logger.error(`Platform-admin agent is not spun-up`);
+          throw new NotFoundException(
+            ResponseMessages.agent.error.platformAdminNotAbleToSpinp,
+            { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+          );
         }
 
+        // Get org agent type details by shared agent
         const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
+
+        // Get agent type details by AFJ agent
         const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
 
         const storeOrgAgentData: IStoreOrgAgentDetails = {
@@ -614,12 +647,15 @@ export class AgentServiceService {
           id: agentProcess.id
         };
 
+        // Get organization data
         const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
 
         this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
         const saveTenant = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
         this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
+
+        // Create the legacy connection invitation
         this._createLegacyConnectionInvitation(payload.orgId, user, getOrganization.name);
 
         this.notifyClientSocket('invitation-url-creation-success', payload.clientSocketId);
@@ -646,13 +682,24 @@ export class AgentServiceService {
     const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
 
     if (!platformAdminSpinnedUp) {
-      throw new InternalServerErrorException('Agent not able to spin-up');
+      this.logger.error(`Agent not able to spin-up`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.notAbleToSpinp,
+        { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+      );
     }
 
     return platformAdminSpinnedUp;
   }
 
-  private async createTenantAndNotify(payload: ITenantDto, ledgerIds: ledgers, platformAdminSpinnedUp: organisation & { org_agents: org_agents[] }): Promise<object> {
+  /**
+   * Create tenant on the agent
+   * @param payload 
+   * @param ledgerIds 
+   * @param platformAdminSpinnedUp 
+   * @returns Get tanant status
+   */
+  private async createTenantAndNotify(payload: ITenantDto, ledgerIds: ledgers, platformAdminSpinnedUp: organisation & { org_agents: org_agents[] }): Promise<CreateTenant> {
     const socket = await this.createSocketInstance();
     if (payload.clientSocketId) {
       socket.emit('agent-spinup-process-initiated', { clientId: payload.clientSocketId });
@@ -667,6 +714,8 @@ export class AgentServiceService {
     };
 
     const apiKey = '';
+
+    // Invoke an API request from the agent to create multi-tenant agent
     const tenantDetails = await this.commonService.httpPost(
       `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
       createTenantOptions,

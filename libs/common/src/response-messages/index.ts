@@ -157,7 +157,12 @@ export const ResponseMessages = {
             alreadySpinUp: 'Agent already spin-up',
             agentUrl: 'Agent url not exist',
             agentNotExists: 'Agent not spinned up for this organization',
-            agentDown: 'Agent is down or not spinned up'
+            agentDown: 'Agent is down or not spinned up',
+            walletAlreadyCreated: 'Your wallet has already been created',
+            walletAlreadyProcessing: 'Your wallet has already processing',
+            notAbleToSpinp: 'Agent not able to spin-up',
+            platformAdminNotAbleToSpinp: 'Platform-admin agent is not spun-up',
+            seedCharCount: 'seed must be at most 32 characters',
         }
     },
     connection: {

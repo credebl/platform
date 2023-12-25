@@ -293,3 +293,34 @@ interface IRequestedPredicatesName {
 interface IRequestedRestriction {
     cred_def_id: string;
 }
+
+export interface AgentSpinUpSatus {
+    agentSpinupStatus: number;
+}
+
+interface WalletConfig {
+    id: string;
+    key: string;
+    keyDerivationMethod: string;
+  }
+  
+  interface Config {
+    label: string;
+    walletConfig: WalletConfig;
+  }
+  
+  interface TenantRecord {
+    _tags: string;
+    metadata: string;
+    id: string;
+    createdAt: string;
+    config: Config;
+    updatedAt: string;
+  }
+  
+  export interface CreateTenant {
+    tenantRecord: TenantRecord;
+    did: string;
+    verkey: string;
+  }
+  

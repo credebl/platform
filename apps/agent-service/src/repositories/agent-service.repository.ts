@@ -56,7 +56,7 @@ export class AgentServiceRepository {
     async getOrgDetails(id: string): Promise<organisation> {
         try {
 
-            const oranizationDetails = await this.prisma.organisation.findFirst({
+            const oranizationDetails = await this.prisma.organisation.findFirstOrThrow({
                 where: {
                     id
                 }
@@ -143,13 +143,13 @@ export class AgentServiceRepository {
     async getAgentDetails(orgId: string): Promise<org_agents> {
         try {
 
-            const x = await this.prisma.org_agents.findFirst({
+            const orgAgentDataByOrgId = await this.prisma.org_agents.findFirstOrThrow({
                 where: {
                     orgId
                 }
             });
 
-            return x;
+            return orgAgentDataByOrgId;
 
         } catch (error) {
 
@@ -160,7 +160,7 @@ export class AgentServiceRepository {
 
     // eslint-disable-next-line camelcase
     async platformAdminAgent(platformOrg: string): Promise<organisation & { org_agents: org_agents[] }> {
-        const platformAdminSpinnedUp = await this.prisma.organisation.findFirst({
+        const platformAdminSpinnedUp = await this.prisma.organisation.findFirstOrThrow({
             where: {
                 name: platformOrg
             },
@@ -246,7 +246,7 @@ export class AgentServiceRepository {
 
     async getOrgAgentTypeDetails(agentType: string): Promise<string> {
         try {
-            const { id } = await this.prisma.org_agents_type.findFirst({
+            const { id } = await this.prisma.org_agents_type.findFirstOrThrow({
                 where: {
                     agent: agentType
                 }
@@ -302,7 +302,7 @@ export class AgentServiceRepository {
 
     async getAgentTypeId(agentType: string): Promise<string> {
         try {
-            const { id } = await this.prisma.agents_type.findFirst({
+            const { id } = await this.prisma.agents_type.findFirstOrThrow({
                 where: {
                     agent: agentType
                 }

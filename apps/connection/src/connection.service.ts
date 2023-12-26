@@ -344,7 +344,8 @@ export class ConnectionService {
           throw new HttpException(
             {
               status: error.statusCode,
-              error: error.message
+              error: error.error,
+              message: error.message
             },
             error.error
           );

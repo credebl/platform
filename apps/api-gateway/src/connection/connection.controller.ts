@@ -1,4 +1,4 @@
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, {IResponse} from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -20,7 +20,6 @@ import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import IResponse from '@credebl/common/interfaces/response.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()

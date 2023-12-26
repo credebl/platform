@@ -1011,7 +1011,7 @@ export class AgentServiceService {
   /**
    * Get agent health
    * @param orgId 
-   * @returns Get agent health
+   * @returns Get agent status
    */
   async getAgentHealthDetails(orgId: string): Promise<AgentStatus> {
     try {

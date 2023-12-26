@@ -69,7 +69,7 @@ export class ConnectionPayload {
   contextCorrelationId: string;
 }
 
-export class IFetchConnectionInterface {
+export class IFetchConnections {
   connectionSearchCriteria: IConnectionSearchCriteria;
   user: IUserRequest;
   orgId: string;
@@ -92,7 +92,6 @@ export interface ConnectionInvitationResponse {
     invitation: object;
   };
 }
-
 export interface OrgAgent {
   organisation: organisation;
   id: string;
@@ -109,16 +108,11 @@ export interface OrgAgent {
   orgAgentTypeId: string;
   tenantId: string;
 }
-export interface IConnectionSearchInterface {
-  schemaSearchCriteria: IConnectionSearchCriteria,
-  user: IUserRequestInterface,
-  orgId: string
-}
 export interface IConnectionSearchCriteria {
   pageNumber: number;
   pageSize: number;
-  sorting: string;
-  sortByValue: string;
+  sortField: string;
+  sortBy: string;
   searchByText: string;
   user: IUserRequestInterface
 }

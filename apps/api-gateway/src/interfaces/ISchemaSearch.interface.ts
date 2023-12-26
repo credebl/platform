@@ -9,7 +9,6 @@ export interface ISchemaSearchPayload {
     searchByText?: string;
     user?: IUserRequestInterface
 }
-
 export interface IConnectionSearchinterface {
     pageNumber: number;
     pageSize: number;
@@ -18,7 +17,6 @@ export interface IConnectionSearchinterface {
     searchByText: string;
     user?: IUserRequestInterface
 }
-
 export interface IConnectionDetailsById {
     id: string;
     createdAt: string;

@@ -18,6 +18,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
+import { ApiResponseDto } from '../dtos/apiResponse.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -136,7 +137,7 @@ export class ConnectionController {
     @ApiOperation({ summary: 'Create outbound out-of-band connection (Legacy Invitation)', description: 'Create outbound out-of-band connection (Legacy Invitation)' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-    @ApiResponse({ status: 201, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async createLegacyConnectionInvitation(
         @Param('orgId') orgId: string,
         @Body() connectionDto: CreateConnectionDto,
@@ -145,11 +146,11 @@ export class ConnectionController {
     ): Promise<Response> {
 
         connectionDto.orgId = orgId;
-        const connectionData = await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
+        await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.connection.success.create,
-            data: connectionData.response
+            message: ResponseMessages.connection.success.create
+            // data: connectionData
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
 

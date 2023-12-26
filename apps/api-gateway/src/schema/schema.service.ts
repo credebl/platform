@@ -4,7 +4,8 @@ import { BaseService } from '../../../../libs/service/base.service';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from './interfaces';
-import { ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -32,10 +33,8 @@ export class SchemaService extends BaseService {
     return this.sendNatsMessage(this.schemaServiceProxy, 'get-schemas', schemaSearch);
   }
 
-  getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ISchemaSearchPayload, user: IUserRequestInterface, orgId: string): Promise<{
-    response: object;
-  }> {
-    const payload = { schemaId, schemaSearchCriteria, user, orgId };
-    return this.sendNats(this.schemaServiceProxy, 'get-cred-deff-list-by-schemas-id', payload);
+  getcredDeffListBySchemaId(schemaSearchCriteria: GetCredentialDefinitionBySchemaIdDto, user: IUserRequestInterface): Promise<ICredDefWithPagination> {
+    const payload = { schemaSearchCriteria, user };
+    return this.sendNatsMessage(this.schemaServiceProxy, 'get-cred-deff-list-by-schemas-id', payload);
   }
 }

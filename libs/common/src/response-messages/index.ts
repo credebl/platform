@@ -69,7 +69,8 @@ export const ResponseMessages = {
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
             notFound: 'Organization agent not found',
-            orgNotFound: 'Organization not found'
+            orgNotFound: 'Organization not found',
+            orgNotMatch: 'Organization does not match'
         }
 
     },

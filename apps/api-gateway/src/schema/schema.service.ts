@@ -5,6 +5,7 @@ import { CreateSchemaDto } from '../dtos/create-schema.dto';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from './interfaces';
 import { ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { schema } from '@prisma/client';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -20,11 +21,9 @@ export class SchemaService extends BaseService {
     return this.sendNats(this.schemaServiceProxy, 'create-schema', payload);
   }
 
-  getSchemaById(schemaId: string, orgId: string): Promise<{
-    response: object;
-  }> {
+  getSchemaById(schemaId: string, orgId: string): Promise<schema> {
     const payload = { schemaId, orgId };
-    return this.sendNats(this.schemaServiceProxy, 'get-schema-by-id', payload);
+    return this.sendNatsMessage(this.schemaServiceProxy, 'get-schema-by-id', payload);
   }
 
   getSchemas(schemaSearchCriteria: ISchemaSearchPayload, user: IUserRequestInterface, orgId: string): Promise<ISchemasWithPagination> {

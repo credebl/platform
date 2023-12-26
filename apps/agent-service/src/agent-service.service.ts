@@ -766,6 +766,11 @@ export class AgentServiceService {
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
+          })
+          .catch(error => {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown
+            );
           });
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
@@ -775,12 +780,17 @@ export class AgentServiceService {
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
+          })
+          .catch(error => {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown
+            );
           });
       }
       return schemaResponse;
     } catch (error) {
-      this.logger.error(`Error in getting schema: ${error}`);
-      throw error;
+      this.logger.error(`Error in getSchemaById: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

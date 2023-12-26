@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
@@ -36,24 +36,24 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
-    summary: 'Get schema information from the ledger using its schema ID.',
+    summary: 'Schema information from its schema ID.',
     description: 'Get schema information from the ledger using its schema ID.'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
     @Res() res: Response,
     @Param('orgId') orgId: string,
     @Param('schemaId') schemaId: string
-  ): Promise<object> {
+  ): Promise<Response> {
 
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
     const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
-      data: schemaDetails.response
+      data: schemaDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

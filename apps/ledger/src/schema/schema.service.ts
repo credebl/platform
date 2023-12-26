@@ -252,7 +252,11 @@ export class SchemaService extends BaseService {
 
   async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
     try {
-      const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+      const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+      
+      if (!agentDetails || !agentDetails.agentEndPoint) {
+        throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound);
+      }
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
       const apiKey = '';
@@ -261,7 +265,7 @@ export class SchemaService extends BaseService {
         const getSchemaPayload = {
           schemaId,
           apiKey,
-          agentEndPoint,
+          agentEndPoint: agentDetails.agentEndPoint,
           agentType: OrgAgentType.DEDICATED
         };
         schemaResponse = await this._getSchemaById(getSchemaPayload);
@@ -272,7 +276,7 @@ export class SchemaService extends BaseService {
           method: 'getSchemaById',
           payload: { schemaId },
           agentType: OrgAgentType.SHARED,
-          agentEndPoint
+          agentEndPoint: agentDetails.agentEndPoint
         };
         schemaResponse = await this._getSchemaById(getSchemaPayload);
       }
@@ -293,7 +297,6 @@ export class SchemaService extends BaseService {
   }
 
   async _getSchemaById(payload: GetSchemaAgentRedirection): Promise<{ response: string }> {
-    try {
       const pattern = {
         cmd: 'agent-get-schema'
       };
@@ -306,18 +309,15 @@ export class SchemaService extends BaseService {
             }))
         ).toPromise()
         .catch(error => {
-          this.logger.error(`Catch : ${JSON.stringify(error)}`);
+          this.logger.error(`Catch in _getSchemaById: ${JSON.stringify(error)}`);
           throw new HttpException(
             {
               status: error.statusCode,
-              error: error.message
+              message: error.message,
+              error: error.error
             }, error.error);
         });
       return schemaResponse;
-    } catch (error) {
-      this.logger.error(`Error in getting schema : ${JSON.stringify(error)}`);
-      throw error;
-    }
   }
 
   async getSchemas(schemaSearchCriteria: ISchemaSearchCriteria, orgId: string): Promise<ISchemasWithPagination> {

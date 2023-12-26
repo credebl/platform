@@ -35,10 +35,9 @@ export class ConnectionController {
 
     /**
         * Description: Get connection by connectionId
-        * @param user
         * @param connectionId
         * @param orgId
-        * 
+        * @returns connection details by connection Id
     */
     @Get('orgs/:orgId/connections/:connectionId')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

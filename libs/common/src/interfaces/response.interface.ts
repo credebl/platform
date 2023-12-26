@@ -11,5 +11,4 @@ export default interface IResponse {
   message?: string;
   label?: string;
   data?: unknown;
-  error?: unknown;
 };

@@ -66,8 +66,8 @@ interface IUserOrgRole {
     email?: string;
     orgRoles: string[];
   }
-  
-  export interface UserEmailVerificationDto {
+
+  export interface ISendVerificationEmail {
     email: string;
     username?: string;
   }
@@ -182,9 +182,8 @@ interface IUserOrgRole {
     search: string;
   }
 
-  // export interface OrgUsersPayload {
-  //   orgId: string;
-  //   pageNumber: number;
-  //   pageSize: number;
-  //   search: string;
-  // }
+  export class IVerifyUserEmail {
+    email: string;
+    verificationCode: string;
+}
+

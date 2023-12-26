@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, IUserInformation, IUsersProfile, UserInvitations } from '../interfaces/user.interface';
+import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, UserCredentials, IUserInformation, IUsersProfile, UserInvitations, ISendVerificationEmail, IVerifyUserEmail} from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -20,8 +20,8 @@ export class UserController {
    * @returns Get registered user response
    */
   @MessagePattern({ cmd: 'send-verification-mail' })
-  async sendVerificationMail(payload: { userEmailVerificationDto: UserEmailVerificationDto }): Promise<object> {
-    return this.userService.sendVerificationMail(payload.userEmailVerificationDto);
+  async sendVerificationMail(payload: { userEmailVerification: ISendVerificationEmail }): Promise<ISendVerificationEmail> {
+    return this.userService.sendVerificationMail(payload.userEmailVerification);
   }
 
   /**
@@ -30,7 +30,7 @@ export class UserController {
    * @returns Get user's email verified
    */
   @MessagePattern({ cmd: 'user-email-verification' })
-  async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<object> {
+  async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<IVerifyUserEmail> {
     return this.userService.verifyEmail(payload.param);
   }
 

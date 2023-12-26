@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { AgentSpinUpSatus, GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, OutOfBandCredentialOffer } from './interface/agent-service.interface';
+import { AgentStatus, AgentSpinUpSatus, GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, OutOfBandCredentialOffer } from './interface/agent-service.interface';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { ISendProofRequestPayload } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
@@ -92,8 +92,13 @@ export class AgentServiceController {
     return this.agentServiceService.getConnectionsByconnectionId(payload.url, payload.apiKey);
   }
 
+  /**
+   * Get agent health
+   * @param payload 
+   * @returns Get agent health
+   */
   @MessagePattern({ cmd: 'agent-health' })
-  async getAgentHealth(payload: { user: user, orgId: string }): Promise<object> {
+  async getAgentHealth(payload: { user: user, orgId: string }): Promise<AgentStatus> {
     return this.agentServiceService.getAgentHealthDetails(payload.orgId);
   }
 

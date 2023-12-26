@@ -599,8 +599,8 @@ export class OrganizationRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      this.logger.error(`Delete Org Invitation Error: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

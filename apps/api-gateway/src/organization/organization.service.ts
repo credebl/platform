@@ -164,6 +164,6 @@ export class OrganizationService extends BaseService {
     invitationId: string
   ): Promise<boolean> {
     const payload = {orgId, invitationId};
-    return this.sendNats(this.serviceProxy, 'delete-organization-invitation', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'delete-organization-invitation', payload);
   }
 }

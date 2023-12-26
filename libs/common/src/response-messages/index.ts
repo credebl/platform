@@ -74,7 +74,6 @@ export const ResponseMessages = {
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
             orgNotFound: 'Organization not found'
         }
-
     },
 
     fido: {

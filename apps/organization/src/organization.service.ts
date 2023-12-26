@@ -1,5 +1,4 @@
-// eslint-disable-next-line camelcase
-import { organisation, org_roles, user } from '@prisma/client';
+import { organisation, user } from '@prisma/client';
 import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
@@ -18,10 +17,11 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-import { IUpdateOrganization, OrgAgent } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -118,8 +118,8 @@ export class OrganizationService {
    * @param 
    * @returns Get created organizations details
    */
-  // eslint-disable-next-line camelcase
-  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+
+  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
     try {
 
       const query = {
@@ -136,12 +136,13 @@ export class OrganizationService {
         userId
       };
 
-      return this.organizationRepository.getOrganizations(
+      const getOrgs = await this.organizationRepository.getOrganizations(
         query,
         filterOptions,
         pageNumber,
         pageSize
       );
+      return getOrgs;
 
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
@@ -154,8 +155,8 @@ export class OrganizationService {
   * @param 
   * @returns Get public organizations details
   */
-  // eslint-disable-next-line camelcase
-  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<object> {
+
+  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
     try {
 
       const query = {
@@ -181,7 +182,7 @@ export class OrganizationService {
     }
   }
 
-  async getPublicProfile(payload: { orgSlug: string }): Promise<object> {
+  async getPublicProfile(payload: { orgSlug: string }): Promise<IGetOrgById> {
     const { orgSlug } = payload;
     try {
       
@@ -195,8 +196,8 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
       }
 
-      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails['id']);
-      organizationDetails['credential_definitions'] = credentials;
+      const credDefs = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
+      organizationDetails['credential_definitions'] = credDefs;
       return organizationDetails;
 
     } catch (error) {
@@ -210,8 +211,8 @@ export class OrganizationService {
      * @param orgId Registration Details
      * @returns Get created organization details
      */
-  // eslint-disable-next-line camelcase
-  async getOrganization(orgId: string): Promise<object> {
+
+  async getOrganization(orgId: string): Promise<IGetOrgById> {
     try {
 
       const query = {
@@ -231,12 +232,12 @@ export class OrganizationService {
     * @param orgId Registration Details
     * @returns Get created invitation details
     */
-  // eslint-disable-next-line camelcase
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgInvitationsPagination> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
       for await (const item of getOrganization['invitations']) {
-        const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item.orgRoles);
+        const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item['orgRoles']);
         (item['orgRoles'] as object) = getOrgRoles;
       };
       return getOrganization;
@@ -252,8 +253,8 @@ export class OrganizationService {
    * @returns
    */
 
-  // eslint-disable-next-line camelcase
-  async getOrgRoles(): Promise<org_roles[]> {
+
+  async getOrgRoles(): Promise< IOrgRoles[]> {
     try {
       return this.orgRoleService.getOrgRoles();
     } catch (error) {
@@ -309,7 +310,7 @@ export class OrganizationService {
   * @returns createInvitation
   */
 
-  // eslint-disable-next-line camelcase
+
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, orgId } = bulkInvitationDto;
 
@@ -397,7 +398,7 @@ export class OrganizationService {
     return false;
   }
 
-  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrgInvitationsPagination> {
     try {
       return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search);
     } catch (error) {
@@ -478,7 +479,7 @@ export class OrganizationService {
     }
   }
 
-  async getOrgDashboard(orgId: string): Promise<object> {
+  async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
     try {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
@@ -534,7 +535,7 @@ export class OrganizationService {
     }
   }
 
-  async _deleteWallet(payload: OrgAgent): Promise<{
+  async _deleteWallet(payload: IOrgAgent): Promise<{
     response;
   }> {
     try {

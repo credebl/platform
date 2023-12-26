@@ -71,7 +71,8 @@ export const ResponseMessages = {
             deleteOrg: 'Organization not found',
             deleteOrgInvitation: 'Organization does not have access to delete this invitation',
             notFound: 'Organization agent not found',
-            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status'
+            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
+            orgNotFound: 'Organization not found'
         }
 
     },
@@ -106,6 +107,7 @@ export const ResponseMessages = {
         },
         error: {
             invalidSchemaId: 'Invalid schema Id provided.',
+            invalidData: 'Invalid data provided.',
             nameNotEmpty: 'Schema name is required',
             versionNotEmpty: 'Schema version is required',
             invalidVersion: 'Invalid schema version provided.',
@@ -118,7 +120,9 @@ export const ResponseMessages = {
             notFound: 'Schema records not found',
             schemaIdNotFound: 'SchemaLedgerId not found',
             credentialDefinitionNotFound: 'No credential definition exist',
-            notStoredCredential: 'User credential not stored'
+            notStoredCredential: 'User credential not stored',
+            agentDetailsNotFound: 'Agent details not found',
+            failedFetchSchema: 'Failed to fetch schema data'
         }
     },
     credentialDefinition: {
@@ -155,7 +159,8 @@ export const ResponseMessages = {
             notAbleToSpinUpAgent: 'Agent not able to spin-up',
             alreadySpinUp: 'Agent already spin-up',
             agentUrl: 'Agent url not exist',
-            agentNotExists: 'Agent not spinned up for this organization'
+            agentNotExists: 'Agent not spinned up for this organization',
+            agentDown: 'Agent is down or not spinned up'
         }
     },
     connection: {
@@ -295,5 +300,13 @@ export const ResponseMessages = {
             mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
             fileDetailsNotFound: 'File details not found.'
         }
+    },
+    errorMessages: {
+        forbidden: 'Forbidden Resource',
+        badRequest: 'Bad Request',
+        conflict: 'Conflict',
+        notAcceptable: 'Not Acceptable',
+        notFound: 'Not Found',
+        serverError: 'Internal Server error'
     }
 };

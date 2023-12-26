@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { OrgRolesRepository } from '../repositories';
 // eslint-disable-next-line camelcase
 import { org_roles } from '@prisma/client';
-
+import { IOrgRoles } from '../interfaces/org-roles.interface';
 @Injectable()
 export class OrgRolesService {
     
@@ -14,8 +14,7 @@ export class OrgRolesService {
         return this.orgRoleRepository.getRole(roleName);
     }
 
-    // eslint-disable-next-line camelcase
-    async getOrgRoles(): Promise<org_roles[]> {
+    async getOrgRoles(): Promise< IOrgRoles[]> {
         return this.orgRoleRepository.getOrgRoles();
     }
 

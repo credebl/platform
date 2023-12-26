@@ -34,6 +34,7 @@ import {
   PlatformSettings,
   ShareUserCertificate,
   UserInvitations,
+  IOrgUsers,
   UpdateUserProfile,
   UserCredentials,
   UserEmailVerificationDto,
@@ -680,7 +681,7 @@ export class UserService {
    * @param orgId
    * @returns users list
    */
-  async getOrgUsers(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+  async getOrgUsers(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgUsers> {
     try {
   
       const query = {

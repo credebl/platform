@@ -2,8 +2,10 @@
 /* eslint-disable camelcase */
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SortValue } from '../../enum';
-import { Type } from 'class-transformer';
-import { IsOptional } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsEnum, IsOptional } from 'class-validator';
+import { trim } from '@credebl/common/cast.helper';
+import { SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
 export class GetAllSchemaDto {
     @ApiProperty({ required: false })
@@ -12,6 +14,7 @@ export class GetAllSchemaDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
     searchByText: string = '';
 
@@ -19,13 +22,22 @@ export class GetAllSchemaDto {
     @IsOptional()
     pageSize: number = 10;
 
-    @ApiProperty({ required: false })
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
     @IsOptional()
-    sorting: string = 'id';
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
 
-    @ApiProperty({ required: false })
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
     @IsOptional()
-    sortByValue: string = SortValue.DESC;
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
 }
 
 export class GetCredentialDefinitionBySchemaIdDto {
@@ -41,11 +53,11 @@ export class GetCredentialDefinitionBySchemaIdDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
-    sorting: string = 'id';
+    sortField: string = 'id';
 
     @ApiProperty({ required: false })
     @IsOptional()
-    sortByValue: string = SortValue.DESC;
+    sortBy: string = SortValue.DESC;
 }
 
 export class GetAllSchemaByPlatformDto {

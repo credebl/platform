@@ -2,6 +2,7 @@
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
+  IOrgUsers,
   PlatformSettings,
   ShareUserCertificate,
   UpdateUserProfile,
@@ -250,7 +251,7 @@ export class UserRepository {
           }   
         }
       }
-    });
+  });
   }
 
   async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<UsersProfile> {
@@ -358,7 +359,7 @@ export class UserRepository {
     pageNumber: number,
     pageSize: number,
     filterOptions?: object
-  ): Promise<object> {
+  ): Promise<IOrgUsers> {
     const result = await this.prisma.$transaction([
       this.prisma.user.findMany({
         where: {
@@ -370,24 +371,40 @@ username: true,
           email: true,
           firstName: true,
           lastName: true,
-isEmailVerified: true,
-          clientId: true,
-          clientSecret: true,
-          supabaseUserId: true,
+          isEmailVerified: true,
           userOrgRoles: {
                         where: {
               ...filterOptions
 // Additional filtering conditions if needed
             },
-            include: {
-              orgRole: true,
+            select: {
+              id: true,
+              orgId: true,
+              orgRoleId: true,
+              orgRole: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true
+                }
+              },
               organisation: {
-                include: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  orgSlug: true,
+                  logoUrl: true,
                   // eslint-disable-next-line camelcase
                   org_agents: {
-                    include: {
-                      // eslint-disable-next-line camelcase
-                      agents_type: true
+                    select: {
+                      id: true,
+                      orgDid: true,
+                      walletName: true,
+                      agentSpinUpStatus: true,
+                      agentsTypeId: true,
+                      createDateTime: true,
+                      orgAgentTypeId:true
                     }
                   }
                 }

@@ -19,7 +19,7 @@ import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
+import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -60,28 +60,13 @@ export class SchemaController {
 
   @Get('/:orgId/schemas/:schemaId/cred-defs')
   @ApiOperation({
-    summary: 'Get credential definition list by schema Id',
+    summary: 'Credential definitions by schema Id',
     description: 'Get credential definition list by schema Id'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiQuery({
     name: 'sortField',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortBy',
-    type: String,
+    enum: CredDefSortFields,
     required: false
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
@@ -89,19 +74,22 @@ export class SchemaController {
   async getcredDeffListBySchemaId(
     @Param('orgId') orgId: string,
     @Param('schemaId') schemaId: string,
-    @Query() GetCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
+    @Query() getCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
-    @User() user: IUserRequestInterface): Promise<object> {
+    @User() user: IUserRequestInterface): Promise<Response> {
 
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
 
-    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, GetCredentialDefinitionBySchemaIdDto, user, orgId);
+    getCredentialDefinitionBySchemaIdDto.schemaId = schemaId;
+    getCredentialDefinitionBySchemaIdDto.orgId = orgId;
+
+    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(getCredentialDefinitionBySchemaIdDto, user);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
-      data: credentialDefinitionList.response
+      data: credentialDefinitionList
     };
     
     return res.status(HttpStatus.OK).json(finalResponse);

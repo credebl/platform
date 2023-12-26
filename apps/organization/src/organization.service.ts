@@ -1,6 +1,6 @@
 // eslint-disable-next-line camelcase
 import { organisation, org_roles, user } from '@prisma/client';
-import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException } from '@nestjs/common';
+import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
@@ -561,6 +561,34 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
       throw error;
+    }
+  }
+
+  async deleteOrganizationInvitation(orgId: string, invitationId: string): Promise<boolean> {
+    try {      
+      const invitationDetails = await this.organizationRepository.getInvitationById(invitationId);
+      
+      // Check invitation is present
+      if (!invitationDetails) {
+        throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
+      }
+
+      // Check if delete process initiated by the org who has created invitation      
+      if (orgId !== invitationDetails.orgId) {
+        throw new ForbiddenException(ResponseMessages.organisation.error.deleteOrgInvitation);
+      }
+
+      // Check if invitation is already accepted/rejected
+      if (Invitation.PENDING !== invitationDetails.status) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invitationStatusInvalid);
+      }
+
+      await this.organizationRepository.deleteOrganizationInvitation(invitationId);
+
+      return true;
+    } catch (error) {
+      this.logger.error(`delete organization invitation: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

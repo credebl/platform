@@ -7,11 +7,11 @@ import {
   ShareUserCertificate,
   UpdateUserProfile,
   UserCredentials,
-  UserEmailVerificationDto,
-    IUsersProfile,
-    IUserInformation
+  ISendVerificationEmail,
+  IUsersProfile,
+  IUserInformation, 
+  IVerifyUserEmail
 } from '../interfaces/user.interface';
-
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
@@ -27,21 +27,21 @@ interface UserQueryOptions {
 @Injectable()
 export class UserRepository {
   constructor(
-    private readonly prisma: PrismaService, 
+    private readonly prisma: PrismaService,
     private readonly logger: Logger
   ) {}
 
   /**
    *
-   * @param userEmailVerificationDto
+   * @param userEmailVerification
    * @returns user email
    */
-  async createUser(userEmailVerificationDto: UserEmailVerificationDto, verifyCode: string): Promise<user> {
+  async createUser(userEmailVerification:ISendVerificationEmail, verifyCode: string): Promise<user> {
     try {
       const saveResponse = await this.prisma.user.create({
         data: {
-          username: userEmailVerificationDto.username,
-          email: userEmailVerificationDto.email,
+          username: userEmailVerification.username,
+          email: userEmailVerification.email,
           verificationCode: verifyCode.toString(),
           publicProfile: true
         }
@@ -247,11 +247,11 @@ export class UserRepository {
                 website: true,
                 publicProfile: true
               }
+            }
           }
-          }   
         }
       }
-  });
+    });
   }
 
   async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<IUsersProfile> {
@@ -301,8 +301,8 @@ export class UserRepository {
                 website: true,
                 publicProfile: true
               }
+            }
           }
-          }   
         }
       }
     });
@@ -375,15 +375,15 @@ export class UserRepository {
         },
         select: {
           id: true,
-username: true,
+          username: true,
           email: true,
           firstName: true,
           lastName: true,
           isEmailVerified: true,
           userOrgRoles: {
-                        where: {
+            where: {
               ...filterOptions
-// Additional filtering conditions if needed
+              // Additional filtering conditions if needed
             },
             select: {
               id: true,
@@ -526,7 +526,7 @@ username: true,
     }
   }
 
-  async verifyUser(email: string): Promise<user> {
+  async verifyUser(email: string): Promise<IVerifyUserEmail> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {

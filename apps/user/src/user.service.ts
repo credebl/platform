@@ -35,11 +35,12 @@ import {
   ShareUserCertificate,
   IOrgUsers,
   UpdateUserProfile,
-  UserCredentials,
-  UserEmailVerificationDto,
+  UserCredentials, 
+  ISendVerificationEmail,
    IUserInformation,
     IUsersProfile,
-    UserInvitations
+    UserInvitations,  
+    IVerifyUserEmail
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -76,12 +77,12 @@ export class UserService {
 
   /**
    *
-   * @param userEmailVerificationDto
+   * @param userEmailVerification
    * @returns
    */
-  async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
+  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<ISendVerificationEmail> {
     try {
-      const { email } = userEmailVerificationDto;
+      const { email } = userEmailVerification;
 
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
@@ -91,7 +92,7 @@ export class UserService {
           throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
         }
       }
-      const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
+      const userDetails = await this.userRepository.checkUserExist(userEmailVerification.email);
 
       if (userDetails && userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
@@ -102,12 +103,12 @@ export class UserService {
       }
 
       const verifyCode = uuidv4();
-      const uniqueUsername = await this.createUsername(userEmailVerificationDto.email, verifyCode);
-      userEmailVerificationDto.username = uniqueUsername;
-      const resUser = await this.userRepository.createUser(userEmailVerificationDto, verifyCode);
+      const uniqueUsername = await this.createUsername(userEmailVerification.email, verifyCode);
+      userEmailVerification.username = uniqueUsername;
+      const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
 
       try {
-        await this.sendEmailForVerification(userEmailVerificationDto.email, resUser.verificationCode);
+        await this.sendEmailForVerification(userEmailVerification.email, resUser.verificationCode);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -178,7 +179,7 @@ export class UserService {
    * @returns Email verification succcess
    */
 
-  async verifyEmail(param: VerifyEmailTokenDto): Promise<object> {
+  async verifyEmail(param: VerifyEmailTokenDto): Promise<IVerifyUserEmail> {
     try {
       const invalidMessage = ResponseMessages.user.error.invalidEmailUrl;
 
@@ -197,10 +198,8 @@ export class UserService {
       }
 
       if (param.verificationCode === userDetails.verificationCode) {
-        await this.userRepository.verifyUser(param.email);
-        return {
-          message: 'User Verified sucessfully'
-        };
+        const verifiedEmail = await this.userRepository.verifyUser(param.email);
+        return verifiedEmail;
       }
     } catch (error) {
       this.logger.error(`error in verifyEmail: ${JSON.stringify(error)}`);

@@ -320,6 +320,7 @@ export class ConnectionService {
     apiKey: string
   ): Promise<IConnectionDetailsById> {
 
+      //nats call in agent service
       const pattern = { cmd: 'agent-get-connections-by-connectionId' };
       const payload = { url, apiKey };
       return this.connectionServiceProxy

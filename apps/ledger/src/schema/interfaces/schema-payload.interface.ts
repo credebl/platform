@@ -53,14 +53,15 @@ export interface ISchemaSearchCriteria {
     pageSize: number;
     sortField: string;
     sortBy: string;
-    searchByText: string;
-    user: IUserRequestInterface
+    searchByText?: string;
+    user?: IUserRequestInterface
+    schemaId?: string;
+    orgId?: string;
 }
 
 export interface ISchemaCredDeffSearchInterface {
     schemaId: string;
     schemaSearchCriteria?: ISchemaSearchCriteria,
     user: IUserRequestInterface,
-    orgId?: string
 }
 

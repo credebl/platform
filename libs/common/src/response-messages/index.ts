@@ -58,7 +58,8 @@ export const ResponseMessages = {
             getOrgDashboard: 'Organization dashboard details fetched',
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
-            delete: 'Organization deleted successfully'
+            delete: 'Organization deleted successfully',
+            orgInvitationDeleted: 'Organization invitation deleted successfully'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -68,10 +69,12 @@ export const ResponseMessages = {
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
+            deleteOrgInvitation: 'Organization does not have access to delete this invitation',
             notFound: 'Organization agent not found',
-            orgNotFound: 'Organization not found'
+            orgNotFound: 'Organization not found',
+            orgNotMatch: 'Organization does not have access',
+            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status'
         }
-
     },
 
     fido: {
@@ -174,7 +177,7 @@ export const ResponseMessages = {
     connection: {
         success: {
             create: 'Connection created successfully',
-            fetch: 'Connection fetched successfully'
+            fetch: 'Connections details fetched successfully'
         },
         error: {
             exists: 'Connection is already exist',

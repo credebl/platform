@@ -15,6 +15,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
+import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
 
 @Injectable()
 export class ConnectionService {
@@ -188,28 +189,18 @@ export class ConnectionService {
     user: IUserRequest,
     orgId: string,
     connectionSearchCriteria: IConnectionSearchCriteria
-  ): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      theirLabel: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+  ): Promise<IConnectionList> {
     try {
       const getConnectionList = await this.connectionRepository.getAllConnections(
         user,
         orgId,
         connectionSearchCriteria
       );
+
+      if (0 === getConnectionList.connectionCount) {
+        throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
+      }
+
       const connectionResponse: {
         totalItems: number;
         hasNextPage: boolean;
@@ -235,20 +226,15 @@ export class ConnectionService {
         lastPage: Math.ceil(getConnectionList.connectionCount / connectionSearchCriteria.pageSize),
         data: getConnectionList.connectionsList
       };
-
-      if (0 !== getConnectionList.connectionCount) {
         return connectionResponse;
-      } else {
-        throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
-      }
     } catch (error) {
-;      if (404 === error.status) {
-        throw new NotFoundException(error.response.message);
-      }
-      throw new RpcException(
+
+      this.logger.error(
         `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
       );
-    }
+
+      throw new RpcException(error.response ? error.response : error);      
+    } 
   }
 
   async _getAllConnections(

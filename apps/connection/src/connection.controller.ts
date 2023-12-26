@@ -60,6 +60,12 @@ export class ConnectionController {
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
   }
 
+  /**
+   * 
+   * @param connectionId
+   * @param orgId 
+   * @returns connection details by connection Id
+   */
   @MessagePattern({ cmd: 'get-all-connection-details-by-connectionId' })
   async getConnectionsById(payload: IFetchConnectionById): Promise<IConnectionDetailsById> {
     const { user, connectionId, orgId } = payload;

@@ -130,18 +130,26 @@ export class AgentServiceService {
     }
   }
 
-
-  async walletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<{ agentSpinupStatus: number }> {
+  /**
+   * Spinup the agent by organization
+   * @param agentSpinupDto 
+   * @param user 
+   * @returns Get agent status
+   */
+  async walletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<AgentSpinupStatus> {
     let agentProcess: org_agents;
     try {
 
-      this.processWalletProvision(agentSpinupDto, user);
+      // Invoke an internal function to create wallet
+      await this.processWalletProvision(agentSpinupDto, user);
       const agentStatusResponse = {
         agentSpinupStatus: AgentSpinUpStatus.PROCESSED
       };
 
       return agentStatusResponse;
     } catch (error) {
+
+      // Invoke an internal function to handle error to create wallet
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -160,6 +168,9 @@ export class AgentServiceService {
       ]);
       if (!user?.userId && agentSpinupDto?.platformAdminEmail) {
 
+        /**
+         * Get Platform admin user by platform admin email
+         */
         platformAdminUser = await this.agentServiceRepository.getPlatfomAdminUser(agentSpinupDto?.platformAdminEmail);
         userId = platformAdminUser?.id;
       } else {
@@ -167,6 +178,10 @@ export class AgentServiceService {
       }
 
       agentSpinupDto.ledgerId = agentSpinupDto.ledgerId?.length ? agentSpinupDto.ledgerId : ledgerIdData.map(ledger => ledger.id);
+
+      /**
+       * Get ledgers by ledgerIds
+       */
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
 
@@ -175,7 +190,11 @@ export class AgentServiceService {
       }
 
       if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
-        throw new BadRequestException('Your wallet is already processing.');
+        this.logger.error('Your wallet is already processing.');
+        throw new BadRequestException(
+          ResponseMessages.agent.error.walletAlreadyProcessing,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
 
 
@@ -190,12 +209,18 @@ export class AgentServiceService {
       agentSpinupDto.tenant = agentSpinupDto.tenant || false;
       agentSpinupDto.ledgerName = agentSpinupDto.ledgerName?.length ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet];
 
+      /**
+       * Invoke function for validate platform configuration
+       */
       this.validatePlatformConfig(platformConfig);
 
       const externalIp = platformConfig?.externalIp;
       const controllerIp = platformConfig?.lastInternalId !== 'false' ? platformConfig?.lastInternalId : '';
       const apiEndpoint = platformConfig?.apiEndpoint;
 
+      /**
+       * Create payload for the wallet create and store payload
+       */
       const walletProvisionPayload = await this.prepareWalletProvisionPayload(agentSpinupDto, externalIp, apiEndpoint, controllerIp, ledgerDetails, platformConfig, orgData);
 
       const socket: Socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
@@ -216,26 +241,46 @@ export class AgentServiceService {
 
   validatePlatformConfig(platformConfig: platform_config): void {
     if (!platformConfig) {
-      throw new BadRequestException('Platform configuration is missing or invalid.');
+      this.logger.error(`Platform configuration is missing or invalid`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.platformConfiguration,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     if (!platformConfig.apiEndpoint) {
-      throw new BadRequestException('API endpoint is missing in the platform configuration.');
+      this.logger.error(`API endpoint is missing in the platform configuration`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.apiEndpoint,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     if (!platformConfig.externalIp) {
-      throw new BadRequestException('External IP is missing in the platform configuration.');
+      this.logger.error(`External IP is missing in the platform configuration`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.externalIp,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     if (typeof platformConfig.externalIp !== 'string') {
-      throw new BadRequestException('External IP must be a string.');
+      this.logger.error(`External IP must be a string`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.externalIp,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
   }
 
   validateAgentProcess(agentProcess: ICreateOrgAgent): void {
     try {
       if (!agentProcess) {
-        throw new BadRequestException('Agent process is invalid or not in a completed state.');
+        this.logger.error(`Agent process is invalid or not in a completed state`);
+        throw new BadRequestException(
+          ResponseMessages.agent.error.externalIp,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
     } catch (error) {
       this.logger.error(`Error validating agent process: ${error.message}`);
@@ -352,11 +397,18 @@ export class AgentServiceService {
       const walletProvision = await this._walletProvision(walletProvisionPayload);
 
       if (!walletProvision?.response) {
-        throw new BadRequestException('Agent not able to spin-up');
+        this.logger.error(`Agent not able to spin-up`);
+        throw new BadRequestException(
+          ResponseMessages.agent.error.notAbleToSpinup,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
       const agentDetails = walletProvision.response;
       const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.agentEndPoint}`;
 
+      /**
+       * Socket connection
+       */
       const socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
 
       if (agentEndPoint && agentSpinupDto.clientSocketId) {
@@ -378,6 +430,9 @@ export class AgentServiceService {
         id: agentProcess?.id
       };
 
+      /**
+       * Store organization agent details 
+       */
       const storeAgentDetails = await this._storeOrgAgentDetails(agentPayload);
 
       if (storeAgentDetails) {
@@ -406,7 +461,11 @@ export class AgentServiceService {
           socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
         }
       } else {
-        throw new BadRequestException('Agent not able to spin-up');
+        this.logger.error(`Agent not able to spin-up`);
+        throw new BadRequestException(
+          ResponseMessages.agent.error.notAbleToSpinup,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
     } catch (error) {
       if (agentSpinupDto.clientSocketId) {
@@ -414,6 +473,9 @@ export class AgentServiceService {
       }
 
       if (agentProcess && agentProcess?.id) {
+        /**
+         * If getting error remove organization agent 
+         */
         await this.agentServiceRepository.removeOrgAgent(agentProcess?.id);
       }
       this.logger.error(`[_agentSpinup] - Error in Agent spin up : ${JSON.stringify(error)}`);
@@ -422,13 +484,28 @@ export class AgentServiceService {
 
   async _storeOrgAgentDetails(payload: IStoreOrgAgentDetails): Promise<object> {
     try {
+
+      /**
+       * Get orgaization agent type and agent details
+       */
       const [agentDid, orgAgentTypeId] = await Promise.all([
         this._getAgentDid(payload),
         this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED)
       ]);
 
+      /**
+       * Get DID method by agent
+       */
       const getDidMethod = await this._getDidMethod(payload, agentDid);
+
+      /**
+       * Organization storage data
+       */
       const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, getDidMethod, orgAgentTypeId);
+
+      /**
+       * Store org agent details
+       */
       const storeAgentDid = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
       return storeAgentDid;

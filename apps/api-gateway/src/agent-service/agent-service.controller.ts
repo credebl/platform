@@ -76,10 +76,10 @@ export class AgentController {
   }
 
   /**
-   * 
+   * Spinup the agent by organization
    * @param agentSpinupDto 
    * @param user 
-   * @returns 
+   * @returns Get agent status
    */
   @Post('/orgs/:orgId/agents/spinup')
   @ApiOperation({
@@ -90,22 +90,30 @@ export class AgentController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   async agentSpinup(
-    @Body() agentSpinupDto: AgentSpinupDto,
     @Param('orgId') orgId: string,
+    @Body() agentSpinupDto: AgentSpinupDto,
     @User() user: user,
     @Res() res: Response
-  ): Promise<Response<object, Record<string, object>>> {
+  ): Promise<Response> {
 
     if (seedLength !== agentSpinupDto.seed.length) {
-      throw new BadRequestException(`seed must be at most 32 characters.`);
+      this.logger.error(`seed must be at most 32 characters.`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.seedChar,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     const regex = new RegExp('^[a-zA-Z0-9]+$');
 
     if (!regex.test(agentSpinupDto.walletName)) {
-      this.logger.error(`Wallet name in wrong format.`);
-      throw new BadRequestException(`Please enter valid wallet name, It allows only alphanumeric values`);
+      this.logger.error(`Please enter valid wallet name, It allows only alphanumeric values`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.seedChar,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
+
     this.logger.log(`**** Spin up the agent...${JSON.stringify(agentSpinupDto)}`);
 
     agentSpinupDto.orgId = orgId;

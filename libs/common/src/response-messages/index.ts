@@ -163,7 +163,7 @@ export const ResponseMessages = {
     connection: {
         success: {
             create: 'Connection created successfully',
-            fetch: 'Connection fetched successfully'
+            fetch: 'Connections details fetched successfully'
         },
         error: {
             exists: 'Connection is already exist',

@@ -21,8 +21,11 @@ import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnect
 export class AgentServiceController {
   constructor(private readonly agentServiceService: AgentServiceService) {}
 
-
-  //DONE
+  /**
+   * Spinup the agent by organization
+   * @param payload 
+   * @returns Get agent status
+   */
   @MessagePattern({ cmd: 'agent-spinup' })
   async walletProvision(payload: { agentSpinupDto: IAgentSpinupDto; user: IUserRequestInterface }): Promise<object> {
     return this.agentServiceService.walletProvision(payload.agentSpinupDto, payload.user);

@@ -28,15 +28,14 @@ export class AuthzService extends BaseService {
     return this.sendNats(this.authServiceProxy, 'get-user-by-keycloakUserId', keycloakUserId);
   }
 
-  async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<object> {
-    const payload = { userEmailVerificationDto };
-    return this.sendNats(this.authServiceProxy, 'send-verification-mail', payload);
+  async sendVerificationMail(userEmailVerification: UserEmailVerificationDto): Promise<UserEmailVerificationDto> {
+    const payload = { userEmailVerification };
+    return this.sendNatsMessage(this.authServiceProxy, 'send-verification-mail', payload);
   }
 
-  async verifyEmail(param: EmailVerificationDto): Promise<object> {
+  async verifyEmail(param: EmailVerificationDto): Promise<EmailVerificationDto> {
     const payload = { param };
-    return this.sendNats(this.authServiceProxy, 'user-email-verification', payload);
-
+    return this.sendNatsMessage(this.authServiceProxy, 'user-email-verification', payload);
   }
 
   async login(email: string, password?: string, isPasskey = false): Promise<{ response: object }> {

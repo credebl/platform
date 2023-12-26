@@ -19,8 +19,8 @@ export class UserController {
    * @returns Get registered user response
    */
   @MessagePattern({ cmd: 'send-verification-mail' })
-  async sendVerificationMail(payload: { userEmailVerificationDto: UserEmailVerificationDto }): Promise<object> {
-    return this.userService.sendVerificationMail(payload.userEmailVerificationDto);
+  async sendVerificationMail(payload: { userEmailVerification: ISendVerificationEmail }): Promise<ISendVerificationEmail> {
+    return this.userService.sendVerificationMail(payload.userEmailVerification);
   }
 
   /**
@@ -29,7 +29,7 @@ export class UserController {
    * @returns Get user's email verified
    */
   @MessagePattern({ cmd: 'user-email-verification' })
-  async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<object> {
+  async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<IVerifyUserEmail> {
     return this.userService.verifyEmail(payload.param);
   }
 

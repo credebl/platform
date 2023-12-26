@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, userInfo, UsersProfile } from '../interfaces/user.interface';
+import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, IUserInformation, IUsersProfile } from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -8,7 +8,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
-import { UsersActivity } from 'libs/user-activity/interface';
+import { IUsersActivity } from 'libs/user-activity/interface';
 
 @Controller()
 export class UserController {
@@ -40,12 +40,12 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-user-profile' })
-  async getProfile(payload: { id }): Promise<UsersProfile> {
+  async getProfile(payload: { id }): Promise<IUsersProfile> {
     return this.userService.getProfile(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-public-profile' })
-  async getPublicProfile(payload: { username }): Promise<UsersProfile> {
+  async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     return this.userService.getPublicProfile(payload);
   }
   @MessagePattern({ cmd: 'update-user-profile' })
@@ -126,13 +126,13 @@ export class UserController {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userInfo: userInfo }): Promise<string | object> {
+  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<string | object> {
     return this.userService.createUserForToken(payload.userInfo);
   }
 
   // Fetch Users recent activities
   @MessagePattern({ cmd: 'get-user-activity' })
-  async getUserActivity(payload: { userId: string, limit: number }): Promise<UsersActivity[]> {
+  async getUserActivity(payload: { userId: string, limit: number }): Promise<IUsersActivity[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
   }
 

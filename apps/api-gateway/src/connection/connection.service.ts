@@ -16,9 +16,7 @@ export class ConnectionService extends BaseService {
   createLegacyConnectionInvitation(
     connectionDto: CreateConnectionDto,
     user: IUserRequestInterface
-  ): Promise<{
-    response: object;
-  }> {
+  ): Promise<object> {
     try {
       const connectionDetails = {
         orgId: connectionDto.orgId,
@@ -30,7 +28,7 @@ export class ConnectionService extends BaseService {
         user
       };
 
-      return this.sendNats(this.connectionServiceProxy, 'create-connection', connectionDetails);
+      return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection', connectionDetails);
     } catch (error) {
       throw new RpcException(error.response);
     }

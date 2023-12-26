@@ -3,30 +3,30 @@ import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateConnectionDto {
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
-    @IsString({ message: 'alias must be a string' })
+    @IsString({ message: 'alias must be a string' }) 
     @IsNotEmpty({ message: 'please provide valid alias' })
     alias: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString({ message: 'label must be a string' }) 
     @IsNotEmpty({ message: 'please provide valid label' })
     label: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
     imageUrl: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsBoolean()
     @IsOptional()
     @IsNotEmpty({ message: 'please provide multiUseInvitation' })
     multiUseInvitation: boolean;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsBoolean()
     @IsOptional()
     @IsNotEmpty({ message: 'autoAcceptConnection should boolean' })

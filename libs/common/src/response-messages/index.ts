@@ -72,7 +72,8 @@ export const ResponseMessages = {
             deleteOrg: 'Organization not found',
             deleteOrgInvitation: 'Organization does not have access to delete this invitation',
             notFound: 'Organization agent not found',
-            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status'
+            orgNotFound: 'Organization not found',
+            orgNotMatch: 'Organization does not match'
         }
     },
 

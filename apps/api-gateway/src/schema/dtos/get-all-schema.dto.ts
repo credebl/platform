@@ -5,7 +5,7 @@ import { SortValue } from '../../enum';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
 import { trim } from '@credebl/common/cast.helper';
-import { SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
+import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
 export class GetAllSchemaDto {
     @ApiProperty({ required: false })
@@ -51,13 +51,26 @@ export class GetCredentialDefinitionBySchemaIdDto {
     @Type(() => Number)
     pageSize: number = 10;
 
-    @ApiProperty({ required: false })
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
     @IsOptional()
-    sortField: string = 'id';
+    @IsEnum(CredDefSortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
 
-    @ApiProperty({ required: false })
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
     @IsOptional()
+    @IsEnum(SortValue)
     sortBy: string = SortValue.DESC;
+
+    schemaId: string;
+
+    orgId: string;
 }
 
 export class GetAllSchemaByPlatformDto {

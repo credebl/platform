@@ -4,7 +4,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { ISchema, ISchemaCredDeffSearchInterface, ISchemaSearchPayload } from './interfaces/schema-payload.interface';
 import { schema } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 
 
 @Controller('schema')
@@ -31,22 +31,8 @@ export class SchemaController {
     }
 
     @MessagePattern({ cmd: 'get-cred-deff-list-by-schemas-id' })
-    async getcredDeffListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<{
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-        nextPage: number;
-        previousPage: number;
-        lastPage: number;
-        data: {
-            tag: string;
-            credentialDefinitionId: string;
-            schemaLedgerId: string;
-            revocable: boolean;
-        }[];
-    }> {
-        const { schemaId, schemaSearchCriteria, user, orgId } = payload;
-        return this.schemaService.getcredDeffListBySchemaId(schemaId, schemaSearchCriteria, user, orgId);
+    async getcredDeffListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<ICredDefWithPagination> {
+        return this.schemaService.getcredDeffListBySchemaId(payload);
     }
 
     @MessagePattern({ cmd: 'get-all-schemas' })

@@ -6,6 +6,7 @@ import { ISchema, ISchemaSearchCriteria } from '../interfaces/schema-payload.int
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
 import { SortValue } from '@credebl/enum/enum';
+import { ICredDefWithCount } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class SchemaRepository {
@@ -162,14 +163,12 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: string, schemaId: string): Promise<{
-    tag: string;
-    credentialDefinitionId: string;
-    schemaLedgerId: string;
-    revocable: boolean;
-  }[]> {
+  async getSchemasCredDeffList(payload: ISchemaSearchCriteria): Promise<ICredDefWithCount> {
+
+    const {orgId, schemaId} = payload;
+    
     try {
-      return this.prisma.credential_definition.findMany({
+      const credDefResult = await this.prisma.credential_definition.findMany({
         where: {
           AND: [
             { orgId },
@@ -185,8 +184,19 @@ export class SchemaRepository {
         },
         orderBy: {
           [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc'
+        },
+        take: Number(payload.pageSize),
+        skip: (payload.pageNumber - 1) * payload.pageSize
+      });
+      const credDefCount = await this.prisma.credential_definition.count({
+        where: {
+          AND: [
+            { orgId },
+            { schemaLedgerId: schemaId }
+          ]
         }
       });
+      return { credDefResult, credDefCount };
     } catch (error) {
       this.logger.error(`Error in getting agent DID: ${error}`);
       throw error;

@@ -35,10 +35,9 @@ export class AuthzController {
     private readonly commonService: CommonService) { }
 
   /**
-   *
-   * @param query
-   * @param res
-   * @returns User email verified
+   * @param email
+   * @param verificationcode
+   * @returns User's email verification status 
    */
   @Get('/verify')
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -55,10 +54,8 @@ export class AuthzController {
   }
 
   /**
-  *
   * @param email
-  * @param res
-  * @returns Email sent success
+  * @returns User's verification email sent status
   */
   @Post('/verification-mail')
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })

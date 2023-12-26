@@ -285,8 +285,7 @@ export class UserController {
   /**
    *
    * @param email
-   * @param res
-   * @returns User email check
+   * @returns User's email exist status
    */
   @Get('/:email')
   @ApiOperation({ summary: 'Check user exist', description: 'check user existence' })

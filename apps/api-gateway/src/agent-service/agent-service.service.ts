@@ -13,9 +13,15 @@ export class AgentService extends BaseService {
         super('AgentService');
     }
 
+    /**
+     * Spinup the agent by organization
+     * @param agentSpinupDto 
+     * @param user 
+     * @returns Get agent status
+     */
     async agentSpinup(agentSpinupDto: AgentSpinupDto, user: user): Promise<{ response: object }> {
         const payload = { agentSpinupDto, user };
-        return this.sendNats(this.agentServiceProxy, 'agent-spinup', payload);
+        return this.sendNatsMessage(this.agentServiceProxy, 'agent-spinup', payload);
     }
 
     async createTenant(createTenantDto: CreateTenantDto, user: user): Promise<{ response: object }> {

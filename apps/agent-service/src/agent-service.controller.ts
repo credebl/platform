@@ -10,6 +10,11 @@ import { user } from '@prisma/client';
 export class AgentServiceController {
   constructor(private readonly agentServiceService: AgentServiceService) { }
 
+  /**
+   * Spinup the agent by organization
+   * @param payload 
+   * @returns Get agent status
+   */
   @MessagePattern({ cmd: 'agent-spinup' })
   async walletProvision(payload: { agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface }): Promise<object> {
     return this.agentServiceService.walletProvision(payload.agentSpinupDto, payload.user);

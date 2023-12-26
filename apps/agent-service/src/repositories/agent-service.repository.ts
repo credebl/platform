@@ -143,7 +143,7 @@ export class AgentServiceRepository {
     async getAgentDetails(orgId: string): Promise<org_agents> {
         try {
 
-            const x = await this.prisma.org_agents.findFirst({
+            const x = await this.prisma.org_agents.findFirstOrThrow({
                 where: {
                     orgId
                 }
@@ -160,7 +160,7 @@ export class AgentServiceRepository {
 
     // eslint-disable-next-line camelcase
     async platformAdminAgent(platformOrg: string): Promise<organisation & { org_agents: org_agents[] }> {
-        const platformAdminSpinnedUp = await this.prisma.organisation.findFirst({
+        const platformAdminSpinnedUp = await this.prisma.organisation.findFirstOrThrow({
             where: {
                 name: platformOrg
             },
@@ -180,7 +180,7 @@ export class AgentServiceRepository {
     // eslint-disable-next-line camelcase
     async getOrgAgentDetails(orgId: string): Promise<org_agents> {
         try {
-            const oranizationAgentDetails = await this.prisma.org_agents.findFirst({
+            const oranizationAgentDetails = await this.prisma.org_agents.findFirstOrThrow({
                 where: {
                     orgId
                 }
@@ -194,7 +194,7 @@ export class AgentServiceRepository {
 
     async getAgentTypeDetails(): Promise<string> {
         try {
-            const { id } = await this.prisma.agents_type.findFirst({
+            const { id } = await this.prisma.agents_type.findFirstOrThrow({
                 where: {
                     agent: AgentType.AFJ
                 }
@@ -246,7 +246,7 @@ export class AgentServiceRepository {
 
     async getOrgAgentTypeDetails(agentType: string): Promise<string> {
         try {
-            const { id } = await this.prisma.org_agents_type.findFirst({
+            const { id } = await this.prisma.org_agents_type.findFirstOrThrow({
                 where: {
                     agent: agentType
                 }
@@ -260,7 +260,7 @@ export class AgentServiceRepository {
 
     async getPlatfomOrg(orgName: string): Promise<string> {
         try {
-            const { id } = await this.prisma.organisation.findFirst({
+            const { id } = await this.prisma.organisation.findFirstOrThrow({
                 where: {
                     name: orgName
                 }

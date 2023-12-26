@@ -293,3 +293,7 @@ interface IRequestedPredicatesName {
 interface IRequestedRestriction {
     cred_def_id: string;
 }
+
+export interface AgentSpinupStatus {
+    agentSpinupStatus: number;
+}

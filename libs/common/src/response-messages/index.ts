@@ -157,7 +157,18 @@ export const ResponseMessages = {
             alreadySpinUp: 'Agent already spin-up',
             agentUrl: 'Agent url not exist',
             agentNotExists: 'Agent not spinned up for this organization',
-            agentDown: 'Agent is down or not spinned up'
+            agentDown: 'Agent is down or not spinned up',
+            seedChar: 'seed must be at most 32 characters.',
+            validWalletName: 'Please enter valid wallet name, It allows only alphanumeric values',
+            walletAlreadyCreated: 'Your wallet has already been created',
+            walletAlreadyProcessing: 'Your wallet is already processing',
+            platformConfiguration: 'Platform configuration is missing or invalid',
+            apiEndpoint: 'API endpoint is missing in the platform configuration',
+            externalIp: 'External IP is missing in the platform configuration',
+            stringExternalIp: 'External IP must be a string',
+            agentProcess: 'Agent process is invalid or not in a completed state',
+            notAbleToSpinup: 'Agent not able to spin-up',
+            ledgerNotFound: 'Ledgers not found'
         }
     },
     connection: {

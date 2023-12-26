@@ -113,10 +113,10 @@ interface IUserOrgRole {
   }
   
   export interface ICheckUserDetails {
+    isExist: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
     isSupabase?: boolean;
-    isExist?: boolean;
   }
 
   export interface UserCredentials {

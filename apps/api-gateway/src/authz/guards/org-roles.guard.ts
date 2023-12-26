@@ -41,7 +41,7 @@ export class OrgRolesGuard implements CanActivate {
       });
 
       if (!specificOrg) {
-        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotFound, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
       }
 
       user.selectedOrg = specificOrg;

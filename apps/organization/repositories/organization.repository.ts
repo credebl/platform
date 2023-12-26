@@ -585,4 +585,23 @@ export class OrganizationRepository {
     }
   }
 
+
+  /**
+   *
+   * @param id
+   * @returns Delete Invitation
+   */
+  async deleteOrganizationInvitation(id: string): Promise<org_invitations> {
+    try {
+      return await this.prisma.org_invitations.delete({
+        where: {
+          id
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
 }

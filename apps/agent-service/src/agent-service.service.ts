@@ -975,7 +975,7 @@ export class AgentServiceService {
 
   /**
    * Get agent health
-   * @param payload 
+   * @param orgId 
    * @returns Get agent health
    */
   async getAgentHealthDetails(orgId: string): Promise<AgentStatus> {

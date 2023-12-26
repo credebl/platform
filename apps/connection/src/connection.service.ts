@@ -302,13 +302,13 @@ export class ConnectionService {
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
 
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.response?.error?.reason)  {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: ResponseMessages.connection.error.connectionNotFound,
+          statusCode: error?.status?.code,
+          error: error?.response?.error?.reason
         });
+
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
@@ -319,30 +319,25 @@ export class ConnectionService {
     url: string,
     apiKey: string
   ): Promise<IConnectionDetailsById> {
-    try {
+
       const pattern = { cmd: 'agent-get-connections-by-connectionId' };
       const payload = { url, apiKey };
       return this.connectionServiceProxy
         .send<IConnectionDetailsById>(pattern, payload)
         .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
+        .catch(error => {
+          this.logger.error(
+                `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
+              );         
+            throw new HttpException(
             {
-              status: error.statusCode,
-              error: error.error,
+              status: error.statusCode,  
+              error: error.error?.message?.error ? error.error?.message?.error : error.error,
               message: error.message
-            },
-            error.error
-          );
+            }, error.error);
         });
-    } catch (error) {
-      this.logger.error(
-        `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
-      );
-      throw error;
-    }
   }
+  
   /**
    * Description: Fetch agent url
    * @param referenceId

@@ -520,7 +520,6 @@ export class UserService {
       
       const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
       invitationsData['invitations'] = invitations;
-      // console.log("{-----------------}",invitationsData);
 
       return invitationsData;
     } catch (error) {

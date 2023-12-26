@@ -21,7 +21,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentService } from './agent-service.service';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { AgentSpinupDto } from './dto/agent-service.dto';
 import { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -65,7 +65,7 @@ export class AgentController {
 
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.agent.success.health,
       data: agentData

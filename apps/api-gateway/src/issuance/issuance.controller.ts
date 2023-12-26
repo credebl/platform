@@ -639,7 +639,7 @@ export class IssuanceController {
    * @param user
    * @param issueCredentialDto
    */
-  @Post('wh/:id/credentials')
+  @Post('wh/credentials')
   @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Catch issue credential webhook responses',

@@ -296,7 +296,7 @@ export class VerificationController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
-    @Post('wh/:id/proofs')
+    @Post('wh/proofs')
     @ApiOperation({
         summary: `Webhook proof presentation`,
         description: `Webhook proof presentation`

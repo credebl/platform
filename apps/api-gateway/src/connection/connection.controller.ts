@@ -163,7 +163,7 @@ export class ConnectionController {
       * @param res
       */
 
-    @Post('wh/:id/connections/')
+    @Post('wh/connections/')
     @ApiExcludeEndpoint()
     @ApiOperation({
         summary: 'Catch connection webhook responses',

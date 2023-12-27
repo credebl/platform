@@ -21,7 +21,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentService } from './agent-service.service';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { AgentSpinupDto } from './dto/agent-service.dto';
 import { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -44,19 +44,31 @@ export class AgentController {
   constructor(private readonly agentService: AgentService) { }
   private readonly logger = new Logger();
 
+  /**
+   * Get Organization agent health
+   * @param orgId 
+   * @param reqUser 
+   * @param res 
+   * @returns Get agent details
+   */
   @Get('/orgs/:orgId/agents/health')
   @ApiOperation({
     summary: 'Get the agent health details',
     description: 'Get the agent health details'
   })
   @UseGuards(AuthGuard('jwt'))
-  async getAgentHealth(@User() reqUser: user, @Param('orgId') orgId: string, @Res() res: Response): Promise<object> {
+  async getAgentHealth(
+    @Param('orgId') orgId: string,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<Response> {
+
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.agent.success.health,
-      data: agentData.response
+      data: agentData
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -107,7 +119,7 @@ export class AgentController {
     agentSpinupDto.orgId = orgId;
     const agentDetails = await this.agentService.agentSpinup(agentSpinupDto, user);
 
-    
+
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.create,
@@ -117,6 +129,14 @@ export class AgentController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  /**
+   * Create wallet for shared agent
+   * @param orgId 
+   * @param createTenantDto 
+   * @param user 
+   * @param res 
+   * @returns wallet initialization status
+   */
   @Post('/orgs/:orgId/agents/wallet')
   @ApiOperation({
     summary: 'Shared Agent',
@@ -130,20 +150,24 @@ export class AgentController {
     @Body() createTenantDto: CreateTenantDto,
     @User() user: user,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
 
     createTenantDto.orgId = orgId;
 
     if (seedLength !== createTenantDto.seed.length) {
-      throw new BadRequestException(`seed must be at most 32 characters.`);
+      this.logger.error(`seed must be at most 32 characters`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.seedCharCount,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.create,
-      data: tenantDetails.response
+      data: tenantDetails
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

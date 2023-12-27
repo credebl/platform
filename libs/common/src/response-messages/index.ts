@@ -13,11 +13,12 @@ export const ResponseMessages = {
             fetchUsers: 'Users fetched successfully',
             newUser: 'User not found',
             checkEmail: 'User email checked successfully.',
-            sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
+            sendVerificationCode: 'Verification link has been successfully sent on the email. Please verify',
             userActivity: 'User activities fetched successfully',
             userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched'
+
         },
         error: {
             exists: 'User already exists',
@@ -159,19 +160,22 @@ export const ResponseMessages = {
             notAbleToSpinUpAgent: 'Agent not able to spin-up',
             alreadySpinUp: 'Agent already spin-up',
             agentUrl: 'Agent url not exist',
-            agentNotExists: 'Agent not spinned up for this organization',
-            agentDown: 'Agent is down or not spinned up',
             seedChar: 'seed must be at most 32 characters.',
             validWalletName: 'Please enter valid wallet name, It allows only alphanumeric values',
-            walletAlreadyCreated: 'Your wallet has already been created',
-            walletAlreadyProcessing: 'Your wallet is already processing',
             platformConfiguration: 'Platform configuration is missing or invalid',
             apiEndpoint: 'API endpoint is missing in the platform configuration',
             externalIp: 'External IP is missing in the platform configuration',
             stringExternalIp: 'External IP must be a string',
             agentProcess: 'Agent process is invalid or not in a completed state',
             notAbleToSpinup: 'Agent not able to spin-up',
-            ledgerNotFound: 'Ledgers not found'
+            ledgerNotFound: 'Ledgers not found',
+            agentNotExists: 'Agent not spun up for this organization',
+            agentDown: 'Agent is down or not spun up',
+            walletAlreadyCreated: 'Your wallet is already been created',
+            walletAlreadyProcessing: 'Your wallet is already processing',
+            notAbleToSpinp: 'Agent not able to spin-up',
+            platformAdminNotAbleToSpinp: 'Platform-admin agent is not spun up',
+            seedCharCount: 'seed must be at most 32 characters'
         }
     },
     connection: {

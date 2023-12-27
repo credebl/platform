@@ -3,7 +3,7 @@ import { CommonService } from '@credebl/common';
 import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -371,5 +371,24 @@ export class OrganizationController {
       message: ResponseMessages.organisation.success.delete
     };
     return res.status(HttpStatus.ACCEPTED).json(finalResponse);
+  }
+
+  @Delete('/:orgId/invitations/:invitationId')
+  @ApiOperation({ summary: 'Delete organization invitation', description: 'Delete organization invitation' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async deleteOrganizationInvitation(
+    @Param('orgId') orgId: string, 
+    @Param('invitationId') invitationId: string, 
+    @Res() res: Response
+    ): Promise<Response> {
+    await this.organizationService.deleteOrganizationInvitation(orgId, invitationId);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.orgInvitationDeleted
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

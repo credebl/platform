@@ -1,6 +1,6 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateConnectionDto {
     @ApiPropertyOptional()
@@ -11,7 +11,8 @@ export class CreateConnectionDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString({ message: 'label must be a string' }) @IsNotEmpty({ message: 'please provide valid label' })
+    @IsString({ message: 'label must be a string' }) 
+    @IsNotEmpty({ message: 'please provide valid label' })
     label: string;
 
     @ApiPropertyOptional()
@@ -35,67 +36,55 @@ export class CreateConnectionDto {
 }
 
 export class ConnectionDto {
-    @ApiProperty()
-    @IsOptional()
-    _tags?: object;
-
-    @ApiProperty()
-    @IsOptional()
-    metadata: object;
-    
-    @ApiProperty()
-    @IsOptional()
-    connectionTypes: object[];
-    
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     id: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     createdAt: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     did: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     theirDid: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     theirLabel: string;
     
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     state: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     role: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     autoAcceptConnection: boolean;
     
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     threadId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     protocol: string;
     
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     outOfBandId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     updatedAt: string;   
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     contextCorrelationId: string;
 }

@@ -18,7 +18,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { catchError, map } from 'rxjs/operators';
 dotenv.config();
-import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, OutOfBandCredentialOffer } from './interface/agent-service.interface';
+import { GetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, OutOfBandCredentialOffer, AgentStatus } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -973,25 +973,41 @@ export class AgentServiceService {
     }
   }
 
-  async getAgentHealthDetails(orgId: string): Promise<object> {
+  /**
+   * Get agent health
+   * @param orgId 
+   * @returns agent status
+   */
+  async getAgentHealthDetails(orgId: string): Promise<AgentStatus> {
     try {
+
+      // Get organization agent details
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
 
       if (!orgAgentDetails) {
-        throw new NotFoundException(ResponseMessages.agent.error.agentNotExists);
+        throw new NotFoundException(
+          ResponseMessages.agent.error.agentNotExists,
+          { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+        );
       }
-      if (orgAgentDetails.agentEndPoint) {
-        const data = await this.commonService
-          .httpGet(`${orgAgentDetails.agentEndPoint}/agent`, { headers: { 'x-api-key': '' } })
-          .then(async response => response);
-        return data;
-      } else {
-        throw new NotFoundException(ResponseMessages.agent.error.agentUrl);
+
+      if (!orgAgentDetails?.agentEndPoint) {
+        throw new NotFoundException(
+          ResponseMessages.agent.error.agentUrl,
+          { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+        );
       }
+
+      // Invoke an API request from the agent to assess its current status
+      const agentHealthData = await this.commonService
+        .httpGet(`${orgAgentDetails.agentEndPoint}${CommonConstants.URL_AGENT_STATUS}`, { headers: { 'x-api-key': '' } })
+        .then(async response => response);
+
+      return agentHealthData;
 
     } catch (error) {
       this.logger.error(`Agent health details : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

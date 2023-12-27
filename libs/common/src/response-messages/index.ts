@@ -13,11 +13,12 @@ export const ResponseMessages = {
             fetchUsers: 'Users fetched successfully',
             newUser: 'User not found',
             checkEmail: 'User email checked successfully.',
-            sendVerificationCode: 'Verification code has been sent sucessfully to the mail. Please verify',
+            sendVerificationCode: 'Verification link has been successfully sent on the email. Please verify',
             userActivity: 'User activities fetched successfully',
             userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched'
+
         },
         error: {
             exists: 'User already exists',
@@ -58,7 +59,8 @@ export const ResponseMessages = {
             getOrgDashboard: 'Organization dashboard details fetched',
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
-            delete: 'Organization deleted successfully'
+            delete: 'Organization deleted successfully',
+            orgInvitationDeleted: 'Organization invitation deleted successfully'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -68,10 +70,12 @@ export const ResponseMessages = {
             userNotFound: 'User not found for the given organization',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
+            deleteOrgInvitation: 'Organization does not have access to delete this invitation',
             notFound: 'Organization agent not found',
-            orgNotFound: 'Organization not found'
+            orgNotFound: 'Organization not found',
+            orgNotMatch: 'Organization does not have access',
+            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status'
         }
-
     },
 
     fido: {

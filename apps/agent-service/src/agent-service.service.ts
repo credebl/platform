@@ -202,18 +202,16 @@ export class AgentServiceService {
       // Get genesis URL and ledger details
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
 
-      if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error(`Your wallet is already been created`);
+      if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
         throw new BadRequestException(
-          ResponseMessages.agent.error.walletAlreadyCreated,
+          ResponseMessages.agent.error.walletAlreadyProcessing,
           { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
         );
       }
 
-      if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error('Your wallet is already processing.');
+      if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
         throw new BadRequestException(
-          ResponseMessages.agent.error.walletAlreadyProcessing,
+          ResponseMessages.agent.error.walletAlreadyCreated,
           { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
         );
       }
@@ -1134,30 +1132,30 @@ export class AgentServiceService {
   }
 
   async getConnectionsByconnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
-    
+
     try {
       const data = await this.commonService
-      .httpGet(url, { headers: { 'x-api-key': apiKey } })
-      .then(async response => response)
-      .catch(error => {
-        this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response)
+        .catch(error => {
+          this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
 
-        if (error && Object.keys(error).length === 0) {
-          throw new InternalServerErrorException(
-            ResponseMessages.agent.error.agentDown,
-            { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
-          );
-        } else {
-          throw error;
-        }     
-      });  
-    return data;
+          if (error && Object.keys(error).length === 0) {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
+          } else {
+            throw error;
+          }
+        });
+      return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
-    
-  }  
+
+  }
 
   /**
    * Get agent health

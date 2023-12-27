@@ -112,19 +112,16 @@ export class IssuanceController {
   }
 
   /**
-   *
-   * @param user
    * @param credentialRecordId
    * @param orgId
-   * @param res
    * @returns Details of specific credential
    */
 
   @Get('/orgs/:orgId/credentials/:credentialRecordId')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Get credential by credentialRecordId`,
-    description: `Get credential credentialRecordId`
+    summary: `Fetch credentials by credentialRecordId`,
+    description: `Fetch credentials credentialRecordId`
   })
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -133,7 +130,6 @@ export class IssuanceController {
     @User() user: IUserRequest,
     @Param('credentialRecordId') credentialRecordId: string,
     @Param('orgId') orgId: string,
-
     @Res() res: Response
   ): Promise<Response> {
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialsbyCredentialRecordId(

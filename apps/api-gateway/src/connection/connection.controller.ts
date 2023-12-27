@@ -140,8 +140,8 @@ export class ConnectionController {
     /**
       * Catch connection webhook responses. 
       * @Body connectionDto
-      * @param id 
-      * @param res
+      * @param orgId 
+      * @returns Callback URL for connection and created connections details
       */
 
     @Post('wh/:orgId/connections/')

@@ -35,7 +35,7 @@ export class ConnectionController {
 
   /**
    * Description: Catch connection webhook responses and save details in connection table
-   * @param payload
+   * @param orgId
    * @returns Callback URL for connection and created connections details
    */
   @MessagePattern({ cmd: 'webhook-get-connection' })

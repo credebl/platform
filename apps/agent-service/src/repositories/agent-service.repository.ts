@@ -294,4 +294,24 @@ export class AgentServiceRepository {
             throw error;
         }
     }
+
+    /**
+   * Get agent details
+   * @param orgId 
+   * @returns Agent health details
+   */
+    // eslint-disable-next-line camelcase
+    async getOrgAgentDetails(orgId: string): Promise<org_agents> {
+        try {
+            const oranizationAgentDetails = await this.prisma.org_agents.findFirstOrThrow({
+                where: {
+                    orgId
+                }
+            });
+            return oranizationAgentDetails;
+        } catch (error) {
+            this.logger.error(`[getOrgAgentDetails] - get org agent health details: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
 }

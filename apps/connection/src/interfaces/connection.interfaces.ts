@@ -87,10 +87,12 @@ export interface IFetchConnectionUrlById {
   orgId: string;
 }
 
-export interface ConnectionInvitationResponse {
-  message: {
-    invitation: object;
-  };
+export interface IConnectionInvitation {
+  message: IInvitation;
+}
+interface IInvitation {
+  invitation: string;
+
 }
 export interface OrgAgent {
   organisation: organisation;

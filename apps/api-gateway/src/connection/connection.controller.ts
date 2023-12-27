@@ -124,11 +124,11 @@ export class ConnectionController {
     ): Promise<Response> {
 
         connectionDto.orgId = orgId;
-        await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
-        const finalResponse: IResponseType = {
+        const connectionData = await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.connection.success.create
-            // data: connectionData
+            message: ResponseMessages.connection.success.create,
+            data: connectionData
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
 

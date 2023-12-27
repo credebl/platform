@@ -39,11 +39,9 @@ import {
   ShareUserCertificateI,
   UpdateUserProfile,
   UserCredentials, 
-  ISendVerificationEmail,
    IUserInformation,
     IUsersProfile,
-    UserInvitations,  
-    IVerifyUserEmail
+    UserInvitations
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -60,6 +58,7 @@ import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
 
 @Injectable()
 export class UserService {
@@ -318,7 +317,7 @@ export class UserService {
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
 
-      return 'User created successfully';
+      return ResponseMessages.user.success.signUpUser;
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -363,7 +362,7 @@ export class UserService {
    * @param loginUserDto
    * @returns User access token details
    */
-  async login(loginUserDto: LoginUserDto): Promise<object> {
+  async login(loginUserDto: LoginUserDto): Promise<ISignInUser> {
     const { email, password, isPasskey } = loginUserDto;
 
     try {
@@ -395,7 +394,7 @@ export class UserService {
     }
   }
 
-  async generateToken(email: string, password: string): Promise<object> {
+  async generateToken(email: string, password: string): Promise<ISignInUser> {
     try {
       const supaInstance = await this.supabaseService.getClient();
       this.logger.error(`supaInstance::`, supaInstance);
@@ -412,6 +411,7 @@ export class UserService {
       }
 
       const token = data?.session;
+      
       return token;
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);

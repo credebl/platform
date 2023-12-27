@@ -31,6 +31,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
+import { ICreateConnectioQr } from '@credebl/common/interfaces/connection.interface';
 
 @Injectable()
 @WebSocketGateway()
@@ -500,12 +501,12 @@ export class AgentServiceService {
       const payload = { orgId, user, label };
       return this.agentServiceProxy
         .send<object>(pattern, payload)
-        // .pipe(
-        //   map((response) => (
-        //     {
-        //       response
-        //     }))
-        // )
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        )
         .toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -851,7 +852,7 @@ export class AgentServiceService {
     }
   }
 
-  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<object> {
+  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<ICreateConnectioQr> {
     try {
 
       const data = await this.commonService

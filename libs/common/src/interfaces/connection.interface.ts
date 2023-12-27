@@ -19,4 +19,16 @@ export interface IConnectionsListCount {
     lastPage: number;
     data: IConnectionItem[];
   }
+
+  export interface ICreateConnectioQr {
+    id: string;
+    orgId: string;
+    agentId: string;
+    connectionInvitation: string;
+    multiUse: boolean;
+    createDateTime: Date;
+    createdBy: number;
+    lastChangedDateTime: Date;
+    lastChangedBy: number;
+}
   

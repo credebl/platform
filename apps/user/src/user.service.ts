@@ -468,8 +468,8 @@ export class UserService {
       
       const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
       invitationsData['invitations'] = invitations;
-
       return invitationsData;
+      
     } catch (error) {
       this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -735,14 +735,14 @@ export class UserService {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {
-          isExist: false
+          isRegistered: false
         };
       } else {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
-          isExist: true
+          isAuthenticated: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
+          isRegistered: true
         };
         return userVerificationDetails;
       }

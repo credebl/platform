@@ -4,8 +4,8 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
-import { IConnectionList, ICreateConnectioQr } from '@credebl/common/interfaces/connection.interface';
-import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
+import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 
 @Injectable()
 export class ConnectionService extends BaseService {
@@ -16,7 +16,7 @@ export class ConnectionService extends BaseService {
   createLegacyConnectionInvitation(
     connectionDto: CreateConnectionDto,
     user: IUserRequestInterface
-  ): Promise<ICreateConnectioQr> {
+  ): Promise<ICreateConnectionUrl> {
     try {
       const connectionDetails = {
         orgId: connectionDto.orgId,

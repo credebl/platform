@@ -87,8 +87,8 @@ export class AgentServiceController {
   async getConnections(payload: { url: string, apiKey: string }): Promise<object> {
     return this.agentServiceService.getConnections(payload.url, payload.apiKey);
   }
-
-  @MessagePattern({ cmd: 'agent-get-connections-by-connectionId' })
+  
+  @MessagePattern({ cmd: 'agent-get-connection-details-by-connectionId' })
   async getConnectionsByconnectionId(payload: { url: string, apiKey: string }): Promise<IConnectionDetailsById> {
     return this.agentServiceService.getConnectionsByconnectionId(payload.url, payload.apiKey);
   }

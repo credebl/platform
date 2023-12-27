@@ -34,7 +34,7 @@ export class ConnectionController {
     ) { }
 
     /**
-        * Description: Get connection by connectionId
+        * Get connection details by connectionId
         * @param connectionId
         * @param orgId
         * @returns connection details by connection Id

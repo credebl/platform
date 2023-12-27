@@ -246,7 +246,7 @@ export class UserController {
    * @returns User's email exist status
    */
   @Get('/:email')
-  @ApiOperation({ summary: 'Check user exist', description: 'check user existence' })
+  @ApiOperation({ summary: 'Check if user exist', description: 'check user existence' })
   async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
     const userDetails = await this.userService.checkUserExist(emailParam.email);
 

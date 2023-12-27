@@ -21,7 +21,8 @@ import {
 } from '../interfaces/issuance.interfaces';
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IIssuedCredentialSearchinterface } from 'apps/api-gateway/src/issuance/interfaces';
+import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
+import { SortValue } from '@credebl/enum/enum';
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -70,7 +71,7 @@ export class IssuanceRepository {
   async getAllIssuedCredentials(
     user: IUserRequest,
     orgId: string,
-    issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface
+    issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams
   ): Promise<{
     issuedCredentialsCount: number;
     issuedCredentialsList: {
@@ -100,10 +101,8 @@ export class IssuanceRepository {
           connectionId: true
         },
         orderBy: {
-          [issuedCredentialsSearchCriteria?.sorting || 'createDateTime']:
-            'DESC' === issuedCredentialsSearchCriteria?.sortByValue
-              ? 'desc'
-              : 'asc'
+          [issuedCredentialsSearchCriteria?.sortField]:
+            SortValue.DESC === issuedCredentialsSearchCriteria?.sortBy?.toLocaleUpperCase() ? 'desc' : 'asc'
         },
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize

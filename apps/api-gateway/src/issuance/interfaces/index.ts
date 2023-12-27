@@ -67,11 +67,11 @@ export interface RequestPayload {
     fileKey: string;
     fileName: string;
 }
-export interface IIssuedCredentialSearchinterface {
+export interface IIssuedCredentialSearchParams {
     pageNumber: number;
     pageSize: number;
-    sorting: string;
-    sortByValue: string;
+    sortField: string;
+    sortBy: string;
     searchByText: string;
 }
 

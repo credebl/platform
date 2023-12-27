@@ -576,7 +576,7 @@ export class AgentServiceService {
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
 
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error(`Your wallet has already been created.`);
+        this.logger.error(`Your wallet is already been created.`);
         throw new ConflictException(
           ResponseMessages.agent.error.walletAlreadyCreated,
           { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
@@ -584,7 +584,7 @@ export class AgentServiceService {
       }
 
       if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error(`Your wallet has already processing.`);
+        this.logger.error(`Your wallet is already processing.`);
         throw new ConflictException(
           ResponseMessages.agent.error.walletAlreadyProcessing,
           { cause: new Error(), description: ResponseMessages.errorMessages.conflict }

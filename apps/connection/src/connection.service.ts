@@ -308,7 +308,6 @@ export class ConnectionService {
           statusCode: error?.status?.code,
           error: error?.response?.error?.reason
         });
-
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
@@ -320,7 +319,7 @@ export class ConnectionService {
     apiKey: string
   ): Promise<IConnectionDetailsById> {
 
-      //nats call in agent service
+      //nats call in agent service for fetch connection details
       const pattern = { cmd: 'agent-get-connections-by-connectionId' };
       const payload = { url, apiKey };
       return this.connectionServiceProxy

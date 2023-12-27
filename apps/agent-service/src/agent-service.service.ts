@@ -965,14 +965,20 @@ export class AgentServiceService {
     try {
       const data = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })
-        .then(async response => response);
+        .then(async response => response)
+        .catch(error => {
+          throw new InternalServerErrorException(
+            ResponseMessages.agent.error.agentDown,
+            { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+          );
+        });
       return data;
 
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
-  }
+  }  
 
   /**
    * Get agent health

@@ -123,7 +123,7 @@ export class AgentController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.create,
-      data: agentDetails.response
+      data: agentDetails
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

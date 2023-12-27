@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class AddUserDetails {
+export class AddUserDetailsDto {
 
     @ApiProperty({ example: 'awqx@getnada.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })

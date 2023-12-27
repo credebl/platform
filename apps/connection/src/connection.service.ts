@@ -6,8 +6,8 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
   ConnectionInvitationResponse,
-  IConnectionInterface,
   IConnectionSearchCriteria,
+  ICreateConnection,
   IUserRequestInterface
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
@@ -109,12 +109,11 @@ export class ConnectionService {
   }
 
   /**
-   * Description: create connection legacy invitation
+   * Description: Catch connection webhook responses and save details in connection table
    * @param orgId
-   * @param user
-   * @returns Connection legacy invitation URL
+   * @returns Callback URL for connection and created connections details
    */
-  async getConnectionWebhook(payload: IConnectionInterface): Promise<object> {
+  async getConnectionWebhook(payload: ICreateConnection): Promise<object> {
     try {
       const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(payload);
       return saveConnectionDetails;

@@ -51,12 +51,12 @@ export interface IOrgAgentInterface {
   orgId: string;
 }
 
-export class IConnectionInterface {
-  connectionDto: ConnectionPayload;
+export interface ICreateConnection {
+  connectionDto: ICreateConnectionPayload;
   orgId: string;
 }
 
-export class ConnectionPayload {
+export interface ICreateConnectionPayload {
   createDateTime: string;
   lastChangedDateTime: string;
   id: string;
@@ -69,7 +69,7 @@ export class ConnectionPayload {
   contextCorrelationId: string;
 }
 
-export class IFetchConnections {
+export interface IFetchConnections {
   connectionSearchCriteria: IConnectionSearchCriteria;
   user: IUserRequest;
   orgId: string;

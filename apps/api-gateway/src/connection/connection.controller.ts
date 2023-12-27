@@ -17,9 +17,9 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
+import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { ApiResponseDto } from '../dtos/apiResponse.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -34,11 +34,10 @@ export class ConnectionController {
     ) { }
 
     /**
-        * Description: Get connection by connectionId
-        * @param user
+        * Get connection details by connectionId
         * @param connectionId
         * @param orgId
-        * 
+        * @returns connection details by connection Id
     */
     @Get('orgs/:orgId/connections/:connectionId')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -47,7 +46,7 @@ export class ConnectionController {
         summary: `Get connections by connection Id`,
         description: `Get connections by connection Id`
     })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getConnectionsById(
         @User() user: IUserRequest,
         @Param('connectionId') connectionId: string,
@@ -55,11 +54,10 @@ export class ConnectionController {
         @Res() res: Response
     ): Promise<Response> {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
-
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.connection.success.fetch,
-            data: connectionsDetails.response
+            message: ResponseMessages.connection.success.fetchConnection,
+            data: connectionsDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
@@ -137,29 +135,28 @@ export class ConnectionController {
 
     }
 
-
     /**
       * Catch connection webhook responses. 
       * @Body connectionDto
-      * @param id 
-      * @param res
+      * @param orgId 
+      * @returns Callback URL for connection and created connections details
       */
 
-    @Post('wh/:id/connections/')
+    @Post('wh/:orgId/connections/')
     @ApiExcludeEndpoint()
     @ApiOperation({
         summary: 'Catch connection webhook responses',
         description: 'Callback URL for connection'
     })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async getConnectionWebhook(
         @Body() connectionDto: ConnectionDto,
-        @Param('id') id: string,
+        @Param('orgId') orgId: string,
         @Res() res: Response
-    ): Promise<object> {
-        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${id}`);
-        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
-        const finalResponse: IResponseType = {
+    ): Promise<Response> {
+        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
+        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.connection.success.create,
             data: connectionData

@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 
 import { ApiProperty } from '@nestjs/swagger';
@@ -17,5 +17,6 @@ export class EmailVerificationDto {
     @ApiProperty()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'Verification code is required.' })
+    @IsString({ message: 'Verification code should be string' })
     verificationCode: string;
 }

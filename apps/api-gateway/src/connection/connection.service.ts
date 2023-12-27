@@ -5,7 +5,7 @@ import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
-import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
+import { IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 
 @Injectable()
 export class ConnectionService extends BaseService {
@@ -38,12 +38,10 @@ export class ConnectionService extends BaseService {
 
   getConnectionWebhook(
     connectionDto: ConnectionDto,
-    id: string
-  ): Promise<{
-    response: object;
-  }> {
-    const payload = { connectionDto, orgId: id };
-    return this.sendNats(this.connectionServiceProxy, 'webhook-get-connection', payload);
+    orgId: string
+  ): Promise<object> {
+    const payload = { connectionDto, orgId };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'webhook-get-connection', payload);
   }
 
   getUrl(referenceId: string): Promise<{
@@ -70,10 +68,8 @@ export class ConnectionService extends BaseService {
     user: IUserRequest,
     connectionId: string,
     orgId: string
-  ): Promise<{
-    response: object;
-  }> {
+  ): Promise<IConnectionDetailsById> {
     const payload = { user, connectionId, orgId };
-    return this.sendNats(this.connectionServiceProxy, 'get-all-connections-by-connectionId', payload);
+    return this.sendNatsMessage(this.connectionServiceProxy, 'get-connection-details-by-connectionId', payload);
   }
 }

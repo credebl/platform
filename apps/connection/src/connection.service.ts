@@ -6,8 +6,8 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
   ConnectionInvitationResponse,
-  IConnectionInterface,
   IConnectionSearchCriteria,
+  ICreateConnection,
   IUserRequestInterface
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
@@ -16,6 +16,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Injectable()
 export class ConnectionService {
@@ -109,12 +110,11 @@ export class ConnectionService {
   }
 
   /**
-   * Description: create connection legacy invitation
+   * Description: Catch connection webhook responses and save details in connection table
    * @param orgId
-   * @param user
-   * @returns Connection legacy invitation URL
+   * @returns Callback URL for connection and created connections details
    */
-  async getConnectionWebhook(payload: IConnectionInterface): Promise<object> {
+  async getConnectionWebhook(payload: ICreateConnection): Promise<object> {
     try {
       const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(payload);
       return saveConnectionDetails;
@@ -272,7 +272,7 @@ export class ConnectionService {
     }
   }
 
-  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<string> {
+  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<IConnectionDetailsById> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
@@ -295,17 +295,17 @@ export class ConnectionService {
       }
 
       const apiKey = platformConfig?.sgApiKey;
-      const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
-      return createConnectionInvitation?.response;
+      const getConnectionDetailsByConnectionId = await this._getConnectionsByConnectionId(url, apiKey);
+      return getConnectionDetailsByConnectionId;
+
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
 
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.response?.error?.reason)  {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: ResponseMessages.connection.error.connectionNotFound,
+          statusCode: error?.response?.status,
+          error: error?.response?.error?.reason
         });
       } else {
         throw new RpcException(error.response ? error.response : error);
@@ -316,37 +316,27 @@ export class ConnectionService {
   async _getConnectionsByConnectionId(
     url: string,
     apiKey: string
-  ): Promise<{
-    response: string;
-  }> {
-    try {
-      const pattern = { cmd: 'agent-get-connections-by-connectionId' };
+  ): Promise<IConnectionDetailsById> {
+
+      //nats call in agent service for fetch connection details
+      const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
       const payload = { url, apiKey };
       return this.connectionServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
+        .send<IConnectionDetailsById>(pattern, payload)
         .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
+        .catch(error => {
+          this.logger.error(
+                `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
+              );         
+            throw new HttpException(
             {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
+              status: error.statusCode,  
+              error: error.error?.message?.error ? error.error?.message?.error : error.error,
+              message: error.message
+            }, error.error);
         });
-    } catch (error) {
-      this.logger.error(
-        `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
-      );
-      throw error;
-    }
   }
+  
   /**
    * Description: Fetch agent url
    * @param referenceId

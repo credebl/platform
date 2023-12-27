@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, IUserInformation, IUsersProfile } from '../interfaces/user.interface';
+import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, UserCredentials, IUserInformation, IUsersProfile, UserInvitations, ISendVerificationEmail, IVerifyUserEmail} from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -16,21 +16,22 @@ export class UserController {
 
   /**
    * Description: Registers new user
-   * @param payload Registration Details
-   * @returns Get registered user response
+   * @param email 
+   * @returns User's verification email sent status
    */
   @MessagePattern({ cmd: 'send-verification-mail' })
-  async sendVerificationMail(payload: { userEmailVerificationDto: UserEmailVerificationDto }): Promise<object> {
-    return this.userService.sendVerificationMail(payload.userEmailVerificationDto);
+  async sendVerificationMail(payload: { userEmailVerification: ISendVerificationEmail }): Promise<ISendVerificationEmail> {
+    return this.userService.sendVerificationMail(payload.userEmailVerification);
   }
 
   /**
    * Description: Verify user's email
-   * @param param
-   * @returns Get user's email verified
+   * @param email
+   * @param verificationcode
+   * @returns User's email verification status 
    */
   @MessagePattern({ cmd: 'user-email-verification' })
-  async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<object> {
+  async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<IVerifyUserEmail> {
     return this.userService.verifyEmail(payload.param);
   }
 
@@ -72,7 +73,7 @@ export class UserController {
 
   @MessagePattern({ cmd: 'get-org-invitations' })
   async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UserInvitations> {
-    return this.userService.invitations(payload);
+        return this.userService.invitations(payload);
   }
 
   /**
@@ -111,7 +112,6 @@ export class UserController {
   }
 
   /**
- *
  * @param payload
  * @returns organization users list
  */
@@ -120,9 +120,13 @@ export class UserController {
     const users = this.userService.get(payload.pageNumber, payload.pageSize, payload.search);
     return users;
   }
-
+  
+  /** 
+  * @param email
+  * @returns User's email exist status
+  * */
   @MessagePattern({ cmd: 'check-user-exist' })
-  async checkUserExist(payload: { userEmail: string }): Promise<string | CheckUserDetails> {
+  async checkUserExist(payload: { userEmail: string }): Promise<ICheckUserDetails> {
     return this.userService.checkUserExist(payload.userEmail);
   }
   @MessagePattern({ cmd: 'add-user' })

@@ -156,7 +156,7 @@ export class AgentController {
 
     const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.create,
       data: tenantDetails

@@ -165,7 +165,7 @@ export const ResponseMessages = {
             walletAlreadyProcessing: 'Your wallet has already processing',
             notAbleToSpinp: 'Agent not able to spin-up',
             platformAdminNotAbleToSpinp: 'Platform-admin agent is not spun-up',
-            seedCharCount: 'seed must be at most 32 characters',
+            seedCharCount: 'seed must be at most 32 characters'
         }
     },
     connection: {

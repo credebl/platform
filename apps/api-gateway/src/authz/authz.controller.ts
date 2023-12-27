@@ -21,7 +21,7 @@ import { Response } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
-import { AddUserDetails } from '../user/dto/add-user.dto';
+import { AddUserDetailsDto } from '../user/dto/add-user.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 
@@ -71,37 +71,30 @@ export class AuthzController {
 
   /**
   *
-  * @param email
-  * @param userInfo
-  * @param res
-  * @returns Add new user
+  * @Body userInfo
+  * @returns User's registration status
   */
   @Post('/signup')
   @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
-  async addUserDetails(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
-      const userDetails = await this.authzService.addUserDetails(userInfo);
+  async addUserDetails(@Body() userInfo: AddUserDetailsDto, @Res() res: Response): Promise<Response> {
+      await this.authzService.addUserDetails(userInfo);
       const finalResponse = {
         statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.create,
-        data: userDetails.response
+        message: ResponseMessages.user.success.create
       };
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
-
-
   /**
-  * 
-  * @param loginUserDto 
-  * @param res 
-  * @returns User access token details
+  * @Body loginUserDto
+  * @returns User's access token details
   */
   @Post('/signin')
   @ApiOperation({
     summary: 'Authenticate the user for the access',
     description: 'Authenticate the user for the access'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
   @ApiBody({ type: LoginUserDto })
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
 
@@ -110,7 +103,7 @@ export class AuthzController {
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.user.success.login,
-        data: userData.response
+        data: userData
       };
 
       return res.status(HttpStatus.OK).json(finalResponse);

@@ -2,6 +2,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { ClientDetails, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
+import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 
 @Controller()
 export class IssuanceController {
@@ -23,7 +24,7 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'get-all-issued-credentials' })
-  async getIssueCredentials(payload: IIssueCredentials): Promise<object> {
+  async getIssueCredentials(payload: IIssueCredentials): Promise<IIssuedCredential> {
     const { user, orgId, issuedCredentialsSearchCriteria} = payload;
     return this.issuanceService.getIssueCredentials(user, orgId, issuedCredentialsSearchCriteria);
   }

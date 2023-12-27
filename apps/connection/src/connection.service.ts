@@ -305,7 +305,7 @@ export class ConnectionService {
       if (error?.response?.error?.reason)  {
         throw new RpcException({
           message: ResponseMessages.connection.error.connectionNotFound,
-          statusCode: error?.status?.code,
+          statusCode: error?.response?.status,
           error: error?.response?.error?.reason
         });
       } else {
@@ -320,7 +320,7 @@ export class ConnectionService {
   ): Promise<IConnectionDetailsById> {
 
       //nats call in agent service for fetch connection details
-      const pattern = { cmd: 'agent-get-connections-by-connectionId' };
+      const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
       const payload = { url, apiKey };
       return this.connectionServiceProxy
         .send<IConnectionDetailsById>(pattern, payload)

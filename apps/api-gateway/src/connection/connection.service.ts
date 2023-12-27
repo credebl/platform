@@ -69,6 +69,6 @@ export class ConnectionService extends BaseService {
     orgId: string
   ): Promise<IConnectionDetailsById> {
     const payload = { user, connectionId, orgId };
-    return this.sendNatsMessage(this.connectionServiceProxy, 'get-all-connection-details-by-connectionId', payload);
+    return this.sendNatsMessage(this.connectionServiceProxy, 'get-connection-details-by-connectionId', payload);
   }
 }

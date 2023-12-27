@@ -34,7 +34,7 @@ export class UserRepository {
   /**
    *
    * @param userEmailVerification
-   * @returns user email
+   * @returns user's email
    */
   async createUser(userEmailVerification:ISendVerificationEmail, verifyCode: string): Promise<user> {
     try {

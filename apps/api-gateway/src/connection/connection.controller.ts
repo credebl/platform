@@ -34,11 +34,10 @@ export class ConnectionController {
     ) { }
 
     /**
-        * Description: Get connection by connectionId
-        * @param user
+        * Get connection details by connectionId
         * @param connectionId
         * @param orgId
-        * 
+        * @returns connection details by connection Id
     */
     @Get('orgs/:orgId/connections/:connectionId')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -47,7 +46,7 @@ export class ConnectionController {
         summary: `Get connections by connection Id`,
         description: `Get connections by connection Id`
     })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getConnectionsById(
         @User() user: IUserRequest,
         @Param('connectionId') connectionId: string,
@@ -55,11 +54,10 @@ export class ConnectionController {
         @Res() res: Response
     ): Promise<Response> {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
-
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.connection.success.fetch,
-            data: connectionsDetails.response
+            message: ResponseMessages.connection.success.fetchConnection,
+            data: connectionsDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

@@ -6,7 +6,6 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
   ConnectionInvitationResponse,
-  IConnectionDetailsById,
   IConnectionSearchCriteria,
   ICreateConnection,
   IUserRequestInterface
@@ -17,6 +16,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Injectable()
 export class ConnectionService {

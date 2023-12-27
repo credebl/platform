@@ -5,7 +5,7 @@ import { AgentStatus, GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAg
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { ISendProofRequestPayload } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
-import { IConnectionDetailsById } from 'apps/connection/src/interfaces/connection.interfaces';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Controller()
 export class AgentServiceController {

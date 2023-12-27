@@ -31,7 +31,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
-import { IConnectionDetailsById } from 'apps/connection/src/interfaces/connection.interfaces';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Injectable()
 @WebSocketGateway()

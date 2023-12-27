@@ -29,7 +29,7 @@ export class CreateConnectionDto {
     @ApiPropertyOptional()
     @IsBoolean()
     @IsOptional()
-    @IsNotEmpty({ message: 'autoAcceptConnection should boolean' })
+    @IsNotEmpty({ message: 'autoAcceptConnection should be boolean' })
     autoAcceptConnection: boolean;
 
     orgId: string;

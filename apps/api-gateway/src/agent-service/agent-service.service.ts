@@ -4,6 +4,7 @@ import { user } from '@prisma/client';
 import { BaseService } from 'libs/service/base.service';
 import { AgentSpinupDto } from './dto/agent-service.dto';
 import { CreateTenantDto } from './dto/create-tenant.dto';
+import { AgentSpinUpSatus } from './interface/agent-service.interface';
 import { AgentStatus } from './interface/agent-service.interface';
 
 @Injectable()
@@ -19,9 +20,11 @@ export class AgentService extends BaseService {
         return this.sendNats(this.agentServiceProxy, 'agent-spinup', payload);
     }
 
-    async createTenant(createTenantDto: CreateTenantDto, user: user): Promise<{ response: object }> {
+    async createTenant(createTenantDto: CreateTenantDto, user: user): Promise<AgentSpinUpSatus> {
         const payload = { createTenantDto, user };
-        return this.sendNats(this.agentServiceProxy, 'create-tenant', payload);
+
+        // NATS call
+        return this.sendNatsMessage(this.agentServiceProxy, 'create-tenant', payload);
     }
 
     async getAgentHealth(user: user, orgId:string): Promise<AgentStatus> {

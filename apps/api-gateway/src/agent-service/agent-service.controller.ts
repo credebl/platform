@@ -121,6 +121,14 @@ export class AgentController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  /**
+   * Create wallet for shared agent
+   * @param orgId 
+   * @param createTenantDto 
+   * @param user 
+   * @param res 
+   * @returns wallet initialization status
+   */
   @Post('/orgs/:orgId/agents/wallet')
   @ApiOperation({
     summary: 'Shared Agent',
@@ -134,20 +142,24 @@ export class AgentController {
     @Body() createTenantDto: CreateTenantDto,
     @User() user: user,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
 
     createTenantDto.orgId = orgId;
 
     if (seedLength !== createTenantDto.seed.length) {
-      throw new BadRequestException(`seed must be at most 32 characters.`);
+      this.logger.error(`seed must be at most 32 characters`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.seedCharCount,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.create,
-      data: tenantDetails.response
+      data: tenantDetails
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

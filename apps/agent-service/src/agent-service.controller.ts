@@ -1,10 +1,11 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { AgentStatus, GetCredDefAgentRedirection, GetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, OutOfBandCredentialOffer } from './interface/agent-service.interface';
+import { IAgentStatus, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer } from './interface/agent-service.interface';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { ISendProofRequestPayload } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Controller()
 export class AgentServiceController {
@@ -16,9 +17,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'create-tenant' })
-  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<{
-    agentSpinupStatus: number;
-  }> {
+  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<IAgentSpinUpSatus> {
     return this.agentServiceService.createTenant(payload.createTenantDto, payload.user);
   }
 
@@ -28,7 +27,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-get-schema' })
-  async getSchemaById(payload: GetSchemaAgentRedirection): Promise<object> {
+  async getSchemaById(payload: IGetSchemaAgentRedirection): Promise<object> {
     return this.agentServiceService.getSchemaById(payload);
   }
 
@@ -39,7 +38,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-get-credential-definition' })
-  async getCredentialDefinitionById(payload: GetCredDefAgentRedirection): Promise<object> {
+  async getCredentialDefinitionById(payload: IGetCredDefAgentRedirection): Promise<object> {
     return this.agentServiceService.getCredentialDefinitionById(payload);
   }
 
@@ -88,9 +87,9 @@ export class AgentServiceController {
   async getConnections(payload: { url: string, apiKey: string }): Promise<object> {
     return this.agentServiceService.getConnections(payload.url, payload.apiKey);
   }
-
-  @MessagePattern({ cmd: 'agent-get-connections-by-connectionId' })
-  async getConnectionsByconnectionId(payload: { url: string, apiKey: string }): Promise<object> {
+  
+  @MessagePattern({ cmd: 'agent-get-connection-details-by-connectionId' })
+  async getConnectionsByconnectionId(payload: { url: string, apiKey: string }): Promise<IConnectionDetailsById> {
     return this.agentServiceService.getConnectionsByconnectionId(payload.url, payload.apiKey);
   }
 
@@ -100,7 +99,7 @@ export class AgentServiceController {
    * @returns Get agent health
    */
   @MessagePattern({ cmd: 'agent-health' })
-  async getAgentHealth(payload: { user: user, orgId: string }): Promise<AgentStatus> {
+  async getAgentHealth(payload: { user: user, orgId: string }): Promise<IAgentStatus> {
     return this.agentServiceService.getAgentHealthDetails(payload.orgId);
   }
 
@@ -134,7 +133,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-out-of-band-credential-offer' })
-  async outOfBandCredentialOffer(payload: { outOfBandIssuancePayload: OutOfBandCredentialOffer, url: string, apiKey: string }): Promise<object> {
+  async outOfBandCredentialOffer(payload: { outOfBandIssuancePayload: IOutOfBandCredentialOffer, url: string, apiKey: string }): Promise<object> {
     return this.agentServiceService.outOfBandCredentialOffer(payload.outOfBandIssuancePayload, payload.url, payload.apiKey);
   }
 

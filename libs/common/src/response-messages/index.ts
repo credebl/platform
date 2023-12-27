@@ -160,13 +160,19 @@ export const ResponseMessages = {
             notAbleToSpinUpAgent: 'Agent not able to spin-up',
             alreadySpinUp: 'Agent already spin-up',
             agentUrl: 'Agent url not exist',
-            agentNotExists: 'Agent not spinned up for this organization',
-            agentDown: 'Agent is down or not spinned up'
+            agentNotExists: 'Agent not spun up for this organization',
+            agentDown: 'Agent is down or not spun up',
+            walletAlreadyCreated: 'Your wallet is already been created',
+            walletAlreadyProcessing: 'Your wallet is already processing',
+            notAbleToSpinp: 'Agent not able to spin-up',
+            platformAdminNotAbleToSpinp: 'Platform-admin agent is not spun up',
+            seedCharCount: 'seed must be at most 32 characters'
         }
     },
     connection: {
         success: {
             create: 'Connection created successfully',
+            fetchConnection: 'Connection details fetched successfully',
             fetch: 'Connections details fetched successfully'
         },
         error: {
@@ -188,7 +194,7 @@ export const ResponseMessages = {
         error: {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
-            agentEndPointNotFound: 'agentEndPoint Not Found',
+            agentEndPointNotFound: 'agent end point Not Found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
             notFound: 'History not found',

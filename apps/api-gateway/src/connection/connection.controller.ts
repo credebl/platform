@@ -1,10 +1,9 @@
-import IResponseType, {IResponse} from '@credebl/common/interfaces/response.interface';
+import {IResponse} from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
-import { AuthTokenResponse } from '../authz/dtos/auth-token-res.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ConnectionService } from './connection.service';
@@ -25,8 +24,8 @@ import { SortFields } from 'apps/connection/src/enum/connection.enum';
 @Controller()
 @ApiTags('connections')
 @ApiBearerAuth()
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class ConnectionController {
 
     private readonly logger = new Logger('Connection');
@@ -34,11 +33,10 @@ export class ConnectionController {
     ) { }
 
     /**
-        * Description: Get connection by connectionId
-        * @param user
+        * Get connection details by connectionId
         * @param connectionId
         * @param orgId
-        * 
+        * @returns connection details by connection Id
     */
     @Get('orgs/:orgId/connections/:connectionId')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -47,7 +45,7 @@ export class ConnectionController {
         summary: `Get connections by connection Id`,
         description: `Get connections by connection Id`
     })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getConnectionsById(
         @User() user: IUserRequest,
         @Param('connectionId') connectionId: string,
@@ -55,11 +53,10 @@ export class ConnectionController {
         @Res() res: Response
     ): Promise<Response> {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
-
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.connection.success.fetch,
-            data: connectionsDetails.response
+            message: ResponseMessages.connection.success.fetchConnection,
+            data: connectionsDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

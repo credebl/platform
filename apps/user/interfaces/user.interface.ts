@@ -66,8 +66,8 @@ interface IUserOrgRole {
     email?: string;
     orgRoles: string[];
   }
-
-  export interface ISendVerificationEmail {
+  
+export interface ISendVerificationEmail {
     email: string;
     username?: string;
   }
@@ -176,8 +176,13 @@ interface IUserOrgRole {
     search: string;
   }
 
-  export class IVerifyUserEmail {
-    email: string;
-    verificationCode: string;
+export interface IVerifyUserEmail{
+  email: string;
+  verificationCode: string;
 }
 
+export interface  IUserSignIn{
+  email: string;
+  password: string;
+  isPasskey: boolean;
+}

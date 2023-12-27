@@ -31,7 +31,7 @@ async function bootstrap(): Promise<void> {
   app.use(helmet({
     xssFilter:true
   }));
-  app.useGlobalPipes(new ValidationPipe());
+  
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)

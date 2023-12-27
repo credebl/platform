@@ -8,15 +8,16 @@ import {
   IFetchConnections
 } from './interfaces/connection.interfaces';
 import { IConnectionList, ICreateConnectioQr } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Controller()
 export class ConnectionController {
   constructor(private readonly connectionService: ConnectionService) {}
 
   /**
-   * Description: Create out-of-band connection legacy invitation
+   * Create connection legacy invitation URL
    * @param payload
-   * @returns Created connection invitation for out-of-band
+   * @returns Created connection invitation URL
    */
   @MessagePattern({ cmd: 'create-connection' })
   async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectioQr> {
@@ -24,7 +25,7 @@ export class ConnectionController {
   }
 
   /**
-   * Description: Catch connection webhook responses and save details in connection table
+   * Receive connection webhook responses and save details in connection table
    * @param orgId
    * @returns Callback URL for connection and created connections details
    */
@@ -49,8 +50,14 @@ export class ConnectionController {
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
   }
 
-  @MessagePattern({ cmd: 'get-all-connections-by-connectionId' })
-  async getConnectionsById(payload: IFetchConnectionById): Promise<string> {
+  /**
+   * 
+   * @param connectionId
+   * @param orgId 
+   * @returns connection details by connection Id
+   */
+  @MessagePattern({ cmd: 'get-connection-details-by-connectionId' })
+  async getConnectionsById(payload: IFetchConnectionById): Promise<IConnectionDetailsById> {
     const { user, connectionId, orgId } = payload;
     return this.connectionService.getConnectionsById(user, connectionId, orgId);
   }

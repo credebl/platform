@@ -1,14 +1,14 @@
-import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, UserCredentials, IUserInformation, IUsersProfile, UserInvitations, ISendVerificationEmail, IVerifyUserEmail} from '../interfaces/user.interface';
+import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, UserCredentials, IUsersProfile, UserInvitations, IUserInformation, IUserSignIn} from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
-import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
 import { IUsersActivity } from 'libs/user-activity/interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
 
 @Controller()
 export class UserController {
@@ -34,9 +34,13 @@ export class UserController {
   async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<IVerifyUserEmail> {
     return this.userService.verifyEmail(payload.param);
   }
+ /**
+  * @Body loginUserDto
+  * @returns User's access token details
+  */
 
   @MessagePattern({ cmd: 'user-holder-login' })
-  async login(payload: LoginUserDto): Promise<object> {
+  async login(payload: IUserSignIn): Promise<ISignInUser> {
    return this.userService.login(payload);
   }
 
@@ -129,8 +133,12 @@ export class UserController {
   async checkUserExist(payload: { userEmail: string }): Promise<ICheckUserDetails> {
     return this.userService.checkUserExist(payload.userEmail);
   }
+  /**
+  * @Body userInfo
+  * @returns User's registration status
+  */
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<string | object> {
+  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<string> {
     return this.userService.createUserForToken(payload.userInfo);
   }
 

@@ -501,6 +501,8 @@ export class AgentServiceService {
       throw error;
     }
   }
+
+  
   async _createLegacyConnectionInvitation(orgId: string, user: IUserRequestInterface, label: string): Promise<{
     response;
   }> {

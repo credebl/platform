@@ -32,6 +32,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
+import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Injectable()
@@ -501,7 +502,7 @@ export class AgentServiceService {
     }
   }
 
-
+  
   async _createLegacyConnectionInvitation(orgId: string, user: IUserRequestInterface, label: string): Promise<{
     response;
   }> {
@@ -931,7 +932,7 @@ export class AgentServiceService {
     }
   }
 
-  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<object> {
+  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<ICreateConnectionUrl> {
     try {
 
       const data = await this.commonService

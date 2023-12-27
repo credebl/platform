@@ -4,7 +4,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
-import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 
 @Injectable()
@@ -16,9 +16,7 @@ export class ConnectionService extends BaseService {
   createLegacyConnectionInvitation(
     connectionDto: CreateConnectionDto,
     user: IUserRequestInterface
-  ): Promise<{
-    response: object;
-  }> {
+  ): Promise<ICreateConnectionUrl> {
     try {
       const connectionDetails = {
         orgId: connectionDto.orgId,
@@ -30,7 +28,7 @@ export class ConnectionService extends BaseService {
         user
       };
 
-      return this.sendNats(this.connectionServiceProxy, 'create-connection', connectionDetails);
+      return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection', connectionDetails);
     } catch (error) {
       throw new RpcException(error.response);
     }

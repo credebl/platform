@@ -5,17 +5,17 @@ import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@n
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
-  ConnectionInvitationResponse,
+  IConnection,
+  IConnectionInvitation,
   IConnectionSearchCriteria,
-  ICreateConnection,
-  IUserRequestInterface
+  ICreateConnection
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
-import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Injectable()
@@ -28,29 +28,21 @@ export class ConnectionService {
   ) {}
 
   /**
-   * Description: create connection legacy invitation
+   * Create connection legacy invitation URL
    * @param orgId
    * @param user
    * @returns Connection legacy invitation URL
    */
-  async createLegacyConnectionInvitation(
-    orgId: string,
-    user: IUserRequestInterface,
-    multiUseInvitation: boolean,
-    autoAcceptConnection: boolean,
-    alias: string,
-    imageUrl: string,
-    label: string
-  ): Promise<object> {
+  async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
+
+    const {orgId, multiUseInvitation, autoAcceptConnection, alias, label} = payload;
     try {
       const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
-
       if (connectionInvitationExist) {
         return connectionInvitationExist;
       }
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-
       const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
@@ -77,9 +69,7 @@ export class ConnectionService {
       const apiKey = platformConfig?.sgApiKey;
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
-
       let shortenedUrl;
       if (agentDetails?.tenantId) {
         shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationObject}`;
@@ -92,7 +82,6 @@ export class ConnectionService {
         agentId,
         orgId
       );
-
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
@@ -125,16 +114,17 @@ export class ConnectionService {
   }
 
   /**
-   * Description: Store shortening URL
-   * @param referenceId
-   * @param url
+   * Store shortening URL
+   * @param orgId
    * @returns connection invitation URL
    */
   async _createConnectionInvitation(
     connectionPayload: object,
     url: string,
     apiKey: string
-  ): Promise<ConnectionInvitationResponse> {
+  ): Promise<IConnectionInvitation> {
+
+    //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
     const payload = { connectionPayload, url, apiKey };
 

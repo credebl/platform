@@ -66,8 +66,8 @@ interface IUserOrgRole {
     email?: string;
     orgRoles: string[];
   }
-  
-  export interface UserEmailVerificationDto {
+
+  export interface ISendVerificationEmail {
     email: string;
     username?: string;
   }
@@ -112,11 +112,11 @@ interface IUserOrgRole {
     label: string;
   }
   
-  export interface CheckUserDetails {
+  export interface ICheckUserDetails {
+    isExist: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
     isSupabase?: boolean;
-    isExist?: boolean;
   }
 
   export interface UserCredentials {
@@ -175,3 +175,9 @@ interface IUserOrgRole {
     pageSize: number;
     search: string;
   }
+
+  export class IVerifyUserEmail {
+    email: string;
+    verificationCode: string;
+}
+

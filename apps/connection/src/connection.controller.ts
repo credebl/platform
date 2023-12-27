@@ -7,7 +7,8 @@ import {
   IFetchConnectionById,
   IFetchConnections
 } from './interfaces/connection.interfaces';
-import { IConnectionList, ICreateConnectioQr } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Controller()
 export class ConnectionController {
@@ -19,7 +20,7 @@ export class ConnectionController {
    * @returns Created connection invitation for out-of-band
    */
   @MessagePattern({ cmd: 'create-connection' })
-  async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectioQr> {
+  async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
     return this.connectionService.createLegacyConnectionInvitation(payload);   
   }
 

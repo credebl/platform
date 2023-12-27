@@ -20,7 +20,7 @@ export interface IConnectionsListCount {
     data: IConnectionItem[];
   }
 
-  export interface ICreateConnectioQr {
+  export interface ICreateConnectionUrl {
     id: string;
     orgId: string;
     agentId: string;

@@ -17,9 +17,9 @@ export interface IAgentSpinupDto {
     platformAdminEmail?: string;
 }
 
-export interface OutOfBandCredentialOffer {
+export interface IOutOfBandCredentialOffer {
     emailId: string;
-    attributes: Attributes[];
+    attributes: IAttributes[];
     credentialDefinitionId: string;
     comment: string;
     protocolVersion?: string;
@@ -56,17 +56,17 @@ export interface ITenantSchemaDto {
     issuerId: string;
 }
 
-export interface GetSchemaAgentRedirection {
+export interface IGetSchemaAgentRedirection {
     schemaId?: string;
     tenantId?: string;
-    payload?: GetSchemaFromTenantPayload;
+    payload?: IGetSchemaFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
 }
 
-export interface GetSchemaFromTenantPayload {
+export interface IGetSchemaFromTenantPayload {
     schemaId: string;
 }
 
@@ -88,17 +88,17 @@ export interface ITenantCredDefDto {
     issuerId: string;
 }
 
-export interface GetCredDefAgentRedirection {
+export interface IGetCredDefAgentRedirection {
     credentialDefinitionId?: string;
     tenantId?: string;
-    payload?: GetCredDefFromTenantPayload;
+    payload?: IGetCredDefFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
 }
 
-export interface GetCredDefFromTenantPayload {
+export interface IGetCredDefFromTenantPayload {
     credentialDefinitionId: string;
 }
 
@@ -219,17 +219,17 @@ export interface ITenantCredDefDto {
     issuerId: string;
 }
 
-export interface GetCredDefAgentRedirection {
+export interface IGetCredDefAgentRedirection {
     credentialDefinitionId?: string;
     tenantId?: string;
-    payload?: GetCredDefFromTenantPayload;
+    payload?: IGetCredDefFromTenantPayload;
     apiKey?: string;
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
 }
 
-export interface GetCredDefFromTenantPayload {
+export interface IGetCredDefFromTenantPayload {
     credentialDefinitionId: string;
 }
 
@@ -246,10 +246,10 @@ export interface ICredentialFormats {
 }
 
 export interface IIndy {
-    attributes: Attributes[];
+    attributes: IAttributes[];
 }
 
-export interface Attributes {
+export interface IAttributes {
     name: string;
     value: string;
 }
@@ -260,7 +260,7 @@ export interface ISendProofRequestPayload {
     autoAcceptProof: string;
 }
 
-export interface AgentStatus {
+export interface IAgentStatus {
     label: string;
     endpoints: string[];
     isInitialized: boolean;
@@ -299,33 +299,58 @@ interface IRequestedRestriction {
     cred_def_id: string;
 }
 
-export interface AgentSpinUpSatus {
+export interface IAgentSpinUpSatus {
     agentSpinupStatus: number;
 }
 
-interface WalletConfig {
+interface IWalletConfig {
     id: string;
     key: string;
     keyDerivationMethod: string;
-  }
-  
-  interface Config {
+}
+
+interface IConfig {
     label: string;
-    walletConfig: WalletConfig;
-  }
-  
-  interface TenantRecord {
+    walletConfig: IWalletConfig;
+}
+
+interface ITenantRecord {
     _tags: string;
     metadata: string;
     id: string;
     createdAt: string;
-    config: Config;
+    config: IConfig;
     updatedAt: string;
-  }
-  
-  export interface CreateTenant {
-    tenantRecord: TenantRecord;
+}
+
+export interface ICreateTenant {
+    tenantRecord: ITenantRecord;
     did: string;
     verkey: string;
-  }
-  
+}
+
+export interface IOrgAgent {
+    agentSpinUpStatus: number;
+}
+
+export interface IOrgLedgers {
+    id: string;
+}
+
+export interface ICreateOrgAgent {
+    id: string;
+}
+
+interface IOrgAgentEndPoint {
+    agentSpinUpStatus: number;
+    agentEndPoint: string
+}
+
+export interface IOrgAgentsResponse {
+    org_agents: IOrgAgentEndPoint[];
+}
+
+
+export interface IStoreAgent {
+    id: string;
+}

@@ -168,7 +168,7 @@ model org_agents {
   tenantId            String?
   apiKey              String?
   agentsTypeId        String?             @db.Uuid
-  orgId               String?             @db.Uuid
+  orgId               String?             @unique @db.Uuid
   orgAgentTypeId      String?             @db.Uuid
   ledgerId            String?             @db.Uuid
   agent_invitations   agent_invitations[]

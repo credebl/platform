@@ -21,6 +21,8 @@ export class AgentService extends BaseService {
 
     async createTenant(createTenantDto: CreateTenantDto, user: user): Promise<AgentSpinUpSatus> {
         const payload = { createTenantDto, user };
+
+        // NATS call
         return this.sendNatsMessage(this.agentServiceProxy, 'create-tenant', payload);
     }
 

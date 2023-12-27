@@ -1,8 +1,8 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
-import { IStoreOrgAgentDetails } from '../interface/agent-service.interface';
+import { ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IStoreOrgAgentDetails, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -64,12 +64,14 @@ export class AgentServiceRepository {
     async getOrgDetails(id: string): Promise<organisation> {
         try {
 
-            const oranizationDetails = await this.prisma.organisation.findFirstOrThrow({
-                where: {
-                    id
-                }
-            });
-            return oranizationDetails;
+            if (id) {
+                const oranizationDetails = await this.prisma.organisation.findUnique({
+                    where: {
+                        id
+                    }
+                });
+                return oranizationDetails;
+            }
         } catch (error) {
             this.logger.error(`[getOrgDetails] - get organization details: ${JSON.stringify(error)}`);
             throw error;
@@ -82,15 +84,23 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
-  async createOrgAgent(agentSpinUpStatus: number, userId: string): Promise<org_agents> {
-    try {
+    // eslint-disable-next-line camelcase
+    async createOrgAgent(agentSpinUpStatus: number, userId: string): Promise<ICreateOrgAgent> {
+        try {
 
-      return this.prisma.org_agents.create({
-        data: {
-          agentSpinUpStatus,
-          createdBy: userId,
-          lastChangedBy: userId
+            return this.prisma.org_agents.create({
+                data: {
+                    agentSpinUpStatus,
+                    createdBy: userId,
+                    lastChangedBy: userId
+                },
+                select: {
+                    id: true
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[createOrgAgent] - create agent details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
     } catch (error) {
@@ -99,13 +109,20 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
-  async removeOrgAgent(id: string): Promise<org_agents> {
-    try {
+    // eslint-disable-next-line camelcase
+    async removeOrgAgent(id: string): Promise<void> {
+        try {
+            if (id) {
 
-      return this.prisma.org_agents.delete({
-        where: {
-          id
+                await this.prisma.org_agents.delete({
+                    where: {
+                        id
+                    }
+                });
+            }
+        } catch (error) {
+            this.logger.error(`[removeOrgAgent] - remove org agent details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
     } catch (error) {
@@ -114,32 +131,40 @@ export class AgentServiceRepository {
     }
   }
 
-  /**
-   * Store agent details
-   * @param storeAgentDetails 
-   * @returns 
-   */
-  // eslint-disable-next-line camelcase
-  async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<org_agents> {
-    try {
+    /**
+     * Store agent details
+     * @param storeAgentDetails 
+     * @returns 
+     */
+    // eslint-disable-next-line camelcase
+    async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
+        try {
 
-      return this.prisma.org_agents.update({
-        where: {
-          id: storeOrgAgentDetails.id
-        },
-        data: {
-          orgDid: storeOrgAgentDetails.did,
-          verkey: storeOrgAgentDetails.verkey,
-          isDidPublic: storeOrgAgentDetails.isDidPublic,
-          agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
-          walletName: storeOrgAgentDetails.walletName,
-          agentsTypeId: storeOrgAgentDetails.agentsTypeId,
-          orgId: storeOrgAgentDetails.orgId,
-          agentEndPoint: storeOrgAgentDetails.agentEndPoint,
-          agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
-          orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
-          tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
-          ledgerId: storeOrgAgentDetails.ledgerId[0]
+            return this.prisma.org_agents.update({
+                where: {
+                    id: storeOrgAgentDetails.id
+                },
+                data: {
+                    orgDid: storeOrgAgentDetails.did,
+                    verkey: storeOrgAgentDetails.verkey,
+                    isDidPublic: storeOrgAgentDetails.isDidPublic,
+                    agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
+                    walletName: storeOrgAgentDetails.walletName,
+                    agentsTypeId: storeOrgAgentDetails.agentsTypeId,
+                    orgId: storeOrgAgentDetails.orgId,
+                    agentEndPoint: storeOrgAgentDetails.agentEndPoint,
+                    agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
+                    orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
+                    tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
+                    ledgerId: storeOrgAgentDetails.ledgerId[0]
+                },
+                select: {
+                    id: true
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
     } catch (error) {
@@ -148,22 +173,26 @@ export class AgentServiceRepository {
     }
   }
 
-  /**
-   * Get agent details
-   * @param orgId 
-   * @returns 
-   */
-  // eslint-disable-next-line camelcase
-  async getAgentDetails(orgId: string): Promise<org_agents> {
-    try {
+    /**
+     * Get agent details
+     * @param orgId 
+     * @returns 
+     */
+    // eslint-disable-next-line camelcase
+    async getAgentDetails(orgId: string): Promise<IOrgAgent> {
+        try {
 
-            const orgAgentDataByOrgId = await this.prisma.org_agents.findFirstOrThrow({
-                where: {
-                    orgId
-                }
-            });
+            if (orgId) {
 
-            return orgAgentDataByOrgId;
+                return this.prisma.org_agents.findUnique({
+                    where: {
+                        orgId
+                    },
+                    select: {
+                        agentSpinUpStatus: true
+                    }
+                });
+            }
 
     } catch (error) {
 
@@ -173,17 +202,21 @@ export class AgentServiceRepository {
   }
 
     // eslint-disable-next-line camelcase
-    async platformAdminAgent(platformOrg: string): Promise<organisation & { org_agents: org_agents[] }> {
-        const platformAdminSpinnedUp = await this.prisma.organisation.findFirstOrThrow({
+    async platformAdminAgent(platformOrg: string): Promise<IOrgAgentsResponse> {
+        return this.prisma.organisation.findFirstOrThrow({
             where: {
                 name: platformOrg
             },
-            include: {
+            select: {
                 // eslint-disable-next-line camelcase
-                org_agents: true
+                org_agents: {
+                    select: {
+                        agentSpinUpStatus: true,
+                        agentEndPoint: true
+                    }
+                }
             }
         });
-        return platformAdminSpinnedUp;
     }
 
       const oranizationAgentDetails = await this.prisma.org_agents.findFirstOrThrow({
@@ -198,11 +231,32 @@ export class AgentServiceRepository {
     }
   }
 
-  async getAgentTypeDetails(): Promise<string> {
-    try {
-      const { id } = await this.prisma.agents_type.findFirst({
-        where: {
-          agent: AgentType.AFJ
+    async getLedgerDetails(name: string[] | string): Promise<IOrgLedgers[]> {
+        try {
+            let whereClause;
+
+            if (Array.isArray(name)) {
+                whereClause = {
+                    name: {
+                        in: name
+                    }
+                };
+            } else {
+                whereClause = {
+                    name
+                };
+            }
+
+            const ledgersDetails = await this.prisma.ledgers.findMany({
+                where: whereClause,
+                select: {
+                    id: true
+                }
+            });
+            return ledgersDetails;
+        } catch (error) {
+            this.logger.error(`[getLedgerDetails] - get ledger details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
       return id;
@@ -298,11 +352,20 @@ export class AgentServiceRepository {
     }
   }
 
-  async getAgentType(id: string): Promise<string> {
-    try {
-      const { agent } = await this.prisma.agents_type.findUnique({
-        where: {
-          id
+    async getAgentType(id: string): Promise<string> {
+        try {
+            if (id) {
+
+                const { agent } = await this.prisma.agents_type.findUnique({
+                    where: {
+                        id
+                    }
+                });
+                return agent;
+            }
+        } catch (error) {
+            this.logger.error(`[getAgentType] - get agent type details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
       return agent;
@@ -339,12 +402,15 @@ export class AgentServiceRepository {
     // eslint-disable-next-line camelcase
     async getOrgAgentDetails(orgId: string): Promise<org_agents> {
         try {
-            const oranizationAgentDetails = await this.prisma.org_agents.findFirstOrThrow({
-                where: {
-                    orgId
-                }
-            });
-            return oranizationAgentDetails;
+            if (orgId) {
+
+                const oranizationAgentDetails = await this.prisma.org_agents.findUnique({
+                    where: {
+                        orgId
+                    }
+                });
+                return oranizationAgentDetails;
+            }
         } catch (error) {
             this.logger.error(`[getOrgAgentDetails] - get org agent health details: ${JSON.stringify(error)}`);
             throw error;

@@ -17,7 +17,7 @@ export class ConnectionController {
   /**
    * Create connection legacy invitation URL
    * @param payload
-   * @returns Created connection invitation URL
+   * @returns connection invitation URL
    */
   @MessagePattern({ cmd: 'create-connection' })
   async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {

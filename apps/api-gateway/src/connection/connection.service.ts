@@ -4,7 +4,8 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
-import { IConnectionDetailsById, IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
+import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 
 @Injectable()
 export class ConnectionService extends BaseService {

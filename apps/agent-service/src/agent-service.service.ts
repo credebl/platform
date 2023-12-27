@@ -502,23 +502,22 @@ export class AgentServiceService {
     }
   }
 
-
-  async _createLegacyConnectionInvitation(orgId: string, user: IUserRequestInterface, label: string): Promise<
-    object> {
+  async _createLegacyConnectionInvitation(orgId: string, user: IUserRequestInterface, label: string): Promise<{
+    response;
+  }> {
     try {
       const pattern = {
         cmd: 'create-connection'
       };
       const payload = { orgId, user, label };
       return this.agentServiceProxy
-        .send<object>(pattern, payload)
+        .send<string>(pattern, payload)
         .pipe(
           map((response) => (
             {
               response
             }))
-        )
-        .toPromise()
+        ).toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(

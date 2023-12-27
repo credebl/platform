@@ -109,7 +109,23 @@ export interface ISendVerificationEmail {
   
   export interface Attribute {
     [key: string]: string;
-    label: string
+    label: string;
+  }
+  
+  export interface ICheckUserDetails {
+    isRegistered: boolean;
+    isEmailVerified?: boolean;
+    isFidoVerified?: boolean;
+    isAuthenticated?: boolean;
+  }
+
+  export interface UserCredentials {
+    id: string;
+    imageUrl?: string;
+    credentialId?: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    deletedAt: Date;
   }
 
   export interface IOrgUsers {

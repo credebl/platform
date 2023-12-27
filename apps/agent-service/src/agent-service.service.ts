@@ -962,22 +962,29 @@ export class AgentServiceService {
   }
 
   async getConnectionsByconnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
+    
     try {
       const data = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
-        .then(async response => response)
-        .catch(error => {
+      .httpGet(url, { headers: { 'x-api-key': apiKey } })
+      .then(async response => response)
+      .catch(error => {
+        this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+
+        if (error && Object.keys(error).length === 0) {
           throw new InternalServerErrorException(
             ResponseMessages.agent.error.agentDown,
             { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
           );
-        });
-      return data;
-
+        } else {
+          throw error;
+        }     
+      });  
+    return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
+    
   }  
 
   /**

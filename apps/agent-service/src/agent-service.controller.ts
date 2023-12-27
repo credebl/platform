@@ -24,7 +24,7 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-spinup' })
-  async walletProvision(payload: { agentSpinupDto: IAgentSpinupDto; user: IUserRequestInterface }): Promise<object> {
+  async walletProvision(payload: { agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface }): Promise<IAgentSpinUpSatus> {
     return this.agentServiceService.walletProvision(payload.agentSpinupDto, payload.user);
   }
 

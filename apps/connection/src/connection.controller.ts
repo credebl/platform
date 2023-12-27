@@ -3,12 +3,12 @@ import { ConnectionService } from './connection.service'; // Import the common s
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
 import {
   IConnection,
-  IConnectionDetailsById,
-  IConnectionInterface,
+  ICreateConnection,
   IFetchConnectionById,
   IFetchConnections
 } from './interfaces/connection.interfaces';
 import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Controller()
 export class ConnectionController {

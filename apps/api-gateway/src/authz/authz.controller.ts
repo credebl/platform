@@ -35,13 +35,12 @@ export class AuthzController {
     private readonly commonService: CommonService) { }
 
   /**
-   *
-   * @param query
-   * @param res
-   * @returns User email verified
+   * @param email
+   * @param verificationcode
+   * @returns User's email verification status 
    */
   @Get('/verify')
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Verify user’s email', description: 'Verify user’s email' })
   async verifyEmail(@Query() query: EmailVerificationDto, @Res() res: Response): Promise<Response> {
     await this.authzService.verifyEmail(query);
@@ -55,16 +54,14 @@ export class AuthzController {
   }
 
   /**
-  *
   * @param email
-  * @param res
-  * @returns Email sent success
+  * @returns User's verification email sent status
   */
   @Post('/verification-mail')
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @ApiOperation({ summary: 'Send verification email', description: 'Send verification email to new user' })
-  async create(@Body() userEmailVerificationDto: UserEmailVerificationDto, @Res() res: Response): Promise<Response> {
-    await this.authzService.sendVerificationMail(userEmailVerificationDto);
+  async create(@Body() userEmailVerification: UserEmailVerificationDto, @Res() res: Response): Promise<Response> {
+    await this.authzService.sendVerificationMail(userEmailVerification);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.user.success.sendVerificationCode

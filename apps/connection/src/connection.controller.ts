@@ -4,7 +4,7 @@ import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs mic
 import {
   IConnection,
   IConnectionDetailsById,
-  IConnectionInterface,
+  ICreateConnection,
   IFetchConnectionById,
   IFetchConnections
 } from './interfaces/connection.interfaces';
@@ -35,12 +35,12 @@ export class ConnectionController {
   }
 
   /**
-   * Description: Catch connection webhook responses and save details in connection table
-   * @param payload
+   * Receive connection webhook responses and save details in connection table
+   * @param orgId
    * @returns Callback URL for connection and created connections details
    */
   @MessagePattern({ cmd: 'webhook-get-connection' })
-  async getConnectionWebhook(payload: IConnectionInterface): Promise<object> {
+  async getConnectionWebhook(payload: ICreateConnection): Promise<object> {
     return this.connectionService.getConnectionWebhook(payload);
   }
 

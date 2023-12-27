@@ -17,9 +17,9 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
+import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { ApiResponseDto } from '../dtos/apiResponse.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -135,29 +135,28 @@ export class ConnectionController {
 
     }
 
-
     /**
       * Catch connection webhook responses. 
       * @Body connectionDto
-      * @param id 
-      * @param res
+      * @param orgId 
+      * @returns Callback URL for connection and created connections details
       */
 
-    @Post('wh/:id/connections/')
+    @Post('wh/:orgId/connections/')
     @ApiExcludeEndpoint()
     @ApiOperation({
         summary: 'Catch connection webhook responses',
         description: 'Callback URL for connection'
     })
-    @ApiResponse({ status: 200, description: 'Success', type: AuthTokenResponse })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async getConnectionWebhook(
         @Body() connectionDto: ConnectionDto,
-        @Param('id') id: string,
+        @Param('orgId') orgId: string,
         @Res() res: Response
-    ): Promise<object> {
-        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${id}`);
-        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, id);
-        const finalResponse: IResponseType = {
+    ): Promise<Response> {
+        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
+        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.connection.success.create,
             data: connectionData

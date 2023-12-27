@@ -5,6 +5,7 @@ import { IAgentStatus, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchem
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { ISendProofRequestPayload } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
+import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Controller()
@@ -44,8 +45,7 @@ export class AgentServiceController {
 
 
   @MessagePattern({ cmd: 'agent-create-connection-legacy-invitation' })
-  async createLegacyConnectionInvitation(payload: { connectionPayload: IConnectionDetails, url: string, apiKey: string }): Promise<object> {
-
+  async createLegacyConnectionInvitation(payload: { connectionPayload: IConnectionDetails, url: string, apiKey: string }): Promise<ICreateConnectionUrl> {
     return this.agentServiceService.createLegacyConnectionInvitation(payload.connectionPayload, payload.url, payload.apiKey);
   }
 

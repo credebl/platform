@@ -134,7 +134,7 @@ export class AgentServiceService {
    * @returns Get agent status
    */
   async walletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<IAgentSpinUpSatus> {
-    let agentProcess: org_agents;
+    let agentProcess: ICreateOrgAgent;
     try {
 
       // Invoke an internal function to create wallet
@@ -158,6 +158,7 @@ export class AgentServiceService {
     let agentProcess: ICreateOrgAgent;
     let getOrgAgent;
     try {
+
       const [platformConfig, getAgentType, ledgerIdData] = await Promise.all([
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
@@ -167,30 +168,41 @@ export class AgentServiceService {
       let orgData;
       if (!user?.userId && agentSpinupDto?.platformAdminEmail) {
 
-        /**
-         * Get Platform admin user by platform admin email
-         */
+
+        // Get Platform admin user by platform admin email
         platformAdminUser = await this.agentServiceRepository.getPlatfomAdminUser(agentSpinupDto?.platformAdminEmail);
 
         userId = platformAdminUser?.id;
       } else {
-        userId = user?.userId;
+        userId = user?.id;
       }
 
+      // Get platform org
       const platformAdminOrgDetails = await this.agentServiceRepository.getPlatfomOrg(agentSpinupDto?.orgName);
+
       if (agentSpinupDto.orgId) {
+
+        // Get organization details
         getOrgAgent = await this.agentServiceRepository.getAgentDetails(agentSpinupDto.orgId);
+
+        // Get organization data by orgId
         orgData = await this.agentServiceRepository.getOrgDetails(agentSpinupDto.orgId);
       } else {
+
+        // Get platform organization details
         getOrgAgent = await this.agentServiceRepository.getAgentDetails(platformAdminOrgDetails);
+
+        // Get platform organization data by orgId
         orgData = await this.agentServiceRepository.getOrgDetails(platformAdminOrgDetails);
       }
 
       agentSpinupDto.ledgerId = agentSpinupDto.ledgerId?.length ? agentSpinupDto.ledgerId : ledgerIdData.map(ledger => ledger?.id);
+
+      // Get genesis URL and ledger details
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
 
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error(`Your wallet has already been created`);
+        this.logger.error(`Your wallet is already been created`);
         throw new BadRequestException(
           ResponseMessages.agent.error.walletAlreadyCreated,
           { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
@@ -205,7 +217,6 @@ export class AgentServiceService {
         );
       }
 
-
       if (!agentSpinupDto.orgId) {
 
         if (platformAdminOrgDetails) {
@@ -217,23 +228,19 @@ export class AgentServiceService {
       agentSpinupDto.tenant = agentSpinupDto.tenant || false;
       agentSpinupDto.ledgerName = agentSpinupDto.ledgerName?.length ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet];
 
-      /**
-       * Invoke function for validate platform configuration
-       */
+
+      // Invoke function for validate platform configuration
       this.validatePlatformConfig(platformConfig);
 
       const externalIp = platformConfig?.externalIp;
       const controllerIp = platformConfig?.lastInternalId !== 'false' ? platformConfig?.lastInternalId : '';
       const apiEndpoint = platformConfig?.apiEndpoint;
 
-      /**
-       * Create payload for the wallet create and store payload
-       */
+      // Create payload for the wallet create and store payload
       const walletProvisionPayload = await this.prepareWalletProvisionPayload(agentSpinupDto, externalIp, apiEndpoint, controllerIp, ledgerDetails, platformConfig, orgData);
 
-      /**
-       * Socket connection
-       */
+
+      // Socket connection
       const socket: Socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
       this.emitAgentSpinupInitiatedEvent(agentSpinupDto, socket);
 
@@ -242,6 +249,7 @@ export class AgentServiceService {
       agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId);
       this.validateAgentProcess(agentProcess);
 
+      // AFJ agent spin-up
       this._agentSpinup(walletProvisionPayload, agentSpinupDto, platformConfig?.sgApiKey, orgData, user, socket, agentSpinupDto.ledgerId, agentProcess);
 
     } catch (error) {

@@ -21,8 +21,10 @@ export class AgentService extends BaseService {
      * @param user 
      * @returns Get agent status
      */
-    async agentSpinup(agentSpinupDto: AgentSpinupDto, user: user): Promise<{ response: object }> {
+    async agentSpinup(agentSpinupDto: AgentSpinupDto, user: user): Promise<AgentSpinUpSatus> {
         const payload = { agentSpinupDto, user };
+
+        // NATS call
         return this.sendNatsMessage(this.agentServiceProxy, 'agent-spinup', payload);
     }
 

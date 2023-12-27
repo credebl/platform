@@ -15,7 +15,21 @@ import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-
+import { join } from 'path';
+import { parse } from 'json2csv';
+import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
+import { parse as paParse } from 'papaparse';
+import { v4 as uuidv4 } from 'uuid';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { orderValues, paginator } from '@credebl/common/common.utils';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
+import { AwsService } from '@credebl/aws';
+import { io } from 'socket.io-client';
+import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
+import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 
 @Injectable()
 export class IssuanceService {
@@ -177,45 +191,15 @@ export class IssuanceService {
   async getIssueCredentials(
     user: IUserRequest,
     orgId: string,
-    issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface
-  ): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      schemaId: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+    issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams
+  ): Promise<IIssuedCredential> {
     try {
       const getIssuedCredentialsList = await this.issuanceRepository.getAllIssuedCredentials(
         user,
         orgId,
         issuedCredentialsSearchCriteria
       );
-      const issuedCredentialsResponse: {
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-        nextPage: number;
-        previousPage: number;
-        lastPage: number;
-        data: {
-          createDateTime: Date;
-          createdBy: string;
-          connectionId: string;
-          schemaId: string;
-          state: string;
-          orgId: string;
-        }[];
-      } = {
+      const issuedCredentialsResponse: IIssuedCredential = {
         totalItems: getIssuedCredentialsList.issuedCredentialsCount,
         hasNextPage:
           issuedCredentialsSearchCriteria.pageSize * issuedCredentialsSearchCriteria.pageNumber < getIssuedCredentialsList.issuedCredentialsCount,
@@ -226,18 +210,14 @@ export class IssuanceService {
         data: getIssuedCredentialsList.issuedCredentialsList
       };
 
-      if (0 !== getIssuedCredentialsList.issuedCredentialsCount) {
-        return issuedCredentialsResponse;
-      } else {
+      if (0 === getIssuedCredentialsList?.issuedCredentialsCount) {
         throw new NotFoundException(ResponseMessages.issuance.error.credentialsNotFound);
       }
+
+      return issuedCredentialsResponse;
     } catch (error) {
-      if (404 === error.status) {
-        throw new NotFoundException(error.response.message);
-      }
-      throw new RpcException(
-        `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
-      );
+      this.logger.error(`Error in fetching issued credentials by org id: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

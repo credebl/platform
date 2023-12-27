@@ -32,6 +32,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Injectable()
 @WebSocketGateway()
@@ -1132,18 +1133,31 @@ export class AgentServiceService {
     }
   }
 
-  async getConnectionsByconnectionId(url: string, apiKey: string): Promise<object> {
+  async getConnectionsByconnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
+    
     try {
       const data = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
-        .then(async response => response);
+      .httpGet(url, { headers: { 'x-api-key': apiKey } })
+      .then(async response => response)
+      .catch(error => {
+        this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
 
-      return data;
+        if (error && Object.keys(error).length === 0) {
+          throw new InternalServerErrorException(
+            ResponseMessages.agent.error.agentDown,
+            { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+          );
+        } else {
+          throw error;
+        }     
+      });  
+    return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
-  }
+    
+  }  
 
   /**
    * Get agent health

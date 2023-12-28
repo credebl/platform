@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload, ProofPresentationPayload } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IProofRequestSearchCriteria, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload, ProofPresentationPayload } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { org_agents, organisation, presentations } from '@prisma/client';
@@ -15,7 +15,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IProofRequestsSearchCriteria } from 'apps/api-gateway/src/verification/interfaces/verification.interface';
+import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 
 @Injectable()
 export class VerificationService {
@@ -41,29 +41,20 @@ export class VerificationService {
   async getProofPresentations(
     user: IUserRequest,
     orgId: string,
-    proofRequestsSearchCriteria: IProofRequestsSearchCriteria
-  ): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+    proofRequestsSearchCriteria: IProofRequestSearchCriteria
+  ): Promise<IProofPresentationList> {
     try {
       const getProofRequestsList = await this.verificationRepository.getAllProofRequests(
         user,
         orgId,
         proofRequestsSearchCriteria
       );
-      const issuedCredentialsResponse: {
+
+      if (0 === getProofRequestsList.proofRequestsCount) {
+        throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
+      }
+
+      const proofPresentationsResponse: {
         totalItems: number;
         hasNextPage: boolean;
         hasPreviousPage: boolean;
@@ -76,6 +67,8 @@ export class VerificationService {
           connectionId: string;
           state: string;
           orgId: string;
+          presentationId: string;
+          id: string;
         }[];
       } = {
         totalItems: getProofRequestsList.proofRequestsCount,
@@ -88,30 +81,15 @@ export class VerificationService {
         data: getProofRequestsList.proofRequestsList
       };
 
-      if (0 !== getProofRequestsList.proofRequestsCount) {
-        return issuedCredentialsResponse;
-      } else {
-        throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
-      }
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      //   let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      //   this.logger.log(`cachedApiKey----${apiKey}`);
-      //  if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-      //    apiKey = await this._getOrgAgentApiKey(orgId);
-      //   }
-      //   const payload = { apiKey, url };
-      //   const getProofPresentationsDetails = await this._getProofPresentations(payload);
-      //   return getProofPresentationsDetails?.response;
+        return proofPresentationsResponse;
+     } catch (error) {
 
-    } catch (error) {
-      if (404 === error.status) {
-        throw new NotFoundException(error.response.message);
-      }
-      throw new RpcException(
-        `[getConnections] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
-      );
-    }
-  }
+        this.logger.error(
+       `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
+    );
+      throw new RpcException(error.response ? error.response : error);      
+  } 
+}
 
   /**
    * Consume agent API for get all proof presentations

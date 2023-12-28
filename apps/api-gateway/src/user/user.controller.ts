@@ -29,7 +29,7 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { Response } from 'express';
 import { CommonService } from '@credebl/common';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponse from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { user } from '@prisma/client';
 import { AuthGuard } from '@nestjs/passport';
@@ -136,7 +136,7 @@ export class UserController {
     @Res() res: Response
   ): Promise<Response> {
     const users = await this.userService.get(getAllUsersDto);
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchUsers,
       data: users.response
@@ -159,7 +159,7 @@ export class UserController {
   async getPublicProfile(@Param('username') username: string, @Res() res: Response): Promise<object> {
     const userData = await this.userService.getPublicProfile(username);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchProfile,
       data: userData.response
@@ -178,7 +178,7 @@ export class UserController {
   async getProfile(@User() reqUser: user, @Res() res: Response): Promise<Response> {
     const userData = await this.userService.getProfile(reqUser.id);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchProfile,
       data: userData
@@ -187,6 +187,9 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  /**
+   * @returns platform and ecosystem settings
+   */
   @Get('/platform-settings')
   @ApiOperation({
     summary: 'Get all platform and ecosystem settings',
@@ -201,7 +204,7 @@ export class UserController {
     const finalResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchPlatformSettings,
-      data: settings.response
+      data: settings
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -222,7 +225,7 @@ export class UserController {
   ): Promise<Response> {
     const userDetails = await this.userService.getUserActivities(reqUser.id, limit);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.userActivity,
       data: userDetails
@@ -273,7 +276,7 @@ export class UserController {
       getAllInvitationsDto
     );
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchInvitations,
       data: invitations.response
@@ -292,7 +295,7 @@ export class UserController {
   async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
     const userDetails = await this.userService.checkUserExist(emailParam.email);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.checkEmail,
       data: userDetails
@@ -300,17 +303,20 @@ export class UserController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
+  /**
+   * @param credentialId
+   * @returns User credentials
+   */
   @Get('/user-credentials/:credentialId')
   @ApiOperation({ summary: 'Get user credentials by Id', description: 'Get user credentials by Id' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getUserCredentialsById (@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getUserCredentialsById(@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
     const getUserCrdentialsById = await this.userService.getUserCredentialsById(credentialId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.userCredentials,
-      data: getUserCrdentialsById.response
+      data: getUserCrdentialsById
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -333,33 +339,36 @@ export class UserController {
     acceptRejectInvitation.invitationId = invitationId;
     const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: invitationRes.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-
+  /** 
+   * @Body shareUserCredentials
+   * @returns User certificate url
+   */
   @Post('/certificate')
   @ApiOperation({
     summary: 'Share user certificate',
     description: 'Share user certificate'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async shareUserCertificate(
     @Body() shareUserCredentials: CreateUserCertificateDto,
     @Res() res: Response
-  ): Promise<object> {  
+  ): Promise<Response> {  
     const schemaIdParts = shareUserCredentials.schemaId.split(':');
     // eslint-disable-next-line prefer-destructuring
     const title = schemaIdParts[2];
 
    const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
-      const finalResponse: IResponseType = {
+      const finalResponse: IResponse = {
         statusCode: HttpStatus.CREATED,
-        message: 'Certificate url generated successfully',
+        message: ResponseMessages.user.success.shareUserCertificate,
         label: title,
-        data: imageBuffer.response
+        data: imageBuffer
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -381,7 +390,7 @@ export class UserController {
     updateUserProfileDto.id = userId;
     await this.userService.updateUserProfile(updateUserProfileDto);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.update
     };
@@ -407,6 +416,11 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  /**
+   * @Body platformSettings
+   * @returns platform and ecosystem settings updated status
+   */
+  
   @Put('/platform-settings')
   @ApiOperation({
     summary: 'Update platform and ecosystem settings',
@@ -423,7 +437,7 @@ export class UserController {
 
     const finalResponse = {
       statusCode: HttpStatus.OK,
-      message: result.response
+      message: result
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

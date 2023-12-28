@@ -18,7 +18,8 @@ export const ResponseMessages = {
             userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched',
-            signUpUser:'User created successfully'
+            signUpUser:'User created successfully',
+            shareUserCertificate:'Certificate url generated successfully'
         },
         error: {
             exists: 'User already exists',

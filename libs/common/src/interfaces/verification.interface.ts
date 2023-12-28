@@ -1,4 +1,4 @@
-export interface IProofsPresentationsListCount {
+export interface IProofPresentationsListCount {
     proofRequestsCount: number;
     proofRequestsList: IProofPresentationItem[];
   }

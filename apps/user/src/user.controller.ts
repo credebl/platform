@@ -73,8 +73,10 @@ export class UserController {
   async findUserByEmail(payload: { email }): Promise<object> {
     return this.userService.findUserByEmail(payload);
   }
-
-
+  /**
+   * @param credentialId
+   * @returns User credentials
+   */
   @MessagePattern({ cmd: 'get-user-credentials-by-id' })
   async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
     return this.userService.getUserCredentialsById(payload);
@@ -99,9 +101,8 @@ export class UserController {
   }
 
   /**
-   *
    * @param payload
-   * @returns Share user certificate
+   * @returns User certificate url
    */
   @MessagePattern({ cmd: 'share-user-certificate' })
   async shareUserCertificate(payload: {
@@ -157,12 +158,16 @@ export class UserController {
   async addPasskey(payload: { userEmail: string, userInfo: AddPasskeyDetails }): Promise<string | object> {
     return this.userService.addPasskey(payload.userEmail, payload.userInfo);
   }
-
+ /**
+   * @returns platform and ecosystem settings updated status
+   */
   @MessagePattern({ cmd: 'update-platform-settings' })
   async updatePlatformSettings(payload: { platformSettings: PlatformSettings }): Promise<string> {
     return this.userService.updatePlatformSettings(payload.platformSettings);
   }
-
+  /**
+   * @returns platform and ecosystem settings
+   */
   @MessagePattern({ cmd: 'fetch-platform-settings' })
   async getPlatformEcosystemSettings(): Promise<object> {
     return this.userService.getPlatformEcosystemSettings();

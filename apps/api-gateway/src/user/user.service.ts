@@ -72,7 +72,7 @@ export class UserService extends BaseService {
     shareUserCredentials: CreateUserCertificateDto
   ): Promise<{ response: Buffer }> {
     const payload = { shareUserCredentials};
-    return this.sendNats(this.serviceProxy, 'share-user-certificate', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', payload);
   }
   
   async get(
@@ -100,10 +100,10 @@ export class UserService extends BaseService {
 
   async updatePlatformSettings(platformSettings: UpdatePlatformSettingsDto): Promise<{ response: string }> {
     const payload = { platformSettings };
-    return this.sendNats(this.serviceProxy, 'update-platform-settings', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'update-platform-settings', payload);
   }
 
   async getPlatformSettings(): Promise<{ response: object }> {
-    return this.sendNats(this.serviceProxy, 'fetch-platform-settings', '');
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-platform-settings', '');
   }
 }

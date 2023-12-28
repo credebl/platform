@@ -346,7 +346,8 @@ export interface ICreateOrgAgent {
 
 interface IOrgAgentEndPoint {
     agentSpinUpStatus: number;
-    agentEndPoint: string
+    agentEndPoint: string;
+    apiKey;
 }
 
 export interface IOrgAgentsResponse {

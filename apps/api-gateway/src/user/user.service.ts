@@ -6,12 +6,13 @@ import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { AddPasskeyDetails } from './dto/add-user.dto';
+import { AddPasskeyDetailsDtoDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -35,9 +36,9 @@ export class UserService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-user-credentials-by-id', payload);
   }
 
-  async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<{ response: object }> {
+  async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<user> {
     const payload = { updateUserProfileDto };
-    return this.sendNats(this.serviceProxy, 'update-user-profile', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'update-user-profile', payload);
   }
   
   async getPublicProfile(id: number): Promise<{ response: object }> {
@@ -94,9 +95,9 @@ export class UserService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'get-user-activity', payload);
   }
 
-  async addPasskey(userEmail: string, userInfo: AddPasskeyDetails): Promise<{ response: string }> {
+  async addPasskey(userEmail: string, userInfo: AddPasskeyDetailsDtoDto): Promise<{ response: string }> {
     const payload = { userEmail, userInfo };
-    return this.sendNats(this.serviceProxy, 'add-passkey', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'add-passkey', payload);
   }
 
   async updatePlatformSettings(platformSettings: UpdatePlatformSettingsDto): Promise<{ response: string }> {

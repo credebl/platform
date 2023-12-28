@@ -33,7 +33,7 @@ export class UserService extends BaseService {
 
   async getUserCredentialsById(credentialId: string): Promise<{ response: object }> {
     const payload = { credentialId };
-    return this.sendNats(this.serviceProxy, 'get-user-credentials-by-id', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-user-credentials-by-id', payload);
   }
 
   async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<user> {
@@ -43,7 +43,7 @@ export class UserService extends BaseService {
 
   async findUserinSupabase(id: string): Promise<{ response: object }> {
     const payload = { id };
-    return this.sendNats(this.serviceProxy, 'get-user-by-supabase', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-user-by-supabase', payload);
   }
 
 
@@ -58,7 +58,7 @@ export class UserService extends BaseService {
     userId: string
   ): Promise<{ response: string }> {
     const payload = { acceptRejectInvitation, userId };
-    return this.sendNats(this.serviceProxy, 'accept-reject-invitations', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'accept-reject-invitations', payload);
   }
 
   async shareUserCertificate(

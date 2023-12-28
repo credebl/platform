@@ -607,7 +607,6 @@ export class AgentServiceService {
       throw error;
     }
   }
-
   
   async _createLegacyConnectionInvitation(orgId: string, user: IUserRequestInterface, label: string): Promise<{
     response;
@@ -1091,11 +1090,26 @@ export class AgentServiceService {
     try {
       const getProofPresentationById = await this.commonService
         .httpGet(url, { headers: { 'authorization': apiKey } })
-        .then(async response => response);
+        .then(async response => response)
+        .catch(error => {
+          this.logger.error(`Error in getProofPresentationById in agent service : ${JSON.stringify(error)}`);
+
+          if (error && Object.keys(error).length === 0) {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
+          } else {
+            throw error;
+          }
+        });
+
       return getProofPresentationById;
     } catch (error) {
       this.logger.error(`Error in proof presentation by id in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      // throw error;
+      throw new RpcException(error.response ? error.response : error);
+
     }
   }
 

@@ -27,15 +27,14 @@ export class VerificationService extends BaseService {
     }
 
     /**
-     * Get proof presentation by id
-     * @param id 
+     * Get proof presentation by proofId
+     * @param proofId 
      * @param orgId 
-     * @param user 
-     * @returns Get proof presentation details
+     * @returns proof presentation details
      */
-    getProofPresentationById(id: string, orgId: string, user: IUserRequest): Promise<{ response: object }> {
-        const payload = { id, orgId, user };
-        return this.sendNats(this.verificationServiceProxy, 'get-proof-presentations-by-id', payload);
+    getProofPresentationById(proofId: string, orgId: string, user: IUserRequest): Promise<object> {
+        const payload = { proofId, orgId, user };
+        return this.sendNatsMessage(this.verificationServiceProxy, 'get-proof-presentations-by-id', payload);
     }
 
     /**

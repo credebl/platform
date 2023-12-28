@@ -24,7 +24,7 @@ export interface IGetAllProofPresentations {
     apiKey: string;
 }
 
-export interface IGetProofPresentationById {
+export interface IProofPresentationById {
     url: string;
     apiKey: string;
 }

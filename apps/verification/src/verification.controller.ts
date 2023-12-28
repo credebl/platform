@@ -22,9 +22,9 @@ export class VerificationController {
   }
 
   /**
-   * Get proof presentation by id
+   * Get proof presentation by proofId
    * @param payload 
-   * @returns Get proof presentation details
+   * @returns Proof presentation details
    */
   @MessagePattern({ cmd: 'get-proof-presentations-by-id' })
   async getProofPresentationById(payload: { id: string, orgId: string, user: IUserRequest }): Promise<string> {

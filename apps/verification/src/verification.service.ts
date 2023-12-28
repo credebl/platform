@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { org_agents, organisation, presentations } from '@prisma/client';
@@ -109,20 +109,19 @@ export class VerificationService {
   }
 
   /**
-   * Get proof presentation by id
-   * @param id 
+   * Get proof presentation by proofId
+   * @param proofId 
    * @param orgId 
-   * @param user 
-   * @returns Get proof presentation details
+   * @returns Proof presentation details
    */
-  async getProofPresentationById(id: string, orgId: string): Promise<string> {
+  async getProofPresentationById(proofId: string, orgId: string): Promise<string> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
 
       const verificationMethodLabel = 'get-proof-presentation-by-id';
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
+      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', proofId);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -139,9 +138,9 @@ export class VerificationService {
   /**
    * Consume agent API for get proof presentation by id
    * @param payload 
-   * @returns Get proof presentation details
+   * @returns Proof presentation details
    */
-  async _getProofPresentationById(payload: IGetProofPresentationById): Promise<{
+  async _getProofPresentationById(payload: IProofPresentationById): Promise<{
     response: string;
   }> {
     try {

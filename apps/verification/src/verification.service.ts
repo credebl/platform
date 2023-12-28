@@ -412,12 +412,12 @@ export class VerificationService {
 
 
   async sendOutOfBandProofRequest(payload: IProofRequestPayload, email: string, getAgentDetails: org_agents, organizationDetails: organisation): Promise<boolean> {
-    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    this.logger.log(`cachedApiKey----${apiKey}`);
-    if (!apiKey || null === apiKey || undefined === apiKey) {
-      apiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
+    let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    this.logger.log(`cachedApiKey----${agentApiKey}`);
+    if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
+      agentApiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
     }
-    payload.apiKey = apiKey;
+    payload.apiKey = agentApiKey;
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
 
     if (!getProofPresentation) {
@@ -479,7 +479,7 @@ export class VerificationService {
         cmd: 'agent-send-out-of-band-proof-request'
       };
 
-      return await this.natsCall(pattern, payload);
+      return this.natsCall(pattern, payload);
 
     } catch (error) {
       this.logger.error(`[_sendOutOfBandProofRequest] - error in Out Of Band Presentation : ${JSON.stringify(error)}`);

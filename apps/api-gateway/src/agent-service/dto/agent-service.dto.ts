@@ -5,8 +5,6 @@ import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLen
 const regex = /^[a-zA-Z0-9 ]*$/;
 export class AgentSpinupDto {
 
-    orgId: string;
-
     @ApiProperty()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'walletName is required' })
@@ -21,10 +19,11 @@ export class AgentSpinupDto {
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))
+    @IsString({ message: 'walletPassword must be in string format.' })
     @IsNotEmpty({ message: 'Password is required.' })
     walletPassword: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: 'dfuhgfklskmjngrjekjfgjjfkoekfdad' })
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'seed is required' })
     @MaxLength(32, { message: 'seed must be at most 32 characters.' })
@@ -34,45 +33,31 @@ export class AgentSpinupDto {
     })
     seed: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
     @IsOptional()
+    @ApiPropertyOptional()
     @IsString({ message: 'did must be in string format.' })
     did?: string;
 
-    @ApiProperty({ example: [1] })
+    @ApiProperty({ example: ['6ba7b810-9dad-11d1-80b4-00c04fd430c8'] })
     @IsOptional()
+    @ApiPropertyOptional()
     @IsArray({ message: 'ledgerId must be an array' })
+    @IsString({ each: true, message: 'Each ledgerId must be a string' })
+    @MaxLength(36, { each: true, message: 'ledgerId must be at most 36 characters.' })
     @IsNotEmpty({ message: 'please provide valid ledgerId' })
     ledgerId?: string[];
 
-    @ApiProperty()
+    @ApiProperty({ example: 'ojIckSD2jqNzOqIrAGzL' })
     @IsOptional()
     @ApiPropertyOptional()
     clientSocketId?: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: true })
     @IsOptional()
     @IsBoolean()
     @ApiPropertyOptional()
     tenant?: boolean;
 
-    @ApiProperty()
-    @IsOptional()
-    @ApiPropertyOptional()
-    @Transform(({ value }) => trim(value))
-    @IsNotEmpty({ message: 'agentType is required' })
-    @MinLength(2, { message: 'agentType must be at least 2 characters.' })
-    @MaxLength(50, { message: 'agentType must be at most 50 characters.' })
-    @IsString({ message: 'agentType must be in string format.' })
-    agentType?: string;
-
-    @ApiProperty()
-    @IsOptional()
-    @ApiPropertyOptional()
-    @Transform(({ value }) => trim(value))
-    @IsNotEmpty({ message: 'transactionApproval is required' })
-    @MinLength(2, { message: 'transactionApproval must be at least 2 characters.' })
-    @MaxLength(50, { message: 'transactionApproval must be at most 50 characters.' })
-    @IsString({ message: 'transactionApproval must be in string format.' })
-    transactionApproval?: string;
+    orgId: string;
 }

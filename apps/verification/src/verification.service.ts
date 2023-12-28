@@ -110,27 +110,8 @@ export class VerificationService {
     response: string;
   }> {
     try {
-
-      const pattern = {
-        cmd: 'agent-get-proof-presentations'
-      };
-
-      return this.verificationServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      const pattern = { cmd: 'agent-get-proof-presentations' };
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_getProofPresentations] - error in get proof presentations : ${JSON.stringify(error)}`);
       throw error;
@@ -181,22 +162,7 @@ export class VerificationService {
         cmd: 'agent-get-proof-presentation-by-id'
       };
 
-      return this.verificationServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_getProofPresentationById] - error in get proof presentation by id : ${JSON.stringify(error)}`);
       throw error;
@@ -282,22 +248,7 @@ export class VerificationService {
         cmd: 'agent-send-proof-request'
       };
 
-      return this.verificationServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_sendProofRequest] - error in verify presentation : ${JSON.stringify(error)}`);
       throw error;
@@ -347,22 +298,8 @@ export class VerificationService {
         cmd: 'agent-verify-presentation'
       };
 
-      return this.verificationServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      return await this.natsCall(pattern, payload);
+
     } catch (error) {
       this.logger.error(`[_verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
       throw error;
@@ -536,22 +473,8 @@ export class VerificationService {
         cmd: 'agent-send-out-of-band-proof-request'
       };
 
-      return this.verificationServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      return await this.natsCall(pattern, payload);
+
     } catch (error) {
       this.logger.error(`[_sendOutOfBandProofRequest] - error in Out Of Band Presentation : ${JSON.stringify(error)}`);
       throw error;
@@ -857,22 +780,7 @@ export class VerificationService {
         cmd: 'agent-proof-form-data'
       };
 
-      return this.verificationServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_getProofFormData] - error in proof form data : ${JSON.stringify(error)}`);
       throw error;
@@ -905,6 +813,32 @@ export class VerificationService {
       });
 
     } else {
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async natsCall(pattern: object, payload: object): Promise<{
+    response: string;
+  }> {
+    try {
+      return this.verificationServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

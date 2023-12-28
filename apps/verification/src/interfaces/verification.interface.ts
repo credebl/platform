@@ -125,16 +125,16 @@ export interface ProofPresentationPayload {
 }
 
 export interface IProofRequests {
-    proofRequestsSearchCriteria: IProofRequestsSearchCriteria;
+    proofRequestsSearchCriteria: IProofRequestSearchCriteria;
     user: IUserRequest;
     orgId: string;
   }
 
-export interface IProofRequestsSearchCriteria {
+export interface IProofRequestSearchCriteria {
     pageNumber: number;
     pageSize: number;
-    sorting: string;
-    sortByValue: string;
+    sortField: string;
+    sortBy: string;
     searchByText: string;
   }  
   

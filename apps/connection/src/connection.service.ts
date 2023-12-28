@@ -14,7 +14,8 @@ import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
-import { platform_config } from '@prisma/client';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
@@ -24,8 +25,9 @@ export class ConnectionService {
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
     private readonly connectionRepository: ConnectionRepository,
-    private readonly logger: Logger
-  ) {}
+    private readonly logger: Logger,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
+  ) { }
 
   /**
    * Create connection legacy invitation URL
@@ -43,7 +45,6 @@ export class ConnectionService {
       }
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
@@ -66,8 +67,14 @@ export class ConnectionService {
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = platformConfig?.sgApiKey;
 
+      const apiKey = await this._getOrgAgentApiKey(orgId);
+      // let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      // this.logger.log(`cachedApiKey----getConnections,${apiKey}`);
+      //if(!apiKey || apiKey === null || apiKey === undefined) {
+      //  apiKey = await this._getOrgAgentApiKey(orgId);
+      // }
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
       let shortenedUrl;
@@ -266,7 +273,7 @@ export class ConnectionService {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
+      // const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
@@ -284,9 +291,16 @@ export class ConnectionService {
         throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
       }
 
-      const apiKey = platformConfig?.sgApiKey;
-      const getConnectionDetailsByConnectionId = await this._getConnectionsByConnectionId(url, apiKey);
-      return getConnectionDetailsByConnectionId;
+
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----getConnectionsById,${apiKey}`);
+     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
+       apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
+      return createConnectionInvitation;
+     
 
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
@@ -348,4 +362,22 @@ export class ConnectionService {
       throw error;
     }
   }
+
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
 }
+

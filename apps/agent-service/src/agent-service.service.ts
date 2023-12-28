@@ -12,7 +12,8 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException
+  NotFoundException,
+  forwardRef
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import * as dotenv from 'dotenv';
@@ -32,6 +33,8 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
@@ -45,8 +48,8 @@ export class AgentServiceService {
     private readonly agentServiceRepository: AgentServiceRepository,
     private readonly commonService: CommonService,
     private readonly connectionService: ConnectionService,
-    @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy
-
+    @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {
@@ -129,18 +132,26 @@ export class AgentServiceService {
     }
   }
 
-
-  async walletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<{ agentSpinupStatus: number }> {
-    let agentProcess: org_agents;
+  /**
+   * Spinup the agent by organization
+   * @param agentSpinupDto 
+   * @param user 
+   * @returns Get agent status
+   */
+  async walletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<IAgentSpinUpSatus> {
+    let agentProcess: ICreateOrgAgent;
     try {
 
-      this.processWalletProvision(agentSpinupDto, user);
+      // Invoke an internal function to create wallet
+      await this.processWalletProvision(agentSpinupDto, user);
       const agentStatusResponse = {
         agentSpinupStatus: AgentSpinUpStatus.PROCESSED
       };
 
       return agentStatusResponse;
     } catch (error) {
+
+      // Invoke an internal function to handle error to create wallet
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -152,6 +163,7 @@ export class AgentServiceService {
     let agentProcess: ICreateOrgAgent;
     let getOrgAgent;
     try {
+
       const [platformConfig, getAgentType, ledgerIdData] = await Promise.all([
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
@@ -161,33 +173,52 @@ export class AgentServiceService {
       let orgData;
       if (!user?.userId && agentSpinupDto?.platformAdminEmail) {
 
+
+        // Get Platform admin user by platform admin email
         platformAdminUser = await this.agentServiceRepository.getPlatfomAdminUser(agentSpinupDto?.platformAdminEmail);
 
         userId = platformAdminUser?.id;
       } else {
-        userId = user?.userId;
+        userId = user?.id;
       }
 
+      // Get platform org
       const platformAdminOrgDetails = await this.agentServiceRepository.getPlatfomOrg(agentSpinupDto?.orgName);
+
       if (agentSpinupDto.orgId) {
+
+        // Get organization details
         getOrgAgent = await this.agentServiceRepository.getAgentDetails(agentSpinupDto.orgId);
+
+        // Get organization data by orgId
         orgData = await this.agentServiceRepository.getOrgDetails(agentSpinupDto.orgId);
       } else {
+
+        // Get platform organization details
         getOrgAgent = await this.agentServiceRepository.getAgentDetails(platformAdminOrgDetails);
+
+        // Get platform organization data by orgId
         orgData = await this.agentServiceRepository.getOrgDetails(platformAdminOrgDetails);
       }
 
       agentSpinupDto.ledgerId = agentSpinupDto.ledgerId?.length ? agentSpinupDto.ledgerId : ledgerIdData.map(ledger => ledger?.id);
+
+      // Get genesis URL and ledger details
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
 
-      if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        throw new BadRequestException('Your wallet has already been created.');
-      }
-
       if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
-        throw new BadRequestException('Your wallet is already processing.');
+        throw new BadRequestException(
+          ResponseMessages.agent.error.walletAlreadyProcessing,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
 
+      if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
+        throw new BadRequestException(
+          ResponseMessages.agent.error.walletAlreadyCreated,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
+      }
 
       if (!agentSpinupDto.orgId) {
 
@@ -200,21 +231,26 @@ export class AgentServiceService {
       agentSpinupDto.tenant = agentSpinupDto.tenant || false;
       agentSpinupDto.ledgerName = agentSpinupDto.ledgerName?.length ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet];
 
+
+      // Invoke function for validate platform configuration
       this.validatePlatformConfig(platformConfig);
 
       const externalIp = platformConfig?.externalIp;
       const controllerIp = platformConfig?.lastInternalId !== 'false' ? platformConfig?.lastInternalId : '';
       const apiEndpoint = platformConfig?.apiEndpoint;
 
+      // Create payload for the wallet create and store payload
       const walletProvisionPayload = await this.prepareWalletProvisionPayload(agentSpinupDto, externalIp, apiEndpoint, controllerIp, ledgerDetails, platformConfig, orgData);
+
+
+      // Socket connection
       const socket: Socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
       this.emitAgentSpinupInitiatedEvent(agentSpinupDto, socket);
 
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
-      /* eslint-disable no-param-reassign */
       agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId);
-      this.validateAgentProcess(agentProcess);
 
+      // AFJ agent spin-up
       this._agentSpinup(walletProvisionPayload, agentSpinupDto, platformConfig?.sgApiKey, orgData, user, socket, agentSpinupDto.ledgerId, agentProcess);
 
     } catch (error) {
@@ -225,26 +261,46 @@ export class AgentServiceService {
 
   validatePlatformConfig(platformConfig: platform_config): void {
     if (!platformConfig) {
-      throw new BadRequestException('Platform configuration is missing or invalid.');
+      this.logger.error(`Platform configuration is missing or invalid`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.platformConfiguration,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     if (!platformConfig.apiEndpoint) {
-      throw new BadRequestException('API endpoint is missing in the platform configuration.');
+      this.logger.error(`API endpoint is missing in the platform configuration`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.apiEndpoint,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     if (!platformConfig.externalIp) {
-      throw new BadRequestException('External IP is missing in the platform configuration.');
+      this.logger.error(`External IP is missing in the platform configuration`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.externalIp,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
 
     if (typeof platformConfig.externalIp !== 'string') {
-      throw new BadRequestException('External IP must be a string.');
+      this.logger.error(`External IP must be a string`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.externalIp,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
     }
   }
 
   validateAgentProcess(agentProcess: ICreateOrgAgent): void {
     try {
       if (!agentProcess) {
-        throw new BadRequestException('Agent process is invalid or not in a completed state.');
+        this.logger.error(`Agent process is invalid or not in a completed state`);
+        throw new BadRequestException(
+          ResponseMessages.agent.error.externalIp,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
     } catch (error) {
       this.logger.error(`Error validating agent process: ${error.message}`);
@@ -301,7 +357,8 @@ export class AgentServiceService {
       indyLedger: escapedJsonString,
       afjVersion: process.env.AFJ_VERSION || '',
       protocol: process.env.AGENT_PROTOCOL || '',
-      tenant: agentSpinupDto.tenant || false
+      tenant: agentSpinupDto.tenant || false,
+      apiKey: agentSpinupDto.apiKey
     };
 
     return walletProvisionPayload;
@@ -356,16 +413,25 @@ export class AgentServiceService {
 
   async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket: Socket, ledgerId: string[], agentProcess: ICreateOrgAgent): Promise<void> {
     try {
+
+      /**
+       * Invoke wallet create and provision with agent 
+       */
       const walletProvision = await this._walletProvision(walletProvisionPayload);
 
       if (!walletProvision?.response) {
-        throw new BadRequestException('Agent not able to spin-up');
+        this.logger.error(`Agent not able to spin-up`);
+        throw new BadRequestException(
+          ResponseMessages.agent.error.notAbleToSpinup,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
+      const agentDetails = walletProvision.response;
+      const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.agentEndPoint}`;
 
-      const agentDetails = JSON.parse(walletProvision.response);
-
-      const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.CONTROLLER_ENDPOINT}`;
-
+      /**
+       * Socket connection
+       */
       const socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
 
       if (agentEndPoint && agentSpinupDto.clientSocketId) {
@@ -377,7 +443,7 @@ export class AgentServiceService {
       const agentPayload: IStoreOrgAgentDetails = {
         agentEndPoint,
         seed: agentSpinupDto.seed,
-        apiKey: orgApiKey,
+        apiKey: agentDetails.agentToken,
         agentsTypeId: agentSpinupDto?.agentType,
         orgId: orgData.id,
         walletName: agentSpinupDto.walletName,
@@ -387,9 +453,25 @@ export class AgentServiceService {
         id: agentProcess?.id
       };
 
+      /**
+       * Store organization agent details 
+       */
       const storeAgentDetails = await this._storeOrgAgentDetails(agentPayload);
 
       if (storeAgentDetails) {
+
+        const filePath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgData.id}_${orgData.name.split(' ').join('_')}.json`;
+        if (agentDetails?.agentToken) {
+          fs.unlink(filePath, (err) => {
+            if (err) {
+              this.logger.error(`Error removing file: ${err.message}`);
+              throw new InternalServerErrorException(err.message);
+            } else {
+              this.logger.log(`File ${filePath} has been removed successfully`);
+            }
+          });
+        }
+
         if (agentSpinupDto.clientSocketId) {
           socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
         }
@@ -402,7 +484,11 @@ export class AgentServiceService {
           socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
         }
       } else {
-        throw new BadRequestException('Agent not able to spin-up');
+        this.logger.error(`Agent not able to spin-up`);
+        throw new BadRequestException(
+          ResponseMessages.agent.error.notAbleToSpinup,
+          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+        );
       }
     } catch (error) {
       if (agentSpinupDto.clientSocketId) {
@@ -410,6 +496,9 @@ export class AgentServiceService {
       }
 
       if (agentProcess && agentProcess?.id) {
+        /**
+         * If getting error remove organization agent 
+         */
         await this.agentServiceRepository.removeOrgAgent(agentProcess?.id);
       }
       this.logger.error(`[_agentSpinup] - Error in Agent spin up : ${JSON.stringify(error)}`);
@@ -418,13 +507,28 @@ export class AgentServiceService {
 
   async _storeOrgAgentDetails(payload: IStoreOrgAgentDetails): Promise<object> {
     try {
+
+      /**
+       * Get orgaization agent type and agent details
+       */
       const [agentDid, orgAgentTypeId] = await Promise.all([
         this._getAgentDid(payload),
         this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED)
       ]);
 
+      /**
+       * Get DID method by agent
+       */
       const getDidMethod = await this._getDidMethod(payload, agentDid);
+
+      /**
+       * Organization storage data
+       */
       const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, getDidMethod, orgAgentTypeId);
+
+      /**
+       * Store org agent details
+       */
       const storeAgentDid = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
       return storeAgentDid;
@@ -433,6 +537,7 @@ export class AgentServiceService {
       throw error;
     }
   }
+
 
   private async _getAgentDid(payload: IStoreOrgAgentDetails): Promise<object> {
     const { agentEndPoint, apiKey, seed, ledgerId, did } = payload;
@@ -461,7 +566,8 @@ export class AgentServiceService {
       agentId: payload.agentId,
       orgAgentTypeId,
       ledgerId: payload.ledgerId,
-      id: payload?.id
+      id: payload.id,
+      apiKey: payload.apiKey
     };
   }
 
@@ -492,9 +598,9 @@ export class AgentServiceService {
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
-          return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'x-api-key': apiKey } });
+          return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });
         } else if (agentApiState === 'get-did-doc') {
-          return this.commonService.httpGet(agentUrl, { headers: { 'x-api-key': apiKey } });
+          return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
         }
       }, retryOptions);
     } catch (error) {
@@ -745,13 +851,12 @@ export class AgentServiceService {
       method: ledgerIds.indyNamespace
     };
 
-    const apiKey = '';
 
     // Invoke an API request from the agent to create multi-tenant agent
     const tenantDetails = await this.commonService.httpPost(
       `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
       createTenantOptions,
-      { headers: { 'x-api-key': apiKey } }
+      { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
     );
 
     this.logger.debug(`API Response Data: ${JSON.stringify(tenantDetails)}`);
@@ -797,7 +902,7 @@ export class AgentServiceService {
           name: payload.name,
           issuerId: payload.issuerId
         };
-        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'x-api-key': payload.apiKey } })
+        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
@@ -818,7 +923,7 @@ export class AgentServiceService {
           name: payload.payload.name,
           issuerId: payload.payload.issuerId
         };
-        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'x-api-key': payload.apiKey } })
+        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
@@ -852,7 +957,7 @@ export class AgentServiceService {
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`.replace('@', `${payload.payload.schemaId}`).replace('#', `${payload.tenantId}`);
 
-        schemaResponse = await this.commonService.httpGet(url, { headers: { 'x-api-key': payload.apiKey } })
+        schemaResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
@@ -878,7 +983,7 @@ export class AgentServiceService {
           issuerId: payload.issuerId
         };
 
-        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'x-api-key': payload.apiKey } })
+        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
@@ -891,7 +996,7 @@ export class AgentServiceService {
           schemaId: payload.payload.schemaId,
           issuerId: payload.payload.issuerId
         };
-        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'x-api-key': payload.apiKey } })
+        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
@@ -919,7 +1024,7 @@ export class AgentServiceService {
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
-        credDefResponse = await this.commonService.httpGet(url, { headers: { 'x-api-key': payload.apiKey } })
+        credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
@@ -935,8 +1040,9 @@ export class AgentServiceService {
   async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<ICreateConnectionUrl> {
     try {
 
+
       const data = await this.commonService
-        .httpPost(url, connectionPayload, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, connectionPayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
 
       return data;
@@ -949,7 +1055,7 @@ export class AgentServiceService {
   async sendCredentialCreateOffer(issueData: IIssuanceCreateOffer, url: string, apiKey: string): Promise<object> {
     try {
       const data = await this.commonService
-        .httpPost(url, issueData, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, issueData, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return data;
     } catch (error) {
@@ -960,7 +1066,7 @@ export class AgentServiceService {
   async getProofPresentations(url: string, apiKey: string): Promise<object> {
     try {
       const getProofPresentationsData = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response);
 
       return getProofPresentationsData;
@@ -973,7 +1079,7 @@ export class AgentServiceService {
   async getIssueCredentials(url: string, apiKey: string): Promise<object> {
     try {
       const data = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return data;
     } catch (error) {
@@ -984,7 +1090,7 @@ export class AgentServiceService {
   async getProofPresentationById(url: string, apiKey: string): Promise<object> {
     try {
       const getProofPresentationById = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return getProofPresentationById;
     } catch (error) {
@@ -996,7 +1102,7 @@ export class AgentServiceService {
   async getIssueCredentialsbyCredentialRecordId(url: string, apiKey: string): Promise<object> {
     try {
       const data = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return data;
     } catch (error) {
@@ -1008,7 +1114,7 @@ export class AgentServiceService {
   async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
     try {
       const sendProofRequest = await this.commonService
-        .httpPost(url, proofRequestPayload, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, proofRequestPayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return sendProofRequest;
     } catch (error) {
@@ -1020,7 +1126,7 @@ export class AgentServiceService {
   async verifyPresentation(url: string, apiKey: string): Promise<object> {
     try {
       const verifyPresentation = await this.commonService
-        .httpPost(url, '', { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, '', { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return verifyPresentation;
     } catch (error) {
@@ -1032,7 +1138,7 @@ export class AgentServiceService {
   async getConnections(url: string, apiKey: string): Promise<object> {
     try {
       const data = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return data;
     } catch (error) {
@@ -1042,30 +1148,30 @@ export class AgentServiceService {
   }
 
   async getConnectionsByconnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
-    
+
     try {
       const data = await this.commonService
-      .httpGet(url, { headers: { 'x-api-key': apiKey } })
-      .then(async response => response)
-      .catch(error => {
-        this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .then(async response => response)
+        .catch(error => {
+          this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
 
-        if (error && Object.keys(error).length === 0) {
-          throw new InternalServerErrorException(
-            ResponseMessages.agent.error.agentDown,
-            { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
-          );
-        } else {
-          throw error;
-        }     
-      });  
-    return data;
+          if (error && Object.keys(error).length === 0) {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
+          } else {
+            throw error;
+          }
+        });
+      return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
-    
-  }  
+
+  }
 
   /**
    * Get agent health
@@ -1077,6 +1183,19 @@ export class AgentServiceService {
 
       // Get organization agent details
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+
+      let agentApiKey;
+      if (orgAgentDetails) {
+
+        agentApiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+        if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
+          agentApiKey = await this.getOrgAgentApiKey(orgId);
+        }
+
+        if (agentApiKey === undefined || null) {
+          agentApiKey = await this.getOrgAgentApiKey(orgId);
+        }
+      }
 
       if (!orgAgentDetails) {
         throw new NotFoundException(
@@ -1094,7 +1213,7 @@ export class AgentServiceService {
 
       // Invoke an API request from the agent to assess its current status
       const agentHealthData = await this.commonService
-        .httpGet(`${orgAgentDetails.agentEndPoint}${CommonConstants.URL_AGENT_STATUS}`, { headers: { 'x-api-key': '' } })
+        .httpGet(`${orgAgentDetails.agentEndPoint}${CommonConstants.URL_AGENT_STATUS}`, { headers: { 'authorization': agentApiKey } })
         .then(async response => response);
 
       return agentHealthData;
@@ -1108,7 +1227,7 @@ export class AgentServiceService {
   async sendOutOfBandProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
     try {
       const sendProofRequest = await this.commonService
-        .httpPost(url, proofRequestPayload, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, proofRequestPayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return sendProofRequest;
     } catch (error) {
@@ -1120,7 +1239,7 @@ export class AgentServiceService {
   async getProofFormData(url: string, apiKey: string): Promise<object> {
     try {
       const getProofFormData = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return getProofFormData;
     } catch (error) {
@@ -1132,7 +1251,7 @@ export class AgentServiceService {
   async schemaEndorsementRequest(url: string, apiKey: string, requestSchemaPayload: object): Promise<object> {
     try {
       const schemaRequest = await this.commonService
-        .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, requestSchemaPayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return schemaRequest;
     } catch (error) {
@@ -1144,7 +1263,7 @@ export class AgentServiceService {
   async credDefEndorsementRequest(url: string, apiKey: string, requestSchemaPayload: object): Promise<object> {
     try {
       const credDefRequest = await this.commonService
-        .httpPost(url, requestSchemaPayload, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, requestSchemaPayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return credDefRequest;
     } catch (error) {
@@ -1156,7 +1275,7 @@ export class AgentServiceService {
   async signTransaction(url: string, apiKey: string, signEndorsementPayload: object): Promise<object> {
     try {
       const signEndorsementTransaction = await this.commonService
-        .httpPost(url, signEndorsementPayload, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, signEndorsementPayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
 
       return signEndorsementTransaction;
@@ -1170,7 +1289,7 @@ export class AgentServiceService {
     try {
 
       const signEndorsementTransaction = await this.commonService
-        .httpPost(url, submitEndorsementPayload, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, submitEndorsementPayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
 
       return signEndorsementTransaction;
@@ -1183,7 +1302,7 @@ export class AgentServiceService {
   async outOfBandCredentialOffer(outOfBandIssuancePayload: IOutOfBandCredentialOffer, url: string, apiKey: string): Promise<object> {
     try {
       const sendOutOfbandCredentialOffer = await this.commonService
-        .httpPost(url, outOfBandIssuancePayload, { headers: { 'x-api-key': apiKey } })
+        .httpPost(url, outOfBandIssuancePayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return sendOutOfbandCredentialOffer;
     } catch (error) {
@@ -1198,12 +1317,44 @@ export class AgentServiceService {
   ): Promise<object> {
     try {
       const deleteWallet = await this.commonService
-        .httpDelete(url, { headers: { 'x-api-key': apiKey } })
+        .httpDelete(url, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return deleteWallet;
     } catch (error) {
       this.logger.error(`Error in delete wallet in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error);
+    }
+  }
+
+  async getOrgAgentApiKey(orgId: string): Promise<string> {
+    try {
+      let agentApiKey;
+      const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
+
+      const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
+      if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
+
+        const [orgAgentData] = platformAdminSpinnedUp.org_agents;
+        const { apiKey } = orgAgentData;
+        if (!platformAdminSpinnedUp) {
+          throw new InternalServerErrorException('Agent not able to spin-up');
+        }
+
+        agentApiKey = apiKey;
+      } else {
+        agentApiKey = orgAgentApiKey?.apiKey;
+      }
+
+      if (!agentApiKey) {
+        throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
+      }
+      await this.cacheService.set(CommonConstants.CACHE_APIKEY_KEY, agentApiKey, CommonConstants.CACHE_TTL_SECONDS);
+      return agentApiKey;
+
+    } catch (error) {
+      this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 }

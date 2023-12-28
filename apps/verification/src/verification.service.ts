@@ -479,7 +479,7 @@ export class VerificationService {
         cmd: 'agent-send-out-of-band-proof-request'
       };
 
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
 
     } catch (error) {
       this.logger.error(`[_sendOutOfBandProofRequest] - error in Out Of Band Presentation : ${JSON.stringify(error)}`);

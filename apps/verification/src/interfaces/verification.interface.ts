@@ -133,8 +133,8 @@ export interface IProofRequests {
 export interface IProofRequestsSearchCriteria {
     pageNumber: number;
     pageSize: number;
-    sorting: string;
-    sortByValue: string;
+    sortField: string;
+    sortBy: string;
     searchByText: string;
   }  
   

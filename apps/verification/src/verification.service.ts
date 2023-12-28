@@ -695,10 +695,10 @@ export class VerificationService {
         for (const key in requestedAttributes) {
 
           if (requestedAttributes.hasOwnProperty(key)) {
-            const attribute = requestedAttributes[key];
-            const attributeName = attribute.name;
-            const credDefId = attribute?.restrictions[0]?.cred_def_id;
-            const schemaId = attribute?.restrictions[0]?.schema_id;
+            const requestedAttributeKey = requestedAttributes[key];
+            const attributeName = requestedAttributeKey.name;
+            const credDefId = requestedAttributeKey?.restrictions[0]?.cred_def_id;
+            const schemaId = requestedAttributeKey?.restrictions[0]?.schema_id;
 
             if (revealedAttrs.hasOwnProperty(key)) {
               const extractedData = {

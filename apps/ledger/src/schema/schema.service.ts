@@ -11,7 +11,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { schema } from '@prisma/client';
-import { ISchema, ISchemaPayload, ISchemaSearchCriteria } from './interfaces/schema-payload.interface';
+import { ISchema, ISchemaCredDeffSearchInterface, ISchemaPayload, ISchemaSearchCriteria } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
@@ -20,6 +20,8 @@ import { OrgAgentType } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+
 @Injectable()
 export class SchemaService extends BaseService {
   constructor(
@@ -336,49 +338,32 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getSchemas(schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: string): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      version: string;
-      attributes: string;
-      schemaLedgerId: string;
-      publisherDid: string;
-      issuerId: string;
-      orgId: string;
-    }[];
-  }> {
+  async getSchemas(schemaSearchCriteria: ISchemaSearchCriteria, orgId: string): Promise<ISchemasWithPagination> {
     try {
       const response = await this.schemaRepository.getSchemas(schemaSearchCriteria, orgId);
 
+      if (0 === response.schemasCount) {
+        throw new NotFoundException(ResponseMessages.schema.error.notFound);
+      } 
+      
       const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
       });
 
-      const schemasResponse = {
+      const nextPage:number = Number(schemaSearchCriteria.pageNumber) + 1;      
+
+      const schemasResponse: ISchemasWithPagination = {
         totalItems: response.schemasCount,
         hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.schemasCount,
         hasPreviousPage: 1 < schemaSearchCriteria.pageNumber,
-        nextPage: schemaSearchCriteria.pageNumber + 1,
+        nextPage,
         previousPage: schemaSearchCriteria.pageNumber - 1,
         lastPage: Math.ceil(response.schemasCount / schemaSearchCriteria.pageSize),
         data: schemasDetails
       };
 
-      if (0 !== response.schemasCount) {
-        return schemasResponse;
-      } else {
-        throw new NotFoundException(ResponseMessages.schema.error.notFound);
-      }
-
+      return schemasResponse;
 
     } catch (error) {
       this.logger.error(`Error in retrieving schemas by org id: ${error}`);
@@ -386,38 +371,29 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ISchemaSearchCriteria, user: IUserRequestInterface, orgId: string): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      tag: string;
-      credentialDefinitionId: string;
-      schemaLedgerId: string;
-      revocable: boolean;
-    }[];
-  }> {
+  async getcredDeffListBySchemaId(
+    payload: ISchemaCredDeffSearchInterface
+    ): Promise<ICredDefWithPagination> {
+    const { schemaSearchCriteria } = payload;
+    
     try {
-      const response = await this.schemaRepository.getSchemasCredDeffList(schemaSearchCriteria, orgId, schemaId);
+      const response = await this.schemaRepository.getSchemasCredDeffList(schemaSearchCriteria);
+      
+      if (0 === response.credDefCount) {
+        throw new NotFoundException(ResponseMessages.schema.error.credentialDefinitionNotFound);
+      } 
+
       const schemasResponse = {
-        totalItems: response.length,
-        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.length,
+        totalItems: response.credDefCount,
+        hasNextPage: schemaSearchCriteria.pageSize * schemaSearchCriteria.pageNumber < response.credDefCount,
         hasPreviousPage: 1 < schemaSearchCriteria.pageNumber,
         nextPage: schemaSearchCriteria.pageNumber + 1,
         previousPage: schemaSearchCriteria.pageNumber - 1,
-        lastPage: Math.ceil(response.length / schemaSearchCriteria.pageSize),
-        data: response
+        lastPage: Math.ceil(response.credDefCount / schemaSearchCriteria.pageSize),
+        data: response.credDefResult
       };
 
-      if (0 !== response.length) {
-        return schemasResponse;
-      } else {
-        throw new NotFoundException(ResponseMessages.schema.error.credentialDefinitionNotFound);
-      }
-
+      return schemasResponse;
 
     } catch (error) {
       this.logger.error(`Error in retrieving credential definition: ${error}`);

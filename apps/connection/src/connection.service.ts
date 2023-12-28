@@ -5,18 +5,19 @@ import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@n
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
-  ConnectionInvitationResponse,
-  IConnectionInterface,
+  IConnection,
+  IConnectionInvitation,
   IConnectionSearchCriteria,
-  IUserRequestInterface
+  ICreateConnection
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
-// import { platform_config } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Injectable()
 export class ConnectionService {
@@ -29,30 +30,21 @@ export class ConnectionService {
   ) { }
 
   /**
-   * Description: create connection legacy invitation
+   * Create connection legacy invitation URL
    * @param orgId
    * @param user
    * @returns Connection legacy invitation URL
    */
-  async createLegacyConnectionInvitation(
-    orgId: string,
-    user: IUserRequestInterface,
-    multiUseInvitation: boolean,
-    autoAcceptConnection: boolean,
-    alias: string,
-    imageUrl: string,
-    label: string
-  ): Promise<object> {
+  async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
+
+    const {orgId, multiUseInvitation, autoAcceptConnection, alias, label} = payload;
     try {
       const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
-
       if (connectionInvitationExist) {
         return connectionInvitationExist;
       }
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-
-      // const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
@@ -84,9 +76,7 @@ export class ConnectionService {
       //  apiKey = await this._getOrgAgentApiKey(orgId);
       // }
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
-
       let shortenedUrl;
       if (agentDetails?.tenantId) {
         shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationObject}`;
@@ -99,7 +89,6 @@ export class ConnectionService {
         agentId,
         orgId
       );
-
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
@@ -117,12 +106,11 @@ export class ConnectionService {
   }
 
   /**
-   * Description: create connection legacy invitation
+   * Description: Catch connection webhook responses and save details in connection table
    * @param orgId
-   * @param user
-   * @returns Connection legacy invitation URL
+   * @returns Callback URL for connection and created connections details
    */
-  async getConnectionWebhook(payload: IConnectionInterface): Promise<object> {
+  async getConnectionWebhook(payload: ICreateConnection): Promise<object> {
     try {
       const saveConnectionDetails = await this.connectionRepository.saveConnectionWebhook(payload);
       return saveConnectionDetails;
@@ -133,16 +121,17 @@ export class ConnectionService {
   }
 
   /**
-   * Description: Store shortening URL
-   * @param referenceId
-   * @param url
+   * Store shortening URL
+   * @param orgId
    * @returns connection invitation URL
    */
   async _createConnectionInvitation(
     connectionPayload: object,
     url: string,
     apiKey: string
-  ): Promise<ConnectionInvitationResponse> {
+  ): Promise<IConnectionInvitation> {
+
+    //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
     const payload = { connectionPayload, url, apiKey };
 
@@ -197,28 +186,18 @@ export class ConnectionService {
     user: IUserRequest,
     orgId: string,
     connectionSearchCriteria: IConnectionSearchCriteria
-  ): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      theirLabel: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+  ): Promise<IConnectionList> {
     try {
       const getConnectionList = await this.connectionRepository.getAllConnections(
         user,
         orgId,
         connectionSearchCriteria
       );
+
+      if (0 === getConnectionList.connectionCount) {
+        throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
+      }
+
       const connectionResponse: {
         totalItems: number;
         hasNextPage: boolean;
@@ -244,20 +223,15 @@ export class ConnectionService {
         lastPage: Math.ceil(getConnectionList.connectionCount / connectionSearchCriteria.pageSize),
         data: getConnectionList.connectionsList
       };
-
-      if (0 !== getConnectionList.connectionCount) {
         return connectionResponse;
-      } else {
-        throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
-      }
     } catch (error) {
-;      if (404 === error.status) {
-        throw new NotFoundException(error.response.message);
-      }
-      throw new RpcException(
+
+      this.logger.error(
         `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
       );
-    }
+
+      throw new RpcException(error.response ? error.response : error);      
+    } 
   }
 
   async _getAllConnections(
@@ -295,7 +269,7 @@ export class ConnectionService {
     }
   }
 
-  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<string> {
+  async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<IConnectionDetailsById> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
@@ -325,16 +299,17 @@ export class ConnectionService {
        apiKey = await this._getOrgAgentApiKey(orgId);
       }
       const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
-      return createConnectionInvitation?.response;
+      return createConnectionInvitation;
+     
+
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
 
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.response?.error?.reason)  {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: ResponseMessages.connection.error.connectionNotFound,
+          statusCode: error?.response?.status,
+          error: error?.response?.error?.reason
         });
       } else {
         throw new RpcException(error.response ? error.response : error);
@@ -345,37 +320,27 @@ export class ConnectionService {
   async _getConnectionsByConnectionId(
     url: string,
     apiKey: string
-  ): Promise<{
-    response: string;
-  }> {
-    try {
-      const pattern = { cmd: 'agent-get-connections-by-connectionId' };
+  ): Promise<IConnectionDetailsById> {
+
+      //nats call in agent service for fetch connection details
+      const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
       const payload = { url, apiKey };
       return this.connectionServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
+        .send<IConnectionDetailsById>(pattern, payload)
         .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
+        .catch(error => {
+          this.logger.error(
+                `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
+              );         
+            throw new HttpException(
             {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
+              status: error.statusCode,  
+              error: error.error?.message?.error ? error.error?.message?.error : error.error,
+              message: error.message
+            }, error.error);
         });
-    } catch (error) {
-      this.logger.error(
-        `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
-      );
-      throw error;
-    }
   }
+  
   /**
    * Description: Fetch agent url
    * @param referenceId

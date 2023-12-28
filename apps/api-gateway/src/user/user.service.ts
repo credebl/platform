@@ -9,6 +9,8 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetails } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
+import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
+import { IUsersActivity } from 'libs/user-activity/interface';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -16,14 +18,14 @@ export class UserService extends BaseService {
     super('User Service');
   }
 
-  async getProfile(id: string): Promise<{ response: object }> {
+  async getProfile(id: string): Promise<IUsersProfile> {
     const payload = { id };
-    return this.sendNats(this.serviceProxy, 'get-user-profile', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-user-profile', payload);
   }
 
   async getPublicProfile(username: string): Promise<{ response: object }> {
-    const payload = { username };
-    return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
+  const payload = { username };
+  return this.sendNatsMessage(this.serviceProxy, 'get-user-public-profile', payload);
   }
 
 
@@ -69,17 +71,17 @@ export class UserService extends BaseService {
   ): Promise<{ response: object }> {
     const { pageNumber, pageSize, search } = getAllUsersDto;
     const payload = { pageNumber, pageSize, search };
-    return this.sendNats(this.serviceProxy, 'fetch-users', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-users', payload);
   }
 
-  async checkUserExist(userEmail: string): Promise<{ response: string }> {
+  async checkUserExist(userEmail: string): Promise<ICheckUserDetails> {
     const payload = { userEmail };
-    return this.sendNats(this.serviceProxy, 'check-user-exist', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'check-user-exist', payload);
   }
 
-  async getUserActivities(userId: string, limit: number): Promise<{ response: object }> {
+  async getUserActivities(userId: string, limit: number): Promise<IUsersActivity[]> {
     const payload = { userId, limit };
-    return this.sendNats(this.serviceProxy, 'get-user-activity', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-user-activity', payload);
   }
 
   async addPasskey(userEmail: string, userInfo: AddPasskeyDetails): Promise<{ response: string }> {

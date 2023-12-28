@@ -22,15 +22,39 @@ export interface Organisation {
   logoUrl: string;
 }
 
-export interface UsersProfile {
-    id?: string;
-    username?: string;
-    email?: string;
-    firstName?: string;
-    lastName?: string;
-    supabaseUserId?: string;
-    userOrgRoles?: object;
-  }
+export interface IUsersProfile {
+  id: string;
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  supabaseUserId?: string;
+  userOrgRoles?: IUserOrgRole[];
+}
+
+interface IUserOrgRole {
+  id:  string;
+  userId:  string;
+  orgRoleId:  string;
+  orgId:  string;
+  orgRole :IOrgRole;
+  organisation:IOrganisation;
+}
+  export interface IOrgRole{
+    id:  string;
+      name: string;
+      description: string;
+  };
+  export interface IOrganisation{
+    id:  string;
+    name: string;
+    description: string;
+    orgSlug: string;
+    logoUrl: string;
+    website: string;
+    publicProfile: boolean;
+  };
+
   
   export interface OrgInvitations {
     id: string;
@@ -43,12 +67,12 @@ export interface UsersProfile {
     orgRoles: string[];
   }
   
-  export interface UserEmailVerificationDto {
+export interface ISendVerificationEmail {
     email: string;
     username?: string;
   }
   
-  export interface userInfo {
+  export interface IUserInformation {
     email: string;
     password: string;
     firstName: string;
@@ -88,11 +112,11 @@ export interface UsersProfile {
     label: string;
   }
   
-  export interface CheckUserDetails {
+  export interface ICheckUserDetails {
+    isExist: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
     isSupabase?: boolean;
-    isExist?: boolean;
   }
 
   export interface UserCredentials {
@@ -103,3 +127,62 @@ export interface UsersProfile {
     lastChangedDateTime: Date;
     deletedAt: Date;
   }
+
+  export interface IOrgUsers {
+    totalPages: number,
+    users: OrgUser[]
+  }
+
+  interface OrgUser {
+    id: string;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    isEmailVerified: boolean;
+    userOrgRoles: UserOrgRoles[];
+  }
+
+  interface UserOrgRoles {
+    id: string;
+    orgId: string;
+    orgRoleId: string;
+    orgRole: OrgRole;
+    organisation: Organization
+  }
+
+  interface Organization {
+    id: string,
+    name: string,
+    description: string,
+    orgSlug: string,
+    logoUrl: string,
+    org_agents: OrgAgents[];
+  }
+
+  interface OrgAgents {
+    id: string,
+    orgDid: string,
+    walletName: string,
+    agentSpinUpStatus: number,
+    agentsTypeId: string,
+    createDateTime: Date,
+    orgAgentTypeId:string
+  }
+
+  export interface Payload {
+    pageNumber: number;
+    pageSize: number;
+    search: string;
+  }
+
+export interface IVerifyUserEmail{
+  email: string;
+  verificationCode: string;
+}
+
+export interface  IUserSignIn{
+  email: string;
+  password: string;
+  isPasskey: boolean;
+}

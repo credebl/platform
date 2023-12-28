@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, UserCredentials, IUsersProfile, UserInvitations, IUserInformation, IUserSignIn} from '../interfaces/user.interface';
+import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, IUserCredentials, IUsersProfile, IUserInformation, IUserSignIn} from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -8,7 +8,7 @@ import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
 
 @Controller()
 export class UserController {
@@ -73,12 +73,15 @@ export class UserController {
    * @returns User credentials
    */
   @MessagePattern({ cmd: 'get-user-credentials-by-id' })
-  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<IUserCredentials> {
     return this.userService.getUserCredentialsById(payload);
   }
 
+  /**
+   * @returns Organization invitation data
+   */
   @MessagePattern({ cmd: 'get-org-invitations' })
-  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UserInvitations> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<IUserInvitations> {
         return this.userService.invitations(payload);
   }
 
@@ -97,7 +100,7 @@ export class UserController {
 
   /**
    * @param payload
-   * @returns User certificate url
+   * @returns User certificate URL
    */
   @MessagePattern({ cmd: 'share-user-certificate' })
   async shareUserCertificate(payload: {

@@ -457,6 +457,7 @@ export class UserService {
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
+
       
       const invitationsData = await this.getOrgInvitations(
         userData.email,
@@ -464,10 +465,11 @@ export class UserService {
         payload.pageNumber,
         payload.pageSize,
         payload.search
-      );
-      
-      const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
-      invitationsData['invitations'] = invitations;
+        );
+       
+        const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
+        invitationsData['invitations'] = invitations;
+
       return invitationsData;
       
     } catch (error) {
@@ -510,6 +512,8 @@ export class UserService {
   }
 
   async updateOrgInvitations(invitations: OrgInvitations[]): Promise<OrgInvitations[]> {
+
+    
     const updatedInvitations = [];
 
     for (const invitation of invitations) {
@@ -546,10 +550,6 @@ export class UserService {
     }
   }
 
-  /**
-   *
-   * @returns
-   */
   async shareUserCertificate(shareUserCertificate: ShareUserCertificate): Promise<string> {
 
     const attributeArray = [];

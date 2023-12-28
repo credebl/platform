@@ -37,6 +37,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
 
 @Injectable()
 @WebSocketGateway()
@@ -1236,15 +1237,29 @@ export class AgentServiceService {
     }
   }
 
-  async getProofFormData(url: string, apiKey: string): Promise<object> {
+  async getVerifiedProofDetails(url: string, apiKey: string): Promise<IProofPresentationDetails[]> {
     try {
-      const getProofFormData = await this.commonService
+      const getVerifiedProofData = await this.commonService
         .httpGet(url, { headers: { 'authorization': apiKey } })
-        .then(async response => response);
-      return getProofFormData;
+        .then(async response => response)
+        .catch(error => {
+          this.logger.error(`Error in getVerifiedProofs in agent service : ${JSON.stringify(error)}`);
+
+          if (error && Object.keys(error).length === 0) {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
+          } else {
+            throw error;
+          }
+        });
+
+      return getVerifiedProofData;
     } catch (error) {
-      this.logger.error(`Error in get proof form data in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`Error in get verified proof details in agent service : ${JSON.stringify(error)}`);
+      // throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

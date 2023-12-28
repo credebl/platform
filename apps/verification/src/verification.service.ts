@@ -143,7 +143,7 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[getProofPresentationById] - error in get proof presentation by id : ${JSON.stringify(error)}`);
-      await this.verificationErrorHandling(error);
+      this.verificationErrorHandling(error);
     }
   }
 
@@ -228,7 +228,7 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
-      await this.verificationErrorHandling(error);
+      this.verificationErrorHandling(error);
     }
   }
 
@@ -277,7 +277,7 @@ export class VerificationService {
       return getProofPresentationById?.response;
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
-      await this.verificationErrorHandling(error);
+      this.verificationErrorHandling(error);
     }
   }
 
@@ -368,7 +368,7 @@ export class VerificationService {
       return true;
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
-      await this.verificationErrorHandling(error);
+      this.verificationErrorHandling(error);
     }
   }
 
@@ -759,7 +759,7 @@ export class VerificationService {
       return extractedDataArray;
     } catch (error) {
       this.logger.error(`[getProofFormData] - error in get proof form data : ${JSON.stringify(error)}`);
-      await this.verificationErrorHandling(error);
+      this.verificationErrorHandling(error);
     }
   }
 

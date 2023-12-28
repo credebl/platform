@@ -284,7 +284,7 @@ export class VerificationController {
         const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.fetch,
+            message: ResponseMessages.verification.success.create,
             data: webhookProofPresentation
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);

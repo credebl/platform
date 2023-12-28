@@ -113,7 +113,7 @@ export interface ISendVerificationEmail {
   }
   
   export interface ICheckUserDetails {
-    isRegistered: boolean;
+    isRegistrationCompleted: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
     isAuthenticated?: boolean;

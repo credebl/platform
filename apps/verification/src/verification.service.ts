@@ -799,14 +799,14 @@ export class VerificationService {
   }
 
   verificationErrorHandling(error): void {
-    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+    if (!error && !error?.status && !error?.status?.message && !error?.status?.message?.error) {
+      
+      throw new RpcException(error.response ? error.response : error);
+    } else {
       throw new RpcException({
         message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
         statusCode: error?.status?.code
       });
-
-    } else {
-      throw new RpcException(error.response ? error.response : error);
     }
   }
 

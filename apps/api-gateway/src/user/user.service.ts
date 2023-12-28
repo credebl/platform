@@ -6,7 +6,7 @@ import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { AddPasskeyDetailsDtoDto } from './dto/add-user.dto';
+import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
@@ -95,7 +95,7 @@ export class UserService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'get-user-activity', payload);
   }
 
-  async addPasskey(userEmail: string, userInfo: AddPasskeyDetailsDtoDto): Promise<{ response: string }> {
+  async addPasskey(userEmail: string, userInfo: AddPasskeyDetailsDto): Promise<{ response: string }> {
     const payload = { userEmail, userInfo };
     return this.sendNatsMessage(this.serviceProxy, 'add-passkey', payload);
   }

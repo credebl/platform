@@ -57,7 +57,7 @@ import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
-import { AddPasskeyDetailsDtoDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
+import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Injectable()
 export class UserService {
@@ -323,7 +323,7 @@ export class UserService {
     }
   }
 
-  async addPasskey(email: string, userInfo: AddPasskeyDetailsDtoDto): Promise<string> {
+  async addPasskey(email: string, userInfo: AddPasskeyDetailsDto): Promise<string> {
     try {
       if (!email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);

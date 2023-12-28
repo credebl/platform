@@ -41,7 +41,7 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { AddPasskeyDetailsDtoDto } from './dto/add-user.dto';
+import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { EmailValidator } from '../dtos/email-validator.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { Roles } from '../authz/decorators/roles.decorator';
@@ -377,7 +377,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async addPasskey(
-    @Body() userInfo: AddPasskeyDetailsDtoDto,
+    @Body() userInfo: AddPasskeyDetailsDto,
     @Param('email') email: string,
     @Res() res: Response
   ): Promise<Response> {

@@ -190,10 +190,9 @@ export class AgentServiceRepository {
         });
     }
 
-
     async getAgentTypeDetails(): Promise<string> {
         try {
-            const { id } = await this.prisma.agents_type.findFirst({
+            const { id } = await this.prisma.agents_type.findFirstOrThrow({
                 where: {
                     agent: AgentType.AFJ
                 }
@@ -250,7 +249,7 @@ export class AgentServiceRepository {
 
     async getPlatfomOrg(orgName: string): Promise<string> {
         try {
-            const { id } = await this.prisma.organisation.findFirst({
+            const { id } = await this.prisma.organisation.findFirstOrThrow({
                 where: {
                     name: orgName
                 }

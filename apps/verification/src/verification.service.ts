@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { org_agents, organisation, presentations } from '@prisma/client';
@@ -13,7 +13,7 @@ import { OutOfBandVerification } from '../templates/out-of-band-verification.tem
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IProofRequestsSearchCriteria } from 'apps/api-gateway/src/verification/interfaces/verification.interface';
+import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 
 @Injectable()
 export class VerificationService {
@@ -38,29 +38,20 @@ export class VerificationService {
   async getProofPresentations(
     user: IUserRequest,
     orgId: string,
-    proofRequestsSearchCriteria: IProofRequestsSearchCriteria
-  ): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+    proofRequestsSearchCriteria: IProofRequestSearchCriteria
+  ): Promise<IProofPresentationList> {
     try {
       const getProofRequestsList = await this.verificationRepository.getAllProofRequests(
         user,
         orgId,
         proofRequestsSearchCriteria
       );
-      const issuedCredentialsResponse: {
+
+      if (0 === getProofRequestsList.proofRequestsCount) {
+        throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
+      }
+
+      const proofPresentationsResponse: {
         totalItems: number;
         hasNextPage: boolean;
         hasPreviousPage: boolean;
@@ -73,6 +64,8 @@ export class VerificationService {
           connectionId: string;
           state: string;
           orgId: string;
+          presentationId: string;
+          id: string;
         }[];
       } = {
         totalItems: getProofRequestsList.proofRequestsCount,
@@ -85,20 +78,15 @@ export class VerificationService {
         data: getProofRequestsList.proofRequestsList
       };
 
-      if (0 !== getProofRequestsList.proofRequestsCount) {
-        return issuedCredentialsResponse;
-      } else {
-        throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
-      }
-    } catch (error) {
-      if (404 === error.status) {
-        throw new NotFoundException(error.response.message);
-      }
-      throw new RpcException(
-        `[getConnections] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
-      );
-    }
-  }
+        return proofPresentationsResponse;
+     } catch (error) {
+
+        this.logger.error(
+       `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
+    );
+      throw new RpcException(error.response ? error.response : error);      
+  } 
+}
 
   /**
    * Consume agent API for get all proof presentations

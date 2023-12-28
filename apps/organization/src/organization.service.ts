@@ -21,6 +21,8 @@ import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboar
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 @Injectable()
 export class OrganizationService {
@@ -32,7 +34,8 @@ export class OrganizationService {
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
   /**
@@ -103,7 +106,7 @@ export class OrganizationService {
 
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
-      updateOrgDto.userId  = userId;
+      updateOrgDto.userId = userId;
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
@@ -185,7 +188,7 @@ export class OrganizationService {
   async getPublicProfile(payload: { orgSlug: string }): Promise<IGetOrgById> {
     const { orgSlug } = payload;
     try {
-      
+
       const query = {
         orgSlug,
         publicProfile: true
@@ -254,7 +257,7 @@ export class OrganizationService {
    */
 
 
-  async getOrgRoles(): Promise< IOrgRoles[]> {
+  async getOrgRoles(): Promise<IOrgRoles[]> {
     try {
       return this.orgRoleService.getOrgRoles();
     } catch (error) {
@@ -504,7 +507,12 @@ export class OrganizationService {
   async deleteOrganization(orgId: string): Promise<boolean> {
     try {
       const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
-
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       let url;
       if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {
         url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
@@ -515,7 +523,7 @@ export class OrganizationService {
 
       const payload = {
         url,
-        apiKey: getAgent.apiKey
+        apiKey
       };
 
       const deleteWallet = await this._deleteWallet(payload);
@@ -565,10 +573,28 @@ export class OrganizationService {
     }
   }
 
+
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.organizationServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
   async deleteOrganizationInvitation(orgId: string, invitationId: string): Promise<boolean> {
-    try {      
+    try {
       const invitationDetails = await this.organizationRepository.getInvitationById(invitationId);
-      
+
       // Check invitation is present
       if (!invitationDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);

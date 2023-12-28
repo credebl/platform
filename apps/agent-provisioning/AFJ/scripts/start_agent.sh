@@ -1,3 +1,5 @@
+#!/bin/bash
+
 START_TIME=$(date +%s)
 
 AGENCY=$1
@@ -207,8 +209,13 @@ if [ $? -eq 0 ]; then
     fi
     cat <<EOF >>${ENDPOINT}
     {
-        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
-        "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
+        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}"
+    }
+EOF
+
+    cat <<EOF >>${PWD}/token/${AGENCY}_${CONTAINER_NAME}.json
+    {
+        "token" : "$token"
     }
 EOF
     echo "Agent config created"

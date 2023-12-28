@@ -370,7 +370,7 @@ export class EcosystemController {
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    await this.ecosystemService.submitTransaction(endorsementId, ecosystemId);
+    await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.submit

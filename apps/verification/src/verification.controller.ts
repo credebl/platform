@@ -4,6 +4,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { IProofRequests, IRequestProof, ProofFormData, ProofPresentationPayload } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { presentations } from '@prisma/client';
+import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 
 @Controller()
 export class VerificationController {
@@ -14,8 +15,8 @@ export class VerificationController {
    * @param payload 
    * @returns Get all proof presentation
    */
-  @MessagePattern({ cmd: 'get-proof-presentations' })
-  async getProofPresentations(payload: IProofRequests): Promise<object> {
+  @MessagePattern({ cmd: 'get-all-proof-presentations' })
+  async getProofPresentations(payload: IProofRequests): Promise<IProofPresentationList> {
     const { user, orgId, proofRequestsSearchCriteria} = payload;
     return this.verificationService.getProofPresentations(user, orgId, proofRequestsSearchCriteria);
   }

@@ -11,8 +11,9 @@ export interface IProofRequestAttribute {
 export interface IProofRequestsSearchCriteria {
     pageNumber: number;
     pageSize: number;
-    sorting: string;
-    sortByValue: string;
+    sortField: string;
+    sortBy: string;
     searchByText: string;
     user?: IUserRequestInterface
 }
+

@@ -226,7 +226,7 @@ export const ResponseMessages = {
     verification: {
         success: {
             fetch: 'Proof presentations details fetched successfully.',
-            create: 'Proof presentations details created successfully.',
+            create: 'Presentation of proof details created successfully.',
             proofFormData: 'Proof presentation form data received successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'

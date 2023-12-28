@@ -20,7 +20,7 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser:'User created successfully',
             shareUserCertificate:'Certificate URL generated successfully',
-            updateUserProfile:'User updated successfully'
+            updateUserProfile:'User profile updated successfully'
         },
         error: {
             exists: 'User already exists',

@@ -787,14 +787,14 @@ export class UserService {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {
-          isRegistered: false
+          isRegistrationCompleted: false
         };
       } else {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
           isAuthenticated: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
-          isRegistered: true
+          isRegistrationCompleted: true
         };
         return userVerificationDetails;
       }

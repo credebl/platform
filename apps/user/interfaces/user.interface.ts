@@ -1,27 +1,3 @@
-export  interface UserInvitations {
-  totalPages:number;
-  userInvitationsData:UserInvitationsData[];
-}
-export  interface UserInvitationsData {
-  orgRoles: OrgRole[];
-  status: string;
-  id: string;
-  orgId: string;
-  organisation: Organisation;
-  userId: string;
-}
-export interface OrgRole {
-  id: string;
-  name: string;
-  description: string;
-}
-
-export interface Organisation {
-  id: string;
-  name: string;
-  logoUrl: string;
-}
-
 export interface IUsersProfile {
   id: string;
   username?: string;
@@ -113,13 +89,13 @@ export interface ISendVerificationEmail {
   }
   
   export interface ICheckUserDetails {
-    isRegistrationCompleted: boolean;
+    isExist: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
-    isAuthenticated?: boolean;
+    isSupabase?: boolean;
   }
 
-  export interface UserCredentials {
+  export interface IUserCredentials {
     id: string;
     imageUrl?: string;
     credentialId?: string;
@@ -150,6 +126,11 @@ export interface ISendVerificationEmail {
     orgRole: OrgRole;
     organisation: Organization
   }
+  interface OrgRole {
+      id: string;
+      name: string;
+      description: string;
+    }
 
   interface OrgRole {
     id: string;

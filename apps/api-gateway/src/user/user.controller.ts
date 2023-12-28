@@ -191,6 +191,9 @@ export class UserController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+  /**
+   * @returns Organization invitation data
+   */
 
   @Get('/org-invitations')
   @ApiOperation({
@@ -223,7 +226,7 @@ export class UserController {
     @Query() getAllInvitationsDto: GetAllInvitationsDto,
     @User() reqUser: user,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
     if (!Object.values(Invitation).includes(getAllInvitationsDto.status)) {
       throw new BadRequestException(ResponseMessages.user.error.invalidInvitationStatus);
     }
@@ -237,7 +240,7 @@ export class UserController {
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchInvitations,
-      data: invitations.response
+      data: invitations
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -310,7 +313,7 @@ export class UserController {
   }
   /** 
    * @Body shareUserCredentials
-   * @returns User certificate url
+   * @returns User certificate URL
    */
   @Post('/certificate')
   @ApiOperation({

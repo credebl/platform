@@ -38,10 +38,9 @@ import {
   PlatformSettingsI,
   ShareUserCertificateI,
   UpdateUserProfile,
-  UserCredentials, 
+  IUserCredentials, 
    IUserInformation,
-    IUsersProfile,
-    UserInvitations
+    IUsersProfile
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -58,7 +57,7 @@ import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
 
 @Injectable()
 export class UserService {
@@ -454,7 +453,7 @@ export class UserService {
     }
   }
 
-  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<IUserCredentials> {
     try {
       const userCredentials = await this.userRepository.getUserCredentialsById(payload.credentialId);
       if (!userCredentials) {
@@ -503,7 +502,7 @@ export class UserService {
     }
   }
 
-  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<UserInvitations> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
       if (!userData) {
@@ -536,7 +535,7 @@ export class UserService {
     pageNumber: number,
     pageSize: number,
     search = ''
-  ): Promise<UserInvitations> {
+  ): Promise<IUserInvitations> {
     const pattern = { cmd: 'fetch-user-invitations' };
     const payload = {
       email,
@@ -787,14 +786,14 @@ export class UserService {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {
-          isRegistrationCompleted: false
+          isExist: false
         };
       } else {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isAuthenticated: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
-          isRegistrationCompleted: true
+          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
+          isExist: true
         };
         return userVerificationDetails;
       }

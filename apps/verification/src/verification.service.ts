@@ -141,11 +141,10 @@ export class VerificationService {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
 
-      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'get-proof-presentation-by-id';
-      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
+      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
+      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -347,9 +346,9 @@ export class VerificationService {
       ]);
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       const verificationMethodLabel = 'create-request-out-of-band';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(outOfBandRequestProof.orgId);

@@ -36,7 +36,7 @@ export class AddUserDetailsDto {
     isPasskey?: boolean;
 }
 
-export class AddPasskeyDetails {
+export class AddPasskeyDetailsDtoDto {
     @ApiProperty()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'Password is required' })

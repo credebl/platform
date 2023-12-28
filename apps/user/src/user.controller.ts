@@ -8,6 +8,7 @@ import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { AddPasskeyDetailsDtoDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Controller()
 export class UserController {
@@ -52,6 +53,9 @@ export class UserController {
   async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     return this.userService.getPublicProfile(payload);
   }
+   /**
+   * @returns User details
+   */
   @MessagePattern({ cmd: 'update-user-profile' })
   async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<user> {
     return this.userService.updateUserProfile(payload.updateUserProfileDto);
@@ -152,7 +156,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'add-passkey' })
-  async addPasskey(payload: { userEmail: string, userInfo: AddPasskeyDetails }): Promise<string | object> {
+  async addPasskey(payload: { userEmail: string, userInfo: AddPasskeyDetailsDtoDto }): Promise<string | object> {
     return this.userService.addPasskey(payload.userEmail, payload.userInfo);
   }
  /**

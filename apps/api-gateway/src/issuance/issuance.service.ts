@@ -40,11 +40,11 @@ export class IssuanceService extends BaseService {
     }
 
 
-    getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<{
+    getIssuedCredentialsByCredentialExchangeId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<{
         response: object;
     }> {
         const payload = { user, credentialRecordId, orgId };
-        return this.sendNats(this.issuanceProxy, 'get-issued-credentials-by-credentialDefinitionId', payload);
+        return this.sendNats(this.issuanceProxy, 'get-issued-credentials-by-credentialExchangeId', payload);
     }
 
     getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: string): Promise<{

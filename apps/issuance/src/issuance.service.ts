@@ -255,7 +255,7 @@ export class IssuanceService {
     }
   }
 
-  async getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<string> {
+  async getIssuedCredentialsByCredentialExchangeId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<string> {
     try {
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -271,16 +271,15 @@ export class IssuanceService {
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
 
       const apiKey = platformConfig?.sgApiKey;
-      const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
+      const createConnectionInvitation = await this._getIssuedCredentialsByCredentialExchangeId(url, apiKey);
       return createConnectionInvitation?.response;
     } catch (error) {
-      this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      this.logger.error(`[getIssuedCredentialsByCredentialExchangeId] - error in get credentials : ${JSON.stringify(error)}`);
+      if (error?.status?.message?.error) {
         throw new RpcException({
           message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
           statusCode: error?.status?.code
         });
-
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
@@ -292,21 +291,21 @@ export class IssuanceService {
       const agentDetails = await this.issuanceRepository.saveIssuedCredentialDetails(payload);
       return agentDetails;
     } catch (error) {
-      this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
+      this.logger.error(`[getIssuedCredentialsByCredentialExchangeId] - error in get credentials : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async _getIssueCredentialsbyCredentialRecordId(url: string, apiKey: string): Promise<{
+  async _getIssuedCredentialsByCredentialExchangeId(url: string, apiKey: string): Promise<{
     response: string;
   }> {
     try {
-      const pattern = { cmd: 'agent-get-issued-credentials-by-credentialDefinitionId' };
+      const pattern = { cmd: 'agent-get-issued-credentials-by-credentialExchangeId' };
       const payload = { url, apiKey };
       return await this.natsCall(pattern, payload);
 
     } catch (error) {
-      this.logger.error(`[_getIssueCredentialsbyCredentialRecordId] [NATS call]- error in fetch credentials : ${JSON.stringify(error)}`);
+      this.logger.error(`[_getIssuedCredentialsByCredentialExchangeId] [NATS call]- error in fetch credentials : ${JSON.stringify(error)}`);
       throw error;
     }
   }

@@ -28,10 +28,10 @@ export class IssuanceController {
     return this.issuanceService.getIssueCredentials(user, orgId, issuedCredentialsSearchCriteria);
   }
 
-  @MessagePattern({ cmd: 'get-issued-credentials-by-credentialDefinitionId' })
-  async getIssueCredentialsbyCredentialRecordId(payload: IIssueCredentialsDefinitions): Promise<string> {
+  @MessagePattern({ cmd: 'get-issued-credentials-by-credentialExchangeId' })
+  async getIssuedCredentialsByCredentialExchangeId(payload: IIssueCredentialsDefinitions): Promise<string> {
     const { user, credentialRecordId, orgId } = payload;
-    return this.issuanceService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
+    return this.issuanceService.getIssuedCredentialsByCredentialExchangeId(user, credentialRecordId, orgId);
   }
 
   

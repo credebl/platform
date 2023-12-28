@@ -149,38 +149,37 @@ export class IssuanceController {
   
 
   /**
-   * Description: Get all issued credentials
-   * @param user
-   * @param credentialRecordId
-   * @param orgId
-   *
-   */
-  @Get('/orgs/:orgId/credentials/:credentialRecordId')
+     * @param credentialRecordId
+     * @param orgId
+     * @returns Details of specific credential
+     */
+
+  @Get('/orgs/:orgId/credentials/:credentialExchangeId')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Get credential by credentialRecordId`,
-    description: `Get credential credentialRecordId`
+    summary: `Fetch credential details by credentialExchangeId`,
+    description: `Fetch credential details by credentialExchangeId`
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
-  async getIssueCredentialsbyCredentialRecordId(
+  async getIssuedCredentialsByCredentialExchangeId(
     @User() user: IUserRequest,
-    @Param('credentialRecordId') credentialRecordId: string,
+    @Param('credentialRecordId') credentialExchangeId: string,
     @Param('orgId') orgId: string,
 
     @Res() res: Response
   ): Promise<Response> {
-    const getCredentialDetails = await this.issueCredentialService.getIssueCredentialsbyCredentialRecordId(
+    const getCredentialDetails = await this.issueCredentialService.getIssuedCredentialsByCredentialExchangeId(
       user,
-      credentialRecordId,
+      credentialExchangeId,
       orgId
     );
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.fetch,
-      data: getCredentialDetails.response
+      data: getCredentialDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -207,7 +206,7 @@ export class IssuanceController {
         .header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`)
         .status(200)
         .send(exportedData.fileContent);
-    } catch (error) {}
+    } catch (error) { }
   }
 
   @Post('/orgs/:orgId/bulk/upload')

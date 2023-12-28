@@ -59,9 +59,9 @@ export class AgentServiceController {
     return this.agentServiceService.getIssueCredentials(payload.url, payload.apiKey);
   }
 
-  @MessagePattern({ cmd: 'agent-get-issued-credentials-by-credentialDefinitionId' })
-  async getIssueCredentialsbyCredentialRecordId(payload: { url: string, apiKey: string }): Promise<object> {
-    return this.agentServiceService.getIssueCredentialsbyCredentialRecordId(payload.url, payload.apiKey);
+  @MessagePattern({ cmd: 'agent-get-issued-credentials-by-credentialExchangeId' })
+  async getIssuedCredentialsByCredentialExchangeId(payload: { url: string, apiKey: string }): Promise<object> {
+    return this.agentServiceService.getIssuedCredentialsByCredentialExchangeId(payload.url, payload.apiKey);
   }
   @MessagePattern({ cmd: 'agent-get-proof-presentations' })
   async getProofPresentations(payload: { url: string, apiKey: string }): Promise<object> {

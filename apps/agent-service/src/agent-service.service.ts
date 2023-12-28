@@ -992,14 +992,14 @@ export class AgentServiceService {
     }
   }
 
-  async getIssueCredentialsbyCredentialRecordId(url: string, apiKey: string): Promise<object> {
+  async getIssuedCredentialsByCredentialExchangeId(url: string, apiKey: string): Promise<object> {
     try {
       const data = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })
         .then(async response => response);
       return data;
     } catch (error) {
-      this.logger.error(`Error in getIssueCredentialsbyCredentialRecordId in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(`Error in getIssuedCredentialsByCredentialExchangeId in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

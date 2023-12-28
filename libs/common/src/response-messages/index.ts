@@ -160,7 +160,7 @@ export const ResponseMessages = {
             notAbleToSpinUpAgent: 'Agent not able to spin up',
             alreadySpinUp: 'Agent already spun up',
             agentUrl: 'Agent url not exist',
-            apiKeyNotExist:'Api key is not found',
+            apiKeyNotExist:'API key is not found',
             seedChar: 'seed must be at most 32 characters',
             validWalletName: 'Please enter valid wallet name. It allows only alphanumeric values',
             platformConfiguration: 'Platform configuration is missing or invalid',

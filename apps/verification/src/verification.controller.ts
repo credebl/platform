@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { IProofRequests, IRequestProof, ProofFormData, ProofPresentationPayload } from './interfaces/verification.interface';
+import { IProofPresentation, IProofRequests, IRequestProof, ProofFormData } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { presentations } from '@prisma/client';
 import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
@@ -51,8 +51,12 @@ export class VerificationController {
     return this.verificationService.verifyPresentation(payload.id, payload.orgId);
   }
 
+  /**
+   * @param orgId 
+   * @returns proof presentation details
+   */
   @MessagePattern({ cmd: 'webhook-proof-presentation' })
-  async webhookProofPresentation(payload: ProofPresentationPayload): Promise<presentations> {
+  async webhookProofPresentation(payload: IProofPresentation): Promise<presentations> {
     return this.verificationService.webhookProofPresentation(payload);
   }
 

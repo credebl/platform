@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import { IsOptional } from "class-validator";
 
 interface IWebhookPresentationProof {
@@ -7,57 +7,57 @@ interface IWebhookPresentationProof {
     connectionId
 }
 
-export class WebhookPresentationProof {
+export class WebhookPresentationProofDto {
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     metadata: object;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     _tags: IWebhookPresentationProof;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     id: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     createdAt: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     protocolVersion: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     state: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     connectionId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     threadId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     presentationId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     autoAcceptProof: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     updatedAt: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     isVerified: boolean;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     contextCorrelationId: string;
 }

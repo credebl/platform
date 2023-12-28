@@ -26,7 +26,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { AuthGuard } from '@nestjs/passport';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { WebhookPresentationProof } from './dto/webhook-proof.dto';
+import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
@@ -261,26 +261,31 @@ export class VerificationController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
-    @Post('wh/:id/proofs')
+    /**
+     * 
+     * @param orgId 
+     * @returns Proof presentation details
+     */
+    @Post('wh/:orgId/proofs')
     @ApiOperation({
-        summary: `Webhook proof presentation`,
-        description: `Webhook proof presentation`
+        summary: `Receive webhook proof presentation`,
+        description: `Handle proof presentations for a specified organization via a webhook`
     })
     @ApiExcludeEndpoint()
-    @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     async webhookProofPresentation(
-        @Param('id') id: string,
-        @Body() proofPresentationPayload: WebhookPresentationProof,
+        @Param('orgId') orgId: string,
+        @Body() proofPresentationPayload: WebhookPresentationProofDto,
         @Res() res: Response
-    ): Promise<object> {
+    ): Promise<Response> {
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
-        const webhookProofPresentation = await this.verificationService.webhookProofPresentation(id, proofPresentationPayload);
-        const finalResponse: IResponseType = {
+        const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload);
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.verification.success.fetch,
-            data: webhookProofPresentation.response
+            data: webhookProofPresentation
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

@@ -6,7 +6,7 @@ import {
   PlatformSettings,
   ShareUserCertificate,
   UpdateUserProfile,
-  UserCredentials,
+  IUserCredentials,
   ISendVerificationEmail,
   IUsersProfile,
   IUserInformation, 
@@ -110,7 +110,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserCredentialsById(credentialId: string): Promise<UserCredentials> {
+  async getUserCredentialsById(credentialId: string): Promise<IUserCredentials> {
     return this.prisma.user_credentials.findUnique({
       where: {
         credentialId

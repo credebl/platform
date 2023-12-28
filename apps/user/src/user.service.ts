@@ -35,10 +35,9 @@ import {
   ShareUserCertificate,
   IOrgUsers,
   UpdateUserProfile,
-  UserCredentials, 
+  IUserCredentials, 
    IUserInformation,
-    IUsersProfile,
-    UserInvitations
+    IUsersProfile
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -55,7 +54,7 @@ import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
 
 @Injectable()
 export class UserService {
@@ -402,7 +401,7 @@ export class UserService {
     }
   }
 
-  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<IUserCredentials> {
     try {
       const userCredentials = await this.userRepository.getUserCredentialsById(payload.credentialId);
       if (!userCredentials) {
@@ -451,12 +450,13 @@ export class UserService {
     }
   }
 
-  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<UserInvitations> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
+
       
       const invitationsData = await this.getOrgInvitations(
         userData.email,
@@ -464,12 +464,13 @@ export class UserService {
         payload.pageNumber,
         payload.pageSize,
         payload.search
-      );
-      
-      const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
-      invitationsData['invitations'] = invitations;
+        );
+       
+        const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
+        invitationsData['invitations'] = invitations;
 
       return invitationsData;
+      
     } catch (error) {
       this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -482,7 +483,7 @@ export class UserService {
     pageNumber: number,
     pageSize: number,
     search = ''
-  ): Promise<UserInvitations> {
+  ): Promise<IUserInvitations> {
     const pattern = { cmd: 'fetch-user-invitations' };
     const payload = {
       email,
@@ -510,6 +511,8 @@ export class UserService {
   }
 
   async updateOrgInvitations(invitations: OrgInvitations[]): Promise<OrgInvitations[]> {
+
+    
     const updatedInvitations = [];
 
     for (const invitation of invitations) {
@@ -546,10 +549,6 @@ export class UserService {
     }
   }
 
-  /**
-   *
-   * @returns
-   */
   async shareUserCertificate(shareUserCertificate: ShareUserCertificate): Promise<string> {
 
     const attributeArray = [];

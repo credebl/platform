@@ -3,7 +3,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { WebhookPresentationProof } from './dto/webhook-proof.dto';
+import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 
@@ -61,9 +61,9 @@ export class VerificationService extends BaseService {
         return this.sendNats(this.verificationServiceProxy, 'verify-presentation', payload);
     }
 
-    webhookProofPresentation(id: string, proofPresentationPayload: WebhookPresentationProof): Promise<{ response: object }> {
-        const payload = { id, proofPresentationPayload };
-        return this.sendNats(this.verificationServiceProxy, 'webhook-proof-presentation', payload);
+    webhookProofPresentation(orgId: string, proofPresentationPayload: WebhookPresentationProofDto): Promise<object> {
+        const payload = { orgId, proofPresentationPayload };
+        return this.sendNatsMessage(this.verificationServiceProxy, 'webhook-proof-presentation', payload);
     }
 
     /**

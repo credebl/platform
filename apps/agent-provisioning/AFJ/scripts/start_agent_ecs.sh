@@ -26,8 +26,8 @@ TESKDEFINITION_FAMILY=${20}
 SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service"
 DESIRED_COUNT=1
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
-ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
-INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
+ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
+INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
 INBOUND_PORT=9001
 
@@ -239,6 +239,7 @@ if [ $? -eq 0 ]; then
         "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
     }
 EOF
+
   echo "Agent config created"
 else
   echo "==============="

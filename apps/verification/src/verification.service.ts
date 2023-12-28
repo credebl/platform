@@ -262,13 +262,13 @@ export class VerificationService {
    */
   async verifyPresentation(id: string, orgId: string): Promise<string> {
     try {
-      const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      
-      const verificationMethodLabel = 'accept-presentation';
-      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
+      const getAgentData = await this.verificationRepository.getAgentEndPoint(orgId);
+      const orgAgentTypeData = await this.verificationRepository.getOrgAgentType(getAgentData?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
+
+      const verificationMethod = 'accept-presentation';
+      
+      const url = await this.getAgentUrl(verificationMethod, orgAgentTypeData, getAgentData?.agentEndPoint, getAgentData?.tenantId, '', id);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }

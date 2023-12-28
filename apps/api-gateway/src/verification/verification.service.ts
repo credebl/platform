@@ -4,7 +4,7 @@ import { BaseService } from 'libs/service/base.service';
 import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProof } from './dto/webhook-proof.dto';
-import { IProofRequestsSearchCriteria } from './interfaces/verification.interface';
+import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 
 
@@ -21,7 +21,7 @@ export class VerificationService extends BaseService {
      * @param orgId 
      * @returns All proof presentations details
      */
-    getProofPresentations(proofRequestsSearchCriteria: IProofRequestsSearchCriteria, user: IUserRequest, orgId: string): Promise<IProofPresentationList> {
+    getProofPresentations(proofRequestsSearchCriteria: IProofRequestSearchCriteria, user: IUserRequest, orgId: string): Promise<IProofPresentationList> {
         const payload = { proofRequestsSearchCriteria, user, orgId };
         return this.sendNatsMessage(this.verificationServiceProxy, 'get-all-proof-presentations', payload);
     }

@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IProofRequestsSearchCriteria, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload, ProofPresentationPayload } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IGetProofPresentationById, IProofRequestPayload, IProofRequestSearchCriteria, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, ProofFormDataPayload, ProofPresentationPayload } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { org_agents, organisation, presentations } from '@prisma/client';
@@ -39,7 +39,7 @@ export class VerificationService {
   async getProofPresentations(
     user: IUserRequest,
     orgId: string,
-    proofRequestsSearchCriteria: IProofRequestsSearchCriteria
+    proofRequestsSearchCriteria: IProofRequestSearchCriteria
   ): Promise<IProofPresentationList> {
     try {
       const getProofRequestsList = await this.verificationRepository.getAllProofRequests(

@@ -3,7 +3,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { org_agents, organisation, platform_config, presentations } from '@prisma/client';
-import { IProofRequestSearchCriteria, ProofPresentationPayload } from '../interfaces/verification.interface';
+import { IProofPresentation } from '../interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationsListCount } from '@credebl/common/interfaces/verification.interface';
 import { SortValue } from '@credebl/enum/enum';
@@ -103,16 +103,16 @@ export class VerificationRepository {
     }
   }
 
-  async storeProofPresentation(payload: ProofPresentationPayload): Promise<presentations> {
+  async storeProofPresentation(payload: IProofPresentation): Promise<presentations> {
     try {
       let organisationId: string;
-      const { proofPresentationPayload, id } = payload;
+      const { proofPresentationPayload, orgId } = payload;
 
       if (proofPresentationPayload?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(proofPresentationPayload?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
-        organisationId = id;
+        organisationId = orgId;
       }
 
       const proofPresentationsDetails = await this.prisma.presentations.upsert({
@@ -138,7 +138,7 @@ export class VerificationRepository {
       });
       return proofPresentationsDetails;
     } catch (error) {
-      this.logger.error(`Error in get saveIssuedCredentialDetails: ${error.message} `);
+      this.logger.error(`Error in get saveProofPresentationDetails: ${error.message} `);
       throw error;
     }
   }

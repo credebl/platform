@@ -3,9 +3,9 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { org_agents, organisation, platform_config, presentations } from '@prisma/client';
-import { IProofRequestsSearchCriteria, ProofPresentationPayload } from '../interfaces/verification.interface';
+import { IProofRequestSearchCriteria, ProofPresentationPayload } from '../interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IProofsPresentationsListCount } from '@credebl/common/interfaces/verification.interface';
+import { IProofPresentationsListCount } from '@credebl/common/interfaces/verification.interface';
 import { SortValue } from '@credebl/enum/enum';
 
 @Injectable()
@@ -57,8 +57,8 @@ export class VerificationRepository {
   async getAllProofRequests(
     user: IUserRequest,
     orgId: string,
-    proofRequestsSearchCriteria: IProofRequestsSearchCriteria
-  ): Promise<IProofsPresentationsListCount> {
+    proofRequestsSearchCriteria: IProofRequestSearchCriteria
+  ): Promise<IProofPresentationsListCount> {
     try {
       const proofRequestsList = await this.prisma.presentations.findMany({
         where: {

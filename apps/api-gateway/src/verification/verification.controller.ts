@@ -18,7 +18,7 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -32,6 +32,7 @@ import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestsSearchCriteria } from './interfaces/verification.interface';
+import { SortFields } from './enum/verification.enum';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -107,43 +108,21 @@ export class VerificationController {
     * Get all proof presentations
     * @param user 
     * @param orgId 
-    * @returns Get all proof presentation
+    * @returns All proof presentations details
     */
     @Get('/orgs/:orgId/proofs')
     @ApiOperation({
-        summary: `Get all proof presentations`,
-        description: `Get all proof presentations`
-    })
-
-    @ApiQuery({
-      name: 'pageNumber',
-      type: Number,
-      required: false
+        summary: `Get all proof presentations by orgId`,
+        description: `Get all proof presentations by orgId`
     })
     @ApiQuery({
-        name: 'pageSize',
-        type: Number,
+        name: 'sortField',
+        enum: SortFields,
         required: false
-    })
-    @ApiQuery({
-      name: 'searchByText',
-      type: String,
-      required: false
-    })   
-    @ApiQuery({
-      name: 'sorting',
-      type: String,
-      required: false
-    })
-    @ApiQuery({
-      name: 'sortByValue',
-      type: String,
-      required: false
-    })
-
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+      })    
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBearerAuth()
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -152,21 +131,21 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Param('orgId') orgId: string
-    ): Promise<object> {
-      const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllProofRequests;
+    ): Promise<Response> {
+      const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllProofRequests;
       const proofRequestsSearchCriteria: IProofRequestsSearchCriteria = {
           pageNumber,
           searchByText,
           pageSize,
-          sorting,
-          sortByValue
+          sortField,
+          sortBy
         };
 
         const proofPresentationDetails = await this.verificationService.getProofPresentations(proofRequestsSearchCriteria, user, orgId);
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.fetch,
-            data: proofPresentationDetails.response
+            data: proofPresentationDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

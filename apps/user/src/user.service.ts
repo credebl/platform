@@ -27,7 +27,6 @@ import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import {
-  AddPasskeyDetails,
   Attribute,
   ICheckUserDetails,
   OrgInvitations,
@@ -55,6 +54,7 @@ import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { AddPasskeyDetailsDtoDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Injectable()
 export class UserService {
@@ -272,7 +272,7 @@ export class UserService {
     }
   }
 
-  async addPasskey(email: string, userInfo: AddPasskeyDetails): Promise<string> {
+  async addPasskey(email: string, userInfo: AddPasskeyDetailsDtoDto): Promise<string> {
     try {
       if (!email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
@@ -292,7 +292,7 @@ export class UserService {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
 
-      return 'User updated successfully';
+      return ResponseMessages.user.success.updateUserProfile;
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

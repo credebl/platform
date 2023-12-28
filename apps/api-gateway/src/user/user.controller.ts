@@ -41,7 +41,7 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { AddPasskeyDetails } from './dto/add-user.dto';
+import { AddPasskeyDetailsDtoDto } from './dto/add-user.dto';
 import { EmailValidator } from '../dtos/email-validator.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { Roles } from '../authz/decorators/roles.decorator';
@@ -339,12 +339,16 @@ export class UserController {
       return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  /**
+   * @Body updateUserProfileDto
+   * @returns User details
+   */
   @Put('/')
   @ApiOperation({
     summary: 'Update user profile',
     description: 'Update user profile'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   async updateUserProfile(
@@ -362,13 +366,18 @@ export class UserController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+ /**
+   * @Body userInfo
+   * @returns User's profile update status
+   */
+  
 
   @Put('/password/:email')
   @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async addPasskey(
-    @Body() userInfo: AddPasskeyDetails,
+    @Body() userInfo: AddPasskeyDetailsDtoDto,
     @Param('email') email: string,
     @Res() res: Response
   ): Promise<Response> {
@@ -376,7 +385,7 @@ export class UserController {
     const finalResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.update,
-      data: userDetails.response
+      data: userDetails
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

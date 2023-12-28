@@ -31,7 +31,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
-import { IProofRequestsSearchCriteria } from './interfaces/verification.interface';
+import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { SortFields } from './enum/verification.enum';
 
 @UseFilters(CustomExceptionFilter)
@@ -133,7 +133,7 @@ export class VerificationController {
         @Param('orgId') orgId: string
     ): Promise<Response> {
       const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllProofRequests;
-      const proofRequestsSearchCriteria: IProofRequestsSearchCriteria = {
+      const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
           pageNumber,
           searchByText,
           pageSize,

@@ -24,6 +24,18 @@ CLUSTER_NAME=${19}
 TESKDEFINITION_FAMILY=${20}
 
 DESIRED_COUNT=1
+
+generate_random_string() {
+  echo "$(date +%s%N | sha256sum | base64 | head -c 12)"
+}
+
+# Call the function to generate a random string
+random_string=$(generate_random_string)
+
+# Print the generated random string
+echo "Random String: $random_string"
+
+SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service-${random_string}"
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
 ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
@@ -73,7 +85,6 @@ last_used_inbound_port=$(increment_port "$last_used_inbound_port" "$last_used_in
 echo "$last_used_inbound_port" > "$INBOUND_PORT_FILE"
 INBOUND_PORT="$last_used_inbound_port"
 
-SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service-${ADMIN_PORT}"
 echo "Last used admin port: $ADMIN_PORT"
 echo "Last used inbound port: $INBOUND_PORT"
 echo "AGENT SPIN-UP STARTED"
@@ -242,7 +253,7 @@ EOF
 
   cat <<EOF >${PWD}/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json
     {
-        "token" : "$token"
+        "token" : ""
     }
 EOF
 

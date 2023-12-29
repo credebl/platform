@@ -139,7 +139,7 @@ export class UserController {
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchUsers,
-      data: users.response
+      data: users
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -162,7 +162,7 @@ export class UserController {
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchProfile,
-      data: userData.response
+      data: userData
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -344,7 +344,7 @@ export class UserController {
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: invitationRes.response
+      message: invitationRes
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

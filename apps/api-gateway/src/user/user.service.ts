@@ -6,12 +6,13 @@ import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { AddPasskeyDetails } from './dto/add-user.dto';
+import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -32,17 +33,17 @@ export class UserService extends BaseService {
 
   async getUserCredentialsById(credentialId: string): Promise<{ response: object }> {
     const payload = { credentialId };
-    return this.sendNats(this.serviceProxy, 'get-user-credentials-by-id', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-user-credentials-by-id', payload);
   }
 
-  async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<{ response: object }> {
+  async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<user> {
     const payload = { updateUserProfileDto };
-    return this.sendNats(this.serviceProxy, 'update-user-profile', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'update-user-profile', payload);
   }
 
   async findUserinSupabase(id: string): Promise<{ response: object }> {
     const payload = { id };
-    return this.sendNats(this.serviceProxy, 'get-user-by-supabase', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-user-by-supabase', payload);
   }
 
 
@@ -57,7 +58,7 @@ export class UserService extends BaseService {
     userId: string
   ): Promise<{ response: string }> {
     const payload = { acceptRejectInvitation, userId };
-    return this.sendNats(this.serviceProxy, 'accept-reject-invitations', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'accept-reject-invitations', payload);
   }
 
   async shareUserCertificate(
@@ -85,9 +86,9 @@ export class UserService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'get-user-activity', payload);
   }
 
-  async addPasskey(userEmail: string, userInfo: AddPasskeyDetails): Promise<{ response: string }> {
+  async addPasskey(userEmail: string, userInfo: AddPasskeyDetailsDto): Promise<{ response: string }> {
     const payload = { userEmail, userInfo };
-    return this.sendNats(this.serviceProxy, 'add-passkey', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'add-passkey', payload);
   }
 
   async updatePlatformSettings(platformSettings: UpdatePlatformSettingsDto): Promise<{ response: string }> {

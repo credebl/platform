@@ -2,8 +2,10 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
-import { ICredDeffSchemaSearchInterface, ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
+import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from './interfaces';
+import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -13,7 +15,7 @@ export class SchemaService extends BaseService {
   ) { super(`Schema Service`); }
 
   createSchema(schema: CreateSchemaDto, user: IUserRequestInterface, orgId: string): Promise<{
-    response: object;
+    response: string;
   }> {
     const payload = { schema, user, orgId };
     return this.sendNats(this.schemaServiceProxy, 'create-schema', payload);
@@ -26,17 +28,13 @@ export class SchemaService extends BaseService {
     return this.sendNats(this.schemaServiceProxy, 'get-schema-by-id', payload);
   }
 
-  getSchemas(schemaSearchCriteria: ISchemaSearchInterface, user: IUserRequestInterface, orgId: string): Promise<{
-    response: object;
-  }> {
+  getSchemas(schemaSearchCriteria: ISchemaSearchPayload, user: IUserRequestInterface, orgId: string): Promise<ISchemasWithPagination> {
     const schemaSearch = { schemaSearchCriteria, user, orgId };
-    return this.sendNats(this.schemaServiceProxy, 'get-schemas', schemaSearch);
+    return this.sendNatsMessage(this.schemaServiceProxy, 'get-schemas', schemaSearch);
   }
 
-  getcredDeffListBySchemaId(schemaId: string, schemaSearchCriteria: ICredDeffSchemaSearchInterface, user: IUserRequestInterface, orgId: string): Promise<{
-    response: object;
-  }> {
-    const payload = { schemaId, schemaSearchCriteria, user, orgId };
-    return this.sendNats(this.schemaServiceProxy, 'get-cred-deff-list-by-schemas-id', payload);
+  getcredDeffListBySchemaId(schemaSearchCriteria: GetCredentialDefinitionBySchemaIdDto, user: IUserRequestInterface): Promise<ICredDefWithPagination> {
+    const payload = { schemaSearchCriteria, user };
+    return this.sendNatsMessage(this.schemaServiceProxy, 'get-cred-deff-list-by-schemas-id', payload);
   }
 }

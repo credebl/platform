@@ -3,42 +3,34 @@ import { ConnectionService } from './connection.service'; // Import the common s
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
 import {
   IConnection,
-  IConnectionInterface,
+  ICreateConnection,
   IFetchConnectionById,
-  IFetchConnectionInterface
+  IFetchConnections
 } from './interfaces/connection.interfaces';
+import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Controller()
 export class ConnectionController {
   constructor(private readonly connectionService: ConnectionService) {}
 
   /**
-   * Description: Create out-of-band connection legacy invitation
+   * Create connection legacy invitation URL
    * @param payload
-   * @returns Created connection invitation for out-of-band
+   * @returns connection invitation URL
    */
   @MessagePattern({ cmd: 'create-connection' })
-  async createLegacyConnectionInvitation(payload: IConnection): Promise<object> {
-    const { orgId, user, multiUseInvitation, autoAcceptConnection, alias, imageUrl, label } = payload;
-
-    return this.connectionService.createLegacyConnectionInvitation(
-      orgId,
-      user,
-      multiUseInvitation,
-      autoAcceptConnection,
-      alias,
-      imageUrl,
-      label
-    );
+  async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
+    return this.connectionService.createLegacyConnectionInvitation(payload);   
   }
 
   /**
-   * Description: Catch connection webhook responses and save details in connection table
-   * @param payload
+   * Receive connection webhook responses and save details in connection table
+   * @param orgId
    * @returns Callback URL for connection and created connections details
    */
   @MessagePattern({ cmd: 'webhook-get-connection' })
-  async getConnectionWebhook(payload: IConnectionInterface): Promise<object> {
+  async getConnectionWebhook(payload: ICreateConnection): Promise<object> {
     return this.connectionService.getConnectionWebhook(payload);
   }
 
@@ -53,13 +45,19 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'get-all-connections' })
-  async getConnections(payload: IFetchConnectionInterface): Promise<object> {
+  async getConnections(payload: IFetchConnections): Promise<IConnectionList> {
     const { user, orgId, connectionSearchCriteria } = payload;
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
   }
 
-  @MessagePattern({ cmd: 'get-all-connections-by-connectionId' })
-  async getConnectionsById(payload: IFetchConnectionById): Promise<string> {
+  /**
+   * 
+   * @param connectionId
+   * @param orgId 
+   * @returns connection details by connection Id
+   */
+  @MessagePattern({ cmd: 'get-connection-details-by-connectionId' })
+  async getConnectionsById(payload: IFetchConnectionById): Promise<IConnectionDetailsById> {
     const { user, connectionId, orgId } = payload;
     return this.connectionService.getConnectionsById(user, connectionId, orgId);
   }

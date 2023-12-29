@@ -3,9 +3,11 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { org_agents, organisation, platform_config, presentations } from '@prisma/client';
-import { ProofPresentationPayload } from '../interfaces/verification.interface';
+import { IProofPresentation } from '../interfaces/verification.interface';
+import { IProofRequestSearchCriteria } from '../interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IProofRequestsSearchCriteria } from 'apps/api-gateway/src/verification/interfaces/verification.interface';
+import { IProofPresentationsListCount } from '@credebl/common/interfaces/verification.interface';
+import { SortValue } from '@credebl/enum/enum';
 
 @Injectable()
 export class VerificationRepository {
@@ -56,24 +58,16 @@ export class VerificationRepository {
   async getAllProofRequests(
     user: IUserRequest,
     orgId: string,
-    proofRequestsSearchCriteria: IProofRequestsSearchCriteria
-  ): Promise<{
-    proofRequestsCount: number;
-    proofRequestsList: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+    proofRequestsSearchCriteria: IProofRequestSearchCriteria
+  ): Promise<IProofPresentationsListCount> {
     try {
       const proofRequestsList = await this.prisma.presentations.findMany({
         where: {
           orgId,
           OR: [
             { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
+            { presentationId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
         ]
         },
         select: {
@@ -86,11 +80,9 @@ export class VerificationRepository {
           presentationId: true
         },
         orderBy: {
-          [proofRequestsSearchCriteria?.sorting || 'createDateTime']:
-            'DESC' === proofRequestsSearchCriteria?.sortByValue
-              ? 'desc'
-              : 'asc'
+          [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc' 
         },
+
         take: Number(proofRequestsSearchCriteria.pageSize),
         skip: (proofRequestsSearchCriteria.pageNumber - 1) * proofRequestsSearchCriteria.pageSize
       });
@@ -99,8 +91,9 @@ export class VerificationRepository {
           orgId,
           OR: [
             { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
-        ]
+            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
+            { presentationId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
+          ]
         }
       });
 
@@ -111,16 +104,16 @@ export class VerificationRepository {
     }
   }
 
-  async storeProofPresentation(payload: ProofPresentationPayload): Promise<presentations> {
+  async storeProofPresentation(payload: IProofPresentation): Promise<presentations> {
     try {
       let organisationId: string;
-      const { proofPresentationPayload, id } = payload;
+      const { proofPresentationPayload, orgId } = payload;
 
       if (proofPresentationPayload?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(proofPresentationPayload?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
-        organisationId = id;
+        organisationId = orgId;
       }
 
       const proofPresentationsDetails = await this.prisma.presentations.upsert({
@@ -146,7 +139,7 @@ export class VerificationRepository {
       });
       return proofPresentationsDetails;
     } catch (error) {
-      this.logger.error(`Error in get saveIssuedCredentialDetails: ${error.message} `);
+      this.logger.error(`Error in get saveProofPresentationDetails: ${error.message} `);
       throw error;
     }
   }

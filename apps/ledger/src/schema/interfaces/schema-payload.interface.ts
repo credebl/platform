@@ -41,7 +41,7 @@ export interface ISchemaPayload {
     schemaSortBy?: string;
 }
 
-export interface ISchemaSearchInterface {
+export interface ISchemaSearchPayload {
     schemaSearchCriteria: ISchemaSearchCriteria,
     user: IUserRequestInterface,
     orgId: string
@@ -51,16 +51,17 @@ export interface ISchemaSearchCriteria {
     ledgerId?: string;
     pageNumber: number;
     pageSize: number;
-    sorting: string;
-    sortByValue: string;
-    searchByText: string;
-    user: IUserRequestInterface
+    sortField: string;
+    sortBy: string;
+    searchByText?: string;
+    user?: IUserRequestInterface
+    schemaId?: string;
+    orgId?: string;
 }
 
 export interface ISchemaCredDeffSearchInterface {
     schemaId: string;
     schemaSearchCriteria?: ISchemaSearchCriteria,
     user: IUserRequestInterface,
-    orgId?: string
 }
 

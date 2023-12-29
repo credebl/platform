@@ -6,12 +6,12 @@ import {
   PlatformSettings,
   ShareUserCertificate,
   UpdateUserProfile,
-  UserCredentials,
-  UserEmailVerificationDto,
-    UsersProfile,
-    userInfo
+  IUserCredentials,
+  ISendVerificationEmail,
+  IUsersProfile,
+  IUserInformation, 
+  IVerifyUserEmail
 } from '../interfaces/user.interface';
-
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
@@ -27,21 +27,21 @@ interface UserQueryOptions {
 @Injectable()
 export class UserRepository {
   constructor(
-    private readonly prisma: PrismaService, 
+    private readonly prisma: PrismaService,
     private readonly logger: Logger
   ) {}
 
   /**
    *
-   * @param userEmailVerificationDto
-   * @returns user email
+   * @param userEmailVerification
+   * @returns user's email
    */
-  async createUser(userEmailVerificationDto: UserEmailVerificationDto, verifyCode: string): Promise<user> {
+  async createUser(userEmailVerification:ISendVerificationEmail, verifyCode: string): Promise<user> {
     try {
       const saveResponse = await this.prisma.user.create({
         data: {
-          username: userEmailVerificationDto.username,
-          email: userEmailVerificationDto.email,
+          username: userEmailVerification.username,
+          email: userEmailVerification.email,
           verificationCode: verifyCode.toString(),
           publicProfile: true
         }
@@ -97,7 +97,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserById(id: string): Promise<UsersProfile> {
+  async getUserById(id: string): Promise<IUsersProfile> {
     const queryOptions: UserQueryOptions = {
       id
     };
@@ -110,7 +110,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserCredentialsById(credentialId: string): Promise<UserCredentials> {
+  async getUserCredentialsById(credentialId: string): Promise<IUserCredentials> {
     return this.prisma.user_credentials.findUnique({
       where: {
         credentialId
@@ -123,7 +123,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserPublicProfile(username: string): Promise<UsersProfile> {
+  async getUserPublicProfile(username: string): Promise<IUsersProfile> {
     const queryOptions: UserQueryOptions = {
       username
     };
@@ -203,7 +203,7 @@ export class UserRepository {
     return this.findUser(queryOptions);
   }
 
-  async findUser(queryOptions: UserQueryOptions): Promise<UsersProfile> {
+  async findUser(queryOptions: UserQueryOptions): Promise<IUsersProfile> {
     return this.prisma.user.findFirst({
       where: {
         OR: [
@@ -247,14 +247,14 @@ export class UserRepository {
                 website: true,
                 publicProfile: true
               }
+            }
           }
-          }   
         }
       }
-  });
+    });
   }
 
-  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<UsersProfile> {
+  async findUserForPublicProfile(queryOptions: UserQueryOptions): Promise<IUsersProfile> {
     return this.prisma.user.findFirst({
       where: {
         publicProfile: true,
@@ -279,18 +279,26 @@ export class UserRepository {
         isEmailVerified: true,
         publicProfile: true,
         userOrgRoles: {
-          include: {
-            orgRole: true,
+          select:{
+            id: true,
+            userId:true,
+            orgRoleId:true,
+            orgId:true,
+            orgRole: {
+              select:{
+                id: true,
+                name: true,
+                description: true
+              }
+            },
             organisation: {
               select: {
                 id: true,
                 name: true,
                 description: true,
+                orgSlug:true,
                 logoUrl: true,
                 website: true,
-                orgSlug: true
-              },
-              where: {
                 publicProfile: true
               }
             }
@@ -330,7 +338,7 @@ export class UserRepository {
    * @returns Updates user details
    */
   // eslint-disable-next-line camelcase
-  async updateUserInfo(email: string, userInfo: userInfo): Promise<user> {
+  async updateUserInfo(email: string, userInfo: IUserInformation): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
@@ -367,15 +375,15 @@ export class UserRepository {
         },
         select: {
           id: true,
-username: true,
+          username: true,
           email: true,
           firstName: true,
           lastName: true,
           isEmailVerified: true,
           userOrgRoles: {
-                        where: {
+            where: {
               ...filterOptions
-// Additional filtering conditions if needed
+              // Additional filtering conditions if needed
             },
             select: {
               id: true,
@@ -518,7 +526,7 @@ username: true,
     }
   }
 
-  async verifyUser(email: string): Promise<user> {
+  async verifyUser(email: string): Promise<IVerifyUserEmail> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {

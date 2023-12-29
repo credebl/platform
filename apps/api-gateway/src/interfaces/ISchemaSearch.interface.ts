@@ -9,12 +9,4 @@ export interface ISchemaSearchPayload {
     searchByText?: string;
     user?: IUserRequestInterface
 }
-
-export interface IConnectionSearchinterface {
-    pageNumber: number;
-    pageSize: number;
-    sorting: string;
-    sortByValue: string;
-    searchByText: string;
-    user?: IUserRequestInterface
-}
+  

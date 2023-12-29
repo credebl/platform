@@ -1,36 +1,36 @@
-export  interface UserInvitations {
-  totalPages:number;
-  userInvitationsData:UserInvitationsData[];
-}
-export  interface UserInvitationsData {
-  orgRoles: OrgRole[];
-  status: string;
+export interface IUsersProfile {
   id: string;
-  orgId: string;
-  organisation: Organisation;
-  userId: string;
-}
-export interface OrgRole {
-  id: string;
-  name: string;
-  description: string;
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  supabaseUserId?: string;
+  userOrgRoles?: IUserOrgRole[];
 }
 
-export interface Organisation {
-  id: string;
-  name: string;
-  logoUrl: string;
+interface IUserOrgRole {
+  id:  string;
+  userId:  string;
+  orgRoleId:  string;
+  orgId:  string;
+  orgRole :IOrgRole;
+  organisation:IOrganisation;
 }
+  export interface IOrgRole{
+    id:  string;
+      name: string;
+      description: string;
+  };
+  export interface IOrganisation{
+    id:  string;
+    name: string;
+    description: string;
+    orgSlug: string;
+    logoUrl: string;
+    website: string;
+    publicProfile: boolean;
+  };
 
-export interface UsersProfile {
-    id?: string;
-    username?: string;
-    email?: string;
-    firstName?: string;
-    lastName?: string;
-    supabaseUserId?: string;
-    userOrgRoles?: object;
-  }
   
   export interface OrgInvitations {
     id: string;
@@ -43,12 +43,12 @@ export interface UsersProfile {
     orgRoles: string[];
   }
   
-  export interface UserEmailVerificationDto {
+export interface ISendVerificationEmail {
     email: string;
     username?: string;
   }
   
-  export interface userInfo {
+  export interface IUserInformation {
     email: string;
     password: string;
     firstName: string;
@@ -88,14 +88,14 @@ export interface UsersProfile {
     label: string;
   }
   
-  export interface CheckUserDetails {
+  export interface ICheckUserDetails {
+    isExist: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
     isSupabase?: boolean;
-    isExist?: boolean;
   }
 
-  export interface UserCredentials {
+  export interface IUserCredentials {
     id: string;
     imageUrl?: string;
     credentialId?: string;
@@ -126,6 +126,11 @@ export interface UsersProfile {
     orgRole: OrgRole;
     organisation: Organization
   }
+  interface OrgRole {
+      id: string;
+      name: string;
+      description: string;
+    }
 
   interface Organization {
     id: string,
@@ -151,3 +156,14 @@ export interface UsersProfile {
     pageSize: number;
     search: string;
   }
+
+export interface IVerifyUserEmail{
+  email: string;
+  verificationCode: string;
+}
+
+export interface  IUserSignIn{
+  email: string;
+  password: string;
+  isPasskey: boolean;
+}

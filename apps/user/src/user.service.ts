@@ -27,19 +27,16 @@ import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import {
-  AddPasskeyDetails,
   Attribute,
-  CheckUserDetails,
+  ICheckUserDetails,
   OrgInvitations,
   PlatformSettings,
   ShareUserCertificate,
-  UserInvitations,
   IOrgUsers,
   UpdateUserProfile,
-  UserCredentials,
-  UserEmailVerificationDto,
-    userInfo,
-    UsersProfile
+  IUserCredentials, 
+   IUserInformation,
+    IUsersProfile
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -55,7 +52,9 @@ import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
-import { UsersActivity } from 'libs/user-activity/interface';
+import { IUsersActivity } from 'libs/user-activity/interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Injectable()
 export class UserService {
@@ -76,12 +75,12 @@ export class UserService {
 
   /**
    *
-   * @param userEmailVerificationDto
+   * @param userEmailVerification
    * @returns
    */
-  async sendVerificationMail(userEmailVerificationDto: UserEmailVerificationDto): Promise<user> {
+  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<ISendVerificationEmail> {
     try {
-      const { email } = userEmailVerificationDto;
+      const { email } = userEmailVerification;
 
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
@@ -91,7 +90,7 @@ export class UserService {
           throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
         }
       }
-      const userDetails = await this.userRepository.checkUserExist(userEmailVerificationDto.email);
+      const userDetails = await this.userRepository.checkUserExist(userEmailVerification.email);
 
       if (userDetails && userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
@@ -102,12 +101,12 @@ export class UserService {
       }
 
       const verifyCode = uuidv4();
-      const uniqueUsername = await this.createUsername(userEmailVerificationDto.email, verifyCode);
-      userEmailVerificationDto.username = uniqueUsername;
-      const resUser = await this.userRepository.createUser(userEmailVerificationDto, verifyCode);
+      const uniqueUsername = await this.createUsername(userEmailVerification.email, verifyCode);
+      userEmailVerification.username = uniqueUsername;
+      const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
 
       try {
-        await this.sendEmailForVerification(userEmailVerificationDto.email, resUser.verificationCode);
+        await this.sendEmailForVerification(userEmailVerification.email, resUser.verificationCode);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -178,7 +177,7 @@ export class UserService {
    * @returns Email verification succcess
    */
 
-  async verifyEmail(param: VerifyEmailTokenDto): Promise<object> {
+  async verifyEmail(param: VerifyEmailTokenDto): Promise<IVerifyUserEmail> {
     try {
       const invalidMessage = ResponseMessages.user.error.invalidEmailUrl;
 
@@ -197,10 +196,8 @@ export class UserService {
       }
 
       if (param.verificationCode === userDetails.verificationCode) {
-        await this.userRepository.verifyUser(param.email);
-        return {
-          message: 'User Verified sucessfully'
-        };
+        const verifiedEmail = await this.userRepository.verifyUser(param.email);
+        return verifiedEmail;
       }
     } catch (error) {
       this.logger.error(`error in verifyEmail: ${JSON.stringify(error)}`);
@@ -208,7 +205,7 @@ export class UserService {
     }
   }
 
-  async createUserForToken(userInfo: userInfo): Promise<string> {
+  async createUserForToken(userInfo: IUserInformation): Promise<string> {
     try {
       const { email } = userInfo;
       if (!userInfo.email) {
@@ -268,14 +265,14 @@ export class UserService {
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
 
-      return 'User created successfully';
+      return ResponseMessages.user.success.signUpUser;
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async addPasskey(email: string, userInfo: AddPasskeyDetails): Promise<string> {
+  async addPasskey(email: string, userInfo: AddPasskeyDetailsDto): Promise<string> {
     try {
       if (!email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
@@ -295,7 +292,7 @@ export class UserService {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
 
-      return 'User updated successfully';
+      return ResponseMessages.user.success.updateUserProfile;
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -313,7 +310,7 @@ export class UserService {
    * @param loginUserDto
    * @returns User access token details
    */
-  async login(loginUserDto: LoginUserDto): Promise<object> {
+  async login(loginUserDto: LoginUserDto): Promise<ISignInUser> {
     const { email, password, isPasskey } = loginUserDto;
 
     try {
@@ -345,7 +342,7 @@ export class UserService {
     }
   }
 
-  async generateToken(email: string, password: string): Promise<object> {
+  async generateToken(email: string, password: string): Promise<ISignInUser> {
     try {
       const supaInstance = await this.supabaseService.getClient();
       this.logger.error(`supaInstance::`, supaInstance);
@@ -362,13 +359,14 @@ export class UserService {
       }
 
       const token = data?.session;
+      
       return token;
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async getProfile(payload: { id }): Promise<UsersProfile> {
+  async getProfile(payload: { id }): Promise<IUsersProfile> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
       const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany({
@@ -388,7 +386,7 @@ export class UserService {
     }
   }
 
-  async getPublicProfile(payload: { username }): Promise<UsersProfile> {
+  async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     try {
       const userProfile = await this.userRepository.getUserPublicProfile(payload.username);
 
@@ -403,7 +401,7 @@ export class UserService {
     }
   }
 
-  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<IUserCredentials> {
     try {
       const userCredentials = await this.userRepository.getUserCredentialsById(payload.credentialId);
       if (!userCredentials) {
@@ -452,26 +450,27 @@ export class UserService {
     }
   }
 
-  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<UserInvitations> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
 
+      
       const invitationsData = await this.getOrgInvitations(
         userData.email,
         payload.status,
         payload.pageNumber,
         payload.pageSize,
         payload.search
-      );
+        );
+       
+        const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
+        invitationsData['invitations'] = invitations;
 
-      const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
-      invitationsData['invitations'] = invitations;
-      // console.log("{-----------------}",invitationsData);
-      
       return invitationsData;
+      
     } catch (error) {
       this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -484,7 +483,7 @@ export class UserService {
     pageNumber: number,
     pageSize: number,
     search = ''
-  ): Promise<UserInvitations> {
+  ): Promise<IUserInvitations> {
     const pattern = { cmd: 'fetch-user-invitations' };
     const payload = {
       email,
@@ -512,6 +511,8 @@ export class UserService {
   }
 
   async updateOrgInvitations(invitations: OrgInvitations[]): Promise<OrgInvitations[]> {
+
+    
     const updatedInvitations = [];
 
     for (const invitation of invitations) {
@@ -548,10 +549,6 @@ export class UserService {
     }
   }
 
-  /**
-   *
-   * @returns
-   */
   async shareUserCertificate(shareUserCertificate: ShareUserCertificate): Promise<string> {
 
     const attributeArray = [];
@@ -728,7 +725,7 @@ export class UserService {
     }
   }
 
-  async checkUserExist(email: string): Promise<CheckUserDetails> {
+  async checkUserExist(email: string): Promise<ICheckUserDetails> {
     try {
       const userDetails = await this.userRepository.checkUniqueUserExist(email);
       if (userDetails && !userDetails.isEmailVerified) {
@@ -755,7 +752,7 @@ export class UserService {
   }
 
 
-  async getUserActivity(userId: string, limit: number): Promise<UsersActivity[]> {
+  async getUserActivity(userId: string, limit: number): Promise<IUsersActivity[]> {
     try {
       return this.userActivityService.getUserActivity(userId, limit);
     } catch (error) {

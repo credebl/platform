@@ -1,4 +1,4 @@
-import { AddPasskeyDetails, ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, UserCredentials, IUsersProfile, UserInvitations, IUserInformation, IUserSignIn} from '../interfaces/user.interface';
+import { ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, IUserCredentials, IUsersProfile, IUserInformation, IUserSignIn} from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -8,7 +8,8 @@ import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Controller()
 export class UserController {
@@ -53,6 +54,9 @@ export class UserController {
   async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     return this.userService.getPublicProfile(payload);
   }
+   /**
+   * @returns User details
+   */
   @MessagePattern({ cmd: 'update-user-profile' })
   async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<user> {
     return this.userService.updateUserProfile(payload.updateUserProfileDto);
@@ -68,15 +72,20 @@ export class UserController {
   async findUserByEmail(payload: { email }): Promise<object> {
     return this.userService.findUserByEmail(payload);
   }
-
-
+  /**
+   * @param credentialId
+   * @returns User credentials
+   */
   @MessagePattern({ cmd: 'get-user-credentials-by-id' })
-  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<IUserCredentials> {
     return this.userService.getUserCredentialsById(payload);
   }
 
+  /**
+   * @returns Organization invitation data
+   */
   @MessagePattern({ cmd: 'get-org-invitations' })
-  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UserInvitations> {
+  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<IUserInvitations> {
         return this.userService.invitations(payload);
   }
 
@@ -94,9 +103,8 @@ export class UserController {
   }
 
   /**
-   *
    * @param payload
-   * @returns Share user certificate
+   * @returns User certificate URL
    */
   @MessagePattern({ cmd: 'share-user-certificate' })
   async shareUserCertificate(payload: {
@@ -149,15 +157,19 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'add-passkey' })
-  async addPasskey(payload: { userEmail: string, userInfo: AddPasskeyDetails }): Promise<string | object> {
+  async addPasskey(payload: { userEmail: string, userInfo: AddPasskeyDetailsDto }): Promise<string | object> {
     return this.userService.addPasskey(payload.userEmail, payload.userInfo);
   }
-
+ /**
+   * @returns platform and ecosystem settings updated status
+   */
   @MessagePattern({ cmd: 'update-platform-settings' })
   async updatePlatformSettings(payload: { platformSettings: PlatformSettings }): Promise<string> {
     return this.userService.updatePlatformSettings(payload.platformSettings);
   }
-
+  /**
+   * @returns platform and ecosystem settings
+   */
   @MessagePattern({ cmd: 'fetch-platform-settings' })
   async getPlatformEcosystemSettings(): Promise<object> {
     return this.userService.getPlatformEcosystemSettings();

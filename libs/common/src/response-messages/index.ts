@@ -18,7 +18,9 @@ export const ResponseMessages = {
             userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched',
-            signUpUser:'User created successfully'
+            signUpUser:'User created successfully',
+            shareUserCertificate:'Certificate URL generated successfully',
+            updateUserProfile:'User profile updated successfully'
         },
         error: {
             exists: 'User already exists',
@@ -227,6 +229,7 @@ export const ResponseMessages = {
     verification: {
         success: {
             fetch: 'Proof presentations details fetched successfully.',
+            create: 'Presentation of proof details created successfully.',
             proofFormData: 'Proof presentation form data received successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'

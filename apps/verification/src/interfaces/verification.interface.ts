@@ -99,10 +99,6 @@ interface IWebhookPresentationProof {
     connectionId
 }
 
-export interface IWebhookProofPresentationPayload {
-    proofPresentationDto: IWebhookProofPresentation;
-    id: string;
-}
 export interface IWebhookProofPresentation {
     metadata: object;
     _tags: IWebhookPresentationProof;
@@ -119,9 +115,9 @@ export interface IWebhookProofPresentation {
     contextCorrelationId: string;
 }
 
-export interface ProofPresentationPayload {
+export interface IProofPresentation {
     proofPresentationPayload: IWebhookProofPresentation;
-    id: string;
+    orgId: string;
 }
 
 export interface IProofRequests {

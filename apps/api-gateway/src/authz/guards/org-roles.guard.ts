@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Logger } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 
 import { HttpException } from '@nestjs/common';
 import { HttpStatus } from '@nestjs/common';
@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Reflector } from '@nestjs/core';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class OrgRolesGuard implements CanActivate {
@@ -40,7 +41,7 @@ export class OrgRolesGuard implements CanActivate {
       });
 
       if (!specificOrg) {
-        throw new HttpException('Organization does not match', HttpStatus.FORBIDDEN);
+        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
       }
 
       user.selectedOrg = specificOrg;

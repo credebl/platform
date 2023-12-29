@@ -1,6 +1,15 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
-RUN npm install -g pnpm
+# RUN npm install -g pnpm
+# Install AWS CLI
+# RUN apk update
+# RUN apk add openssh-client
+# RUN apk update
+# RUN apk add aws-cli
+RUN npm install -g pnpm --ignore-scripts \
+    && apk update \
+    && apk add openssh-client \
+    && apk add aws-cli
 
 # Set the working directory
 WORKDIR /app
@@ -23,24 +32,35 @@ RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
 FROM node:18-alpine as prod
+# Install AWS CLI
+# RUN apk update
+# RUN apk add openssh-client
+# RUN apk update
+# RUN apk add aws-cli
+RUN npm install -g pnpm --ignore-scripts \
+    && apk update \
+    && apk add openssh-client \
+    && apk add aws-cli
+
 WORKDIR /app
-RUN npm install -g pnpm
 
 RUN mkdir -p ./agent-provisioning/AFJ/endpoints
 RUN mkdir -p ./agent-provisioning/AFJ/agent-config
+RUN mkdir -p ./agent-provisioning/AFJ/port-file
+RUN mkdir -p ./agent-provisioning/AFJ/token
 
 # Copy the compiled code
 COPY --from=build /app/dist/apps/agent-provisioning/ ./dist/apps/agent-provisioning/
 COPY --from=build /app/node_modules  ./node_modules
 COPY --from=build /app/apps/agent-provisioning/AFJ/scripts ./agent-provisioning/AFJ/scripts
-COPY --from=build /app/apps/agent-provisioning/AFJ/port-files ./agent-provisioning/AFJ/port-file
+COPY --from=build /app/apps/agent-provisioning/AFJ/port-file ./agent-provisioning/AFJ/port-file
 
 # Set permissions
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent.sh
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent_ecs.sh
 RUN chmod 777 /app/agent-provisioning/AFJ/endpoints
 RUN chmod 777 /app/agent-provisioning/AFJ/agent-config
-
+RUN chmod 777 /app/agent-provisioning/AFJ/token
 # Copy the libs folder
 COPY libs/ ./libs/
 

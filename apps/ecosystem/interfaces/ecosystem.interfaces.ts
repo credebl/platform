@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client';
 export interface AttributeValue {
   attributeName: string;
   schemaDataType: string;
@@ -15,7 +15,7 @@ export interface RequestSchemaEndorsement {
 }
 
 export interface RequestCredDeffEndorsement {
-  schemaId: string
+  schemaId: string;
   tag: string;
   endorse?: boolean;
   schemaDetails?: object;
@@ -25,7 +25,7 @@ export interface RequestCredDeffEndorsement {
 export interface IAttributeValue {
   attributeName: string;
   schemaDataType: string;
-  displayName: string
+  displayName: string;
 }
 
 export interface SchemaTransactionPayload {
@@ -96,7 +96,7 @@ export interface EndorsementTransactionPayload {
   authorDid: string;
   requestPayload: string;
   responsePayload: string;
-  requestBody: Prisma.JsonValue
+  requestBody: Prisma.JsonValue;
   status: string;
   ecosystemOrgId: string;
   createDateTime: Date;
@@ -132,7 +132,6 @@ export interface submitTransactionPayload {
   credentialDefinition?: CredentialDefinitionPayload;
 }
 
-
 export interface SaveSchema {
   name: string;
   version: string;
@@ -165,7 +164,7 @@ export interface EndorsementTransactionPayloadDetails {
   responsePayload: string;
   type: string;
   createDateTime: Date;
-  createdBy:string;
+  createdBy: string;
   lastChangedDateTime: Date;
   lastChangedBy: string;
   deletedAt: Date | null;
@@ -280,3 +279,9 @@ export interface EcoInvitationsPagination {
   totalPages: number;
 }
 
+export interface TransactionPayload {
+  endorsementId: string;
+  ecosystemId: string;
+  ecosystemLeadAgentEndPoint?: string;
+  orgId?: string;
+}

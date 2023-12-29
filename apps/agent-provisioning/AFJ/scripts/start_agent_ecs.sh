@@ -23,11 +23,22 @@ S3_BUCKET_ARN=${18}
 CLUSTER_NAME=${19}
 TESKDEFINITION_FAMILY=${20}
 
-SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service"
 DESIRED_COUNT=1
+
+generate_random_string() {
+  echo "$(date +%s%N | sha256sum | base64 | head -c 12)"
+}
+
+# Call the function to generate a random string
+random_string=$(generate_random_string)
+
+# Print the generated random string
+echo "Random String: $random_string"
+
+SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service-${random_string}"
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
-ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
-INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
+ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
+INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
 INBOUND_PORT=9001
 
@@ -80,7 +91,7 @@ echo "AGENT SPIN-UP STARTED"
 
 AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
 
-cat <<EOF >>/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json
+cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json
 {
   "label": "${AGENCY}_${CONTAINER_NAME}",
   "walletId": "$WALLET_NAME",
@@ -233,12 +244,19 @@ if [ $? -eq 0 ]; then
   done
 
   echo "Creating agent config"
-  cat <<EOF >>${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
+  cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
         "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
         "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
     }
 EOF
+
+  cat <<EOF >${PWD}/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json
+    {
+        "token" : ""
+    }
+EOF
+
   echo "Agent config created"
 else
   echo "==============="

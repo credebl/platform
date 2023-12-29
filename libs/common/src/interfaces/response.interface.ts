@@ -5,3 +5,9 @@ export default interface IResponseType {
   data?: unknown;
   error?: unknown;
 };
+export interface IResponse {
+  statusCode: number;
+  message: string;
+  label?: string;
+  data?: unknown;
+};

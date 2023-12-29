@@ -6,7 +6,7 @@ import { GetAllSchemaByPlatformDto } from '../schema/dtos/get-all-schema.dto';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { User } from '../authz/decorators/user.decorator';
 import { Response } from 'express';
-import { ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
+import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
@@ -34,13 +34,13 @@ export class PlatformController {
         @User() user: IUserRequestInterface
     ): Promise<object> {
         const { ledgerId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
-        const schemaSearchCriteria: ISchemaSearchInterface = {
+        const schemaSearchCriteria: ISchemaSearchPayload = {
             ledgerId,
             pageNumber,
             searchByText,
             pageSize,
-            sorting,
-            sortByValue
+            sortField: sorting,
+            sortBy: sortByValue
         };
         const schemasResponse = await this.platformService.getAllSchema(schemaSearchCriteria, user);
         const finalResponse: IResponseType = {

@@ -1,4 +1,4 @@
-export interface UsersActivity {
+export interface IUsersActivity {
     id: string,
     orgId: string,
     userId: string,

@@ -7,6 +7,7 @@ import { SchemaRepository } from './repositories/schema.repository';
 import { SchemaService } from './schema.service';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from '@credebl/prisma-service';
+import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ]),
 
     HttpModule,
-    CommonModule
+    CommonModule,
+    CacheModule.register()
   ],
   providers: [
     SchemaService,

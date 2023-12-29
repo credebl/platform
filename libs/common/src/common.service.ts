@@ -1,3 +1,9 @@
+/* eslint-disable arrow-body-style */
+/* eslint-disable implicit-arrow-linebreak */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable space-in-parens */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import * as CryptoJS from 'crypto-js';
 
 import {
@@ -11,8 +17,6 @@ import {
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
-import { readFileSync } from 'fs';
-import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class CommonService {
@@ -390,4 +394,5 @@ export class CommonService {
       throw new BadRequestException('Invalid Credentials');
     }
   }
+
 }

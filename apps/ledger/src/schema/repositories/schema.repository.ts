@@ -1,10 +1,12 @@
 /* eslint-disable camelcase */
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { ISchema, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { AgentDetails } from '../interfaces/schema.interface';
+import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
+import { SortValue } from '@credebl/enum/enum';
+import { ICredDefWithCount } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class SchemaRepository {
@@ -70,20 +72,7 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemas(payload: ISchemaSearchCriteria, orgId: string): Promise<{
-    schemasCount: number;
-    schemasResult: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      version: string;
-      attributes: string;
-      schemaLedgerId: string;
-      publisherDid: string;
-      issuerId: string;
-      orgId: string;
-    }[];
-  }> {
+  async getSchemas(payload: ISchemaSearchCriteria, orgId: string): Promise<ISchemasWithCount> {
     try {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
@@ -107,7 +96,7 @@ export class SchemaRepository {
           issuerId: true
         },
         orderBy: {
-          [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
+          [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc' 
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
@@ -122,7 +111,11 @@ export class SchemaRepository {
       return { schemasCount, schemasResult };
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
-      throw error;
+      throw new InternalServerErrorException(
+        ResponseMessages.schema.error.failedFetchSchema,
+        { cause: new Error(), description: error.message }
+      );
+
     }
   }
 
@@ -170,14 +163,12 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemasCredDeffList(payload: ISchemaSearchCriteria, orgId: string, schemaId: string): Promise<{
-    tag: string;
-    credentialDefinitionId: string;
-    schemaLedgerId: string;
-    revocable: boolean;
-  }[]> {
+  async getSchemasCredDeffList(payload: ISchemaSearchCriteria): Promise<ICredDefWithCount> {
+
+    const {orgId, schemaId} = payload;
+    
     try {
-      return this.prisma.credential_definition.findMany({
+      const credDefResult = await this.prisma.credential_definition.findMany({
         where: {
           AND: [
             { orgId },
@@ -192,9 +183,20 @@ export class SchemaRepository {
           createDateTime: true
         },
         orderBy: {
-          [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
+          [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc'
+        },
+        take: Number(payload.pageSize),
+        skip: (payload.pageNumber - 1) * payload.pageSize
+      });
+      const credDefCount = await this.prisma.credential_definition.count({
+        where: {
+          AND: [
+            { orgId },
+            { schemaLedgerId: schemaId }
+          ]
         }
       });
+      return { credDefResult, credDefCount };
     } catch (error) {
       this.logger.error(`Error in getting agent DID: ${error}`);
       throw error;
@@ -238,7 +240,7 @@ export class SchemaRepository {
           issuerId: true
         },
         orderBy: {
-          [payload.sorting]: 'DESC' === payload.sortByValue ? 'desc' : 'ASC' === payload.sortByValue ? 'asc' : 'desc'
+          [payload.sortField]: 'DESC' === payload.sortBy ? 'desc' : 'ASC' === payload.sortBy ? 'asc' : 'desc'
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize

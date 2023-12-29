@@ -8,11 +8,12 @@ export interface IProofRequestAttribute {
     credentialName: string;
 }
 
-export interface IProofRequestsSearchCriteria {
+export interface IProofRequestSearchCriteria {
     pageNumber: number;
     pageSize: number;
-    sorting: string;
-    sortByValue: string;
+    sortField: string;
+    sortBy: string;
     searchByText: string;
     user?: IUserRequestInterface
 }
+

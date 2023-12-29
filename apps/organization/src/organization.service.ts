@@ -1,6 +1,5 @@
-// eslint-disable-next-line camelcase
-import { organisation, org_roles, user } from '@prisma/client';
-import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException } from '@nestjs/common';
+import { organisation, user } from '@prisma/client';
+import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
@@ -18,10 +17,13 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-import { IUpdateOrganization, OrgAgent } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -32,7 +34,8 @@ export class OrganizationService {
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
   /**
@@ -103,7 +106,7 @@ export class OrganizationService {
 
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
-      updateOrgDto.userId  = userId;
+      updateOrgDto.userId = userId;
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
@@ -118,8 +121,8 @@ export class OrganizationService {
    * @param 
    * @returns Get created organizations details
    */
-  // eslint-disable-next-line camelcase
-  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+
+  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
     try {
 
       const query = {
@@ -136,12 +139,13 @@ export class OrganizationService {
         userId
       };
 
-      return this.organizationRepository.getOrganizations(
+      const getOrgs = await this.organizationRepository.getOrganizations(
         query,
         filterOptions,
         pageNumber,
         pageSize
       );
+      return getOrgs;
 
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
@@ -154,8 +158,8 @@ export class OrganizationService {
   * @param 
   * @returns Get public organizations details
   */
-  // eslint-disable-next-line camelcase
-  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<object> {
+
+  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
     try {
 
       const query = {
@@ -181,10 +185,10 @@ export class OrganizationService {
     }
   }
 
-  async getPublicProfile(payload: { orgSlug: string }): Promise<object> {
+  async getPublicProfile(payload: { orgSlug: string }): Promise<IGetOrgById> {
     const { orgSlug } = payload;
     try {
-      
+
       const query = {
         orgSlug,
         publicProfile: true
@@ -195,8 +199,8 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
       }
 
-      const credentials = await this.organizationRepository.getCredDefByOrg(organizationDetails['id']);
-      organizationDetails['credential_definitions'] = credentials;
+      const credDefs = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
+      organizationDetails['credential_definitions'] = credDefs;
       return organizationDetails;
 
     } catch (error) {
@@ -210,8 +214,8 @@ export class OrganizationService {
      * @param orgId Registration Details
      * @returns Get created organization details
      */
-  // eslint-disable-next-line camelcase
-  async getOrganization(orgId: string): Promise<object> {
+
+  async getOrganization(orgId: string): Promise<IGetOrgById> {
     try {
 
       const query = {
@@ -231,12 +235,12 @@ export class OrganizationService {
     * @param orgId Registration Details
     * @returns Get created invitation details
     */
-  // eslint-disable-next-line camelcase
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<object> {
+
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgInvitationsPagination> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
       for await (const item of getOrganization['invitations']) {
-        const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item.orgRoles);
+        const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item['orgRoles']);
         (item['orgRoles'] as object) = getOrgRoles;
       };
       return getOrganization;
@@ -252,8 +256,8 @@ export class OrganizationService {
    * @returns
    */
 
-  // eslint-disable-next-line camelcase
-  async getOrgRoles(): Promise<org_roles[]> {
+
+  async getOrgRoles(): Promise<IOrgRoles[]> {
     try {
       return this.orgRoleService.getOrgRoles();
     } catch (error) {
@@ -309,7 +313,7 @@ export class OrganizationService {
   * @returns createInvitation
   */
 
-  // eslint-disable-next-line camelcase
+
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const { invitations, orgId } = bulkInvitationDto;
 
@@ -397,7 +401,7 @@ export class OrganizationService {
     return false;
   }
 
-  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrgInvitationsPagination> {
     try {
       return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search);
     } catch (error) {
@@ -478,7 +482,7 @@ export class OrganizationService {
     }
   }
 
-  async getOrgDashboard(orgId: string): Promise<object> {
+  async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
     try {
       return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
@@ -503,7 +507,12 @@ export class OrganizationService {
   async deleteOrganization(orgId: string): Promise<boolean> {
     try {
       const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
-
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       let url;
       if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {
         url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
@@ -514,7 +523,7 @@ export class OrganizationService {
 
       const payload = {
         url,
-        apiKey: getAgent.apiKey
+        apiKey
       };
 
       const deleteWallet = await this._deleteWallet(payload);
@@ -534,7 +543,7 @@ export class OrganizationService {
     }
   }
 
-  async _deleteWallet(payload: OrgAgent): Promise<{
+  async _deleteWallet(payload: IOrgAgent): Promise<{
     response;
   }> {
     try {
@@ -561,6 +570,52 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
       throw error;
+    }
+  }
+
+
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.organizationServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
+  async deleteOrganizationInvitation(orgId: string, invitationId: string): Promise<boolean> {
+    try {
+      const invitationDetails = await this.organizationRepository.getInvitationById(invitationId);
+
+      // Check invitation is present
+      if (!invitationDetails) {
+        throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
+      }
+
+      // Check if delete process initiated by the org who has created invitation      
+      if (orgId !== invitationDetails.orgId) {
+        throw new ForbiddenException(ResponseMessages.organisation.error.deleteOrgInvitation);
+      }
+
+      // Check if invitation is already accepted/rejected
+      if (Invitation.PENDING !== invitationDetails.status) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invitationStatusInvalid);
+      }
+
+      await this.organizationRepository.deleteOrganizationInvitation(invitationId);
+
+      return true;
+    } catch (error) {
+      this.logger.error(`delete organization invitation: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

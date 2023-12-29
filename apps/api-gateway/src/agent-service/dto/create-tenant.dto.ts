@@ -7,7 +7,7 @@ export class CreateTenantDto {
     @ApiProperty()
     @MaxLength(25, { message: 'Maximum length for label must be 25 characters.' })
     @IsString({ message: 'label must be in string format.' })
-    @Transform(({ value }) => value.trim())
+    @Transform(({ value }) => trim(value))
     @MinLength(2, { message: 'Minimum length for label must be 2 characters.' })
     @Matches(labelRegex, { message: 'Label must not contain special characters.' })
     @Matches(/^\S*$/, {
@@ -15,7 +15,7 @@ export class CreateTenantDto {
     })
     label: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: 'dfuhgfklskmjngrjekjfgjjfkoekfdad' })
     @MaxLength(32, { message: 'seed must be at most 32 characters.' })
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'seed is required' })
@@ -26,20 +26,23 @@ export class CreateTenantDto {
     seed: string;
 
     @ApiProperty({ example: [1] })
+    @ApiPropertyOptional()
     @IsOptional()
     @IsArray({ message: 'ledgerId must be an array' })
     @IsNotEmpty({ message: 'please provide valid ledgerId' })
     ledgerId?: string[];
 
-    orgId: string;
-
-    @ApiProperty()
+    @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
     @IsOptional()
+    @ApiPropertyOptional()
     @IsString({ message: 'did must be in string format.' })
     did?: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: 'ojIckSD2jqNzOqIrAGzL' })
     @IsOptional()
     @ApiPropertyOptional()
+    @IsString({ message: 'did must be in string format.' })
     clientSocketId?: string;
+
+    orgId: string;
 }

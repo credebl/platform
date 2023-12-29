@@ -6,8 +6,8 @@ import {  trim } from '@credebl/common/cast.helper';
 
 export class LoginUserDto {
     @ApiProperty({ example: 'awqx@getnada.com' })
-    @IsEmail()
-    @IsNotEmpty({ message: 'Please provide valid email' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
+    @IsNotEmpty({ message: 'Email is required' }) 
     @IsString({ message: 'email should be string' })
     email: string;
 

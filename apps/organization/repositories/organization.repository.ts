@@ -56,7 +56,7 @@ export class OrganizationRepository {
           description: createOrgDto.description,
           website: createOrgDto.website,
           orgSlug: createOrgDto.orgSlug,
-          publicProfile: true,
+          publicProfile: false,
           createdBy: createOrgDto.createdBy,
           lastChangedBy: createOrgDto.lastChangedBy
         }

@@ -6,7 +6,7 @@ FROM node:18-alpine as build
 # RUN apk add openssh-client
 # RUN apk update
 # RUN apk add aws-cli
-RUN npm install -g pnpm \
+RUN npm install -g pnpm --ignore-scripts \
     && apk update \
     && apk add openssh-client \
     && apk add aws-cli
@@ -37,17 +37,18 @@ FROM node:18-alpine as prod
 # RUN apk add openssh-client
 # RUN apk update
 # RUN apk add aws-cli
-RUN npm install -g pnpm \
+RUN npm install -g pnpm --ignore-scripts \
     && apk update \
     && apk add openssh-client \
     && apk add aws-cli
 
 WORKDIR /app
-RUN npm install -g pnpm
 
 RUN mkdir -p ./agent-provisioning/AFJ/endpoints
 RUN mkdir -p ./agent-provisioning/AFJ/agent-config
 RUN mkdir -p ./agent-provisioning/AFJ/port-file
+RUN mkdir -p ./agent-provisioning/AFJ/token
+
 # Copy the compiled code
 COPY --from=build /app/dist/apps/agent-provisioning/ ./dist/apps/agent-provisioning/
 COPY --from=build /app/node_modules  ./node_modules
@@ -59,7 +60,7 @@ RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent.sh
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent_ecs.sh
 RUN chmod 777 /app/agent-provisioning/AFJ/endpoints
 RUN chmod 777 /app/agent-provisioning/AFJ/agent-config
-
+RUN chmod 777 /app/agent-provisioning/AFJ/token
 # Copy the libs folder
 COPY libs/ ./libs/
 

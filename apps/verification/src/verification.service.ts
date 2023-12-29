@@ -616,7 +616,7 @@ export class VerificationService {
           break;
         }
 
-        case 'proof-form-data': {
+        case 'get-verified-proof': {
           url = orgAgentType === OrgAgentType.DEDICATED
             ? `${agentEndPoint}${CommonConstants.URL_PROOF_FORM_DATA}`.replace('#', proofPresentationId)
             : orgAgentType === OrgAgentType.SHARED
@@ -645,7 +645,7 @@ export class VerificationService {
   async getVerifiedProofdetails(proofId: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-      const verificationMethodLabel = 'proof-form-data';
+      const verificationMethodLabel = 'get-verified-proof';
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', proofId);
@@ -771,6 +771,7 @@ export class VerificationService {
   }> {
     try {
 
+      //nats call in agent for fetch verified proof details
       const pattern = {
         cmd: 'get-agent-verified-proof-details'
       };
@@ -823,7 +824,8 @@ export class VerificationService {
             {
               response
             }))
-        ).toPromise()
+        )
+        .toPromise()
         .catch((error) => {
             this.logger.error(`catch: ${JSON.stringify(error)}`);
             throw new HttpException({         

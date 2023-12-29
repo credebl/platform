@@ -751,18 +751,17 @@ export class VerificationService {
       return extractedDataArray;
     } catch (error) {
         this.logger.error(`[getVerifiedProofDetails] - error in get verified proof details : ${JSON.stringify(error)}`);
-        const errorStack = error?.status?.message?.error?.reason;
+        const errorStack = error?.response?.error?.reason;
 
         if (errorStack) {
           throw new RpcException({
-              message: ResponseMessages.verification.error.proofPresentationNotFound,
-              statusCode: error?.status?.message?.statusCode,
+              message: ResponseMessages.verification.error.verifiedProofNotFound,
+              statusCode: error?.response?.status,
               error: errorStack
           });
       } else {
         throw new RpcException(error.response ? error.response : error);      
       } 
-      // this.verificationErrorHandling(error);
       }
   }
 
@@ -816,7 +815,6 @@ export class VerificationService {
   async natsCall(pattern: object, payload: object): Promise<{
     response: string;
   }> {
-    try {
       return this.verificationServiceProxy
         .send<string>(pattern, payload)
         .pipe(
@@ -826,17 +824,14 @@ export class VerificationService {
             }))
         )
         .toPromise()
-        .catch((error) => {
+        .catch(error => {
             this.logger.error(`catch: ${JSON.stringify(error)}`);
             throw new HttpException({         
                 status: error.statusCode, 
-                error: error.error?.message?.error ? error.error?.message?.error : error.error,
+                error: error.error,
                 message: error.message
               }, error.error);
-            });
-          } catch (error) {
-          this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
-          throw new RpcException(error.response ? error.response : error);
-        }
+        });
     }
+  
 }          

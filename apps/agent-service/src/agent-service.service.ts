@@ -1250,7 +1250,7 @@ export class AgentServiceService {
               ResponseMessages.agent.error.agentDown,
               { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
             );
-          } else {
+          } else {         
             throw error;
           }
         });
@@ -1258,7 +1258,6 @@ export class AgentServiceService {
       return getVerifiedProofData;
     } catch (error) {
       this.logger.error(`Error in get verified proof details in agent service : ${JSON.stringify(error)}`);
-      // throw error;
       throw new RpcException(error.response ? error.response : error);
     }
   }

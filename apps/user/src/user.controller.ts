@@ -1,13 +1,15 @@
-import { AddPasskeyDetails, CheckUserDetails, PlatformSettings, ShareUserCertificate, UserInvitations, UpdateUserProfile, UserCredentials, UserEmailVerificationDto, userInfo, UsersProfile } from '../interfaces/user.interface';
+import { ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, IUserCredentials, IUsersProfile, IUserInformation, IUserSignIn} from '../interfaces/user.interface';
+import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
-import { LoginUserDto } from '../dtos/login-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
-import { UsersActivity } from 'libs/user-activity/interface';
+import { IUsersActivity } from 'libs/user-activity/interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Controller()
 export class UserController {
@@ -15,38 +17,46 @@ export class UserController {
 
   /**
    * Description: Registers new user
-   * @param payload Registration Details
-   * @returns Get registered user response
+   * @param email 
+   * @returns User's verification email sent status
    */
   @MessagePattern({ cmd: 'send-verification-mail' })
-  async sendVerificationMail(payload: { userEmailVerificationDto: UserEmailVerificationDto }): Promise<object> {
-    return this.userService.sendVerificationMail(payload.userEmailVerificationDto);
+  async sendVerificationMail(payload: { userEmailVerification: ISendVerificationEmail }): Promise<ISendVerificationEmail> {
+    return this.userService.sendVerificationMail(payload.userEmailVerification);
   }
 
   /**
    * Description: Verify user's email
-   * @param param
-   * @returns Get user's email verified
+   * @param email
+   * @param verificationcode
+   * @returns User's email verification status 
    */
   @MessagePattern({ cmd: 'user-email-verification' })
-  async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<object> {
+  async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<IVerifyUserEmail> {
     return this.userService.verifyEmail(payload.param);
   }
+ /**
+  * @Body loginUserDto
+  * @returns User's access token details
+  */
 
   @MessagePattern({ cmd: 'user-holder-login' })
-  async login(payload: LoginUserDto): Promise<object> {
+  async login(payload: IUserSignIn): Promise<ISignInUser> {
    return this.userService.login(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-profile' })
-  async getProfile(payload: { id }): Promise<UsersProfile> {
+  async getProfile(payload: { id }): Promise<IUsersProfile> {
     return this.userService.getProfile(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-public-profile' })
-  async getPublicProfile(payload: { username }): Promise<UsersProfile> {
+  async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     return this.userService.getPublicProfile(payload);
   }
+   /**
+   * @returns User details
+   */
   @MessagePattern({ cmd: 'update-user-profile' })
   async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<user> {
     return this.userService.updateUserProfile(payload.updateUserProfileDto);
@@ -62,16 +72,21 @@ export class UserController {
   async findUserByEmail(payload: { email }): Promise<object> {
     return this.userService.findUserByEmail(payload);
   }
-
-
+  /**
+   * @param credentialId
+   * @returns User credentials
+   */
   @MessagePattern({ cmd: 'get-user-credentials-by-id' })
-  async getUserCredentialsById(payload: { credentialId }): Promise<UserCredentials> {
+  async getUserCredentialsById(payload: { credentialId }): Promise<IUserCredentials> {
     return this.userService.getUserCredentialsById(payload);
   }
 
+  /**
+   * @returns Organization invitation data
+   */
   @MessagePattern({ cmd: 'get-org-invitations' })
-  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<UserInvitations> {
-    return this.userService.invitations(payload);
+  async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<IUserInvitations> {
+        return this.userService.invitations(payload);
   }
 
   /**
@@ -88,9 +103,8 @@ export class UserController {
   }
 
   /**
-   *
    * @param payload
-   * @returns Share user certificate
+   * @returns User certificate URL
    */
   @MessagePattern({ cmd: 'share-user-certificate' })
   async shareUserCertificate(payload: {
@@ -105,12 +119,11 @@ export class UserController {
    * @returns organization users list
    */
   @MessagePattern({ cmd: 'fetch-organization-user' })
-  async getOrganizationUsers(payload: { orgId: string, pageNumber: number, pageSize: number, search: string }): Promise<object> {
+  async getOrganizationUsers(payload: {orgId:string} & Payload): Promise<IOrgUsers> {
     return this.userService.getOrgUsers(payload.orgId, payload.pageNumber, payload.pageSize, payload.search);
   }
 
   /**
- *
  * @param payload
  * @returns organization users list
  */
@@ -119,32 +132,44 @@ export class UserController {
     const users = this.userService.get(payload.pageNumber, payload.pageSize, payload.search);
     return users;
   }
-
+  
+  /** 
+  * @param email
+  * @returns User's email exist status
+  * */
   @MessagePattern({ cmd: 'check-user-exist' })
-  async checkUserExist(payload: { userEmail: string }): Promise<string | CheckUserDetails> {
+  async checkUserExist(payload: { userEmail: string }): Promise<ICheckUserDetails> {
     return this.userService.checkUserExist(payload.userEmail);
   }
+  /**
+  * @Body userInfo
+  * @returns User's registration status
+  */
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userInfo: userInfo }): Promise<string | object> {
+  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<string> {
     return this.userService.createUserForToken(payload.userInfo);
   }
 
   // Fetch Users recent activities
   @MessagePattern({ cmd: 'get-user-activity' })
-  async getUserActivity(payload: { userId: string, limit: number }): Promise<UsersActivity[]> {
+  async getUserActivity(payload: { userId: string, limit: number }): Promise<IUsersActivity[]> {
     return this.userService.getUserActivity(payload.userId, payload.limit);
   }
 
   @MessagePattern({ cmd: 'add-passkey' })
-  async addPasskey(payload: { userEmail: string, userInfo: AddPasskeyDetails }): Promise<string | object> {
+  async addPasskey(payload: { userEmail: string, userInfo: AddPasskeyDetailsDto }): Promise<string | object> {
     return this.userService.addPasskey(payload.userEmail, payload.userInfo);
   }
-
+ /**
+   * @returns platform and ecosystem settings updated status
+   */
   @MessagePattern({ cmd: 'update-platform-settings' })
   async updatePlatformSettings(payload: { platformSettings: PlatformSettings }): Promise<string> {
     return this.userService.updatePlatformSettings(payload.platformSettings);
   }
-
+  /**
+   * @returns platform and ecosystem settings
+   */
   @MessagePattern({ cmd: 'fetch-platform-settings' })
   async getPlatformEcosystemSettings(): Promise<object> {
     return this.userService.getPlatformEcosystemSettings();

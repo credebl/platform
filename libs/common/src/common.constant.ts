@@ -219,6 +219,9 @@ export enum CommonConstants {
   // delete wallet
   URL_DELETE_WALLET = '/agent/wallet',
   URL_DELETE_SHARED_WALLET = '/multi-tenancy/#',
+
+  // agent status
+  URL_AGENT_STATUS = '/agent',
   
   // Tenant Status
   PENDING_STATE = 0,
@@ -295,7 +298,10 @@ export enum CommonConstants {
   TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
   TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#',
 
- 
+
+ //CacheInfo
+CACHE_APIKEY_KEY = "apiKey",
+CACHE_TTL_SECONDS = 604800
 }
 
 export const postgresqlErrorCodes = [];

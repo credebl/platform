@@ -246,7 +246,7 @@ export class EcosystemController {
     * @returns Ecosystem members list
     */
   @Get('/:ecosystemId/:orgId/members')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
@@ -370,7 +370,7 @@ export class EcosystemController {
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    await this.ecosystemService.submitTransaction(endorsementId, ecosystemId);
+    await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.submit

@@ -17,7 +17,7 @@ import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
 import { OrgAgentType } from '@credebl/enum/enum';
-import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -32,7 +32,7 @@ export class SchemaService extends BaseService {
     schema: ISchemaPayload,
     user: IUserRequestInterface,
     orgId: string
-  ): Promise<schema> {
+  ): Promise<ISchemaData> {
     const apiKey = '';
     const { userId } = user.selectedOrg;
     try {

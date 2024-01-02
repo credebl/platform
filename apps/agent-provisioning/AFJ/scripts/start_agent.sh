@@ -177,6 +177,16 @@ if [ $? -eq 0 ]; then
     done
 
     echo "Creating agent config"
+
+    # Capture the logs from the container
+    container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
+
+    # Extract the token from the logs using grep and awk (modify the pattern as needed)
+    token=$(echo "$container_logs" | grep -oE 'token [^ ]+' | awk '{print $2}')
+
+    # Print the extracted token
+    echo "Token: $token"
+    
     cat <<EOF >>${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
         "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",

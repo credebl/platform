@@ -21,3 +21,20 @@ export interface IProofPresentationsListCount {
     data: IProofPresentationItem[];
   }
 
+  export interface IProofData {
+    _tags: {
+      connectionId: string;
+      state: string;
+      threadId: string;
+    };
+    metadata: Record<string, string>;
+    id: string;
+    createdAt: string;
+    protocolVersion: string;
+    state: string;
+    connectionId: string;
+    threadId: string;
+    autoAcceptProof: string;
+    updatedAt: string; // or Date as well
+    isVerified: boolean;
+  }

@@ -1,27 +1,3 @@
-export  interface UserInvitations {
-  totalPages:number;
-  userInvitationsData:UserInvitationsData[];
-}
-export  interface UserInvitationsData {
-  orgRoles: OrgRole[];
-  status: string;
-  id: string;
-  orgId: string;
-  organisation: Organisation;
-  userId: string;
-}
-export interface OrgRole {
-  id: string;
-  name: string;
-  description: string;
-}
-
-export interface Organisation {
-  id: string;
-  name: string;
-  logoUrl: string;
-}
-
 export interface IUsersProfile {
   id: string;
   username?: string;
@@ -67,7 +43,7 @@ interface IUserOrgRole {
     orgRoles: string[];
   }
   
-  export interface UserEmailVerificationDto {
+export interface ISendVerificationEmail {
     email: string;
     username?: string;
   }
@@ -112,14 +88,14 @@ interface IUserOrgRole {
     label: string;
   }
   
-  export interface CheckUserDetails {
+  export interface ICheckUserDetails {
+    isExist: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
     isSupabase?: boolean;
-    isExist?: boolean;
   }
 
-  export interface UserCredentials {
+  export interface IUserCredentials {
     id: string;
     imageUrl?: string;
     credentialId?: string;
@@ -150,6 +126,11 @@ interface IUserOrgRole {
     orgRole: OrgRole;
     organisation: Organization
   }
+  interface OrgRole {
+      id: string;
+      name: string;
+      description: string;
+    }
 
   interface Organization {
     id: string,
@@ -175,3 +156,14 @@ interface IUserOrgRole {
     pageSize: number;
     search: string;
   }
+
+export interface IVerifyUserEmail{
+  email: string;
+  verificationCode: string;
+}
+
+export interface  IUserSignIn{
+  email: string;
+  password: string;
+  isPasskey: boolean;
+}

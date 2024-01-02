@@ -18,12 +18,16 @@ import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schem
 import { map } from 'rxjs/operators';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Injectable()
 export class SchemaService extends BaseService {
   constructor(
     private readonly schemaRepository: SchemaRepository,
-    @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy
+    @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {
     super('SchemaService');
   }
@@ -33,10 +37,14 @@ export class SchemaService extends BaseService {
     user: IUserRequestInterface,
     orgId: string
   ): Promise<ISchemaData> {
-    const apiKey = '';
+
+    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    if (!apiKey || null === apiKey || undefined === apiKey) {
+      apiKey = await this._getOrgAgentApiKey(orgId);
+    }
     const { userId } = user.selectedOrg;
     try {
-      
+
       const schemaExists = await this.schemaRepository.schemaExists(
         schema.schemaName,
         schema.schemaVersion
@@ -78,9 +86,9 @@ export class SchemaService extends BaseService {
             }));
 
 
-        const attributeNamesLowerCase = trimmedAttributes.map(attribute => attribute.attributeName.toLowerCase());
-        const duplicateAttributeNames = attributeNamesLowerCase
-        .filter((value, index, element) => element.indexOf(value) !== index);
+          const attributeNamesLowerCase = trimmedAttributes.map(attribute => attribute.attributeName.toLowerCase());
+          const duplicateAttributeNames = attributeNamesLowerCase
+            .filter((value, index, element) => element.indexOf(value) !== index);
 
         if (0 < duplicateAttributeNames.length) {
             throw new ConflictException(
@@ -89,9 +97,9 @@ export class SchemaService extends BaseService {
             );
         }
 
-        const attributeDisplayNamesLowerCase = trimmedAttributes.map(attribute => attribute.displayName.toLocaleLowerCase());
-        const duplicateAttributeDisplayNames = attributeDisplayNamesLowerCase
-        .filter((value, index, element) => element.indexOf(value) !== index);
+          const attributeDisplayNamesLowerCase = trimmedAttributes.map(attribute => attribute.displayName.toLocaleLowerCase());
+          const duplicateAttributeDisplayNames = attributeDisplayNamesLowerCase
+            .filter((value, index, element) => element.indexOf(value) !== index);
 
         if (0 < duplicateAttributeDisplayNames.length) {
             throw new ConflictException(
@@ -255,7 +263,15 @@ export class SchemaService extends BaseService {
       const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-      const apiKey = '';
+      // const apiKey = '';
+
+      let apiKey;
+      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+
+      }
+
       let schemaResponse;
       if (OrgAgentType.DEDICATED === orgAgentType) {
         const getSchemaPayload = {
@@ -272,7 +288,8 @@ export class SchemaService extends BaseService {
           method: 'getSchemaById',
           payload: { schemaId },
           agentType: OrgAgentType.SHARED,
-          agentEndPoint
+          agentEndPoint,
+          apiKey
         };
         schemaResponse = await this._getSchemaById(getSchemaPayload);
       }
@@ -431,4 +448,23 @@ export class SchemaService extends BaseService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.schemaServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
+
 }

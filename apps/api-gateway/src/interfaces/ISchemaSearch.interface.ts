@@ -9,3 +9,4 @@ export interface ISchemaSearchPayload {
     searchByText?: string;
     user?: IUserRequestInterface
 }
+  

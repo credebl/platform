@@ -98,7 +98,7 @@ export class UserController {
   async acceptRejectInvitations(payload: {
     acceptRejectInvitation: AcceptRejectInvitationDto;
     userId: string;
-  }): Promise<string> {
+  }): Promise<IUserInvitations> {
     return this.userService.acceptRejectInvitations(payload.acceptRejectInvitation, payload.userId);
   }
 

@@ -286,8 +286,6 @@ export class UserController {
   /**
 *
    * @param acceptRejectInvitation
-   * @param reqUser
-   * @param res
    * @returns Organization invitation status
    */
   @Post('/org-invitations/:invitationId')

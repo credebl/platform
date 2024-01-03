@@ -38,6 +38,8 @@ export const ResponseMessages = {
             invalidCredentials: 'Invalid Credentials',
             registerFido: 'Please complete your fido registration',
             invitationNotFound: 'Invitation not found',
+            invitationAlreadyAccepted:'Organization invitation already accepted',
+            invitationAlreadyRejected:'Organization invitation already rejected',
             invalidInvitationStatus: 'Invalid invitation status',
             invalidKeycloakId: 'keycloakId is invalid',
             invalidEmail: 'Invalid Email Id!',
@@ -46,7 +48,9 @@ export const ResponseMessages = {
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
             userNotRegisterd: 'The user has not yet completed the registration process',
             InvalidEmailDomain :'Email from this domain is not allowed',
-            credentialNotFound: 'User credentials not found'
+            credentialNotFound: 'User credentials not found',
+            invalidOrgId:'Organization does not exist',
+            invalidInvitationId:'Organization invitation does not exist'
         }
     },
     organisation: {

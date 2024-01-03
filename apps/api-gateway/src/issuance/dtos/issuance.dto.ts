@@ -1,8 +1,9 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested } from 'class-validator';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, IsObject, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { toNumber } from '@credebl/common/cast.helper';
-
+import { toNumber, trim } from '@credebl/common/cast.helper';
+import { IssueCredentialType } from '@credebl/enum/enum';
 class Attribute {
 
     @IsNotEmpty({ message: 'Please provide a valid attribute name' })
@@ -12,6 +13,13 @@ class Attribute {
     value: string;
 }
 
+class Credential {
+    @ApiProperty({ required: true })
+    '@context':[];
+    @ApiProperty({ required: true })
+    type: string[];
+  }
+
 class CredentialOffer {
 
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
@@ -20,7 +28,7 @@ class CredentialOffer {
     @ValidateNested({ each: true })
     @Type(() => Attribute)
     @IsOptional()
-    attributes: Attribute[];
+    attributes?: Attribute[];
 
     @ApiProperty({ example: 'awqx@getnada.com' })
     @IsEmail()
@@ -29,6 +37,18 @@ class CredentialOffer {
     @Transform(({ value }) => value.trim())
     @IsOptional()
     emailId: string;
+
+    @IsNotEmpty({ message: 'Please provide valid credential' })
+    @IsObject({ message: 'credential should be an object' })
+    @Type(() => Credential)
+    @IsOptional()
+    credential?:Credential;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid options' })
+    @IsObject({ message: 'options should be an object' })
+    options?:object;
 }
 
 export class IssueCredentialDto {
@@ -143,27 +163,12 @@ export class OutOfBandCredentialDto {
     @IsOptional()
     credentialOffer: CredentialOffer[];
 
-    @ApiProperty({ example: 'awqx@getnada.com' })
-    @IsEmail()
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'email should be string' })
-    @Transform(({ value }) => value.trim().toLowerCase())
-    @IsOptional()
-    emailId: string;
-
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
-    @ValidateNested({ each: true })
-    @Type(() => Attribute)
-    @IsOptional()
-    attributes: Attribute[];
-
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid credential definition id' })
     @IsString({ message: 'credential definition id should be string' })
     @Transform(({ value }) => value.trim())
-    credentialDefinitionId: string;
+    @IsOptional()
+    credentialDefinitionId?: string;
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid comment' })
@@ -176,6 +181,15 @@ export class OutOfBandCredentialDto {
     @IsNotEmpty({ message: 'Please provide valid protocol version' })
     @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
+
+
+    @ApiProperty({ example: 'jsonld' })
+    @IsNotEmpty({ message: 'Please provide credential type ' })
+    @IsEnum({ message: 'Credential type should be enum' })
+    @Transform(({ value }) => trim(value).toLocaleLowerCase())
+    @IsOptional()
+    credentialType:IssueCredentialType;
+
 
     orgId: string;
 }

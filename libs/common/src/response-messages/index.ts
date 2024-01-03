@@ -200,7 +200,10 @@ export const ResponseMessages = {
             retry: 'Credentials do not exist for retry',
             walletError: 'Credential Issuance failed due to error in Wallet Agent',
             emailIdNotPresent: 'EmailId is empty or not present',
-            attributesNotPresent: 'Attributes are not present or not empty'
+            attributesNotPresent: 'Attributes are not present or not empty',
+            credentialNotPresent:'Credential not present',
+            optionsNotPresent:'Options are not present',
+            invalidCredentialType:'Please provide a valid credential type'
         }
     },
     verification: {

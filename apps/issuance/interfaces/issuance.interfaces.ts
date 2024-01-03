@@ -1,7 +1,7 @@
 // eslint-disable-next-line camelcase
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
-
+import { IssueCredentialType } from '@credebl/enum/enum';
 export interface Attributes {
   name: string;
   value: string;
@@ -68,13 +68,14 @@ export interface CredentialOffer {
   attributes: Attributes[];
 }
 export interface OutOfBandCredentialOfferPayload {
-  credentialDefinitionId: string;
+  credentialDefinitionId?: string;
   orgId: string;
   comment?: string;
   credentialOffer?: CredentialOffer[];
   emailId?: string;
   attributes?: Attributes[];
   protocolVersion?: string;
+  credentialType?:IssueCredentialType;
 }
 
 export interface OutOfBandCredentialOffer {

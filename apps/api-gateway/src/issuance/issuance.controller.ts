@@ -62,7 +62,8 @@ import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { user } from '@prisma/client';
 import { GetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
-
+import { log } from 'console';
+import { IssueCredentialType } from '@credebl/enum/enum';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -580,7 +581,7 @@ export class IssuanceController {
    * @param res
    * @returns
    */
-  @Post('/orgs/:orgId/credentials/oob')
+  @Post('/orgs/:orgId/credentials/oob/')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
     summary: `Create out-of-band credential offer`,
@@ -590,24 +591,37 @@ export class IssuanceController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiQuery({
+    name:'credentialType',
+    enum: IssueCredentialType
+  })
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
+    @Query('credentialType') credentialType: IssueCredentialType,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
-   
+     outOfBandCredentialDto.credentialType = credentialType;
     const credOffer = outOfBandCredentialDto?.credentialOffer || [];
     if (credOffer.every(item => Boolean(!item?.emailId || '' === item?.emailId.trim()))) {
       throw new BadRequestException(ResponseMessages.issuance.error.emailIdNotPresent);
     }
-
-    if (credOffer.every(offer => (!offer?.attributes || 0 === offer?.attributes?.length ||
+    if (outOfBandCredentialDto.credentialType ===  IssueCredentialType.INDY   && credOffer.every(offer => (!offer?.attributes || 0 === offer?.attributes?.length ||
       !offer?.attributes?.every(item => item?.name)
       ))
     ) {
       throw new BadRequestException(ResponseMessages.issuance.error.attributesNotPresent);
+    }
+
+
+    if (outOfBandCredentialDto.credentialType === IssueCredentialType.JSONLD   && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
+    }
+
+    if (outOfBandCredentialDto.credentialType   ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
     }
 
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(

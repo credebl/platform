@@ -29,7 +29,7 @@ import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchinterface } from 'apps/api-gateway/src/issuance/interfaces';
-
+import { IssueCredentialType } from '@credebl/enum/enum';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
@@ -321,19 +321,24 @@ export class IssuanceService {
         orgId,
         protocolVersion,
         attributes,
-        emailId
-      } = outOfBandCredential;
+        emailId,
+        credentialType
+      } = outOfBandCredential; 
 
+      if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType) {
+            throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
+      }
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentDetails.agentEndPoint, agentDetails.tenantId);
+     
       const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
-
+      
       if (!organizationDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
       }
@@ -342,10 +347,12 @@ export class IssuanceService {
 
       const errors = [];
       const emailPromises = [];
-
+      let outOfBandIssuancePayload;
       const sendEmailForCredentialOffer = async (iterator, emailId): Promise<boolean> => {
         try {
-          const outOfBandIssuancePayload = {
+         
+          if (IssueCredentialType.INDY === credentialType) {
+          outOfBandIssuancePayload = {
             protocolVersion: protocolVersion || 'v1',
             credentialFormats: {
               indy: {
@@ -357,7 +364,23 @@ export class IssuanceService {
             comment,
             label: organizationDetails?.name
           };
-
+        }
+        if (IssueCredentialType.JSONLD === credentialType) {
+         
+          outOfBandIssuancePayload = {
+            protocolVersion:'v2',
+            credentialFormats: {
+              jsonld: {
+                credential: iterator.credential,
+                options: iterator.options
+              }
+            },
+            autoAcceptCredential: 'always',
+            comment
+            // label: organizationDetails?.name
+          };
+        }
+          
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
           if (!credentialCreateOfferDetails) {
             errors.push(ResponseMessages.issuance.error.credentialOfferNotFound);

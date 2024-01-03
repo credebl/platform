@@ -10,7 +10,8 @@ import {
   BadRequestException,
   Get,
   Query,
-  UseGuards
+  UseGuards,
+  ParseUUIDPipe
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
@@ -135,7 +136,7 @@ export class UserController {
   @ApiBearerAuth()
   async getProfile(@User() reqUser: user, @Res() res: Response): Promise<Response> {
     const userData = await this.userService.getProfile(reqUser.id);
-
+    
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchProfile,
@@ -283,10 +284,8 @@ export class UserController {
   }
 
   /**
-   *
+*
    * @param acceptRejectInvitation
-   * @param reqUser
-   * @param res
    * @returns Organization invitation status
    */
   @Post('/org-invitations/:invitationId')
@@ -297,12 +296,12 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async acceptRejectInvitaion(
-    @Body() acceptRejectInvitation: AcceptRejectInvitationDto,
-    @Param('invitationId') invitationId: string,
+      @Body() acceptRejectInvitation: AcceptRejectInvitationDto,
+      @Param('invitationId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for InvitationId`); }})) invitationId: string,
     @User() reqUser: user,
     @Res() res: Response
-  ): Promise<object> {
-    acceptRejectInvitation.invitationId = parseInt(invitationId);
+  ): Promise<Response> {
+    acceptRejectInvitation.invitationId = invitationId;
     const invitationRes = await this.userService.acceptRejectInvitaion(acceptRejectInvitation, reqUser.id);
 
     const finalResponse: IResponse = {
@@ -359,7 +358,7 @@ export class UserController {
     const userId = reqUser.id;
     updateUserProfileDto.id = userId;
     await this.userService.updateUserProfile(updateUserProfileDto);
-
+     
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.update

@@ -3,8 +3,7 @@ import { SchemaService } from './schema.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { ISchema, ISchemaCredDeffSearchInterface, ISchemaSearchPayload } from './interfaces/schema-payload.interface';
 import { schema } from '@prisma/client';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 
 
 @Controller('schema')
@@ -12,10 +11,9 @@ export class SchemaController {
     constructor(private readonly schemaService: SchemaService) { }
 
     @MessagePattern({ cmd: 'create-schema' })
-    async createSchema(payload: ISchema): Promise<string> {
+    async createSchema(payload: ISchema): Promise<ISchemaData> {
         const { schema, user, orgId } = payload;
-        await this.schemaService.createSchema(schema, user, orgId);
-        return ResponseMessages.schema.success.create;
+        return this.schemaService.createSchema(schema, user, orgId);
     }
 
     @MessagePattern({ cmd: 'get-schema-by-id' })

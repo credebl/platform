@@ -200,7 +200,6 @@ if [ $? -eq 0 ]; then
     done
 
     echo "Creating agent config"
-
     # Capture the logs from the container
     container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
 
@@ -209,8 +208,15 @@ if [ $? -eq 0 ]; then
 
     # Print the extracted token
     echo "Token: $token"
+    
+    ENDPOINT="${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json"
 
-    cat <<EOF >>${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json
+    # Check if the file exists
+    if [ -f "$ENDPOINT" ]; then
+    # If it exists, remove the file
+    rm "$ENDPOINT"
+    fi
+    cat <<EOF >>${ENDPOINT}
     {
         "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}"
     }

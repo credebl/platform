@@ -140,15 +140,16 @@ export class SchemaController {
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<object> {
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
 
     schema.orgId = orgId;
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: schemaDetails.response
+      message: ResponseMessages.schema.success.create,
+      data: schemaDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

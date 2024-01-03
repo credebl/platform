@@ -4,7 +4,7 @@ import { BaseService } from '../../../../libs/service/base.service';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from './interfaces';
-import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 
 @Injectable()
@@ -14,11 +14,9 @@ export class SchemaService extends BaseService {
     @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy
   ) { super(`Schema Service`); }
 
-  createSchema(schema: CreateSchemaDto, user: IUserRequestInterface, orgId: string): Promise<{
-    response: string;
-  }> {
+  createSchema(schema: CreateSchemaDto, user: IUserRequestInterface, orgId: string): Promise<ISchemaData> {
     const payload = { schema, user, orgId };
-    return this.sendNats(this.schemaServiceProxy, 'create-schema', payload);
+    return this.sendNatsMessage(this.schemaServiceProxy, 'create-schema', payload);
   }
 
   getSchemaById(schemaId: string, orgId: string): Promise<{

@@ -21,7 +21,7 @@ import { Response } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
-import { AddUserDetails } from '../user/dto/add-user.dto';
+import { AddUserDetailsDto } from '../user/dto/add-user.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 
 
@@ -35,10 +35,9 @@ export class AuthzController {
     private readonly commonService: CommonService) { }
 
   /**
-   *
-   * @param query
-   * @param res
-   * @returns User email verified
+   * @param email
+   * @param verificationcode
+   * @returns User's email verification status 
    */
   @Get('/verify')
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -55,16 +54,14 @@ export class AuthzController {
   }
 
   /**
-  *
   * @param email
-  * @param res
-  * @returns Email sent success
+  * @returns User's verification email sent status
   */
   @Post('/verification-mail')
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @ApiOperation({ summary: 'Send verification email', description: 'Send verification email to new user' })
-  async create(@Body() userEmailVerificationDto: UserEmailVerificationDto, @Res() res: Response): Promise<Response> {
-    await this.authzService.sendVerificationMail(userEmailVerificationDto);
+  async create(@Body() userEmailVerification: UserEmailVerificationDto, @Res() res: Response): Promise<Response> {
+    await this.authzService.sendVerificationMail(userEmailVerification);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.user.success.sendVerificationCode
@@ -74,30 +71,23 @@ export class AuthzController {
 
   /**
   *
-  * @param email
-  * @param userInfo
-  * @param res
-  * @returns Add new user
+  * @Body userInfo
+  * @returns User's registration status
   */
   @Post('/signup')
   @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
-  async addUserDetails(@Body() userInfo: AddUserDetails, @Res() res: Response): Promise<Response> {
-      const userDetails = await this.authzService.addUserDetails(userInfo);
+  async addUserDetails(@Body() userInfo: AddUserDetailsDto, @Res() res: Response): Promise<Response> {
+      await this.authzService.addUserDetails(userInfo);
       const finalResponse = {
         statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.create,
-        data: userDetails.response
+        message: ResponseMessages.user.success.create
       };
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
-
-
   /**
-  * 
-  * @param loginUserDto 
-  * @param res 
-  * @returns User access token details
+  * @Body loginUserDto
+  * @returns User's access token details
   */
   @Post('/signin')
   @ApiOperation({
@@ -113,7 +103,7 @@ export class AuthzController {
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.user.success.login,
-        data: userData.response
+        data: userData
       };
 
       return res.status(HttpStatus.OK).json(finalResponse);

@@ -3,13 +3,7 @@ export interface IUserOrgRoles {
   userId: string
   orgRoleId: string
   orgId: string | null,
-  orgRole: OrgRole
-}
-
-export interface OrgRole {
-  id: string
-  name: string
-  description: string
+  orgRole: IOrgRole
 }
 
 export interface IUpdateOrganization {
@@ -24,7 +18,116 @@ export interface IUpdateOrganization {
 
 }
 
-export interface OrgAgent {
+export interface IOrgAgent {
   url: string;
   apiKey: string;
+}
+
+
+export interface IGetOrgById { 
+  id: string;
+  name: string;
+  description: string;
+  orgSlug: string;
+  logoUrl: string;
+  website: string;
+  publicProfile: boolean;
+  schema: ISchema[];
+  org_agents: IOrgAgents[];
+}
+
+interface ISchema {
+  id: string;
+  name: string;
+}
+
+interface IOrgAgents {
+  agent_invitations: IAgentInvitation[];
+  ledgers: ILedgers;
+  org_agent_type: IOrgAgentType;
+}
+
+interface IAgentInvitation {
+  id: string;
+  connectionInvitation: string;
+  multiUse: boolean;
+}
+
+export interface IUserOrgRole {
+  user: string;
+  orgRole: string;
+}
+
+interface IOrgAgentType {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  agent: string;
+}
+
+interface ILedgers {
+  id: string;
+  name: string;
+  networkType: string
+}
+
+export interface IGetOrgs {
+  totalPages:number;
+  organizations : IAllOrganizations[];
+}
+
+interface IAllOrganizations {
+  id: string,
+  name: string,
+  description: string,
+  logoUrl: string,
+  orgSlug: string,
+  userOrgRoles: IUserOrganizationRoles[];
+}
+
+interface IUserOrganizationRoles {
+  id: string,
+  orgRole :IOrgRole;
+}
+
+export interface IOrgRole {
+  id: string
+  name: string
+  description: string
+}
+
+export interface IOrgInvitationsPagination {
+  totalPages: number;
+  invitations: IInvitation[];
+}
+
+interface IInvitation {
+  id: string,
+  orgId: string,
+  email: string,
+  userId: string,
+  status: string,
+  orgRoles: string[],
+  createDateTime: Date,
+  createdBy:string,
+  organisation: IOrganizationPagination;
+}
+
+interface IOrganizationPagination {
+  id: string;
+  name: string;
+  logoUrl: string;
+}
+
+export interface IOrganizationDashboard {
+  usersCount: number,
+  schemasCount: number,
+  credentialsCount: number,
+  presentationsCount:number
+}
+
+export interface Payload {
+  pageNumber: number;
+  pageSize: number;
+  search: string;
 }

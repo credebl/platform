@@ -1,7 +1,7 @@
 
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class EmailValidator {
 
@@ -10,5 +10,6 @@ export class EmailValidator {
   @IsNotEmpty({ message: 'Email is required' })
   @IsString({ message: 'Email should be a string' })
   @Transform(({ value }) =>  'string' === typeof value ? value.trim() : value)
+  @MaxLength(256, { message: 'Email must be at most 256 character' })
   email: string;
 }

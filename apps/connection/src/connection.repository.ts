@@ -2,8 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, org_agents, platform_config, shortening_url } from '@prisma/client';
-import { IConnectionInterface, IConnectionSearchCriteria, OrgAgent } from './interfaces/connection.interfaces';
+import { IConnectionSearchCriteria, ICreateConnection, OrgAgent } from './interfaces/connection.interfaces';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IConnectionsListCount } from '@credebl/common/interfaces/connection.interface';
+import { SortValue } from '@credebl/enum/enum';
 // import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
 export class ConnectionRepository {
@@ -93,7 +95,7 @@ export class ConnectionRepository {
    * @returns Get connection details
    */
   // eslint-disable-next-line camelcase
-  async saveConnectionWebhook(payload: IConnectionInterface): Promise<object> {
+  async saveConnectionWebhook(payload: ICreateConnection): Promise<object> {
     try {
 
       let organisationId: string;
@@ -245,17 +247,7 @@ export class ConnectionRepository {
     user: IUserRequest,
     orgId: string,
     connectionSearchCriteria: IConnectionSearchCriteria
-  ): Promise<{
-    connectionCount: number;
-    connectionsList: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      theirLabel: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+  ): Promise<IConnectionsListCount> {
     try {
       const connectionsList = await this.prisma.connections.findMany({
         where: {
@@ -274,10 +266,7 @@ export class ConnectionRepository {
           connectionId: true
         },
         orderBy: {
-          [connectionSearchCriteria?.sorting || 'createDateTime']:
-          'DESC' === connectionSearchCriteria?.sortByValue
-              ? 'desc'
-          : 'asc'
+          [connectionSearchCriteria.sortField]: SortValue.ASC === connectionSearchCriteria.sortBy ? 'asc' : 'desc' 
         },
         take: Number(connectionSearchCriteria.pageSize),
         skip: (connectionSearchCriteria.pageNumber - 1) * connectionSearchCriteria.pageSize

@@ -78,7 +78,7 @@ export class UserService {
    * @param userEmailVerification
    * @returns
    */
-  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<ISendVerificationEmail> {
+  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
       const { email } = userEmailVerification;
 
@@ -90,23 +90,19 @@ export class UserService {
           throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
         }
       }
-      const userDetails = await this.userRepository.checkUserExist(userEmailVerification.email);
-
-      if (userDetails && userDetails.isEmailVerified) {
+      const userDetails = await this.userRepository.checkUserExist(email);
+      
+      if (userDetails?.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
 
-      if (userDetails && !userDetails.isEmailVerified) {
-        throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
-      }
-
       const verifyCode = uuidv4();
-      const uniqueUsername = await this.createUsername(userEmailVerification.email, verifyCode);
+      const uniqueUsername = await this.createUsername(email, verifyCode);
       userEmailVerification.username = uniqueUsername;
       const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
 
       try {
-        await this.sendEmailForVerification(userEmailVerification.email, resUser.verificationCode);
+        await this.sendEmailForVerification(email, resUser.verificationCode);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -214,7 +210,7 @@ export class UserService {
       const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email);
 
       if (!checkUserDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+        throw new NotFoundException(ResponseMessages.user.error.emailIsNotVerified);
       }
       if (checkUserDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
@@ -734,14 +730,15 @@ export class UserService {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {
-          isExist: false
+          isRegistrationCompleted: false,
+          isEmailVerified: false
         };
       } else {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
-          isExist: true
+          isRegistrationCompleted: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
+
         };
         return userVerificationDetails;
       }

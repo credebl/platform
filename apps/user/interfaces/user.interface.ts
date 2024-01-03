@@ -89,10 +89,9 @@ export interface ISendVerificationEmail {
   }
   
   export interface ICheckUserDetails {
-    isExist: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
-    isSupabase?: boolean;
+    isRegistrationCompleted?: boolean;
   }
 
   export interface IUserCredentials {

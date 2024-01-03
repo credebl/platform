@@ -56,6 +56,8 @@ export interface ISchemaData {
   publisherDid: string;
   issuerId: string;
   orgId: string;
+  ledgerId?: string;
+  id?: string;
 }
 
 export interface ISchemasWithCount {

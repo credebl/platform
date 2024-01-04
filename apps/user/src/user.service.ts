@@ -535,7 +535,7 @@ export class UserService {
    * @param userId
    * @returns Organization invitation status
    */
-  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<string> {
+  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(userId);
       return this.fetchInvitationsStatus(acceptRejectInvitation, userId, userData.email);
@@ -640,7 +640,7 @@ export class UserService {
     acceptRejectInvitation: AcceptRejectInvitationDto,
     userId: string,
     email: string
-  ): Promise<string> {
+  ): Promise<IUserInvitations> {
     try {
       const pattern = { cmd: 'update-invitation-status' };
 
@@ -656,7 +656,8 @@ export class UserService {
           throw new HttpException(
             {
               statusCode: error.statusCode,
-              error: error.message
+              error: error.error,
+              message: error.message
             },
             error.error
           );

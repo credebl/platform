@@ -895,7 +895,8 @@ export class EcosystemService {
         const submitTxn = await this.submitTransaction({
           endorsementId,
           ecosystemId,
-          ecosystemLeadAgentEndPoint: ecosystemLeadAgentDetails.agentEndPoint
+          ecosystemLeadAgentEndPoint: ecosystemLeadAgentDetails.agentEndPoint,
+          orgId: ecosystemLeadDetails.orgId
         });
         if (!submitTxn) {
           await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);

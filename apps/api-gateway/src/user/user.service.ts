@@ -11,6 +11,7 @@ import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
+import { CreateUserDegreeCertificateDto } from './dto/share-degree-certificate.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -66,6 +67,13 @@ export class UserService extends BaseService {
     return this.sendNats(this.serviceProxy, 'share-user-certificate', payload);
   }
   
+  async shareDegreeCertificate(
+    shareDegreeCertificate: CreateUserDegreeCertificateDto
+  ): Promise<object> {
+    const payload = { shareDegreeCertificate};
+    return this.sendNatsMessage(this.serviceProxy, 'share-degree-certificate', payload);
+  }
+
   async get(
     getAllUsersDto: GetAllUsersDto
   ): Promise<{ response: object }> {

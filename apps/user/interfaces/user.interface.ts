@@ -106,7 +106,13 @@ export interface ISendVerificationEmail {
     credentialId: string;
     attributes: Attribute[];
   }
-  
+ 
+  export interface IShareDegreeCertificate {
+    schemaId: string;
+    credentialId: string;
+    attributes: Attribute[];
+  }
+
   export interface Attribute {
     [key: string]: string;
     label: string;

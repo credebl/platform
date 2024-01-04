@@ -38,7 +38,8 @@ import {
   UserCredentials, 
    IUserInformation,
     IUsersProfile,
-    UserInvitations
+    UserInvitations,
+    IShareDegreeCertificate
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -56,6 +57,7 @@ import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
+import { DegreeCertificateTemplate } from '../templates/degree-template';
 
 @Injectable()
 export class UserService {
@@ -612,6 +614,49 @@ export class UserService {
     }
 
     return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
+
+  }
+
+
+  async shareDegreeCertificate(shareDegreeCertificate: IShareDegreeCertificate): Promise<string> {
+
+    const attributeArray = [];
+    let attributeJson = {};
+    const attributePromises = shareDegreeCertificate.attributes.map(async (iterator: Attribute) => {
+      attributeJson = {
+        [iterator.name]: iterator.value
+      };
+      attributeArray.push(attributeJson);
+    });
+    await Promise.all(attributePromises);
+
+    const userDegreeTemplate = new DegreeCertificateTemplate();
+    const template = await userDegreeTemplate.getDegreeCertificateTemplate(attributeArray);
+
+    const imageBuffer = 
+    await this.convertHtmlToImage(template, shareDegreeCertificate.credentialId);
+    const verifyCode = uuidv4();
+
+    const imageUrl = await this.awsService.uploadUserCertificate(
+      imageBuffer,
+      'svg',
+      verifyCode,
+      'certificates',
+      'base64'
+    );
+    const existCredentialId = await this.userRepository.getUserCredentialsById(shareDegreeCertificate.credentialId);
+    
+    if (existCredentialId) {
+      return `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`;
+    }
+
+    const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareDegreeCertificate.credentialId);
+
+    if (!saveCredentialData) {
+      throw new BadRequestException(ResponseMessages.schema.error.notStoredCredential);
+    }
+
+    return `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`;
 
   }
 

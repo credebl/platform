@@ -2,18 +2,59 @@
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 
-export interface Attributes {
+export interface IAttributes {
   name: string;
   value: string;
 }
 export interface IIssuance {
-  user: IUserRequest;
+  user?: IUserRequest;
   credentialDefinitionId: string;
-  comment: string;
+  comment?: string;
   connectionId: string;
-  attributes: Attributes[];
+  attributes: IAttributes[];
   orgId: string;
   protocolVersion: string;
+}
+
+interface IIndy {
+  attributes: IAttributes[],
+  credentialDefinitionId: string
+}
+
+export interface IIssueData {
+  protocolVersion?: string;
+  connectionId: string;
+  credentialFormats: {
+    indy: IIndy
+  },
+  autoAcceptCredential: string,
+  comment: string;
+}
+
+interface ICredentialAttribute {
+  'mime-type': string;
+  name: string;
+  value: string;
+}
+
+export interface ICreateOfferResponse {
+    _tags?: Record<string, string>;
+    metadata: {
+      '_anoncreds/credential': {
+        schemaId: string;
+        credentialDefinitionId: string;
+      };
+    };
+    credentials: unknown[]; // You may want to define a more specific type for credentials
+    id: string;
+    createdAt: string;
+    state: string;
+    connectionId: string;
+    threadId: string;
+    protocolVersion: string;
+    credentialAttributes: ICredentialAttribute[];
+    autoAcceptCredential: string;
+    contextCorrelationId?: string;
 }
 
 export interface IIssueCredentials {
@@ -65,7 +106,7 @@ export interface ICredentialAttributesInterface {
 
 export interface CredentialOffer {
   emailId: string;
-  attributes: Attributes[];
+  attributes: IAttributes[];
 }
 export interface OutOfBandCredentialOfferPayload {
   credentialDefinitionId: string;
@@ -73,7 +114,7 @@ export interface OutOfBandCredentialOfferPayload {
   comment?: string;
   credentialOffer?: CredentialOffer[];
   emailId?: string;
-  attributes?: Attributes[];
+  attributes?: IAttributes[];
   protocolVersion?: string;
 }
 

@@ -532,9 +532,9 @@ export class IssuanceController {
   }
 
   /**
-   * Description: Issuer send credential to create offer
    * @param user
    * @param issueCredentialDto
+   * @returns Issuer send credential to create offer
    */
   @Post('/orgs/:orgId/credentials/offer')
   @ApiBearerAuth()
@@ -544,7 +544,7 @@ export class IssuanceController {
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
     @Param('orgId') orgId: string,
@@ -552,22 +552,13 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     issueCredentialDto.orgId = orgId;
-    const attrData = issueCredentialDto.attributes;
-
-    attrData.forEach((data) => {
-      if ('' === data['name'].trim()) {
-        throw new BadRequestException(`Name must be required`);
-      } else if ('' === data['value'].trim()) {
-        throw new BadRequestException(`Value must be required at position of ${data['name']}`);
-      }
-    });
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
+      data: getCredentialDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

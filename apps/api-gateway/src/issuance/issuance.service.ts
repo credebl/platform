@@ -16,13 +16,10 @@ export class IssuanceService extends BaseService {
         super('IssuanceService');
     }
 
-    sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<{
-        response: object;
-    }> {
-       
+    sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<string> {       
         const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, user };
     
-        return this.sendNats(this.issuanceProxy, 'send-credential-create-offer', payload);
+        return this.sendNatsMessage(this.issuanceProxy, 'send-credential-create-offer', payload);
     }
 
     sendCredentialOutOfBand(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<{

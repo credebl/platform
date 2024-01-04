@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -11,10 +11,10 @@ export class LoginUserDto {
     @IsString({ message: 'email should be string' })
     email: string;
 
+    @ValidateIf((obj) => false === obj.isPasskey)
     @ApiProperty()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'Password is required.' })
-    @IsOptional()
     password?: string;
 
     @ApiProperty({ example: 'false' })

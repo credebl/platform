@@ -15,8 +15,7 @@ export class RegisterTenantDto {
   @MaxLength(256, { message: 'Email must be at most 256 character.' })
   @IsEmail({}, { message: 'Please provide a valid email' })
   @IsString({ message: 'Email should be a string' })
-  @Transform(({ value }) =>  'string' === typeof value ? value.trim() : value)
-
+  @Transform(({ value }) => trim(value))
   email: string;
 
   @ApiProperty()

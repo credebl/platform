@@ -73,8 +73,8 @@ export class OrganizationService {
 
 
   /**
-   * 
-   * @param orgName 
+   *
+   * @param orgName
    * @returns OrgSlug
    */
   createOrgSlug(orgName: string): string {
@@ -86,10 +86,10 @@ export class OrganizationService {
   }
 
   /**
- *
- * @param registerOrgDto
- * @returns
- */
+   *
+   * @param registerOrgDto
+   * @returns
+   */
 
   // eslint-disable-next-line camelcase
   async updateOrganization(updateOrgDto: IUpdateOrganization, userId: string, orgId: string): Promise<organisation> {
@@ -118,7 +118,7 @@ export class OrganizationService {
 
   /**
    * Description: get organizations
-   * @param 
+   * @param
    * @returns Get created organizations details
    */
 
@@ -154,10 +154,10 @@ export class OrganizationService {
   }
 
   /**
-  * Description: get public organizations
-  * @param 
-  * @returns Get public organizations details
-  */
+   * Description: get public organizations
+   * @param
+   * @returns Get public organizations details
+   */
 
   async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
     try {
@@ -210,10 +210,10 @@ export class OrganizationService {
   }
 
   /**
-     * Description: get organization
-     * @param orgId Registration Details
-     * @returns Get created organization details
-     */
+   * Description: get organization
+   * @param orgId Registration Details
+   * @returns Get created organization details
+   */
 
   async getOrganization(orgId: string): Promise<IGetOrgById> {
     try {
@@ -231,10 +231,10 @@ export class OrganizationService {
   }
 
   /**
-    * Description: get invitation
-    * @param orgId Registration Details
-    * @returns Get created invitation details
-    */
+   * Description: get invitation
+   * @param orgId Registration Details
+   * @returns Get created invitation details
+   */
 
   async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgInvitationsPagination> {
     try {
@@ -267,9 +267,9 @@ export class OrganizationService {
   }
 
   /**
-   * 
-   * @param email 
-   * @returns 
+   *
+   * @param email
+   * @returns
    */
   async checkInvitationExist(
     email: string,
@@ -308,10 +308,10 @@ export class OrganizationService {
   }
 
   /**
-  *
-  * @Body sendInvitationDto
-  * @returns createInvitation
-  */
+   *
+   * @Body sendInvitationDto
+   * @returns createInvitation
+   */
 
 
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
@@ -411,8 +411,8 @@ export class OrganizationService {
   }
 
   /**
-   * 
-   * @param payload 
+   *
+   * @param payload
    * @returns Updated invitation response
    */
   async updateOrgInvitation(payload: UpdateInvitationDto): Promise<string> {
@@ -423,6 +423,18 @@ export class OrganizationService {
 
       if (!invitation) {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
+      }
+
+      if (invitation.orgId !== orgId) {
+        throw new NotFoundException(ResponseMessages.user.error.invalidOrgId);
+      }
+
+      if (invitation.status === Invitation.ACCEPTED) {
+        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyAccepted);
+      }
+
+      if (invitation.status === Invitation.REJECTED) {
+        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyRejected);
       }
 
       const data = {
@@ -447,11 +459,11 @@ export class OrganizationService {
   }
 
   /**
-   * 
-   * @param orgId 
-   * @param roleIds 
-   * @param userId 
-   * @returns 
+   *
+   * @param orgId
+   * @param roleIds
+   * @param userId
+   * @returns
    */
   async updateUserRoles(orgId: string, roleIds: string[], userId: string): Promise<boolean> {
     try {
@@ -556,8 +568,8 @@ export class OrganizationService {
         .pipe(
           map((response) => (
             {
-              response
-            }))
+            response
+          }))
         ).toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -585,9 +597,9 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException({
-        status: error.status,
-        error: error.message
-      }, error.status);
+          status: error.status,
+          error: error.message
+        }, error.status);
     }
   }
 
@@ -600,7 +612,7 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
       }
 
-      // Check if delete process initiated by the org who has created invitation      
+      // Check if delete process initiated by the org who has created invitation
       if (orgId !== invitationDetails.orgId) {
         throw new ForbiddenException(ResponseMessages.organisation.error.deleteOrgInvitation);
       }

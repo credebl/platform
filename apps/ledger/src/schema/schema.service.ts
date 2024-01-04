@@ -17,10 +17,10 @@ import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
 import { OrgAgentType } from '@credebl/enum/enum';
+import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { ICredDefWithPagination, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -36,9 +36,8 @@ export class SchemaService extends BaseService {
     schema: ISchemaPayload,
     user: IUserRequestInterface,
     orgId: string
-  ): Promise<schema> {
-    // const apiKey = '';
-    // const apiKey = await this._getOrgAgentApiKey(orgId);
+  ): Promise<ISchemaData> {
+
     let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
     if (!apiKey || null === apiKey || undefined === apiKey) {
       apiKey = await this._getOrgAgentApiKey(orgId);

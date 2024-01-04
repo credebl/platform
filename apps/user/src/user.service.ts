@@ -617,47 +617,51 @@ export class UserService {
 
   }
 
-
   async shareDegreeCertificate(shareDegreeCertificate: IShareDegreeCertificate): Promise<string> {
 
-    const attributeArray = [];
-    let attributeJson = {};
-    const attributePromises = shareDegreeCertificate.attributes.map(async (iterator: Attribute) => {
-      attributeJson = {
-        [iterator.name]: iterator.value
-      };
-      attributeArray.push(attributeJson);
-    });
-    await Promise.all(attributePromises);
-
-    const userDegreeTemplate = new DegreeCertificateTemplate();
-    const template = await userDegreeTemplate.getDegreeCertificateTemplate(attributeArray);
-
-    const imageBuffer = 
-    await this.convertHtmlToImage(template, shareDegreeCertificate.credentialId);
-    const verifyCode = uuidv4();
-
-    const imageUrl = await this.awsService.uploadUserCertificate(
-      imageBuffer,
-      'svg',
-      verifyCode,
-      'certificates',
-      'base64'
-    );
-    const existCredentialId = await this.userRepository.getUserCredentialsById(shareDegreeCertificate.credentialId);
-    
-    if (existCredentialId) {
+    try {
+      const attributeArray = [];
+      let attributeJson = {};
+      const attributePromises = shareDegreeCertificate.attributes.map(async (iterator: Attribute) => {
+        attributeJson = {
+          [iterator.name]: iterator.value
+        };
+        attributeArray.push(attributeJson);
+      });
+      await Promise.all(attributePromises);
+  
+      const userDegreeTemplate = new DegreeCertificateTemplate();
+      const template = await userDegreeTemplate.getDegreeCertificateTemplate(attributeArray);
+  
+      const imageBuffer = 
+      await this.convertHtmlToImage(template, shareDegreeCertificate.credentialId);
+      const verifyCode = uuidv4();
+  
+      const imageUrl = await this.awsService.uploadUserCertificate(
+        imageBuffer,
+        'svg',
+        verifyCode,
+        'certificates',
+        'base64'
+      );
+      const existCredentialId = await this.userRepository.getUserCredentialsById(shareDegreeCertificate.credentialId);
+      
+      if (existCredentialId) {
+        return `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`;
+      }
+  
+      const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareDegreeCertificate.credentialId);
+  
+      if (!saveCredentialData) {
+        throw new BadRequestException(ResponseMessages.schema.error.notStoredCredential);
+      }
+  
       return `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`;
+  
+    } catch (error) {
+      this.logger.error(`Error In getDegreeTemplate: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
-
-    const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareDegreeCertificate.credentialId);
-
-    if (!saveCredentialData) {
-      throw new BadRequestException(ResponseMessages.schema.error.notStoredCredential);
-    }
-
-    return `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`;
-
   }
 
   async saveCertificateUrl(imageUrl: string, credentialId: string): Promise<unknown> {
@@ -672,7 +676,8 @@ export class UserService {
       headless: true
     });
     const page = await browser.newPage();
-    await page.setViewport({ width: 0, height: 1000, deviceScaleFactor: 2});
+    // await page.setViewport({ width: 0, height: 1000, deviceScaleFactor: 2});
+    await page.setViewport({ width: 1270, height: 1977, deviceScaleFactor: 2});
     await page.setContent(template);
     const screenshot = await page.screenshot();
     await browser.close();

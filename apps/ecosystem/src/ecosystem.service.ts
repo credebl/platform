@@ -44,7 +44,7 @@ export class EcosystemService {
     private readonly logger: Logger,
     private readonly prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheService: Cache
-  ) {}
+  ) { }
 
   /**
    *
@@ -75,17 +75,17 @@ export class EcosystemService {
     }
 
     const orgDetails: OrganizationData = await this.getOrganizationDetails(createEcosystemDto.orgId, createEcosystemDto.userId);
-    
+
     if (!orgDetails) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.orgNotExist);
     }
 
-    if (0  === orgDetails.org_agents.length) {
+    if (0 === orgDetails.org_agents.length) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
     }
-    
+
     const ecosystemLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
-    
+
     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, ecosystemLedgers);
     if (!createEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
@@ -125,7 +125,7 @@ export class EcosystemService {
   async editEcosystem(editEcosystemDto: CreateEcosystem, ecosystemId: string): Promise<object> {
     const { name, description, tags, logo, autoEndorsement, userId } = editEcosystemDto;
 
-    const updateData : CreateEcosystem = {
+    const updateData: CreateEcosystem = {
       lastChangedBy: userId
     };
 
@@ -136,7 +136,7 @@ export class EcosystemService {
     if (tags) { updateData.tags = tags; }
 
     if (logo) { updateData.logoUrl = logo; }
-    
+
     if ('' !== autoEndorsement.toString()) { updateData.autoEndorsement = autoEndorsement; }
 
     const editEcosystem = await this.ecosystemRepository.updateEcosystemById(updateData, ecosystemId);
@@ -214,7 +214,7 @@ export class EcosystemService {
           },
           error.status
         );
-      }); 
+      });
   }
 
 
@@ -247,7 +247,7 @@ export class EcosystemService {
         if (Array.isArray(ledgerNetworks)) {
           for (const ledger of ledgerNetworks) {
             const ledgerDetails = await this.fetchLedgerDetailsbyId(ledger.toString());
-            ledgerData.push(ledgerDetails);            
+            ledgerData.push(ledgerDetails);
           }
           invitation.ecosystem.networkDetails = ledgerData;
         }
@@ -272,23 +272,23 @@ export class EcosystemService {
     const { invitations, ecosystemId } = bulkInvitationDto;
 
     try {
-      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);  
+      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
 
       if (!ecosystemDetails.ledgers
-        || (Array.isArray(ecosystemDetails.ledgers) 
-      && 0 === ecosystemDetails.ledgers.length)) {
+        || (Array.isArray(ecosystemDetails.ledgers)
+          && 0 === ecosystemDetails.ledgers.length)) {
 
         const ecosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
         const ecosystemAgents = await this.ecosystemRepository.getAllAgentDetails(ecosystemLeadDetails.orgId);
-        
+
         const ecosystemLedgers = ecosystemAgents.map((agent) => agent.ledgerId);
 
-        const updateData : CreateEcosystem = {
+        const updateData: CreateEcosystem = {
           ledgers: ecosystemLedgers
         };
 
-        await this.ecosystemRepository.updateEcosystemById(updateData, ecosystemId);   
+        await this.ecosystemRepository.updateEcosystemById(updateData, ecosystemId);
       }
 
       for (const invitation of invitations) {
@@ -330,7 +330,7 @@ export class EcosystemService {
       }
     }
 
-    return isLedgerFound; 
+    return isLedgerFound;
   }
 
   /**
@@ -363,21 +363,21 @@ export class EcosystemService {
       }
 
       const orgDetails: OrganizationData = await this.getOrganizationDetails(acceptRejectInvitation.orgId, acceptRejectInvitation.userId);
-  
+
       if (!orgDetails) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgNotExist);
       }
-  
-      if (0  === orgDetails.org_agents.length) {
+
+      if (0 === orgDetails.org_agents.length) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
       }
 
-      const isLedgerFound = await this.checkLedgerMatches(orgDetails, invitation.ecosystemId); 
+      const isLedgerFound = await this.checkLedgerMatches(orgDetails, invitation.ecosystemId);
 
       if (!isLedgerFound && Invitation.REJECTED !== status) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ledgerNotMatch);
       }
-      
+
       const updatedInvitation = await this.updateEcosystemInvitation(invitationId, orgId, status);
       if (!updatedInvitation) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotUpdate);
@@ -548,9 +548,9 @@ export class EcosystemService {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
-      const {name, version} = requestSchemaPayload;
+      const { name, version } = requestSchemaPayload;
 
-      if (0 === name.length) {        
+      if (0 === name.length) {
         throw new BadRequestException(ResponseMessages.schema.error.nameNotEmpty);
       }
 
@@ -857,10 +857,10 @@ export class EcosystemService {
         endorsementTransactionType.SIGN,
         ecosystemLeadAgentDetails?.tenantId
       );
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(ecosystemLeadDetails.orgId);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(ecosystemLeadDetails.orgId);
       }
       const jsonString = endorsementTransactionPayload.requestPayload.toString();
       const payload = {
@@ -893,7 +893,8 @@ export class EcosystemService {
         const submitTxn = await this.submitTransaction({
           endorsementId,
           ecosystemId,
-          ecosystemLeadAgentEndPoint: ecosystemLeadAgentDetails.agentEndPoint
+          ecosystemLeadAgentEndPoint: ecosystemLeadAgentDetails.agentEndPoint,
+          orgId: ecosystemLeadDetails.orgId
         });
         if (!submitTxn) {
           await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
@@ -1052,7 +1053,7 @@ export class EcosystemService {
     endorsementTransactionPayload,
     ecosystemMemberDetails,
     submitTransactionRequest
-  // eslint-disable-next-line camelcase
+    // eslint-disable-next-line camelcase
   ): Promise<credential_definition> {
     const schemaDetails = await this.ecosystemRepository.getSchemaDetailsById(
       endorsementTransactionPayload.requestBody['schemaId']
@@ -1086,7 +1087,7 @@ export class EcosystemService {
 
   async submitTransaction(transactionPayload: TransactionPayload): Promise<object> {
     try {
-      const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId} = transactionPayload;
+      const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
         endorsementTransactionStatus.SIGNED
@@ -1119,11 +1120,15 @@ export class EcosystemService {
         ecosystemLeadAgentDetails
       );
       // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+
+      this.logger.log(`orgId ::: ${orgId}`);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
       }
+
+
       const submitTransactionRequest = await this._submitTransaction(payload, url, apiKey);
 
       if ('failed' === submitTransactionRequest["message"].state) {
@@ -1235,8 +1240,7 @@ export class EcosystemService {
 
       if (!resourceId) {
         throw new Error(
-          `${ResponseMessages.ecosystem.error.invalidTransactionMessage} Missing "${
-            transactionType === endorsementTransactionType.SCHEMA ? 'schemaId' : 'credentialDefinitionId'
+          `${ResponseMessages.ecosystem.error.invalidTransactionMessage} Missing "${transactionType === endorsementTransactionType.SCHEMA ? 'schemaId' : 'credentialDefinitionId'
           }" property.`
         );
       }

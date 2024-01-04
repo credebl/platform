@@ -1,3 +1,4 @@
+import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsArray, IsEmail, IsInt, IsNotEmpty, IsString } from 'class-validator';
@@ -17,7 +18,7 @@ export class RegisterNonAdminUserDto {
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })
-    @Transform(({ value }) =>  'string' === typeof value ? value.trim() : value)
+    @Transform(({ value }) => trim(value))
     email: string;
 
     @ApiPropertyOptional()

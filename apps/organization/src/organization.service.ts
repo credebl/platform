@@ -20,10 +20,12 @@ import { Invitation, OrgAgentType } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -35,7 +37,8 @@ export class OrganizationService {
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly clientRegistrationService: ClientRegistrationService
   ) { }
 
   /**
@@ -47,6 +50,7 @@ export class OrganizationService {
   // eslint-disable-next-line camelcase
   async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<organisation> {
     try {
+
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
 
       if (organizationExist) {
@@ -63,7 +67,11 @@ export class OrganizationService {
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
+
+      await this.registerToKeycloak(organizationDetails.name, organizationDetails.orgSlug);
+
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
+      
       return organizationDetails;
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
@@ -71,6 +79,14 @@ export class OrganizationService {
     }
   }
 
+  async registerToKeycloak(orgName: string, orgSlug: string): Promise<void> {
+      const token = await this.clientRegistrationService.getManagementToken();
+      await this.clientRegistrationService.createClient(orgName, orgSlug, token);
+      // console.log(`Keycloak clientDetails:${orgSlug}:`, clientDetails);
+
+      throw new InternalServerErrorException('Keycloak Registration');
+      
+  }
 
   /**
    * 

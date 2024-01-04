@@ -32,14 +32,13 @@ export class OrgRolesGuard implements CanActivate {
 
     if (req.params.orgId || req.query.orgId || req.body.orgId) {
       const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
-
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
           return false;
         }
-        return orgDetails.orgId.toString() === orgId.toString();
+        return orgDetails.orgId.toString().trim() === orgId.toString().trim();
       });
-
+      
       if (!specificOrg) {
         throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
       }
@@ -47,7 +46,7 @@ export class OrgRolesGuard implements CanActivate {
       user.selectedOrg = specificOrg;
       // eslint-disable-next-line array-callback-return
       user.selectedOrg.orgRoles = user.userOrgRoles.map((orgRoleItem) => {
-        if (orgRoleItem.orgId && orgRoleItem.orgId.toString() === orgId.toString()) {
+        if (orgRoleItem.orgId && orgRoleItem.orgId.toString().trim() === orgId.toString().trim()) {
           return orgRoleItem.orgRole.name;
         }
       });

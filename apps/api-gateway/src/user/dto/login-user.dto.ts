@@ -11,10 +11,10 @@ export class LoginUserDto {
     @Transform(({ value }) => trim(value))
     email: string;
 
+    @ValidateIf((obj) => false === obj.isPasskey)
     @ApiProperty()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'Password is required.' })
-    @IsOptional()
     password?: string;
 
     @ApiProperty({ example: 'false' })

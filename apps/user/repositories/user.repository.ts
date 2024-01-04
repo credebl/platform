@@ -38,12 +38,18 @@ export class UserRepository {
    */
   async createUser(userEmailVerification:ISendVerificationEmail, verifyCode: string): Promise<user> {
     try {
-      const saveResponse = await this.prisma.user.create({
-        data: {
+      const saveResponse = await this.prisma.user.upsert({
+        where: {
+          email: userEmailVerification.email
+        },
+        create: {
           username: userEmailVerification.username,
           email: userEmailVerification.email,
           verificationCode: verifyCode.toString(),
           publicProfile: true
+        },
+        update: {
+          verificationCode: verifyCode.toString()
         }
       });
 
@@ -70,7 +76,7 @@ export class UserRepository {
       });
     } catch (error) {
       this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 

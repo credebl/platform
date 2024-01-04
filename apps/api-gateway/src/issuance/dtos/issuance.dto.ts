@@ -1,7 +1,7 @@
 import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { toNumber } from '@credebl/common/cast.helper';
+import { toNumber, trim } from '@credebl/common/cast.helper';
 
 class Attribute {
 
@@ -26,7 +26,7 @@ class CredentialOffer {
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })
-    @Transform(({ value }) =>  'string' === typeof value ? value.trim() : value)
+    @Transform(({ value }) => trim(value))
     emailId: string;
 }
 

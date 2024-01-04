@@ -7,14 +7,14 @@ export class DegreeCertificateTemplate {
 
     async getDegreeCertificateTemplate(attributes: Attribute[]): Promise<string> {
       try {
-        const [fullName, degree, major, graduationDate] = await Promise.all(attributes).then((attributes) => {
+        // const [fullName, degree, major, graduationDate] = await Promise.all(attributes).then((attributes) => {
           const fullName = this.findAttributeByName(attributes, 'Student Name')?.full_name ?? '';
         //   const degree = this.findAttributeByName(attributes, 'degree')?.degree ?? '';
         //   const major = this.findAttributeByName(attributes, 'major')?.major ?? '';
         //   const graduationDate = this.findAttributeByName(attributes, 'graduation_date')?.graduation_date ?? '';
-          return [fullName, degree, major, graduationDate];
-        });
-  
+        //   return [fullName, degree, major, graduationDate];
+        // });
+//   console.log('attributes::', attributes);
         return `<!DOCTYPE html>
         <html lang="en">
             <head>
@@ -64,7 +64,7 @@ export class DegreeCertificateTemplate {
                             <div>
                                 <img
                                     style="width: 200px; height: auto; margin-top: 1rem;"
-                                    src="/images/university/logo-color.svg"
+                                    src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/college-color-logo.svg"
                                 />
                             </div>
                             <div
@@ -204,7 +204,7 @@ export class DegreeCertificateTemplate {
                                 <div style="margin: 0 auto;">
                                     <img
                                         style="width: 200px; height: auto; margin-top: 1rem;"
-                                        src="/images/university/logo.svg"
+                                        src="https://credebl-dev-user-certificate.s3.ap-south-1.amazonaws.com/certificates/college-logo.svg"
                                     />
                                 </div>
                                 <div style="width: 33%; text-align: end;">

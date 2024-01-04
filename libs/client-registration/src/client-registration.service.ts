@@ -200,7 +200,7 @@ export class ClientRegistrationService {
       return;
     }
     try {
-      const realmName = process.env.KEYCLOAK_CREDEBL_REALM;
+      const realmName = process.env.KEYCLOAK_REALM;
       const getClientResponse = await this.commonService.httpGet(
         await this.keycloakUrlService.GetClientURL(realmName, clientId),
         this.getAuthHeader(token)
@@ -239,15 +239,16 @@ export class ClientRegistrationService {
 
 
   async createClient(
-    name: string,
+    orgName: string,
+    orgSlug: string,
     token: string
   ) {
 
     //create client for respective created realm in order to access its resources
-    const realmName = process.env.KEYCLOAK_CREDEBL_REALM;
+    const realmName = process.env.KEYCLOAK_REALM;
     const clientPayload = {
-      clientId: `admin-${name}`,
-      name: `admin-${name}`,
+      clientId: `${orgSlug}`,
+      name: `${orgName}`,
       adminUrl: process.env.KEYCLOAK_ADMIN_URL,
       alwaysDisplayInConsole: false,
       access: {
@@ -310,7 +311,7 @@ export class ClientRegistrationService {
     );
 
     const getClientResponse = await this.commonService.httpGet(
-      await this.keycloakUrlService.GetClientURL(realmName, `admin-${name}`),
+      await this.keycloakUrlService.GetClientURL(realmName, `${orgSlug}`),
       this.getAuthHeader(token)
     );
     this.logger.debug(
@@ -439,7 +440,7 @@ export class ClientRegistrationService {
       ) {
         throw new Error('Invalid inputs while getting token.');
       }
-      const strURL = await this.keycloakUrlService.GetSATURL('credebl-platform');
+      const strURL = await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM);
       this.logger.log(`getToken URL: ${strURL}`);
       const config = {
         headers: {
@@ -447,7 +448,7 @@ export class ClientRegistrationService {
         }
       };
       const tokenResponse = await this.commonService.httpPost(
-        await this.keycloakUrlService.GetSATURL('credebl-platform'),
+        await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM),
         qs.stringify(payload)
         , config);
 

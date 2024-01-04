@@ -32,24 +32,15 @@ export class OrgRolesGuard implements CanActivate {
     req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
     req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
 
-    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
-
-    if (!orgId) {
-      throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
-    }
-
-    if (!isValidUUID(orgId)) {
-      throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-    }
-  
-    if (orgId) {     
+    if (req.params.orgId || req.query.orgId || req.body.orgId) {
+      const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
           return false;
         }
         return orgDetails.orgId.toString().trim() === orgId.toString().trim();
       });
-
+      
       if (!specificOrg) {
         throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
       }

@@ -1,5 +1,7 @@
 
+import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
 
 export class EmailValidator {
@@ -9,5 +11,6 @@ export class EmailValidator {
   @IsNotEmpty({ message: 'Email is required' })  
   @MaxLength(256, { message: 'Email must be at most 256 character' })
   @IsEmail()
+  @Transform(({ value }) => trim(value))
   email: string;
 }

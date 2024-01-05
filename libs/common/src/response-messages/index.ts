@@ -50,7 +50,8 @@ export const ResponseMessages = {
             InvalidEmailDomain :'Email from this domain is not allowed',
             credentialNotFound: 'User credentials not found',
             invalidOrgId:'Organization does not exist',
-            invalidInvitationId:'Organization invitation does not exist'
+            invalidInvitationId:'Organization invitation does not exist',
+            emailIsNotVerified:'Email is not verified'
         }
     },
     organisation: {

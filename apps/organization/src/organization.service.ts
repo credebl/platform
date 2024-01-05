@@ -17,7 +17,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
-import { Invitation, OrgAgentType } from '@credebl/enum/enum';
+import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -417,7 +417,6 @@ export class OrganizationService {
   async updateOrgInvitation(payload: UpdateInvitationDto): Promise<string> {
     try {
       const { orgId, status, invitationId, userId } = payload;
-
       const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
       if (!invitation) {
@@ -428,18 +427,10 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.user.error.invalidOrgId);
       }
 
-      if (invitation.status === Invitation.ACCEPTED) {
-        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyAccepted);
+      const invitationStatus = invitation.status as Invitation;
+      if (!transition(invitationStatus, payload.status)) {
+        throw new BadRequestException(`${ResponseMessages.user.error.invitationStatusUpdateInvalid} ${invitation.status}`);
       }
-
-      if (invitation.status === Invitation.REJECTED) {
-        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyRejected);
-      }
-
-      if (invitation.status === Invitation.PENDING) {
-        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyPending);
-      }
-  
 
       const data = {
         status

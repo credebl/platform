@@ -51,6 +51,7 @@ export const ResponseMessages = {
             credentialNotFound: 'User credentials not found',
             invalidOrgId:'Organization does not exist',
             invalidInvitationId:'Organization invitation does not exist',
+            invitationAlreadyPending:'Organization invitation is already in pending state',
             emailIsNotVerified:'Email is not verified'
         }
     },

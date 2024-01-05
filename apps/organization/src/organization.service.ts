@@ -17,7 +17,7 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
@@ -122,7 +122,7 @@ export class OrganizationService {
    * @returns Get created organizations details
    */
 
-  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
+  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<IGetOrganization> {
     try {
 
       const query = {
@@ -159,7 +159,7 @@ export class OrganizationService {
    * @returns Get public organizations details
    */
 
-  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
+  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<IGetOrganization> {
     try {
 
       const query = {
@@ -252,8 +252,7 @@ export class OrganizationService {
 
   /**
    *
-   * @param registerOrgDto
-   * @returns
+   * @returns organization roles
    */
 
 
@@ -437,6 +436,11 @@ export class OrganizationService {
         throw new ConflictException(ResponseMessages.user.error.invitationAlreadyRejected);
       }
 
+      if (invitation.status === Invitation.PENDING) {
+        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyPending);
+      }
+  
+
       const data = {
         status
       };
@@ -503,7 +507,7 @@ export class OrganizationService {
     }
   }
 
-  async getOgPofile(orgId: string): Promise<organisation> {
+  async getOrgPofile(orgId: string): Promise<organisation> {
     try {
       const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
       if (!orgProfile.logoUrl || '' === orgProfile.logoUrl) {

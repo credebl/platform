@@ -11,7 +11,7 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { organisation } from '@prisma/client';
-import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard } from 'apps/organization/interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IOrganizationDashboard } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 
 @Injectable()
@@ -46,7 +46,7 @@ export class OrganizationService extends BaseService {
    * @returns Organizations details
    */
 
-  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: string): Promise<IGetOrgs> {
+  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: string): Promise<IGetOrganization> {
     const payload = { userId, ...getAllOrgsDto };
     const fetchOrgs = await this.sendNatsMessage(this.serviceProxy, 'get-organizations', payload);
     return fetchOrgs;
@@ -57,7 +57,7 @@ export class OrganizationService extends BaseService {
    * @param
    * @returns Public organizations list
    */
-  async getPublicOrganizations(getAllOrgsDto: GetAllOrganizationsDto): Promise<IGetOrgs> {
+  async getPublicOrganizations(getAllOrgsDto: GetAllOrganizationsDto): Promise<IGetOrganization> {
     const payload = { ...getAllOrgsDto };
     const PublicOrg = this.sendNatsMessage(this.serviceProxy, 'get-public-organizations', payload);
     return PublicOrg;
@@ -143,7 +143,7 @@ export class OrganizationService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-user', payload);
   }
 
-  async getOgPofile(
+  async getOrgPofile(
     orgId: string
   ): Promise<organisation> {
     const payload = { orgId };

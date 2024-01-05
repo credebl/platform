@@ -13,6 +13,6 @@ export class EmailValidator {
   @Transform(({ value }) => trim(value))
   @MaxLength(256, { message: 'Email must be at most 256 character' })
   @IsEmail()
-  @Transform(({ value }) => 'string' === typeof value ? value.trim() : value)
+  @Transform(({ value }) => trim(value))
   email: string;
 }

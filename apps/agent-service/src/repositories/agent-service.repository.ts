@@ -97,32 +97,41 @@ export class AgentServiceRepository {
     }
   }
 
-  /**
-   * Store agent details
-   * @param storeAgentDetails
-   * @returns
-   */
-  // eslint-disable-next-line camelcase
-  async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<org_agents> {
-    try {
-      return this.prisma.org_agents.update({
-        where: {
-          id: storeOrgAgentDetails.id
-        },
-        data: {
-          orgDid: storeOrgAgentDetails.did,
-          verkey: storeOrgAgentDetails.verkey,
-          isDidPublic: storeOrgAgentDetails.isDidPublic,
-          agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
-          walletName: storeOrgAgentDetails.walletName,
-          agentsTypeId: storeOrgAgentDetails.agentsTypeId,
-          orgId: storeOrgAgentDetails.orgId,
-          agentEndPoint: storeOrgAgentDetails.agentEndPoint,
-          agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
-          orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
-          tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
-          ledgerId: storeOrgAgentDetails.ledgerId[0],
-          apiKey: storeOrgAgentDetails.apiKey
+    /**
+     * Store agent details
+     * @param storeAgentDetails
+     * @returns
+     */
+    // eslint-disable-next-line camelcase
+    async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
+        try {
+
+            return this.prisma.org_agents.update({
+                where: {
+                    id: storeOrgAgentDetails.id
+                },
+                data: {
+                    orgDid: storeOrgAgentDetails.did,
+                    verkey: storeOrgAgentDetails.verkey,
+                    isDidPublic: storeOrgAgentDetails.isDidPublic,
+                    agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
+                    walletName: storeOrgAgentDetails.walletName,
+                    agentsTypeId: storeOrgAgentDetails.agentsTypeId,
+                    orgId: storeOrgAgentDetails.orgId,
+                    agentEndPoint: storeOrgAgentDetails.agentEndPoint,
+                    agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
+                    orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
+                    tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
+                    ledgerId: storeOrgAgentDetails.ledgerId[0],
+                    apiKey: storeOrgAgentDetails.apiKey
+                },
+                select: {
+                    id: true
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
     } catch (error) {

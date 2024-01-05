@@ -252,8 +252,7 @@ export class OrganizationService {
 
   /**
    *
-   * @param registerOrgDto
-   * @returns
+   * @returns organization roles
    */
 
 

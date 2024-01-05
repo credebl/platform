@@ -1366,14 +1366,15 @@ export class AgentServiceService {
           name: payload.name,
           issuerId: payload.issuerId
         };
-        schemaResponse = await this.commonService
-          .httpPost(url, schemaPayload, { headers: { authorization: getApiKey } })
-          .then(async (schema) => schema)
-          .catch((error) => {
-            throw new InternalServerErrorException(ResponseMessages.agent.error.agentDown, {
-              cause: new Error(),
-              description: ResponseMessages.errorMessages.serverError
-            });
+        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
+          .then(async (schema) => {
+            return schema;
+          })
+          .catch(error => {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
           });
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_SCHEMA}`.replace(
@@ -1386,14 +1387,15 @@ export class AgentServiceService {
           name: payload.payload.name,
           issuerId: payload.payload.issuerId
         };
-        schemaResponse = await this.commonService
-          .httpPost(url, schemaPayload, { headers: { authorization: getApiKey } })
-          .then(async (schema) => schema)
-          .catch((error) => {
-            throw new InternalServerErrorException(ResponseMessages.agent.error.agentDown, {
-              cause: new Error(),
-              description: ResponseMessages.errorMessages.serverError
-            });
+        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
+          .then(async (schema) => {
+            return schema;
+          })
+          .catch(error => {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
           });
       }
       return schemaResponse;
@@ -1409,19 +1411,21 @@ export class AgentServiceService {
 
       const getApiKey = await this.getOrgAgentApiKey(payload.orgId);
       if (OrgAgentType.DEDICATED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace(
-          '#',
-          `${payload.schemaId}`
-        )}`;
-        schemaResponse = await this.commonService.httpGet(url, { headers: { authorization: getApiKey } }).then(async (schema) => schema);
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace('#', `${payload.schemaId}`)}`;
+        schemaResponse = await this.commonService.httpGet(url, payload.schemaId)
+          .then(async (schema) => {
+            return schema;
+          });
+
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`
           .replace('@', `${payload.payload.schemaId}`)
           .replace('#', `${payload.tenantId}`);
 
-        schemaResponse = await this.commonService
-          .httpGet(url, { headers: { authorization: getApiKey } })
-          .then(async (schema) => schema);
+        schemaResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
+          .then(async (schema) => {
+            return schema;
+          });
       }
       return schemaResponse;
     } catch (error) {
@@ -1443,9 +1447,11 @@ export class AgentServiceService {
           issuerId: payload.issuerId
         };
 
-        credDefResponse = await this.commonService
-          .httpPost(url, credDefPayload, { headers: { authorization: getApiKey } })
-          .then(async (credDef) => credDef);
+        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
+          .then(async (credDef) => {
+            return credDef;
+          });
+
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CRED_DEF}`.replace(
           '#',
@@ -1456,9 +1462,10 @@ export class AgentServiceService {
           schemaId: payload.payload.schemaId,
           issuerId: payload.payload.issuerId
         };
-        credDefResponse = await this.commonService
-          .httpPost(url, credDefPayload, { headers: { authorization: getApiKey } })
-          .then(async (credDef) => credDef);
+        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
+          .then(async (credDef) => {
+            return credDef;
+          });
       }
 
       return credDefResponse;
@@ -1474,20 +1481,18 @@ export class AgentServiceService {
 
       const getApiKey = await this.getOrgAgentApiKey(payload.orgId);
       if (OrgAgentType.DEDICATED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID.replace(
-          '#',
-          `${payload.credentialDefinitionId}`
-        )}`;
-        credDefResponse = await this.commonService
-          .httpGet(url, { headers: { authorization: getApiKey } })
-          .then(async (credDef) => credDef);
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID.replace('#', `${payload.credentialDefinitionId}`)}`;
+        credDefResponse = await this.commonService.httpGet(url, payload.credentialDefinitionId)
+          .then(async (credDef) => {
+            return credDef;
+          });
+
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`
-          .replace('@', `${payload.payload.credentialDefinitionId}`)
-          .replace('#', `${payload.tenantId}`);
-        credDefResponse = await this.commonService
-          .httpGet(url, { headers: { authorization: getApiKey } })
-          .then(async (credDef) => credDef);
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
+        credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
+          .then(async (credDef) => {
+            return credDef;
+          });
       }
       return credDefResponse;
     } catch (error) {
@@ -1620,8 +1625,23 @@ export class AgentServiceService {
 
   async getConnectionsByconnectionId(url: string, orgId: string): Promise<object> {
     try {
-      const getConnectionsByconnectionId = await this.agentCall(url, orgId);
-      return getConnectionsByconnectionId;
+      const data = await this.commonService
+        .httpGet(url, { headers: { 'authorization': apiKey } })
+        .then(async response => response)
+        .catch(error => {
+          this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+
+          if (error && Ob  questionAnswerRecord: 'Question Answer record fetched successfully',
+            ject.keys(error).length === 0) {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
+          } else {
+            throw error;
+          }
+        });
+      return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

@@ -436,6 +436,11 @@ export class OrganizationService {
         throw new ConflictException(ResponseMessages.user.error.invitationAlreadyRejected);
       }
 
+      if (invitation.status === Invitation.PENDING) {
+        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyPending);
+      }
+  
+
       const data = {
         status
       };

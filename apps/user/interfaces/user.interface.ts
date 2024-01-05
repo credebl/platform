@@ -192,3 +192,12 @@ export interface  IUserSignIn{
   password: string;
   isPasskey: boolean;
 }
+
+export interface IIssueCertificate {
+  courseCode: string;
+  courseName: string;
+  theoryGradeCredits: string;
+  theoryObtainedEarned: string;
+  practicalGradeCredits: string;
+  practicalObtainedEarned: string;
+}

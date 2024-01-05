@@ -1,4 +1,4 @@
-import { Attribute } from '../interfaces/user.interface';
+import { Attribute, IIssueCertificate } from '../interfaces/user.interface';
 
 export class DegreeCertificateTemplate {
   findAttributeByName(attributes: Attribute[], name: string): Attribute {
@@ -7,12 +7,12 @@ export class DegreeCertificateTemplate {
 
   async getDegreeCertificateTemplate(attributes: Attribute[]): Promise<string> {
     try {
-      const [
+      const {
         slNo,
         date,
         studentName,
         programme,
-        // courseDetails,
+        courseDetails,
         universityName,
         type,
         semester,
@@ -23,54 +23,56 @@ export class DegreeCertificateTemplate {
         commulativeSemesterPerformanceSGA,
         registrationNo,
         year
-      ] = await Promise.all(attributes).then((attributes) => {
-        // const slNo = this.findAttributeByName(attributes, 'slNo')?.slNo ?? '';
-        // const date = this.findAttributeByName(attributes, 'date')?.date ?? '';
+      } = await Promise.all(attributes).then((attributes) => {
+        const slNo = this.findAttributeByName(attributes, 'slNo')?.slNo ?? '';
+        const date = this.findAttributeByName(attributes, 'date')?.date ?? '';
         const studentName = this.findAttributeByName(attributes, 'studentName')?.studentName ?? '';
-        // const programme = this.findAttributeByName(attributes, 'programme')?.programme ?? '';
-        // const courseDetails = this.findAttributeByName(attributes, 'courseDetails')?.courseDetails ?? '';
+        const programme = this.findAttributeByName(attributes, 'programme')?.programme ?? '';
+        const courseDetails = this.findAttributeByName(attributes, 'courseDetails')?.courseDetails ?? '';
         const universityName = this.findAttributeByName(attributes, 'universityName')?.universityName ?? '';
-        // const semester = this.findAttributeByName(attributes, 'semester')?.semester ?? '';
+        const semester = this.findAttributeByName(attributes, 'semester')?.semester ?? '';
         const type = this.findAttributeByName(attributes, 'type')?.type ?? '';
-        // const academicYear = this.findAttributeByName(attributes, 'academicYear')?.academicYear ?? '';
-        // const year = this.findAttributeByName(attributes, 'year')?.year ?? '';
-        // const currentSemesterPerformanceCreditsEarned =
-        //   this.findAttributeByName(attributes, 'currentSemesterPerformance-creditsEarned')[
-        //     'currentSemesterPerformance-creditsEarned'
-        //   ] ?? '';
-        // const commulativeSemesterPerformanceCreditsEarned =
-        //   this.findAttributeByName(attributes, 'commulativeSemesterPerformance-creditsEarned')[
-        //     'commulativeSemesterPerformance-creditsEarned'
-        //   ] ?? '';
-        // const currentSemesterPerformanceSGA =
-        //   this.findAttributeByName(attributes, 'currentSemesterPerformance-SGA')['currentSemesterPerformance-SGA'] ??
-        //   '';
-        // const commulativeSemesterPerformanceSGA =
-        //   this.findAttributeByName(attributes, 'commulativeSemesterPerformance-SGA')[
-        //     'commulativeSemesterPerformance-SGA'
-        //   ] ?? '';
-        // const registrationNo = this.findAttributeByName(attributes, 'registrationNo')?.registrationNo ?? '';
+        const academicYear = this.findAttributeByName(attributes, 'academicYear')?.academicYear ?? '';
+        const year = this.findAttributeByName(attributes, 'year')?.year ?? '';
+        const currentSemesterPerformanceCreditsEarned =
+          this.findAttributeByName(attributes, 'currentSemesterPerformance-creditsEarned')?.[
+            'currentSemesterPerformance-creditsEarned'
+          ] ?? '';
+        const commulativeSemesterPerformanceCreditsEarned =
+          this.findAttributeByName(attributes, 'commulativeSemesterPerformance-creditsEarned')?.[
+            'commulativeSemesterPerformance-creditsEarned'
+          ] ?? '';
+        const currentSemesterPerformanceSGA =
+          this.findAttributeByName(attributes, 'currentSemesterPerformance-SGA')?.['currentSemesterPerformance-SGA'] ??
+          '';
+        const commulativeSemesterPerformanceSGA =
+          this.findAttributeByName(attributes, 'commulativeSemesterPerformance-SGA')?.[
+            'commulativeSemesterPerformance-SGA'
+          ] ?? '';
+        const registrationNo = this.findAttributeByName(attributes, 'registrationNo')?.registrationNo ?? '';
 
-        return [
-        //   slNo,
-        //   date,
-          studentName,
-        //   programme,
-        //   courseDetails,
-          universityName,
-          type
-        //   semester,
-        //   academicYear,
-        //   year,
-        //   currentSemesterPerformanceCreditsEarned,
-        //   commulativeSemesterPerformanceCreditsEarned,
-        //   currentSemesterPerformanceSGA,
-        //   commulativeSemesterPerformanceSGA,
-        //   registrationNo
-        ];
+        const refinedObj = {
+            slNo,
+            date,
+            studentName,
+            programme,
+            courseDetails,
+            universityName,
+            type,
+            semester,
+            academicYear,
+            year,
+            currentSemesterPerformanceCreditsEarned,
+            commulativeSemesterPerformanceCreditsEarned,
+            currentSemesterPerformanceSGA,
+            commulativeSemesterPerformanceSGA,
+            registrationNo
+          };
+
+        return refinedObj;
       });
 
-    //   console.log('courseDetails::', courseDetails);
+      const courseDetailsJSON: IIssueCertificate[] = courseDetails && JSON.parse(courseDetails);
       return `
         <!DOCTYPE html>
                     <html lang="en">
@@ -144,7 +146,7 @@ export class DegreeCertificateTemplate {
                                         <div
                                             style="position: relative;width: 100%;margin: 0.5rem 0;line-height: 0.75;display: flex;justify-content: center;"
                                         >
-                                            <div style="padding: 1rem 6rem; width: fit-content; background-color: #f7f0e8;">
+                                            <div style="padding: 1rem 6rem; width: fit-content;">
                                                 <h1 style="font-size: 3em; line-height: 1"> ${type}</h1>
                                             <p style="font-size: 1.2rem;">(Academic Year ${academicYear})</p>
                                             </div>
@@ -174,70 +176,24 @@ export class DegreeCertificateTemplate {
                                                     </tr>
                                                     <tr>
                                                         <th>Grade Credits</th>
-                                                        <th>GradeCredits</th>
                                                         <th>Obtained Earned</th>
+                                                        <th>Grade Credits</th>
                                                         <th>Obtained Earned</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr>
-                                                        <td class="course">MCC-590</td>
-                                                        <td class="course">Research Methodology</td>
-                                                        <td>S</td>
-                                                        <td>2</td>
-                                                        <td></td>
-                                                        <td></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="course">MAC-591</td>
-                                                        <td class="course">English for Research Paper Writing</td>
-                                                        <td>A+</td>
-                                                        <td>23</td>
-                                                        <td>12</td>
-                                                        <td>68</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="course">MCC-590</td>
-                                                        <td class="course">Research Methodology</td>
-                                                        <td>S</td>
-                                                        <td>2</td>
-                                                        <td></td>
-                                                        <td></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="course">MAC-591</td>
-                                                        <td class="course">English for Research Paper Writing</td>
-                                                        <td>A+</td>
-                                                        <td>23</td>
-                                                        <td>12</td>
-                                                        <td>68</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="course">MCC-590</td>
-                                                        <td class="course">Research Methodology</td>
-                                                        <td>S</td>
-                                                        <td>2</td>
-                                                        <td></td>
-                                                        <td></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="course">MAC-591</td>
-                                                        <td class="course">Elective: Information System Security for Professionals -
-                                                            Part I</td
-                                                        >
-                                                        <td>A+</td>
-                                                        <td>23</td>
-                                                        <td>12</td>
-                                                        <td>68</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="course">MCC-590</td>
-                                                        <td class="course">Research Methodology</td>
-                                                        <td>S</td>
-                                                        <td>2</td>
-                                                        <td></td>
-                                                        <td></td>
-                                                    </tr>
+                                                ${
+                                                    courseDetailsJSON?.map((item: IIssueCertificate) => (
+                                                        `<tr>
+                                                            <td class="course">${item.courseCode}</td>
+                                                            <td class="course">${item.courseName}</td>
+                                                            <td>${item.theoryGradeCredits}</td>
+                                                            <td>${item.theoryObtainedEarned}</td>
+                                                            <td>${item.practicalGradeCredits}</td>
+                                                            <td>${item.practicalObtainedEarned}</td>
+                                                        </tr>`
+                                                    ))
+                                                }
                                                 </tbody>
                                             </table>
                                             <table border="1" style="width: 100%; margin-top: 1rem;">
@@ -283,6 +239,9 @@ export class DegreeCertificateTemplate {
                         </body>
                     </html>
         `;
-    } catch {}
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log(`Degree temlpate ERROR::: ${JSON.stringify(error)}`);
+    }
   }
 }

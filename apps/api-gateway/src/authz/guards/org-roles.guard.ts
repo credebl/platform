@@ -30,9 +30,13 @@ export class OrgRolesGuard implements CanActivate {
 
     const { user } = req;
 
-    if (req.params.orgId || req.query.orgId || req.body.orgId) {
-      const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
 
+    if ('' === orgId?.trim()) {
+      throw new ForbiddenException('OrgId is required');
+    }
+
+    if (orgId) {
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
           return false;
@@ -52,7 +56,7 @@ export class OrgRolesGuard implements CanActivate {
         }
       });
 
-    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {      
+    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {
 
       // eslint-disable-next-line array-callback-return
       const isPlatformAdmin = user.userOrgRoles.find((orgDetails) => {

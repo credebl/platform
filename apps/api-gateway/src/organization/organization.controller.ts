@@ -38,28 +38,29 @@ export class OrganizationController {
     private readonly commonService: CommonService
   ) { }
 
+/**
+ * @param orgId 
+ * @returns organization profile details
+ */
+
   @Get('/profile/:orgId')
-  @ApiOperation({ summary: 'Organization Profile', description: 'Update an organization' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  async getOgPofile(@Param('orgId') orgId: string, @Res() res: Response): Promise<IResponseType> {
-    const orgProfile = await this.organizationService.getOgPofile(orgId);
+  @ApiOperation({ summary: 'Organization Profile', description: 'Get organization profile details' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getOrgPofile(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+    const orgProfile = await this.organizationService.getOrgPofile(orgId);
 
     const base64Data = orgProfile['logoUrl'];
     const getImageBuffer = await this.imageServiceService.getBase64Image(base64Data);
-
     res.setHeader('Content-Type', 'image/png'); 
     return res.send(getImageBuffer);
   }
 
   /**
  * 
- * @param user 
- * @param orgId 
- * @param res 
  * @returns Users list of organization
  */
   @Get('/public-profile')
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get all public profile of organizations', description: 'Get all public profile of organizations.' })
   @ApiQuery({
     name: 'pageNumber',
@@ -76,7 +77,7 @@ export class OrganizationController {
     type: String,
     required: false
   })
-  async get(@Query() getAllUsersDto: GetAllOrganizationsDto, @Res() res: Response): Promise<IResponseType> {
+  async get(@Query() getAllUsersDto: GetAllOrganizationsDto, @Res() res: Response): Promise<Response> {
 
     const users = await this.organizationService.getPublicOrganizations(getAllUsersDto);
     const finalResponse: IResponseType = {

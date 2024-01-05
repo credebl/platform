@@ -71,12 +71,12 @@ interface ILedgers {
   networkType: string
 }
 
-export interface IGetOrgs {
+export interface IGetOrganization {
   totalPages:number;
-  organizations : IAllOrganizations[];
+  organizations : IGetAllOrganizations[];
 }
 
-interface IAllOrganizations {
+interface IGetAllOrganizations{
   id: string,
   name: string,
   description: string,

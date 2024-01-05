@@ -89,15 +89,19 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+/**
+ * @returns get organization roles
+ */
+
   @Get('/roles')
   @ApiOperation({
     summary: 'Fetch org-roles details',
     description: 'Fetch org-roles details'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getOrgRoles(@Res() res: Response): Promise<IResponseType> {
+  async getOrgRoles(@Res() res: Response): Promise<Response> {
 
     const orgRoles = await this.organizationService.getOrgRoles();
 

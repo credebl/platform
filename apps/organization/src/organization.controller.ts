@@ -94,7 +94,7 @@ export class OrganizationController {
   }
 
   /**
-   * @returns Get org-roles details
+   * @returns Get org-roles 
    */
 
   @MessagePattern({ cmd: 'get-org-roles' })

@@ -1,6 +1,6 @@
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
-import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
@@ -28,8 +28,8 @@ import { ImageServiceService } from '@credebl/image-service';
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
 @ApiTags('organizations')
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class OrganizationController {
 
   constructor(
@@ -40,13 +40,13 @@ export class OrganizationController {
 
 /**
  * @param orgId 
- * @returns organization profile details
+ * @returns Organization logo image
  */
 
   @Get('/profile/:orgId')
   @ApiOperation({ summary: 'Organization Profile', description: 'Get organization profile details' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  async getOrgPofile(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+  async getOrgPofile(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response): Promise<Response> {
     const orgProfile = await this.organizationService.getOrgPofile(orgId);
 
     const base64Data = orgProfile['logoUrl'];
@@ -55,9 +55,8 @@ export class OrganizationController {
     return res.send(getImageBuffer);
   }
 
-  /**
- * 
- * @returns Users list of organization
+/**
+ * @returns List of public organizations
  */
   @Get('/public-profile')
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -114,11 +113,14 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
-
+/**
+ * @param orgSlug 
+ * @returns organization details
+ */
   @Get('public-profiles/:orgSlug')
   @ApiOperation({
-    summary: 'Fetch user details',
-    description: 'Fetch user details'
+    summary: 'Fetch organization details',
+    description: 'Fetch organization details'
   })
 
   @ApiParam({
@@ -126,7 +128,7 @@ export class OrganizationController {
     type: String,
     required: true
   })
-  async getPublicProfile(@Param('orgSlug') orgSlug: string, @Res() res: Response): Promise<IResponseType> {
+  async getPublicProfile(@Param('orgSlug') orgSlug: string, @Res() res: Response): Promise<Response> {
     const userData = await this.organizationService.getPublicProfile(orgSlug);
 
     const finalResponse: IResponseType = {
@@ -139,14 +141,18 @@ export class OrganizationController {
 
   }
 
+/**
+ * @param orgId 
+ * @returns Organization dashboard details
+ */
 
   @Get('/dashboard/:orgId')
-  @ApiOperation({ summary: 'Get an organization', description: 'Get an organization' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get dashboard details', description: 'Get organization dashboard details' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
 
-  async getOrganizationDashboard(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<IResponseType> {
+  async getOrganizationDashboard(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganizationDashboard(orgId, reqUser.id);
 

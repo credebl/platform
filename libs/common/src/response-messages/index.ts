@@ -73,7 +73,7 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'An organization name is already exist',
-            profileNotFound: 'Organization public profile not found',
+            orgProfileNotFound: 'Organization public profile not found',
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
@@ -83,7 +83,8 @@ export const ResponseMessages = {
             notFound: 'Organization agent not found',
             orgNotFound: 'Organization not found',
             orgNotMatch: 'Organization does not have access',
-            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status'
+            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
+            invalidOrgId:'Invalid format for orgId'
         }
     },
 

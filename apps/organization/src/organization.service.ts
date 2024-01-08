@@ -584,10 +584,9 @@ export class OrganizationService {
     try {
       const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
       // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
       }
       let url;
       if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {

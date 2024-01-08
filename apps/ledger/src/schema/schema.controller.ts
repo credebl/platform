@@ -16,6 +16,11 @@ export class SchemaController {
         return this.schemaService.createSchema(schema, user, orgId);
     }
 
+    /**
+     * @param orgId
+     * @param schemaId 
+     * @returns Schema details by schema Id
+     */
     @MessagePattern({ cmd: 'get-schema-by-id' })
     async getSchemaById(payload: ISchema): Promise<schema> {
         const { schemaId, orgId } = payload;

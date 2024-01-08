@@ -309,19 +309,20 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async _getSchemaById(payload: GetSchemaAgentRedirection): Promise<{ response: string }> {
+  async _getSchemaById(payload: GetSchemaAgentRedirection): Promise<string> {
     try {
       const pattern = {
         cmd: 'agent-get-schema'
       };
       const schemaResponse = await this.schemaServiceProxy
         .send(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
+        // .pipe(
+        //   map((response) => (
+        //     {
+        //       response
+        //     }))
+        // )
+        .toPromise()
         .catch(error => {
           this.logger.error(`Catch : ${JSON.stringify(error)}`);
           throw new HttpException(

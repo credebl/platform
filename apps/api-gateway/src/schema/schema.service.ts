@@ -19,11 +19,9 @@ export class SchemaService extends BaseService {
     return this.sendNatsMessage(this.schemaServiceProxy, 'create-schema', payload);
   }
 
-  getSchemaById(schemaId: string, orgId: string): Promise<{
-    response: object;
-  }> {
+  getSchemaById(schemaId: string, orgId: string): Promise<object> {
     const payload = { schemaId, orgId };
-    return this.sendNats(this.schemaServiceProxy, 'get-schema-by-id', payload);
+    return this.sendNatsMessage(this.schemaServiceProxy, 'get-schema-by-id', payload);
   }
 
   getSchemas(schemaSearchCriteria: ISchemaSearchPayload, user: IUserRequestInterface, orgId: string): Promise<ISchemasWithPagination> {

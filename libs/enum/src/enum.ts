@@ -58,3 +58,9 @@ export enum UserCertificateId {
     ARBITER = 'Arbiter',
     WORLD_RECORD = 'WorldRecord'
 }
+
+export enum NodeEnvironment {
+   DEVELOPMENT='development',
+   PRODUCTION='production'
+}
+

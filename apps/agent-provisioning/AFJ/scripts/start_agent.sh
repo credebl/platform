@@ -1,3 +1,5 @@
+#!/bin/bash
+
 START_TIME=$(date +%s)
 
 AGENCY=$1
@@ -20,6 +22,7 @@ ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
 INBOUND_PORT=9001
+
 
 increment_port() {
     local port="$1"
@@ -94,7 +97,7 @@ if [ -f "$CONFIG_FILE" ]; then
   rm "$CONFIG_FILE"
 fi
 
-cat <<EOF >>${CONFIG_FILE}
+cat <<EOF >${CONFIG_FILE}
 {
   "label": "${AGENCY}_${CONTAINER_NAME}",
   "walletId": "$WALLET_NAME",
@@ -138,7 +141,7 @@ if [ -f "$DOCKER_COMPOSE" ]; then
   # If it exists, remove the file
   rm "$DOCKER_COMPOSE"
 fi
-cat <<EOF >>${DOCKER_COMPOSE}
+cat <<EOF >${DOCKER_COMPOSE}
 version: '3'
 
 services:
@@ -198,6 +201,15 @@ if [ $? -eq 0 ]; then
     done
 
     echo "Creating agent config"
+    # Capture the logs from the container
+    container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
+
+    # Extract the token from the logs using grep and awk (modify the pattern as needed)
+    token=$(echo "$container_logs" | grep -oE 'token [^ ]+' | awk '{print $2}')
+
+    # Print the extracted token
+    echo "Token: $token"
+    
     ENDPOINT="${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json"
 
     # Check if the file exists
@@ -205,10 +217,15 @@ if [ $? -eq 0 ]; then
     # If it exists, remove the file
     rm "$ENDPOINT"
     fi
-    cat <<EOF >>${ENDPOINT}
+    cat <<EOF >${ENDPOINT}
     {
-        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
-        "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
+        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}"
+    }
+EOF
+
+    cat <<EOF >${PWD}/token/${AGENCY}_${CONTAINER_NAME}.json
+    {
+        "token" : "$token"
     }
 EOF
     echo "Agent config created"

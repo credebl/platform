@@ -18,7 +18,9 @@ export const ResponseMessages = {
             userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched',
-            signUpUser:'User created successfully'
+            signUpUser:'User created successfully',
+            shareUserCertificate:'Certificate URL generated successfully',
+            updateUserProfile:'User profile updated successfully'
         },
         error: {
             exists: 'User already exists',
@@ -36,6 +38,8 @@ export const ResponseMessages = {
             invalidCredentials: 'Invalid Credentials',
             registerFido: 'Please complete your fido registration',
             invitationNotFound: 'Invitation not found',
+            invitationAlreadyAccepted:'Organization invitation already accepted',
+            invitationAlreadyRejected:'Organization invitation already rejected',
             invalidInvitationStatus: 'Invalid invitation status',
             invalidKeycloakId: 'keycloakId is invalid',
             invalidEmail: 'Invalid Email Id!',
@@ -44,7 +48,12 @@ export const ResponseMessages = {
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
             userNotRegisterd: 'The user has not yet completed the registration process',
             InvalidEmailDomain :'Email from this domain is not allowed',
-            credentialNotFound: 'User credentials not found'
+            credentialNotFound: 'User credentials not found',
+            invalidOrgId:'Organization does not exist',
+            invalidInvitationId:'Organization invitation does not exist',
+            invitationAlreadyPending:'Organization invitation is already in pending state',
+            emailIsNotVerified:'Email is not verified',
+            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already'
         }
     },
     organisation: {
@@ -160,6 +169,7 @@ export const ResponseMessages = {
             notAbleToSpinUpAgent: 'Agent not able to spin up',
             alreadySpinUp: 'Agent already spun up',
             agentUrl: 'Agent url not exist',
+            apiKeyNotExist:'API key is not found',
             seedChar: 'seed must be at most 32 characters',
             validWalletName: 'Please enter valid wallet name. It allows only alphanumeric values',
             platformConfiguration: 'Platform configuration is missing or invalid',
@@ -228,6 +238,7 @@ export const ResponseMessages = {
     verification: {
         success: {
             fetch: 'Proof presentations details fetched successfully.',
+            create: 'Presentation of proof details created successfully.',
             proofFormData: 'Proof presentation form data received successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'

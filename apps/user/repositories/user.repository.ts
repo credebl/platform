@@ -6,7 +6,7 @@ import {
   PlatformSettings,
   ShareUserCertificate,
   UpdateUserProfile,
-  UserCredentials,
+  IUserCredentials,
   ISendVerificationEmail,
   IUsersProfile,
   IUserInformation, 
@@ -38,12 +38,18 @@ export class UserRepository {
    */
   async createUser(userEmailVerification:ISendVerificationEmail, verifyCode: string): Promise<user> {
     try {
-      const saveResponse = await this.prisma.user.create({
-        data: {
+      const saveResponse = await this.prisma.user.upsert({
+        where: {
+          email: userEmailVerification.email
+        },
+        create: {
           username: userEmailVerification.username,
           email: userEmailVerification.email,
           verificationCode: verifyCode.toString(),
           publicProfile: true
+        },
+        update: {
+          verificationCode: verifyCode.toString()
         }
       });
 
@@ -70,7 +76,7 @@ export class UserRepository {
       });
     } catch (error) {
       this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 
@@ -110,7 +116,7 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
-  async getUserCredentialsById(credentialId: string): Promise<UserCredentials> {
+  async getUserCredentialsById(credentialId: string): Promise<IUserCredentials> {
     return this.prisma.user_credentials.findUnique({
       where: {
         credentialId

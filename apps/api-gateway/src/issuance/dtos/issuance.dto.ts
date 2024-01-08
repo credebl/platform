@@ -150,7 +150,7 @@ export class OutOfBandCredentialDto {
     credentialOffer: CredentialOffer[];
 
     @ApiProperty({ example: 'awqx@getnada.com' })
-    @IsEmail()
+    @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Please provide valid email' })
     @IsString({ message: 'email should be string' })
     @Transform(({ value }) => value.trim().toLowerCase())

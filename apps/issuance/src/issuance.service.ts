@@ -8,9 +8,10 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
+// import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { ClientDetails, FileUploadData, IAttributes, IIssuance, IIssueData, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
-import { platform_config } from '@prisma/client';
+// import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -28,7 +29,9 @@ import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
-import { IIssuedCredentialSearchinterface } from 'apps/api-gateway/src/issuance/interfaces';
+import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
+import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+
 
 @Injectable()
 export class IssuanceService {
@@ -41,8 +44,8 @@ export class IssuanceService {
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
-    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue
-
+    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
 
@@ -50,7 +53,7 @@ export class IssuanceService {
     try {
       const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -67,9 +70,15 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const apiKey = platformConfig?.sgApiKey;
-      
-      const issueData: IIssueData = {
+      // const apiKey = platformConfig?.sgApiKey;
+      // let apiKey = await this._getOrgAgentApiKey(orgId);
+
+      let apiKey;
+      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const issueData = {
         protocolVersion: 'v1',
         connectionId,
         credentialFormats: {
@@ -103,6 +112,9 @@ export class IssuanceService {
   async sendCredentialOutOfBand(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: IAttributes[]): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      // eslint-disable-next-line camelcase
+      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -113,9 +125,17 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
-      const apiKey = platformConfig?.sgApiKey;
-      const issueData: IIssueData = {
+      // const apiKey = platformConfig?.sgApiKey;
+
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey;
+      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey---${apiKey}`);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+
+      const issueData = {
         connectionId,
         credentialFormats: {
           indy: {
@@ -188,45 +208,15 @@ export class IssuanceService {
   async getIssueCredentials(
     user: IUserRequest,
     orgId: string,
-    issuedCredentialsSearchCriteria: IIssuedCredentialSearchinterface
-  ): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      connectionId: string;
-      schemaId: string;
-      state: string;
-      orgId: string;
-    }[];
-  }> {
+    issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams
+  ): Promise<IIssuedCredential> {
     try {
       const getIssuedCredentialsList = await this.issuanceRepository.getAllIssuedCredentials(
         user,
         orgId,
         issuedCredentialsSearchCriteria
       );
-      const issuedCredentialsResponse: {
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-        nextPage: number;
-        previousPage: number;
-        lastPage: number;
-        data: {
-          createDateTime: Date;
-          createdBy: string;
-          connectionId: string;
-          schemaId: string;
-          state: string;
-          orgId: string;
-        }[];
-      } = {
+      const issuedCredentialsResponse: IIssuedCredential = {
         totalItems: getIssuedCredentialsList.issuedCredentialsCount,
         hasNextPage:
           issuedCredentialsSearchCriteria.pageSize * issuedCredentialsSearchCriteria.pageNumber < getIssuedCredentialsList.issuedCredentialsCount,
@@ -237,18 +227,14 @@ export class IssuanceService {
         data: getIssuedCredentialsList.issuedCredentialsList
       };
 
-      if (0 !== getIssuedCredentialsList.issuedCredentialsCount) {
-        return issuedCredentialsResponse;
-      } else {
+      if (0 === getIssuedCredentialsList?.issuedCredentialsCount) {
         throw new NotFoundException(ResponseMessages.issuance.error.credentialsNotFound);
       }
+
+      return issuedCredentialsResponse;
     } catch (error) {
-      if (404 === error.status) {
-        throw new NotFoundException(error.response.message);
-      }
-      throw new RpcException(
-        `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
-      );
+      this.logger.error(`Error in fetching issued credentials by org id: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -269,7 +255,7 @@ export class IssuanceService {
     try {
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
+      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
@@ -280,7 +266,13 @@ export class IssuanceService {
       const issuanceMethodLabel = 'get-issue-credential-by-credential-id';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
 
-      const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = platformConfig?.sgApiKey;
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
       return createConnectionInvitation?.response;
     } catch (error) {
@@ -348,7 +340,13 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
       }
 
-      const { apiKey } = agentDetails;
+      // const { apiKey } = agentDetails;
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      this.logger.log(`cachedApiKey----${apiKey}`);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
 
       const errors = [];
       const emailPromises = [];
@@ -364,8 +362,7 @@ export class IssuanceService {
               }
             },
             autoAcceptCredential: 'always',
-            comment,
-            label: organizationDetails?.name
+            comment
           };
 
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
@@ -1073,4 +1070,22 @@ export class IssuanceService {
     }
   }
 
+   async _getOrgAgentApiKey(orgId: string): Promise<string> {
+    const pattern = { cmd: 'get-org-agent-api-key' };
+    const payload = { orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.issuanceServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
 }
+

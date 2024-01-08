@@ -175,8 +175,8 @@ export interface IIssuedCredentialsSearchInterface {
 export interface IIssuedCredentialsSearchCriteria {
   pageNumber: number;
   pageSize: number;
-  sorting: string;
-  sortByValue: string;
+  sortField: string;
+  sortBy: string;
   searchByText: string;
   user?: IUserRequestInterface;
 }

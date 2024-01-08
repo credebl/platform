@@ -35,9 +35,9 @@ import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
 
 @Injectable()
 @WebSocketGateway()

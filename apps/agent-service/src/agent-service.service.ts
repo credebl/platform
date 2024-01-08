@@ -1152,18 +1152,8 @@ export class AgentServiceService {
       const data = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })
         .then(async response => response)
-        .catch(error => {
-          this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
 
-          if (error && Object.keys(error).length === 0) {
-            throw new InternalServerErrorException(
-              ResponseMessages.agent.error.agentDown,
-              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
-            );
-          } else {
-            throw error;
-          }
-        });
       return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
@@ -1240,18 +1230,7 @@ export class AgentServiceService {
       const getVerifiedProofData = await this.commonService
         .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response)
-        .catch(error => {
-          this.logger.error(`Error in getVerifiedProofs in agent service : ${JSON.stringify(error)}`);
-
-          if (error && Object.keys(error).length === 0) {
-            throw new InternalServerErrorException(
-              ResponseMessages.agent.error.agentDown,
-              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
-            );
-          } else {         
-            throw error;
-          }
-        });
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
 
       return getVerifiedProofData;
     } catch (error) {
@@ -1343,10 +1322,11 @@ export class AgentServiceService {
       let agentApiKey;
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
 
+
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
       if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
-
+        
         const [orgAgentData] = platformAdminSpinnedUp.org_agents;
         const { apiKey } = orgAgentData;
         if (!platformAdminSpinnedUp) {
@@ -1354,6 +1334,7 @@ export class AgentServiceService {
         }
 
         agentApiKey = apiKey;
+
       } else {
         agentApiKey = orgAgentApiKey?.apiKey;
       }
@@ -1369,5 +1350,16 @@ export class AgentServiceService {
       throw error;
     }
   }
+
+  async handleAgentSpinupStatusErrors(error: string): Promise<object> {
+    if (error && Object.keys(error).length === 0) {
+      throw new InternalServerErrorException(
+        ResponseMessages.agent.error.agentDown,
+        { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+      );
+    } else {
+      throw error;
+    }
+  }  
 }
 

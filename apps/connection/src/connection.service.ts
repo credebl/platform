@@ -37,7 +37,7 @@ export class ConnectionService {
    */
   async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
 
-    const {orgId, multiUseInvitation, autoAcceptConnection, alias, label} = payload;
+    const { orgId, multiUseInvitation, autoAcceptConnection, alias, label } = payload;
     try {
       const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
       if (connectionInvitationExist) {
@@ -67,8 +67,10 @@ export class ConnectionService {
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const apiKey = await this._getOrgAgentApiKey(orgId);
-
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
       let shortenedUrl;
@@ -217,15 +219,15 @@ export class ConnectionService {
         lastPage: Math.ceil(getConnectionList.connectionCount / connectionSearchCriteria.pageSize),
         data: getConnectionList.connectionsList
       };
-        return connectionResponse;
+      return connectionResponse;
     } catch (error) {
 
       this.logger.error(
         `[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
       );
 
-      throw new RpcException(error.response ? error.response : error);      
-    } 
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
   async _getAllConnections(
@@ -286,18 +288,19 @@ export class ConnectionService {
       }
 
 
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
+      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
       }
       const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
       return createConnectionInvitation;
-     
+
 
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
 
-      if (error?.response?.error?.reason)  {
+      if (error?.response?.error?.reason) {
         throw new RpcException({
           message: ResponseMessages.connection.error.connectionNotFound,
           statusCode: error?.response?.status,
@@ -314,25 +317,25 @@ export class ConnectionService {
     apiKey: string
   ): Promise<IConnectionDetailsById> {
 
-      //nats call in agent service for fetch connection details
-      const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
-      const payload = { url, apiKey };
-      return this.connectionServiceProxy
-        .send<IConnectionDetailsById>(pattern, payload)
-        .toPromise()
-        .catch(error => {
-          this.logger.error(
-                `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
-              );         
-            throw new HttpException(
-            {
-              status: error.statusCode,  
-              error: error.error?.message?.error ? error.error?.message?.error : error.error,
-              message: error.message
-            }, error.error);
-        });
+    //nats call in agent service for fetch connection details
+    const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
+    const payload = { url, apiKey };
+    return this.connectionServiceProxy
+      .send<IConnectionDetailsById>(pattern, payload)
+      .toPromise()
+      .catch(error => {
+        this.logger.error(
+          `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
+        );
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error?.message?.error ? error.error?.message?.error : error.error,
+            message: error.message
+          }, error.error);
+      });
   }
-  
+
   /**
    * Description: Fetch agent url
    * @param referenceId

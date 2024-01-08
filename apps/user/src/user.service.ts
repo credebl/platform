@@ -78,7 +78,7 @@ export class UserService {
    * @param userEmailVerification
    * @returns
    */
-  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<ISendVerificationEmail> {
+  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
       const { email } = userEmailVerification;
 
@@ -90,9 +90,9 @@ export class UserService {
           throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
         }
       }
-      const userDetails = await this.userRepository.checkUserExist(userEmailVerification.email);
+      const userDetails = await this.userRepository.checkUserExist(email);
 
-      if (userDetails && userDetails.isEmailVerified) {
+      if (userDetails?.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
 
@@ -101,12 +101,12 @@ export class UserService {
       }
 
       const verifyCode = uuidv4();
-      const uniqueUsername = await this.createUsername(userEmailVerification.email, verifyCode);
+      const uniqueUsername = await this.createUsername(email, verifyCode);
       userEmailVerification.username = uniqueUsername;
       const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
 
       try {
-        await this.sendEmailForVerification(userEmailVerification.email, resUser.verificationCode);
+        await this.sendEmailForVerification(email, resUser.verificationCode);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -211,10 +211,10 @@ export class UserService {
       if (!userInfo.email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email);
+      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email.toLowerCase());
 
       if (!checkUserDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+        throw new NotFoundException(ResponseMessages.user.error.emailIsNotVerified);
       }
       if (checkUserDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
@@ -222,11 +222,11 @@ export class UserService {
       if (false === checkUserDetails.isEmailVerified) {
         throw new NotFoundException(ResponseMessages.user.error.verifyEmail);
       }
-      const resUser = await this.userRepository.updateUserInfo(userInfo.email, userInfo);
+      const resUser = await this.userRepository.updateUserInfo(userInfo.email.toLowerCase(), userInfo);
       if (!resUser) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
-      const userDetails = await this.userRepository.getUserDetails(userInfo.email);
+      const userDetails = await this.userRepository.getUserDetails(userInfo.email.toLowerCase());
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
@@ -234,22 +234,22 @@ export class UserService {
       let supaUser;
 
       if (userInfo.isPasskey) {
-        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
-        const userDetails = await this.userRepository.getUserDetails(email);
+        const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
+        const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
 
         if (!resUser) {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
         supaUser = await this.supabaseService.getClient().auth.signUp({
-          email,
+          email: email.toLowerCase(),
           password: decryptedPassword
         });
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
 
         supaUser = await this.supabaseService.getClient().auth.signUp({
-          email,
+          email: email.toLowerCase(),
           password: decryptedPassword
         });
       }
@@ -274,10 +274,10 @@ export class UserService {
 
   async addPasskey(email: string, userInfo: AddPasskeyDetailsDto): Promise<string> {
     try {
-      if (!email) {
+      if (!email.toLowerCase()) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(email);
+      const checkUserDetails = await this.userRepository.getUserDetails(email.toLowerCase());
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
@@ -287,7 +287,7 @@ export class UserService {
       if (false === checkUserDetails.isEmailVerified) {
         throw new NotFoundException(ResponseMessages.user.error.emailNotVerified);
       }
-      const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
+      const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
       if (!resUser) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
@@ -300,7 +300,7 @@ export class UserService {
   }
 
   private validateEmail(email: string): void {
-    if (!validator.isEmail(email)) {
+    if (!validator.isEmail(email.toLowerCase())) {
       throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
     }
   }
@@ -314,8 +314,8 @@ export class UserService {
     const { email, password, isPasskey } = loginUserDto;
 
     try {
-      this.validateEmail(email);
-      const userData = await this.userRepository.checkUserExist(email);
+      this.validateEmail(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
@@ -329,12 +329,12 @@ export class UserService {
       }
 
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-        const getUserDetails = await this.userRepository.getUserDetails(userData.email);
+        const getUserDetails = await this.userRepository.getUserDetails(userData.email.toLowerCase());
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return this.generateToken(email, decryptedPassword);
+        return this.generateToken(email.toLowerCase(), decryptedPassword);
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        return this.generateToken(email, decryptedPassword);
+        return this.generateToken(email.toLowerCase(), decryptedPassword);
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
@@ -348,7 +348,7 @@ export class UserService {
       this.logger.error(`supaInstance::`, supaInstance);
 
       const { data, error } = await supaInstance.auth.signInWithPassword({
-        email,
+        email: email.toLowerCase(),
         password
       });
 
@@ -539,7 +539,7 @@ export class UserService {
    * @param userId
    * @returns Organization invitation status
    */
-  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<string> {
+  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(userId);
       return this.fetchInvitationsStatus(acceptRejectInvitation, userId, userData.email);
@@ -644,7 +644,7 @@ export class UserService {
     acceptRejectInvitation: AcceptRejectInvitationDto,
     userId: string,
     email: string
-  ): Promise<string> {
+  ): Promise<IUserInvitations> {
     try {
       const pattern = { cmd: 'update-invitation-status' };
 
@@ -660,7 +660,8 @@ export class UserService {
           throw new HttpException(
             {
               statusCode: error.statusCode,
-              error: error.message
+              error: error.error,
+              message: error.message
             },
             error.error
           );
@@ -727,21 +728,22 @@ export class UserService {
 
   async checkUserExist(email: string): Promise<ICheckUserDetails> {
     try {
-      const userDetails = await this.userRepository.checkUniqueUserExist(email);
+      const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase());
       if (userDetails && !userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
       } else if (userDetails && userDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {
-          isExist: false
+          isRegistrationCompleted: false,
+          isEmailVerified: false
         };
       } else {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
-          isExist: true
+          isRegistrationCompleted: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
+
         };
         return userVerificationDetails;
       }

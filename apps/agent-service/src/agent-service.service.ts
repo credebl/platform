@@ -12,17 +12,15 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
-  forwardRef
+  NotFoundException
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
-import { catchError, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
-import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';

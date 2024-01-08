@@ -59,15 +59,8 @@ export enum UserCertificateId {
     WORLD_RECORD = 'WorldRecord'
 }
 
-export enum Purpose {
-    ORGANIZATION = 'Organization',
-    USER_CERTIFICATE = 'UserCertificate'
+export enum NodeEnvironment {
+   DEVELOPMENT='development',
+   PRODUCTION='production'
 }
 
-const transitionMap: { [key in Invitation]: Invitation[] } = {
-    [Invitation.PENDING]: [Invitation.ACCEPTED, Invitation.REJECTED],
-    [Invitation.ACCEPTED]: [],
-    [Invitation.REJECTED]: []
-};
-
-export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));

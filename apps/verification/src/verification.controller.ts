@@ -1,10 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { IProofPresentation, IProofRequests, IRequestProof, ProofFormData } from './interfaces/verification.interface';
+import { IProofPresentation, IProofPresentationData, IProofRequests, IRequestProof } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { presentations } from '@prisma/client';
-import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 
 @Controller()
 export class VerificationController {
@@ -65,11 +65,9 @@ export class VerificationController {
     return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof);
   }
 
-  @MessagePattern({ cmd: 'proof-form-data' })
-  async getProofFormData(payload: ProofFormData): Promise<object> {
-  
-    const { id, orgId } = payload;
-   
-    return this.verificationService.getProofFormData(id, orgId);
+  @MessagePattern({ cmd: 'get-verified-proof-details' })
+  async getVerifiedProofdetails(payload: IProofPresentationData): Promise<IProofPresentationDetails[]> {  
+    const { proofId, orgId } = payload;  
+    return this.verificationService.getVerifiedProofdetails(proofId, orgId);
   }
 }

@@ -45,28 +45,34 @@ export class VerificationController {
 
     private readonly logger = new Logger('VerificationController');
 
-    @Get('/orgs/:orgId/proofs/:proofId/form')
+    /**
+     * 
+     * @param proofId 
+     * @param orgId 
+     * @returns Verified proof details
+     */
+    @Get('/orgs/:orgId/verified-proofs/:proofId')
     @ApiOperation({
-        summary: `Get a proof form data`,
-        description: `Get a proof form data`
+        summary: `Get verified proof details`,
+        description: `Get verified proof details`
     })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @ApiBearerAuth()
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-    async getProofFormData(
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+    async getVerifiedProofDetails(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('proofId') id: string,
+        @Param('proofId') proofId: string,
         @Param('orgId') orgId: string
-    ): Promise<object> { 
-        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);   
-        const finalResponse: IResponseType = {
+    ): Promise<Response> { 
+        const sendProofRequest = await this.verificationService.getVerifiedProofDetails(proofId, orgId, user);   
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.verification.success.proofFormData,
-            data: sendProofRequest.response
+            message: ResponseMessages.verification.success.verifiedProofDetails,
+            data: sendProofRequest
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

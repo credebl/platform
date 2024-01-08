@@ -52,7 +52,8 @@ export const ResponseMessages = {
             invalidOrgId:'Organization does not exist',
             invalidInvitationId:'Organization invitation does not exist',
             invitationAlreadyPending:'Organization invitation is already in pending state',
-            emailIsNotVerified:'Email is not verified'
+            emailIsNotVerified:'Email is not verified',
+            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already'
         }
     },
     organisation: {

@@ -859,7 +859,6 @@ export class AgentServiceService {
       { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
     );
 
-    this.logger.debug(`API Response Data: ${JSON.stringify(tenantDetails)}`);
     return tenantDetails;
   }
 
@@ -904,7 +903,6 @@ export class AgentServiceService {
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
           })
           .catch(error => {
@@ -925,7 +923,6 @@ export class AgentServiceService {
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
           })
           .catch(error => {
@@ -950,7 +947,6 @@ export class AgentServiceService {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace('#', `${payload.schemaId}`)}`;
         schemaResponse = await this.commonService.httpGet(url, payload.schemaId)
           .then(async (schema) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
           });
 
@@ -959,7 +955,6 @@ export class AgentServiceService {
 
         schemaResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
           });
       }
@@ -985,7 +980,6 @@ export class AgentServiceService {
 
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
 
@@ -998,7 +992,6 @@ export class AgentServiceService {
         };
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
       }
@@ -1018,7 +1011,6 @@ export class AgentServiceService {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID.replace('#', `${payload.credentialDefinitionId}`)}`;
         credDefResponse = await this.commonService.httpGet(url, payload.credentialDefinitionId)
           .then(async (credDef) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
 
@@ -1026,7 +1018,6 @@ export class AgentServiceService {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
         credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
       }
@@ -1151,7 +1142,7 @@ export class AgentServiceService {
 
     try {
       const data = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response)
         .catch(error => {
           this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);

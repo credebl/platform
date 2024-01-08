@@ -46,7 +46,9 @@ export class OrganizationController {
   @Get('/profile/:orgId')
   @ApiOperation({ summary: 'Organization Profile', description: 'Get organization profile details' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  async getOrgPofile(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response): Promise<Response> {
+  async getOrgPofile(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }}))
+  orgId: string, @Res() res: Response): Promise<Response> {
+
     const orgProfile = await this.organizationService.getOrgPofile(orgId);
 
     const base64Data = orgProfile['logoUrl'];
@@ -149,10 +151,10 @@ export class OrganizationController {
   @Get('/dashboard/:orgId')
   @ApiOperation({ summary: 'Get dashboard details', description: 'Get organization dashboard details' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-
-  async getOrganizationDashboard(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  async getOrganizationDashboard(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     const getOrganization = await this.organizationService.getOrganizationDashboard(orgId, reqUser.id);
 
@@ -235,9 +237,12 @@ export class OrganizationController {
 
   }
 
+  /**
+   * @returns Organization details
+   */
   @Get('/:orgId')
-  @ApiOperation({ summary: 'Get an organization', description: 'Get an organization' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Get an organization', description: 'Get an organization by id' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)

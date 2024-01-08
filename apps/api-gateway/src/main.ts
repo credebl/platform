@@ -11,11 +11,12 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 
 import helmet from 'helmet';
+import { NodeEnvironment } from '@credebl/enum/enum';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
-    // httpsOptions,
+    logger: NodeEnvironment.DEVELOPMENT === process.env.NODE_ENV ? ['log', 'debug', 'error', 'verbose', 'warn'] : ['error', 'warn']
   });
 
   app.connectMicroservice<MicroserviceOptions>({

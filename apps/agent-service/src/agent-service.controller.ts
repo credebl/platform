@@ -1,9 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { IAgentStatus, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer } from './interface/agent-service.interface';
-import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
-import { ISendProofRequestPayload } from './interface/agent-service.interface';
+import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
@@ -87,7 +85,7 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-get-proof-presentation-by-id' })
-  async getProofPresentationById(payload: { url: string; apiKey: string }): Promise<object> {
+  async getProofPresentationById(payload: { url: string; apiKey: string }): Promise<IProofPresentation> {
     return this.agentServiceService.getProofPresentationById(payload.url, payload.apiKey);
   }
 

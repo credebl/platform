@@ -22,13 +22,14 @@ export class VerificationController {
   }
 
   /**
-   * Get proof presentation by id
-   * @param payload 
-   * @returns Get proof presentation details
+   * Get proof presentation by proofId
+   * @param orgId 
+   * @param proofId 
+   * @returns Proof presentation details by proofId
    */
-  @MessagePattern({ cmd: 'get-proof-presentations-by-id' })
-  async getProofPresentationById(payload: { id: string, orgId: string, user: IUserRequest }): Promise<string> {
-    return this.verificationService.getProofPresentationById(payload.id, payload.orgId);
+  @MessagePattern({ cmd: 'get-proof-presentations-by-proofId' })
+  async getProofPresentationById(payload: { proofId: string, orgId: string, user: IUserRequest }): Promise<string> {
+    return this.verificationService.getProofPresentationById(payload.proofId, payload.orgId);
   }
 
   /**

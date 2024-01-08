@@ -247,6 +247,7 @@ export const ResponseMessages = {
             schemaIdNotFound: 'Schema Id is required',
             predicatesValueNotNumber: 'The attribuite value is not a number',
             proofPresentationNotFound: 'Proof presentations not found',
+            proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'

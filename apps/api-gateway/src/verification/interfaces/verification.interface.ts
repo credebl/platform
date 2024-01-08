@@ -17,3 +17,13 @@ export interface IProofRequestSearchCriteria {
     user?: IUserRequestInterface
 }
 
+export interface IProofPresentation {
+    createdAt: string;
+    protocolVersion: string;
+    state: string;
+    connectionId: string;
+    threadId: string;
+    autoAcceptProof: string;
+    updatedAt: string;
+    isVerified: boolean;
+  }

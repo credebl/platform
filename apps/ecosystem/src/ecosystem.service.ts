@@ -860,7 +860,6 @@ export class EcosystemService {
         ecosystemLeadAgentDetails?.tenantId
       );
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(ecosystemLeadDetails.orgId);
       }
@@ -1121,15 +1120,11 @@ export class EcosystemService {
         ecosystemMemberDetails,
         ecosystemLeadAgentDetails
       );
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
 
-      this.logger.log(`orgId ::: ${orgId}`);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
-
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, apiKey);
 
@@ -1361,7 +1356,6 @@ export class EcosystemService {
   async getAllEcosystemSchemas(ecosystemSchemas: GetAllSchemaList): Promise<object> {
     try {
       const response = await this.ecosystemRepository.getAllEcosystemSchemasDetails(ecosystemSchemas);
-      this.logger.error(`In error getAllEcosystemSchemas1: ${JSON.stringify(response)}`);
       const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
@@ -1376,7 +1370,6 @@ export class EcosystemService {
         lastPage: Math.ceil(response.schemasCount / ecosystemSchemas.pageSize),
         data: schemasDetails
       };
-      this.logger.error(`In error getAllEcosystemSchemas1: ${JSON.stringify(response)}`);
       return schemasResponse;
     } catch (error) {
       this.logger.error(`In error fetching all ecosystem schemas: ${JSON.stringify(error)}`);

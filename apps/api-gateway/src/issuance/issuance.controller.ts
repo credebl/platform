@@ -612,8 +612,6 @@ export class IssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
-
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

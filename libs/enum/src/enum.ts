@@ -59,6 +59,11 @@ export enum UserCertificateId {
     WORLD_RECORD = 'WorldRecord'
 }
 
+export enum NodeEnvironment {
+   DEVELOPMENT='development',
+   PRODUCTION='production'
+}
+
 const transitionMap: { [key in Invitation]: Invitation[] } = {
     [Invitation.PENDING]: [Invitation.ACCEPTED, Invitation.REJECTED],
     [Invitation.ACCEPTED]: [],

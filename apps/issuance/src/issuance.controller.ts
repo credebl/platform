@@ -54,7 +54,6 @@ export class IssuanceController {
   async importCSV(payload: {
     importFileDetails: ImportFileDetails
   }): Promise<string> {
-    this.logger.log(`payload.importFileDetails----${payload.importFileDetails}`);
     return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
   }
 

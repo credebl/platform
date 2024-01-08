@@ -115,7 +115,6 @@ export class IssuanceService {
 
       let apiKey;
       apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey---${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -251,7 +250,6 @@ export class IssuanceService {
       // const apiKey = platformConfig?.sgApiKey;
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -325,7 +323,6 @@ export class IssuanceService {
       // const { apiKey } = agentDetails;
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -545,7 +542,6 @@ export class IssuanceService {
       const fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       await createFile(filePath, fileName, csv);
-      this.logger.log(`File created - ${fileName}`);
       const fullFilePath = join(process.cwd(), `uploadedFiles/exports/${fileName}`);
 
       if (!checkIfFileOrDirectoryExists(fullFilePath)) {
@@ -565,15 +561,10 @@ export class IssuanceService {
 
 
   async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
-    this.logger.log(`START importAndPreviewDataForIssuance----${JSON.stringify(importFileDetails)}`);
     try {
 
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
-
-      this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
-
-      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.fileKey)}`);
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
       const csvData: string = getFileDetails.Body.toString();
@@ -584,8 +575,6 @@ export class IssuanceService {
         transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
         complete: (results) => results.data
       });
-
-      this.logger.log(`parsedData----${JSON.stringify(parsedData)}`);
 
       if (0 >= parsedData.data.length) {
         throw new BadRequestException(`File data is empty`);
@@ -763,10 +752,8 @@ export class IssuanceService {
       );
     }
 
-    this.logger.log(`requestId----${JSON.stringify(requestId)}`);
     try {
       const cachedData = await this.cacheManager.get(requestId);
-      this.logger.log(`cachedData----${JSON.stringify(cachedData)}`);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
@@ -807,7 +794,6 @@ export class IssuanceService {
       }
       for (const element of respFile) {
         try {
-          this.logger.log(`element----${JSON.stringify(element)}`);
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
@@ -859,7 +845,6 @@ export class IssuanceService {
 
       for (const element of respFile) {
         try {
-          this.logger.log(`element----${JSON.stringify(element)}`);
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
@@ -910,7 +895,6 @@ export class IssuanceService {
       detailError: '',
       jobId: ''
     };
-    this.logger.log(`jobDetails----${JSON.stringify(jobDetails)}`);
 
     fileUploadData.fileUpload = jobDetails.fileUploadId;
     fileUploadData.fileRow = JSON.stringify(jobDetails);
@@ -944,7 +928,7 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(
-        `error in issuanceBulkCredential for data ${JSON.stringify(jobDetails)} : ${JSON.stringify(error)}`
+        `error in issuanceBulkCredential for data : ${JSON.stringify(error)}`
       );
       fileUploadData.isError = true;
       fileUploadData.error = JSON.stringify(error.error) ? JSON.stringify(error.error) : JSON.stringify(error);
@@ -974,9 +958,6 @@ export class IssuanceService {
           status,
           lastChangedDateTime: new Date()
         });
-
-        this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
-
 
       }
     } catch (error) {
@@ -1036,7 +1017,6 @@ export class IssuanceService {
       });
       return isFalsyForColumnValue;
     });
-    this.logger.log(`isNullish: ${isNullish}`);
     if (isNullish) {
       throw new BadRequestException(
         `Empty data found at row ${rowIndex} and column ${columnIndex}`

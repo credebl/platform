@@ -198,17 +198,6 @@ export class ConnectionController {
         @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
-        connectionDto.type = 'Connection';
-        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
-
-        // const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId);
-
-        // if (webhookUrl) {
-        //   try {
-        //     await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto });
-        // } catch (error) {
-        //     throw new RpcException(error.response ? error.response : error);
-        // }
         const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,

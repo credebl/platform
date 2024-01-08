@@ -67,14 +67,8 @@ export class ConnectionService {
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      // const apiKey = platformConfig?.sgApiKey;
-
       const apiKey = await this._getOrgAgentApiKey(orgId);
-      // let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      // this.logger.log(`cachedApiKey----getConnections,${apiKey}`);
-      //if(!apiKey || apiKey === null || apiKey === undefined) {
-      //  apiKey = await this._getOrgAgentApiKey(orgId);
-      // }
+
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
       let shortenedUrl;
@@ -292,9 +286,7 @@ export class ConnectionService {
       }
 
 
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----getConnectionsById,${apiKey}`);
      if (!apiKey || null === apiKey  ||  undefined === apiKey) {
        apiKey = await this._getOrgAgentApiKey(orgId);
       }

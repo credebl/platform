@@ -20,14 +20,14 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { catchError, map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, ISchemaResponse } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
-import { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';
+import { IGetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';
 import { ConnectionService } from 'apps/connection/src/connection.service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
@@ -942,7 +942,7 @@ export class AgentServiceService {
     }
   }
 
-  async getSchemaById(payload: GetSchemaAgentRedirection): Promise<object> {
+  async getSchemaById(payload: IGetSchemaAgentRedirection): Promise<ISchemaResponse> {
     try {
       let schemaResponse;
 
@@ -952,7 +952,14 @@ export class AgentServiceService {
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
+          })
+          .catch(error => {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
           });
+
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`.replace('@', `${payload.payload.schemaId}`).replace('#', `${payload.tenantId}`);
@@ -961,6 +968,12 @@ export class AgentServiceService {
           .then(async (schema) => {
             this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
+          })
+          .catch(error => {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
           });
       }
       return schemaResponse;

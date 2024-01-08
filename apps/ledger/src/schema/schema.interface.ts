@@ -32,7 +32,7 @@ export interface ITenantSchemaDto {
     issuerId: string;
 }
 
-export interface GetSchemaAgentRedirection {
+export interface IGetSchemaAgentRedirection {
     schemaId?: string;
     tenantId?: string;
     payload?: GetSchemaFromTenantPayload;

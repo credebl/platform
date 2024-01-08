@@ -14,7 +14,7 @@ import { schema } from '@prisma/client';
 import { ISchema, ISchemaCredDeffSearchInterface, ISchemaPayload, ISchemaSearchCriteria } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
-import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
+import { CreateSchemaAgentRedirection, IGetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
@@ -309,7 +309,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async _getSchemaById(payload: GetSchemaAgentRedirection): Promise<string> {
+  async _getSchemaById(payload: IGetSchemaAgentRedirection): Promise<string> {
     try {
       const pattern = {
         cmd: 'agent-get-schema'

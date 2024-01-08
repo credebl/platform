@@ -358,3 +358,21 @@ export interface IOrgAgentsResponse {
 export interface IStoreAgent {
     id: string;
 }
+export interface ISchemaResponse {
+    schema: ISchemadetails;
+    schemaId: string;
+    schemaMetadata: ISchemaData;
+}
+
+interface ISchemadetails {
+    attrNames: string[];
+    name: string;
+    version: string;
+    issuerId: string;
+}
+
+interface ISchemaData {
+    didIndyNamespace: string;
+    indyLedgerSeqNo: number;
+}
+  

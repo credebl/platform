@@ -21,3 +21,8 @@ export interface IProofPresentationsListCount {
     data: IProofPresentationItem[];
   }
 
+  export interface IProofPresentationDetails {
+    [key: string]: string;
+    credDefId: string;
+    schemaId: string;
+  }

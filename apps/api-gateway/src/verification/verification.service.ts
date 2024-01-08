@@ -5,7 +5,7 @@ import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
-import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 
 
 @Injectable()
@@ -76,11 +76,10 @@ export class VerificationService extends BaseService {
         const payload = { outOfBandRequestProof, user };
         return this.sendNats(this.verificationServiceProxy, 'send-out-of-band-proof-request', payload);
     }
-
-     
-    getProofFormData(id: string, orgId: string, user: IUserRequest): Promise<{ response: object }> {
-        const payload = { id, orgId, user };       
-        return this.sendNats(this.verificationServiceProxy, 'proof-form-data', payload);
+    
+    getVerifiedProofDetails(proofId: string, orgId: string, user: IUserRequest): Promise<IProofPresentationDetails[]> {
+        const payload = { proofId, orgId, user };       
+        return this.sendNatsMessage(this.verificationServiceProxy, 'get-verified-proof-details', payload);
     }
 
 }

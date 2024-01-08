@@ -18,9 +18,9 @@ export const ResponseMessages = {
             userCredentials: 'User credentials fetched successfully',
             platformEcosystemettings: 'Platform and ecosystem settings updated',
             fetchPlatformSettings: 'Platform settings fetched',
-            signUpUser:'User created successfully',
-            shareUserCertificate:'Certificate URL generated successfully',
-            updateUserProfile:'User profile updated successfully'
+            signUpUser: 'User created successfully',
+            shareUserCertificate: 'Certificate URL generated successfully',
+            updateUserProfile: 'User profile updated successfully'
         },
         error: {
             exists: 'User already exists',
@@ -38,8 +38,8 @@ export const ResponseMessages = {
             invalidCredentials: 'Invalid Credentials',
             registerFido: 'Please complete your fido registration',
             invitationNotFound: 'Invitation not found',
-            invitationAlreadyAccepted:'Organization invitation already accepted',
-            invitationAlreadyRejected:'Organization invitation already rejected',
+            invitationAlreadyAccepted: 'Organization invitation already accepted',
+            invitationAlreadyRejected: 'Organization invitation already rejected',
             invalidInvitationStatus: 'Invalid invitation status',
             invalidKeycloakId: 'keycloakId is invalid',
             invalidEmail: 'Invalid Email Id!',
@@ -47,12 +47,12 @@ export const ResponseMessages = {
             verifyEmail: 'The verification link has already been sent to your email address. please verify',
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
             userNotRegisterd: 'The user has not yet completed the registration process',
-            InvalidEmailDomain :'Email from this domain is not allowed',
+            InvalidEmailDomain: 'Email from this domain is not allowed',
             credentialNotFound: 'User credentials not found',
-            invalidOrgId:'Organization does not exist',
-            invalidInvitationId:'Organization invitation does not exist',
-            invitationAlreadyPending:'Organization invitation is already in pending state',
-            emailIsNotVerified:'Email is not verified',
+            invalidOrgId: 'Organization does not exist',
+            invalidInvitationId: 'Organization invitation does not exist',
+            invitationAlreadyPending: 'Organization invitation is already in pending state',
+            emailIsNotVerified: 'Email is not verified',
             invitationStatusUpdateInvalid: 'Status update is invalid. Request is already'
         }
     },
@@ -169,7 +169,7 @@ export const ResponseMessages = {
             notAbleToSpinUpAgent: 'Agent not able to spin up',
             alreadySpinUp: 'Agent already spun up',
             agentUrl: 'Agent url not exist',
-            apiKeyNotExist:'API key is not found',
+            apiKeyNotExist: 'API key is not found',
             seedChar: 'seed must be at most 32 characters',
             validWalletName: 'Please enter valid wallet name. It allows only alphanumeric values',
             platformConfiguration: 'Platform configuration is missing or invalid',
@@ -335,5 +335,13 @@ export const ResponseMessages = {
         notAcceptable: 'Not Acceptable',
         notFound: 'Not Found',
         serverError: 'Internal Server error'
+    },
+    notification: {
+        success: {
+            register: 'Registration process successfully'
+        },
+        error: {
+            notFound: 'Notification record not found.'
+        }
     }
 };

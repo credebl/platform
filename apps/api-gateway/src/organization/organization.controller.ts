@@ -62,7 +62,7 @@ export class OrganizationController {
  */
   @Get('/public-profile')
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Get all public profile of organizations', description: 'Get all public profile of organizations.' })
+  @ApiOperation({ summary: 'Get all public profile organizations', description: 'Get all public profile organizations.' })
   @ApiQuery({
     name: 'pageNumber',
     type: Number,

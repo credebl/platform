@@ -6,10 +6,11 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IGetOrgById, IGetOrganization, IOrganizationDashboard, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { organisation } from '@prisma/client';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
+import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 
 @Controller()
 export class OrganizationController {
@@ -71,7 +72,10 @@ export class OrganizationController {
   async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<IGetOrgById> {
     return this.organizationService.getOrganization(payload.orgId);
   }
-
+/**
+ * @param orgSlug 
+ * @returns organization details
+ */
   @MessagePattern({ cmd: 'get-organization-public-profile' })
   async getPublicProfile(payload: { orgSlug }): Promise<IGetOrgById> {
     return this.organizationService.getPublicProfile(payload);

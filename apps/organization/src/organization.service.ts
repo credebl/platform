@@ -17,7 +17,7 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
@@ -25,6 +25,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
+import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -195,7 +196,7 @@ export class OrganizationService {
 
       const organizationDetails = await this.organizationRepository.getOrganization(query);
       if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgProfileNotFound);
       }
 
       const credDefs = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
@@ -491,7 +492,7 @@ export class OrganizationService {
 
   async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
     try {
-      return this.organizationRepository.getOrgDashboard(orgId);
+            return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

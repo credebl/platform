@@ -11,9 +11,10 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { organisation } from '@prisma/client';
-import { IGetOrgById, IGetOrganization, IOrganizationDashboard } from 'apps/organization/interfaces/organization.interface';
-import { IOrgUsers } from 'apps/user/interfaces/user.interface';
+import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
+import { IOrgUsers } from 'apps/user/interfaces/user.interface';
+import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -96,7 +97,7 @@ export class OrganizationService extends BaseService {
     const payload = { orgId, pageNumber, pageSize, search };
     return this.sendNatsMessage(this.serviceProxy, 'get-invitations-by-orgId', payload);
   }
-
+  
   async getOrganizationDashboard(orgId: string, userId: string): Promise<IOrganizationDashboard> {
     const payload = { orgId, userId };
     return this.sendNatsMessage(this.serviceProxy, 'get-organization-dashboard', payload);

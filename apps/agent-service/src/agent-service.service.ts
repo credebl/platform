@@ -12,17 +12,15 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
-  forwardRef
+  NotFoundException
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
-import { catchError, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
-import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -35,6 +33,9 @@ import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
+import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 
 @Injectable()
 @WebSocketGateway()
@@ -1078,15 +1079,18 @@ export class AgentServiceService {
       throw error;
     }
   }
-  async getProofPresentationById(url: string, apiKey: string): Promise<object> {
+
+  async getProofPresentationById(url: string, apiKey: string): Promise<IProofPresentation> {
     try {
       const getProofPresentationById = await this.commonService
         .httpGet(url, { headers: { 'authorization': apiKey } })
-        .then(async response => response);
+        .then(async response => response)
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
+
       return getProofPresentationById;
     } catch (error) {
       this.logger.error(`Error in proof presentation by id in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -1101,8 +1105,8 @@ export class AgentServiceService {
       throw error;
     }
   }
-  
-  async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
+
+  async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<IAgentProofRequest> {
     try {
       const sendProofRequest = await this.commonService
         .httpPost(url, proofRequestPayload, { headers: { 'authorization': apiKey } })
@@ -1114,15 +1118,16 @@ export class AgentServiceService {
     }
   }
 
-  async verifyPresentation(url: string, apiKey: string): Promise<object> {
+  async verifyPresentation(url: string, apiKey: string): Promise<IPresentation> {
     try {
       const verifyPresentation = await this.commonService
         .httpPost(url, '', { headers: { 'authorization': apiKey } })
-        .then(async response => response);
+        .then(async response => response)
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
       return verifyPresentation;
     } catch (error) {
       this.logger.error(`Error in verify proof presentation in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -1144,18 +1149,8 @@ export class AgentServiceService {
       const data = await this.commonService
         .httpGet(url, { headers: { 'x-api-key': apiKey } })
         .then(async response => response)
-        .catch(error => {
-          this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
 
-          if (error && Object.keys(error).length === 0) {
-            throw new InternalServerErrorException(
-              ResponseMessages.agent.error.agentDown,
-              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
-            );
-          } else {
-            throw error;
-          }
-        });
       return data;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
@@ -1222,15 +1217,17 @@ export class AgentServiceService {
     }
   }
 
-  async getProofFormData(url: string, apiKey: string): Promise<object> {
+  async getVerifiedProofDetails(url: string, apiKey: string): Promise<IProofPresentationDetails[]> {
     try {
-      const getProofFormData = await this.commonService
+      const getVerifiedProofData = await this.commonService
         .httpGet(url, { headers: { 'authorization': apiKey } })
-        .then(async response => response);
-      return getProofFormData;
+        .then(async response => response)
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
+
+      return getVerifiedProofData;
     } catch (error) {
-      this.logger.error(`Error in get proof form data in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`Error in get verified proof details in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -1317,10 +1314,11 @@ export class AgentServiceService {
       let agentApiKey;
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
 
+
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
       if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
-
+        
         const [orgAgentData] = platformAdminSpinnedUp.org_agents;
         const { apiKey } = orgAgentData;
         if (!platformAdminSpinnedUp) {
@@ -1328,6 +1326,7 @@ export class AgentServiceService {
         }
 
         agentApiKey = apiKey;
+
       } else {
         agentApiKey = orgAgentApiKey?.apiKey;
       }
@@ -1343,5 +1342,16 @@ export class AgentServiceService {
       throw error;
     }
   }
+
+  async handleAgentSpinupStatusErrors(error: string): Promise<object> {
+    if (error && Object.keys(error).length === 0) {
+      throw new InternalServerErrorException(
+        ResponseMessages.agent.error.agentDown,
+        { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+      );
+    } else {
+      throw error;
+    }
+  }  
 }
 

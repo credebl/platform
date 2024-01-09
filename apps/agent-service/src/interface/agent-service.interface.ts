@@ -352,8 +352,45 @@ interface IOrgAgentEndPoint {
 export interface IOrgAgentsResponse {
     org_agents: IOrgAgentEndPoint[];
 }
-
-
 export interface IStoreAgent {
     id: string;
 }
+
+export interface IAgentProofRequest {
+    metadata: object;
+    id: string;
+    createdAt: string;
+    protocolVersion: string;
+    state: string;
+    connectionId: string;
+    threadId: string;
+    autoAcceptProof: string;
+    updatedAt: string;
+  }
+
+export interface IPresentation {
+    _tags: ITags;
+    metadata: object;
+    id: string;
+}
+export interface IStoreAgent {
+    id: string;
+}
+
+export interface IProofPresentation {
+    createdAt: string;
+    protocolVersion: string;
+    state: string;
+    connectionId: string;
+    threadId: string;
+    autoAcceptProof: string;
+    updatedAt: string;
+    isVerified: boolean;
+  }
+
+interface ITags {
+    connectionId: string;
+    state: string;
+    threadId: string;
+}  
+  

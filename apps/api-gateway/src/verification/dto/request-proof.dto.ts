@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -17,9 +17,9 @@ export class ProofRequestAttribute {
     @IsNotEmpty({ message: 'condition is required.' })
     condition?: string;
 
-    @IsString()
     @IsOptional()
     @IsNotEmpty({ message: 'value is required.' })
+    @IsNumberString({}, { message: 'Value must be a number' })
     value?: string;
 
     @IsString()
@@ -28,7 +28,7 @@ export class ProofRequestAttribute {
     credDefId?: string;
 }
 
-export class RequestProof {
+export class RequestProofDto {
     @ApiProperty()
     @Transform(({ value }) => trim(value))
     @Transform(({ value }) => toLowerCase(value))
@@ -42,8 +42,8 @@ export class RequestProof {
                 attributeName: 'attributeName',
                 condition: '>=',
                 value: 'predicates',
-                credDefId: '',
-                schemaId: ''
+                credDefId: 'string',
+                schemaId: 'string'
             }
         ]
     })
@@ -55,6 +55,7 @@ export class RequestProof {
     @ApiProperty()
     @IsOptional()
     comment: string;
+
     orgId: string;
 
     @IsString({ message: 'auto accept proof must be in string' })

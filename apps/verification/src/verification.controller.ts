@@ -32,23 +32,24 @@ export class VerificationController {
   }
 
   /**
-   * Request proof presentation
-   * @param payload 
-   * @returns Get requested proof presentation details
+   * Send proof request
+   * @param orgId 
+   * @returns Requested proof presentation details
    */
   @MessagePattern({ cmd: 'send-proof-request' })
   async sendProofRequest(payload: { requestProof: IRequestProof, user: IUserRequest }): Promise<string> {
     return this.verificationService.sendProofRequest(payload.requestProof);
   }
 
-  /**
-   * Verify proof presentation
-   * @param payload 
-   * @returns Get verified proof presentation details
-   */
+    /**
+     * Verify proof presentation
+     * @param proofId 
+     * @param orgId 
+     * @returns Verified proof presentation details
+     */
   @MessagePattern({ cmd: 'verify-presentation' })
-  async verifyPresentation(payload: { id: string, orgId: string, user: IUserRequest }): Promise<string> {
-    return this.verificationService.verifyPresentation(payload.id, payload.orgId);
+  async verifyPresentation(payload: { proofId: string, orgId: string, user: IUserRequest }): Promise<string> {
+    return this.verificationService.verifyPresentation(payload.proofId, payload.orgId);
   }
 
   /**

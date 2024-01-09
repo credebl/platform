@@ -1,10 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
+import { OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
-import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
+import { IProofRequestSearchCriteria, ISendProofRequest } from './interfaces/verification.interface';
 import { IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 
 
@@ -39,26 +39,24 @@ export class VerificationService extends BaseService {
     }
 
     /**
-     * Request proof presentation
-     * @param requestProof 
-     * @param user 
-     * @returns Get requested proof presentation details
+     * Send proof request
+     * @param orgId 
+     * @returns Requested proof presentation details
      */
-    sendProofRequest(requestProof: RequestProof, user: IUserRequest): Promise<{ response: object }> {
+    sendProofRequest(requestProof: RequestProofDto, user: IUserRequest): Promise<ISendProofRequest> {
         const payload = { requestProof, user };
-        return this.sendNats(this.verificationServiceProxy, 'send-proof-request', payload);
+        return this.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);
     }
 
     /**
-     * Request proof presentation
-     * @param id 
+     * Verify proof presentation
+     * @param proofId 
      * @param orgId 
-     * @param user 
-     * @returns Get requested proof presentation details
+     * @returns Verified proof presentation details
      */
-    verifyPresentation(id: string, orgId: string, user: IUserRequest): Promise<{ response: object }> {
-        const payload = { id, orgId, user };
-        return this.sendNats(this.verificationServiceProxy, 'verify-presentation', payload);
+    verifyPresentation(proofId: string, orgId: string, user: IUserRequest): Promise<object> {
+        const payload = { proofId, orgId, user };
+        return this.sendNatsMessage(this.verificationServiceProxy, 'verify-presentation', payload);
     }
 
     webhookProofPresentation(orgId: string, proofPresentationPayload: WebhookPresentationProofDto): Promise<object> {

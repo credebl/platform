@@ -158,10 +158,9 @@ export class VerificationService {
   }
 
   /**
-   * Request proof presentation
-   * @param requestProof 
-   * @param user 
-   * @returns Get requested proof presentation details
+   * Send proof request
+   * @param orgId 
+   * @returns Requested proof presentation details
    */
   async sendProofRequest(requestProof: IRequestProof): Promise<string> {
     try {
@@ -218,12 +217,13 @@ export class VerificationService {
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
       this.verificationErrorHandling(error);
+    
     }
   }
 
   /**
    * Consume agent API for request proof presentation
-   * @param payload 
+   * @param orgId 
    * @returns Get requested proof presentation details
    */
   async _sendProofRequest(payload: IProofRequestPayload): Promise<{
@@ -242,14 +242,13 @@ export class VerificationService {
     }
   }
 
-  /**
-   * Verify proof presentation
-   * @param id 
-   * @param orgId 
-   * @param user 
-   * @returns Get verified proof presentation details
-   */
-  async verifyPresentation(id: string, orgId: string): Promise<string> {
+    /**
+     * Verify proof presentation
+     * @param proofId 
+     * @param orgId 
+     * @returns Verified proof presentation details
+     */
+    async verifyPresentation(proofId: string, orgId: string): Promise<string> {
     try {
       const getAgentData = await this.verificationRepository.getAgentEndPoint(orgId);
       const orgAgentTypeData = await this.verificationRepository.getOrgAgentType(getAgentData?.orgAgentTypeId);
@@ -257,7 +256,7 @@ export class VerificationService {
 
       const verificationMethod = 'accept-presentation';
       
-      const url = await this.getAgentUrl(verificationMethod, orgAgentTypeData, getAgentData?.agentEndPoint, getAgentData?.tenantId, '', id);
+      const url = await this.getAgentUrl(verificationMethod, orgAgentTypeData, getAgentData?.agentEndPoint, getAgentData?.tenantId, '', proofId);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -479,6 +478,7 @@ export class VerificationService {
           const attributeReferent = `additionalProp${index + 1}`;
 
           if (!attribute.condition && !attribute.value) {
+
             const keys = Object.keys(requestedAttributes);
 
             if (0 < keys.length) {
@@ -545,9 +545,10 @@ export class VerificationService {
       }
     } catch (error) {
       this.logger.error(`[proofRequestPayload] - error in proof request payload : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
+      throw new RpcException(error.response ? error.response : error);      
+     
+    } 
+   }
 
   /**
   * Description: Fetch agent url 
@@ -810,7 +811,8 @@ export class VerificationService {
             {
               response
             }))
-        ).toPromise()
+        )
+        .toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(

@@ -280,6 +280,12 @@ export class VerificationController {
         @Res() res: Response
     ): Promise<Response> {
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
+        const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
+    
+    if (webhookUrl) {
+ 
+       await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload});
+    }
         const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,

@@ -40,3 +40,24 @@ export class RegisterOrgWebhhookEndpointDto {
     @IsString({ message: 'webhookEndpoint must be in string format.' })
     webhookEndpoint: string;
 }
+
+export class SendNotificationDto {
+
+    @ApiProperty()
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'fcmToken is required.' })
+    @IsString({ message: 'fcmToken must be in string format.' })
+    fcmToken: string;
+
+    @ApiProperty()
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: '@type is required.' })
+    @IsString({ message: '@type must be in string format.' })
+    '@type': string;
+
+    @ApiProperty()
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'clientCode is required.' })
+    @IsString({ message: 'clientCode must be in string format.' })
+    clientCode: string;
+}

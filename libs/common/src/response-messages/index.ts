@@ -338,10 +338,12 @@ export const ResponseMessages = {
     },
     notification: {
         success: {
-            register: 'Registration process successfully'
+            register: 'Registration process successfully',
+            sendNotification: 'Notification send successfully'
         },
         error: {
-            notFound: 'Notification record not found.'
+            notFound: 'Notification record not found.',
+            invalidUrl: 'Invalid URL'
         }
     }
 };

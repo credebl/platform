@@ -67,4 +67,29 @@ export class NotificationRepository {
             throw error;
         }
     }
+
+    /**
+     * Get webhook endpoint
+     * @param orgId 
+     * @returns Get notification details
+     */
+    async getOrgWebhookEndpoint(orgId: string): Promise<INotification> {
+        try {
+
+            const updateNotification = await this.prisma.notification.findUnique({
+                where: {
+                    orgId
+                }
+            });
+
+            if (!updateNotification) {
+                throw new NotFoundException(ResponseMessages.notification.error.notFound);
+            }
+
+            return updateNotification;
+        } catch (error) {
+            this.logger.error(`Error in getOrgWebhookEndpoint: ${error.message} `);
+            throw error;
+        }
+    }
 }

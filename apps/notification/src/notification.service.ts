@@ -1,12 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { INotification, IHolderRegisterCredentals, IWebhookEndpoint } from '../interfaces/notification.interfaces';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { INotification, IHolderRegisterCredentals, IWebhookEndpoint, ISendNotification } from '../interfaces/notification.interfaces';
 import { RpcException } from '@nestjs/microservices';
 import { NotificationRepository } from './notification.repository';
+import { ResponseMessages } from '@credebl/common/response-messages';
+import { CommonService } from '@credebl/common';
+
 
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger('NotificationService');
   constructor(
+    private readonly commonService: CommonService,
     private readonly notificationRepository: NotificationRepository
   ) { }
 
@@ -27,6 +31,45 @@ export class NotificationService {
       this.logger.error(`[registerEndpoint] - error in register org webhook endpoint: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  /**
+   * Send notification for holder
+   * @param payload 
+   * @returns Get notification details
+   */
+  async sendNotification(payload: ISendNotification): Promise<object> {
+    try {
+      const orgId = payload?.clientCode;
+      const getWebhookUrl = await this.notificationRepository.getOrgWebhookEndpoint(orgId);
+
+      const webhookPayload = {
+        fcmToken: payload.fcmToken,
+        '@type': payload['@type']
+      };
+
+      const webhookResponse = await this.commonService.httpPost(getWebhookUrl?.webhookEndpoint, webhookPayload)
+        .then(async response => response)
+        .catch(error => {
+          this.logger.error(`Error in sendNotification : ${JSON.stringify(error)}`);
+          throw error;
+        });
+
+      if (!this.isValidUrl(getWebhookUrl?.webhookEndpoint)) {
+        throw new BadRequestException(ResponseMessages.notification.error.invalidUrl);
+      }
+
+      return webhookResponse;
+
+    } catch (error) {
+      this.logger.error(`[registerEndpoint] - error in send notification: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  private isValidUrl(url: string): boolean {
+    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
+    return urlRegex.test(url);
   }
 
   /**

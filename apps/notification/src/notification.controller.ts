@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { INotification, IHolderRegisterCredentals, IWebhookEndpoint } from '../interfaces/notification.interfaces';
+import { INotification, IHolderRegisterCredentals, IWebhookEndpoint, ISendNotification } from '../interfaces/notification.interfaces';
 
 @Controller()
 export class NotificationController {
@@ -15,6 +15,16 @@ export class NotificationController {
   @MessagePattern({ cmd: 'register-org-webhook-endpoint-for-notification' })
   async registerOrgWebhookEndpoint(payload: IWebhookEndpoint): Promise<INotification> {
        return this.notificationService.registerOrgWebhookEndpoint(payload);
+  }
+
+  /**
+   * Send notification for holder
+   * @param payload 
+   * @returns Get notification details
+   */
+  @MessagePattern({ cmd: 'send-notification' })
+  async sendNotification(payload: ISendNotification): Promise<object> {
+       return this.notificationService.sendNotification(payload);
   }
 
   /**

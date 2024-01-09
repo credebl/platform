@@ -4,7 +4,7 @@ import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthoriz
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import { RegisterHolderCredentalsDto, RegisterOrgWebhhookEndpointDto } from './dtos/notification.dto';
+import { RegisterHolderCredentalsDto, RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -47,6 +47,35 @@ export class NotificationController {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.notification.success.register,
             data: registerUserEndpoint
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+    /**
+     * Send notification for holder
+     * @param sendNotificationDto 
+     * @param res 
+     * @returns Get notification details
+     */
+    @Post('/')
+    @ApiOperation({
+        summary: `Send notification for holder`,
+        description: `Send notification for holder`
+    })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    async sendNotification(
+        @Body() sendNotificationDto: SendNotificationDto,
+        @Res() res: Response
+    ): Promise<Response> {
+
+        const sendNotification = await this.noificatonService.sendNotification(
+            sendNotificationDto
+        );
+
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.notification.success.sendNotification,
+            data: sendNotification
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

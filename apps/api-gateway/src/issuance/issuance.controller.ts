@@ -504,16 +504,18 @@ export class IssuanceController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  /**
-   * @param user
-   * @param issueCredentialDto
-   * @returns Issuer send credential to create offer
-   */
+ /**
+  * @param user 
+  * @param orgId 
+  * @param issueCredentialDto 
+  * @param res 
+  * @returns Issuer creates a credential offer and sends it to the holder
+  */
   @Post('/orgs/:orgId/credentials/offer')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Send credential details to create-offer`,
-    description: `Send credential details to create-offer`
+    summary: `Issuer create a credential offer`,
+    description: `Issuer creates a credential offer and sends it to the holder`
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
@@ -528,7 +530,7 @@ export class IssuanceController {
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,
       data: getCredentialDetails

@@ -225,18 +225,17 @@ export class VerificationController {
 
     /**
      * Out-Of-Band Proof Presentation
-     * @param user 
-     * @param outOfBandRequestProof 
-     * @returns Get out-of-band requested proof presentation details
+     * @param orgId 
+     * @returns Out-of-band requested proof presentation details
      */
     @Post('/orgs/:orgId/proofs/oob')
     @ApiOperation({
         summary: `Sends a out-of-band proof request`,
         description: `Sends a out-of-band proof request`
     })
-    @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBody({ type: OutOfBandRequestProof })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     @ApiBearerAuth()
@@ -246,18 +245,17 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Body() outOfBandRequestProof: OutOfBandRequestProof,
         @Param('orgId') orgId: string
-    ): Promise<object> {
+    ): Promise<Response> {
 
         for (const attrData of outOfBandRequestProof.attributes) {
             await this.validateAttribute(attrData);
         }
 
         outOfBandRequestProof.orgId = orgId;
-        const sendProofRequest = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
+        await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.fetch,
-            data: sendProofRequest.response
+            message: ResponseMessages.verification.success.send
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

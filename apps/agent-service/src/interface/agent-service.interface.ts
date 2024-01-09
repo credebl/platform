@@ -357,7 +357,7 @@ export interface IStoreAgent {
     id: string;
 }
 
-export interface ISendProofRequest {
+export interface IAgentProofRequest {
     metadata: object;
     id: string;
     createdAt: string;
@@ -369,7 +369,7 @@ export interface ISendProofRequest {
     updatedAt: string;
   }
 
-export interface IVerifyProof {
+export interface IPresentation {
     _tags: ITags;
     metadata: object;
     id: string;

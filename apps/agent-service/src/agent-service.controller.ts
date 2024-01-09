@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation, ISendProofRequest, IVerifyProof  } from './interface/agent-service.interface';
+import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation, IAgentProofRequest, IPresentation  } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
@@ -96,12 +96,12 @@ export class AgentServiceController {
     proofRequestPayload: ISendProofRequestPayload;
     url: string;
     apiKey: string;
-  }): Promise<ISendProofRequest> {
+  }): Promise<IAgentProofRequest> {
     return this.agentServiceService.sendProofRequest(payload.proofRequestPayload, payload.url, payload.apiKey);
   }
 //DONE
   @MessagePattern({ cmd: 'agent-verify-presentation' })
-  async verifyPresentation(payload: { url: string; apiKey: string }): Promise<IVerifyProof> {
+  async verifyPresentation(payload: { url: string; apiKey: string }): Promise<IPresentation> {
     return this.agentServiceService.verifyPresentation(payload.url, payload.apiKey);
   }
 

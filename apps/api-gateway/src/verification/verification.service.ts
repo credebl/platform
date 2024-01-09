@@ -5,7 +5,7 @@ import { OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto'
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
-import { IProofRequestSearchCriteria, ISendProofRequest } from './interfaces/verification.interface';
+import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentation } from './interfaces/verification.interface';
 
 
@@ -43,7 +43,7 @@ export class VerificationService extends BaseService {
      * @param orgId 
      * @returns Requested proof presentation details
      */
-    sendProofRequest(requestProof: RequestProofDto, user: IUserRequest): Promise<ISendProofRequest> {
+    sendProofRequest(requestProof: RequestProofDto, user: IUserRequest): Promise<IProofRequest> {
         const payload = { requestProof, user };
         return this.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);
     }
@@ -54,7 +54,7 @@ export class VerificationService extends BaseService {
      * @param orgId 
      * @returns Verified proof presentation details
      */
-    verifyPresentation(proofId: string, orgId: string, user: IUserRequest): Promise<object> {
+    verifyPresentation(proofId: string, orgId: string, user: IUserRequest): Promise<IPresentation> {
         const payload = { proofId, orgId, user };
         return this.sendNatsMessage(this.verificationServiceProxy, 'verify-presentation', payload);
     }
@@ -70,9 +70,9 @@ export class VerificationService extends BaseService {
      * @param outOfBandRequestProof 
      * @returns Get out-of-band requested proof presentation details
      */
-    sendOutOfBandPresentationRequest(outOfBandRequestProof: OutOfBandRequestProof, user: IUserRequest): Promise<{ response: object }> {
+    sendOutOfBandPresentationRequest(outOfBandRequestProof: OutOfBandRequestProof, user: IUserRequest): Promise<object> {
         const payload = { outOfBandRequestProof, user };
-        return this.sendNats(this.verificationServiceProxy, 'send-out-of-band-proof-request', payload);
+        return this.sendNatsMessage(this.verificationServiceProxy, 'send-out-of-band-proof-request', payload);
     }
     
     getVerifiedProofDetails(proofId: string, orgId: string, user: IUserRequest): Promise<IProofPresentationDetails[]> {

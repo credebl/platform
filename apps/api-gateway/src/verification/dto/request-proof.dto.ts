@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -87,6 +87,9 @@ export class OutOfBandRequestProof {
     attributes: ProofRequestAttribute[];
 
     @ApiProperty()
+    @IsEmail({}, { message: 'Please provide a valid email' })
+    @IsNotEmpty({ message: 'Email is required' })
+    @Transform(({ value }) => trim(value))
     @IsString({ each: true, message: 'Each emailId in the array should be a string' })
     emailId: string | string[];
 

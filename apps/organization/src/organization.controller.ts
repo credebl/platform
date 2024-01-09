@@ -6,9 +6,10 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IOrganizationDashboard, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
 import { organisation } from '@prisma/client';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 
 @Controller()
 export class OrganizationController {
@@ -84,7 +85,7 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-invitations-by-orgId' })
   async getInvitationsByOrgId(
     @Body() payload: { orgId: string } & Payload
-  ): Promise<IOrgInvitationsPagination> {
+  ): Promise<IOrganizationInvitations> {
     return this.organizationService.getInvitationsByOrgId(
       payload.orgId,
       payload.pageNumber,
@@ -117,7 +118,7 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'fetch-user-invitations' })
   async fetchUserInvitation(
     @Body() payload: { email: string; status: string } & Payload
-  ): Promise<IOrgInvitationsPagination> {
+  ): Promise<IOrganizationInvitations> {
     return this.organizationService.fetchUserInvitation(
       payload.email,
       payload.status,

@@ -96,29 +96,6 @@ export interface IOrgRole {
   description: string
 }
 
-export interface IOrgInvitationsPagination {
-  totalPages: number;
-  invitations: IInvitation[];
-}
-
-interface IInvitation {
-  id: string,
-  orgId: string,
-  email: string,
-  userId: string,
-  status: string,
-  orgRoles: string[],
-  createDateTime: Date,
-  createdBy:string,
-  organisation: IOrganizationPagination;
-}
-
-interface IOrganizationPagination {
-  id: string;
-  name: string;
-  logoUrl: string;
-}
-
 export interface IOrganizationDashboard {
   usersCount: number,
   schemasCount: number,

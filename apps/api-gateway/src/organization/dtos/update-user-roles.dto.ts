@@ -8,7 +8,7 @@ export class UpdateUserRolesDto {
     userId: string;
 
     @ApiProperty({
-        example: ['1']
+        example: [2, 1, 3]
     })
     @IsArray()
     @IsNotEmpty({ message: 'orgRoleId is required' })

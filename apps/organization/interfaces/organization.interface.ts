@@ -119,13 +119,6 @@ interface IOrganizationPagination {
   logoUrl: string;
 }
 
-export interface IOrganizationDashboard {
-  usersCount: number,
-  schemasCount: number,
-  credentialsCount: number,
-  presentationsCount:number
-}
-
 export interface Payload {
   pageNumber: number;
   pageSize: number;

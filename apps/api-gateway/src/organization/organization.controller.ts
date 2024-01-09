@@ -3,7 +3,7 @@ import { CommonService } from '@credebl/common';
 import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
-import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
+import  IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -81,7 +81,7 @@ export class OrganizationController {
   async get(@Query() getAllUsersDto: GetAllOrganizationsDto, @Res() res: Response): Promise<Response> {
 
     const users = await this.organizationService.getPublicOrganizations(getAllUsersDto);
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrganizations,
       data: users
@@ -106,7 +106,7 @@ export class OrganizationController {
 
     const orgRoles = await this.organizationService.getOrgRoles();
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.fetchOrgRoles,
       data: orgRoles
@@ -131,9 +131,15 @@ export class OrganizationController {
     required: true
   })
   async getPublicProfile(@Param('orgSlug') orgSlug: string, @Res() res: Response): Promise<Response> {
+    // eslint-disable-next-line no-param-reassign
+    orgSlug = orgSlug.trim();
+    
+    if (!orgSlug.length) {
+      throw new BadRequestException(ResponseMessages.organisation.error.orgSlugIsRequired);
+    }
     const userData = await this.organizationService.getPublicProfile(orgSlug);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.fetchProfile,
       data: userData
@@ -158,7 +164,7 @@ export class OrganizationController {
 
     const getOrganization = await this.organizationService.getOrganizationDashboard(orgId, reqUser.id);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrgDashboard,
       data: getOrganization
@@ -192,7 +198,7 @@ export class OrganizationController {
 
     const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getInvitation,
       data: getInvitationById
@@ -228,7 +234,7 @@ export class OrganizationController {
 
     const getOrganizations = await this.organizationService.getOrganizations(getAllOrgsDto, reqUser.id);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrganizations,
       data: getOrganizations
@@ -250,7 +256,7 @@ export class OrganizationController {
 
     const getOrganization = await this.organizationService.getOrganization(orgId, reqUser.id);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrganization,
       data: getOrganization
@@ -286,7 +292,7 @@ export class OrganizationController {
   })
   async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
     const users = await this.organizationService.getOrgUsers(orgId, getAllUsersDto);
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchUsers,
       data: users
@@ -305,7 +311,7 @@ export class OrganizationController {
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
     await this.organizationService.createOrganization(createOrgDto, reqUser.id);
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.create
     };
@@ -317,16 +323,16 @@ export class OrganizationController {
     summary: 'Create organization invitation',
     description: 'Create send invitation'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: string, @User() user: user, @Res() res: Response): Promise<IResponseType> {
+  async createInvitation(@Body() bulkInvitationDto: BulkSendInvitationDto, @Param('orgId') orgId: string, @User() user: user, @Res() res: Response): Promise<Response> {
 
     bulkInvitationDto.orgId = orgId;
     await this.organizationService.createInvitation(bulkInvitationDto, user.id, user.email);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.createInvitation
     };
@@ -349,7 +355,7 @@ export class OrganizationController {
     updateUserDto.userId = userId;
     await this.organizationService.updateUserRoles(updateUserDto, updateUserDto.userId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.updateUserRoles
     };
@@ -370,7 +376,7 @@ export class OrganizationController {
     updateOrgDto.orgId = orgId;
     await this.organizationService.updateOrganization(updateOrgDto, reqUser.id, orgId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.update
     };
@@ -389,7 +395,7 @@ export class OrganizationController {
 
     await this.organizationService.deleteOrganization(orgId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.ACCEPTED,
       message: ResponseMessages.organisation.success.delete
     };

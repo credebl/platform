@@ -132,5 +132,5 @@ export interface IProofRequestSearchCriteria {
     sortField: string;
     sortBy: string;
     searchByText: string;
-  }  
+  }   
   

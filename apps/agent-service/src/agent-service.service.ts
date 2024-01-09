@@ -19,7 +19,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, ISendProofRequest, IVerifyProof } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
@@ -1110,7 +1110,7 @@ export class AgentServiceService {
     }
   }
 
-  async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
+  async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<ISendProofRequest> {
     try {
       const sendProofRequest = await this.commonService
         .httpPost(url, proofRequestPayload, { headers: { 'authorization': apiKey } })
@@ -1122,7 +1122,7 @@ export class AgentServiceService {
     }
   }
 
-  async verifyPresentation(url: string, apiKey: string): Promise<object> {
+  async verifyPresentation(url: string, apiKey: string): Promise<IVerifyProof> {
     try {
       const verifyPresentation = await this.commonService
         .httpPost(url, '', { headers: { 'authorization': apiKey } })

@@ -17,3 +17,14 @@ export interface IProofRequestSearchCriteria {
     user?: IUserRequestInterface
 }
 
+export interface ISendProofRequest {
+    metadata: object;
+    id: string;
+    createdAt: string;
+    protocolVersion: string;
+    state: string;
+    connectionId: string;
+    threadId: string;
+    autoAcceptProof: string;
+    updatedAt: string;
+  }

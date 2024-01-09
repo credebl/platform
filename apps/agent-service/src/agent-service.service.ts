@@ -1092,18 +1092,7 @@ export class AgentServiceService {
       const getProofPresentationById = await this.commonService
         .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response)
-        .catch(error => {
-          this.logger.error(`Error in getProofPresentationByProofId in agent service : ${JSON.stringify(error)}`);
-
-          if (error && Object.keys(error).length === 0) {
-            throw new InternalServerErrorException(
-              ResponseMessages.agent.error.agentDown,
-              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
-            );
-          } else {         
-            throw error;
-          }
-        });
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
 
       return getProofPresentationById;
     } catch (error) {
@@ -1140,11 +1129,12 @@ export class AgentServiceService {
     try {
       const verifyPresentation = await this.commonService
         .httpPost(url, '', { headers: { 'authorization': apiKey } })
-        .then(async response => response);
+        .then(async response => response)
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
       return verifyPresentation;
     } catch (error) {
       this.logger.error(`Error in verify proof presentation in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

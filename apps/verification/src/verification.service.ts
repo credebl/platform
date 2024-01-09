@@ -273,8 +273,18 @@ export class VerificationService {
       const getProofPresentationById = await this._verifyPresentation(payload);
       return getProofPresentationById?.response;
     } catch (error) {
-      this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
-      this.verificationErrorHandling(error);
+      this.logger.error(`[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`);
+      const errorStack = error?.response?.error?.reason;
+
+      if (errorStack) {
+        throw new RpcException({
+          message: ResponseMessages.verification.error.proofNotFound,
+          statusCode: error?.response?.status,
+          error: errorStack
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);      
+      } 
     }
   }
 

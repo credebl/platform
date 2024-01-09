@@ -216,7 +216,7 @@ export class VerificationController {
         @Param('orgId') orgId: string
     ): Promise<Response> {
         await this.verificationService.verifyPresentation(proofId, orgId, user);
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.verification.success.verified
         };

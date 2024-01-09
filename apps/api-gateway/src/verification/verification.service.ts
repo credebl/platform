@@ -6,6 +6,8 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 import { IProofRequestSearchCriteria, ISendProofRequest } from './interfaces/verification.interface';
+import { IProofPresentation } from './interfaces/verification.interface';
+
 
 @Injectable()
 export class VerificationService extends BaseService {
@@ -26,15 +28,14 @@ export class VerificationService extends BaseService {
     }
 
     /**
-     * Get proof presentation by id
-     * @param id 
+     * Get proof presentation by proofId
+     * @param proofId 
      * @param orgId 
-     * @param user 
-     * @returns Get proof presentation details
+     * @returns Proof presentation details by proofId
      */
-    getProofPresentationById(id: string, orgId: string, user: IUserRequest): Promise<{ response: object }> {
-        const payload = { id, orgId, user };
-        return this.sendNats(this.verificationServiceProxy, 'get-proof-presentations-by-id', payload);
+    getProofPresentationById(proofId: string, orgId: string, user: IUserRequest): Promise<IProofPresentation> {
+        const payload = { proofId, orgId, user };
+        return this.sendNatsMessage(this.verificationServiceProxy, 'get-proof-presentations-by-proofId', payload);
     }
 
     /**

@@ -19,7 +19,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, ISendProofRequest, IVerifyProof } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, ISendProofRequest, IVerifyProof, IProofPresentation } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
@@ -1086,15 +1086,29 @@ export class AgentServiceService {
       throw error;
     }
   }
-  async getProofPresentationById(url: string, apiKey: string): Promise<object> {
+
+  async getProofPresentationById(url: string, apiKey: string): Promise<IProofPresentation> {
     try {
       const getProofPresentationById = await this.commonService
         .httpGet(url, { headers: { 'authorization': apiKey } })
-        .then(async response => response);
+        .then(async response => response)
+        .catch(error => {
+          this.logger.error(`Error in getProofPresentationByProofId in agent service : ${JSON.stringify(error)}`);
+
+          if (error && Object.keys(error).length === 0) {
+            throw new InternalServerErrorException(
+              ResponseMessages.agent.error.agentDown,
+              { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
+            );
+          } else {         
+            throw error;
+          }
+        });
+
       return getProofPresentationById;
     } catch (error) {
       this.logger.error(`Error in proof presentation by id in agent service : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

@@ -78,34 +78,33 @@ export class VerificationController {
     }
 
     /**
-     * Get proof presentation by id
-     * @param user 
-     * @param id 
+     * Get proof presentation details by proofId
+     * @param proofId 
      * @param orgId 
-     * @returns Get proof presentation details
+     * @returns Proof presentation details by proofId
      */
     @Get('/orgs/:orgId/proofs/:proofId')
     @ApiOperation({
-        summary: `Get all proof presentation by proof Id`,
-        description: `Get all proof presentation by proof Id`
+        summary: `Get proof presentation by proof Id`,
+        description: `Get proof presentation by proof Id`
     })
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @ApiBearerAuth()
     async getProofPresentationById(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('proofId') id: string,
+        @Param('proofId') proofId: string,
         @Param('orgId') orgId: string
-    ): Promise<object> {
-        const getProofPresentationById = await this.verificationService.getProofPresentationById(id, orgId, user);
-        const finalResponse: IResponseType = {
+    ): Promise<Response> {
+        const getProofPresentationById = await this.verificationService.getProofPresentationById(proofId, orgId, user);
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.fetch,
-            data: getProofPresentationById.response
+            data: getProofPresentationById
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }

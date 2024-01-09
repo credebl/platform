@@ -248,6 +248,7 @@ export const ResponseMessages = {
             predicatesValueNotNumber: 'The attribuite value is not a number',
             proofPresentationNotFound: 'Proof presentations not found',
             verifiedProofNotFound: 'Proof presentation not found',
+            proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'

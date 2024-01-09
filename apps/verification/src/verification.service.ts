@@ -109,20 +109,19 @@ export class VerificationService {
   }
 
   /**
-   * Get proof presentation by id
-   * @param id 
+   * Get proof presentation by proofId
+   * @param proofId 
    * @param orgId 
-   * @param user 
-   * @returns Get proof presentation details
+   * @returns Proof presentation details by proofId
    */
-  async getProofPresentationById(id: string, orgId: string): Promise<string> {
+  async getProofPresentationById(proofId: string, orgId: string): Promise<string> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
 
       const verificationMethodLabel = 'get-proof-presentation-by-id';
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', id);
+      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', proofId);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -131,8 +130,18 @@ export class VerificationService {
       const getProofPresentationById = await this._getProofPresentationById(payload);
       return getProofPresentationById?.response;
     } catch (error) {
-      this.logger.error(`[getProofPresentationById] - error in get proof presentation by id : ${JSON.stringify(error)}`);
-      this.verificationErrorHandling(error);
+      this.logger.error(`[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`);
+      const errorStack = error?.response?.error?.reason;
+
+      if (errorStack) {
+        throw new RpcException({
+          message: ResponseMessages.verification.error.proofNotFound,
+          statusCode: error?.response?.status,
+          error: errorStack
+        });
+    } else {
+      throw new RpcException(error.response ? error.response : error);      
+    } 
     }
   }
 

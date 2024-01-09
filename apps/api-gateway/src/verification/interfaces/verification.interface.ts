@@ -20,6 +20,8 @@ export interface IProofRequestSearchCriteria {
 export interface ISendProofRequest {
     metadata: object;
     id: string;
+} 
+export interface IProofPresentation {
     createdAt: string;
     protocolVersion: string;
     state: string;
@@ -27,4 +29,5 @@ export interface ISendProofRequest {
     threadId: string;
     autoAcceptProof: string;
     updatedAt: string;
+    isVerified: boolean;
   }

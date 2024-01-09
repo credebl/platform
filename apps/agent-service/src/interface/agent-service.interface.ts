@@ -373,6 +373,12 @@ export interface IVerifyProof {
     _tags: ITags;
     metadata: object;
     id: string;
+}
+export interface IStoreAgent {
+    id: string;
+}
+
+export interface IProofPresentation {
     createdAt: string;
     protocolVersion: string;
     state: string;
@@ -388,3 +394,4 @@ interface ITags {
     state: string;
     threadId: string;
 }  
+  

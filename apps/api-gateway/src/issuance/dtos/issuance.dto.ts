@@ -47,20 +47,24 @@ export class IssueCredentialDto {
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'credentialDefinitionId is required' })
     @IsString({ message: 'credentialDefinitionId should be a string' })
+    @Transform(({ value }) => trim(value))
     credentialDefinitionId: string;
 
     @ApiProperty({ example: 'string' })
     @IsOptional()
     @IsString({ message: 'Comment should be a string' })
+    @Transform(({ value }) => trim(value))
     comment?: string;
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'connectionId is required' })
     @IsString({ message: 'connectionId should be string' })
+    @Transform(({ value }) => trim(value))
     connectionId: string;
 
     @IsOptional()
     @IsString({ message: 'protocol-version should be a string' })
+    @Transform(({ value }) => trim(value))
     protocolVersion?: string;
 
     // Added orgId from params to create offer

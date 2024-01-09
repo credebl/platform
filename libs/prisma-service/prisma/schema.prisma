@@ -177,6 +177,7 @@ model org_agents {
   ledgers             ledgers?            @relation(fields: [ledgerId], references: [id])
   org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
   organisation        organisation?       @relation(fields: [orgId], references: [id])
+  webhookUrl          String?              @db.VarChar
 }
 
 model org_agents_type {

@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, HttpException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
@@ -82,5 +82,39 @@ export class VerificationService extends BaseService {
         const payload = { id, orgId, user };       
         return this.sendNats(this.verificationServiceProxy, 'proof-form-data', payload);
     }
+
+    async _getWebhookUrl(tenantId: string): Promise<string> {
+        const pattern = { cmd: 'get-webhookurl' };
+        const payload = { tenantId };
+    
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const message = await this.verificationServiceProxy.send<any>(pattern, payload).toPromise();
+          return message;
+        } catch (error) {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException({
+            status: error.status,
+            error: error.message
+          }, error.status);
+        }
+      }
+    
+      async _postWebhookResponse(webhookUrl: string, data:object): Promise<string> {
+        const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
+        const payload = { webhookUrl, data  };
+
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const message = await this.verificationServiceProxy.send<any>(pattern, payload).toPromise();
+          return message;
+        } catch (error) {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException({
+            status: error.status,
+            error: error.message
+          }, error.status);
+        }
+      }
 
 }

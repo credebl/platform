@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
@@ -32,5 +32,16 @@ export class CreateOrganizationDto {
     @IsOptional()
     @Transform(({ value }) => trim(value))
     website?: string;
-    
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Transform(({ value }) => trim(value))
+    @IsUrl({
+        // eslint-disable-next-line camelcase
+        require_protocol: true, // require URL protocol (e.g., http:// or https://)
+        // eslint-disable-next-line camelcase
+        require_tld: true // require top-level domain (e.g., .com, .net)
+        
+    })
+    webhookEndpoint?: string;
 }

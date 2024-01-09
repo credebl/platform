@@ -62,6 +62,10 @@ export class OrganizationService {
 
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
+      if (createOrgDto.webhookEndpoint) {
+        await this.storeOrgWebhookEndpoint(organizationDetails.id, createOrgDto.webhookEndpoint);
+      }
+
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
       return organizationDetails;
@@ -71,6 +75,25 @@ export class OrganizationService {
     }
   }
 
+  async storeOrgWebhookEndpoint(orgId: string, webhookEndpoint: string): Promise<string> {
+    const pattern = { cmd: 'register-org-webhook-endpoint-for-notification' };
+    const payload = {
+      orgId,
+      webhookEndpoint
+    };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.organizationServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
 
   /**
    *
@@ -563,8 +586,8 @@ export class OrganizationService {
         .pipe(
           map((response) => (
             {
-            response
-          }))
+              response
+            }))
         ).toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -592,9 +615,9 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException({
-          status: error.status,
-          error: error.message
-        }, error.status);
+        status: error.status,
+        error: error.message
+      }, error.status);
     }
   }
 

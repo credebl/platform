@@ -241,8 +241,8 @@ export const ResponseMessages = {
     verification: {
         success: {
             fetch: 'Proof presentations details fetched successfully.',
-            create: 'Presentation of proof details created successfully.',
-            proofFormData: 'Proof presentation form data received successfully.',
+            create: 'Presentation of proof received successfully.',
+            verifiedProofDetails: 'Proof presentation details fetched successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'
         },
@@ -252,6 +252,8 @@ export const ResponseMessages = {
             schemaIdNotFound: 'Schema Id is required',
             predicatesValueNotNumber: 'The attribuite value is not a number',
             proofPresentationNotFound: 'Proof presentations not found',
+            verifiedProofNotFound: 'Proof presentation not found',
+            proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'

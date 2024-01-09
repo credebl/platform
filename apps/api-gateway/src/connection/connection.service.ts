@@ -1,5 +1,5 @@
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, HttpException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
@@ -70,4 +70,40 @@ export class ConnectionService extends BaseService {
     const payload = { user, connectionId, orgId };
     return this.sendNatsMessage(this.connectionServiceProxy, 'get-connection-details-by-connectionId', payload);
   }
+
+
+  async _getWebhookUrl(tenantId: string): Promise<string> {
+    const pattern = { cmd: 'get-webhookurl' };
+    const payload = { tenantId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
+  async _postWebhookResponse(webhookUrl: string, data:object): Promise<string> {
+    const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
+    const payload = { webhookUrl, data  };
+   
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
 }

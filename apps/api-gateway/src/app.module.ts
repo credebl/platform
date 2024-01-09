@@ -20,6 +20,11 @@ import { SchemaModule } from './schema/schema.module';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { EcosystemModule } from './ecosystem/ecosystem.module';
+import { getNatsOptions } from '@credebl/common/nats.config';
+import { BullModule } from '@nestjs/bull';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
@@ -43,7 +48,15 @@ import { EcosystemModule } from './ecosystem/ecosystem.module';
     UserModule,
     ConnectionModule,
     IssuanceModule,
-    EcosystemModule
+    EcosystemModule,
+    WebhookModule,
+    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT)
+      }
+    })
   ],
   controllers: [AppController],
   providers: [AppService]

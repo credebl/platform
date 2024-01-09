@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, HttpException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -117,4 +117,39 @@ export class IssuanceService extends BaseService {
         const payload = { fileId, orgId, clientId };
         return this.sendNats(this.issuanceProxy, 'retry-bulk-credentials', payload);
     }
+
+    async _getWebhookUrl(tenantId: string): Promise<string> {
+        const pattern = { cmd: 'get-webhookurl' };
+        const payload = { tenantId };
+    
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const message = await this.issuanceProxy.send<any>(pattern, payload).toPromise();
+          return message;
+        } catch (error) {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException({
+            status: error.status,
+            error: error.message
+          }, error.status);
+        }
+      }
+    
+      async _postWebhookResponse(webhookUrl: string, data:object): Promise<string> {
+        const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
+        const payload = { webhookUrl, data  };
+
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const message = await this.issuanceProxy.send<any>(pattern, payload).toPromise();
+          return message;
+        } catch (error) {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException({
+            status: error.status,
+            error: error.message
+          }, error.status);
+        }
+      }
+    
 }

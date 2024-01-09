@@ -1,6 +1,5 @@
-
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, IsDefined, MaxLength, ArrayNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 import { SortValue } from '../../enum';
@@ -11,8 +10,8 @@ class Attribute {
     @ApiProperty()
     @IsString({ message: 'Attribute name should be string' })
     @IsNotEmpty({ message: 'Attribute name is required' })
-    @Transform(({ value }) => trim(value))
     @Type(() => String)
+    @Transform(({ value }) => trim(value))
     name: string;
 
     @ApiProperty()
@@ -21,87 +20,21 @@ class Attribute {
     value: string;
 }
 
-class CredentialsIssuanceDto {
-    @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid credential definition id' })
-    @IsString({ message: 'credential definition id should be string' })
-    @Transform(({ value }) => value.trim())
-    credentialDefinitionId: string;
-
-    @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid comment' })
-    @IsString({ message: 'comment should be string' })
-    @IsOptional()
-    comment: string;
-
-    @ApiPropertyOptional({ example: 'v1' })
-    @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid protocol version' })
-    @IsString({ message: 'protocol version should be string' })
-    protocolVersion?: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid goal code' })
-    @IsString({ message: 'goal code should be string' })
-    goalCode?: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid parent thread id' })
-    @IsString({ message: 'parent thread id should be string' })
-    parentThreadId?: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid willConfirm' })
-    @IsBoolean({ message: 'willConfirm should be boolean' })
-    willConfirm?: boolean;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid label' })
-    @IsString({ message: 'label should be string' })
-    label?: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString({ message: 'auto accept proof must be in string' })
-    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
-    @IsEnum(AutoAccept, {
-        message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
-    })
-    autoAcceptCredential?: string;
-
-    orgId: string;
-}
-
-export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
-
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsArray()
+class CredentialOffer {
+    @ApiProperty()
+    @IsArray({ message: 'Attributes should be an array' })
+    @ArrayNotEmpty({ message: 'Attributes are required' })
     @ValidateNested({ each: true })
     @ArrayMinSize(1)
     @Type(() => Attribute)
     attributes: Attribute[];
-}
 
-class CredentialOffer {
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsNotEmpty({ message: 'Attribute name is required' })
-    @IsArray({ message: 'Attributes should be an array' })
-    @ValidateNested({ each: true })
-    @IsOptional()
-    @Type(() => Attribute)
-    attributes: Attribute[];
-
-    @ApiProperty({ example: 'testmail@mailinator.com' })
-    @IsOptional()
-    @IsEmail({}, { message: 'Please provide a valid email' })
+    @ApiProperty()
+    @IsEmail({}, { message: 'Email is invalid' })
     @IsNotEmpty({ message: 'Email is required' })
-    @IsString({ message: 'Email should be a string' })
     @MaxLength(256, { message: 'Email must be at most 256 character' })
     @Transform(({ value }) => trim(value))
+    @Type(() => String)
     emailId: string;
 }
 
@@ -199,30 +132,46 @@ export class CredentialAttributes {
     value: string;
 }
 
-export class OOBCredentialDtoWithEmail extends CredentialsIssuanceDto {
-
-    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
+export class OutOfBandCredentialOfferDto {
+    @ApiProperty({
+        example: [
+            {
+                'emailId': 'abc@example.com',
+                'attributes': [
+                    {
+                        'value': 'string',
+                        'name': 'string'
+                    }
+                ]
+            }
+        ]
+    })
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })
-    @IsOptional()
+    @IsArray({ message: 'Credential offer details should be array' })
+    @ArrayNotEmpty({ message: 'Credential offer details required' })
+    @ValidateNested({ each: true })
+    @Type(() => CredentialOffer)
     credentialOffer: CredentialOffer[];
 
-    @ApiProperty({ example: 'awqx@getnada.com' })
-    @IsEmail({}, { message: 'Please provide a valid email' })
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'email should be string' })
-    @Transform(({ value }) => value.trim().toLowerCase())
-    @IsOptional()
-    emailId: string;
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid credential definition id' })
+    @IsString({ message: 'credential definition id should be string' })
+    @Transform(({ value }) => value.trim())
+    credentialDefinitionId: string;
 
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
-    @ValidateNested({ each: true })
-    @Type(() => Attribute)
+    @ApiProperty({ example: 'string' })
     @IsOptional()
-    attributes: Attribute[];
+    @IsNotEmpty({ message: 'Please provide valid comment' })
+    @IsString({ message: 'comment should be string' })
+    comment?: string;
+
+    @ApiProperty({ example: 'v1' })
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid protocol version' })
+    @IsString({ message: 'protocol version should be string' })
+    protocolVersion?: string;
+
+    orgId: string;
 }
 
 

@@ -171,6 +171,8 @@ export class IssuanceService {
     }
   }
 
+  // Created this function to avoid the impact of actual "natsCall" function for other operations
+  // Once implement this for all component then we'll remove the duplicate function
   async natsCallAgent(pattern: IPattern, payload: ISendOfferNatsPayload): Promise<ICreateOfferResponse> {
     try {
       const createOffer = await this.issuanceServiceProxy

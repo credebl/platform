@@ -36,8 +36,7 @@ import {
   FileParameter,
   IssuanceDto,
   IssueCredentialDto,
-  OOBCredentialDtoWithEmail,
-  OOBIssueCredentialDto,
+  OutOfBandCredentialOfferDto,
   PreviewFileDetails
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -64,8 +63,11 @@ import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.d
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
-    private readonly awsService: AwsService
-  ) {}
+    private readonly imageServiceService: ImageServiceService,
+    private readonly awsService: AwsService,
+    private readonly commonService: CommonService
+  ) { }
+  private readonly logger = new Logger('IssuanceController');
   private readonly PAGE: number = 1;
 
   /**
@@ -170,7 +172,7 @@ export class IssuanceController {
         .header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`)
         .status(HttpStatus.OK)
         .send(exportedData.fileContent);
-    } catch (error) {}
+    } catch (error) { }
   }
 
   @Post('/orgs/:orgId/bulk/upload')
@@ -488,50 +490,39 @@ export class IssuanceController {
   }
 
   /**
-   * Description: credential issuance out-of-band
-   * @param user
-   * @param outOfBandCredentialDto
-   * @param orgId
-   * @param res
-   * @returns
+   * 
+   * @param user 
+   * @param outOfBandCredentialDto 
+   * @param orgId 
+   * @param res 
+   * @returns Issuer creates a out-of-band credential offers and sends them to holders via emails
    */
-  @Post('/orgs/:orgId/credentials/oob')
+  @Post('/orgs/:orgId/credentials/oob/email')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
-    summary: `Send out-of-band credential offer via email`,
-    description: `Sends an out-of-band credential offer on provided email`
+    summary: `Issuer creates a out-of-band credential offer`,
+    description: `Issuer creates a out-of-band credential offers and sends them to holders via emails`
   })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
-    @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
+    @Body() outOfBandCredentialDto: OutOfBandCredentialOfferDto,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
-    const credOffer = outOfBandCredentialDto?.credentialOffer || [];
-    if (credOffer.every(item => Boolean(!item?.emailId || '' === item?.emailId.trim()))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.emailIdNotPresent);
-    }
-
-    if (credOffer.every(offer => (!offer?.attributes || 0 === offer?.attributes?.length ||
-      !offer?.attributes?.every(item => item?.name)
-      ))
-    ) {
-      throw new BadRequestException(ResponseMessages.issuance.error.attributesNotPresent);
-    }
 
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(
       user,
       outOfBandCredentialDto
     );
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.issuance.success.fetch,
+      message: ResponseMessages.issuance.success.createOOB,
       data: getCredentialDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);

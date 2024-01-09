@@ -3,7 +3,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
+import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OutOfBandCredentialOfferDto, PreviewFileDetails } from './dtos/issuance.dto';
 import { FileExportResponse, IIssuedCredentialSearchParams, RequestPayload } from './interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { ICreateOfferResponse } from 'apps/issuance/interfaces/issuance.interfaces';
@@ -54,7 +54,7 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
     }
 
-    outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OOBCredentialDtoWithEmail): Promise<{
+    outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OutOfBandCredentialOfferDto): Promise<{
         response: object;
     }> {
         const payload = { user, outOfBandCredentialDto };

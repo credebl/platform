@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { ClientDetails, FileUploadData, IAttributes, IIssuance, IIssueData, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { ClientDetails, FileUploadData, IAttributes, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -49,11 +49,10 @@ export class IssuanceService {
   ) { }
 
 
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<string> {
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICreateOfferResponse> {
     try {
       const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -70,15 +69,12 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      // const apiKey = platformConfig?.sgApiKey;
-      // let apiKey = await this._getOrgAgentApiKey(orgId);
-
       let apiKey;
       apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
-      const issueData = {
+      const issueData: IIssueData = {
         protocolVersion: 'v1',
         connectionId,
         credentialFormats: {
@@ -91,8 +87,17 @@ export class IssuanceService {
         comment
       };
 
-      const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
-      return credentialCreateOfferDetails?.response;
+      const credentialCreateOfferDetails: ICreateOfferResponse = await this._sendCredentialCreateOffer(issueData, url, apiKey);
+
+      if (credentialCreateOfferDetails && 0 < Object.keys(credentialCreateOfferDetails).length) {
+        delete credentialCreateOfferDetails._tags;
+        delete credentialCreateOfferDetails.metadata;
+        delete credentialCreateOfferDetails.credentials;
+        delete credentialCreateOfferDetails.credentialAttributes;
+        delete credentialCreateOfferDetails.autoAcceptCredential;
+      }
+
+      return credentialCreateOfferDetails;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
@@ -109,7 +114,7 @@ export class IssuanceService {
   }
 
 
-  async sendCredentialOutOfBand(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: IAttributes[]): Promise<string> {
+  async sendCredentialOutOfBand(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: IAttributes[]): Promise<ICreateOfferResponse> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
@@ -149,7 +154,7 @@ export class IssuanceService {
 
       const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
 
-      return credentialCreateOfferDetails?.response;
+      return credentialCreateOfferDetails;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
 
@@ -163,6 +168,26 @@ export class IssuanceService {
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
+    }
+  }
+
+  async natsCallAgent(pattern: IPattern, payload: ISendOfferNatsPayload): Promise<ICreateOfferResponse> {
+    try {
+      const createOffer = await this.issuanceServiceProxy
+        .send<ICreateOfferResponse>(pattern, payload)
+        .toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+      return createOffer;
+    } catch (error) {
+      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -192,13 +217,11 @@ export class IssuanceService {
     }
   }
 
-  async _sendCredentialCreateOffer(issueData: IIssueData, url: string, apiKey: string): Promise<{
-    response: string;
-  }> {
+  async _sendCredentialCreateOffer(issueData: IIssueData, url: string, apiKey: string): Promise<ICreateOfferResponse> {
     try {
       const pattern = { cmd: 'agent-send-credential-create-offer' };
-      const payload = { issueData, url, apiKey };
-      return await this.natsCall(pattern, payload);
+      const payload: ISendOfferNatsPayload = { issueData, url, apiKey };
+      return await this.natsCallAgent(pattern, payload);
     } catch (error) {
       this.logger.error(`[_sendCredentialCreateOffer] [NATS call]- error in create credentials : ${JSON.stringify(error)}`);
       throw error;
@@ -1070,7 +1093,7 @@ export class IssuanceService {
     }
   }
 
-   async _getOrgAgentApiKey(orgId: string): Promise<string> {
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
     const pattern = { cmd: 'get-org-agent-api-key' };
     const payload = { orgId };
 

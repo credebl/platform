@@ -28,7 +28,7 @@ export interface IIssueData {
     indy: IIndy
   },
   autoAcceptCredential: string,
-  comment: string;
+  comment?: string;
 }
 
 interface ICredentialAttribute {
@@ -38,29 +38,43 @@ interface ICredentialAttribute {
 }
 
 export interface ICreateOfferResponse {
-    _tags?: Record<string, string>;
-    metadata: {
-      '_anoncreds/credential': {
-        schemaId: string;
-        credentialDefinitionId: string;
-      };
-    };
-    credentials: unknown[]; // You may want to define a more specific type for credentials
-    id: string;
-    createdAt: string;
-    state: string;
+  _tags?: {
     connectionId: string;
+    state: string;
     threadId: string;
-    protocolVersion: string;
-    credentialAttributes: ICredentialAttribute[];
-    autoAcceptCredential: string;
-    contextCorrelationId?: string;
+  };
+  metadata?: {
+    '_anoncreds/credential'?: {
+      schemaId: string;
+      credentialDefinitionId: string;
+    };
+  };
+  credentials?: unknown[];
+  id: string;
+  createdAt: string;
+  state: string;
+  connectionId: string;
+  threadId: string;
+  protocolVersion: string;
+  credentialAttributes?: ICredentialAttribute[];
+  autoAcceptCredential?: string;
+  contextCorrelationId?: string;
 }
 
 export interface IIssueCredentials {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
   user: IUserRequest;
   orgId: string;
+}
+
+export interface IPattern {
+  cmd: string;
+}
+
+export interface ISendOfferNatsPayload {
+  issueData: IIssueData,
+  url: string,
+  apiKey: string;
 }
 
 export interface IIssueCredentialsDefinitions {

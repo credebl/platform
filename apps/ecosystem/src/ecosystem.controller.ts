@@ -8,7 +8,8 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
+import { ecosystem } from '@prisma/client';
 
 @Controller()
 export class EcosystemController {
@@ -22,7 +23,7 @@ export class EcosystemController {
    */
 
   @MessagePattern({ cmd: 'create-ecosystem' })
-  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<object> {
+  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<ecosystem> {
     return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
   }
 
@@ -51,7 +52,7 @@ export class EcosystemController {
    * @returns Get ecosystem dashboard details
    */
   @MessagePattern({ cmd: 'get-ecosystem-dashboard-details' })
-  async getEcosystemDashboardDetails(payload: { ecosystemId: string; orgId: string }): Promise<object> {
+  async getEcosystemDashboardDetails(payload: { ecosystemId: string; orgId: string }): Promise<IEcosystemDashboard> {
     return this.ecosystemService.getEcosystemDashboardDetails(payload.ecosystemId);
   }
 

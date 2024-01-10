@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, EcoInvitationsPagination, EcosystemDetails, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, EcoInvitationsPagination, EcosystemResponse, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -115,7 +115,7 @@ export class EcosystemRepository {
  * @returns Get all ecosystem details
  */
   // eslint-disable-next-line camelcase
-  async getAllEcosystemDetails(orgId: string): Promise<EcosystemDetails[]> {
+  async getAllEcosystemDetails(orgId: string): Promise<EcosystemResponse> {
     try {
       const ecosystemDetails = await this.prisma.ecosystem.findMany({
         where: {
@@ -151,7 +151,17 @@ export class EcosystemRepository {
           }
         }
       });
-      return ecosystemDetails;
+      const ecosystemCount = await this.prisma.ecosystem.count({
+        where: {
+          ecosystemOrgs: {
+            some: {
+              orgId
+            }
+          }
+        }
+      });
+
+      return { ecosystemCount, ecosystemDetails};
     } catch (error) {
       this.logger.error(`Error in get all ecosystem transaction: ${error.message}`);
       throw error;

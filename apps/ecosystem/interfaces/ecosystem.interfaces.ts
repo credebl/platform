@@ -242,6 +242,11 @@ export interface EcosystemDetails {
   }[];
 }
 
+export interface EcosystemResponse {
+  ecosystemCount: number;
+  ecosystemDetails: EcosystemDetails[];
+}
+
 export interface EcosystemInvitationDetails {
   name: string;
   id: string;

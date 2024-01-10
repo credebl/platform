@@ -64,7 +64,7 @@ description: 'Register a webhook url'
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
 @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-@ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+@ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
 async registerWebhook(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgIdFormat); }})) orgId: string, @Body() registerWebhookDto: RegisterWebhookDto,
 @Res() res: Response): Promise<Response> {
 registerWebhookDto.orgId = orgId;

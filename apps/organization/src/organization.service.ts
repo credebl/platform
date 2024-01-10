@@ -16,14 +16,15 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
-import { Invitation, OrgAgentType } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
+import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
+import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -122,7 +123,7 @@ export class OrganizationService {
    * @returns Get created organizations details
    */
 
-  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
+  async getOrganizations(userId: string, pageNumber: number, pageSize: number, search: string): Promise<IGetOrganization> {
     try {
 
       const query = {
@@ -159,7 +160,7 @@ export class OrganizationService {
    * @returns Get public organizations details
    */
 
-  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<IGetOrgs> {
+  async getPublicOrganizations(pageNumber: number, pageSize: number, search: string): Promise<IGetOrganization> {
     try {
 
       const query = {
@@ -196,7 +197,7 @@ export class OrganizationService {
 
       const organizationDetails = await this.organizationRepository.getOrganization(query);
       if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgProfileNotFound);
       }
 
       const credDefs = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
@@ -252,8 +253,7 @@ export class OrganizationService {
 
   /**
    *
-   * @param registerOrgDto
-   * @returns
+   * @returns organization roles
    */
 
 
@@ -418,7 +418,6 @@ export class OrganizationService {
   async updateOrgInvitation(payload: UpdateInvitationDto): Promise<string> {
     try {
       const { orgId, status, invitationId, userId } = payload;
-
       const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
       if (!invitation) {
@@ -429,12 +428,9 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.user.error.invalidOrgId);
       }
 
-      if (invitation.status === Invitation.ACCEPTED) {
-        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyAccepted);
-      }
-
-      if (invitation.status === Invitation.REJECTED) {
-        throw new ConflictException(ResponseMessages.user.error.invitationAlreadyRejected);
+      const invitationStatus = invitation.status as Invitation;
+      if (!transition(invitationStatus, payload.status)) {
+        throw new BadRequestException(`${ResponseMessages.user.error.invitationStatusUpdateInvalid} ${invitation.status}`);
       }
 
       const data = {
@@ -496,14 +492,14 @@ export class OrganizationService {
 
   async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
     try {
-      return this.organizationRepository.getOrgDashboard(orgId);
+            return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async getOgPofile(orgId: string): Promise<organisation> {
+  async getOrgPofile(orgId: string): Promise<organisation> {
     try {
       const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
       if (!orgProfile.logoUrl || '' === orgProfile.logoUrl) {

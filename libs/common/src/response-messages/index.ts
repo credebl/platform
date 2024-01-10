@@ -51,7 +51,9 @@ export const ResponseMessages = {
             credentialNotFound: 'User credentials not found',
             invalidOrgId:'Organization does not exist',
             invalidInvitationId:'Organization invitation does not exist',
-            emailIsNotVerified:'Email is not verified'
+            invitationAlreadyPending:'Organization invitation is already in pending state',
+            emailIsNotVerified:'Email is not verified',
+            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already'
         }
     },
     organisation: {
@@ -71,7 +73,8 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'An organization name is already exist',
-            profileNotFound: 'Organization public profile not found',
+            orgProfileNotFound: 'Organization public profile not found',
+            orgSlugIsRequired: 'Organization public profile not found',
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
@@ -82,7 +85,10 @@ export const ResponseMessages = {
             orgNotFound: 'Organization not found',
             orgNotMatch: 'Organization does not have access',
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
-            invalidOrgIdFormat:'Invalid format for OrganizationId'
+            invalidOrgId:'Invalid format for orgId',
+            orgIdIsRequired:'OrgId is required'
+            
+
         }
     },
 
@@ -208,7 +214,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            fetch: 'Issued Credential details fetched successfully',
+            fetch: 'Issued Credentials details fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
             bulkIssuance: 'Issuance process started. It will take some time',
@@ -240,8 +246,8 @@ export const ResponseMessages = {
     verification: {
         success: {
             fetch: 'Proof presentations details fetched successfully.',
-            create: 'Presentation of proof details created successfully.',
-            proofFormData: 'Proof presentation form data received successfully.',
+            create: 'Presentation of proof received successfully.',
+            verifiedProofDetails: 'Proof presentation details fetched successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'
         },
@@ -251,6 +257,8 @@ export const ResponseMessages = {
             schemaIdNotFound: 'Schema Id is required',
             predicatesValueNotNumber: 'The attribuite value is not a number',
             proofPresentationNotFound: 'Proof presentations not found',
+            verifiedProofNotFound: 'Proof presentation not found',
+            proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'

@@ -1,6 +1,8 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { trim } from '@credebl/common/cast.helper';
 
 export class HolderDetailsDto {
     @ApiProperty({ example: 'Alen' })
@@ -13,14 +15,15 @@ export class HolderDetailsDto {
     @IsString({ message: 'lastName should be string' })
     lastName: string;
 
-    @ApiProperty({ example: 'awqx@example.com' })
-    @IsEmail()
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'email should be string' })
+    @ApiProperty({ example: 'awqx@getnada.com' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
+    @IsNotEmpty({ message: 'Email is required' })
+    @IsString({ message: 'Email should be a string' })
+    @Transform(({ value }) => trim(value))
     email: string;
 
     @ApiProperty({ example: 'awqx@example.com' })
-    @IsEmail()
+    @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Please provide valid username' })
     @IsString({ message: 'username should be string' })
     username: string;
@@ -29,8 +32,6 @@ export class HolderDetailsDto {
     @IsNotEmpty({ message: 'Please provide valid password' })
     @IsString({ message: 'password should be string' })
     password: string;
-
-    // connectionId?: string;
 
     @ApiProperty({ example: 'GamoraPlus' })
     @IsNotEmpty({ message: 'Please provide valid deviceId' })

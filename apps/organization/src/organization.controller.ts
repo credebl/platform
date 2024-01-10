@@ -6,9 +6,10 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
 import { organisation } from '@prisma/client';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 
 @Controller()
 export class OrganizationController {
@@ -45,20 +46,18 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-organizations' })
   async getOrganizations(
     @Body() payload: { userId: string} & Payload
-  ): Promise<IGetOrgs> {
+  ): Promise<IGetOrganization> {
     const { userId, pageNumber, pageSize, search } = payload;
     return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search);
   }
 
   /**
-   * Description: get organizations
-   * @param
-   * @returns Get created organization details
+   * @returns Get public organization details
    */
   @MessagePattern({ cmd: 'get-public-organizations' })
   async getPublicOrganizations(
     @Body() payload: Payload
-  ): Promise<IGetOrgs> {
+  ): Promise<IGetOrganization> {
     const { pageNumber, pageSize, search } = payload;
     return this.organizationService.getPublicOrganizations(pageNumber, pageSize, search);
   }
@@ -72,7 +71,10 @@ export class OrganizationController {
   async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<IGetOrgById> {
     return this.organizationService.getOrganization(payload.orgId);
   }
-
+/**
+ * @param orgSlug 
+ * @returns organization details
+ */
   @MessagePattern({ cmd: 'get-organization-public-profile' })
   async getPublicProfile(payload: { orgSlug }): Promise<IGetOrgById> {
     return this.organizationService.getPublicProfile(payload);
@@ -96,8 +98,7 @@ export class OrganizationController {
   }
 
   /**
-   * Description: retrieve org-roles
-   * @returns Get org-roles details
+   * @returns Get org-roles 
    */
 
   @MessagePattern({ cmd: 'get-org-roles' })
@@ -156,9 +157,12 @@ export class OrganizationController {
     return this.organizationService.getOrgDashboard(payload.orgId);
   }
 
+/**
+ * @returns organization profile details
+ */
   @MessagePattern({ cmd: 'fetch-organization-profile' })
-  async getOgPofile(payload: { orgId: string }): Promise<organisation> {
-    return this.organizationService.getOgPofile(payload.orgId);
+  async getOrgPofile(payload: { orgId: string }): Promise<organisation> {
+    return this.organizationService.getOrgPofile(payload.orgId);
   }
 
   @MessagePattern({ cmd: 'delete-organization' })

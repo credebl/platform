@@ -1,7 +1,7 @@
 /* eslint-disable no-useless-catch */
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { BadRequestException, HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -177,7 +177,7 @@ export class IssuanceService {
         });
     } catch (error) {
       this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -303,16 +303,14 @@ export class IssuanceService {
   }
 
 
-  async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean | object[]> {
+  async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
     try {
       const {
         credentialOffer,
         comment,
         credentialDefinitionId,
         orgId,
-        protocolVersion,
-        attributes,
-        emailId
+        protocolVersion
       } = outOfBandCredential;
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -329,8 +327,10 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
       }
 
-      // const { apiKey } = agentDetails;
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
+      if (!(credentialOffer && 0 < credentialOffer.length)) {
+        throw new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound);
+      }
+
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
@@ -346,7 +346,7 @@ export class IssuanceService {
             protocolVersion: protocolVersion || 'v1',
             credentialFormats: {
               indy: {
-                attributes: iterator.attributes || attributes,
+                attributes: iterator.attributes,
                 credentialDefinitionId
               }
             },
@@ -355,14 +355,15 @@ export class IssuanceService {
           };
 
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
-          if (!credentialCreateOfferDetails) {
-            errors.push(ResponseMessages.issuance.error.credentialOfferNotFound);
+
+          if (credentialCreateOfferDetails) {
+            errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
             return false;
           }
 
           const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
           if (!invitationId) {
-            errors.push(ResponseMessages.issuance.error.invitationNotFound);
+            errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
             return false;
           }
 
@@ -375,14 +376,14 @@ export class IssuanceService {
           const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
 
           if (!platformConfigData) {
-            errors.push(ResponseMessages.issuance.error.platformConfigNotFound);
+            errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
             return false;
           }
 
           this.emailData.emailFrom = platformConfigData.emailFrom;
           this.emailData.emailTo = emailId;
           this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-          this.emailData.emailHtml = await this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, agentEndPoint);
+          this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, agentEndPoint);
           this.emailData.emailAttachments = [
             {
               filename: 'qrcode.png',
@@ -394,33 +395,36 @@ export class IssuanceService {
 
           const isEmailSent = await sendEmail(this.emailData);
           if (!isEmailSent) {
-            errors.push(ResponseMessages.issuance.error.emailSend);
+            errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
             return false;
           }
 
           return isEmailSent;
         } catch (error) {
-          if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-            errors.push(ResponseMessages.issuance.error.walletError);
+          this.logger.error('[OUT-OF-BAND CREATE OFFER - SEND EMAIL]::', JSON.stringify(error));
+          const errorStack = error?.status?.message;
+          if (errorStack) {
+            errors.push(
+              new RpcException({
+                error: errorStack?.error?.message,
+                statusCode: errorStack?.statusCode,
+                message: ResponseMessages.issuance.error.walletError
+              }));
           } else {
-            errors.push(error.message);
+            errors.push(new InternalServerErrorException(error.message));
           }
           return false;
         }
       };
 
       if (credentialOffer) {
-
         for (let i = 0; i < credentialOffer.length; i += Number(process.env.OOB_BATCH_SIZE)) {
           const batch = credentialOffer.slice(i, i + Number(process.env.OOB_BATCH_SIZE));
 
           // Process each batch in parallel
           const batchPromises = batch.map((iterator) => sendEmailForCredentialOffer(iterator, iterator.emailId));
-
           emailPromises.push(Promise.all(batchPromises));
         }
-      } else {
-        emailPromises.push(sendEmailForCredentialOffer({}, emailId));
       }
 
       const results = await Promise.all(emailPromises);
@@ -437,14 +441,21 @@ export class IssuanceService {
 
       return allSuccessful;
     } catch (error) {
-
       this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
+      if (0 < error?.length) {
+        const errorStack = error?.map(item => {
+          const { message, statusCode, error } = item?.error || item?.response || {};
+          return {
+            message,
+            statusCode,
+            error
+          };
         });
-
+        throw new RpcException({
+          error: errorStack,
+          statusCode: error?.status?.code,
+          message: ResponseMessages.issuance.error.unableToCreateOOBOffer
+        });
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
@@ -1059,7 +1070,7 @@ export class IssuanceService {
     }
   }
 
-   async _getOrgAgentApiKey(orgId: string): Promise<string> {
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
     const pattern = { cmd: 'get-org-agent-api-key' };
     const payload = { orgId };
 

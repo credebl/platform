@@ -356,8 +356,8 @@ export const ResponseMessages = {
             getWebhookUrl:'Webhook Url fetched successfully'
         },
         error: {
-            registerWebhook:'Unable to register a webhook url'
-
+            registerWebhook:'Unable to register a webhook url',
+            webhookResponse:'Error in sending webhook response to org webhook url'
         }
     }
 };

@@ -88,8 +88,9 @@ return res.status(HttpStatus.CREATED).json(finalResponse);
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.OWNER, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.ADMIN)
   async getWebhookUrl(
-    @Param('tenantId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.agent.error.invalidTenantIdIdFormat); }})) tenantId: string,
+    @Param('tenantId') tenantId: string,
     @Res() res: Response
   ): Promise<Response> {
   

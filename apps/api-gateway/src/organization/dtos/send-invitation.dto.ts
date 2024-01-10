@@ -23,10 +23,21 @@ export class SendInvitationDto {
 @ApiExtraModels()
 export class BulkSendInvitationDto {
 
-    @ApiProperty({ type: [SendInvitationDto] })
+    @ApiProperty({
+        example: [
+            {
+                email: 'awqx@getnada.com',
+                orgRoleId: ['1,2,3']
+            }
+        ]
+    })
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => SendInvitationDto)
     invitations: SendInvitationDto[];
+
+    @ApiProperty()
+    @IsString({ message: 'orgId should be a string' })
+    @IsNotEmpty({ message: 'orgId is required' })
     orgId: string;
 }

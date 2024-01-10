@@ -11,7 +11,8 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { organisation } from '@prisma/client';
-import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination} from 'apps/organization/interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
+import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 
@@ -90,7 +91,7 @@ export class OrganizationService extends BaseService {
   async getInvitationsByOrgId(
     orgId: string,
     getAllInvitationsDto: GetAllSentInvitationsDto
-  ): Promise<IOrgInvitationsPagination> {
+  ): Promise<IOrganizationInvitations> {
     const { pageNumber, pageSize, search } = getAllInvitationsDto;
     const payload = { orgId, pageNumber, pageSize, search };
     return this.sendNats(this.serviceProxy, 'get-invitations-by-orgId', payload);

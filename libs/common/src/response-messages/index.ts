@@ -74,7 +74,7 @@ export const ResponseMessages = {
         error: {
             exists: 'An organization name is already exist',
             orgProfileNotFound: 'Organization public profile not found',
-            orgSlugIsRequired: 'Organization public profile not found',
+            orgSlugIsRequired: 'orgslug is required',
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
@@ -89,7 +89,6 @@ export const ResponseMessages = {
             orgIdIsRequired:'OrgId is required',
             ecosystemIdIsRequired:'ecosystemId is required'
             
-
         }
     },
 

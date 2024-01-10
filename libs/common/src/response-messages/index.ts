@@ -191,7 +191,8 @@ export const ResponseMessages = {
             seedCharCount: 'seed must be at most 32 characters',
             nullTenantId:'TenantId must not be null',
             tenantIdNotFound:'TenantId not found',
-            invalidTenantIdIdFormat:'Invalid tenantId format'
+            invalidTenantIdIdFormat:'Invalid tenantId format',
+            requiredTenantId:'Tenant Id is required'
         }
     },
     connection: {

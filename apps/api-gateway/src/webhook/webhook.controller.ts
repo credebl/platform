@@ -65,7 +65,7 @@ description: 'Register a webhook url'
 @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
 @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
 @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-async registerWebhook(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgIdFormat); }})) orgId: string, @Body() registerWebhookDto: RegisterWebhookDto,
+async registerWebhook(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Body() registerWebhookDto: RegisterWebhookDto,
 @Res() res: Response): Promise<Response> {
 registerWebhookDto.orgId = orgId;
 
@@ -92,6 +92,12 @@ return res.status(HttpStatus.CREATED).json(finalResponse);
     @Param('tenantId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.agent.error.invalidTenantIdIdFormat); }})) tenantId: string,
     @Res() res: Response
   ): Promise<Response> {
+  
+    // eslint-disable-next-line no-param-reassign
+    tenantId = tenantId.trim();
+    if (!tenantId.length) {
+      throw new BadRequestException(ResponseMessages.agent.error.requiredTenantId);
+    }
 
     const webhookUrlData = await this.webhookService.getWebhookUrl(tenantId);
 

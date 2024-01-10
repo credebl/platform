@@ -6,13 +6,14 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IUpdateOrganization } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
@@ -65,7 +66,7 @@ export class OrganizationRepository {
       return orgData;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 
@@ -93,7 +94,7 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 
@@ -178,7 +179,7 @@ export class OrganizationRepository {
     pageNumber: number,
     pageSize: number,
     search = ''
-  ): Promise<IOrgInvitationsPagination> {
+  ): Promise<IOrganizationInvitations> {
 
     this.logger.log(search);
     const query = {
@@ -206,7 +207,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IOrgInvitationsPagination> {
+  async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IOrganizationInvitations> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.org_invitations.findMany({
@@ -254,7 +255,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrgInvitationsPagination> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrganizationInvitations> {
     try {
       const query = {
         orgId,
@@ -267,7 +268,7 @@ export class OrganizationRepository {
       return this.getOrgInvitationsPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 

@@ -134,7 +134,7 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async editEcosystem(editEcosystemDto: CreateEcosystem, ecosystemId: string): Promise<object> {
+  async editEcosystem(editEcosystemDto: CreateEcosystem, ecosystemId: string): Promise<ecosystem> {
     const { name, description, tags, logo, autoEndorsement, userId } = editEcosystemDto;
 
     const updateData: CreateEcosystem = {
@@ -155,6 +155,7 @@ export class EcosystemService {
     if (!editEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.update);
     }
+
     return editEcosystem;
   }
 

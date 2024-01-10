@@ -33,7 +33,7 @@ export class EcosystemController {
    * @returns Get updated ecosystem details
    */
   @MessagePattern({ cmd: 'edit-ecosystem' })
-  async editEcosystem(@Body() payload: { editEcosystemDto; ecosystemId }): Promise<object> {
+  async editEcosystem(@Body() payload: { editEcosystemDto; ecosystemId }): Promise<ecosystem> {
     return this.ecosystemService.editEcosystem(payload.editEcosystemDto, payload.ecosystemId);
   }
 

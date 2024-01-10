@@ -36,9 +36,9 @@ export class EcosystemService extends BaseService {
    * @param editEcosystemDto
    * @returns Ecosystem creation success
    */
-  async editEcosystem(editEcosystemDto: EditEcosystemDto, ecosystemId: string): Promise<object> {
+  async editEcosystem(editEcosystemDto: EditEcosystemDto, ecosystemId: string): Promise<ecosystem> {
     const payload = { editEcosystemDto, ecosystemId };
-    return this.sendNats(this.serviceProxy, 'edit-ecosystem', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'edit-ecosystem', payload);
   }
 
   /**

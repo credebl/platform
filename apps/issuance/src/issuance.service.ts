@@ -340,7 +340,8 @@ export class IssuanceService {
       const errors = [];
       const emailPromises = [];
 
-      const sendEmailForCredentialOffer = async (iterator, emailId): Promise<boolean> => {
+      const sendEmailForCredentialOffer = async (iterator, emailId, index): Promise<boolean> => {
+        const iterationNo = index + 1;
         try {
           const outOfBandIssuancePayload = {
             protocolVersion: protocolVersion || 'v1',
@@ -356,7 +357,7 @@ export class IssuanceService {
 
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
 
-          if (credentialCreateOfferDetails) {
+          if (!credentialCreateOfferDetails) {
             errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
             return false;
           }
@@ -406,12 +407,12 @@ export class IssuanceService {
           if (errorStack) {
             errors.push(
               new RpcException({
-                error: errorStack?.error?.message,
+                error: `${errorStack?.error?.message} at position ${iterationNo}`,
                 statusCode: errorStack?.statusCode,
-                message: ResponseMessages.issuance.error.walletError
+                message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`
               }));
           } else {
-            errors.push(new InternalServerErrorException(error.message));
+            errors.push(new InternalServerErrorException(`${error.message} at position ${iterationNo}`));
           }
           return false;
         }
@@ -422,7 +423,7 @@ export class IssuanceService {
           const batch = credentialOffer.slice(i, i + Number(process.env.OOB_BATCH_SIZE));
 
           // Process each batch in parallel
-          const batchPromises = batch.map((iterator) => sendEmailForCredentialOffer(iterator, iterator.emailId));
+          const batchPromises = batch.map((iterator, index) => sendEmailForCredentialOffer(iterator, iterator.emailId, index));
           emailPromises.push(Promise.all(batchPromises));
         }
       }

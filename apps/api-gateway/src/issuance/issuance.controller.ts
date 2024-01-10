@@ -556,7 +556,7 @@ export class IssuanceController {
   @Post('/orgs/:orgId/credentials/oob/email')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
-    summary: `Issuer creates a out-of-band credential offer`,
+    summary: `Creates a out-of-band credential offer and sends them via emails`,
     description: `Issuer creates a out-of-band credential offers and sends them to holders via emails`
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })

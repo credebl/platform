@@ -141,7 +141,7 @@ export class OutOfBandCredentialOfferDto {
     @ApiProperty({
         example: [
             {
-                'emailId': 'abc@example.com',
+                'emailId': 'testmail@domain.com',
                 'attributes': [
                     {
                         'value': 'string',

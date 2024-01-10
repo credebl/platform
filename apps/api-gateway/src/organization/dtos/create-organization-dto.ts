@@ -36,6 +36,8 @@ export class CreateOrganizationDto {
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'webhookEndpoint is required.' })
+    @IsString({ message: 'webhookEndpoint must be in string format.' })
     @IsUrl({
         // eslint-disable-next-line camelcase
         require_protocol: true, // require URL protocol (e.g., http:// or https://)

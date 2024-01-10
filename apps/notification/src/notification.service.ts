@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { INotification, IHolderRegisterCredentals, IWebhookEndpoint, ISendNotification } from '../interfaces/notification.interfaces';
+import { INotification, IWebhookEndpoint, ISendNotification } from '../interfaces/notification.interfaces';
 import { RpcException } from '@nestjs/microservices';
 import { NotificationRepository } from './notification.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -41,6 +41,10 @@ export class NotificationService {
   async sendNotification(payload: ISendNotification): Promise<object> {
     try {
       const orgId = payload?.clientCode;
+
+      /**
+       * Fetch the webhook endpoint by orgId
+       */
       const getWebhookUrl = await this.notificationRepository.getOrgWebhookEndpoint(orgId);
 
       const webhookPayload = {
@@ -48,6 +52,9 @@ export class NotificationService {
         '@type': payload['@type']
       };
 
+      /**
+       * Send notification details with webhook endpoint  
+       */
       const webhookResponse = await this.commonService.httpPost(getWebhookUrl?.webhookEndpoint, webhookPayload)
         .then(async response => response)
         .catch(error => {
@@ -55,6 +62,7 @@ export class NotificationService {
           throw error;
         });
 
+        
       if (!this.isValidUrl(getWebhookUrl?.webhookEndpoint)) {
         throw new BadRequestException(ResponseMessages.notification.error.invalidUrl);
       }
@@ -70,25 +78,5 @@ export class NotificationService {
   private isValidUrl(url: string): boolean {
     const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
     return urlRegex.test(url);
-  }
-
-  /**
-     * Update the holder specific fcmtoken, userkey by orgId 
-     * @param registerHolder 
-     * @param res 
-     * @returns Updated notification data
-     */
-  async registerHolderCredentals(payload: IHolderRegisterCredentals): Promise<INotification> {
-    try {
-
-      /**
-       * Call the function for update the token and passkey on notification table
-       */
-      const updateNotification = await this.notificationRepository.updateHolderRegisterCredentials(payload);
-      return updateNotification;
-    } catch (error) {
-      this.logger.error(`[registerEndpoint] - error in register endpoint for holder: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
   }
 }

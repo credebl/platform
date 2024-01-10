@@ -459,10 +459,8 @@ model file_data {
 
 model notification {
   id                  String    @id @default(uuid()) @db.Uuid
-  userKey             String?
-  orgId               String?   @db.Uuid @unique
+  orgId               String?   @unique @db.Uuid
   webhookEndpoint     String?
-  fcmToken            String?
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
   createdBy           String    @default("1")
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)

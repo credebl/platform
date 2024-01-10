@@ -34,13 +34,13 @@ export interface IVerifyPresentation {
     apiKey: string;
 }
 
-export interface ProofFormDataPayload {
+export interface IVerifiedProofData {
     url: string;
     apiKey: string;
 }
 
-export interface ProofFormData {
-    id: string;
+export interface IProofPresentationData {
+    proofId: string;
     orgId: string; 
     user: IUserRequest;
 }
@@ -132,5 +132,5 @@ export interface IProofRequestSearchCriteria {
     sortField: string;
     sortBy: string;
     searchByText: string;
-  }  
+  }   
   

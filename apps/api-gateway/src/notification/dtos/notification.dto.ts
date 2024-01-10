@@ -68,3 +68,18 @@ export class SendNotificationDto {
     @IsString({ message: 'clientCode must be in string format.' })
     clientCode: string;
 }
+
+export class GetNotificationDto {
+
+    @ApiProperty()
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'fcmToken is required.' })
+    @IsString({ message: 'fcmToken must be in string format.' })
+    fcmToken: string;
+
+    @ApiProperty()
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: '@type is required.' })
+    @IsString({ message: '@type must be in string format.' })
+    '@type': string;
+}

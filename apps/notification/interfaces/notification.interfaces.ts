@@ -16,3 +16,8 @@ export interface ISendNotification {
     '@type': string;
     clientCode: string;
 }
+
+export interface IGetNotification {
+    fcmToken: string;
+    '@type': string;
+}

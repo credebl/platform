@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { INotification, IWebhookEndpoint, ISendNotification } from '../interfaces/notification.interfaces';
+import { INotification, IWebhookEndpoint, ISendNotification, IGetNotification } from '../interfaces/notification.interfaces';
 import { RpcException } from '@nestjs/microservices';
 import { NotificationRepository } from './notification.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -78,5 +78,20 @@ export class NotificationService {
   private isValidUrl(url: string): boolean {
     const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
     return urlRegex.test(url);
+  }
+
+  /**
+   * Get notification by webhook
+   * @param payload 
+   * @returns Get notification details
+   */
+  async getNotification(payload: IGetNotification): Promise<string> {
+    try {
+      this.logger.log(`Get notification payload ::: ${JSON.stringify(payload)}`);
+      return 'Get notification details';
+    } catch (error) {
+      this.logger.error(`[getNotification] - error in get notification: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 }

@@ -53,9 +53,7 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
     }
 
-    outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OutOfBandCredentialOfferDto): Promise<{
-        response: object;
-    }> {
+    outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OutOfBandCredentialOfferDto): Promise<boolean> {
         const payload = { user, outOfBandCredentialDto };
         return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
     }

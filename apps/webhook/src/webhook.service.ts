@@ -1,7 +1,7 @@
 import { CommonService } from '@credebl/common';
 import { WebhookRepository } from './webhook.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 
 import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/webhook.interfaces';
 import {
@@ -46,7 +46,7 @@ export class WebhookService {
       }
     } catch (error) {
       this.logger.error(`[registerWebhookUrl] - register webhook url details : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -65,7 +65,8 @@ export class WebhookService {
       }
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details : ${JSON.stringify(error)}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
+
     }
   }
 
@@ -81,11 +82,12 @@ export class WebhookService {
 
       if (!response.ok) {
         this.logger.error(`Error in sending webhook response to org webhook url:`, response.status);
+        throw new InternalServerErrorException(ResponseMessages.webhook.error.webhookResponse);
       }
       return response;
     } catch (error) {
       this.logger.error(`Error in sending webhook response to org webhook url: ${error}`);
-      throw error;
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

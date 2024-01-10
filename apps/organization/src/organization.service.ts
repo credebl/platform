@@ -18,11 +18,12 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 @Injectable()
 export class OrganizationService {
@@ -117,8 +118,6 @@ export class OrganizationService {
   }
 
   /**
-   * Description: get organizations
-   * @param
    * @returns Get created organizations details
    */
 
@@ -236,7 +235,7 @@ export class OrganizationService {
    * @returns Get created invitation details
    */
 
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgInvitationsPagination> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrganizationInvitations> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
       for await (const item of getOrganization['invitations']) {
@@ -401,7 +400,7 @@ export class OrganizationService {
     return false;
   }
 
-  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrgInvitationsPagination> {
+  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrganizationInvitations> {
     try {
       return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search);
     } catch (error) {

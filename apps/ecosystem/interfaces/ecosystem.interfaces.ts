@@ -259,8 +259,9 @@ interface EcosystemDetail {
   }[];
 }
 
-export interface EcosystemDetailsWithCount extends EcosystemDetail {
+export interface EcosystemDetailsResult {
   totalCount: number;
+  ecosystemDetails: EcosystemDetail[];
 }
 
 export interface EcosystemInvitationDetails {

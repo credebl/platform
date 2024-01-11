@@ -72,6 +72,7 @@ interface ILedgers {
 }
 
 export interface IGetOrganization {
+  totalCount:number;
   totalPages:number;
   organizations : IGetAllOrganizations[];
 }

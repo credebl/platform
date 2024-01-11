@@ -1,15 +1,14 @@
 import { Transform, Type } from 'class-transformer';
-// import { SortValue } from '../../enum';
 import { toNumber } from '@credebl/common/cast.helper';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsOptional, Min } from 'class-validator';
 
 export class GetAllOrganizationsDto {
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, default: 1  })
     @IsOptional()
-    @Type(() => Number)
     @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page number must be greater than 0' })
     pageNumber = 1;
 
     @ApiProperty({ required: false })
@@ -17,10 +16,10 @@ export class GetAllOrganizationsDto {
     @Type(() => String)
     search = '';
 
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, default: 10 })
     @IsOptional()
-    @Type(() => Number)
     @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page size must be greater than 0' })
     pageSize = 10;
 
 }

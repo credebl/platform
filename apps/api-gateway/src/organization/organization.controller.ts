@@ -349,7 +349,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Update user roles', description: 'update user roles' })
-  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId') userId: string, @Res() res: Response): Promise<Response> {
+  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidUserId); }})) userId: string, @Res() res: Response): Promise<Response> {
 
     updateUserDto.orgId = orgId;
     updateUserDto.userId = userId;

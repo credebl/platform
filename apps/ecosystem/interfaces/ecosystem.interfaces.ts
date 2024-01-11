@@ -6,8 +6,8 @@ export interface AttributeValue {
 }
 
 export interface RequestSchemaEndorsement {
-  orgId: string
-  userId?: string
+  orgId: string;
+  userId?: string;
   name: string;
   version: string;
   attributes: AttributeValue[];
@@ -81,7 +81,7 @@ export interface SchemaTransactionResponse {
   requestPayload: string;
   status: string;
   ecosystemOrgId: string;
-  userId?: string
+  userId?: string;
 }
 
 export interface SignedTransactionMessage {
@@ -180,7 +180,7 @@ export interface CreateEcosystem {
   name?: string;
   description?: string;
   tags?: string;
-  logoUrl?:string;
+  logoUrl?: string;
   userId?: string;
   logo?: string;
   orgName?: string;
@@ -223,28 +223,44 @@ export interface OrgAgent {
 }
 
 export interface LedgerDetails {
-  id: string,
-  name: string,
-  indyNamespace: string,
-  networkUrl: string
+  id: string;
+  name: string;
+  indyNamespace: string;
+  networkUrl: string;
 }
 
-export interface EcosystemDetails {
+interface EcosystemRole {
+  id: string;
+  name: string;
+  description: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+}
+
+interface EcosystemDetail {
+  id: string;
+  name: string;
+  description: string;
+  logoUrl: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  createdBy: string;
+  autoEndorsement: boolean;
   ecosystemOrgs: {
-    ecosystemRole: {
-      id: string;
-      name: string;
-      description: string;
-      createDateTime: Date;
-      lastChangedDateTime: Date;
-      deletedAt: Date;
-    };
+    id: string;
+    orgId: string;
+    status: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    ecosystemId: string;
+    ecosystemRoleId: string;
+    ecosystemRole: EcosystemRole;
   }[];
 }
 
-export interface EcosystemResponse {
-  ecosystemCount: number;
-  ecosystemDetails: EcosystemDetails[];
+export interface EcosystemDetailsWithCount extends EcosystemDetail {
+  totalCount: number;
 }
 
 export interface EcosystemInvitationDetails {
@@ -259,24 +275,23 @@ export interface EcosystemInvitationDetails {
   lastChangedBy?: string;
   deletedAt?: Date;
   autoEndorsement?: boolean;
-  ledgers: Prisma.JsonValue;  
-  networkDetails?: LedgerDetails[];            
+  ledgers: Prisma.JsonValue;
+  networkDetails?: LedgerDetails[];
 }
 
-
 export interface InvitationResponse {
-    id: string;
-    email: string;
-    status: string;
-    ecosystemId: string;
-    userId: string;
-    orgId: string;
-    deletedAt: Date;
-    ecosystem: EcosystemInvitationDetails;
-    createDateTime: Date;
-    createdBy: string;
-    lastChangedDateTime: Date;
-    lastChangedBy: string;
+  id: string;
+  email: string;
+  status: string;
+  ecosystemId: string;
+  userId: string;
+  orgId: string;
+  deletedAt: Date;
+  ecosystem: EcosystemInvitationDetails;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
 }
 
 export interface EcoInvitationsPagination {

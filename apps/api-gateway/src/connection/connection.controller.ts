@@ -21,7 +21,7 @@ import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interfac
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { ClientProxy} from '@nestjs/microservices';
+import { ClientProxy, RpcException} from '@nestjs/microservices';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -161,7 +161,10 @@ export class ConnectionController {
     const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId);
 
     if (webhookUrl) {
-      await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto });
+      try {
+        await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto });
+    } catch (error) {
+        throw new RpcException(error.response ? error.response : error);
     }
     const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
     const finalResponse: IResponse = {
@@ -172,5 +175,5 @@ export class ConnectionController {
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-       
+}     
 }

@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { CommonService } from '@credebl/common';
 import { WebhookRepository } from './webhook.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-
+import AsyncRetry = require('async-retry');
 import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/webhook.interfaces';
 import {
   BadRequestException,
@@ -21,6 +22,20 @@ export class WebhookService {
     private readonly commonService: CommonService,
     private readonly webhookRepository: WebhookRepository
   ) {}
+
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  retryOptions(logger: Logger) {
+    return {
+      retries: 3,
+      factor: 2,
+      minTimeout: 2000,
+      onRetry(e: { message: string }, attempt: number): void {
+        logger.log(`Error:: ${e.message}`);
+        logger.log(`Attempt:: ${attempt}`);
+       
+      }
+    };
+  }
 
   async registerWebhook(registerWebhookDto: IWebhookDto): Promise<ICreateWebhookUrl> {
     try {
@@ -66,11 +81,10 @@ export class WebhookService {
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
-
     }
   }
 
-  async webhookResponse(webhookUrl: string, data: object): Promise<object> {
+  async webhookFunc(webhookUrl: string, data: object): Promise<Response> {
     try {
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -84,6 +98,16 @@ export class WebhookService {
         this.logger.error(`Error in sending webhook response to org webhook url:`, response.status);
         throw new InternalServerErrorException(ResponseMessages.webhook.error.webhookResponse);
       }
+      return response;
+    } catch (err) {
+      throw new InternalServerErrorException(ResponseMessages.webhook.error.webhookResponse);
+    }
+  }
+
+  async webhookResponse(webhookUrl: string, data: object): Promise<object> {
+    try {
+      const webhookResponse = async (): Promise<Response> => this.webhookFunc(webhookUrl, data);
+      const response = await AsyncRetry(webhookResponse, this.retryOptions(this.logger));
       return response;
     } catch (error) {
       this.logger.error(`Error in sending webhook response to org webhook url: ${error}`);

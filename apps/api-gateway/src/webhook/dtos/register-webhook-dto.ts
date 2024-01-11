@@ -11,6 +11,6 @@ orgId: string;
 @Transform(({ value }) => trim(value))
 @IsNotEmpty({ message: 'webhookUrl is required.' })
 @IsString({ message: 'webhookUrl must be in string format.' })
-@IsUrl(undefined, {message:'URL is not valid'})
+@IsUrl(undefined, {message:'webhookUrl is not valid'})
 webhookUrl: string;
 }

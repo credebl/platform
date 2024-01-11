@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, EcoInvitationsPagination, EcosystemDetails, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, EcoInvitationsPagination, EcosystemDetailsWithCount, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -108,48 +108,66 @@ export class EcosystemRepository {
    * @returns Get all ecosystem details
    */
   // eslint-disable-next-line camelcase
-  async getAllEcosystemDetails(orgId: string): Promise<EcosystemDetails[]> {
+  async getAllEcosystemDetails(orgId: string): Promise<EcosystemDetailsWithCount> {
     try {
-      const ecosystemDetails = await this.prisma.ecosystem.findMany({
-        where: {
-          ecosystemOrgs: {
-            some: {
-              orgId
+      const [ecosystemDetails, ecosystemCount] = await Promise.all([
+        this.prisma.ecosystem.findMany({
+          where: {
+            ecosystemOrgs: {
+              some: {
+                orgId
+              }
+            }
+          },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            logoUrl: true,
+            createDateTime: true,
+            lastChangedDateTime: true,
+            createdBy: true,
+            autoEndorsement: true,
+            ecosystemOrgs: {
+              where: {
+                orgId
+              },
+              select: {
+                id: true,
+                orgId: true,
+                status: true,
+                createDateTime: true,
+                lastChangedDateTime: true,
+                ecosystemId: true,
+                ecosystemRoleId: true,
+                ecosystemRole: true
+              }
             }
           }
-        },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          logoUrl: true,
-          createDateTime: true,
-          lastChangedDateTime: true,
-          createdBy: true,
-          autoEndorsement: true,
-          ecosystemOrgs: {
-            where: {
-              orgId
-            },
-            select: {
-              id: true,
-              orgId:true,
-              status: true,
-              createDateTime: true,
-              lastChangedDateTime: true,
-              ecosystemId: true,
-              ecosystemRoleId: true,
-              ecosystemRole: true
+        }),
+        this.prisma.ecosystem.count({
+          where: {
+            ecosystemOrgs: {
+              some: {
+                orgId
+              }
             }
           }
-        }
-      });
-      return ecosystemDetails;
+        })
+      ]);
+  
+      ecosystemDetails[0]['totalCount'] = ecosystemCount;
+  
+      return {
+        ...ecosystemDetails[0],
+        totalCount: ecosystemCount
+      };
     } catch (error) {
       this.logger.error(`Error in get all ecosystem transaction: ${error.message}`);
       throw error;
     }
   }
+  
 
   /**
    * 

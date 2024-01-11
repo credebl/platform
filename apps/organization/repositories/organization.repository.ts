@@ -473,7 +473,7 @@ export class OrganizationRepository {
       const totalCount = result[1];
       const totalPages = Math.ceil(totalCount / pageSize);
 
-      return { totalPages, organizations };
+      return { totalCount, totalPages, organizations };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

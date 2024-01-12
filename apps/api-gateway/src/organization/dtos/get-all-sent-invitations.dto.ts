@@ -7,6 +7,13 @@ import { IsOptional, Min } from 'class-validator';
 export class GetAllSentInvitationsDto {
     @ApiProperty({ required: false })
     @IsOptional()
+   
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page size must be greater than 0' })
+    pageSize = 10;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
     
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: 'Page number must be greater than 0' })
@@ -16,12 +23,5 @@ export class GetAllSentInvitationsDto {
     @IsOptional()
     @Type(() => String)
     search = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-   
-    @Transform(({ value }) => toNumber(value))
-    @Min(1, { message: 'Page size must be greater than 0' })
-    pageSize = 10;
 
 }

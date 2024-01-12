@@ -38,6 +38,8 @@ export const ResponseMessages = {
             invalidCredentials: 'Invalid Credentials',
             registerFido: 'Please complete your fido registration',
             invitationNotFound: 'Invitation not found',
+            invitationAlreadyAccepted:'Organization invitation already accepted',
+            invitationAlreadyRejected:'Organization invitation already rejected',
             invalidInvitationStatus: 'Invalid invitation status',
             invalidKeycloakId: 'keycloakId is invalid',
             invalidEmail: 'Invalid Email Id!',
@@ -46,7 +48,12 @@ export const ResponseMessages = {
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
             userNotRegisterd: 'The user has not yet completed the registration process',
             InvalidEmailDomain :'Email from this domain is not allowed',
-            credentialNotFound: 'User credentials not found'
+            credentialNotFound: 'User credentials not found',
+            invalidOrgId:'Organization does not exist',
+            invalidInvitationId:'Organization invitation does not exist',
+            invitationAlreadyPending:'Organization invitation is already in pending state',
+            emailIsNotVerified:'Email is not verified',
+            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already'
         }
     },
     organisation: {
@@ -67,7 +74,8 @@ export const ResponseMessages = {
         },
         error: {
             exists: 'An organization name is already exist',
-            profileNotFound: 'Organization public profile not found',
+            orgProfileNotFound: 'Organization public profile not found',
+            orgSlugIsRequired: 'orgslug is required',
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
@@ -78,7 +86,10 @@ export const ResponseMessages = {
             orgNotFound: 'Organization not found',
             orgNotMatch: 'Organization does not have access',
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
-            credentialsNotUpdate: 'Unable to update organization credentials'
+            credentialsNotUpdate: 'Unable to update organization credentials',
+            invalidOrgId:'Invalid format for orgId',
+            orgIdIsRequired:'OrgId is required'
+            
         }
     },
 
@@ -199,7 +210,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            fetch: 'Issued Credential details fetched successfully',
+            fetch: 'Issued Credentials details fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
             bulkIssuance: 'Issuance process started. It will take some time',
@@ -231,8 +242,8 @@ export const ResponseMessages = {
     verification: {
         success: {
             fetch: 'Proof presentations details fetched successfully.',
-            create: 'Presentation of proof details created successfully.',
-            proofFormData: 'Proof presentation form data received successfully.',
+            create: 'Presentation of proof received successfully.',
+            verifiedProofDetails: 'Proof presentation details fetched successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'
         },
@@ -242,6 +253,8 @@ export const ResponseMessages = {
             schemaIdNotFound: 'Schema Id is required',
             predicatesValueNotNumber: 'The attribuite value is not a number',
             proofPresentationNotFound: 'Proof presentations not found',
+            verifiedProofNotFound: 'Proof presentation not found',
+            proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'

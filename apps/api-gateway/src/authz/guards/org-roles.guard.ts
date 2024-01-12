@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
+import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 
 import { HttpException } from '@nestjs/common';
 import { HttpStatus } from '@nestjs/common';
@@ -27,11 +27,19 @@ export class OrgRolesGuard implements CanActivate {
 
     // Request requires org check, proceed with it
     const req = context.switchToHttp().getRequest();
-
     const { user } = req;
+  
+    req.params.orgId = req.params?.orgId ? req.params?.orgId?.trim() : '';
+    req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
+    req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
 
-    if (req.params.orgId || req.query.orgId || req.body.orgId) {
-      const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+  
+    if (!orgId) {
+      throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
+    }
+
+    if (orgId) {     
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
           return false;

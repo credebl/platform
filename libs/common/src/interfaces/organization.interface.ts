@@ -42,7 +42,13 @@ export interface IOrganization {
     lastChangedBy: string
   }
 
-  export interface IOrgCredentials {
-      clientId: string,
-      clientSecret: string  
-  }
+export interface IOrgCredentials {
+  clientId: string,
+  clientSecret: string
+}
+export interface IOrganizationDashboard {
+  usersCount: number,
+  schemasCount: number,
+  credentialsCount: number,
+  presentationsCount: number
+}

@@ -19,6 +19,7 @@ model user {
   verificationCode    String?           @db.VarChar(500)
   isEmailVerified     Boolean           @default(false)
   supabaseUserId      String?           @db.VarChar(500)
+  keycloakUserId      String?           @db.VarChar(500)
   clientId            String?           @db.VarChar(500)
   clientSecret        String?           @db.VarChar(500)
   profileImg          String?           @db.VarChar(1000)
@@ -90,6 +91,8 @@ model organisation {
   logoUrl               String?
   website               String?                 @db.VarChar
   publicProfile         Boolean                 @default(false)
+  clientId              String?                 @db.VarChar(500)
+  clientSecret          String?                 @db.VarChar(500)
   connections           connections[]
   credentials           credentials[]
   org_agents            org_agents[]

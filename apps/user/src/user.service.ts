@@ -284,7 +284,9 @@ export class UserService {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
 
-      let supaUser;
+      let keycloakDetails = null;
+
+      const token = await this.clientRegistrationService.getManagementToken();
 
       if (userInfo.isPasskey) {
         const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
@@ -294,26 +296,25 @@ export class UserService {
         if (!resUser) {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
-        supaUser = await this.supabaseService.getClient().auth.signUp({
-          email: email.toLowerCase(),
-          password: decryptedPassword
-        });
+
+        userInfo.password = decryptedPassword;
+        try {          
+          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
+        } catch (error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak');
+        }
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
+        userInfo.password = decryptedPassword;
 
-        supaUser = await this.supabaseService.getClient().auth.signUp({
-          email: email.toLowerCase(),
-          password: decryptedPassword
-        });
+        try {          
+          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
+        } catch (error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak');
+        }
       }
 
-      if (supaUser.error) {
-        throw new InternalServerErrorException(supaUser.error?.message);
-      }
-
-      const supaId = supaUser.data?.user?.id;
-
-      await this.userRepository.updateUserDetails(userDetails.id, supaId.toString());
+      await this.userRepository.updateUserDetails(userDetails.id, keycloakDetails.keycloakUserId.toString());
 
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
@@ -398,25 +399,9 @@ export class UserService {
 
   async generateToken(email: string, password: string): Promise<ISignInUser> {
     try {
-      const supaInstance = await this.supabaseService.getClient();
-      this.logger.error(`supaInstance::`, supaInstance);
-
-      const { data, error } = await supaInstance.auth.signInWithPassword({
-        email: email.toLowerCase(),
-        password
-      });
-
-      this.logger.error(`Supa Login Error::`, JSON.stringify(error));
-
-      if (error) {
-        throw new BadRequestException(error?.message);
-      }
-
-      const token = data?.session;
-      
-      return token;
+     return await this.clientRegistrationService.getUserToken(email, password);
     } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
+      throw new BadRequestException(error?.message);
     }
   }
 
@@ -492,6 +477,15 @@ export class UserService {
       return await this.userRepository.getUserBySupabaseId(payload.id);
     } catch (error) {
       this.logger.error(`Error in findSupabaseUser: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async findKeycloakUser(payload: { id }): Promise<object> {
+    try {
+      return await this.userRepository.getUserByKeycloakId(payload.id);
+    } catch (error) {
+      this.logger.error(`Error in findKeycloakUser: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

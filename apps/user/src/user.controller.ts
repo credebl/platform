@@ -70,6 +70,10 @@ export class UserController {
     return this.userService.findSupabaseUser(payload);
   }
 
+  @MessagePattern({ cmd: 'get-user-by-keycloak' })
+  async findKeycloakUser(payload: { id }): Promise<object> {
+    return this.userService.findKeycloakUser(payload);
+  }
 
   @MessagePattern({ cmd: 'get-user-by-mail' })
   async findUserByEmail(payload: { email }): Promise<object> {

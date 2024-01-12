@@ -11,7 +11,7 @@ import { organisation } from '@prisma/client';
 import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrganizationInvitations, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
-import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { IOrgCredentials, IOrganization } from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -30,6 +30,17 @@ export class OrganizationService extends BaseService {
   }
 
   /**
+   * 
+   * @param orgId 
+   * @param userId 
+   * @returns Orgnization client credentials
+   */
+  async createOrgCredentials(orgId: string, userId: string): Promise<IOrgCredentials> {
+    const payload = { orgId, userId };
+    return this.sendNatsMessage(this.serviceProxy, 'create-org-credentials', payload);
+  }
+
+  /**
    *
    * @param updateOrgDto
    * @returns Organization update Success
@@ -37,6 +48,15 @@ export class OrganizationService extends BaseService {
   async updateOrganization(updateOrgDto: UpdateOrganizationDto, userId: string, orgId: string): Promise<organisation> {
     const payload = { updateOrgDto, userId, orgId };
     return this.sendNats(this.serviceProxy, 'update-organization', payload);
+  }
+
+  /**
+   * 
+   * @param orgId 
+   * @returns Organization details with owner
+   */
+  async findOrganizationOwner(orgId: string): Promise<IOrganization> {
+    return this.sendNatsMessage(this.serviceProxy, 'get-organization-owner', orgId);
   }
 
   /**

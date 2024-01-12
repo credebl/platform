@@ -10,6 +10,7 @@ import { IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../
 import { IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { organisation } from '@prisma/client';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgCredentials, IOrganization } from '@credebl/common/interfaces/organization.interface';
 
 @Controller()
 export class OrganizationController {
@@ -25,6 +26,16 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'create-organization' })
   async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string }): Promise<organisation> {
     return this.organizationService.createOrganization(payload.createOrgDto, payload.userId);
+  }
+
+  /**
+   * 
+   * @param payload 
+   * @returns organization client credentials
+   */
+  @MessagePattern({ cmd: 'create-org-credentials' })
+  async createOrgCredentials(@Body() payload: { orgId: string; userId: string }): Promise<IOrgCredentials> {
+    return this.organizationService.createOrgCredentials(payload.orgId);
   }
 
   /**
@@ -163,6 +174,11 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'fetch-organization-profile' })
   async getOrgPofile(payload: { orgId: string }): Promise<organisation> {
     return this.organizationService.getOrgPofile(payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'get-organization-owner' })
+  async getOrgOwner(orgId: string): Promise<IOrganization> {
+    return this.organizationService.getOrgOwner(orgId);
   }
 
   @MessagePattern({ cmd: 'delete-organization' })

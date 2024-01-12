@@ -24,8 +24,7 @@ import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
-import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
 @Injectable()
 export class OrganizationService {
   constructor(

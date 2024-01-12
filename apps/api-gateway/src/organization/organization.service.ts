@@ -9,9 +9,8 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { organisation } from '@prisma/client';
 import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
-import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
+import { IOrganizationInvitations, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
-import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @Injectable()

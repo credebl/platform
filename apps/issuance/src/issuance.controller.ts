@@ -1,4 +1,4 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { ClientDetails, IIssuance, IIssuanceWebhookInterface, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
@@ -6,7 +6,6 @@ import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface
 
 @Controller()
 export class IssuanceController {
-  private readonly logger = new Logger('issuanceService');
   constructor(private readonly issuanceService: IssuanceService) { }
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })

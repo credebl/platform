@@ -154,7 +154,7 @@ export class OrganizationService extends BaseService {
   }
 
   async deleteOrganization(
-    orgId: number
+    orgId: string
   ): Promise<boolean> {
     const payload = { orgId };
 

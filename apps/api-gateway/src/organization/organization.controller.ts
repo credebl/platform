@@ -1,4 +1,4 @@
-import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
 import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
@@ -386,12 +386,17 @@ export class OrganizationController {
   /**
    * @returns Boolean
    */
+  //Todo
   @Delete('/:orgId')
   @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiExcludeEndpoint()
+  @ApiResponse({ status: HttpStatus.ACCEPTED, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  async deleteOrganization(@Param('orgId') orgId: number, @Res() res: Response): Promise<Response> {
+  async deleteOrganization(
+    @Param('orgId') orgId: string, 
+    @Res() res: Response
+    ): Promise<Response> {
 
     await this.organizationService.deleteOrganization(orgId);
 
@@ -401,6 +406,7 @@ export class OrganizationController {
     };
     return res.status(HttpStatus.ACCEPTED).json(finalResponse);
   }
+
 
   @Delete('/:orgId/invitations/:invitationId')
   @ApiOperation({ summary: 'Delete organization invitation', description: 'Delete organization invitation' })

@@ -8,7 +8,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
+import { IEditEcosystem, IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 import { ecosystem } from '@prisma/client';
 
 @Controller()
@@ -33,7 +33,7 @@ export class EcosystemController {
    * @returns Get updated ecosystem details
    */
   @MessagePattern({ cmd: 'edit-ecosystem' })
-  async editEcosystem(@Body() payload: { editEcosystemDto; ecosystemId }): Promise<ecosystem> {
+  async editEcosystem(@Body() payload: { editEcosystemDto; ecosystemId }): Promise<IEditEcosystem> {
     return this.ecosystemService.editEcosystem(payload.editEcosystemDto, payload.ecosystemId);
   }
 

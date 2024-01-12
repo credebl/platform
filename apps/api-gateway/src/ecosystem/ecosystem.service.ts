@@ -13,7 +13,7 @@ import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { ecosystem } from '@prisma/client';
-import { IEcosystemDashboard } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEditEcosystem, IEcosystemDashboard } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -36,7 +36,7 @@ export class EcosystemService extends BaseService {
    * @param editEcosystemDto
    * @returns Ecosystem creation success
    */
-  async editEcosystem(editEcosystemDto: EditEcosystemDto, ecosystemId: string): Promise<ecosystem> {
+  async editEcosystem(editEcosystemDto: EditEcosystemDto, ecosystemId: string): Promise<IEditEcosystem> {
     const payload = { editEcosystemDto, ecosystemId };
     return this.sendNatsMessage(this.serviceProxy, 'edit-ecosystem', payload);
   }

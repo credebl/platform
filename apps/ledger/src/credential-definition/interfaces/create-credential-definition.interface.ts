@@ -38,21 +38,32 @@ export interface CredDefPayload {
   orgDid?: string;
 }
 
-export class GetAllCredDefsDto {
+export interface ICredDefs {
   pageSize?: number;
   pageNumber?: number;
   searchByText?: string;
-  sorting?: string;
+  sortField?: string;
   revocable?: boolean;
-  sortByValue?: string;
+  sortBy?: string;
 }
 
-export interface GetAllCredDefsPayload {
-  credDefSearchCriteria: GetAllCredDefsDto,
+export interface ICredDefList {
+  credDefSearchCriteria: ICredDefs,
   user: IUserRequestInterface,
   orgId: string
 }
 
-export interface GetCredDefBySchemaId {
+export interface ICredDefBySchemaId {
   schemaId: string
+}
+
+export interface ICredDefsCount {
+  createDateTime: Date;
+  createdBy: string;
+  credentialDefinitionId: string;
+  tag: string;
+  schemaLedgerId: string;
+  schemaId: string;
+  orgId: string;
+  revocable: boolean;
 }

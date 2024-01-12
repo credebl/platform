@@ -1,10 +1,11 @@
 /* eslint-disable camelcase */
-import { CredDefPayload, GetAllCredDefsDto } from '../interfaces/create-credential-definition.interface';
+import { CredDefPayload, ICredDefs, ICredDefsCount } from '../interfaces/create-credential-definition.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
+import { SortValue } from '@credebl/enum/enum';
 
 @Injectable()
 export class CredentialDefinitionRepository {
@@ -64,16 +65,7 @@ export class CredentialDefinitionRepository {
         }
     }
 
-    async getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, orgId: string): Promise<{
-        createDateTime: Date;
-        createdBy: string;
-        credentialDefinitionId: string;
-        tag: string;
-        schemaLedgerId: string;
-        schemaId: string;
-        orgId: string;
-        revocable: boolean;
-    }[]> {
+    async getAllCredDefs(credDefSearchCriteria: ICredDefs, orgId: string): Promise<ICredDefsCount[]> {
         try {
             const credDefResult = await this.prisma.credential_definition.findMany({
                 where: {
@@ -95,8 +87,9 @@ export class CredentialDefinitionRepository {
                     revocable: true
                 },
                 orderBy: {
-                    [credDefSearchCriteria.sorting]: 'DESC' === credDefSearchCriteria.sortByValue ? 'desc' : 'ASC' === credDefSearchCriteria.sortByValue ? 'asc' : 'desc'
-                },
+                    [credDefSearchCriteria.sortField]: SortValue.ASC === credDefSearchCriteria.sortBy ? 'asc' : 'desc' 
+                  },
+          
                 take: credDefSearchCriteria.pageSize,
                 skip: (credDefSearchCriteria.pageNumber - 1) * credDefSearchCriteria.pageSize
             });
@@ -157,7 +150,7 @@ export class CredentialDefinitionRepository {
 
     async getCredentialDefinitionBySchemaId(schemaId: string): Promise<credential_definition[]> {
         try {
-            return this.prisma.credential_definition.findMany({
+            return await this.prisma.credential_definition.findMany({
                 where: {
                     schemaLedgerId: schemaId
                 }

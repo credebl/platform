@@ -4,10 +4,10 @@ import { Controller, Logger } from '@nestjs/common';
 
 import { CredentialDefinitionService } from './credential-definition.service';
 import { MessagePattern } from '@nestjs/microservices';
-import {  GetAllCredDefsPayload, GetCredDefBySchemaId } from './interfaces/create-credential-definition.interface';
-import { CreateCredDefPayload, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
+import { ICredDefList, CreateCredDefPayload, GetCredDefPayload, ICredDefBySchemaId } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
 import { CredDefSchema } from './interfaces/credential-definition.interface';
+import { ICredDefCount } from '@credebl/common/interfaces/cred-def.interface';
 
 @Controller('credential-definitions')
 export class CredentialDefinitionController {
@@ -25,30 +25,23 @@ export class CredentialDefinitionController {
         return this.credDefService.getCredentialDefinitionById(payload);
     }
 
+ /**
+   * Fetch all credential definitions of provided organization id
+   * @param orgId 
+   * @returns All credential definitions of provided organization id
+   */
     @MessagePattern({ cmd: 'get-all-credential-definitions' })
-    async getAllCredDefs(payload: GetAllCredDefsPayload): Promise<{
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-        nextPage: number;
-        previousPage: number;
-        lastPage: number;
-        data: {
-            createDateTime: Date;
-            createdBy: string;
-            credentialDefinitionId: string;
-            tag: string;
-            schemaLedgerId: string;
-            schemaId: string;
-            orgId: string;
-            revocable: boolean;
-        }[]
-    }> {
+    async getAllCredDefs(payload: ICredDefList): Promise<ICredDefCount> {
         return this.credDefService.getAllCredDefs(payload);
     }
 
+  /**
+   * Get an existing credential definitions by schema Id
+   * @param schemaId 
+   * @returns Credential definitions by schema Id
+   */
     @MessagePattern({ cmd: 'get-all-credential-definitions-by-schema-id' })
-    async getCredentialDefinitionBySchemaId(payload: GetCredDefBySchemaId): Promise<credential_definition[]> {
+    async getCredentialDefinitionBySchemaId(payload: ICredDefBySchemaId): Promise<credential_definition[]> {
         return this.credDefService.getCredentialDefinitionBySchemaId(payload);
     }
 

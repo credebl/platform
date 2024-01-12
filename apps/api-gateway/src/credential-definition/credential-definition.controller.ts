@@ -6,7 +6,7 @@ import { UnauthorizedErrorDto } from 'apps/api-gateway/src/dtos/unauthorized-err
 import { ForbiddenErrorDto } from 'apps/api-gateway/src/dtos/forbidden-error.dto';
 import { User } from '../authz/decorators/user.decorator';
 import { AuthGuard } from '@nestjs/passport';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Response } from 'express';
 import { GetAllCredDefsDto } from './dto/get-all-cred-defs.dto';
@@ -16,6 +16,7 @@ import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { SortFields } from './enum/cred-def.enum';
 
 
 @ApiBearerAuth()
@@ -51,49 +52,48 @@ export class CredentialDefinitionController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
-  @Get('/verifiation/cred-defs/:schemaId')
+  /**
+   * Get an existing credential definitions by schema Id
+   * @param schemaId 
+   * @returns Credential definitions by schema Id
+   */
+  @Get('/verification/cred-defs/:schemaId')
   @ApiOperation({
     summary: 'Get an existing credential definitions by schema Id',
     description: 'Get an existing credential definitions by schema Id'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   async getCredentialDefinitionBySchemaId(
     @Param('schemaId') schemaId: string,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
+
     const credentialsDefinitions = await this.credentialDefinitionService.getCredentialDefinitionBySchemaId(schemaId);
-    const credDefResponse: IResponseType = {
+    const credDefResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.credentialDefinition.success.fetch,
-      data: credentialsDefinitions.response
+      data: credentialsDefinitions
     };
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
+  /**
+   * Fetch all credential definitions of provided organization id
+   * @param orgId 
+   * @returns All credential definitions of provided organization id
+   */
   @Get('/orgs/:orgId/cred-defs')
   @ApiOperation({
-    summary: 'Fetch all credential definitions of provided organization id with pagination',
+    summary: 'Fetch all credential definitions of provided organization id',
     description: 'Fetch all credential definitions from metadata saved in database of provided organization id.'
   })
-  @ApiQuery(
-    { name: 'pageNumber', required: false }
-  )
-  @ApiQuery(
-    { name: 'searchByText', required: false }
-  )
-  @ApiQuery(
-    { name: 'pageSize', required: false }
-  )
-  @ApiQuery(
-    { name: 'sorting', required: false }
-  )
-  @ApiQuery(
-    { name: 'sortByValue', required: false }
-  )
-  @ApiQuery(
-    { name: 'revocable', required: false }
-  )
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiQuery({
+    name: 'sortField',
+    enum: SortFields,
+    required: false
+  })    
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getAllCredDefs(
@@ -101,18 +101,44 @@ export class CredentialDefinitionController {
     @Query() getAllCredDefs: GetAllCredDefsDto,
     @User() user: IUserRequestInterface,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
     const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefs(
       getAllCredDefs,
       user,
       orgId
     );
-    const credDefResponse: IResponseType = {
+    const credDefResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.credentialDefinition.success.fetch,
-      data: credentialsDefinitionDetails.response
+      data: credentialsDefinitionDetails
     };
     return res.status(HttpStatus.OK).json(credDefResponse);
+  }
+
+  /**
+   * 
+   * @param orgId 
+   * @returns All credential definition for bulk opeartion
+   */
+  @Get('/orgs/:orgId/bulk/cred-defs')
+  @ApiOperation({
+    summary: 'Fetch all credential definition for bulk opeartion',
+    description: 'Fetch all credential definition from metadata saved in database for bulk opeartion.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getAllCredDefAndSchemaForBulkOperation(
+    @Param('orgId') orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefAndSchemaForBulkOperation(orgId);
+    const credDefResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.credentialDefinition.success.fetch,
+      data: credentialsDefinitionDetails
+    };
+    return res.status(HttpStatus.CREATED).json(credDefResponse);
   }
 
   @Post('/orgs/:orgId/cred-defs')
@@ -135,27 +161,6 @@ export class CredentialDefinitionController {
     const credDefResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.credentialDefinition.success.create,
-      data: credentialsDefinitionDetails.response
-    };
-    return res.status(HttpStatus.CREATED).json(credDefResponse);
-  }
-
-  @Get('/orgs/:orgId/bulk/cred-defs')
-  @ApiOperation({
-    summary: 'Fetch all credential definition for bulk opeartion',
-    description: 'Fetch all credential definition from metadata saved in database for bulk opeartion.'
-  })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async getAllCredDefAndSchemaForBulkOperation(
-    @Param('orgId') orgId: string,
-    @Res() res: Response
-  ): Promise<object> {
-    const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefAndSchemaForBulkOperation(orgId);
-    const credDefResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.credentialDefinition.success.fetch,
       data: credentialsDefinitionDetails.response
     };
     return res.status(HttpStatus.CREATED).json(credDefResponse);

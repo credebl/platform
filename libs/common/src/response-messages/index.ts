@@ -62,7 +62,8 @@ export const ResponseMessages = {
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
             delete: 'Organization deleted successfully',
-            orgInvitationDeleted: 'Organization invitation deleted successfully'
+            orgInvitationDeleted: 'Organization invitation deleted successfully',
+            orgCredentials: 'Organization credentials created successfully'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -76,7 +77,8 @@ export const ResponseMessages = {
             notFound: 'Organization agent not found',
             orgNotFound: 'Organization not found',
             orgNotMatch: 'Organization does not have access',
-            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status'
+            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
+            credentialsNotUpdate: 'Unable to update organization credentials'
         }
     },
 

@@ -175,8 +175,7 @@ export class OrganizationController {
     required: false
   })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  async getInvitationsByOrgId(@Param('orgId') orgId: string, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<IResponseType> {
-
+  async getInvitationsByOrgId(@Param('orgId') orgId: string, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<IResponseType> {    
     const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
 
     const finalResponse: IResponseType = {
@@ -292,6 +291,29 @@ export class OrganizationController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.create
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * 
+   * @param orgId 
+   * @param res 
+   * @param reqUser 
+   * @returns Organization Client Credentials
+   */
+  @Post('/:orgId/client_credentials')
+  @Roles(OrgRoles.OWNER)
+  @ApiOperation({ summary: 'Create credentials for an organization', description: 'Create client id and secret for an organization' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async createOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<IResponseType> {
+    const orgCredentials = await this.organizationService.createOrgCredentials(orgId, reqUser.id);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.organisation.success.orgCredentials,
+      data: orgCredentials
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

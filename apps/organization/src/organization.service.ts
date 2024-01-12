@@ -25,6 +25,7 @@ import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgCredentials, IOrganization } from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
 export class OrganizationService {
@@ -68,8 +69,6 @@ export class OrganizationService {
 
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
 
-      await this.registerToKeycloak(organizationDetails.name, organizationDetails.orgSlug);
-
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
       
       return organizationDetails;
@@ -79,13 +78,73 @@ export class OrganizationService {
     }
   }
 
-  async registerToKeycloak(orgName: string, orgSlug: string): Promise<void> {
-      const token = await this.clientRegistrationService.getManagementToken();
-      await this.clientRegistrationService.createClient(orgName, orgSlug, token);
-      // console.log(`Keycloak clientDetails:${orgSlug}:`, clientDetails);
+  /**
+   * 
+   * @param orgId 
+   * @returns organization client credentials
+   */
+  async createOrgCredentials(orgId: string): Promise<IOrgCredentials> {
+    try {
 
-      throw new InternalServerErrorException('Keycloak Registration');
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+
+      if (!organizationDetails) {
+        throw new ConflictException(ResponseMessages.organisation.error.orgNotFound);
+      }
+
+      const orgCredentials = await this.registerToKeycloak(organizationDetails.name, organizationDetails.id);
       
+      const {clientId, clientSecret} = orgCredentials;
+
+      const updateOrgData = {
+        clientId,
+        clientSecret: this.maskString(clientSecret)
+      };
+
+      const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
+
+      if (!updatedOrg) {
+        throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate);
+      }
+
+      return orgCredentials;
+    
+    } catch (error) {
+      this.logger.error(`In createOrgCredentials : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Register the organization to keycloak
+   * @param orgName 
+   * @param orgId 
+   * @returns client credentials
+   */
+  async registerToKeycloak(orgName: string, orgId: string): Promise<IOrgCredentials> {
+      const token = await this.clientRegistrationService.getManagementToken();
+      return this.clientRegistrationService.createClient(orgName, orgId, token);      
+  }
+
+
+  /**
+   * Mask string and display last 5 characters
+   * @param inputString 
+   * @returns 
+   */
+  maskString(inputString: string): string {
+    if (5 <= inputString.length) {
+      // Extract the last 5 characters
+      const lastFiveCharacters = inputString.slice(-8);
+
+      // Create a masked string with '*' characters
+      const maskedString = '*'.repeat(inputString.length - 8) + lastFiveCharacters;
+
+      return maskedString;
+    } else {
+      // If the inputString is less than 5 characters, return the original string
+      return inputString;
+    }
   }
 
   /**
@@ -519,6 +578,17 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async getOrgOwner(orgId: string): Promise<IOrganization> {
+    try {
+      const orgDetails = await this.organizationRepository.getOrganizationOwnerDetails(orgId, OrgRoles.OWNER);
+      return orgDetails;
+    } catch (error) {
+      this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 
   async deleteOrganization(orgId: string): Promise<boolean> {
     try {

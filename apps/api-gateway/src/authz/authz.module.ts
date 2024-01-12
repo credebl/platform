@@ -18,6 +18,7 @@ import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';
 import { EcosystemService } from '../ecosystem/ecosystem.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { OrganizationService } from '../organization/organization.service';
 
 @Module({
   imports: [
@@ -47,7 +48,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     CommonService,
     UserService,
     SupabaseService,
-    EcosystemService
+    EcosystemService,
+    OrganizationService
   ],
   exports: [
     PassportModule,

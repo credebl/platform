@@ -17,13 +17,11 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
-import { GetAllOrganizationsDto } from './dtos/get-all-organizations.dto';
-import { GetAllSentInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
-import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
 import { ImageServiceService } from '@credebl/image-service';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -78,9 +76,9 @@ export class OrganizationController {
     type: String,
     required: false
   })
-  async get(@Query() getAllUsersDto: GetAllOrganizationsDto, @Res() res: Response): Promise<Response> {
+  async get(@Query() paginationDto: PaginationDto, @Res() res: Response): Promise<Response> {
 
-    const users = await this.organizationService.getPublicOrganizations(getAllUsersDto);
+    const users = await this.organizationService.getPublicOrganizations(paginationDto);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrganizations,
@@ -194,9 +192,9 @@ export class OrganizationController {
     required: false
   })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  async getInvitationsByOrgId(@Param('orgId') orgId: string, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<Response> {
+  async getInvitationsByOrgId(@Param('orgId') orgId: string, @Query() paginationDto: PaginationDto, @Res() res: Response): Promise<Response> {
 
-    const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
+    const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, paginationDto);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -230,9 +228,9 @@ export class OrganizationController {
     type: String,
     required: false
   })
-  async getOrganizations(@Query() getAllOrgsDto: GetAllOrganizationsDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async getOrganizations(@Query() paginationDto: PaginationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
-    const getOrganizations = await this.organizationService.getOrganizations(getAllOrgsDto, reqUser.id);
+    const getOrganizations = await this.organizationService.getOrganizations(paginationDto, reqUser.id);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -290,8 +288,8 @@ export class OrganizationController {
     type: String,
     required: false
   })
-  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() getAllUsersDto: GetAllUsersDto, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    const users = await this.organizationService.getOrgUsers(orgId, getAllUsersDto);
+  async getOrganizationUsers(@User() user: IUserRequestInterface, @Query() paginationDto: PaginationDto, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+    const users = await this.organizationService.getOrgUsers(orgId, paginationDto);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchUsers,

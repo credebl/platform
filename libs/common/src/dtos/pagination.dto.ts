@@ -4,7 +4,7 @@ import { toNumber } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, Min } from 'class-validator';
 
-export class GetAllOrganizationsDto {
+export class PaginationDto {
     @ApiProperty({ required: false, default: 1  })
     @IsOptional()
     @Transform(({ value }) => toNumber(value))

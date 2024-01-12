@@ -58,9 +58,9 @@ export class SendNotificationDto {
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))
-    @IsNotEmpty({ message: '@type is required.' })
-    @IsString({ message: '@type must be in string format.' })
-    '@type': string;
+    @IsNotEmpty({ message: 'messageType is required.' })
+    @IsString({ message: 'messageType must be in string format.' })
+    messageType: string;
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))
@@ -79,7 +79,7 @@ export class GetNotificationDto {
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))
-    @IsNotEmpty({ message: '@type is required.' })
-    @IsString({ message: '@type must be in string format.' })
-    '@type': string;
+    @IsNotEmpty({ message: 'messageType is required.' })
+    @IsString({ message: 'messageType must be in string format.' })
+    messageType: string;
 }

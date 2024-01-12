@@ -4,7 +4,7 @@ import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthoriz
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import { GetNotificationDto, RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
+import { GetNotificationDto, RegisterOrgWebhhookEndpointDto } from './dtos/notification.dto';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -64,11 +64,12 @@ export class NotificationController {
     })
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     async sendNotification(
-        @Body() sendNotificationDto: SendNotificationDto,
+        @Body() notificationRequestBody: string,
         @Res() res: Response
     ): Promise<Response> {
+
         const sendNotification = await this.noificatonService.sendNotification(
-            sendNotificationDto
+            notificationRequestBody
         );
 
         const finalResponse: IResponse = {

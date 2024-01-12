@@ -13,11 +13,11 @@ export interface IWebhookEndpoint {
 
 export interface ISendNotification {
     fcmToken: string;
-    '@type': string;
+    messageType: string;
     clientCode: string;
 }
 
 export interface IGetNotification {
     fcmToken: string;
-    '@type': string;
+    messageType: string;
 }

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { INotification, IWebhookEndpoint, ISendNotification, IGetNotification } from '../interfaces/notification.interfaces';
+import { INotification, IWebhookEndpoint, IGetNotification } from '../interfaces/notification.interfaces';
 import { RpcException } from '@nestjs/microservices';
 import { NotificationRepository } from './notification.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -38,9 +38,10 @@ export class NotificationService {
    * @param payload 
    * @returns Get notification details
    */
-  async sendNotification(payload: ISendNotification): Promise<object> {
+  async sendNotification(payload: string): Promise<object> {
     try {
-      const orgId = payload?.clientCode;
+      const notificationPayload = JSON.parse(payload);
+      const orgId = notificationPayload?.clientCode;
 
       /**
        * Fetch the webhook endpoint by orgId
@@ -48,8 +49,8 @@ export class NotificationService {
       const getWebhookUrl = await this.notificationRepository.getOrgWebhookEndpoint(orgId);
 
       const webhookPayload = {
-        fcmToken: payload.fcmToken,
-        '@type': payload['@type']
+        fcmToken: notificationPayload?.fcmToken,
+        messageType: notificationPayload?.messageType
       };
 
       /**

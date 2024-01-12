@@ -416,7 +416,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async deleteOrganizationInvitation(
     @Param('orgId') orgId: string, 
-    @Param('invitationId') invitationId: string, 
+    @Param('invitationId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidInvitationId); }})) invitationId: string, 
     @Res() res: Response
     ): Promise<Response> {
     await this.organizationService.deleteOrganizationInvitation(orgId, invitationId);

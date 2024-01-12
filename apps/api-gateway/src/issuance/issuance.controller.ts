@@ -5,7 +5,6 @@ import {
   Controller,
   Post,
   Body,
-  Logger,
   UseGuards,
   BadRequestException,
   HttpStatus,
@@ -75,7 +74,6 @@ export class IssuanceController {
     private readonly awsService: AwsService,
     private readonly commonService: CommonService
   ) {}
-  private readonly logger = new Logger('IssuanceController');
   private readonly PAGE: number = 1;
 
   /**

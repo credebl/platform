@@ -28,10 +28,8 @@ export class CreateEcosystemDto {
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'tag must be in string format.' })
     @Type(() => String)
-    tags? = ' ';
+    tags?: string;
   
-    @ApiPropertyOptional()
-
     userId: string;
   
     @ApiPropertyOptional()

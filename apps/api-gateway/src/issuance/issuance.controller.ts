@@ -33,7 +33,15 @@ import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
-import { IssuanceDto, IssueCredentialDto, OutOfBandCredentialDto } from './dtos/issuance.dto';
+import {
+  ClientDetails,
+  FileParameter,
+  IssuanceDto,
+  IssueCredentialDto,
+  OOBCredentialDtoWithEmail,
+  OOBIssueCredentialDto,
+  PreviewFileDetails
+} from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -518,15 +526,6 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     issueCredentialDto.orgId = orgId;
-    const attrData = issueCredentialDto.attributes;
-
-    attrData.forEach((data) => {
-      if ('' === data['name'].trim()) {
-        throw new BadRequestException(`Name must be required`);
-      } else if ('' === data['value'].trim()) {
-        throw new BadRequestException(`Value must be required at position of ${data['name']}`);
-      }
-    });
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
 
@@ -549,8 +548,8 @@ export class IssuanceController {
   @Post('/orgs/:orgId/credentials/oob')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
-    summary: `Create out-of-band credential offer`,
-    description: `Create out-of-band credential offer`
+    summary: `Send out-of-band credential offer via email`,
+    description: `Sends an out-of-band credential offer on provided email`
   })
   @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
@@ -558,12 +557,11 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
-    @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
+    @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
-   
     const credOffer = outOfBandCredentialDto?.credentialOffer || [];
     if (credOffer.every(item => Boolean(!item?.emailId || '' === item?.emailId.trim()))) {
       throw new BadRequestException(ResponseMessages.issuance.error.emailIdNotPresent);
@@ -608,6 +606,36 @@ export class IssuanceController {
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
 
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.create,
+      data: getCredentialDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Description: Issuer create out-of-band credential
+   * @param user
+   * @param issueCredentialDto
+   */
+  @Post('/orgs/:orgId/credentials/oob/offer')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: `Create out-of-band credential offer`,
+    description: `Creates an out-of-band credential offer`
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  async createOOBCredentialOffer(
+    @Param('orgId') orgId: string,
+    @Body() issueCredentialDto: OOBIssueCredentialDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    issueCredentialDto.orgId = orgId;
+    const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
+
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,

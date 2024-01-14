@@ -30,7 +30,7 @@ import {
 } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult, IEcosystemInvitation } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -256,7 +256,7 @@ export class EcosystemService {
     pageNumber: number,
     pageSize: number,
     search: string
-  ): Promise<object> {
+  ): Promise<IEcosystemInvitation> {
     try {
       const query = {
         AND: [{ email: userEmail }, { status: { contains: search, mode: 'insensitive' } }]
@@ -791,7 +791,7 @@ export class EcosystemService {
     }
   }
 
-  async getInvitationsByEcosystemId(payload: FetchInvitationsPayload): Promise<object> {
+  async getInvitationsByEcosystemId(payload: FetchInvitationsPayload): Promise<IEcosystemInvitation> {
     try {
       const { ecosystemId, pageNumber, pageSize, search } = payload;
       const ecosystemInvitations = await this.ecosystemRepository.getInvitationsByEcosystemId(

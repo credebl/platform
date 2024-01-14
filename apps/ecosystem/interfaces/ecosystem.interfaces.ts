@@ -300,3 +300,77 @@ export interface EcoInvitationsPagination {
   totalPages: number;
 }
 
+export interface TransactionPayload {
+  endorsementId: string;
+  ecosystemId: string;
+  ecosystemLeadAgentEndPoint?: string;
+  orgId?: string;
+}
+
+export interface IEcosystemDashboard {
+    ecosystem: IEcosystemDetails[];
+    membersCount: number;
+    endorsementsCount: number;
+    ecosystemLead: EcosystemLeadDetails;
+  };
+
+ interface IEcosystemDetails {
+  id: string;
+  name: string;
+  description: string;
+  tags: string; 
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: string[];
+}
+
+interface EcosystemLeadDetails {
+  role: string;
+  orgName: string;
+  config: IEcosystemConfigDetails[];
+}
+ interface IEcosystemConfigDetails {
+  id: string;
+  key: string;
+  value: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+}
+
+export interface IEditEcosystem {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: Prisma.JsonValue;
+}
+
+export interface ICreateEcosystem {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: Prisma.JsonValue;
+}

@@ -27,7 +27,7 @@ export class PlatformController {
         description: 'Get all schemas from platform.'
     })
     @UseGuards(AuthGuard('jwt'))
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getAllSchema(
         @Query() getAllSchemaDto: GetAllSchemaByPlatformDto,
         @Res() res: Response,
@@ -58,7 +58,7 @@ export class PlatformController {
         description: 'Get all ledgers from platform.'
     })
     @UseGuards(AuthGuard('jwt'))
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getAllLedgers(
         @Res() res: Response
     ): Promise<object> {
@@ -79,7 +79,7 @@ export class PlatformController {
         description: 'Get network url from platform.'
     })
     @UseGuards(AuthGuard('jwt'))
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getNetwrkUrl(
         @Param('indyNamespace') indyNamespace: string, 
         @Res() res: Response

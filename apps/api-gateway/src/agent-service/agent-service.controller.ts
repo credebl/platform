@@ -38,8 +38,8 @@ const seedLength = 32;
 @Controller()
 @ApiTags('agents')
 @ApiBearerAuth()
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class AgentController {
   constructor(private readonly agentService: AgentService) { }
   private readonly logger = new Logger();
@@ -88,7 +88,7 @@ export class AgentController {
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   async agentSpinup(
     @Param('orgId') orgId: string,
     @Body() agentSpinupDto: AgentSpinupDto,
@@ -144,7 +144,7 @@ export class AgentController {
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   async createTenant(
     @Param('orgId') orgId: string,
     @Body() createTenantDto: CreateTenantDto,

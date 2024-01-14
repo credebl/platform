@@ -1,4 +1,4 @@
-import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
 import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
@@ -45,6 +45,7 @@ export class OrganizationController {
 
   @Get('/profile/:orgId')
   @ApiOperation({ summary: 'Organization Profile', description: 'Get organization profile details' })
+  @ApiExcludeEndpoint()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getOrgPofile(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }}))
   orgId: string, @Res() res: Response): Promise<Response> {

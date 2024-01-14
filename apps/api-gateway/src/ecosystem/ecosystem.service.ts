@@ -8,6 +8,7 @@ import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
+import { IEditEcosystem, IEcosystemDashboard, ICreateEcosystem, EcosystemDetailsResult } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -20,9 +21,9 @@ export class EcosystemService extends BaseService {
    * @param createEcosystemDto
    * @returns Ecosystem creation success
    */
-  async createEcosystem(createEcosystemDto: CreateEcosystemDto): Promise<object> {
+  async createEcosystem(createEcosystemDto: CreateEcosystemDto): Promise<ICreateEcosystem> {
     const payload = { createEcosystemDto };
-    return this.sendNats(this.serviceProxy, 'create-ecosystem', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'create-ecosystem', payload);
   }
 
   /**
@@ -30,9 +31,9 @@ export class EcosystemService extends BaseService {
    * @param editEcosystemDto
    * @returns Ecosystem creation success
    */
-  async editEcosystem(editEcosystemDto: EditEcosystemDto, ecosystemId: string): Promise<object> {
+  async editEcosystem(editEcosystemDto: EditEcosystemDto, ecosystemId: string): Promise<IEditEcosystem> {
     const payload = { editEcosystemDto, ecosystemId };
-    return this.sendNats(this.serviceProxy, 'edit-ecosystem', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'edit-ecosystem', payload);
   }
 
   /**
@@ -40,9 +41,9 @@ export class EcosystemService extends BaseService {
    *
    * @returns Get all ecosystems
    */
-  async getAllEcosystem(orgId: string): Promise<{ response: object }> {
+  async getAllEcosystem(orgId: string): Promise<EcosystemDetailsResult> {
     const payload = { orgId };
-    return this.sendNats(this.serviceProxy, 'get-all-ecosystem', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-all-ecosystem', payload);
   }
 
   /**
@@ -50,9 +51,9 @@ export class EcosystemService extends BaseService {
    *
    * @returns Get ecosystems dashboard card counts
    */
-  async getEcosystemDashboardDetails(ecosystemId: string, orgId: string): Promise<{ response: object }> {
+  async getEcosystemDashboardDetails(ecosystemId: string, orgId: string): Promise<IEcosystemDashboard> {
     const payload = { ecosystemId, orgId };
-    return this.sendNats(this.serviceProxy, 'get-ecosystem-dashboard-details', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-ecosystem-dashboard-details', payload);
   }
 
   /**

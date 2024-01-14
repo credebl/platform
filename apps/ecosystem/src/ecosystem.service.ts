@@ -28,18 +28,7 @@ import {
 } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import {
-  CreateEcosystem,
-  CredDefMessage,
-  RequestCredDeffEndorsement,
-  RequestSchemaEndorsement,
-  SaveSchema,
-  SchemaMessage,
-  SignedTransactionMessage,
-  TransactionPayload,
-  saveCredDef,
-  submitTransactionPayload
-} from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -66,7 +55,9 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<object> {
+  async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<ICreateEcosystem> {
+    try {
+
     const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
 
     if (ecosystemExist) {
@@ -103,8 +94,13 @@ export class EcosystemService {
     if (!createEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
     }
+    
     return createEcosystem;
+  } catch (error) {
+    this.logger.error(`createEcosystem: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
   }
+}
 
   /**
    *
@@ -113,13 +109,20 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async editEcosystem(editEcosystemDto: CreateEcosystem, ecosystemId: string): Promise<object> {
+  async editEcosystem(editEcosystemDto: CreateEcosystem, ecosystemId: string): Promise<IEditEcosystem> {
+    try {
     const { name, description, tags, logo, autoEndorsement, userId } = editEcosystemDto;
 
     const updateData: CreateEcosystem = {
       lastChangedBy: userId
     };
 
+    const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
+
+    if (ecosystemExist) {
+      throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+    }
+    
     if (name) { updateData.name = name; }
 
     if (description) { updateData.description = description; }
@@ -134,8 +137,14 @@ export class EcosystemService {
     if (!editEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.update);
     }
+
     return editEcosystem;
+  } catch (error) {
+      this.logger.error(`In update ecosystem : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
+  
 
   /**
    *
@@ -144,12 +153,13 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async getAllEcosystem(payload: { orgId: string }): Promise<object> {
+  async getAllEcosystem(payload: { orgId: string }): Promise<EcosystemDetailsResult> {
     const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails(payload.orgId);
 
     if (!getAllEcosystemDetails) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.update);
     }
+    
     return getAllEcosystemDetails;
   }
 
@@ -158,7 +168,7 @@ export class EcosystemService {
    *
    * @returns ecosystem dashboard details
    */
-  async getEcosystemDashboardDetails(ecosystemId: string): Promise<object> {
+  async getEcosystemDashboardDetails(ecosystemId: string): Promise<IEcosystemDashboard> {
     try {
       const endorseMemberCount = await this.ecosystemRepository.getEcosystemDashboardDetails(ecosystemId);
 
@@ -171,7 +181,7 @@ export class EcosystemService {
 
       const ecosystemDetails = await this.ecosystemRepository.fetchEcosystemOrg(query);
 
-      const dashboardDetails = {
+      const dashboardDetails: IEcosystemDashboard = {
         ecosystem: ecosystemDetails['ecosystem'],
         membersCount: endorseMemberCount.membersCount,
         endorsementsCount: endorseMemberCount.endorsementsCount,
@@ -181,7 +191,7 @@ export class EcosystemService {
           config: endorseMemberCount.ecosystemConfigData
         }
       };
-
+      
       return dashboardDetails;
     } catch (error) {
       this.logger.error(`In ecosystem dashboard details : ${JSON.stringify(error)}`);

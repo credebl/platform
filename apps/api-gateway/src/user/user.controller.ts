@@ -54,8 +54,8 @@ import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
 @ApiTags('users')
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class UserController {
   constructor(
     private readonly userService: UserService,

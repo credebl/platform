@@ -1,7 +1,7 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 
 @ApiExtraModels()
@@ -27,10 +27,9 @@ export class CreateEcosystemDto {
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'tag must be in string format.' })
-    tags? = '';
+    @Type(() => String)
+    tags?: string;
   
-    @ApiPropertyOptional()
-    
     userId: string;
   
     @ApiPropertyOptional()

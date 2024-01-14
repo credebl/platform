@@ -28,7 +28,7 @@ export class BulkSendInvitationDto {
         example: [
             {
                 email: 'awqx@getnada.com',
-                orgRoleId: ['1,2,3']
+                orgRoleId: [1, 2, 3]
             }
         ]
     })

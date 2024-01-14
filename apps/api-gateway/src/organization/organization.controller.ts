@@ -43,6 +43,7 @@ export class OrganizationController {
 
   @Get('/profile/:orgId')
   @ApiOperation({ summary: 'Organization Profile', description: 'Get organization profile details' })
+  @ApiExcludeEndpoint()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getOrgPofile(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }}))
   orgId: string, @Res() res: Response): Promise<Response> {

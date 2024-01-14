@@ -88,7 +88,9 @@ export const ResponseMessages = {
             invalidOrgId:'Invalid format for orgId',
             orgIdIsRequired:'OrgId is required',
             invalidUserId:'Invalid format of userId',
-            invalidInvitationId:'Invalid format for invitaion id'
+            invalidInvitationId:'Invalid format for invitaion id',
+            ecosystemIdIsRequired:'ecosystemId is required'
+            
         }
     },
 

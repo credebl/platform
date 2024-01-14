@@ -86,7 +86,8 @@ export const ResponseMessages = {
             orgNotMatch: 'Organization does not have access',
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
             invalidOrgId:'Invalid format for orgId',
-            orgIdIsRequired:'OrgId is required'
+            orgIdIsRequired:'OrgId is required',
+            ecosystemIdIsRequired:'ecosystemId is required'
             
         }
     },

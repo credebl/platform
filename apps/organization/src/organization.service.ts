@@ -23,8 +23,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
-import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
 @Injectable()
 export class OrganizationService {
   constructor(

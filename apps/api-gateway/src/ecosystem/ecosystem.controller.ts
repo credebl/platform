@@ -35,8 +35,8 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
 @ApiTags('ecosystem')
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class EcosystemController {
   constructor(
     private readonly ecosystemService: EcosystemService
@@ -44,7 +44,7 @@ export class EcosystemController {
 
   @Get('/:ecosystemId/:orgId/endorsement-transactions')
   @ApiOperation({ summary: 'Get all endorsement transactions', description: 'Get all endorsement transactions' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
@@ -82,7 +82,7 @@ export class EcosystemController {
 
   @Get('/:ecosystemId/:orgId/schemas')
   @ApiOperation({ summary: 'Get all ecosystem schemas', description: 'Get all ecosystem schemas' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
@@ -167,7 +167,7 @@ export class EcosystemController {
 
   @Get('/:orgId/users/invitations')
   @ApiOperation({ summary: 'Get received ecosystem invitations', description: 'Get received ecosystem invitations' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiBearerAuth()
@@ -211,7 +211,7 @@ export class EcosystemController {
 
   @Get('/:ecosystemId/:orgId/invitations')
   @ApiOperation({ summary: 'Get all sent invitations', description: 'Get all sent invitations' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
@@ -259,7 +259,7 @@ export class EcosystemController {
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get ecosystem members list', description: 'Get ecosystem members list.' })
   @ApiQuery({
     name: 'pageNumber',
@@ -531,7 +531,7 @@ export class EcosystemController {
 
   @Delete('/:ecosystemId/:orgId/invitations/:invitationId')
   @ApiOperation({ summary: 'Delete ecosystem pending invitations', description: 'Delete ecosystem pending invitations' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER)

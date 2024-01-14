@@ -67,8 +67,8 @@ import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.d
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
@@ -136,7 +136,7 @@ export class IssuanceController {
     summary: `Fetch credentials by credentialRecordId`,
     description: `Fetch credentials credentialRecordId`
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
   async getIssueCredentialsbyCredentialRecordId(
@@ -160,8 +160,8 @@ export class IssuanceController {
   }
 
   @Get('/orgs/:orgId/:credentialDefinitionId/download')
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   @Header('Content-Disposition', 'attachment; filename="schema.csv"')
   @Header('Content-Type', 'application/csv')
   @ApiOperation({
@@ -192,7 +192,7 @@ export class IssuanceController {
     summary: 'Upload file for bulk issuance',
     description: 'Upload file for bulk issuance.'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,
     description: 'Unauthorized',
@@ -259,7 +259,7 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,
     description: 'Unauthorized',
@@ -318,7 +318,7 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,
     description: 'Unauthorized',
@@ -354,7 +354,7 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,
     description: 'Unauthorized',
@@ -412,7 +412,7 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,
     description: 'Unauthorized',
@@ -471,7 +471,7 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: 401,
     description: 'Unauthorized',
@@ -518,7 +518,7 @@ export class IssuanceController {
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
     @Param('orgId') orgId: string,
@@ -551,7 +551,7 @@ export class IssuanceController {
     summary: `Send out-of-band credential offer via email`,
     description: `Sends an out-of-band credential offer on provided email`
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
@@ -627,7 +627,7 @@ export class IssuanceController {
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   async createOOBCredentialOffer(
     @Param('orgId') orgId: string,
     @Body() issueCredentialDto: OOBIssueCredentialDto,

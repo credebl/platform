@@ -86,6 +86,8 @@ export const ResponseMessages = {
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
             invalidOrgId:'Invalid format for orgId',
             orgIdIsRequired:'OrgId is required',
+            invalidUserId:'Invalid format of userId',
+            invalidInvitationId:'Invalid format for invitaion id',
             ecosystemIdIsRequired:'ecosystemId is required'
             
         }

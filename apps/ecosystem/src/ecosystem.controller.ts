@@ -8,8 +8,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { IEditEcosystem, IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
-import { ecosystem } from '@prisma/client';
+import { IEditEcosystem, IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, ICreateEcosystem, EcosystemDetailsResult } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {
@@ -23,7 +22,7 @@ export class EcosystemController {
    */
 
   @MessagePattern({ cmd: 'create-ecosystem' })
-  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<ecosystem> {
+  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<ICreateEcosystem> {
     return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
   }
 
@@ -43,7 +42,7 @@ export class EcosystemController {
    * @returns Get all ecosystem details
    */
   @MessagePattern({ cmd: 'get-all-ecosystem' })
-  async getAllEcosystems(@Body() payload: { orgId: string }): Promise<object> {
+  async getAllEcosystems(@Body() payload: { orgId: string }): Promise<EcosystemDetailsResult> {
     return this.ecosystemService.getAllEcosystem(payload);
   }
 

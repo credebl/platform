@@ -30,11 +30,11 @@ import {
 } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
-import { credential_definition, ecosystem, org_agents, platform_config, schema, user } from '@prisma/client';
+import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
 // import { CommonService } from '@credebl/common/common.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -58,7 +58,7 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<ecosystem> {
+  async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<ICreateEcosystem> {
     try {
 
     const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
@@ -135,12 +135,19 @@ export class EcosystemService {
 
   // eslint-disable-next-line camelcase
   async editEcosystem(editEcosystemDto: CreateEcosystem, ecosystemId: string): Promise<IEditEcosystem> {
+    try {
     const { name, description, tags, logo, autoEndorsement, userId } = editEcosystemDto;
 
     const updateData: CreateEcosystem = {
       lastChangedBy: userId
     };
 
+    const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
+
+    if (ecosystemExist) {
+      throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+    }
+    
     if (name) { updateData.name = name; }
 
     if (description) { updateData.description = description; }
@@ -157,7 +164,12 @@ export class EcosystemService {
     }
 
     return editEcosystem;
+  } catch (error) {
+      this.logger.error(`In update ecosystem : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
+  
 
   /**
    *
@@ -166,7 +178,7 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async getAllEcosystem(payload: { orgId: string }): Promise<object> {
+  async getAllEcosystem(payload: { orgId: string }): Promise<EcosystemDetailsResult> {
     const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails(payload.orgId);
 
     if (!getAllEcosystemDetails) {

@@ -12,8 +12,7 @@ import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
-import { ecosystem } from '@prisma/client';
-import { IEditEcosystem, IEcosystemDashboard } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEditEcosystem, IEcosystemDashboard, ICreateEcosystem, EcosystemDetailsResult } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -26,7 +25,7 @@ export class EcosystemService extends BaseService {
    * @param createEcosystemDto
    * @returns Ecosystem creation success
    */
-  async createEcosystem(createEcosystemDto: CreateEcosystemDto): Promise<ecosystem> {
+  async createEcosystem(createEcosystemDto: CreateEcosystemDto): Promise<ICreateEcosystem> {
     const payload = { createEcosystemDto };
     return this.sendNatsMessage(this.serviceProxy, 'create-ecosystem', payload);
   }
@@ -46,7 +45,7 @@ export class EcosystemService extends BaseService {
    *
    * @returns Get all ecosystems
    */
-  async getAllEcosystem(orgId: string): Promise<object> {
+  async getAllEcosystem(orgId: string): Promise<EcosystemDetailsResult> {
     const payload = { orgId };
     return this.sendNatsMessage(this.serviceProxy, 'get-all-ecosystem', payload);
   }

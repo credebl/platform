@@ -359,3 +359,18 @@ export interface IEditEcosystem {
   autoEndorsement: boolean;
   ledgers: Prisma.JsonValue;
 }
+
+export interface ICreateEcosystem {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: Prisma.JsonValue;
+}

@@ -13,8 +13,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
-import { IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
 export class OrganizationRepository {
@@ -150,7 +149,7 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -473,7 +472,7 @@ export class OrganizationRepository {
       const totalCount = result[1];
       const totalPages = Math.ceil(totalCount / pageSize);
 
-      return { totalPages, organizations };
+      return { totalCount, totalPages, organizations };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

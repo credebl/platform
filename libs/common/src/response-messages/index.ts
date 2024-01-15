@@ -226,7 +226,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            createOOB: 'Out of band credentials offer created successfully',
+            createOOB: 'Out-of-band credentials offer created successfully',
             fetch: 'Issued Credentials details fetched successfully',
             importCSV: 'File imported sucessfully',
             previewCSV: 'File details fetched sucessfully',
@@ -242,7 +242,7 @@ export const ResponseMessages = {
             notFound: 'History not found',
             credentialOfferNotFound: 'Credential offer not found',
             invitationNotFound: 'Invitation not found',
-            unableToCreateOOBOffer: 'Unable to create out of band credential offer',
+            unableToCreateOOBOffer: 'Unable to create out-of-band credential offer',
             platformConfigNotFound: 'Platform config details not found',
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',

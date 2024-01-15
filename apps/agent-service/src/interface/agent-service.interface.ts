@@ -84,26 +84,6 @@ export interface ITenantCredDef {
     agentEndPoint?: string;
 }
 
-export interface ITenantCredDefDto {
-    tag: string;
-    schemaId: string;
-    issuerId: string;
-}
-
-export interface IGetCredDefAgentRedirection {
-    credentialDefinitionId?: string;
-    tenantId?: string;
-    payload?: IGetCredDefFromTenantPayload;
-    apiKey?: string;
-    agentEndPoint?: string;
-    agentType?: string;
-    method?: string;
-}
-
-export interface IGetCredDefFromTenantPayload {
-    credentialDefinitionId: string;
-}
-
 export interface IWalletProvision {
     orgId: string;
     externalIp: string;
@@ -202,18 +182,6 @@ export interface IOrgAgentInterface {
     walletName: string;
     agentsTypeId: string;
     orgId: string;
-}
-
-export interface ITenantCredDef {
-    tenantId?: string;
-    tag?: string;
-    schemaId?: string;
-    issuerId?: string;
-    payload?: ITenantCredDef;
-    method?: string;
-    agentType?: string;
-    apiKey?: string;
-    agentEndPoint?: string;
 }
 
 export interface ITenantCredDefDto {

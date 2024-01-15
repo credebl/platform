@@ -191,6 +191,7 @@ export const ResponseMessages = {
     connection: {
         success: {
             create: 'Connection created successfully',
+            receivenvitation: 'Invitation received successfully',
             fetchConnection: 'Connection details fetched successfully',
             fetch: 'Connections details fetched successfully'
         },

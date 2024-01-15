@@ -15,7 +15,7 @@ export interface IAgentSpinupDto {
     tenant?: boolean;
     ledgerName?: string[];
     platformAdminEmail?: string;
-    apiKey?:string;
+    apiKey?: string;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -123,7 +123,7 @@ export interface IWalletProvision {
     afjVersion: string;
     protocol: string;
     tenant: boolean;
-    apiKey?:string;
+    apiKey?: string;
 }
 
 export interface IPlatformConfigDto {
@@ -354,7 +354,53 @@ export interface IOrgAgentsResponse {
     org_agents: IOrgAgentEndPoint[];
 }
 
+export interface IAcceptCredentials {
+    credentialRecordId: string;
+}
 
 export interface IStoreAgent {
     id: string;
+}
+
+export interface IReceiveInvitationUrl {
+    alias?: string;
+    label?: string;
+    imageUrl?: string;
+    autoAcceptConnection?: boolean;
+    autoAcceptInvitation?: boolean;
+    reuseConnection?: boolean;
+    acceptInvitationTimeoutMs?: number;
+    invitationUrl: string;
+}
+
+interface Service {
+    id: string;
+    serviceEndpoint: string;
+    type: string;
+    recipientKeys: string[];
+    routingKeys: string[];
+    accept: string[];
+}
+
+interface Invitation {
+    '@id': string;
+    '@type': string;
+    label: string;
+    goalCode: string;
+    goal: string;
+    accept: string[];
+    handshake_protocols: string[];
+    services: (Service | string)[];
+    imageUrl?: string;
+}
+
+export interface IReceiveInvitation {
+    alias?: string;
+    label?: string;
+    imageUrl?: string;
+    autoAcceptConnection?: boolean;
+    autoAcceptInvitation?: boolean;
+    reuseConnection?: boolean;
+    acceptInvitationTimeoutMs?: number;
+    invitation: Invitation;
 }

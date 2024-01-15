@@ -2,8 +2,8 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
-import { IUserRequestInterface } from './interfaces';
+import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
+import { IReceiveInvitationResponse, IUserRequestInterface } from './interfaces';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 
@@ -69,5 +69,23 @@ export class ConnectionService extends BaseService {
   ): Promise<IConnectionDetailsById> {
     const payload = { user, connectionId, orgId };
     return this.sendNatsMessage(this.connectionServiceProxy, 'get-connection-details-by-connectionId', payload);
+  }
+
+  receiveInvitationUrl(
+    receiveInvitationUrl: ReceiveInvitationUrlDto,
+    orgId: string,
+    user: IUserRequestInterface
+  ): Promise<IReceiveInvitationResponse> {
+    const payload = { user, receiveInvitationUrl, orgId };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation-url', payload);
+  }
+
+  receiveInvitation(
+    receiveInvitation: ReceiveInvitationDto,
+    orgId: string,
+    user: IUserRequestInterface
+  ): Promise<IReceiveInvitationResponse> {
+    const payload = { user, receiveInvitation, orgId };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation', payload);
   }
 }

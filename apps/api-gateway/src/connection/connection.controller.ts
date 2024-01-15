@@ -7,7 +7,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ConnectionService } from './connection.service';
-import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
+import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -132,6 +132,48 @@ export class ConnectionController {
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
+    }
+    
+    @Post('/orgs/:orgId/receive-invitation-url')
+    @ApiOperation({ summary: 'Receive Invitation URL', description: 'Receive Invitation URL' })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    async receiveInvitationUrl(
+        @Param('orgId') orgId: string,
+        @Body() receiveInvitationUrl: ReceiveInvitationUrlDto,
+        @User() user: IUserRequestInterface,
+        @Res() res: Response
+    ): Promise<Response> {
+
+        const connectionData = await this.connectionService.receiveInvitationUrl(receiveInvitationUrl, orgId, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.connection.success.receivenvitation,
+            data: connectionData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+    @Post('/orgs/:orgId/receive-invitation')
+    @ApiOperation({ summary: 'Receive Invitation', description: 'Receive Invitation' })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    async receiveInvitation(
+        @Param('orgId') orgId: string,
+        @Body() receiveInvitation: ReceiveInvitationDto,
+        @User() user: IUserRequestInterface,
+        @Res() res: Response
+    ): Promise<Response> {
+
+        const connectionData = await this.connectionService.receiveInvitation(receiveInvitation, orgId, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.connection.success.receivenvitation,
+            data: connectionData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
     /**

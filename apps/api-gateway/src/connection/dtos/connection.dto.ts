@@ -1,17 +1,18 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class CreateConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString({ message: 'alias must be a string' }) 
+    @IsString({ message: 'alias must be a string' })
     @IsNotEmpty({ message: 'please provide valid alias' })
     alias: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString({ message: 'label must be a string' }) 
+    @IsString({ message: 'label must be a string' })
     @IsNotEmpty({ message: 'please provide valid label' })
     label: string;
 
@@ -55,7 +56,7 @@ export class ConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     theirLabel: string;
-    
+
     @ApiPropertyOptional()
     @IsOptional()
     state: string;
@@ -67,7 +68,7 @@ export class ConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     autoAcceptConnection: boolean;
-    
+
     @ApiPropertyOptional()
     @IsOptional()
     threadId: string;
@@ -75,16 +76,174 @@ export class ConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     protocol: string;
-    
+
     @ApiPropertyOptional()
     @IsOptional()
     outOfBandId: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    updatedAt: string;   
+    updatedAt: string;
 
     @ApiPropertyOptional()
     @IsOptional()
     contextCorrelationId: string;
+}
+
+export class ReceiveInvitationUrlDto {
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'alias must be a string' })
+    @IsNotEmpty({ message: 'please provide valid alias' })
+    alias: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'label must be a string' })
+    @IsNotEmpty({ message: 'please provide valid label' })
+    label: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'imageUrl must be a string' })
+    @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    imageUrl: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsBoolean({ message: 'autoAcceptConnection must be a boolean' })
+    @IsNotEmpty({ message: 'please provide valid autoAcceptConnection' })
+    autoAcceptConnection: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsBoolean({ message: 'autoAcceptInvitation must be a boolean' })
+    @IsNotEmpty({ message: 'please provide valid autoAcceptInvitation' })
+    autoAcceptInvitation: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsBoolean({ message: 'reuseConnection must be a boolean' })
+    @IsNotEmpty({ message: 'please provide valid reuseConnection' })
+    reuseConnection: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNumber()
+    @IsNotEmpty({ message: 'please provide valid acceptInvitationTimeoutMs' })
+    acceptInvitationTimeoutMs: number;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString({ message: 'invitationUrl must be a string' })
+    @IsNotEmpty({ message: 'please provide valid invitationUrl' })
+    invitationUrl: string;
+}
+
+
+class ServiceDto {
+    @IsString()
+    id: string;
+
+    @IsString()
+    serviceEndpoint: string;
+
+    @IsString()
+    type: string;
+
+    @IsString({ each: true })
+    recipientKeys: string[];
+
+    @IsString({ each: true })
+    routingKeys: string[];
+
+    @IsOptional()
+    @IsString({ each: true })
+    accept: string[];
+}
+
+class InvitationDto {
+    @IsString()
+    '@id': string;
+
+    @IsString()
+    '@type': string;
+
+    @IsString()
+    label: string;
+
+    @IsOptional()
+    @IsString()
+    goalCode: string;
+
+    @IsOptional()
+    @IsString()
+    goal: string;
+
+    @IsOptional()
+    @IsString({ each: true })
+    accept: string[];
+
+    @IsOptional()
+    @IsString({ each: true })
+    // eslint-disable-next-line camelcase
+    handshake_protocols: string[];
+
+    @ValidateNested({ each: true })
+    @Type(() => ServiceDto)
+    services: ServiceDto[];
+
+    @IsString()
+    @IsOptional()
+    imageUrl?: string;
+}
+
+export class ReceiveInvitationDto {
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    @IsNotEmpty({ message: 'please provide valid alias' })
+    alias: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    @IsNotEmpty({ message: 'please provide valid label' })
+    label: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    imageUrl: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsBoolean({ message: 'autoAcceptConnection must be a boolean' })
+    @IsNotEmpty({ message: 'please provide valid autoAcceptConnection' })
+    autoAcceptConnection: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsBoolean({ message: 'autoAcceptInvitation must be a boolean' })
+    @IsNotEmpty({ message: 'please provide valid autoAcceptInvitation' })
+    autoAcceptInvitation: boolean;
+
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsBoolean({ message: 'reuseConnection must be a boolean' })
+    @IsNotEmpty({ message: 'please provide valid reuseConnection' })
+    reuseConnection: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNumber()
+    @IsNotEmpty({ message: 'please provide valid acceptInvitationTimeoutMs' })
+    acceptInvitationTimeoutMs: number;
+
+    @ApiProperty()
+    @ValidateNested()
+    @Type(() => InvitationDto)
+    invitation: InvitationDto;
 }

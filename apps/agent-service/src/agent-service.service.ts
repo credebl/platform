@@ -20,7 +20,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { catchError, map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IAcceptCredentials, IReceiveInvitationUrl, IReceiveInvitation } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { IConnectionDetails, IUserRequestInterface } from './interface/agent-service.interface';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -1314,6 +1314,30 @@ export class AgentServiceService {
     } catch (error) {
       this.logger.error(`Error in delete wallet in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error);
+    }
+  }
+
+  async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, apiKey: string): Promise<string> {
+    try {
+      const receiveInvitationUrlRes = await this.commonService
+        .httpPost(url, receiveInvitationUrl, { headers: { 'authorization': apiKey } })
+        .then(async response => response);
+      return receiveInvitationUrlRes;
+    } catch (error) {
+      this.logger.error(`Error in receive invitation in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async receiveInvitation(receiveInvitation: IReceiveInvitation, url: string, apiKey: string): Promise<string> {
+    try {
+      const receiveInvitationRes = await this.commonService
+        .httpPost(url, receiveInvitation, { headers: { 'authorization': apiKey } })
+        .then(async response => response);
+      return receiveInvitationRes;
+    } catch (error) {
+      this.logger.error(`Error in receive invitation in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

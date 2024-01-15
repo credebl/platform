@@ -167,7 +167,9 @@ export const ResponseMessages = {
     agent: {
         success: {
             create: 'Agent process initiated successfully. Please wait',
-            health: 'Agent health details retrieved successfully.'
+            health: 'Agent health details retrieved successfully.',
+            webhookUrlRegister:'Webhook Url registered successfully',
+            getWebhookUrl:'Webhook Url fetched successfully'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -192,7 +194,11 @@ export const ResponseMessages = {
             walletAlreadyProcessing: 'Your wallet is already processing',
             notAbleToSpinp: 'Agent not able to spun up',
             platformAdminNotAbleToSpinp: 'Platform admin agent is not spun up',
-            seedCharCount: 'seed must be at most 32 characters'
+            seedCharCount: 'seed must be at most 32 characters',
+            nullTenantId:'TenantId must not be null',
+            tenantIdNotFound:'TenantId not found',
+            invalidTenantIdIdFormat:'Invalid tenantId format',
+            requiredTenantId:'Tenant Id is required'
         }
     },
     connection: {
@@ -344,5 +350,16 @@ export const ResponseMessages = {
         notAcceptable: 'Not Acceptable',
         notFound: 'Not Found',
         serverError: 'Internal Server error'
+    },
+    
+    webhook: {
+        success: {
+            webhookUrlRegister:'Webhook Url registered successfully',
+            getWebhookUrl:'Webhook Url fetched successfully'
+        },
+        error: {
+            registerWebhook:'Unable to register a webhook url',
+            webhookResponse:'Error in sending webhook response to org webhook url'
+        }
     }
 };

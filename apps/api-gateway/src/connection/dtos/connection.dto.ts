@@ -90,7 +90,7 @@ export class ConnectionDto {
     contextCorrelationId: string;
 }
 
-export class ReceiveInvitationUrlDto {
+class ReceiveInvitationCommonDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsString({ message: 'alias must be a string' })
@@ -132,6 +132,9 @@ export class ReceiveInvitationUrlDto {
     @IsNumber()
     @IsNotEmpty({ message: 'please provide valid acceptInvitationTimeoutMs' })
     acceptInvitationTimeoutMs: number;
+}
+
+export class ReceiveInvitationUrlDto extends ReceiveInvitationCommonDto {
 
     @ApiProperty()
     @IsOptional()
@@ -198,49 +201,7 @@ class InvitationDto {
     imageUrl?: string;
 }
 
-export class ReceiveInvitationDto {
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    @IsNotEmpty({ message: 'please provide valid alias' })
-    alias: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    @IsNotEmpty({ message: 'please provide valid label' })
-    label: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    @IsNotEmpty({ message: 'please provide valid imageUrl' })
-    imageUrl: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsBoolean({ message: 'autoAcceptConnection must be a boolean' })
-    @IsNotEmpty({ message: 'please provide valid autoAcceptConnection' })
-    autoAcceptConnection: boolean;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsBoolean({ message: 'autoAcceptInvitation must be a boolean' })
-    @IsNotEmpty({ message: 'please provide valid autoAcceptInvitation' })
-    autoAcceptInvitation: boolean;
-
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsBoolean({ message: 'reuseConnection must be a boolean' })
-    @IsNotEmpty({ message: 'please provide valid reuseConnection' })
-    reuseConnection: boolean;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsNumber()
-    @IsNotEmpty({ message: 'please provide valid acceptInvitationTimeoutMs' })
-    acceptInvitationTimeoutMs: number;
+export class ReceiveInvitationDto extends ReceiveInvitationCommonDto {
 
     @ApiProperty()
     @ValidateNested()

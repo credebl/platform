@@ -155,19 +155,19 @@ export interface IUserRequestInterface {
     tenantOrgId?: string;
     userRoleOrgPermissions?: UserRoleOrgPermsDto[];
     orgName?: string;
-    selectedOrg: ISelectedOrgInterface;
+    selectedOrg: IOrgInterface;
 }
 
-export interface ISelectedOrgInterface {
+export interface IOrgInterface {
     id: string;
     userId: string;
     orgRoleId: string;
     orgId: string;
     orgRole: object;
-    organisation: IOrganizationInterface;
+    organisation: IOrganizationAgentInterface;
 }
 
-export interface IOrganizationInterface {
+export interface IOrganizationAgentInterface {
     name: string;
     description: string;
     org_agents: IOrgAgentInterface[]
@@ -360,7 +360,7 @@ export interface IReceiveInvitationUrl {
     invitationUrl: string;
 }
 
-interface Service {
+interface IService {
     id: string;
     serviceEndpoint: string;
     type: string;
@@ -369,7 +369,7 @@ interface Service {
     accept: string[];
 }
 
-interface Invitation {
+interface IInvitation {
     '@id': string;
     '@type': string;
     label: string;
@@ -377,7 +377,7 @@ interface Invitation {
     goal: string;
     accept: string[];
     handshake_protocols: string[];
-    services: (Service | string)[];
+    services: (IService | string)[];
     imageUrl?: string;
 }
 
@@ -389,7 +389,7 @@ export interface IReceiveInvitation {
     autoAcceptInvitation?: boolean;
     reuseConnection?: boolean;
     acceptInvitationTimeoutMs?: number;
-    invitation: Invitation;
+    invitation: IInvitation;
 }
 export interface IProofPresentation {
     createdAt: string;

@@ -23,12 +23,9 @@ export class AgentProvisioningService {
     try {
 
       const { containerName, externalIp, orgId, seed, walletName, walletPassword, walletStorageHost, walletStoragePassword, walletStoragePort, walletStorageUser, webhookEndpoint, agentType, protocol, afjVersion, tenant, indyLedger } = payload;
-
       if (agentType === AgentType.AFJ) {
         // The wallet provision command is used to invoke a shell script
-        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP
-          } ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${afjVersion} ${indyLedger} ${process.env.AGENT_HOST} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${process.env.CLUSTER_NAME} ${process.env.TESKDEFINITION_FAMILY}`;
-
+        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP} ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${afjVersion} "${indyLedger}" ${process.env.AGENT_HOST} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${process.env.CLUSTER_NAME} ${process.env.TESKDEFINITION_FAMILY}`;
         const spinUpResponse: object = new Promise(async (resolve) => {
 
           await exec(walletProvision, async (err, stdout, stderr) => {
@@ -36,8 +33,14 @@ export class AgentProvisioningService {
             if (stderr) {
               this.logger.log(`shell script error: ${stderr}`);
             }
-            const agentEndPoint: string = await fs.readFileSync(`${process.env.PWD}${process.env.AFJ_AGENT_ENDPOINT_PATH}${orgId}_${containerName}.json`, 'utf8');
-            resolve(agentEndPoint);
+
+            const agentEndPoint = await fs.readFileSync(`${process.cwd()}${process.env.AFJ_AGENT_ENDPOINT_PATH}${orgId}_${containerName}.json`, 'utf8');
+            const agentToken = await fs.readFileSync(`${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgId}_${containerName}.json`, 'utf8');
+
+            resolve({
+              agentEndPoint: JSON.parse(agentEndPoint).CONTROLLER_ENDPOINT,
+              agentToken: JSON.parse(agentToken).token
+            });
           });
         });
         return spinUpResponse;

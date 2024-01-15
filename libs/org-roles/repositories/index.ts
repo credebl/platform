@@ -4,6 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { org_roles } from '@prisma/client';
 import { OrgRoles } from '../enums';
+import { IOrgRoles } from '../interfaces/org-roles.interface';
 
 @Injectable()
 export class OrgRolesRepository {
@@ -24,9 +25,8 @@ export class OrgRolesRepository {
     }
   }
   
-
-    // eslint-disable-next-line camelcase
-    async getOrgRoles(): Promise<org_roles[]> {
+  
+    async getOrgRoles(): Promise<IOrgRoles[]> {
         try {
             const roleDetails = await this.prisma.org_roles.findMany();
             const filteredRoles = roleDetails.filter(role => role.name !== OrgRoles.PLATFORM_ADMIN);
@@ -58,9 +58,8 @@ export class OrgRolesRepository {
 
             return roleDetails;
         } catch (error) {
-            this.logger.error(`In get org-roles repository: ${JSON.stringify(error)}`);
-            throw new InternalServerErrorException('Bad Request');
-
+            this.logger.error(`In get org-roles by id repository : ${JSON.stringify(error)}`);
+            throw error;
         }
     }
 }

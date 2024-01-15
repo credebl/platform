@@ -1,3 +1,5 @@
+#!/bin/bash
+
 START_TIME=$(date +%s)
 
 AGENCY=$1
@@ -20,6 +22,7 @@ ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
 INBOUND_PORT=9001
+
 
 increment_port() {
     local port="$1"
@@ -76,12 +79,25 @@ else
   mkdir ${PWD}/apps/agent-provisioning/AFJ/endpoints
 fi
 
-docker build . -t $AFJ_VERSION -f apps/agent-provisioning/AFJ/afj-controller/Dockerfile
+if [ -d "${PWD}/apps/agent-provisioning/AFJ/agent-config" ]; then
+  echo "Endpoints directory exists."
+else
+  echo "Error: Endpoints directory does not exists."
+  mkdir ${PWD}/apps/agent-provisioning/AFJ/agent-config
+fi
 
 AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
 
 echo "-----$AGENT_ENDPOINT----"
-cat <<EOF >>${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json
+CONFIG_FILE="${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
+
+# Check if the file exists
+if [ -f "$CONFIG_FILE" ]; then
+  # If it exists, remove the file
+  rm "$CONFIG_FILE"
+fi
+
+cat <<EOF >${CONFIG_FILE}
 {
   "label": "${AGENCY}_${CONTAINER_NAME}",
   "walletId": "$WALLET_NAME",
@@ -117,7 +133,15 @@ cat <<EOF >>${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINE
 EOF
 
 FILE_NAME="docker-compose_${AGENCY}_${CONTAINER_NAME}.yaml"
-cat <<EOF >>${PWD}/apps/agent-provisioning/AFJ/${FILE_NAME}
+
+DOCKER_COMPOSE="${PWD}/apps/agent-provisioning/AFJ/${FILE_NAME}"
+
+# Check if the file exists
+if [ -f "$DOCKER_COMPOSE" ]; then
+  # If it exists, remove the file
+  rm "$DOCKER_COMPOSE"
+fi
+cat <<EOF >${DOCKER_COMPOSE}
 version: '3'
 
 services:
@@ -152,7 +176,7 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker-compose -f $FILE_NAME --project-name ${AGENCY}_${CONTAINER_NAME} up -d
+  docker compose -f $FILE_NAME up -d
   if [ $? -eq 0 ]; then
 
     n=0
@@ -177,10 +201,31 @@ if [ $? -eq 0 ]; then
     done
 
     echo "Creating agent config"
-    cat <<EOF >>${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json
+    # Capture the logs from the container
+    container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
+
+    # Extract the token from the logs using grep and awk (modify the pattern as needed)
+    token=$(echo "$container_logs" | grep -oE 'token [^ ]+' | awk '{print $2}')
+
+    # Print the extracted token
+    echo "Token: $token"
+    
+    ENDPOINT="${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json"
+
+    # Check if the file exists
+    if [ -f "$ENDPOINT" ]; then
+    # If it exists, remove the file
+    rm "$ENDPOINT"
+    fi
+    cat <<EOF >${ENDPOINT}
     {
-        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
-        "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
+        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}"
+    }
+EOF
+
+    cat <<EOF >${PWD}/token/${AGENCY}_${CONTAINER_NAME}.json
+    {
+        "token" : "$token"
     }
 EOF
     echo "Agent config created"

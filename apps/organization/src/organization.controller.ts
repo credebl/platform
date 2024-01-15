@@ -6,7 +6,10 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IUpdateOrganization } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { organisation } from '@prisma/client';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 
 @Controller()
 export class OrganizationController {
@@ -20,7 +23,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'create-organization' })
-  async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string }): Promise<object> {
+  async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string }): Promise<organisation> {
     return this.organizationService.createOrganization(payload.createOrgDto, payload.userId);
   }
 
@@ -31,7 +34,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'update-organization' })
-  async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: string, orgId: string }): Promise<object> {
+  async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: string, orgId: string }): Promise<organisation> {
     return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId, payload.orgId);
   }
 
@@ -42,21 +45,19 @@ export class OrganizationController {
    */
   @MessagePattern({ cmd: 'get-organizations' })
   async getOrganizations(
-    @Body() payload: { userId: string; pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+    @Body() payload: { userId: string} & Payload
+  ): Promise<IGetOrganization> {
     const { userId, pageNumber, pageSize, search } = payload;
     return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search);
   }
 
   /**
-   * Description: get organizations
-   * @param
-   * @returns Get created organization details
+   * @returns Get public organization details
    */
   @MessagePattern({ cmd: 'get-public-organizations' })
   async getPublicOrganizations(
-    @Body() payload: { pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+    @Body() payload: Payload
+  ): Promise<IGetOrganization> {
     const { pageNumber, pageSize, search } = payload;
     return this.organizationService.getPublicOrganizations(pageNumber, pageSize, search);
   }
@@ -67,12 +68,15 @@ export class OrganizationController {
    * @returns Get created organization details
    */
   @MessagePattern({ cmd: 'get-organization-by-id' })
-  async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<object> {
+  async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<IGetOrgById> {
     return this.organizationService.getOrganization(payload.orgId);
   }
-
+/**
+ * @param orgSlug 
+ * @returns organization details
+ */
   @MessagePattern({ cmd: 'get-organization-public-profile' })
-  async getPublicProfile(payload: { orgSlug }): Promise<object> {
+  async getPublicProfile(payload: { orgSlug }): Promise<IGetOrgById> {
     return this.organizationService.getPublicProfile(payload);
   }
 
@@ -83,8 +87,8 @@ export class OrganizationController {
    */
   @MessagePattern({ cmd: 'get-invitations-by-orgId' })
   async getInvitationsByOrgId(
-    @Body() payload: { orgId: string; pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+    @Body() payload: { orgId: string } & Payload
+  ): Promise<IOrganizationInvitations> {
     return this.organizationService.getInvitationsByOrgId(
       payload.orgId,
       payload.pageNumber,
@@ -94,12 +98,11 @@ export class OrganizationController {
   }
 
   /**
-   * Description: retrieve org-roles
-   * @returns Get org-roles details
+   * @returns Get org-roles 
    */
 
   @MessagePattern({ cmd: 'get-org-roles' })
-  async getOrgRoles(): Promise<object> {
+  async getOrgRoles(): Promise<IOrgRoles[]> {
     return this.organizationService.getOrgRoles();
   }
 
@@ -117,8 +120,8 @@ export class OrganizationController {
 
   @MessagePattern({ cmd: 'fetch-user-invitations' })
   async fetchUserInvitation(
-    @Body() payload: { email: string; status: string; pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+    @Body() payload: { email: string; status: string } & Payload
+  ): Promise<IOrganizationInvitations> {
     return this.organizationService.fetchUserInvitation(
       payload.email,
       payload.status,
@@ -150,17 +153,25 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'get-organization-dashboard' })
-  async getOrgDashboard(payload: { orgId: string; userId: string }): Promise<object> {
+  async getOrgDashboard(payload: { orgId: string; userId: string }): Promise<IOrganizationDashboard> {
     return this.organizationService.getOrgDashboard(payload.orgId);
   }
 
+/**
+ * @returns organization profile details
+ */
   @MessagePattern({ cmd: 'fetch-organization-profile' })
-  async getOgPofile(payload: { orgId: string }): Promise<object> {
-    return this.organizationService.getOgPofile(payload.orgId);
+  async getOrgPofile(payload: { orgId: string }): Promise<organisation> {
+    return this.organizationService.getOrgPofile(payload.orgId);
   }
 
   @MessagePattern({ cmd: 'delete-organization' })
   async deleteOrganization(payload: { orgId: string }): Promise<boolean> {
     return this.organizationService.deleteOrganization(payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'delete-organization-invitation' })
+  async deleteOrganizationInvitation(payload: { orgId: string; invitationId: string; }): Promise<boolean> {
+    return this.organizationService.deleteOrganizationInvitation(payload.orgId, payload.invitationId);
   }
 }

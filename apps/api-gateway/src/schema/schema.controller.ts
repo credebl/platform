@@ -10,7 +10,7 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
-import { ICredDeffSchemaSearchInterface, ISchemaSearchInterface } from '../interfaces/ISchemaSearch.interface';
+import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
@@ -19,6 +19,7 @@ import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -38,7 +39,6 @@ export class SchemaController {
     summary: 'Get schema information from the ledger using its schema ID.',
     description: 'Get schema information from the ledger using its schema ID.'
   })
-
   @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
     @Res() res: Response,
@@ -60,28 +60,13 @@ export class SchemaController {
 
   @Get('/:orgId/schemas/:schemaId/cred-defs')
   @ApiOperation({
-    summary: 'Get credential definition list by schema Id',
+    summary: 'Credential definitions by schema Id',
     description: 'Get credential definition list by schema Id'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sorting',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortByValue',
-    type: String,
+    name: 'sortField',
+    enum: CredDefSortFields,
     required: false
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
@@ -89,77 +74,61 @@ export class SchemaController {
   async getcredDeffListBySchemaId(
     @Param('orgId') orgId: string,
     @Param('schemaId') schemaId: string,
-    @Query() GetCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
+    @Query() getCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
-    @User() user: IUserRequestInterface): Promise<object> {
+    @User() user: IUserRequestInterface): Promise<Response> {
 
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
 
-    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(schemaId, GetCredentialDefinitionBySchemaIdDto, user, orgId);
+    getCredentialDefinitionBySchemaIdDto.schemaId = schemaId;
+    getCredentialDefinitionBySchemaIdDto.orgId = orgId;
+
+    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(getCredentialDefinitionBySchemaIdDto, user);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
-      data: credentialDefinitionList.response
+      data: credentialDefinitionList
     };
+    
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Get('/:orgId/schemas')
   @ApiOperation({
-    summary: 'Get all schemas by org id.',
+    summary: 'Schemas by org id.',
     description: 'Get all schemas by org id.'
   })
   @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'searchByText',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sorting',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortByValue',
-    type: String,
+    name: 'sortField',
+    enum: SortFields,
     required: false
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemas(
     @Query() getAllSchemaDto: GetAllSchemaDto,
     @Param('orgId') orgId: string,
     @Res() res: Response,
     @User() user: IUserRequestInterface
-  ): Promise<object> {
+  ): Promise<Response> {
 
-    const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
-    const schemaSearchCriteria: ISchemaSearchInterface = {
+    const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllSchemaDto;
+    const schemaSearchCriteria: ISchemaSearchPayload = {
       pageNumber,
       searchByText,
       pageSize,
-      sorting,
-      sortByValue
+      sortField,
+      sortBy
     };
     const schemasResponse = await this.appService.getSchemas(schemaSearchCriteria, user, orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
-      data: schemasResponse.response
+      data: schemasResponse
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -171,34 +140,16 @@ export class SchemaController {
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<object> {
-
-    schema.attributes.forEach((attribute) => {
-      if (attribute.hasOwnProperty('attributeName') && attribute.hasOwnProperty('schemaDataType') && attribute.hasOwnProperty('displayName')) {
-        if (attribute.hasOwnProperty('attributeName') && '' === attribute?.attributeName) {
-          throw new BadRequestException('Attribute must not be empty');
-        } else if (attribute.hasOwnProperty('attributeName') && '' === attribute?.attributeName?.trim()) {
-          throw new BadRequestException('Attributes should not contain space');
-        } else if (attribute.hasOwnProperty('schemaDataType') && '' === attribute?.schemaDataType) {
-          throw new BadRequestException('Schema Data Type should not contain space');
-        } else if (attribute.hasOwnProperty('schemaDataType') && '' === attribute?.schemaDataType?.trim()) {
-          throw new BadRequestException('Schema Data Type should not contain space');
-        } else if (attribute.hasOwnProperty('displayName') && '' === attribute?.displayName) {
-          throw new BadRequestException('Display Name Type should not contain space');
-        }
-      } else {
-        throw new BadRequestException('Please provide a valid attributes');
-      }
-    });
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
 
     schema.orgId = orgId;
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: 'Schema created successfully',
-      data: schemaDetails.response
+      message: ResponseMessages.schema.success.create,
+      data: schemaDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

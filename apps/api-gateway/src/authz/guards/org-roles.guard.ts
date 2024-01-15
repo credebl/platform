@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Logger } from '@nestjs/common';
+import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 
 import { HttpException } from '@nestjs/common';
 import { HttpStatus } from '@nestjs/common';
@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Reflector } from '@nestjs/core';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class OrgRolesGuard implements CanActivate {
@@ -26,27 +27,34 @@ export class OrgRolesGuard implements CanActivate {
 
     // Request requires org check, proceed with it
     const req = context.switchToHttp().getRequest();
-
     const { user } = req;
+  
+    req.params.orgId = req.params?.orgId ? req.params?.orgId?.trim() : '';
+    req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
+    req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
 
-    if (req.params.orgId || req.query.orgId || req.body.orgId) {
-      const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+  
+    if (!orgId) {
+      throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
+    }
 
+    if (orgId) {     
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
           return false;
         }
-        return orgDetails.orgId.toString() === orgId.toString();
+        return orgDetails.orgId.toString().trim() === orgId.toString().trim();
       });
 
       if (!specificOrg) {
-        throw new HttpException('Organization does not match', HttpStatus.FORBIDDEN);
+        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
       }
 
       user.selectedOrg = specificOrg;
       // eslint-disable-next-line array-callback-return
       user.selectedOrg.orgRoles = user.userOrgRoles.map((orgRoleItem) => {
-        if (orgRoleItem.orgId && orgRoleItem.orgId.toString() === orgId.toString()) {
+        if (orgRoleItem.orgId && orgRoleItem.orgId.toString().trim() === orgId.toString().trim()) {
           return orgRoleItem.orgRole.name;
         }
       });

@@ -27,12 +27,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     
     const userDetails = await this.usersService.findUserinSupabase(payload.sub);
     
-    if (!userDetails.response) {
+    if (!userDetails) {
       throw new NotFoundException('User not found');
     }
     
     return {
-      ...userDetails.response,
+      ...userDetails,
       ...payload
     };
   }

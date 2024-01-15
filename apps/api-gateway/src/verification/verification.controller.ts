@@ -16,9 +16,9 @@ import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards,
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { OutOfBandRequestProof, RequestProof } from './dto/request-proof.dto';
+import { OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -26,12 +26,14 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { AuthGuard } from '@nestjs/passport';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { WebhookPresentationProof } from './dto/webhook-proof.dto';
+import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
-import { IProofRequestsSearchCriteria } from './interfaces/verification.interface';
+import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
+import { SortFields } from './enum/verification.enum';
+import { RpcException } from '@nestjs/microservices';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -44,75 +46,66 @@ export class VerificationController {
 
     private readonly logger = new Logger('VerificationController');
 
-    @Get('/verification/oob/qr')
-    @ApiOperation({ summary: 'Out-Of-Band issuance QR', description: 'Out-Of-Band issuance QR' })
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-    @ApiExcludeEndpoint()
-    @ApiQuery(
-        { name: 'base64Image', required: true }
-      )
-    async getOgPofile(@Query('base64Image') base64Image: string, @Res() res: Response): Promise<Response> {
-
-        const getImageBuffer = await this.imageServiceService.getBase64Image(base64Image);
-        res.setHeader('Content-Type', 'image/png');
-        return res.send(getImageBuffer);
-    }
-
-    @Get('/orgs/:orgId/proofs/:proofId/form')
+    /**
+     * 
+     * @param proofId 
+     * @param orgId 
+     * @returns Verified proof details
+     */
+    @Get('/orgs/:orgId/verified-proofs/:proofId')
     @ApiOperation({
-        summary: `Get a proof form data`,
-        description: `Get a proof form data`
+        summary: `Get verified proof details`,
+        description: `Get verified proof details`
     })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @ApiBearerAuth()
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-    async getProofFormData(
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+    async getVerifiedProofDetails(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('proofId') id: string,
+        @Param('proofId') proofId: string,
         @Param('orgId') orgId: string
-    ): Promise<object> { 
-        const sendProofRequest = await this.verificationService.getProofFormData(id, orgId, user);   
-        const finalResponse: IResponseType = {
+    ): Promise<Response> { 
+        const sendProofRequest = await this.verificationService.getVerifiedProofDetails(proofId, orgId, user);   
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.verification.success.proofFormData,
-            data: sendProofRequest.response
+            message: ResponseMessages.verification.success.verifiedProofDetails,
+            data: sendProofRequest
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
     /**
-     * Get proof presentation by id
-     * @param user 
-     * @param id 
+     * Get proof presentation details by proofId
+     * @param proofId 
      * @param orgId 
-     * @returns Get proof presentation details
+     * @returns Proof presentation details by proofId
      */
     @Get('/orgs/:orgId/proofs/:proofId')
     @ApiOperation({
-        summary: `Get all proof presentation by proof Id`,
-        description: `Get all proof presentation by proof Id`
+        summary: `Get proof presentation by proof Id`,
+        description: `Get proof presentation by proof Id`
     })
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @ApiBearerAuth()
     async getProofPresentationById(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('proofId') id: string,
+        @Param('proofId') proofId: string,
         @Param('orgId') orgId: string
-    ): Promise<object> {
-        const getProofPresentationById = await this.verificationService.getProofPresentationById(id, orgId, user);
-        const finalResponse: IResponseType = {
+    ): Promise<Response> {
+        const getProofPresentationById = await this.verificationService.getProofPresentationById(proofId, orgId, user);
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.fetch,
-            data: getProofPresentationById.response
+            data: getProofPresentationById
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
@@ -121,43 +114,21 @@ export class VerificationController {
     * Get all proof presentations
     * @param user 
     * @param orgId 
-    * @returns Get all proof presentation
+    * @returns All proof presentations details
     */
     @Get('/orgs/:orgId/proofs')
     @ApiOperation({
-        summary: `Get all proof presentations`,
-        description: `Get all proof presentations`
-    })
-
-    @ApiQuery({
-      name: 'pageNumber',
-      type: Number,
-      required: false
+        summary: `Get all proof presentations by orgId`,
+        description: `Get all proof presentations by orgId`
     })
     @ApiQuery({
-        name: 'pageSize',
-        type: Number,
+        name: 'sortField',
+        enum: SortFields,
         required: false
-    })
-    @ApiQuery({
-      name: 'searchByText',
-      type: String,
-      required: false
-    })   
-    @ApiQuery({
-      name: 'sorting',
-      type: String,
-      required: false
-    })
-    @ApiQuery({
-      name: 'sortByValue',
-      type: String,
-      required: false
-    })
-
-    @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+      })    
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBearerAuth()
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -166,111 +137,106 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Param('orgId') orgId: string
-    ): Promise<object> {
-      const { pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllProofRequests;
-      const proofRequestsSearchCriteria: IProofRequestsSearchCriteria = {
+    ): Promise<Response> {
+      const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllProofRequests;
+      const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
           pageNumber,
           searchByText,
           pageSize,
-          sorting,
-          sortByValue
+          sortField,
+          sortBy
         };
 
         const proofPresentationDetails = await this.verificationService.getProofPresentations(proofRequestsSearchCriteria, user, orgId);
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.fetch,
-            data: proofPresentationDetails.response
+            data: proofPresentationDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-    /**
-     * Request proof presentation
-     * @param user 
-     * @param requestProof 
-     * @returns Get requested proof presentation details
-     */
-    @Post('/orgs/:orgId/proofs')
-    @ApiOperation({
-        summary: `Sends a proof request`,
-        description: `Sends a proof request`
-    })
-    @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: RequestProof })
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
-    async sendPresentationRequest(
-        @Res() res: Response,
-        @User() user: IUserRequest,
-        @Param('orgId') orgId: string,
-        @Body() requestProof: RequestProof
-    ): Promise<object> {
+  /**
+   * Send proof request
+   * @param orgId
+   * @returns Requested proof presentation details
+   */
+  @Post('/orgs/:orgId/proofs')
+  @ApiOperation({
+    summary: `Sends a proof request`,
+    description: `Sends a proof request`
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiBody({ type: RequestProofDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
+  async sendPresentationRequest(
+    @Res() res: Response,
+    @User() user: IUserRequest,
+    @Param('orgId') orgId: string,
+    @Body() requestProof: RequestProofDto
+  ): Promise<Response> {
 
-        for (const attrData of requestProof.attributes) {
-            await this.validateAttribute(attrData);
-        }
-
-        requestProof.orgId = orgId;
-        const sendProofRequest = await this.verificationService.sendProofRequest(requestProof, user);
-        const finalResponse: IResponseType = {
-            statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.send,
-            data: sendProofRequest.response
-        };
-        return res.status(HttpStatus.CREATED).json(finalResponse);
+    for (const attrData of requestProof.attributes) {
+      await this.validateAttribute(attrData);
     }
+
+    requestProof.orgId = orgId;
+    await this.verificationService.sendProofRequest(requestProof, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.verification.success.send
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
 
     /**
      * Verify proof presentation
-     * @param user 
-     * @param id 
+     * @param proofId 
      * @param orgId 
-     * @returns Get verified proof presentation details
+     * @returns Verified proof presentation details
      */
     @Post('/orgs/:orgId/proofs/:proofId/verify')
     @ApiOperation({
         summary: `Verify presentation`,
         description: `Verify presentation`
     })
-    @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async verifyPresentation(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('proofId') id: string,
+        @Param('proofId') proofId: string,
         @Param('orgId') orgId: string
-    ): Promise<object> {
-        const verifyPresentation = await this.verificationService.verifyPresentation(id, orgId, user);
-        const finalResponse: IResponseType = {
+    ): Promise<Response> {
+        await this.verificationService.verifyPresentation(proofId, orgId, user);
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.verified,
-            data: verifyPresentation.response
+            message: ResponseMessages.verification.success.verified
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
     /**
      * Out-Of-Band Proof Presentation
-     * @param user 
-     * @param outOfBandRequestProof 
-     * @returns Get out-of-band requested proof presentation details
+     * @param orgId 
+     * @returns Out-of-band requested proof presentation details
      */
     @Post('/orgs/:orgId/proofs/oob')
     @ApiOperation({
         summary: `Sends a out-of-band proof request`,
         description: `Sends a out-of-band proof request`
     })
-    @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBody({ type: OutOfBandRequestProof })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     @ApiBearerAuth()
@@ -280,45 +246,57 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Body() outOfBandRequestProof: OutOfBandRequestProof,
         @Param('orgId') orgId: string
-    ): Promise<object> {
+    ): Promise<Response> {
 
         for (const attrData of outOfBandRequestProof.attributes) {
             await this.validateAttribute(attrData);
         }
 
         outOfBandRequestProof.orgId = orgId;
-        const sendProofRequest = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
+        await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.fetch,
-            data: sendProofRequest.response
+            message: ResponseMessages.verification.success.send
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
-    @Post('wh/:id/proofs')
+    /**
+     * 
+     * @param orgId 
+     * @returns Proof presentation details
+     */
+    @Post('wh/:orgId/proofs')
     @ApiOperation({
-        summary: `Webhook proof presentation`,
-        description: `Webhook proof presentation`
+        summary: `Receive webhook proof presentation`,
+        description: `Handle proof presentations for a specified organization via a webhook`
     })
     @ApiExcludeEndpoint()
-    @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-    @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-    @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     async webhookProofPresentation(
-        @Param('id') id: string,
-        @Body() proofPresentationPayload: WebhookPresentationProof,
+        @Param('orgId') orgId: string,
+        @Body() proofPresentationPayload: WebhookPresentationProofDto,
         @Res() res: Response
-    ): Promise<object> {
+    ): Promise<Response> {
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
-        const webhookProofPresentation = await this.verificationService.webhookProofPresentation(id, proofPresentationPayload);
-        const finalResponse: IResponseType = {
+        const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
+    if (webhookUrl) {
+        try {
+            await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload});
+      } catch (error) {
+          throw new RpcException(error.response ? error.response : error);
+      }
+        const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload);
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.fetch,
-            data: webhookProofPresentation.response
+            message: ResponseMessages.verification.success.create,
+            data: webhookProofPresentation
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
+}
 
     async validateAttribute(
         attrData: object
@@ -328,6 +306,14 @@ export class VerificationController {
             throw new BadRequestException('attributeName must be required');
         } else if (!attrData['schemaId']) {
             throw new BadRequestException('schemaId must be required');
+        }
+
+        if (undefined !== attrData['schemaId'] && '' === attrData['schemaId'].trim()) {
+            throw new BadRequestException('schemaId cannot be empty');
+        }
+
+        if (!attrData['credDefId']) {
+            throw new BadRequestException('credDefId must be required'); 
         }
 
         if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
@@ -340,6 +326,12 @@ export class VerificationController {
 
         if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
             throw new BadRequestException('value cannot be empty');
+        }
+
+        if (attrData['condition']) { 
+            if (isNaN(attrData['value'])) {
+            throw new BadRequestException('value must be an integer');
+            }
         }
     }
 }

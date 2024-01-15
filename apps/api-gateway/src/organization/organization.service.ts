@@ -3,12 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
-import { GetAllOrganizationsDto } from './dtos/get-all-organizations.dto';
-import { GetAllSentInvitationsDto } from './dtos/get-all-sent-invitations.dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { GetAllUsersDto } from '../user/dto/get-all-users.dto';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { organisation } from '@prisma/client';
+import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
+import { IOrgUsers } from 'apps/user/interfaces/user.interface';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -21,9 +24,9 @@ export class OrganizationService extends BaseService {
    * @param createOrgDto
    * @returns Organization creation Success
    */
-  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<object> {
+  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<organisation> {
     const payload = { createOrgDto, userId };
-    return this.sendNats(this.serviceProxy, 'create-organization', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'create-organization', payload);
   }
 
   /**
@@ -31,9 +34,9 @@ export class OrganizationService extends BaseService {
    * @param updateOrgDto
    * @returns Organization update Success
    */
-  async updateOrganization(updateOrgDto: UpdateOrganizationDto, userId: string, orgId: string): Promise<object> {
+  async updateOrganization(updateOrgDto: UpdateOrganizationDto, userId: string, orgId: string): Promise<organisation> {
     const payload = { updateOrgDto, userId, orgId };
-    return this.sendNats(this.serviceProxy, 'update-organization', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'update-organization', payload);
   }
 
   /**
@@ -41,25 +44,28 @@ export class OrganizationService extends BaseService {
    * @param
    * @returns Organizations details
    */
-  async getOrganizations(getAllOrgsDto: GetAllOrganizationsDto, userId: string): Promise<{ response: object }> {
-    const payload = { userId, ...getAllOrgsDto };
-    return this.sendNats(this.serviceProxy, 'get-organizations', payload);
-  }
 
+  async getOrganizations(paginationDto: PaginationDto, userId: string): Promise<IGetOrganization> {
+    const payload = { userId, ...paginationDto };
+    const fetchOrgs = await this.sendNatsMessage(this.serviceProxy, 'get-organizations', payload);
+    return fetchOrgs;
+  }
+  
   /**
    *
    * @param
    * @returns Public organizations list
    */
-  async getPublicOrganizations(getAllOrgsDto: GetAllOrganizationsDto): Promise<{ response: object }> {
-    const payload = { ...getAllOrgsDto };
-    return this.sendNats(this.serviceProxy, 'get-public-organizations', payload);
+  async getPublicOrganizations(paginationDto: PaginationDto): Promise<IGetOrganization> {
+    const payload = { ...paginationDto };
+    const PublicOrg = this.sendNatsMessage(this.serviceProxy, 'get-public-organizations', payload);
+    return PublicOrg;
   }
 
-  async getPublicProfile(orgSlug: string): Promise<{ response: object }> {
+  async getPublicProfile(orgSlug: string): Promise<IGetOrgById> {
     const payload = { orgSlug };
     try {
-      return this.sendNats(this.serviceProxy, 'get-organization-public-profile', payload);
+      return this.sendNatsMessage(this.serviceProxy, 'get-organization-public-profile', payload);
     } catch (error) {
       this.logger.error(`Error in get user:${JSON.stringify(error)}`);
     }
@@ -70,9 +76,9 @@ export class OrganizationService extends BaseService {
    * @param orgId
    * @returns Organization get Success
    */
-  async getOrganization(orgId: string, userId: string): Promise<{ response: object }> {
+  async getOrganization(orgId: string, userId: string): Promise<IGetOrgById> {
     const payload = { orgId, userId };
-    return this.sendNats(this.serviceProxy, 'get-organization-by-id', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-organization-by-id', payload);
   }
 
   /**
@@ -82,16 +88,16 @@ export class OrganizationService extends BaseService {
    */
   async getInvitationsByOrgId(
     orgId: string,
-    getAllInvitationsDto: GetAllSentInvitationsDto
-  ): Promise<{ response: object }> {
-    const { pageNumber, pageSize, search } = getAllInvitationsDto;
+    pagination: PaginationDto
+  ): Promise<IOrganizationInvitations> {
+    const { pageNumber, pageSize, search } = pagination;
     const payload = { orgId, pageNumber, pageSize, search };
-    return this.sendNats(this.serviceProxy, 'get-invitations-by-orgId', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-invitations-by-orgId', payload);
   }
-
-  async getOrganizationDashboard(orgId: string, userId: string): Promise<{ response: object }> {
+  
+  async getOrganizationDashboard(orgId: string, userId: string): Promise<IOrganizationDashboard> {
     const payload = { orgId, userId };
-    return this.sendNats(this.serviceProxy, 'get-organization-dashboard', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-organization-dashboard', payload);
   }
 
   /**
@@ -99,9 +105,10 @@ export class OrganizationService extends BaseService {
    * @param
    * @returns get organization roles
    */
-  async getOrgRoles(): Promise<object> {
+
+  async getOrgRoles(): Promise<IOrgRoles[]> {
     const payload = {};
-    return this.sendNats(this.serviceProxy, 'get-org-roles', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-org-roles', payload);
   }
 
   /**
@@ -109,9 +116,9 @@ export class OrganizationService extends BaseService {
    * @param sendInvitationDto
    * @returns Organization invitation creation Success
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<object> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
     const payload = { bulkInvitationDto, userId, userEmail };
-    return this.sendNats(this.serviceProxy, 'send-invitation', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'send-invitation', payload);
   }
 
   /**
@@ -120,34 +127,42 @@ export class OrganizationService extends BaseService {
    * @param userId
    * @returns User roles update response
    */
-  async updateUserRoles(updateUserDto: UpdateUserRolesDto, userId: string): Promise<{ response: boolean }> {
+  async updateUserRoles(updateUserDto: UpdateUserRolesDto, userId: string): Promise<boolean> {
     const payload = { orgId: updateUserDto.orgId, roleIds: updateUserDto.orgRoleId, userId };
-    return this.sendNats(this.serviceProxy, 'update-user-roles', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'update-user-roles', payload);
   }
 
   async getOrgUsers(
     orgId: string,
-    getAllUsersDto: GetAllUsersDto
-  ): Promise<{ response: object }> {
-    const { pageNumber, pageSize, search } = getAllUsersDto;
+    paginationDto: PaginationDto
+  ): Promise<IOrgUsers> {
+    const { pageNumber, pageSize, search } = paginationDto;
     const payload = { orgId, pageNumber, pageSize, search };
 
-    return this.sendNats(this.serviceProxy, 'fetch-organization-user', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-user', payload);
   }
 
-  async getOgPofile(
+  async getOrgPofile(
     orgId: string
-  ): Promise<{ response: object }> {
+  ): Promise<organisation> {
     const payload = { orgId };
 
-    return this.sendNats(this.serviceProxy, 'fetch-organization-profile', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-profile', payload);
   }
 
   async deleteOrganization(
-    orgId: number
-  ): Promise<{ response: object }> {
+    orgId: string
+  ): Promise<boolean> {
     const payload = { orgId };
 
-    return this.sendNats(this.serviceProxy, 'delete-organization', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'delete-organization', payload);
+  }
+
+  async deleteOrganizationInvitation(
+    orgId: string,
+    invitationId: string
+  ): Promise<boolean> {
+    const payload = {orgId, invitationId};
+    return this.sendNatsMessage(this.serviceProxy, 'delete-organization-invitation', payload);
   }
 }

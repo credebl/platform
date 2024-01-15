@@ -62,7 +62,7 @@ interface Tags {
   threadId: string;
 }
 
-interface OutOfBandInvitationService {
+interface IOutOfBandInvitationService {
   id: string;
   serviceEndpoint: string;
   type: string;
@@ -70,21 +70,21 @@ interface OutOfBandInvitationService {
   routingKeys: string[];
 }
 
-interface OutOfBandInvitation {
+interface IOutOfBandInvitation {
   "@type": string;
   "@id": string;
   label: string;
   accept: string[];
   handshake_protocols: string[];
-  services: OutOfBandInvitationService[];
+  services: IOutOfBandInvitationService[];
 }
 
-interface OutOfBandRecord {
+interface IOutOfBandRecord {
   _tags: Tags;
   metadata?: { [key: string]: string };
   id: string;
   createdAt: string;
-  outOfBandInvitation: OutOfBandInvitation;
+  outOfBandInvitation: IOutOfBandInvitation;
   role: string;
   state: string;
   autoAcceptConnection: boolean;
@@ -92,7 +92,7 @@ interface OutOfBandRecord {
   updatedAt: string;
 }
 
-interface ConnectionRecord {
+interface IConnectionRecord {
   _tags: { [key: string]: string };
   metadata: { [key: string]: string };
   connectionTypes: string[];
@@ -111,7 +111,7 @@ interface ConnectionRecord {
   updatedAt: string;
 }
 
-export interface IReceiveInvitationResponse {
-  outOfBandRecord: OutOfBandRecord;
-  connectionRecord: ConnectionRecord;
+export interface IReceiveInvitationRes {
+  outOfBandRecord: IOutOfBandRecord;
+  connectionRecord: IConnectionRecord;
 }

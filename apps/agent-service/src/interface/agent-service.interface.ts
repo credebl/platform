@@ -338,7 +338,7 @@ export interface IAgentProofRequest {
     threadId: string;
     autoAcceptProof: string;
     updatedAt: string;
-  }
+}
 
 export interface IPresentation {
     _tags: ITags;
@@ -349,7 +349,7 @@ export interface IStoreAgent {
     id: string;
 }
 
-export interface IReceiveInvitationUrl {
+export interface IReceiveInvite {
     alias?: string;
     label?: string;
     imageUrl?: string;
@@ -357,6 +357,9 @@ export interface IReceiveInvitationUrl {
     autoAcceptInvitation?: boolean;
     reuseConnection?: boolean;
     acceptInvitationTimeoutMs?: number;
+}
+
+export interface IReceiveInvitationUrl extends IReceiveInvite {
     invitationUrl: string;
 }
 
@@ -381,14 +384,7 @@ interface IInvitation {
     imageUrl?: string;
 }
 
-export interface IReceiveInvitation {
-    alias?: string;
-    label?: string;
-    imageUrl?: string;
-    autoAcceptConnection?: boolean;
-    autoAcceptInvitation?: boolean;
-    reuseConnection?: boolean;
-    acceptInvitationTimeoutMs?: number;
+export interface IReceiveInvitation extends IReceiveInvite {
     invitation: IInvitation;
 }
 export interface IProofPresentation {
@@ -400,11 +396,11 @@ export interface IProofPresentation {
     autoAcceptProof: string;
     updatedAt: string;
     isVerified: boolean;
-  }
+}
 
 interface ITags {
     connectionId: string;
     state: string;
     threadId: string;
-}  
-  
+}
+

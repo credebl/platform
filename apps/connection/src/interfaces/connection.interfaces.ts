@@ -125,14 +125,7 @@ export interface IReceiveInvitationByUrlOrg {
   orgId: string
 }
 
-export interface IReceiveInvitationUrl {
-  alias?: string;
-  label?: string;
-  imageUrl?: string;
-  autoAcceptConnection?: boolean;
-  autoAcceptInvitation?: boolean;
-  reuseConnection?: boolean;
-  acceptInvitationTimeoutMs?: number;
+export interface IReceiveInvitationUrl extends IReceiveInvite {
   invitationUrl: string;
 }
 
@@ -163,7 +156,7 @@ interface Invitation {
   imageUrl?: string;
 }
 
-export interface IReceiveInvitation {
+export interface IReceiveInvite {
   alias?: string;
   label?: string;
   imageUrl?: string;
@@ -171,6 +164,9 @@ export interface IReceiveInvitation {
   autoAcceptInvitation?: boolean;
   reuseConnection?: boolean;
   acceptInvitationTimeoutMs?: number;
+}
+
+export interface IReceiveInvitation extends IReceiveInvite {
   invitation: Invitation;
 }
 

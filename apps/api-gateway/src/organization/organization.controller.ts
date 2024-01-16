@@ -22,6 +22,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { ImageServiceService } from '@credebl/image-service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { validate as isValidUUID } from 'uuid';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -352,10 +353,14 @@ export class OrganizationController {
 
     updateUserDto.orgId = orgId;  
     updateUserDto.userId = userId.trim();  
-     
     if (!updateUserDto.userId.length) {
       throw new BadRequestException(ResponseMessages.organisation.error.userIdIsRequired);
     }
+
+    if (!isValidUUID(updateUserDto.userId)) {
+      throw new BadRequestException(ResponseMessages.organisation.error.invalidUserId);
+    } 
+
     await this.organizationService.updateUserRoles(updateUserDto, updateUserDto.userId);
 
     const finalResponse: IResponse = {
@@ -424,10 +429,14 @@ export class OrganizationController {
     ): Promise<Response> {
       // eslint-disable-next-line no-param-reassign
       invitationId = invitationId.trim();
-    
-    if (!invitationId.length) {
-      throw new BadRequestException(ResponseMessages.organisation.error.invitationIdIsRequired);
-    }
+      if (!invitationId.length) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invitationIdIsRequired);
+      }
+  
+      if (!isValidUUID(invitationId)) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invalidInvitationId);
+      } 
+
 
     await this.organizationService.deleteOrganizationInvitation(orgId, invitationId);
     const finalResponse: IResponse = {
@@ -437,3 +446,4 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 }
+

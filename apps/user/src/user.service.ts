@@ -11,6 +11,8 @@ import {
   HttpException
 } from '@nestjs/common';
 
+import * as fs from 'fs';
+
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonService } from '@credebl/common';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -747,10 +749,33 @@ export class UserService {
     }
   }
 
-
   async getUserActivity(userId: string, limit: number): Promise<IUsersActivity[]> {
     try {
       return this.userActivityService.getUserActivity(userId, limit);
+    } catch (error) {
+      this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async registerKeycloakUsers(): Promise<string> {
+    try {
+
+      const configData = fs.readFileSync(`${process.cwd()}/apps/user/json-data/supabase-user-data.json`, 'utf8');
+
+      const token = await this.clientRegistrationService.getManagementToken();
+
+      const { supabaseUsers } = JSON.parse(configData);
+
+      for (const user of supabaseUsers) {
+        const createdUser = await this.clientRegistrationService.createUsersInKeycloak(user, process.env.KEYCLOAK_REALM, token);
+      }
+
+      // const { data: { users }, error } = await this.supabaseService.getClient().auth.admin.listUsers();
+      // console.log(`Supa users::`, users);
+      // console.log(`Supa error::`, error);
+
+      return '';
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

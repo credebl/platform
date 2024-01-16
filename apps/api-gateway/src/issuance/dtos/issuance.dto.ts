@@ -1,4 +1,5 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayNotEmpty, MinLength, ArrayMinSize } from 'class-validator';
+
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { toNumber, trim } from '@credebl/common/cast.helper';

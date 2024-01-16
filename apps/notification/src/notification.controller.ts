@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { INotification, IWebhookEndpoint, IGetNotification } from '../interfaces/notification.interfaces';
+import { INotification, IWebhookEndpoint, IGetNotification, ISendNotification } from '../interfaces/notification.interfaces';
 
 @Controller()
 export class NotificationController {
@@ -23,7 +23,7 @@ export class NotificationController {
    * @returns Get notification details
    */
   @MessagePattern({ cmd: 'send-notification' })
-  async sendNotification(payload: string): Promise<object> {
+  async sendNotification(payload: ISendNotification): Promise<object> {
        return this.notificationService.sendNotification(payload);
   }
 

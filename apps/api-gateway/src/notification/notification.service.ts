@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { GetNotificationDto, RegisterOrgWebhhookEndpointDto } from './dtos/notification.dto';
+import { GetNotificationDto, RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
 import { INotification } from './interfaces/notification.interfaces';
 
 @Injectable()
@@ -24,7 +24,7 @@ export class NoificatonService extends BaseService {
      * @param sendNotificationDto 
      * @returns Get notification details
      */
-    async sendNotification(notificationRequestBody: string): Promise<INotification> {
+    async sendNotification(notificationRequestBody: SendNotificationDto): Promise<INotification> {
         return this.sendNatsMessage(this.serviceProxy, 'send-notification', notificationRequestBody);
     }
 

@@ -19,7 +19,7 @@ import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -198,22 +198,21 @@ export class ConnectionController {
     ): Promise<Response> {
         this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
 
-        const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId);
+        // const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId);
 
-        if (webhookUrl) {
-            try {
-                await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto });
-            } catch (error) {
-                throw new RpcException(error.response ? error.response : error);
-            }
-            const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
-            const finalResponse: IResponse = {
-                statusCode: HttpStatus.CREATED,
-                message: ResponseMessages.connection.success.create,
-                data: connectionData
-            };
+        // if (webhookUrl) {
+        //   try {
+        //     await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto });
+        // } catch (error) {
+        //     throw new RpcException(error.response ? error.response : error);
+        // }
+        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.connection.success.create,
+            data: connectionData
+        };
 
-            return res.status(HttpStatus.CREATED).json(finalResponse);
-        }
+        return res.status(HttpStatus.CREATED).json(finalResponse);
     }
-}
+}     

@@ -58,6 +58,11 @@ export class UserService extends BaseService {
     const payload = { id };
     return this.sendNatsMessage(this.serviceProxy, 'get-user-by-keycloak', payload);
   }
+  
+  async registerKeycloakUsers(state: string): Promise<string> {
+    const payload = { state };
+    return this.sendNatsMessage(this.serviceProxy, 'register-keycloak-users', payload);
+  }
 
   async invitations(id: string, status: string, getAllInvitationsDto: GetAllInvitationsDto): Promise<IUserInvitations> {
     const { pageNumber, pageSize, search } = getAllInvitationsDto;

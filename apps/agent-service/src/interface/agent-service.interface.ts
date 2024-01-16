@@ -15,7 +15,7 @@ export interface IAgentSpinupDto {
     tenant?: boolean;
     ledgerName?: string[];
     platformAdminEmail?: string;
-    apiKey?:string;
+    apiKey?: string;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -83,26 +83,6 @@ export interface ITenantCredDef {
     agentEndPoint?: string;
 }
 
-export interface ITenantCredDefDto {
-    tag: string;
-    schemaId: string;
-    issuerId: string;
-}
-
-export interface IGetCredDefAgentRedirection {
-    credentialDefinitionId?: string;
-    tenantId?: string;
-    payload?: IGetCredDefFromTenantPayload;
-    apiKey?: string;
-    agentEndPoint?: string;
-    agentType?: string;
-    method?: string;
-}
-
-export interface IGetCredDefFromTenantPayload {
-    credentialDefinitionId: string;
-}
-
 export interface IWalletProvision {
     orgId: string;
     externalIp: string;
@@ -122,7 +102,7 @@ export interface IWalletProvision {
     afjVersion: string;
     protocol: string;
     tenant: boolean;
-    apiKey?:string;
+    apiKey?: string;
 }
 
 export interface IPlatformConfigDto {
@@ -174,19 +154,19 @@ export interface IUserRequestInterface {
     tenantOrgId?: string;
     userRoleOrgPermissions?: UserRoleOrgPermsDto[];
     orgName?: string;
-    selectedOrg: ISelectedOrgInterface;
+    selectedOrg: IOrgInterface;
 }
 
-export interface ISelectedOrgInterface {
+export interface IOrgInterface {
     id: string;
     userId: string;
     orgRoleId: string;
     orgId: string;
     orgRole: object;
-    organisation: IOrganizationInterface;
+    organisation: IOrganizationAgentInterface;
 }
 
-export interface IOrganizationInterface {
+export interface IOrganizationAgentInterface {
     name: string;
     description: string;
     org_agents: IOrgAgentInterface[]
@@ -201,18 +181,6 @@ export interface IOrgAgentInterface {
     walletName: string;
     agentsTypeId: string;
     orgId: string;
-}
-
-export interface ITenantCredDef {
-    tenantId?: string;
-    tag?: string;
-    schemaId?: string;
-    issuerId?: string;
-    payload?: ITenantCredDef;
-    method?: string;
-    agentType?: string;
-    apiKey?: string;
-    agentEndPoint?: string;
 }
 
 export interface ITenantCredDefDto {
@@ -356,6 +324,9 @@ export interface IStoreAgent {
     id: string;
 }
 
+export interface IAcceptCredentials {
+    credentialRecordId: string;
+}
 export interface IAgentProofRequest {
     metadata: object;
     id: string;
@@ -366,7 +337,7 @@ export interface IAgentProofRequest {
     threadId: string;
     autoAcceptProof: string;
     updatedAt: string;
-  }
+}
 
 export interface IPresentation {
     _tags: ITags;
@@ -377,6 +348,44 @@ export interface IStoreAgent {
     id: string;
 }
 
+export interface IReceiveInvite {
+    alias?: string;
+    label?: string;
+    imageUrl?: string;
+    autoAcceptConnection?: boolean;
+    autoAcceptInvitation?: boolean;
+    reuseConnection?: boolean;
+    acceptInvitationTimeoutMs?: number;
+}
+
+export interface IReceiveInvitationUrl extends IReceiveInvite {
+    invitationUrl: string;
+}
+
+interface IService {
+    id: string;
+    serviceEndpoint: string;
+    type: string;
+    recipientKeys: string[];
+    routingKeys: string[];
+    accept: string[];
+}
+
+interface IInvitation {
+    '@id': string;
+    '@type': string;
+    label: string;
+    goalCode: string;
+    goal: string;
+    accept: string[];
+    handshake_protocols: string[];
+    services: (IService | string)[];
+    imageUrl?: string;
+}
+
+export interface IReceiveInvitation extends IReceiveInvite {
+    invitation: IInvitation;
+}
 export interface IProofPresentation {
     createdAt: string;
     protocolVersion: string;
@@ -386,11 +395,11 @@ export interface IProofPresentation {
     autoAcceptProof: string;
     updatedAt: string;
     isVerified: boolean;
-  }
+}
 
 interface ITags {
     connectionId: string;
     state: string;
     threadId: string;
-}  
-  
+}
+

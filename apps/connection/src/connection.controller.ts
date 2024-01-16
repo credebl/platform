@@ -5,7 +5,10 @@ import {
   IConnection,
   ICreateConnection,
   IFetchConnectionById,
-  IFetchConnections
+  IFetchConnections,
+  IReceiveInvitationByOrg,
+  IReceiveInvitationByUrlOrg,
+  IReceiveInvitationResponse
 } from './interfaces/connection.interfaces';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
@@ -60,5 +63,17 @@ export class ConnectionController {
   async getConnectionsById(payload: IFetchConnectionById): Promise<IConnectionDetailsById> {
     const { user, connectionId, orgId } = payload;
     return this.connectionService.getConnectionsById(user, connectionId, orgId);
+  }
+
+  @MessagePattern({ cmd: 'receive-invitation-url' })
+  async receiveInvitationUrl(payload: IReceiveInvitationByUrlOrg): Promise<IReceiveInvitationResponse> {
+    const { user, receiveInvitationUrl, orgId } = payload;
+    return this.connectionService.receiveInvitationUrl(user, receiveInvitationUrl, orgId);
+  }
+
+  @MessagePattern({ cmd: 'receive-invitation' })
+  async receiveInvitation(payload: IReceiveInvitationByOrg): Promise<IReceiveInvitationResponse> {
+    const { user, receiveInvitation, orgId } = payload;
+    return this.connectionService.receiveInvitation(user, receiveInvitation, orgId);
   }
 }

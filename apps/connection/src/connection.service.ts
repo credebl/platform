@@ -8,7 +8,10 @@ import {
   IConnection,
   IConnectionInvitation,
   IConnectionSearchCriteria,
-  ICreateConnection
+  ICreateConnection,
+  IReceiveInvitation,
+  IReceiveInvitationResponse,
+  IReceiveInvitationUrl
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -357,6 +360,141 @@ export class ConnectionService {
         error: error.message
       }, error.status);
     }
+  }
+
+  async receiveInvitationUrl(user: IUserRequest, receiveInvitationUrl: IReceiveInvitationUrl, orgId: string): Promise<IReceiveInvitationResponse> {
+    try {
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
+      const { agentEndPoint } = agentDetails;
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+
+
+      let url;
+      if (orgAgentType === OrgAgentType.DEDICATED) {
+        url = `${agentEndPoint}${CommonConstants.URL_RECEIVE_INVITATION_URL}`;
+      } else if (orgAgentType === OrgAgentType.SHARED) {
+        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_RECEIVE_INVITATION_URL}`
+          .replace('#', agentDetails.tenantId);
+      } else {
+        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+      }
+
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const createConnectionInvitation = await this._receiveInvitationUrl(url, apiKey, receiveInvitationUrl);
+      return createConnectionInvitation;
+
+
+    } catch (error) {
+      this.logger.error(`[receiveInvitationUrl] - error in rece ive invitation url : ${JSON.stringify(error)}`);
+
+      if (error?.response?.error?.reason) {
+        throw new RpcException({
+          message: ResponseMessages.connection.error.connectionNotFound,
+          statusCode: error?.response?.status,
+          error: error?.response?.error?.reason
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
+  async _receiveInvitationUrl(
+    url: string,
+    apiKey: string,
+    receiveInvitationUrl: IReceiveInvitationUrl
+  ): Promise<IReceiveInvitationResponse> {
+
+    const pattern = { cmd: 'agent-receive-invitation-url' };
+    const payload = { url, apiKey, receiveInvitationUrl };
+    return this.connectionServiceProxy
+      .send<IReceiveInvitationResponse>(pattern, payload)
+      .toPromise()
+      .catch(error => {
+        this.logger.error(
+          `[_receiveInvitationUrl] [NATS call]- error in receive invitation url : ${JSON.stringify(error)}`
+        );
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error?.message?.error ? error.error?.message?.error : error.error,
+            message: error.message
+          }, error.error);
+      });
+  }
+
+  async receiveInvitation(user: IUserRequest, receiveInvitation: IReceiveInvitation, orgId: string): Promise<IReceiveInvitationResponse> {
+    try {
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
+      const { agentEndPoint } = agentDetails;
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+
+      let url;
+      if (orgAgentType === OrgAgentType.DEDICATED) {
+        url = `${agentEndPoint}${CommonConstants.URL_RECEIVE_INVITATION}`;
+      } else if (orgAgentType === OrgAgentType.SHARED) {
+        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_RECEIVE_INVITATION}`
+          .replace('#', agentDetails.tenantId);
+      } else {
+        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+      }
+
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const createConnectionInvitation = await this._receiveInvitation(url, apiKey, receiveInvitation);
+      return createConnectionInvitation;
+
+
+    } catch (error) {
+      this.logger.error(`[receiveInvitation] - error in receive invitation : ${JSON.stringify(error)}`);
+
+      if (error?.response?.error?.reason) {
+        throw new RpcException({
+          message: ResponseMessages.connection.error.connectionNotFound,
+          statusCode: error?.response?.status,
+          error: error?.response?.error?.reason
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
+  async _receiveInvitation(
+    url: string,
+    apiKey: string,
+    receiveInvitation: IReceiveInvitation
+  ): Promise<IReceiveInvitationResponse> {
+
+    const pattern = { cmd: 'agent-receive-invitation' };
+    const payload = { url, apiKey, receiveInvitation };
+    return this.connectionServiceProxy
+      .send<IReceiveInvitationResponse>(pattern, payload)
+      .toPromise()
+      .catch(error => {
+        this.logger.error(
+          `[_receiveInvitation] [NATS call]- error in receive invitation : ${JSON.stringify(error)}`
+        );
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error?.message?.error ? error.error?.message?.error : error.error,
+            message: error.message
+          }, error.error);
+      });
   }
 }
 

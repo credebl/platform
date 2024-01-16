@@ -34,7 +34,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
@@ -54,7 +53,6 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { ImageServiceService } from '@credebl/image-service';
 import { FileExportResponse, IIssuedCredentialSearchParams, RequestPayload } from './interfaces';
 import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -72,12 +70,9 @@ import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.d
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
-    private readonly imageServiceService: ImageServiceService,
-    private readonly awsService: AwsService,
-    private readonly commonService: CommonService
+    private readonly awsService: AwsService
   ) {}
   private readonly logger = new Logger('IssuanceController');
-  private readonly PAGE: number = 1;
 
   /**
    * @param orgId
@@ -179,7 +174,7 @@ export class IssuanceController {
       );
       return res
         .header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`)
-        .status(200)
+        .status(HttpStatus.OK)
         .send(exportedData.fileContent);
     } catch (error) {}
   }
@@ -194,12 +189,12 @@ export class IssuanceController {
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -211,7 +206,6 @@ export class IssuanceController {
       required: ['file'],
       properties: {
         file: {
-          // 👈 this property
           type: 'string',
           format: 'binary'
         }
@@ -261,12 +255,12 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -320,12 +314,12 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -356,12 +350,12 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -414,12 +408,12 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -473,12 +467,12 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -635,7 +629,6 @@ export class IssuanceController {
   ): Promise<Response> {
     issueCredentialDto.orgId = orgId;
     const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
-
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,

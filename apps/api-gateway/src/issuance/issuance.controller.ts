@@ -600,16 +600,16 @@ export class IssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId);
+    // const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId);
     
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
   
-    if (webhookUrl) {
-      try {
-        await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto});
-    } catch (error) {
-        throw new RpcException(error.response ? error.response : error);
-    }
+    // if (webhookUrl) {
+    //   try {
+    //     await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto});
+    // } catch (error) {
+    //     throw new RpcException(error.response ? error.response : error);
+    // }
   
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
     const finalResponse: IResponseType = {
@@ -648,5 +648,4 @@ export class IssuanceController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-}
 }

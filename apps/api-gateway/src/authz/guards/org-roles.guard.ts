@@ -34,8 +34,6 @@ export class OrgRolesGuard implements CanActivate {
 
     const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
 
-    // console.log(`--------------IsUUID(orgId) ${isValidUUID(orgId)}`);
-
     if (!orgId) {
       throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
     }

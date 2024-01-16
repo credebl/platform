@@ -118,3 +118,116 @@ export interface IConnectionSearchCriteria {
   searchByText: string;
   user: IUserRequestInterface
 }
+
+export interface IReceiveInvitationByUrlOrg {
+  user: IUserRequestInterface,
+  receiveInvitationUrl: IReceiveInvitationUrl,
+  orgId: string
+}
+
+export interface IReceiveInvitationUrl extends IReceiveInvite {
+  invitationUrl: string;
+}
+
+export interface IReceiveInvitationByOrg {
+  user: IUserRequestInterface,
+  receiveInvitation: IReceiveInvitation,
+  orgId: string
+}
+
+interface Service {
+  id: string;
+  serviceEndpoint: string;
+  type: string;
+  recipientKeys: string[];
+  routingKeys: string[];
+  accept: string[];
+}
+
+interface Invitation {
+  '@id': string;
+  '@type': string;
+  label: string;
+  goalCode: string;
+  goal: string;
+  accept: string[];
+  handshake_protocols: string[];
+  services: (Service | string)[];
+  imageUrl?: string;
+}
+
+export interface IReceiveInvite {
+  alias?: string;
+  label?: string;
+  imageUrl?: string;
+  autoAcceptConnection?: boolean;
+  autoAcceptInvitation?: boolean;
+  reuseConnection?: boolean;
+  acceptInvitationTimeoutMs?: number;
+}
+
+export interface IReceiveInvitation extends IReceiveInvite {
+  invitation: Invitation;
+}
+
+interface Tags {
+  invitationId: string;
+  recipientKeyFingerprints: string[];
+  role: string;
+  state: string;
+  threadId: string;
+}
+
+interface OutOfBandInvitationService {
+  id: string;
+  serviceEndpoint: string;
+  type: string;
+  recipientKeys: string[];
+  routingKeys: string[];
+}
+
+interface OutOfBandInvitation {
+  "@type": string;
+  "@id": string;
+  label: string;
+  accept: string[];
+  handshake_protocols: string[];
+  services: OutOfBandInvitationService[];
+}
+
+interface OutOfBandRecord {
+  _tags: Tags;
+  metadata?: { [key: string]: string };
+  id: string;
+  createdAt: string;
+  outOfBandInvitation: OutOfBandInvitation;
+  role: string;
+  state: string;
+  autoAcceptConnection: boolean;
+  reusable: boolean;
+  updatedAt: string;
+}
+
+interface ConnectionRecord {
+  _tags: { [key: string]: string };
+  metadata: { [key: string]: string };
+  connectionTypes: string[];
+  id: string;
+  createdAt: string;
+  did: string;
+  invitationDid: string;
+  theirLabel: string;
+  state: string;
+  role: string;
+  alias: string;
+  autoAcceptConnection: boolean;
+  threadId: string;
+  protocol: string;
+  outOfBandId: string;
+  updatedAt: string;
+}
+
+export interface IReceiveInvitationResponse {
+  outOfBandRecord: OutOfBandRecord;
+  connectionRecord: ConnectionRecord;
+}

@@ -15,6 +15,8 @@ import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/orga
 import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 import { IOrgCredentials, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { ClientCredentialsDto } from './dtos/client-credentials.dto';
+import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -188,4 +190,11 @@ export class OrganizationService extends BaseService {
     const payload = {orgId, invitationId};
     return this.sendNatsMessage(this.serviceProxy, 'delete-organization-invitation', payload);
   }
+
+  async clientLoginCredentials(
+    clientCredentialsDto: ClientCredentialsDto
+  ): Promise<IAccessTokenData> {
+    return this.sendNatsMessage(this.serviceProxy, 'authenticate-client-credentials', clientCredentialsDto);
+  }
+
 }

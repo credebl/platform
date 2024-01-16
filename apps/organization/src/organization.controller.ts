@@ -11,6 +11,7 @@ import { IOrganizationInvitations } from '@credebl/common/interfaces/organizatio
 import { organisation } from '@prisma/client';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { IOrgCredentials, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 
 @Controller()
 export class OrganizationController {
@@ -189,5 +190,10 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'delete-organization-invitation' })
   async deleteOrganizationInvitation(payload: { orgId: string; invitationId: string; }): Promise<boolean> {
     return this.organizationService.deleteOrganizationInvitation(payload.orgId, payload.invitationId);
+  }
+
+  @MessagePattern({ cmd: 'authenticate-client-credentials' })
+  async clientLoginCredentails(payload: { clientId: string; clientSecret: string;}): Promise<IAccessTokenData> {
+    return this.organizationService.clientLoginCredentails(payload);
   }
 }

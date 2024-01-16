@@ -70,7 +70,8 @@ export const ResponseMessages = {
             updateUserRoles: 'User roles updated successfully',
             delete: 'Organization deleted successfully',
             orgInvitationDeleted: 'Organization invitation deleted successfully',
-            orgCredentials: 'Organization credentials created successfully'
+            orgCredentials: 'Organization credentials created successfully',
+            clientCredentials: 'Client credentials fetched successfully'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -88,7 +89,8 @@ export const ResponseMessages = {
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
             credentialsNotUpdate: 'Unable to update organization credentials',
             invalidOrgId:'Invalid format for orgId',
-            orgIdIsRequired:'OrgId is required'
+            orgIdIsRequired:'OrgId is required',
+            clientIdRequired:'clientId is required'
             
         }
     },

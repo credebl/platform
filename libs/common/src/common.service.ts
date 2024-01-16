@@ -41,7 +41,7 @@ export class CommonService {
           return response.data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in POST : ${error}`);
+      this.logger.error(`ERROR in POST : ${JSON.stringify(error)}`);
       if (
         error
           .toString()
@@ -68,6 +68,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
+            message: error.message,
             error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.BAD_REQUEST
@@ -83,15 +84,17 @@ export class CommonService {
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
-      } else {
+      } 
+      
         throw new HttpException(
           {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            statusCode: error.response.status,
+            message: error.message,
             error: error.response.data ? error.response.data : error.message
           },
-          HttpStatus.INTERNAL_SERVER_ERROR
+          error.response.status
         );
-      }
+      
     }
   }
 

@@ -17,7 +17,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -28,6 +28,9 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { IOrgCredentials, IOrganization } from '@credebl/common/interfaces/organization.interface';
 
+import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
+import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
+import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -268,6 +271,35 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
+   
+    const {clientId, clientSecret} = clientCredentials;
+    return this.authenticateClientKeycloak(clientId, clientSecret);
+  }
+
+
+  async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
+
+    try {
+
+      const payload = new ClientCredentialTokenPayloadDto();
+      // eslint-disable-next-line camelcase
+      payload.client_id = clientId;
+      // eslint-disable-next-line camelcase
+      payload.client_secret = clientSecret;
+      payload.scope = 'email profile';
+      
+      const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload);
+      return mgmtTokenResponse;
+
+    } catch (error) {
+      this.logger.error(`Error in authenticateClientKeycloak : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+   
+  }
+
 
   /**
    * Description: get public organizations

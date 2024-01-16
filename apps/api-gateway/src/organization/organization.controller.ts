@@ -21,8 +21,7 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { ImageServiceService } from '@credebl/image-service';
-import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { validate as isValidUUID } from 'uuid';
+import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -339,6 +338,28 @@ export class OrganizationController {
       data: orgCredentials
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/:clientId/token')
+  @ApiOperation({ summary: 'Authenticate client for credentials', description: 'Authenticate client for credentials' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async clientLoginCredentials(
+    @Param('clientId') clientId: string,
+    @Body() clientCredentialsDto: ClientCredentialsDto,
+    @Res() res: Response): Promise<Response> {
+    clientCredentialsDto.clientId = clientId.trim();
+
+    if (!clientCredentialsDto.clientId) {
+      throw new BadRequestException(ResponseMessages.organisation.error.clientIdRequired);
+    }
+
+    const orgCredentials = await this.organizationService.clientLoginCredentials(clientCredentialsDto);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.clientCredentials,
+      data: orgCredentials
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Post('/:orgId/invitations')

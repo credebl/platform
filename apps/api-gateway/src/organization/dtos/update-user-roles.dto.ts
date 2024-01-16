@@ -11,7 +11,6 @@ export class UpdateUserRolesDto {
         example: ['2', '1', '3']
     })
     
-    // @IsNotEmpty()
     @IsArray()
     @ArrayNotEmpty()
     @MinLength(0, {each: true})

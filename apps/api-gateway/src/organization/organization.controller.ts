@@ -348,10 +348,14 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Update user roles', description: 'update user roles' })
-  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidUserId); }})) userId: string, @Res() res: Response): Promise<Response> {
+  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId') userId: string, @Res() res: Response): Promise<Response> {
 
-    updateUserDto.orgId = orgId;
-    updateUserDto.userId = userId;
+    updateUserDto.orgId = orgId;  
+    updateUserDto.userId = userId.trim();  
+     
+    if (!updateUserDto.userId.length) {
+      throw new BadRequestException(ResponseMessages.organisation.error.userIdIsRequired);
+    }
     await this.organizationService.updateUserRoles(updateUserDto, updateUserDto.userId);
 
     const finalResponse: IResponse = {
@@ -415,9 +419,16 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async deleteOrganizationInvitation(
     @Param('orgId') orgId: string, 
-    @Param('invitationId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidInvitationId); }})) invitationId: string, 
+    @Param('invitationId') invitationId: string, 
     @Res() res: Response
     ): Promise<Response> {
+      // eslint-disable-next-line no-param-reassign
+      invitationId = invitationId.trim();
+    
+    if (!invitationId.length) {
+      throw new BadRequestException(ResponseMessages.organisation.error.invitationIdIsRequired);
+    }
+
     await this.organizationService.deleteOrganizationInvitation(orgId, invitationId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,

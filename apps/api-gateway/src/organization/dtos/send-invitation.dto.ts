@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEmail, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 
@@ -16,6 +16,7 @@ export class SendInvitationDto {
     @ApiProperty({ example: [2, 1, 3] })
     @IsNotEmpty({ message: 'Please provide valid orgRoleId' })
     @IsArray()
+    @IsUUID('4', { each: true, message: 'Invalid format of orgRoleId' })
     orgRoleId: string[];
 
 }
@@ -27,7 +28,7 @@ export class BulkSendInvitationDto {
         example: [
             {
                 email: 'awqx@getnada.com',
-                orgRoleId: ['1,2,3']
+                orgRoleId: [1, 2, 3]
             }
         ]
     })

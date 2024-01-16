@@ -174,4 +174,3 @@ export class ConnectionController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 }     
-

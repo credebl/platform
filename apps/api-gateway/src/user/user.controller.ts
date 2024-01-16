@@ -39,7 +39,6 @@ import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { Invitation } from '@credebl/enum/enum';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
-import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
@@ -50,12 +49,13 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { AwsService } from '@credebl/aws/aws.service';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
 @ApiTags('users')
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class UserController {
   constructor(
     private readonly userService: UserService,
@@ -91,10 +91,10 @@ export class UserController {
   })
   async get(
     @User() user: IUserRequestInterface,
-    @Query() getAllUsersDto: GetAllUsersDto,
+    @Query() paginationDto: PaginationDto,
     @Res() res: Response
   ): Promise<Response> {
-    const users = await this.userService.get(getAllUsersDto);
+    const users = await this.userService.get(paginationDto);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchUsers,
@@ -224,7 +224,7 @@ export class UserController {
     required: false
   })
   async invitations(
-    @Query() getAllInvitationsDto: GetAllInvitationsDto,
+  @Query() getAllInvitationsDto: GetAllInvitationsDto,
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {

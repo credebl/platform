@@ -12,7 +12,8 @@ import {
   UseGuards,
   BadRequestException,
   Body,
-  SetMetadata
+  SetMetadata,
+  HttpStatus
 } from '@nestjs/common';
 import { AgentService } from './agent.service';
 import { ApiTags, ApiResponse, ApiOperation, ApiQuery, ApiBearerAuth, ApiParam, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiExcludeEndpoint } from '@nestjs/swagger';
@@ -53,9 +54,9 @@ export class AgentController {
   @ApiQuery({ name: 'verkey', required: false })
   @ApiQuery({ name: 'did', required: false })
   @ApiOperation({ summary: 'List of all DID', description: 'List of all the DID created for the current Cloud Agent.' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   getAllDid(
     @User() user: any,
     @Query('_public') _public: boolean,
@@ -76,9 +77,9 @@ export class AgentController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @SetMetadata('permissions', [CommonConstants.PERMISSION_ORG_MGMT])
   @ApiOperation({ summary: 'Create a new DID', description: 'Create a new did for the current Cloud Agent wallet.' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   createLocalDid(
     @User() user: any
   ): Promise<object> {
@@ -100,9 +101,9 @@ export class AgentController {
     summary: 'Create wallet and start ACA-Py',
     description: 'Create a new wallet and spin up your Aries Cloud Agent Python by selecting your desired network.'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   walletProvision(
     @Body() walletUserDetails: WalletDetailsDto,
     @User() user: object
@@ -127,9 +128,9 @@ export class AgentController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @SetMetadata('permissions', [CommonConstants.PERMISSION_ORG_MGMT])
   @ApiOperation({ summary: 'Fetch the current public DID', description: 'Fetch the current public DID.' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   getPublicDid(
     @User() user: any
   ): Promise<object> {
@@ -146,9 +147,9 @@ export class AgentController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @SetMetadata('permissions', [CommonConstants.PERMISSION_USER_MANAGEMENT])
   @ApiOperation({ summary: 'Assign public DID', description: 'Assign public DID for the current use.' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   assignPublicDid(
     @Param('id') id: number,
     @User() user: any
@@ -177,9 +178,9 @@ export class AgentController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @SetMetadata('permissions', [CommonConstants.PERMISSION_ORG_MGMT])
   @ApiOperation({ summary: 'Send a NYM registration to the ledger', description: 'Write the DID to the ledger to make that DID public.' })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   registerNym(
     @Param('id') id: string,
     @User() user: IUserRequestInterface
@@ -202,9 +203,9 @@ export class AgentController {
     summary: 'Restart/Stop an running Aries Agent. (Platform Admin)',
     description: 'Platform Admin can restart or stop the running Aries Agent. (Platform Admin)'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   @ApiParam({ name: 'action', enum: AgentActions })
   restartStopAgent(@Param('orgId') orgId: string, @Param('action') action: string): Promise<object> {
     return this.agentService.restartStopAgent(action, orgId);
@@ -218,9 +219,9 @@ export class AgentController {
     summary: 'Fetch Aries Cloud Agent status',
     description: 'Fetch the status of the Aries Cloud Agent.'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   getAgentServerStatus(@User() user: any): Promise<object> {
     this.logger.log(`**** getPlatformConfig called...`);
     return this.agentService.getAgentServerStatus(user);
@@ -247,9 +248,9 @@ export class AgentController {
     summary: 'List all Aries Cloud Agent status',
     description: 'List of all created Aries Cloud Agent status.'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   @ApiQuery({ name: 'items_per_page', required: false })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'search_text', required: false })

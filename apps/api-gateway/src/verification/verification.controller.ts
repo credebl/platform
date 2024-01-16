@@ -34,7 +34,6 @@ import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { SortFields } from './enum/verification.enum';
 
-
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('verifications')
@@ -68,8 +67,8 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Param('proofId') proofId: string,
         @Param('orgId') orgId: string
-    ): Promise<Response> { 
-        const sendProofRequest = await this.verificationService.getVerifiedProofDetails(proofId, orgId, user);   
+    ): Promise<Response> {
+        const sendProofRequest = await this.verificationService.getVerifiedProofDetails(proofId, orgId, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.verification.success.verifiedProofDetails,
@@ -125,7 +124,7 @@ export class VerificationController {
         name: 'sortField',
         enum: SortFields,
         required: false
-      })    
+    })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
@@ -138,13 +137,13 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Param('orgId') orgId: string
     ): Promise<Response> {
-      const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllProofRequests;
-      const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
-          pageNumber,
-          searchByText,
-          pageSize,
-          sortField,
-          sortBy
+        const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllProofRequests;
+        const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
+            pageNumber,
+            searchByText,
+            pageSize,
+            sortField,
+            sortBy
         };
 
         const proofPresentationDetails = await this.verificationService.getProofPresentations(proofRequestsSearchCriteria, user, orgId);
@@ -156,42 +155,42 @@ export class VerificationController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-  /**
-   * Send proof request
-   * @param orgId
-   * @returns Requested proof presentation details
-   */
-  @Post('/orgs/:orgId/proofs')
-  @ApiOperation({
-    summary: `Sends a proof request`,
-    description: `Sends a proof request`
-  })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-  @ApiBody({ type: RequestProofDto })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
-  async sendPresentationRequest(
-    @Res() res: Response,
-    @User() user: IUserRequest,
-    @Param('orgId') orgId: string,
-    @Body() requestProof: RequestProofDto
-  ): Promise<Response> {
+    /**
+     * Send proof request
+     * @param orgId
+     * @returns Requested proof presentation details
+     */
+    @Post('/orgs/:orgId/proofs')
+    @ApiOperation({
+        summary: `Sends a proof request`,
+        description: `Sends a proof request`
+    })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiBody({ type: RequestProofDto })
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
+    async sendPresentationRequest(
+        @Res() res: Response,
+        @User() user: IUserRequest,
+        @Param('orgId') orgId: string,
+        @Body() requestProof: RequestProofDto
+    ): Promise<Response> {
 
-    for (const attrData of requestProof.attributes) {
-      await this.validateAttribute(attrData);
+        for (const attrData of requestProof.attributes) {
+            await this.validateAttribute(attrData);
+        }
+
+        requestProof.orgId = orgId;
+        await this.verificationService.sendProofRequest(requestProof, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.verification.success.send
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
     }
-
-    requestProof.orgId = orgId;
-    await this.verificationService.sendProofRequest(requestProof, user);
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.verification.success.send
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
 
     /**
      * Verify proof presentation
@@ -281,13 +280,13 @@ export class VerificationController {
         @Res() res: Response
     ): Promise<Response> {
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
-    //     const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
-    // if (webhookUrl) {
-    //     try {
-    //         await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload});
-    //   } catch (error) {
-    //       throw new RpcException(error.response ? error.response : error);
-    //   }
+        //     const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
+        // if (webhookUrl) {
+        //     try {
+        //         await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload});
+        //   } catch (error) {
+        //       throw new RpcException(error.response ? error.response : error);
+        //   }
         const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
@@ -295,8 +294,7 @@ export class VerificationController {
             data: webhookProofPresentation
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
-    
-}
+    }
 
     async validateAttribute(
         attrData: object
@@ -313,7 +311,7 @@ export class VerificationController {
         }
 
         if (!attrData['credDefId']) {
-            throw new BadRequestException('credDefId must be required'); 
+            throw new BadRequestException('credDefId must be required');
         }
 
         if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
@@ -328,9 +326,9 @@ export class VerificationController {
             throw new BadRequestException('value cannot be empty');
         }
 
-        if (attrData['condition']) { 
+        if (attrData['condition']) {
             if (isNaN(attrData['value'])) {
-            throw new BadRequestException('value must be an integer');
+                throw new BadRequestException('value must be an integer');
             }
         }
     }

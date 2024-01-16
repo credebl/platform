@@ -335,7 +335,7 @@ model ecosystem {
   id                   String                  @id @default(uuid()) @db.Uuid
   name                 String
   description          String
-  tags                 String
+  tags                 String?
   createDateTime       DateTime                @default(now()) @db.Timestamptz(6)
   createdBy            String                  @db.Uuid
   lastChangedDateTime  DateTime                @default(now()) @db.Timestamptz(6)

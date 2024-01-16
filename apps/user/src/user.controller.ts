@@ -90,6 +90,11 @@ export class UserController {
   async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<IUserInvitations> {
         return this.userService.invitations(payload);
   }
+  
+  @MessagePattern({ cmd: 'register-keycloak-users' })
+  async registerKeycloakUsers(): Promise<string> {
+      return this.userService.registerKeycloakUsers();
+  }
 
   /**
    *

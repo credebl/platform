@@ -55,6 +55,21 @@ export class ClientRegistrationService {
 
   }
 
+  async createUsersInKeycloak(
+    payload: unknown,
+    realm: string,
+    token: string
+  ) {
+
+    const registerUserResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.createUserURL(realm),
+      payload,
+      this.getAuthHeader(token)
+    );
+
+    return registerUserResponse;
+  }
+
   async createUser(
     user: CreateUserDto,
     realm: string,

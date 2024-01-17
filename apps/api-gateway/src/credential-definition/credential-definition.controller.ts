@@ -22,8 +22,8 @@ import { SortFields } from './enum/cred-def.enum';
 @ApiBearerAuth()
 @ApiTags('credential-definitions')
 @Controller()
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 @UseFilters(CustomExceptionFilter)
 export class CredentialDefinitionController {
 
@@ -35,7 +35,7 @@ export class CredentialDefinitionController {
     summary: 'Get an existing credential definition by Id',
     description: 'Get an existing credential definition by Id'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getCredentialDefinitionById(
@@ -146,7 +146,7 @@ export class CredentialDefinitionController {
     summary: 'Sends a credential definition to ledger',
     description: 'Sends a credential definition to ledger'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async createCredentialDefinition(
@@ -161,6 +161,27 @@ export class CredentialDefinitionController {
     const credDefResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.credentialDefinition.success.create,
+      data: credentialsDefinitionDetails.response
+    };
+    return res.status(HttpStatus.CREATED).json(credDefResponse);
+  }
+
+  @Get('/orgs/:orgId/bulk/cred-defs')
+  @ApiOperation({
+    summary: 'Fetch all credential definition for bulk opeartion',
+    description: 'Fetch all credential definition from metadata saved in database for bulk opeartion.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getAllCredDefAndSchemaForBulkOperation(
+    @Param('orgId') orgId: string,
+    @Res() res: Response
+  ): Promise<object> {
+    const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefAndSchemaForBulkOperation(orgId);
+    const credDefResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.credentialDefinition.success.fetch,
       data: credentialsDefinitionDetails.response
     };
     return res.status(HttpStatus.CREATED).json(credDefResponse);

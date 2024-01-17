@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
-import { Injectable, Inject, HttpException } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { Injectable, Inject} from '@nestjs/common';
+import { ClientProxy} from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
@@ -128,10 +128,7 @@ export class IssuanceService extends BaseService {
           return message;
         } catch (error) {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException({
-            status: error.status,
-            error: error.message
-          }, error.status);
+          throw error;
         }
       }
     
@@ -145,10 +142,8 @@ export class IssuanceService extends BaseService {
           return message;
         } catch (error) {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException({
-            status: error.status,
-            error: error.message
-          }, error.status);
+       
+        throw error;
         }
       }
     

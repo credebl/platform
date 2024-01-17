@@ -1,5 +1,5 @@
-import { Injectable, Inject, HttpException } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { Injectable, Inject} from '@nestjs/common';
+import { ClientProxy} from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -90,10 +90,7 @@ export class VerificationService extends BaseService {
           return message;
         } catch (error) {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException({
-            status: error.status,
-            error: error.message
-          }, error.status);
+          throw error;
         }
       }
     
@@ -107,10 +104,7 @@ export class VerificationService extends BaseService {
           return message;
         } catch (error) {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException({
-            status: error.status,
-            error: error.message
-          }, error.status);
+          throw error;
         }
       }
 

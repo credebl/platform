@@ -1,5 +1,5 @@
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { Inject, Injectable, HttpException } from '@nestjs/common';
+import { Inject, Injectable} from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
@@ -99,10 +99,7 @@ export class ConnectionService extends BaseService {
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException({
-        status: error.status,
-        error: error.message
-      }, error.status);
+      throw error;
     }
   }
 
@@ -116,10 +113,7 @@ export class ConnectionService extends BaseService {
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException({
-        status: error.status,
-        error: error.message
-      }, error.status);
+      throw error;
     }
   }
 

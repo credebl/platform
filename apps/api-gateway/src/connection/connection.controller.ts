@@ -21,7 +21,7 @@ import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interfac
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy} from '@nestjs/microservices';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -184,25 +184,37 @@ export class ConnectionController {
    * @param orgId
    * @returns Callback URL for connection and created connections details
    */
-    @Post('wh/:orgId/connections/')
-    @ApiExcludeEndpoint()
-    @ApiOperation({
-        summary: 'Catch connection webhook responses',
-        description: 'Callback URL for connection'
-    })
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-    async getConnectionWebhook(
-        @Body() connectionDto: ConnectionDto,
-        @Param('orgId') orgId: string,
-        @Res() res: Response
-    ): Promise<Response> {
-        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.connection.success.create,
-            data: connectionData
-        };
-
-        return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
-}     
+  @Post('wh/:orgId/connections/')
+  @ApiExcludeEndpoint()
+  @ApiOperation({
+    summary: 'Catch connection webhook responses',
+    description: 'Callback URL for connection'
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  async getConnectionWebhook(
+    @Body() connectionDto: ConnectionDto,
+    @Param('orgId') orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
+  
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId).catch(error => {
+       
+     });
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.connection.success.create,
+      data: connectionData
+    };
+    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId).catch(error => {
+        throw error;
+    });
+    if (webhookUrl) {
+        await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto }).catch(error => {
+           throw error; 
+        });
+    } 
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+}

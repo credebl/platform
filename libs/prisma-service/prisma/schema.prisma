@@ -461,7 +461,7 @@ model file_data {
 model notification {
   id                  String    @id @default(uuid()) @db.Uuid
   orgId               String?   @unique @db.Uuid
-  webhookEndpoint     String?
+  notificationWebhook String?
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
   createdBy           String    @default("1")
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)

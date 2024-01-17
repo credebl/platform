@@ -37,8 +37,8 @@ export class CreateOrganizationDto {
     @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => trim(value))
-    @IsNotEmpty({ message: 'webhookEndpoint is required.' })
-    @IsString({ message: 'webhookEndpoint must be in string format.' })
+    @IsNotEmpty({ message: 'notificationWebhook is required.' })
+    @IsString({ message: 'notificationWebhook must be in string format.' })
     @IsUrl({
         // eslint-disable-next-line camelcase
         require_protocol: true, // require URL protocol (e.g., http:// or https://)
@@ -46,5 +46,5 @@ export class CreateOrganizationDto {
         require_tld: true // require top-level domain (e.g., .com, .net)
         
     })
-    webhookEndpoint?: string;
+    notificationWebhook?: string;
 }

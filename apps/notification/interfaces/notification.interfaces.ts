@@ -3,12 +3,12 @@
 export interface INotification {
     id: string;
     orgId: string;
-    webhookEndpoint: string;
+    notificationWebhook: string;
 }
 
 export interface IWebhookEndpoint {
     orgId: string;
-    webhookEndpoint: string;
+    notificationWebhook: string;
 }
 
 export interface ISendNotification {

@@ -19,11 +19,11 @@ export class NotificationRepository {
     async storeOrgWebhookEndpoint(payload: IWebhookEndpoint): Promise<INotification> {
         try {
 
-            const { orgId, webhookEndpoint } = payload;
+            const { orgId, notificationWebhook } = payload;
             const updateNotification = await this.prisma.notification.create({
                 data: {
                     orgId,
-                    webhookEndpoint
+                    notificationWebhook
                 }
             });
 

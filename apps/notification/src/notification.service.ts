@@ -55,7 +55,7 @@ export class NotificationService {
       /**
        * Send notification details with webhook endpoint  
        */
-      const webhookResponse = await this.commonService.httpPost(getWebhookUrl?.webhookEndpoint, webhookPayload)
+      const webhookResponse = await this.commonService.httpPost(getWebhookUrl?.notificationWebhook, webhookPayload)
         .then(async response => response)
         .catch(error => {
           this.logger.error(`Error in sendNotification : ${JSON.stringify(error)}`);
@@ -63,7 +63,7 @@ export class NotificationService {
         });
 
         
-      if (!this.isValidUrl(getWebhookUrl?.webhookEndpoint)) {
+      if (!this.isValidUrl(getWebhookUrl?.notificationWebhook)) {
         throw new BadRequestException(ResponseMessages.notification.error.invalidUrl);
       }
 

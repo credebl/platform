@@ -63,8 +63,8 @@ export class OrganizationService {
 
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
-      if (createOrgDto.webhookEndpoint) {
-        await this.storeOrgWebhookEndpoint(organizationDetails.id, createOrgDto.webhookEndpoint);
+      if (createOrgDto.notificationWebhook) {
+        await this.storeOrgWebhookEndpoint(organizationDetails.id, createOrgDto.notificationWebhook);
       }
 
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
@@ -76,11 +76,11 @@ export class OrganizationService {
     }
   }
 
-  async storeOrgWebhookEndpoint(orgId: string, webhookEndpoint: string): Promise<string> {
+  async storeOrgWebhookEndpoint(orgId: string, notificationWebhook: string): Promise<string> {
     const pattern = { cmd: 'register-org-webhook-endpoint-for-notification' };
     const payload = {
       orgId,
-      webhookEndpoint
+      notificationWebhook
     };
 
     try {

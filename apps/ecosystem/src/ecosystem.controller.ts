@@ -8,7 +8,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { RequestCredDeffEndorsement, RequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
+import { IEditEcosystem, IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, ICreateEcosystem, EcosystemDetailsResult } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {
@@ -22,7 +22,7 @@ export class EcosystemController {
    */
 
   @MessagePattern({ cmd: 'create-ecosystem' })
-  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<object> {
+  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<ICreateEcosystem> {
     return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
   }
 
@@ -32,7 +32,7 @@ export class EcosystemController {
    * @returns Get updated ecosystem details
    */
   @MessagePattern({ cmd: 'edit-ecosystem' })
-  async editEcosystem(@Body() payload: { editEcosystemDto; ecosystemId }): Promise<object> {
+  async editEcosystem(@Body() payload: { editEcosystemDto; ecosystemId }): Promise<IEditEcosystem> {
     return this.ecosystemService.editEcosystem(payload.editEcosystemDto, payload.ecosystemId);
   }
 
@@ -42,7 +42,7 @@ export class EcosystemController {
    * @returns Get all ecosystem details
    */
   @MessagePattern({ cmd: 'get-all-ecosystem' })
-  async getAllEcosystems(@Body() payload: { orgId: string }): Promise<object> {
+  async getAllEcosystems(@Body() payload: { orgId: string }): Promise<EcosystemDetailsResult> {
     return this.ecosystemService.getAllEcosystem(payload);
   }
 
@@ -51,7 +51,7 @@ export class EcosystemController {
    * @returns Get ecosystem dashboard details
    */
   @MessagePattern({ cmd: 'get-ecosystem-dashboard-details' })
-  async getEcosystemDashboardDetails(payload: { ecosystemId: string; orgId: string }): Promise<object> {
+  async getEcosystemDashboardDetails(payload: { ecosystemId: string; orgId: string }): Promise<IEcosystemDashboard> {
     return this.ecosystemService.getEcosystemDashboardDetails(payload.ecosystemId);
   }
 

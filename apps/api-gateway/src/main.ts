@@ -10,7 +10,7 @@ import { AllExceptionsFilter } from '@credebl/common/exception-handler';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 
-import helmet from "helmet";
+import helmet from 'helmet';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -28,9 +28,7 @@ async function bootstrap(): Promise<void> {
   expressApp.set('x-powered-by', false);
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb' }));
-  app.use(helmet({
-    xssFilter:true
-  }));
+  
   
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
@@ -62,7 +60,9 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('uploadedFiles/bulk-verification-templates'));
   app.use(express.static('uploadedFiles/import'));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-
+  app.use(helmet({
+    xssFilter:true
+  }));
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);
 }

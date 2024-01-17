@@ -85,9 +85,12 @@ export const ResponseMessages = {
             orgNotFound: 'Organization not found',
             orgNotMatch: 'Organization does not have access',
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
-            invalidOrgId:'Invalid format for orgId',
-            orgIdIsRequired:'OrgId is required'
-            
+            invalidOrgId: 'Invalid format for orgId',
+            orgIdIsRequired: 'OrgId is required',
+            invalidUserId: 'Invalid format of userId',
+            invalidInvitationId: 'Invalid format for invitaion id',
+            ecosystemIdIsRequired: 'ecosystemId is required'
+
         }
     },
 
@@ -164,7 +167,9 @@ export const ResponseMessages = {
     agent: {
         success: {
             create: 'Agent process initiated successfully. Please wait',
-            health: 'Agent health details retrieved successfully.'
+            health: 'Agent health details retrieved successfully.',
+            webhookUrlRegister: 'Webhook Url registered successfully',
+            getWebhookUrl: 'Webhook Url fetched successfully'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -189,12 +194,17 @@ export const ResponseMessages = {
             walletAlreadyProcessing: 'Your wallet is already processing',
             notAbleToSpinp: 'Agent not able to spun up',
             platformAdminNotAbleToSpinp: 'Platform admin agent is not spun up',
-            seedCharCount: 'seed must be at most 32 characters'
+            seedCharCount: 'seed must be at most 32 characters',
+            nullTenantId: 'TenantId must not be null',
+            tenantIdNotFound: 'TenantId not found',
+            invalidTenantIdIdFormat: 'Invalid tenantId format',
+            requiredTenantId: 'Tenant Id is required'
         }
     },
     connection: {
         success: {
             create: 'Connection created successfully',
+            receivenvitation: 'Invitation received successfully',
             fetchConnection: 'Connection details fetched successfully',
             fetch: 'Connections details fetched successfully'
         },
@@ -350,6 +360,16 @@ export const ResponseMessages = {
         error: {
             notFound: 'Notification record not found.',
             invalidUrl: 'Invalid URL'
+        }
+    },
+    webhook: {
+        success: {
+            webhookUrlRegister: 'Webhook Url registered successfully',
+            getWebhookUrl: 'Webhook Url fetched successfully'
+        },
+        error: {
+            registerWebhook: 'Unable to register a webhook url',
+            webhookResponse: 'Error in sending webhook response to org webhook url'
         }
     }
 };

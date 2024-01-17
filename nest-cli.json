@@ -242,6 +242,15 @@
         "tsConfigPath": "apps/ecosystem/tsconfig.app.json"
       }
     },
+    "webhook": {
+      "type": "application",
+      "root": "apps/webhook",
+      "entryFile": "main",
+      "sourceRoot": "apps/webhook/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/webhook/tsconfig.app.json"
+      }
+    },
     "image-service": {
       "type": "library",
       "root": "libs/image-service",

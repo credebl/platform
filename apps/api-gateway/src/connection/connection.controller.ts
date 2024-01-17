@@ -19,7 +19,7 @@ import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { ClientProxy, RpcException} from '@nestjs/microservices';
+import { ClientProxy} from '@nestjs/microservices';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -155,23 +155,24 @@ export class ConnectionController {
     @Res() res: Response
   ): Promise<Response> {
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
-
-    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId);
-
-    if (webhookUrl) {
-      try {
-        await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto });
-    } catch (error) {
-        throw new RpcException(error.response ? error.response : error);
-    }
-    const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
+  
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId).catch(error => {
+       
+     });
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.connection.success.create,
       data: connectionData
     };
-
+    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId).catch(error => {
+        throw error;
+    });
+    if (webhookUrl) {
+        await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto }).catch(error => {
+           throw error; 
+        });
+    } 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-}     
 }

@@ -33,7 +33,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { SortFields } from './enum/verification.enum';
-import { RpcException } from '@nestjs/microservices';
+
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -281,21 +281,31 @@ export class VerificationController {
         @Res() res: Response
     ): Promise<Response> {
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
-        const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
-    if (webhookUrl) {
-        try {
-            await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload});
-      } catch (error) {
-          throw new RpcException(error.response ? error.response : error);
-      }
-        const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload);
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.create,
-            data: webhookProofPresentation
-        };
+       
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
+    
+            });
+            const finalResponse: IResponse = {
+                statusCode: HttpStatus.CREATED,
+                message: ResponseMessages.verification.success.create,
+                data: webhookProofPresentation
+            };
+           
+           
+             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId).catch(error => {
+                throw error;
+             });
+            
+        if (webhookUrl) {
+            
+                await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload}).catch(error => {
+                    throw error;
+                });
+             
+        }
         return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
+
 }
 
     async validateAttribute(

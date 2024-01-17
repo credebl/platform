@@ -62,6 +62,7 @@ import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
+import { error } from 'console';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -612,24 +613,26 @@ export class IssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId);
-    
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
-  
-    if (webhookUrl) {
-      try {
-        await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto});
-    } catch (error) {
-        throw new RpcException(error.response ? error.response : error);
+     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
+     
+      });
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.create,
+        data: getCredentialDetails
+      };    
+      const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId).catch(error => {
+        throw error;
+      });
+      if (webhookUrl) {
+        
+          await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto}).catch(error => {
+            throw error;
+          });
+      
     }
-  
-    const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
-    };
     return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-}
+    }   
 }

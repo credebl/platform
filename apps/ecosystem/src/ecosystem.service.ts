@@ -141,12 +141,11 @@ export class EcosystemService {
     const updateData: CreateEcosystem = {
       lastChangedBy: userId
     };
+    // const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
 
-    const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
-
-    if (ecosystemExist) {
-      throw new ConflictException(ResponseMessages.ecosystem.error.exists);
-    }
+    // if (ecosystemExist) {
+    //   throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+    // }
     
     if (name) { updateData.name = name; }
 

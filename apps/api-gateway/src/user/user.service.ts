@@ -1,5 +1,4 @@
-import { Inject } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
@@ -13,6 +12,7 @@ import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { CreateUserDegreeCertificateDto } from './dto/share-degree-certificate.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -68,6 +68,13 @@ export class UserService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', payload);
   }
   
+  async shareDegreeCertificate(
+    shareDegreeCertificate: CreateUserDegreeCertificateDto
+  ): Promise<object> {
+    const payload = { shareDegreeCertificate};
+    return this.sendNatsMessage(this.serviceProxy, 'share-degree-certificate', payload);
+  }
+
   async get(
     paginationDto:PaginationDto
   ): Promise<object> {

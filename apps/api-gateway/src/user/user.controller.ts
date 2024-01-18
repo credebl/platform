@@ -50,6 +50,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { AwsService } from '@credebl/aws/aws.service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { CreateUserDegreeCertificateDto } from './dto/share-degree-certificate.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -333,6 +334,25 @@ export class UserController {
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.user.success.shareUserCertificate,
         label: title,
+        data: imageBuffer
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/degree-certificate')
+  @ApiOperation({
+    summary: 'Share Degree certificate',
+    description: 'Share Degree certificate'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async shareUniversityCertificate(
+    @Body() shareDegreeCertificate: CreateUserDegreeCertificateDto,
+    @Res() res: Response
+  ): Promise<Response> {  
+   const imageBuffer = await this.userService.shareDegreeCertificate(shareDegreeCertificate);
+      const finalResponse: IResponse = {
+        statusCode: HttpStatus.CREATED,
+        message: 'Certificate url generated successfully',
         data: imageBuffer
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);

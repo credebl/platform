@@ -82,7 +82,13 @@ export interface ISendVerificationEmail {
     credentialId: string;
     attributes: Attribute[];
   }
-  
+ 
+  export interface IShareDegreeCertificate {
+    schemaId: string;
+    credentialId: string;
+    attributes: Attribute[];
+  }
+
   export interface Attribute {
     [key: string]: string;
     label: string;
@@ -164,4 +170,13 @@ export interface  IUserSignIn{
   email: string;
   password: string;
   isPasskey: boolean;
+}
+
+export interface IIssueCertificate {
+  courseCode: string;
+  courseName: string;
+  theoryGradeCredits: string;
+  theoryObtainedEarned: string;
+  practicalGradeCredits: string;
+  practicalObtainedEarned: string;
 }

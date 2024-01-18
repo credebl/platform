@@ -7,7 +7,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Reflector } from '@nestjs/core';
 import { ResponseMessages } from '@credebl/common/response-messages';
-
+import { validate as isValidUUID } from 'uuid';
 @Injectable()
 export class OrgRolesGuard implements CanActivate {
   constructor(private reflector: Reflector) { }            // eslint-disable-next-line array-callback-return
@@ -25,7 +25,6 @@ export class OrgRolesGuard implements CanActivate {
       return true;
     }
 
-    // Request requires org check, proceed with it
     const req = context.switchToHttp().getRequest();
     const { user } = req;
   
@@ -34,11 +33,15 @@ export class OrgRolesGuard implements CanActivate {
     req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
 
     const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
-  
+
     if (!orgId) {
       throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
     }
 
+    if (!isValidUUID(orgId)) {
+      throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+    }
+  
     if (orgId) {     
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {

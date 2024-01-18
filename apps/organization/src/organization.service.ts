@@ -326,6 +326,11 @@ export class OrganizationService {
         const userData = await this.getUserFirstName(userEmail);
         
         const {firstName} = userData;
+        const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
+       
+        if (0 === orgRolesDetails.length) {
+          throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+        }
 
         const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
@@ -333,7 +338,6 @@ export class OrganizationService {
 
           await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
 
-          const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
           try {
             await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, firstName, isUserExist);
           } catch (error) {

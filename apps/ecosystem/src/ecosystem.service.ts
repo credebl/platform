@@ -973,10 +973,24 @@ export class EcosystemService {
    *
    * @returns Ecosystem members list
    */
+
   async getEcoystemMembers(payload: EcosystemMembersPayload): Promise<object> {
     try {
-      const { ecosystemId, pageNumber, pageSize, search } = payload;
-      return await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search);
+      const { ecosystemId, pageNumber, pageSize, search, sortBy } = payload;      
+      const getEcosystemMember = await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search, sortBy);
+      
+      const ecosystemMemberResponse = {
+        totalItems: getEcosystemMember[1],
+        hasNextPage:
+        payload.pageSize * payload.pageNumber < getEcosystemMember[1],
+        hasPreviousPage: 1 < payload.pageNumber,
+        nextPage: Number(payload.pageNumber) + 1,
+        previousPage: payload.pageNumber - 1,
+        lastPage: Math.ceil(getEcosystemMember[1] / payload.pageSize),
+        data: getEcosystemMember[0]
+      };
+
+      return ecosystemMemberResponse;
     } catch (error) {
       this.logger.error(`In getEcosystemMembers: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

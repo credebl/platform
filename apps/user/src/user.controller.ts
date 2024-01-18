@@ -75,7 +75,7 @@ export class UserController {
 
   @MessagePattern({ cmd: 'get-user-by-mail' })
   async findUserByEmail(payload: { email }): Promise<object> {
-    return this.userService.findUserByEmail(payload);
+    return this.userService.checkEmailExists(payload);
   }
   /**
    * @param credentialId

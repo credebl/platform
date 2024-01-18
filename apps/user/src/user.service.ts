@@ -38,7 +38,8 @@ import {
    IUserInformation,
     IUsersProfile,
     IShareDegreeCertificate,
-    IPuppeteerOption
+    IPuppeteerOption,
+    IShareDegreeCertificateRes
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -619,7 +620,7 @@ export class UserService {
 
   }
 
-  async shareDegreeCertificate(shareDegreeCertificate: IShareDegreeCertificate): Promise<string> {
+  async shareDegreeCertificate(shareDegreeCertificate: IShareDegreeCertificate): Promise<IShareDegreeCertificateRes> {
 
     try {
       const attributeArray = [];
@@ -649,21 +650,54 @@ export class UserService {
         'base64'
       );
       const existCredentialId = await this.userRepository.getUserCredentialsById(shareDegreeCertificate.credentialId);
-      
+      const getInvitationUrl = await this.getInvitationUrl(shareDegreeCertificate);
       if (existCredentialId) {
-        return `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`;
+        return {
+          cretificate: `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`,
+          invitationUrl: getInvitationUrl
+        };
       }
   
       const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareDegreeCertificate.credentialId);
-  
+    
       if (!saveCredentialData) {
         throw new BadRequestException(ResponseMessages.schema.error.notStoredCredential);
       }
   
-      return `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`;
+      return {
+        cretificate: `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`,
+        invitationUrl: getInvitationUrl
+      };
   
     } catch (error) {
       this.logger.error(`Error In getDegreeTemplate: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getInvitationUrl(
+    payload: IShareDegreeCertificate
+  ): Promise<string> {
+    try {
+      const pattern = { cmd: 'create-shortening-url' };
+      const invitationUrl = await this.userServiceProxy
+        .send(pattern, payload)
+        .toPromise()
+        .catch((error) => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              statusCode: error.statusCode,
+              error: error.error,
+              message: error.message
+            },
+            error.error
+          );
+        });
+
+      return invitationUrl;
+    } catch (error) {
+      this.logger.error(`Error In getInvitationUrl: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

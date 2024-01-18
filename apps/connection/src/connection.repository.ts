@@ -181,12 +181,11 @@ export class ConnectionRepository {
    * @returns Get storeShorteningUrl details
    */
   // eslint-disable-next-line camelcase
-  async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<shortening_url> {
+  async storeShorteningUrl(referenceId: string): Promise<shortening_url> {
     try {
       return this.prisma.shortening_url.create({
         data: {
           referenceId,
-          url: connectionInvitationUrl,
           type: null
         }
       });

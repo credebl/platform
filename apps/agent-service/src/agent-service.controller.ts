@@ -9,7 +9,7 @@ import { IProofPresentationDetails } from '@credebl/common/interfaces/verificati
 
 @Controller()
 export class AgentServiceController {
-  constructor(private readonly agentServiceService: AgentServiceService) {}
+  constructor(private readonly agentServiceService: AgentServiceService) { }
 
   /**
    * Spinup the agent by organization
@@ -46,7 +46,7 @@ export class AgentServiceController {
     return this.agentServiceService.createCredentialDefinition(payload);
   }
 
- // DONE
+  // DONE
   @MessagePattern({ cmd: 'agent-get-credential-definition' })
   async getCredentialDefinitionById(payload: IGetCredDefAgentRedirection): Promise<object> {
     return this.agentServiceService.getCredentialDefinitionById(payload);
@@ -99,7 +99,7 @@ export class AgentServiceController {
   }): Promise<IAgentProofRequest> {
     return this.agentServiceService.sendProofRequest(payload.proofRequestPayload, payload.url, payload.apiKey);
   }
-//DONE
+  //DONE
   @MessagePattern({ cmd: 'agent-verify-presentation' })
   async verifyPresentation(payload: { url: string; apiKey: string }): Promise<IPresentation> {
     return this.agentServiceService.verifyPresentation(payload.url, payload.apiKey);
@@ -110,7 +110,7 @@ export class AgentServiceController {
   async getConnections(payload: { url: string; apiKey: string }): Promise<object> {
     return this.agentServiceService.getConnections(payload.url, payload.apiKey);
   }
-  
+
   @MessagePattern({ cmd: 'agent-get-connection-details-by-connectionId' })
   async getConnectionsByconnectionId(payload: { url: string, apiKey: string }): Promise<IConnectionDetailsById> {
     return this.agentServiceService.getConnectionsByconnectionId(payload.url, payload.apiKey);
@@ -190,5 +190,22 @@ export class AgentServiceController {
   async getOrgAgentApiKey(payload: { orgId: string }): Promise<string> {
     return this.agentServiceService.getOrgAgentApiKey(payload.orgId);
   }
-  
+
+  @MessagePattern({ cmd: 'agent-receive-invitation-url' })
+  async receiveInvitationUrl(payload: {
+    url,
+    apiKey,
+    receiveInvitationUrl
+  }): Promise<string> {
+    return this.agentServiceService.receiveInvitationUrl(payload.receiveInvitationUrl, payload.url, payload.apiKey);
+  }
+
+  @MessagePattern({ cmd: 'agent-receive-invitation' })
+  async receiveInvitation(payload: {
+    url,
+    apiKey,
+    receiveInvitation
+  }): Promise<string> {
+    return this.agentServiceService.receiveInvitation(payload.receiveInvitation, payload.url, payload.apiKey);
+  }
 }

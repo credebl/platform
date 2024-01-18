@@ -21,8 +21,8 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 @ApiBearerAuth()
 @ApiTags('credential-definitions')
 @Controller()
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 @UseFilters(CustomExceptionFilter)
 export class CredentialDefinitionController {
 
@@ -34,7 +34,7 @@ export class CredentialDefinitionController {
     summary: 'Get an existing credential definition by Id',
     description: 'Get an existing credential definition by Id'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getCredentialDefinitionById(
@@ -56,7 +56,7 @@ export class CredentialDefinitionController {
     summary: 'Get an existing credential definitions by schema Id',
     description: 'Get an existing credential definitions by schema Id'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   async getCredentialDefinitionBySchemaId(
     @Param('schemaId') schemaId: string,
@@ -120,7 +120,7 @@ export class CredentialDefinitionController {
     summary: 'Sends a credential definition to ledger',
     description: 'Sends a credential definition to ledger'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async createCredentialDefinition(
@@ -145,7 +145,7 @@ export class CredentialDefinitionController {
     summary: 'Fetch all credential definition for bulk opeartion',
     description: 'Fetch all credential definition from metadata saved in database for bulk opeartion.'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getAllCredDefAndSchemaForBulkOperation(

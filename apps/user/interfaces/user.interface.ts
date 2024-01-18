@@ -181,3 +181,7 @@ export interface IIssueCertificate {
   practicalGradeCredits: string;
   practicalObtainedEarned: string;
 }
+export  interface IPuppeteerOption{
+  width: number;
+  height: number;
+}

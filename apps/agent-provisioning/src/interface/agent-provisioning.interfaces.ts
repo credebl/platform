@@ -12,7 +12,7 @@ export interface IWalletProvision {
     walletStoragePort: string;
     walletStorageUser: string;
     walletStoragePassword: string;
-    internalIp: string;
+    inboundEndpoint: string;
     containerName: string;
     agentType: AgentType;
     orgName: string;

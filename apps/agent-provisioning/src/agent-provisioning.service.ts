@@ -22,10 +22,10 @@ export class AgentProvisioningService {
   async walletProvision(payload: IWalletProvision): Promise<object> {
     try {
 
-      const { containerName, externalIp, orgId, seed, walletName, walletPassword, walletStorageHost, walletStoragePassword, walletStoragePort, walletStorageUser, webhookEndpoint, agentType, protocol, afjVersion, tenant, indyLedger } = payload;
+      const { containerName, externalIp, orgId, seed, walletName, walletPassword, walletStorageHost, walletStoragePassword, walletStoragePort, walletStorageUser, webhookEndpoint, agentType, protocol, afjVersion, tenant, indyLedger, inboundEndpoint } = payload;
       if (agentType === AgentType.AFJ) {
         // The wallet provision command is used to invoke a shell script
-        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP} ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${afjVersion} "${indyLedger}" ${process.env.AGENT_HOST} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${process.env.CLUSTER_NAME} ${process.env.TESKDEFINITION_FAMILY}`;
+        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP} ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${afjVersion} "${indyLedger}" ${inboundEndpoint} ${process.env.AGENT_HOST} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${process.env.CLUSTER_NAME} ${process.env.TESKDEFINITION_FAMILY}`;
         const spinUpResponse: object = new Promise(async (resolve) => {
 
           await exec(walletProvision, async (err, stdout, stderr) => {
@@ -34,8 +34,24 @@ export class AgentProvisioningService {
               this.logger.log(`shell script error: ${stderr}`);
             }
 
-            const agentEndPoint = await fs.readFileSync(`${process.cwd()}${process.env.AFJ_AGENT_ENDPOINT_PATH}${orgId}_${containerName}.json`, 'utf8');
-            const agentToken = await fs.readFileSync(`${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgId}_${containerName}.json`, 'utf8');
+            const agentEndpointPath = `${process.cwd()}${process.env.AFJ_AGENT_ENDPOINT_PATH}${orgId}_${containerName}.json`;
+            const agentTokenPath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgId}_${containerName}.json`;
+
+            const agentEndPointExists = await this.checkFileExistence(agentEndpointPath);
+            const agentTokenExists = await this.checkFileExistence(agentTokenPath);
+
+            let agentEndPoint;
+            let agentToken;
+            
+            if (agentEndPointExists && agentTokenExists) {
+              this.logger.log('Both files exist');
+              agentEndPoint = await fs.readFileSync(agentEndpointPath, 'utf8');
+              agentToken = await fs.readFileSync(agentTokenPath, 'utf8');
+              // Proceed with accessing the files if needed
+            } else {
+              this.logger.log('One or both files do not exist');
+            }
+
 
             resolve({
               agentEndPoint: JSON.parse(agentEndPoint).CONTROLLER_ENDPOINT,
@@ -52,4 +68,14 @@ export class AgentProvisioningService {
       throw new RpcException(error);
     }
   }
+
+  async checkFileExistence(filePath: string): Promise<boolean> {
+    try {
+      await fs.accessSync(filePath);
+      return true; // File exists
+    } catch (error) {
+      return false; // File does not exist
+    }
+  }
+
 }

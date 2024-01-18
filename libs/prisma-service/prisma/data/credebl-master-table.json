@@ -1,7 +1,7 @@
 {
   "platformConfigData": {
-    "externalIp": "##Machine Ip Address for agent setup##",
-    "lastInternalId": "##Docker Network Ip Address##",
+    "externalIp": "##Docker Network Ip Address##",
+    "inboundEndpoint": "##Docker Network Ip Address##",
     "username": "credebl",
     "sgApiKey": "###Sendgrid Key###",
     "emailFrom": "##Senders Mail ID##",

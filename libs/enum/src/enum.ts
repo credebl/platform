@@ -1,6 +1,6 @@
 export enum SortValue {
-    ASC = 'ASC',
-    DESC = 'DESC'
+    ASC = 'asc',
+    DESC = 'desc'
 }
 
 export enum AgentType {

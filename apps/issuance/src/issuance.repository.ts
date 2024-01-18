@@ -102,7 +102,7 @@ export class IssuanceRepository {
         },
         orderBy: {
           [issuedCredentialsSearchCriteria?.sortField]:
-            SortValue.DESC === issuedCredentialsSearchCriteria?.sortBy?.toLocaleUpperCase() ? 'desc' : 'asc'
+            SortValue.DESC === issuedCredentialsSearchCriteria?.sortBy ? 'desc' : 'asc'
         },
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize

@@ -240,7 +240,7 @@ export class SchemaRepository {
           issuerId: true
         },
         orderBy: {
-          [payload.sortField]: 'DESC' === payload.sortBy ? 'desc' : 'ASC' === payload.sortBy ? 'asc' : 'desc'
+          [payload.sortField]: 'desc' === payload.sortBy ? 'desc' : 'asc' 
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize

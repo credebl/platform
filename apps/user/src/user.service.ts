@@ -156,7 +156,7 @@ export class UserService {
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
       emailData.emailTo = email;
-      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Email Verification`;
+      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Verify your email to activate your account`;
 
       emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode);
       const isEmailSent = await sendEmail(emailData);
@@ -446,6 +446,16 @@ export class UserService {
       return await this.userRepository.findUserByEmail(payload.email);
     } catch (error) {
       this.logger.error(`findUserByEmail: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async checkEmailExists(payload: { email }): Promise<object> {
+    try {
+
+      return await this.userRepository.checkUserExist(payload.email);
+    } catch (error) {
+      this.logger.error(`checkEmailExists: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

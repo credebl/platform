@@ -938,8 +938,8 @@ export class EcosystemService {
 
   async getEcoystemMembers(payload: EcosystemMembersPayload): Promise<object> {
     try {
-      const { ecosystemId, pageNumber, pageSize, search } = payload;
-      const getEcosystemMember = await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search);
+      const { ecosystemId, pageNumber, pageSize, search, sortBy } = payload;      
+      const getEcosystemMember = await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search, sortBy);
       
       const ecosystemMemberResponse = {
         totalItems: getEcosystemMember[1],

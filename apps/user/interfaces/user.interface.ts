@@ -86,6 +86,7 @@ export interface ISendVerificationEmail {
   export interface IShareDegreeCertificate {
     schemaId: string;
     credentialId: string;
+    invitationUrl?: string;
     attributes: Attribute[];
   }
 

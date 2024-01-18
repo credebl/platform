@@ -352,7 +352,6 @@ export const ResponseMessages = {
         notFound: 'Not Found',
         serverError: 'Internal Server error'
     },
-    
     webhook: {
         success: {
             webhookUrlRegister:'Webhook Url registered successfully',
@@ -361,6 +360,11 @@ export const ResponseMessages = {
         error: {
             registerWebhook:'Unable to register a webhook url',
             webhookResponse:'Error in sending webhook response to org webhook url'
+        }
+    },
+    shorteningUrl: {
+        success: {
+            getshorteningUrl:'shortening Url fetched successfully'
         }
     }
 };

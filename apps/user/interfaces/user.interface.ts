@@ -90,6 +90,11 @@ export interface ISendVerificationEmail {
     attributes: Attribute[];
   }
 
+  export interface IShareDegreeCertificateRes {
+    cretificate: string;
+    invitationUrl: string;
+  }
+
   export interface Attribute {
     [key: string]: string;
     label: string;

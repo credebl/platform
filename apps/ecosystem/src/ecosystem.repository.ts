@@ -466,67 +466,63 @@ export class EcosystemRepository {
    * @param filterOptions 
    * @returns users list
    */
-  // eslint-disable-next-line camelcase
-  async findEcosystemMembers(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
-    try {
-      const query = {
-        ecosystemId,
-        OR: [{ organisation: { name: { contains: search, mode: 'insensitive' } } }]
-      };
-      return await this.getEcosystemMembersPagination(query, pageNumber, pageSize);
 
-    } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
-  async getEcosystemMembersPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
-    try {
-      const result = await this.prisma.$transaction([
-        this.prisma.ecosystem_orgs.findMany({
-          where: {
-            ...queryObject
-          },
-          include: {
-            ecosystem: true,
-            ecosystemRole: true,
-            organisation: {
-              select: {
-                name: true,
-                orgSlug: true,
+async findEcosystemMembers(
+  ecosystemId: string,
+  pageNumber: number,
+  pageSize: number,
+  search: string,
+  sortBy: string
+): Promise<object> {
+  try {
+    const result = await this.prisma.$transaction([
+      this.prisma.ecosystem_orgs.findMany({
+        where: {
+          ecosystemId,
+          OR: [
+            {
+              organisation: {
+                name: { contains: search, mode: 'insensitive' },
                 // eslint-disable-next-line camelcase
-                org_agents: true
-
+                org_agents: {
+                  some: {
+                    orgDid: { contains: search, mode: 'insensitive' }
+                  }
+                }
               }
             }
-          },
-          take: pageSize,
-          skip: (pageNumber - 1) * pageSize,
-          orderBy: {
-            createDateTime: 'desc'
+          ]
+        },
+        include: {
+          ecosystem: true,
+          ecosystemRole: true,
+          organisation: {
+            select: {
+              name: true,
+              orgSlug: true,
+              // eslint-disable-next-line camelcase
+              org_agents: true
+            }
           }
-        }),
-        this.prisma.ecosystem_orgs.count({
-          where: {
-            ...queryObject
-          }
-        })
-      ]);
-
-      // eslint-disable-next-line prefer-destructuring
-      const members = result[0];
-      // eslint-disable-next-line prefer-destructuring
-      const totalCount = result[1];
-      const totalPages = Math.ceil(totalCount / pageSize);
-
-      return { totalPages, members };
-    } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw error;
-    }
+        },
+        take: Number(pageSize),
+        skip: (pageNumber - 1) * pageSize,
+        orderBy: {
+          createDateTime: 'asc' === sortBy ? 'asc' : 'desc'
+        }
+      }),
+      this.prisma.ecosystem_orgs.count({
+        where: {
+          ecosystemId
+        }
+      })
+    ]);
+    return result;
+  } catch (error) {
+    this.logger.error(`error: ${JSON.stringify(error)}`);
+    throw error;
   }
-
+}
 
   async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IEcosystemInvitation> {
     try {

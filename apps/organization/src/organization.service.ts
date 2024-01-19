@@ -323,6 +323,9 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
+        const userData = await this.getUserFirstName(userEmail);
+        
+        const {firstName} = userData;
         const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
        
         if (0 === orgRolesDetails.length) {
@@ -336,7 +339,7 @@ export class OrganizationService {
           await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
 
           try {
-            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, isUserExist);
+            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, firstName, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
@@ -363,6 +366,7 @@ export class OrganizationService {
     email: string,
     orgName: string,
     orgRolesDetails: object[],
+    firstName:string,
     isUserExist: boolean
   ): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
@@ -371,9 +375,9 @@ export class OrganizationService {
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Invitation`;
+    emailData.emailSubject = `Invitation to join “${orgName}” on CREDEBL`;
 
-    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, orgName, orgRolesDetails, isUserExist);
+    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, orgName, orgRolesDetails, firstName, isUserExist);
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData);
@@ -398,12 +402,32 @@ export class OrganizationService {
           error.status
         );
       });
-
-    if (userData && userData.isEmailVerified) {
+    if (userData?.isEmailVerified) {
       return true;
     }
     return false;
   }
+
+  async getUserFirstName(userEmail: string): Promise<user> {
+    const pattern = { cmd: 'get-user-by-mail' };
+    const payload = { email: userEmail };
+
+    const userData  = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });    
+      return userData;
+    }
+   
 
   async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrganizationInvitations> {
     try {

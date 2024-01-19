@@ -11,11 +11,12 @@ export class ShorteningUrlService {
 
     async createAndStoreShorteningUrl(payload): Promise<string> {
         try {
-            const { credentialId, schemaId, invitationUrl, attributes } = payload;
+            const { credentialId, schemaId, credDefId, invitationUrl, attributes } = payload;
             const invitationPaload = {
                 referenceId: credentialId,
                 invitationPayload: {
                     schemaId, 
+                    credDefId,
                     invitationUrl, 
                     attributes
                 }

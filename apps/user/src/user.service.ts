@@ -59,6 +59,7 @@ import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { DegreeCertificateTemplate } from '../templates/degree-template';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class UserService {
@@ -632,9 +633,21 @@ export class UserService {
         attributeArray.push(attributeJson);
       });
       await Promise.all(attributePromises);
+
+      const existCredentialId = await this.userRepository.getUserCredentialsById(shareDegreeCertificate.credentialId);
+      const getInvitationUrl = await this.getInvitationUrl(shareDegreeCertificate);
+      if (existCredentialId) {
+        return {
+          cretificate: `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`,
+          invitationUrl: getInvitationUrl
+        };
+      }
+
+      const qrCodeOptions = { type: 'image/png' };
+      const qrCode = await QRCode.toDataURL(getInvitationUrl, qrCodeOptions);
   
       const userDegreeTemplate = new DegreeCertificateTemplate();
-      const template = await userDegreeTemplate.getDegreeCertificateTemplate(attributeArray);
+      const template = await userDegreeTemplate.getDegreeCertificateTemplate(attributeArray, qrCode);
   
       const option: IPuppeteerOption = {height: 1270, width: 1977};
 
@@ -649,14 +662,6 @@ export class UserService {
         'certificates',
         'base64'
       );
-      const existCredentialId = await this.userRepository.getUserCredentialsById(shareDegreeCertificate.credentialId);
-      const getInvitationUrl = await this.getInvitationUrl(shareDegreeCertificate);
-      if (existCredentialId) {
-        return {
-          cretificate: `${process.env.FRONT_END_URL}/certificates/${shareDegreeCertificate.credentialId}`,
-          invitationUrl: getInvitationUrl
-        };
-      }
   
       const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareDegreeCertificate.credentialId);
     

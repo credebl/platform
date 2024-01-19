@@ -502,16 +502,6 @@ export class UserService {
     }
   }
 
-  async checkEmailExists(payload: { email }): Promise<object> {
-    try {
-
-      return await this.userRepository.checkUserExist(payload.email);
-    } catch (error) {
-      this.logger.error(`checkEmailExists: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
   async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);

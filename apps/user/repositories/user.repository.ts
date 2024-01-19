@@ -221,7 +221,16 @@ export class UserRepository {
           }
         ]
       },
-      include: {
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        profileImg: true,
+        publicProfile: true,
+        supabaseUserId: true,
+        isEmailVerified: true,
         userOrgRoles: {
           include: {
             orgRole: {

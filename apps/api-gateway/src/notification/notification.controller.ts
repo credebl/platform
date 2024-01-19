@@ -8,7 +8,7 @@ import { GetNotificationDto, RegisterOrgWebhhookEndpointDto, SendNotificationDto
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { NoificatonService } from './notification.service';
+import { NotificationService } from './notification.service';
 
 
 @Controller('notification')
@@ -18,7 +18,7 @@ import { NoificatonService } from './notification.service';
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
 export class NotificationController {
     constructor(
-        private readonly noificatonService: NoificatonService
+        private readonly notificationService: NotificationService
     ) { }
     private readonly logger = new Logger('NotificationController');
 
@@ -39,7 +39,7 @@ export class NotificationController {
         @Res() res: Response
     ): Promise<Response> {
 
-        const registerUserEndpoint = await this.noificatonService.registerOrgWebhookEndpoint(
+        const registerUserEndpoint = await this.notificationService.registerOrgWebhookEndpoint(
             registerOrgWebhhookEndpointDto
         );
 
@@ -68,7 +68,7 @@ export class NotificationController {
         @Res() res: Response
     ): Promise<Response> {
 
-        const sendNotification = await this.noificatonService.sendNotification(
+        const sendNotification = await this.notificationService.sendNotification(
             notificationRequestBody
         );
 
@@ -97,7 +97,7 @@ export class NotificationController {
         @Body() getNotificationDto: GetNotificationDto,
         @Res() res: Response
     ): Promise<Response> {
-        const getNotification = await this.noificatonService.getNotification(
+        const getNotification = await this.notificationService.getNotification(
             getNotificationDto
         );
 

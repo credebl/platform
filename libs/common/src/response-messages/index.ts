@@ -354,7 +354,7 @@ export const ResponseMessages = {
     },
     notification: {
         success: {
-            register: 'Registration process successfully',
+            register: 'Notification webhook registration process completed successfully',
             sendNotification: 'Notification send successfully'
         },
         error: {

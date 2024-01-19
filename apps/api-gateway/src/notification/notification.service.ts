@@ -5,9 +5,9 @@ import { GetNotificationDto, RegisterOrgWebhhookEndpointDto, SendNotificationDto
 import { INotification } from './interfaces/notification.interfaces';
 
 @Injectable()
-export class NoificatonService extends BaseService {
+export class NotificationService extends BaseService {
     constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy) {
-        super('noificatonService');
+        super('NotificationService');
     }
 
     /**

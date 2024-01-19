@@ -17,13 +17,14 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -117,8 +118,6 @@ export class OrganizationService {
   }
 
   /**
-   * Description: get organizations
-   * @param
    * @returns Get created organizations details
    */
 
@@ -196,7 +195,7 @@ export class OrganizationService {
 
       const organizationDetails = await this.organizationRepository.getOrganization(query);
       if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.profileNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgProfileNotFound);
       }
 
       const credDefs = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
@@ -236,7 +235,7 @@ export class OrganizationService {
    * @returns Get created invitation details
    */
 
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgInvitationsPagination> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrganizationInvitations> {
     try {
       const getOrganization = await this.organizationRepository.getInvitationsByOrgId(orgId, pageNumber, pageSize, search);
       for await (const item of getOrganization['invitations']) {
@@ -324,19 +323,28 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
+        const userData = await this.getUserFirstName(userEmail);
+        
+        const {firstName} = userData;
+        const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
+       
+        if (0 === orgRolesDetails.length) {
+          throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+        }
+
         const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
           await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
 
-          const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
           try {
-            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, isUserExist);
+            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, firstName, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
         }
+
       }
       await this.userActivityService.createActivity(userId, organizationDetails.id, `Invitations sent for ${organizationDetails.name}`, 'Get started with user role management once invitations accepted');
       return ResponseMessages.organisation.success.createInvitation;
@@ -358,6 +366,7 @@ export class OrganizationService {
     email: string,
     orgName: string,
     orgRolesDetails: object[],
+    firstName:string,
     isUserExist: boolean
   ): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
@@ -366,9 +375,9 @@ export class OrganizationService {
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Invitation`;
+    emailData.emailSubject = `Invitation to join “${orgName}” on CREDEBL`;
 
-    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, orgName, orgRolesDetails, isUserExist);
+    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, orgName, orgRolesDetails, firstName, isUserExist);
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData);
@@ -393,14 +402,34 @@ export class OrganizationService {
           error.status
         );
       });
-
-    if (userData && userData.isEmailVerified) {
+    if (userData?.isEmailVerified) {
       return true;
     }
     return false;
   }
 
-  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrgInvitationsPagination> {
+  async getUserFirstName(userEmail: string): Promise<user> {
+    const pattern = { cmd: 'get-user-by-mail' };
+    const payload = { email: userEmail };
+
+    const userData  = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });    
+      return userData;
+    }
+   
+
+  async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrganizationInvitations> {
     try {
       return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search);
     } catch (error) {
@@ -491,7 +520,7 @@ export class OrganizationService {
 
   async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
     try {
-      return this.organizationRepository.getOrgDashboard(orgId);
+            return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

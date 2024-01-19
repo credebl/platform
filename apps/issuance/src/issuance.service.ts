@@ -31,6 +31,7 @@ import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 
 
 @Injectable()
@@ -102,8 +103,9 @@ export class IssuanceService {
   }
 
 
-  async sendCredentialOutOfBand(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
+  async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<string> {
     try {
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
       // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
@@ -117,9 +119,6 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      // const apiKey = platformConfig?.sgApiKey;
-
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey;
       apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
@@ -127,7 +126,7 @@ export class IssuanceService {
       }
 
       const issueData = {
-        connectionId,
+        protocolVersion: protocolVersion || 'v1',
         credentialFormats: {
           indy: {
             attributes,
@@ -137,7 +136,7 @@ export class IssuanceService {
         autoAcceptCredential: 'always',
         comment
       };
-      const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
+      const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
 
       return credentialCreateOfferDetails?.response;
     } catch (error) {

@@ -16,10 +16,8 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })
-  async sendCredentialOutOfBand(payload: IIssuance): Promise<string> {
-    const { orgId, user, credentialDefinitionId, comment, connectionId, attributes } = payload;
-   
-    return this.issuanceService.sendCredentialOutOfBand(orgId, user, credentialDefinitionId, comment, connectionId, attributes);
+  async sendCredentialOutOfBand(payload: IIssuance): Promise<string> { 
+    return this.issuanceService.sendCredentialOutOfBand(payload);
   }
 
   @MessagePattern({ cmd: 'get-all-issued-credentials' })

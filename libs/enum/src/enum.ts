@@ -1,6 +1,6 @@
 export enum SortValue {
-    ASC = 'ASC',
-    DESC = 'DESC'
+    ASC = 'asc',
+    DESC = 'desc'
 }
 
 export enum AgentType {
@@ -60,8 +60,8 @@ export enum UserCertificateId {
 }
 
 export enum NodeEnvironment {
-   DEVELOPMENT='development',
-   PRODUCTION='production'
+   DEVELOPMENT='DEV',
+   PRODUCTION='PROD'
 }
 
 const transitionMap: { [key in Invitation]: Invitation[] } = {

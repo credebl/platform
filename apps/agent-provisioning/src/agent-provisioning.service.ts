@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import * as dotenv from 'dotenv';
@@ -50,8 +50,8 @@ export class AgentProvisioningService {
               // Proceed with accessing the files if needed
             } else {
               this.logger.log('One or both files do not exist');
+              throw new NotFoundException(`${agentEndpointPath} or ${agentTokenPath} files do not exist `);
             }
-
 
             resolve({
               agentEndPoint: JSON.parse(agentEndPoint).CONTROLLER_ENDPOINT,

@@ -230,6 +230,7 @@ export class UserRepository {
         profileImg: true,
         publicProfile: true,
         supabaseUserId: true,
+        isEmailVerified: true,
         userOrgRoles: {
           select:{
             id: true,

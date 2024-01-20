@@ -161,7 +161,7 @@ export class UserService {
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
       emailData.emailTo = email;
-      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Email Verification`;
+      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Verify your email to activate your account`;
 
       emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode);
       const isEmailSent = await sendEmail(emailData);

@@ -297,7 +297,7 @@ export class EcosystemService {
    * @param userId
    * @returns
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string, orgId: string): Promise<string> {
     const { invitations, ecosystemId } = bulkInvitationDto;
 
     try {
@@ -325,12 +325,18 @@ export class EcosystemService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
+        const userData = await this.getEcoUserName(userEmail);
+        
+        const { firstName } = userData;
+
+        const orgDetails: OrganizationData = await this.getOrganizationDetails(orgId, userId);
+
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
           await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
           try {
-            await this.sendInviteEmailTemplate(email, ecosystemDetails.name, isUserExist);
+            await this.sendInviteEmailTemplate(email, ecosystemDetails.name, firstName, orgDetails.name, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
@@ -520,16 +526,16 @@ export class EcosystemService {
    * @param ecosystemName
    * @returns Send invitation mail
    */
-  async sendInviteEmailTemplate(email: string, ecosystemName: string, isUserExist: boolean): Promise<boolean> {
+  async sendInviteEmailTemplate(email: string, ecosystemName: string, firstName:string, orgName:string, isUserExist: boolean): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
 
     const urlEmailTemplate = new EcosystemInviteTemplate();
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Invitation`;
+    emailData.emailSubject = `Invitation to join an Ecosystem “${ecosystemName}” on CREDEBL`;
 
-    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, ecosystemName, isUserExist);
+    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, ecosystemName, firstName, orgName, isUserExist);
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData);
@@ -560,6 +566,27 @@ export class EcosystemService {
     }
     return false;
   }
+
+
+  async getEcoUserName(userEmail: string): Promise<user> {
+    const pattern = { cmd: 'get-user-by-mail' };
+    const payload = { email: userEmail };
+
+    const userData  = await this.ecosystemServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });    
+      return userData;
+    }
 
   /**
    *

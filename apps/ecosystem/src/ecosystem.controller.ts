@@ -92,8 +92,9 @@ export class EcosystemController {
     bulkInvitationDto: BulkSendInvitationDto;
     userId: string;
     userEmail: string;
+    orgId: string;
   }): Promise<string> {
-    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail);
+    return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail, payload.orgId);
   }
 
   /**

@@ -141,12 +141,7 @@ export class EcosystemService {
     const updateData: CreateEcosystem = {
       lastChangedBy: userId
     };
-    // const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
 
-    // if (ecosystemExist) {
-    //   throw new ConflictException(ResponseMessages.ecosystem.error.exists);
-    // }
-    
     if (name) { updateData.name = name; }
 
     if (description) { updateData.description = description; }
@@ -156,6 +151,15 @@ export class EcosystemService {
     if (logo) { updateData.logoUrl = logo; }
 
     if ('' !== autoEndorsement.toString()) { updateData.autoEndorsement = autoEndorsement; }
+
+    const ecosystemExist = await this.ecosystemRepository.checkEcosystemExist(editEcosystemDto.name, ecosystemId);
+
+    if (0 === ecosystemExist.length) {
+      const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
+      if (ecosystemExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+      }
+    }
 
     const editEcosystem = await this.ecosystemRepository.updateEcosystemById(updateData, ecosystemId);
     if (!editEcosystem) {

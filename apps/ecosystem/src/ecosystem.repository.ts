@@ -185,6 +185,20 @@ export class EcosystemRepository {
     }
   }
 
+  async checkEcosystemExist(name: string, ecosystemId:string): Promise<ecosystem[]> {
+    try {
+      return this.prisma.ecosystem.findMany({
+        where: {
+          id:ecosystemId,
+          name
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   async checkEcosystemNameExist(name: string): Promise<ecosystem> {
     try {
       return this.prisma.ecosystem.findFirst({

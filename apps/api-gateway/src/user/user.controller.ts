@@ -371,24 +371,27 @@ export class UserController {
    */
   
 
-  @Put('/password/:email')
-  @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  async addPasskey(
-    @Body() userInfo: AddPasskeyDetailsDto,
-    @Param('email') email: string,
-    @Res() res: Response
-  ): Promise<Response> {
-    const userDetails = await this.userService.addPasskey(email, userInfo);
-    const finalResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.update,
-      data: userDetails
-    };
+ @Put('/password/:email')
+ @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
+ @ApiExcludeEndpoint()
+ @ApiBearerAuth()
+ @UseGuards(AuthGuard('jwt'))
+ 
+ async addPasskey(
+   @Body() userInfo: AddPasskeyDetailsDto,
+   @User() reqUser: user,
+   @Res() res: Response
+ ): Promise<Response> {
 
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
+   const userDetails = await this.userService.addPasskey(reqUser.email, userInfo);
+   const finalResponse = {
+     statusCode: HttpStatus.OK,
+     message: ResponseMessages.user.success.update,
+     data: userDetails
+   };
+
+   return res.status(HttpStatus.OK).json(finalResponse);
+ }
 
   /**
    * @Body platformSettings

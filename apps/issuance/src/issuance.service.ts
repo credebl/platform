@@ -679,7 +679,7 @@ export class IssuanceService {
           throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
         }
         const parsedData = JSON.parse(cachedData as string).fileData.data;
-        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortValue));
+        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortField));
         const finalData = paginator(parsedData, previewRequest.pageNumber, previewRequest.pageSize);
 
         return finalData;

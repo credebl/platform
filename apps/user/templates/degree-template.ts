@@ -18,9 +18,9 @@ export class DegreeCertificateTemplate {
         semester,
         academicYear,
         currentSemesterPerformanceCreditsEarned,
-        commulativeSemesterPerformanceCreditsEarned,
+        cumulativeSemesterPerformanceCreditsEarned,
         currentSemesterPerformanceSGA,
-        commulativeSemesterPerformanceSGA,
+        cumulativeSemesterPerformanceSGA,
         registrationNo,
         year
       } = await Promise.all(attributes).then((attributes) => {
@@ -214,8 +214,8 @@ export class DegreeCertificateTemplate {
                                                     <tr>
                                                         <td>${currentSemesterPerformanceCreditsEarned}</td>
                                                         <td>${currentSemesterPerformanceSGA}</td>
-                                                        <td>${commulativeSemesterPerformanceCreditsEarned}</td>
-                                                        <td>${commulativeSemesterPerformanceSGA}</td>
+                                                        <td>${cumulativeSemesterPerformanceCreditsEarned}</td>
+                                                        <td>${cumulativeSemesterPerformanceSGA}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>

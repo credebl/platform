@@ -365,32 +365,6 @@ export class IssuanceController {
     summary: 'Get the file list for bulk operation',
     description: 'Get all the file list for organization for bulk operation'
   })
-
-  @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'search',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortBy',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortValue',
-    type: Number,
-    required: false
-  })
   async issuedFileDetails(
     @Param('orgId') orgId: string,
     @Query() fileParameter: FileParameter,
@@ -426,32 +400,6 @@ export class IssuanceController {
   @ApiOperation({
     summary: 'Get the file data',
     description: 'Get the file data by file id'
-  })
-
-  @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'search',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortBy',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortValue',
-    type: Number,
-    required: false
   })
   async getFileDetailsByFileId(
     @Param('orgId') orgId: string,

@@ -20,6 +20,12 @@ export class CreateUserDegreeCertificateDto {
   @IsString({ message: 'schemaId should be string' })
   schemaId: string;
 
+  @ApiProperty({ example: 'CredDefId' })
+  @IsNotEmpty({ message: 'Please provide valid schemaId' })
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'credDefId should be string' })
+  credDefId: string;
+
   @ApiProperty({ example: 'InvitationUrl' })
   @IsNotEmpty({ message: 'Please provide valid invitationUrl' })
   @Transform(({ value }) => trim(value))

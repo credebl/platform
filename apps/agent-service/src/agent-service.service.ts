@@ -36,6 +36,8 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import * as CryptoJS from 'crypto-js';
+
 
 @Injectable()
 @WebSocketGateway()
@@ -364,10 +366,11 @@ export class AgentServiceService {
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
 
+      const encryptedToken = await this.tokenEncryption(agentDetails?.agentToken);
       const agentPayload: IStoreOrgAgentDetails = {
         agentEndPoint,
         seed: agentSpinupDto.seed,
-        apiKey: agentDetails.agentToken,
+        apiKey: encryptedToken,
         agentsTypeId: agentSpinupDto?.agentType,
         orgId: orgData.id,
         walletName: agentSpinupDto.walletName,
@@ -468,13 +471,15 @@ export class AgentServiceService {
     const writeDid = 'write-did';
     const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(ledgerId);
     const agentDidWriteUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);
+    const getDcryptedToken = await this.commonService.decryptPassword(apiKey);
+    return this._retryAgentSpinup(agentDidWriteUrl, getDcryptedToken, writeDid, seed, ledgerDetails[0].indyNamespace, did);
   }
 
   private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {
     const getDidDic = 'get-did-doc';
     const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}`.replace('#', agentDid['did']);
-    return this._retryAgentSpinup(getDidMethodUrl, payload.apiKey, getDidDic);
+    const getDcryptedToken = await this.commonService.decryptPassword(payload.apiKey);
+    return this._retryAgentSpinup(getDidMethodUrl, getDcryptedToken, getDidDic);
   }
 
   private _buildStoreOrgAgentData(payload: IStoreOrgAgentDetails, getDidMethod: object, orgAgentTypeId: string): IStoreOrgAgentDetails {
@@ -532,7 +537,7 @@ export class AgentServiceService {
     }
   }
 
-  
+
   async _createLegacyConnectionInvitation(orgId: string, user: IUserRequestInterface, label: string): Promise<{
     response;
   }> {
@@ -776,11 +781,13 @@ export class AgentServiceService {
     };
 
 
+    const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp.org_agents[0].apiKey);
+
     // Invoke an API request from the agent to create multi-tenant agent
     const tenantDetails = await this.commonService.httpPost(
       `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
       createTenantOptions,
-      { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
+      { headers: { 'authorization': getDcryptedToken } }
     );
 
     return tenantDetails;
@@ -1266,11 +1273,17 @@ export class AgentServiceService {
       let agentApiKey;
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
 
+      const apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+
+      if (apiKey) {
+        const getDcryptedToken = await this.commonService.decryptPassword(apiKey);
+        return getDcryptedToken;
+      }
 
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
       if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
-        
+
         const [orgAgentData] = platformAdminSpinnedUp.org_agents;
         const { apiKey } = orgAgentData;
         if (!platformAdminSpinnedUp) {
@@ -1286,8 +1299,10 @@ export class AgentServiceService {
       if (!agentApiKey) {
         throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }
+
       await this.cacheService.set(CommonConstants.CACHE_APIKEY_KEY, agentApiKey, CommonConstants.CACHE_TTL_SECONDS);
-      return agentApiKey;
+      const getDcryptedToken = await this.commonService.decryptPassword(agentApiKey);
+      return getDcryptedToken;
 
     } catch (error) {
       this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
@@ -1304,6 +1319,21 @@ export class AgentServiceService {
     } else {
       throw error;
     }
-  }  
+  }
+
+  async tokenEncryption(token: string): Promise<string> {
+    try {
+
+      const encryptedToken = CryptoJS.AES.encrypt(
+        JSON.stringify(token),
+        process.env.CRYPTO_PRIVATE_KEY
+      ).toString();
+
+      return encryptedToken;
+
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 

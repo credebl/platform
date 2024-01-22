@@ -63,15 +63,8 @@ export class IssuanceService {
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
+      const apiKey = await this._getOrgAgentApiKey(orgId);
 
-      // const apiKey = platformConfig?.sgApiKey;
-      // let apiKey = await this._getOrgAgentApiKey(orgId);
-
-      let apiKey;
-      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
       const issueData = {
         protocolVersion: 'v1',
         connectionId,
@@ -118,13 +111,7 @@ export class IssuanceService {
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
-
-      let apiKey;
-      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey---${apiKey}`);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
+      const apiKey = await this._getOrgAgentApiKey(orgId);
 
       const issueData = {
         protocolVersion: protocolVersion || 'v1',
@@ -254,13 +241,8 @@ export class IssuanceService {
       const issuanceMethodLabel = 'get-issue-credential-by-credential-id';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
 
-      // const apiKey = platformConfig?.sgApiKey;
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
+      const apiKey = await this._getOrgAgentApiKey(orgId);
+
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
       return createConnectionInvitation?.response;
     } catch (error) {
@@ -327,15 +309,9 @@ export class IssuanceService {
       if (!organizationDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
       }
-
-      // const { apiKey } = agentDetails;
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-
+     
+      const  apiKey = await this._getOrgAgentApiKey(orgId);
+    
       const errors = [];
       const emailPromises = [];
 
@@ -1058,7 +1034,7 @@ export class IssuanceService {
     }
   }
 
-   async _getOrgAgentApiKey(orgId: string): Promise<string> {
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
     const pattern = { cmd: 'get-org-agent-api-key' };
     const payload = { orgId };
 

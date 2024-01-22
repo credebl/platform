@@ -24,7 +24,7 @@ import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -324,7 +324,7 @@ export class OrganizationService {
         const isUserExist = await this.checkUserExistInPlatform(email);
 
         const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
-       
+
         if (0 === orgRolesDetails.length) {
           throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
         }
@@ -496,7 +496,7 @@ export class OrganizationService {
 
   async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
     try {
-            return this.organizationRepository.getOrgDashboard(orgId);
+      return this.organizationRepository.getOrgDashboard(orgId);
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -519,12 +519,9 @@ export class OrganizationService {
   async deleteOrganization(orgId: string): Promise<boolean> {
     try {
       const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
+
+      const apiKey = await this._getOrgAgentApiKey(orgId);
+
       let url;
       if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {
         url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
@@ -568,8 +565,8 @@ export class OrganizationService {
         .pipe(
           map((response) => (
             {
-            response
-          }))
+              response
+            }))
         ).toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -597,9 +594,9 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException({
-          status: error.status,
-          error: error.message
-        }, error.status);
+        status: error.status,
+        error: error.message
+      }, error.status);
     }
   }
 

@@ -20,7 +20,6 @@ import { OrgAgentType } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { CommonConstants } from '@credebl/common/common.constant';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -38,29 +37,28 @@ export class SchemaService extends BaseService {
     orgId: string
   ): Promise<ISchemaData> {
 
-    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    if (!apiKey || null === apiKey || undefined === apiKey) {
-      apiKey = await this._getOrgAgentApiKey(orgId);
-    }
+
+    const apiKey = await this._getOrgAgentApiKey(orgId);
+
     const { userId } = user.selectedOrg;
     try {
 
       const schemaExists = await this.schemaRepository.schemaExists(
         schema.schemaName,
         schema.schemaVersion
+      );
+
+      if (0 !== schemaExists.length) {
+        this.logger.error(ResponseMessages.schema.error.exists);
+        throw new ConflictException(
+          ResponseMessages.schema.error.exists,
+          { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
         );
-        
-        if (0 !== schemaExists.length) {
-          this.logger.error(ResponseMessages.schema.error.exists);
-          throw new ConflictException(
-            ResponseMessages.schema.error.exists,
-            { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
-          );
-        }
-        
-        if (null !== schema || schema !== undefined) {
-          const schemaVersionIndexOf = -1;
-          if (
+      }
+
+      if (null !== schema || schema !== undefined) {
+        const schemaVersionIndexOf = -1;
+        if (
           isNaN(parseFloat(schema.schemaVersion)) ||
           schema.schemaVersion.toString().indexOf('.') ===
           schemaVersionIndexOf
@@ -73,40 +71,40 @@ export class SchemaService extends BaseService {
 
         const schemaAttributeLength = 0;
         if (schema.attributes.length === schemaAttributeLength) {
-            throw new NotAcceptableException(
-              ResponseMessages.schema.error.insufficientAttributes,
-              { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
-            );
-          } else if (schema.attributes.length > schemaAttributeLength) {
-            
-            const trimmedAttributes = schema.attributes.map(attribute => ({
-              attributeName: attribute.attributeName.trim(),
-              schemaDataType: attribute.schemaDataType,
-              displayName: attribute.displayName.trim()
-            }));
+          throw new NotAcceptableException(
+            ResponseMessages.schema.error.insufficientAttributes,
+            { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
+          );
+        } else if (schema.attributes.length > schemaAttributeLength) {
+
+          const trimmedAttributes = schema.attributes.map(attribute => ({
+            attributeName: attribute.attributeName.trim(),
+            schemaDataType: attribute.schemaDataType,
+            displayName: attribute.displayName.trim()
+          }));
 
 
           const attributeNamesLowerCase = trimmedAttributes.map(attribute => attribute.attributeName.toLowerCase());
           const duplicateAttributeNames = attributeNamesLowerCase
             .filter((value, index, element) => element.indexOf(value) !== index);
 
-        if (0 < duplicateAttributeNames.length) {
+          if (0 < duplicateAttributeNames.length) {
             throw new ConflictException(
               ResponseMessages.schema.error.uniqueAttributesnames,
               { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
             );
-        }
+          }
 
           const attributeDisplayNamesLowerCase = trimmedAttributes.map(attribute => attribute.displayName.toLocaleLowerCase());
           const duplicateAttributeDisplayNames = attributeDisplayNamesLowerCase
             .filter((value, index, element) => element.indexOf(value) !== index);
 
-        if (0 < duplicateAttributeDisplayNames.length) {
+          if (0 < duplicateAttributeDisplayNames.length) {
             throw new ConflictException(
               ResponseMessages.schema.error.uniqueAttributesDisplaynames,
               { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
             );
-        }
+          }
 
           schema.schemaName = schema.schemaName.trim();
           const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
@@ -216,7 +214,7 @@ export class SchemaService extends BaseService {
             { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
           );
         }
-      } else {       
+      } else {
         throw new BadRequestException(
           ResponseMessages.schema.error.emptyData,
           { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
@@ -234,27 +232,27 @@ export class SchemaService extends BaseService {
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {
-      const pattern = {
-        cmd: 'agent-create-schema'
-      };
-      const schemaResponse = await this.schemaServiceProxy
-        .send(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,  
-              error: error.error,
-              message: error.message
-            }, error.error);
-        });
-      return schemaResponse;  
+    const pattern = {
+      cmd: 'agent-create-schema'
+    };
+    const schemaResponse = await this.schemaServiceProxy
+      .send(pattern, payload)
+      .pipe(
+        map((response) => (
+          {
+            response
+          }))
+      ).toPromise()
+      .catch(error => {
+        this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error,
+            message: error.message
+          }, error.error);
+      });
+    return schemaResponse;
   }
 
 
@@ -263,14 +261,8 @@ export class SchemaService extends BaseService {
       const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-      // const apiKey = '';
-
-      let apiKey;
-      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-
-      }
+     
+      const apiKey = await this._getOrgAgentApiKey(orgId);
 
       let schemaResponse;
       if (OrgAgentType.DEDICATED === orgAgentType) {
@@ -343,14 +335,14 @@ export class SchemaService extends BaseService {
 
       if (0 === response.schemasCount) {
         throw new NotFoundException(ResponseMessages.schema.error.notFound);
-      } 
-      
+      }
+
       const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
       });
 
-      const nextPage:number = Number(schemaSearchCriteria.pageNumber) + 1;      
+      const nextPage: number = Number(schemaSearchCriteria.pageNumber) + 1;
 
       const schemasResponse: ISchemasWithPagination = {
         totalItems: response.schemasCount,
@@ -372,15 +364,15 @@ export class SchemaService extends BaseService {
 
   async getcredDeffListBySchemaId(
     payload: ISchemaCredDeffSearchInterface
-    ): Promise<ICredDefWithPagination> {
+  ): Promise<ICredDefWithPagination> {
     const { schemaSearchCriteria } = payload;
-    
+
     try {
       const response = await this.schemaRepository.getSchemasCredDeffList(schemaSearchCriteria);
-      
+
       if (0 === response.credDefCount) {
         throw new NotFoundException(ResponseMessages.schema.error.credentialDefinitionNotFound);
-      } 
+      }
 
       const schemasResponse = {
         totalItems: response.credDefCount,

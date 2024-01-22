@@ -391,6 +391,7 @@ export class CommonService {
       const decryptedPassword = JSON.parse(password.toString(CryptoJS.enc.Utf8));
       return decryptedPassword;
     } catch (error) {
+      this.logger.error(error)
       throw new BadRequestException('Invalid Credentials');
     }
   }

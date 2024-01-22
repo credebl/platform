@@ -38,14 +38,14 @@ export class DegreeCertificateTemplate {
           this.findAttributeByName(attributes, 'currentSemesterPerformance-creditsEarned')?.[
             'currentSemesterPerformance-creditsEarned'
           ] ?? '';
-        const commulativeSemesterPerformanceCreditsEarned =
+        const cumulativeSemesterPerformanceCreditsEarned =
           this.findAttributeByName(attributes, 'commulativeSemesterPerformance-creditsEarned')?.[
-            'commulativeSemesterPerformance-creditsEarned'
+            'cumulativeSemesterPerformance-creditsEarned'
           ] ?? '';
         const currentSemesterPerformanceSGA =
           this.findAttributeByName(attributes, 'currentSemesterPerformance-SGA')?.['currentSemesterPerformance-SGA'] ??
           '';
-        const commulativeSemesterPerformanceSGA =
+        const cumulativeSemesterPerformanceSGA =
           this.findAttributeByName(attributes, 'commulativeSemesterPerformance-SGA')?.[
             'commulativeSemesterPerformance-SGA'
           ] ?? '';
@@ -63,9 +63,9 @@ export class DegreeCertificateTemplate {
             academicYear,
             year,
             currentSemesterPerformanceCreditsEarned,
-            commulativeSemesterPerformanceCreditsEarned,
+            cumulativeSemesterPerformanceCreditsEarned,
             currentSemesterPerformanceSGA,
-            commulativeSemesterPerformanceSGA,
+            cumulativeSemesterPerformanceSGA,
             registrationNo
           };
 

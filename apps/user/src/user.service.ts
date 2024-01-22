@@ -722,8 +722,6 @@ export class UserService {
     const options: IPuppeteerOption = (option && 0 < Object.keys(option).length) ? option : {width: 0, height: 1000};
     
     const page = await browser.newPage();
-    // await page.setViewport({ width: 0, height: 1000, deviceScaleFactor: 2});
-    // await page.setViewport({ width: 1270, height: 1977, deviceScaleFactor: 2});
     await page.setViewport({ width: options?.width, height: options?.height, deviceScaleFactor: 2});
     await page.setContent(template);
     const screenshot = await page.screenshot();

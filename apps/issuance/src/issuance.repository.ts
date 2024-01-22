@@ -9,8 +9,7 @@ import {
   file_upload,
   org_agents,
   organisation,
-  platform_config,
-  shortening_url
+  platform_config
 } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import {
@@ -208,29 +207,6 @@ export class IssuanceRepository {
         }
       });
       return agentInvitationData;
-    } catch (error) {
-      this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
-      throw error;
-    }
-  }
-
-  /**
-   * Description: Save ShorteningUrl details
-   * @param referenceId
-   * @param connectionInvitationUrl
-   * @returns Get storeShorteningUrl details
-   */
-  // eslint-disable-next-line camelcase
-  async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<shortening_url> {
-    try {
-      const createShorteningUrl = await this.prisma.shortening_url.create({
-        data: {
-          referenceId,
-          url: connectionInvitationUrl,
-          type: null
-        }
-      });
-      return createShorteningUrl;
     } catch (error) {
       this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
       throw error;

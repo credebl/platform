@@ -344,7 +344,7 @@ export class UserController {
     summary: 'Share Degree certificate',
     description: 'Share Degree certificate'
   })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async shareUniversityCertificate(
     @Body() shareDegreeCertificate: CreateUserDegreeCertificateDto,
     @Res() res: Response
@@ -352,7 +352,7 @@ export class UserController {
    const imageBuffer = await this.userService.shareDegreeCertificate(shareDegreeCertificate);
       const finalResponse: IResponse = {
         statusCode: HttpStatus.CREATED,
-        message: 'Certificate url generated successfully',
+        message: ResponseMessages.user.success.degreeCertificate,
         data: imageBuffer
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);

@@ -20,6 +20,7 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser:'User created successfully',
             shareUserCertificate:'Certificate URL generated successfully',
+            degreeCertificate: 'Degree Certificate shared successfully',
             updateUserProfile:'User profile updated successfully'
         },
         error: {

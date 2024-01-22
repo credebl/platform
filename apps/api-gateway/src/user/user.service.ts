@@ -7,7 +7,7 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { CreateUserCertificateDto } from './dto/share-certificate.dto';
-import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
+import { IUsersProfile, ICheckUserDetails, IShareDegreeCertificateRes } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
@@ -70,7 +70,7 @@ export class UserService extends BaseService {
   
   async shareDegreeCertificate(
     shareDegreeCertificate: CreateUserDegreeCertificateDto
-  ): Promise<object> {
+  ): Promise<IShareDegreeCertificateRes> {
     const payload = { shareDegreeCertificate};
     return this.sendNatsMessage(this.serviceProxy, 'share-degree-certificate', payload);
   }

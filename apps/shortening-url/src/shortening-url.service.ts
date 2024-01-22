@@ -29,7 +29,7 @@ export class ShorteningUrlService {
         }
     }
 
-    async getShorteningUrl(referenceId): Promise<object> {
+    async getShorteningUrl(referenceId: string): Promise<object> {
         try {
             const getShorteningUrl = await this.shorteningUrlRepository.getShorteningUrl(referenceId);
 

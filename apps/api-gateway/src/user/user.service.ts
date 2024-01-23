@@ -6,13 +6,12 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
-import { CreateUserCertificateDto } from './dto/share-certificate.dto';
-import { IUsersProfile, ICheckUserDetails, IShareDegreeCertificateRes } from 'apps/user/interfaces/user.interface';
+import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { CreateUserDegreeCertificateDto } from './dto/share-degree-certificate.dto';
+import { CreateCertificateDto } from './dto/share-certificate.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -62,17 +61,14 @@ export class UserService extends BaseService {
   }
 
   async shareUserCertificate(
-    shareUserCredentials: CreateUserCertificateDto
+    shareUserCredentials: CreateCertificateDto
   ): Promise<Buffer> {
     const payload = { shareUserCredentials};
-    return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', payload);
-  }
-  
-  async shareDegreeCertificate(
-    shareDegreeCertificate: CreateUserDegreeCertificateDto
-  ): Promise<IShareDegreeCertificateRes> {
-    const payload = { shareDegreeCertificate};
-    return this.sendNatsMessage(this.serviceProxy, 'share-degree-certificate', payload);
+    if (shareUserCredentials.invitationUrl && 0 < shareUserCredentials.invitationUrl.length) {
+      return this.sendNatsMessage(this.serviceProxy, 'share-degree-certificate', payload);
+    } else {
+      return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', payload);
+    }
   }
 
   async get(

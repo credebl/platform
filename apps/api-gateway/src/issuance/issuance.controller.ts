@@ -548,7 +548,7 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     // const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId);
-
+    issueCredentialDto.type = 'Issuance';
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
 
     // if (webhookUrl) {

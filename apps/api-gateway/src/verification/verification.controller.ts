@@ -279,7 +279,9 @@ export class VerificationController {
         @Body() proofPresentationPayload: WebhookPresentationProofDto,
         @Res() res: Response
     ): Promise<Response> {
+        proofPresentationPayload.type = 'Verification';
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
+
         //     const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
         // if (webhookUrl) {
         //     try {

@@ -1,6 +1,6 @@
 
 import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 import { IsEnum } from 'class-validator';
@@ -130,6 +130,10 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     contextCorrelationId: string;
+    
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 }
 
 

@@ -37,7 +37,6 @@ import {
   IUserCredentials, 
    IUserInformation,
     IUsersProfile,
-    IShareDegreeCertificate,
     IPuppeteerOption,
     IShareDegreeCertificateRes
 } from '../interfaces/user.interface';
@@ -621,7 +620,7 @@ export class UserService {
 
   }
 
-  async shareDegreeCertificate(shareDegreeCertificate: IShareDegreeCertificate): Promise<IShareDegreeCertificateRes> {
+  async shareDegreeCertificate(shareDegreeCertificate: ShareUserCertificate): Promise<IShareDegreeCertificateRes> {
 
     try {
       const attributeArray = [];
@@ -681,7 +680,7 @@ export class UserService {
   }
 
   async getInvitationUrl(
-    payload: IShareDegreeCertificate
+    payload: ShareUserCertificate
   ): Promise<string> {
     try {
       const pattern = { cmd: 'create-shortening-url' };

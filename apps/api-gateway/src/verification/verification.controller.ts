@@ -281,14 +281,16 @@ export class VerificationController {
         @Body() proofPresentationPayload: WebhookPresentationProofDto,
         @Res() res: Response
     ): Promise<Response> {
+        proofPresentationPayload.type = 'Verification';
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
-        const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
-    if (webhookUrl) {
-        try {
-            await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload});
-      } catch (error) {
-          throw new RpcException(error.response ? error.response : error);
-      }
+
+        //     const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
+        // if (webhookUrl) {
+        //     try {
+        //         await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload});
+        //   } catch (error) {
+        //       throw new RpcException(error.response ? error.response : error);
+        //   }
         const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,

@@ -88,6 +88,10 @@ export class ConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     contextCorrelationId: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 }
 
 class ReceiveInvitationCommonDto {

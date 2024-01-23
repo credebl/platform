@@ -60,4 +60,8 @@ export class WebhookPresentationProofDto {
     @ApiPropertyOptional()
     @IsOptional()
     contextCorrelationId: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 }

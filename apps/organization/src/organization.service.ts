@@ -22,6 +22,8 @@ import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
+import { AwsService } from '@credebl/aws';
+import { v4 as uuidv4 } from 'uuid';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
@@ -34,6 +36,7 @@ export class OrganizationService {
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
+    private readonly awsService: AwsService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache
@@ -72,7 +75,33 @@ export class OrganizationService {
     }
   }
 
+  async getLogoImageBuffer(updateOrgDto: IUpdateOrganization): Promise<string> {
+    try {
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(updateOrgDto.orgId);
+      const logo = organizationDetails.logoUrl;
 
+      const [fileType] = logo.split(';')[0].split(':').slice(1);
+
+      const verifyCode = uuidv4();
+
+      const imageUrl = await this.awsService.uploadUserCertificate(logo, fileType, verifyCode, 'orgLogo', 'base64'); 
+
+      const saveOrgLogoUrl = await this.saveOrgLogoImageUrl(imageUrl, updateOrgDto.orgId);
+
+      if (!saveOrgLogoUrl) {
+        throw new BadRequestException('Image logo url not stored');
+      }
+      return imageUrl;
+    } catch (error) {
+      this.logger.error(`In getting imageUrl : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }  
+
+  async saveOrgLogoImageUrl(imageUrl: string, orgId: string): Promise<organisation> {
+    return this.organizationRepository.updateOrgLogoImageUrl(orgId, imageUrl);
+  }
+    
   /**
    *
    * @param orgName

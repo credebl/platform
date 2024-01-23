@@ -1,10 +1,8 @@
 -- CreateTable
 CREATE TABLE "notification" (
     "id" UUID NOT NULL,
-    "userKey" TEXT,
     "orgId" UUID,
-    "webhookEndpoint" TEXT,
-    "fcmToken" TEXT,
+    "notificationWebhook" TEXT,
     "createDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdBy" TEXT NOT NULL DEFAULT '1',
     "lastChangedDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -4,7 +4,7 @@ import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthoriz
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import { GetNotificationDto, RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
+import { RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -76,35 +76,6 @@ export class NotificationController {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.notification.success.sendNotification,
             data: sendNotification
-        };
-        return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
-
-    // Sample webhook API for get notification
-    /**
-     * Get notification by webhook
-     * @param getNotificationDto 
-     * @param res 
-     * @returns Get notification details
-     */
-    @Post('/webhook')
-    @ApiOperation({
-        summary: `Get notification by webhook`,
-        description: `Get notification by webhook`
-    })
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-    async getNotification(
-        @Body() getNotificationDto: GetNotificationDto,
-        @Res() res: Response
-    ): Promise<Response> {
-        const getNotification = await this.notificationService.getNotification(
-            getNotificationDto
-        );
-
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.notification.success.sendNotification,
-            data: getNotification
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

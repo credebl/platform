@@ -6,7 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { NotificationController } from './notification.controller';
-import { NoificatonService } from './notification.service';
+import { NotificationService } from './notification.service';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { NoificatonService } from './notification.service';
     ])
   ],
   controllers: [NotificationController],
-  providers: [NoificatonService, CommonService]
+  providers: [NotificationService, CommonService]
 })
 export class NotificationModule { }
 

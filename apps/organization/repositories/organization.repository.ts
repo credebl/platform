@@ -172,6 +172,22 @@ export class OrganizationRepository {
     }
   }
 
+  async updateOrgLogoImageUrl(orgId: string, imageUrl: string): Promise<organisation> {
+    try {
+      const saveOrgImageUrl = await this.prisma.organisation.update({     
+        where: {
+          id: orgId
+        },
+        data: {
+          logoUrl: imageUrl
+        }     
+      });
+      return saveOrgImageUrl;
+    } catch (error) {
+      throw new Error(`Error saving certificate image URL: ${error.message}`);
+    }
+  }
+
   async getAllOrgInvitations(
     email: string,
     status: string,

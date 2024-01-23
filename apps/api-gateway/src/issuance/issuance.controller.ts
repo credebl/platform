@@ -5,7 +5,6 @@ import {
   Controller,
   Post,
   Body,
-  Logger,
   UseGuards,
   BadRequestException,
   HttpStatus,
@@ -16,7 +15,8 @@ import {
   UseFilters,
   Header,
   UploadedFile,
-  UseInterceptors
+  UseInterceptors,
+  Logger
 } from '@nestjs/common';
 import {
   ApiTags,

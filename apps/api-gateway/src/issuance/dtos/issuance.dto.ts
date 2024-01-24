@@ -1,8 +1,11 @@
 
 import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { toNumber, trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/cast.helper';
+import { IsEnum } from 'class-validator';
+import { SortValue } from '../../enum';
+import { SortFields } from 'apps/connection/src/enum/connection.enum';
 
 class Attribute {
 
@@ -127,6 +130,10 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     contextCorrelationId: string;
+    
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 }
 
 
@@ -192,62 +199,71 @@ export class OOBCredentialDtoWithEmail {
 
 
 export class PreviewFileDetails {
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
+
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
+
+    @ApiProperty({ required: false, example: '10' })
+    @IsOptional()
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false, example: '1' })
+    @IsOptional()
+    pageNumber: number = 1;
+
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
-    search = '';
+    searchByText: string = '';
 
-    @ApiProperty({ required: false, default: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
 
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortValue = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortBy = '';
-
-    @ApiProperty({ required: false, default: 1 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
 }
 
 export class FileParameter {
-    @ApiProperty({ required: false, default: 1 })
+    @ApiProperty({ required: false, example: '10' })
     @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false, example: '1' })
+    @IsOptional()
+    pageNumber: number = 1;
+
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
+
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
-    search = '';
-
-    @ApiProperty({ required: false, default: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortBy = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortValue = '';
-
+    searchByText: string = '';
 }
 
 export class ClientDetails {

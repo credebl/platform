@@ -146,7 +146,6 @@ export class UserDevicesRepository {
      * @returns Find device details from credentialID
      */
   async getFidoUserDeviceDetails(credentialId: string): Promise<unknown> {
-    this.logger.log(`credentialId: ${credentialId}`);
     try {
       const getUserDevice = await this.prisma.$queryRaw`
   SELECT * FROM user_devices
@@ -190,7 +189,6 @@ export class UserDevicesRepository {
      */
   // eslint-disable-next-line camelcase
   async checkUserDeviceByCredentialId(credentialId: string): Promise<user_devices> {
-    this.logger.log(`checkUserDeviceByCredentialId: ${credentialId}`);
     try {
       return await this.prisma.user_devices.findFirst({
         where: {

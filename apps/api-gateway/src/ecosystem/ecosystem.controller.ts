@@ -410,7 +410,7 @@ export class EcosystemController {
 
     bulkInvitationDto.ecosystemId = ecosystemId;
 
-    await this.ecosystemService.createInvitation(bulkInvitationDto, user.id, user.email);
+    await this.ecosystemService.createInvitation(bulkInvitationDto, user.id, user.email, orgId);
 
     const finalResponse: IResponse = {
       statusCode: 201,

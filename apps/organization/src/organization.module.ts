@@ -14,7 +14,7 @@ import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import { getNatsOptions } from '@credebl/common/nats.config';
-
+import { AwsService } from '@credebl/aws';
 @Module({
   imports: [
     ClientsModule.register([
@@ -31,7 +31,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
   providers: [
     OrganizationService, OrganizationRepository, PrismaService,
      Logger, OrgRolesService, UserOrgRolesService, OrgRolesRepository, UserActivityRepository,
-      UserOrgRolesRepository, UserRepository, UserActivityService
+      UserOrgRolesRepository, UserRepository, UserActivityService, AwsService
     ]
 
 })

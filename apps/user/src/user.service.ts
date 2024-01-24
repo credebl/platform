@@ -365,6 +365,7 @@ export class UserService {
     const { email, password, isPasskey } = loginUserDto;
 
     try {
+
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
       if (!userData) {
@@ -641,13 +642,11 @@ export class UserService {
 
     const imageBuffer = 
     await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
-    const verifyCode = uuidv4();
-
     const imageUrl = await this.awsService.uploadUserCertificate(
       imageBuffer,
       'svg',
-      verifyCode,
       'certificates',
+      process.env.AWS_PUBLIC_BUCKET_NAME,
       'base64'
     );
     const existCredentialId = await this.userRepository.getUserCredentialsById(shareUserCertificate.credentialId);

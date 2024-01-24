@@ -7,7 +7,8 @@ import { Module } from '@nestjs/common';
 import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-
+import { ImageServiceService } from '@credebl/image-service';
+import { AwsService } from '@credebl/aws';
 @Module({
   imports: [
     HttpModule,
@@ -23,7 +24,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     ])
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService, ImageServiceService]
+  providers: [OrganizationService, CommonService, ImageServiceService, AwsService]
 })
 export class OrganizationModule { }
 

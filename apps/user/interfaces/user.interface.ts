@@ -69,7 +69,7 @@ export interface ISendVerificationEmail {
   }
   export interface PlatformSettings {
     externalIp: string;
-    lastInternalId: string;
+    inboundEndpoint: string;
     sgApiKey: string;
     emailFrom: string;
     apiEndPoint: string;

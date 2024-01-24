@@ -591,7 +591,7 @@ isEmailVerified: true,
         },
         data: {
           externalIp: updatePlatformSettings.externalIp,
-          lastInternalId: updatePlatformSettings.lastInternalId,
+          inboundEndpoint: updatePlatformSettings.inboundEndpoint,
           sgApiKey: updatePlatformSettings.sgApiKey,
           emailFrom: updatePlatformSettings.emailFrom,
           apiEndpoint: updatePlatformSettings.apiEndPoint

@@ -17,11 +17,12 @@ PROTOCOL=${12}
 TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
-AGENT_HOST=${16}
-AWS_ACCOUNT_ID=${17}
-S3_BUCKET_ARN=${18}
-CLUSTER_NAME=${19}
-TESKDEFINITION_FAMILY=${20}
+INBOUND_ENDPOINT=${16}
+AGENT_HOST=${17}
+AWS_ACCOUNT_ID=${18}
+S3_BUCKET_ARN=${19}
+CLUSTER_NAME=${20}
+TESKDEFINITION_FAMILY=${21}
 
 DESIRED_COUNT=1
 
@@ -89,7 +90,22 @@ echo "Last used admin port: $ADMIN_PORT"
 echo "Last used inbound port: $INBOUND_PORT"
 echo "AGENT SPIN-UP STARTED"
 
-AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
+# Define a regular expression pattern for IP address
+IP_REGEX="^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$"
+
+# Check if the input is a domain
+if echo "$INBOUND_ENDPOINT" | grep -qP "^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"; then
+  echo "INBOUND_ENDPOINT is a domain: $INBOUND_ENDPOINT"
+  AGENT_ENDPOINT=$INBOUND_ENDPOINT
+else
+  # Check if the input is an IP address
+  if [[ $INBOUND_ENDPOINT =~ $IP_REGEX ]]; then
+    echo "INBOUND_ENDPOINT is an IP address: $INBOUND_ENDPOINT"
+    AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
+  else
+    echo "Invalid input for INBOUND_ENDPOINT: $INBOUND_ENDPOINT"
+  fi
+fi
 
 cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json
 {

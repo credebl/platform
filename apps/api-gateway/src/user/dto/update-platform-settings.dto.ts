@@ -10,8 +10,8 @@ export class UpdatePlatformSettingsDto {
 
     @ApiProperty({ example: '127.0.0.1' })
     @IsOptional()
-    @IsString({ message: 'last Internal Id should be string' })
-    lastInternalId: string;
+    @IsString({ message: 'inbound endpoint should be string' })
+    inboundEndpoint: string;
 
     @ApiProperty()
     @IsOptional()

@@ -71,7 +71,6 @@ export class ConnectionService {
       const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----getConnections,${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -294,7 +293,6 @@ export class ConnectionService {
 
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----getConnectionsById,${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }

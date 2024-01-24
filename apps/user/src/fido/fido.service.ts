@@ -63,7 +63,6 @@ export class FidoService {
             .httpGet(url, { headers: { 'Content-Type': 'application/json' } })
             .then(async (response) => {
                 const { user } = response;
-                this.logger.debug(`registration option:: already${JSON.stringify(response)}`);
                  await this.fidoUserRepository.updateUserDetails(email.toLowerCase(), [
                     {fidoUserId:user.id},
                     {isFidoVerified:false}

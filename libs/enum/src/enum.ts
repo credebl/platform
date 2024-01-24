@@ -64,6 +64,11 @@ export enum Purpose {
     USER_CERTIFICATE = 'UserCertificate'
 }
 
+export enum NodeEnvironment {
+   DEVELOPMENT='DEV',
+   PRODUCTION='PROD'
+}
+
 const transitionMap: { [key in Invitation]: Invitation[] } = {
     [Invitation.PENDING]: [Invitation.ACCEPTED, Invitation.REJECTED],
     [Invitation.ACCEPTED]: [],

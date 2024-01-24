@@ -704,7 +704,7 @@ export class IssuanceService {
         totalItems: fileData.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileData.fileCount,
         hasPreviousPage: 1 < getAllfileDetails.pageNumber,
-        nextPage: getAllfileDetails.pageNumber + 1,
+        nextPage: Number(getAllfileDetails.pageNumber) + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
         lastPage: Math.ceil(fileData.fileCount / getAllfileDetails.pageSize),
         data: fileData.fileDataList
@@ -733,7 +733,7 @@ export class IssuanceService {
         totalItems: fileDetails.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
         hasPreviousPage: 1 < getAllfileDetails.pageNumber,
-        nextPage: getAllfileDetails.pageNumber + 1,
+        nextPage: Number(getAllfileDetails.pageNumber) + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
         lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
         data: fileDetails.fileList

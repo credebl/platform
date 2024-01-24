@@ -77,8 +77,9 @@ export interface ISendVerificationEmail {
     multiEcosystemSupport: boolean;
   }
   
-  export interface ShareUserCertificate {
+  export interface IShareUserCertificate {
     schemaId: string;
+    credDefId: string;
     credentialId: string;
     attributes: Attribute[];
     invitationUrl?: string;
@@ -86,7 +87,7 @@ export interface ISendVerificationEmail {
 
   export interface IShareDegreeCertificateRes {
     cretificate: string;
-    invitationUrl: string;
+    invitationUrl?: string;
   }
 
   export interface Attribute {

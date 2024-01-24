@@ -31,7 +31,7 @@ import {
   ICheckUserDetails,
   OrgInvitations,
   PlatformSettings,
-  ShareUserCertificate,
+  IShareUserCertificate,
   IOrgUsers,
   UpdateUserProfile,
   IUserCredentials, 
@@ -553,7 +553,7 @@ export class UserService {
     }
   }
 
-  async shareUserCertificate(shareUserCertificate: ShareUserCertificate): Promise<string> {
+  async shareUserCertificate(shareUserCertificate: IShareUserCertificate): Promise<string> {
 
     const attributeArray = [];
     let attributeJson = {};
@@ -591,7 +591,7 @@ export class UserService {
         throw new NotFoundException('error in get attributes');
     }
 
-    const option: IPuppeteerOption = {height: 1270, width: 1977};
+    const option: IPuppeteerOption = {height: 0, width: 1000};
 
     const imageBuffer = 
     await this.convertHtmlToImage(template, shareUserCertificate.credentialId, option);
@@ -620,7 +620,7 @@ export class UserService {
 
   }
 
-  async shareDegreeCertificate(shareDegreeCertificate: ShareUserCertificate): Promise<IShareDegreeCertificateRes> {
+  async shareDegreeCertificate(shareDegreeCertificate: IShareUserCertificate): Promise<IShareDegreeCertificateRes> {
 
     try {
       const attributeArray = [];
@@ -647,7 +647,6 @@ export class UserService {
   
       const userDegreeTemplate = new DegreeCertificateTemplate();
       const template = await userDegreeTemplate.getDegreeCertificateTemplate(attributeArray, qrCode);
-  
       const option: IPuppeteerOption = {height: 1270, width: 1977};
 
       const imageBuffer = 
@@ -661,7 +660,6 @@ export class UserService {
         'certificates',
         'base64'
       );
-  
       const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareDegreeCertificate.credentialId);
     
       if (!saveCredentialData) {
@@ -680,7 +678,7 @@ export class UserService {
   }
 
   async getInvitationUrl(
-    payload: ShareUserCertificate
+    payload: IShareUserCertificate
   ): Promise<string> {
     try {
       const pattern = { cmd: 'create-shortening-url' };

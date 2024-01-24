@@ -27,7 +27,6 @@ export class CreateCertificateDto {
   credDefId?: string;
 
   @ApiProperty({ example: 'InvitationUrl' })
-  @IsNotEmpty({ message: 'Please provide valid invitationUrl' })
   @Transform(({ value }) => trim(value))
   @IsString({ message: 'schemaId should be string' })
   invitationUrl?: string;

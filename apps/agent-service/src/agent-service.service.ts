@@ -57,80 +57,6 @@ export class AgentServiceService {
       + input.slice(end);
   }
 
-  async _validateInternalIp(
-    platformConfig: platform_config,
-    controllerIp: string
-  ): Promise<string> {
-    let internalIp = '';
-    const maxIpLength = '255';
-    const indexValue = 1;
-    const controllerIpLength = 0;
-    try {
-      if (
-        platformConfig.lastInternalId.split('.')[3] < maxIpLength &&
-        platformConfig.lastInternalId.split('.')[3] !== maxIpLength
-      ) {
-        internalIp = await this.ReplaceAt(
-          controllerIp,
-          controllerIp.split('.')[3],
-          parseInt(controllerIp.split('.')[3]) + indexValue,
-          controllerIp.lastIndexOf('.') + indexValue,
-          controllerIp.length
-        );
-
-        platformConfig.lastInternalId = internalIp;
-      } else if (
-        platformConfig.lastInternalId.split('.')[2] < maxIpLength &&
-        platformConfig.lastInternalId.split('.')[2] !== maxIpLength
-      ) {
-        internalIp = await this.ReplaceAt(
-          controllerIp,
-          controllerIp.split('.')[2],
-          parseInt(controllerIp.split('.')[2]) + indexValue,
-          controllerIp.indexOf('.', controllerIp.indexOf('.') + indexValue) +
-          indexValue,
-          controllerIp.length
-        );
-
-        platformConfig.lastInternalId = internalIp;
-      } else if (
-        platformConfig.lastInternalId.split('.')[1] < maxIpLength &&
-        platformConfig.lastInternalId.split('.')[1] !== maxIpLength
-      ) {
-        internalIp = await this.ReplaceAt(
-          controllerIp,
-          controllerIp.split('.')[1],
-          parseInt(controllerIp.split('.')[1]) + indexValue,
-          controllerIp.indexOf('.', controllerIp.indexOf('.')) + indexValue,
-          controllerIp.length
-        );
-
-        platformConfig.lastInternalId = internalIp;
-      } else if (
-        platformConfig.lastInternalId.split('.')[0] < maxIpLength &&
-        platformConfig.lastInternalId.split('.')[0] !== maxIpLength
-      ) {
-        internalIp = await this.ReplaceAt(
-          controllerIp,
-          controllerIp.split('.')[0],
-          parseInt(controllerIp.split('.')[0]) + indexValue,
-          controllerIpLength,
-          controllerIp.length
-        );
-
-        platformConfig.lastInternalId = internalIp;
-      } else {
-        this.logger.error(`This IP address is not valid!`);
-        throw new BadRequestException(`This IP address is not valid!`);
-      }
-
-      return internalIp;
-    } catch (error) {
-      this.logger.error(`error in valid internal ip : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
   /**
    * Spinup the agent by organization
    * @param agentSpinupDto 
@@ -235,11 +161,11 @@ export class AgentServiceService {
       this.validatePlatformConfig(platformConfig);
 
       const externalIp = platformConfig?.externalIp;
-      const controllerIp = platformConfig?.lastInternalId !== 'false' ? platformConfig?.lastInternalId : '';
+      const inboundEndpoint = platformConfig?.inboundEndpoint !== 'false' ? platformConfig?.inboundEndpoint : '';
       const apiEndpoint = platformConfig?.apiEndpoint;
 
       // Create payload for the wallet create and store payload
-      const walletProvisionPayload = await this.prepareWalletProvisionPayload(agentSpinupDto, externalIp, apiEndpoint, controllerIp, ledgerDetails, platformConfig, orgData);
+      const walletProvisionPayload = await this.prepareWalletProvisionPayload(agentSpinupDto, externalIp, apiEndpoint, inboundEndpoint, ledgerDetails, orgData);
 
 
       // Socket connection
@@ -326,9 +252,8 @@ export class AgentServiceService {
     agentSpinupDto: IAgentSpinupDto,
     externalIp: string,
     apiEndpoint: string,
-    controllerIp: string,
+    inboundEndpoint: string,
     ledgerDetails: ledgers[],
-    platformConfig: platform_config,
     orgData: organisation
   ): Promise<IWalletProvision> {
     const ledgerArray = ledgerDetails.map(ledger => ({
@@ -349,7 +274,7 @@ export class AgentServiceService {
       walletStoragePort: process.env.WALLET_STORAGE_PORT || '',
       walletStorageUser: process.env.WALLET_STORAGE_USER || '',
       walletStoragePassword: process.env.WALLET_STORAGE_PASSWORD || '',
-      internalIp: await this._validateInternalIp(platformConfig, controllerIp),
+      inboundEndpoint,
       containerName: orgData.name.split(' ').join('_'),
       agentType: AgentType.AFJ,
       orgName: orgData?.name,

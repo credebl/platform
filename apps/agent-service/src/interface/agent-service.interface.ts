@@ -95,7 +95,6 @@ export interface IWalletProvision {
     walletStoragePort: string;
     walletStorageUser: string;
     walletStoragePassword: string;
-    internalIp: string;
     containerName: string;
     agentType: string;
     orgName: string;
@@ -103,6 +102,7 @@ export interface IWalletProvision {
     afjVersion: string;
     protocol: string;
     tenant: boolean;
+    inboundEndpoint: string;
     apiKey?: string;
 }
 

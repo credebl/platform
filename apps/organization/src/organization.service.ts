@@ -23,7 +23,6 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { AwsService } from '@credebl/aws';
-import { v4 as uuidv4 } from 'uuid';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
@@ -62,6 +61,19 @@ export class OrganizationService {
       createOrgDto.createdBy = userId;
       createOrgDto.lastChangedBy = userId;
 
+      // const imageUrl = await this.awsService.uploadUserCertificate(createOrgDto.logo, 'certificates', process.env.AWS_PUBLIC_BUCKET_NAME,
+      // 'base64'); 
+
+      const allowedExtensions = ['png', 'jpg', 'jpeg'];
+
+      const imageUrl = await this.uploadFileToS3(createOrgDto.logo, allowedExtensions);
+
+      if (imageUrl) {
+        createOrgDto.logo = imageUrl;
+      } else {
+        throw new BadRequestException('error in uploading image on s3 bucket');
+      }
+
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
@@ -75,32 +87,33 @@ export class OrganizationService {
     }
   }
 
-  async getLogoImageBuffer(updateOrgDto: IUpdateOrganization): Promise<string> {
+  //
+  async uploadFileToS3(orgLogo: string, allowedExtensions: string[]): Promise<string> {
     try {
-      const organizationDetails = await this.organizationRepository.getOrganizationDetails(updateOrgDto.orgId);
-      const logo = organizationDetails.logoUrl;
+      const ext = allowedExtensions.find(extension => orgLogo.endsWith(`.${extension}`)) || 'png';
+      const imgData = Buffer.from(orgLogo, 'base64');
 
-      const [fileType] = logo.split(';')[0].split(':').slice(1);
+      // const logoUrl = await this.awsService.uploadUserCertificate(imgData, ext, 'orgLogo', process.env.AWS_ORG_LOGO_BUCKET_NAME,
+      // 'base64', 'orgLogos'); 
+      const logoUrl = await this.awsService.uploadUserCertificate(
+        imgData,
+        ext,
+        'orgLogo',
+        process.env.AWS_ORG_LOGO_BUCKET_NAME,
+        'base64',
+        'orgLogos'
+      );
 
-      const verifyCode = uuidv4();
-
-      const imageUrl = await this.awsService.uploadUserCertificate(logo, fileType, verifyCode, 'orgLogo', 'base64'); 
-
-      const saveOrgLogoUrl = await this.saveOrgLogoImageUrl(imageUrl, updateOrgDto.orgId);
-
-      if (!saveOrgLogoUrl) {
-        throw new BadRequestException('Image logo url not stored');
-      }
-      return imageUrl;
+      // const timestamp = Date.now();
+      // const filename = 'orgLogo';
+      // const pathAWS = '';
+      // const logoUrl = `https://${process.env.AWS_ORG_LOGO_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;    
+      return logoUrl;
     } catch (error) {
       this.logger.error(`In getting imageUrl : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }  
-
-  async saveOrgLogoImageUrl(imageUrl: string, orgId: string): Promise<organisation> {
-    return this.organizationRepository.updateOrgLogoImageUrl(orgId, imageUrl);
-  }
     
   /**
    *

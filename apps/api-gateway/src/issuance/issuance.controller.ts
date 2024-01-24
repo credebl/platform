@@ -5,7 +5,6 @@ import {
   Controller,
   Post,
   Body,
-  Logger,
   UseGuards,
   BadRequestException,
   HttpStatus,
@@ -16,7 +15,8 @@ import {
   UseFilters,
   Header,
   UploadedFile,
-  UseInterceptors
+  UseInterceptors,
+  Logger
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -548,7 +548,7 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     // const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId);
-
+    issueCredentialDto.type = 'Issuance';
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
 
     // if (webhookUrl) {

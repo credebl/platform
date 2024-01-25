@@ -37,10 +37,10 @@ export class AwsService {
       await putObjectAsync({
         Bucket: bucketName,
         // Bucket: process.env.AWS_PUBLIC_BUCKET_NAME,
-        Key: `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`,
+        Key: `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.png`,
         Body: fileBuffer,
         ContentEncoding: encoding,
-        ContentType: `image/${ext}`
+        ContentType: `image/png`
         // ContentType: ext
       });
 

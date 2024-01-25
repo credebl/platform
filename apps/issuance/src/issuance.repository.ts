@@ -102,7 +102,7 @@ export class IssuanceRepository {
         },
         orderBy: {
           [issuedCredentialsSearchCriteria?.sortField]:
-            SortValue.DESC === issuedCredentialsSearchCriteria?.sortBy?.toLocaleUpperCase() ? 'desc' : 'asc'
+            SortValue.DESC === issuedCredentialsSearchCriteria?.sortBy ? 'desc' : 'asc'
         },
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
@@ -375,17 +375,17 @@ export class IssuanceRepository {
     try {
       const fileList = await this.prisma.file_upload.findMany({
         where: {
-          orgId: String(orgId),
+          orgId,
           OR: [
-            { name: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
-            { status: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
-            { upload_type: { contains: getAllfileDetails?.search, mode: 'insensitive' } }
+            { name: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
+            { status: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
+            { upload_type: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } }
           ]
         },
         take: Number(getAllfileDetails?.pageSize),
         skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
         orderBy: {
-          createDateTime: 'desc'
+          createDateTime: 'desc' === getAllfileDetails.sortBy ? 'desc' : 'asc'
         }
       });
 
@@ -404,7 +404,7 @@ export class IssuanceRepository {
 
       const fileCount = await this.prisma.file_upload.count({
         where: {
-          orgId: String(orgId)
+          orgId
         }
       });
 
@@ -439,15 +439,15 @@ export class IssuanceRepository {
         where: {
           fileUploadId: fileId,
           OR: [
-            { error: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
-            { referenceId: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
-            { detailError: { contains: getAllfileDetails?.search, mode: 'insensitive' } }
+            { error: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
+            { referenceId: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
+            { detailError: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } }
           ]
         },
         take: Number(getAllfileDetails?.pageSize),
         skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
         orderBy: {
-          createDateTime: 'desc'
+          createDateTime: 'desc' === getAllfileDetails.sortBy ? 'desc' : 'asc'
         }
       });
       const fileCount = await this.prisma.file_data.count({

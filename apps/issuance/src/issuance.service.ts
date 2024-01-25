@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { ClientDetails, FileUploadData, IAttributes, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { ClientDetails, FileUploadData, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -31,6 +31,7 @@ import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 
 
 @Injectable()
@@ -114,8 +115,9 @@ export class IssuanceService {
   }
 
 
-  async sendCredentialOutOfBand(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: IAttributes[]): Promise<ICreateOfferResponse> {
+  async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object; }> {
     try {
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
       // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
@@ -130,18 +132,14 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      // const apiKey = platformConfig?.sgApiKey;
-
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey;
       apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey---${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
 
       const issueData = {
-        connectionId,
+        protocolVersion: protocolVersion || 'v1',
         credentialFormats: {
           indy: {
             attributes,
@@ -151,8 +149,7 @@ export class IssuanceService {
         autoAcceptCredential: 'always',
         comment: comment || ''
       };
-
-      const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
+      const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
 
       return credentialCreateOfferDetails;
     } catch (error) {
@@ -294,7 +291,6 @@ export class IssuanceService {
       // const apiKey = platformConfig?.sgApiKey;
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -368,7 +364,6 @@ export class IssuanceService {
       // const { apiKey } = agentDetails;
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -596,7 +591,6 @@ export class IssuanceService {
       const fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       await createFile(filePath, fileName, csv);
-      this.logger.log(`File created - ${fileName}`);
       const fullFilePath = join(process.cwd(), `uploadedFiles/exports/${fileName}`);
 
       if (!checkIfFileOrDirectoryExists(fullFilePath)) {
@@ -616,15 +610,10 @@ export class IssuanceService {
 
 
   async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
-    this.logger.log(`START importAndPreviewDataForIssuance----${JSON.stringify(importFileDetails)}`);
     try {
 
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
-
-      this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
-
-      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.fileKey)}`);
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
       const csvData: string = getFileDetails.Body.toString();
@@ -635,8 +624,6 @@ export class IssuanceService {
         transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
         complete: (results) => results.data
       });
-
-      this.logger.log(`parsedData----${JSON.stringify(parsedData)}`);
 
       if (0 >= parsedData.data.length) {
         throw new BadRequestException(`File data is empty`);
@@ -716,7 +703,7 @@ export class IssuanceService {
           throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
         }
         const parsedData = JSON.parse(cachedData as string).fileData.data;
-        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortValue));
+        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortField));
         const finalData = paginator(parsedData, previewRequest.pageNumber, previewRequest.pageSize);
 
         return finalData;
@@ -741,7 +728,7 @@ export class IssuanceService {
         totalItems: fileData.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileData.fileCount,
         hasPreviousPage: 1 < getAllfileDetails.pageNumber,
-        nextPage: getAllfileDetails.pageNumber + 1,
+        nextPage: Number(getAllfileDetails.pageNumber) + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
         lastPage: Math.ceil(fileData.fileCount / getAllfileDetails.pageSize),
         data: fileData.fileDataList
@@ -770,7 +757,7 @@ export class IssuanceService {
         totalItems: fileDetails.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
         hasPreviousPage: 1 < getAllfileDetails.pageNumber,
-        nextPage: getAllfileDetails.pageNumber + 1,
+        nextPage: Number(getAllfileDetails.pageNumber) + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
         lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
         data: fileDetails.fileList
@@ -814,10 +801,8 @@ export class IssuanceService {
       );
     }
 
-    this.logger.log(`requestId----${JSON.stringify(requestId)}`);
     try {
       const cachedData = await this.cacheManager.get(requestId);
-      this.logger.log(`cachedData----${JSON.stringify(cachedData)}`);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
@@ -858,7 +843,6 @@ export class IssuanceService {
       }
       for (const element of respFile) {
         try {
-          this.logger.log(`element----${JSON.stringify(element)}`);
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
@@ -910,7 +894,6 @@ export class IssuanceService {
 
       for (const element of respFile) {
         try {
-          this.logger.log(`element----${JSON.stringify(element)}`);
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
@@ -961,7 +944,6 @@ export class IssuanceService {
       detailError: '',
       jobId: ''
     };
-    this.logger.log(`jobDetails----${JSON.stringify(jobDetails)}`);
 
     fileUploadData.fileUpload = jobDetails.fileUploadId;
     fileUploadData.fileRow = JSON.stringify(jobDetails);
@@ -995,7 +977,7 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(
-        `error in issuanceBulkCredential for data ${JSON.stringify(jobDetails)} : ${JSON.stringify(error)}`
+        `error in issuanceBulkCredential for data : ${JSON.stringify(error)}`
       );
       fileUploadData.isError = true;
       fileUploadData.error = JSON.stringify(error.error) ? JSON.stringify(error.error) : JSON.stringify(error);
@@ -1025,9 +1007,6 @@ export class IssuanceService {
           status,
           lastChangedDateTime: new Date()
         });
-
-        this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
-
 
       }
     } catch (error) {
@@ -1087,7 +1066,6 @@ export class IssuanceService {
       });
       return isFalsyForColumnValue;
     });
-    this.logger.log(`isNullish: ${isNullish}`);
     if (isNullish) {
       throw new BadRequestException(
         `Empty data found at row ${rowIndex} and column ${columnIndex}`

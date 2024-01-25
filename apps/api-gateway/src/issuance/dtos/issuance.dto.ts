@@ -1,7 +1,9 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, MaxLength, ArrayNotEmpty, IsDefined } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, IsDefined, ArrayNotEmpty, MaxLength, IsEnum } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { toNumber, trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/cast.helper';
+import { SortValue } from '../../enum';
+import { SortFields } from 'apps/connection/src/enum/connection.enum';
 
 class Attribute {
     @ApiProperty()
@@ -15,6 +17,33 @@ class Attribute {
     @IsDefined()
     @Transform(({ value }) => trim(value))
     value: string;
+}
+
+export class OOBIssueCredentialDto {
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
+    @IsArray({ message: 'Attributes should be an array' })
+    @ArrayNotEmpty({message: 'Attributes are required'})
+    @ValidateNested({ each: true })
+    @Type(() => Attribute)
+    attributes: Attribute[];
+
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid credentialDefinitionId' })
+    @IsString({ message: 'credentialDefinitionId should be string' })
+    credentialDefinitionId: string;
+
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid comment' })
+    @IsString({ message: 'comment should be string' })
+    @IsOptional()
+    comment: string;
+
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid protocol-version' })
+    @IsString({ message: 'protocolVersion should be string' })
+    protocolVersion?: string;
+
+    orgId: string;
 }
 
 class CredentialOffer {
@@ -36,39 +65,12 @@ class CredentialOffer {
     emailId: string;
 }
 
-export class IssueCredentialDto {
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsArray({ message: 'Attributes should be an array' })
-    @ArrayNotEmpty({message: 'Attributes are required'})
-    @ValidateNested({ each: true })
-    @Type(() => Attribute)
-    attributes: Attribute[];
-
-    @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'credentialDefinitionId is required' })
-    @IsString({ message: 'credentialDefinitionId should be a string' })
-    @Transform(({ value }) => trim(value))
-    credentialDefinitionId: string;
-
-    @ApiProperty({ example: 'string' })
-    @IsOptional()
-    @IsString({ message: 'Comment should be a string' })
-    @Transform(({ value }) => trim(value))
-    comment?: string;
-
+export class IssueCredentialDto extends OOBIssueCredentialDto {
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'connectionId is required' })
     @IsString({ message: 'connectionId should be string' })
     @Transform(({ value }) => trim(value))
     connectionId: string;
-
-    @IsOptional()
-    @IsString({ message: 'protocol-version should be a string' })
-    @Transform(({ value }) => trim(value))
-    protocolVersion?: string;
-
-    // Added orgId from params to create offer
-    orgId: string;
 }
 
 export class IssuanceDto {
@@ -127,6 +129,10 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     contextCorrelationId: string;
+    
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 }
 
 
@@ -144,7 +150,7 @@ export class CredentialAttributes {
     value: string;
 }
 
-export class OutOfBandCredentialDto {
+export class OOBCredentialDtoWithEmail {
 
     @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
@@ -192,62 +198,71 @@ export class OutOfBandCredentialDto {
 
 
 export class PreviewFileDetails {
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
+
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
+
+    @ApiProperty({ required: false, example: '10' })
+    @IsOptional()
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false, example: '1' })
+    @IsOptional()
+    pageNumber: number = 1;
+
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
-    search = '';
+    searchByText: string = '';
 
-    @ApiProperty({ required: false, default: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
 
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortValue = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortBy = '';
-
-    @ApiProperty({ required: false, default: 1 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
 }
 
 export class FileParameter {
-    @ApiProperty({ required: false, default: 1 })
+    @ApiProperty({ required: false, example: '10' })
     @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false, example: '1' })
+    @IsOptional()
+    pageNumber: number = 1;
+
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
+
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
-    search = '';
-
-    @ApiProperty({ required: false, default: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortBy = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortValue = '';
-
+    searchByText: string = '';
 }
 
 export class ClientDetails {

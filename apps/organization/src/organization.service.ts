@@ -5,7 +5,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { OrgRolesService } from '@credebl/org-roles';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -16,7 +16,6 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
@@ -62,9 +61,6 @@ export class OrganizationService {
       createOrgDto.createdBy = userId;
       createOrgDto.lastChangedBy = userId;
 
-      // const imageUrl = await this.awsService.uploadUserCertificate(createOrgDto.logo, 'certificates', process.env.AWS_PUBLIC_BUCKET_NAME,
-      // 'base64'); 
-
       const allowedExtensions = ['png', 'jpg', 'jpeg'];
 
       const imageUrl = await this.uploadFileToS3(createOrgDto.logo, allowedExtensions);
@@ -93,7 +89,7 @@ export class OrganizationService {
     try {
       const ext = allowedExtensions.find(extension => orgLogo.endsWith(`.${extension}`)) || 'png';
       const imgData = Buffer.from(orgLogo, 'base64');
-
+      // const imageData = converBase64ToImage(base64, pathToSaveImage)
       // const logoUrl = await this.awsService.uploadUserCertificate(imgData, ext, 'orgLogo', process.env.AWS_ORG_LOGO_BUCKET_NAME,
       // 'base64', 'orgLogos'); 
       const logoUrl = await this.awsService.uploadUserCertificate(
@@ -104,11 +100,6 @@ export class OrganizationService {
         'base64',
         'orgLogos'
       );
-
-      // const timestamp = Date.now();
-      // const filename = 'orgLogo';
-      // const pathAWS = '';
-      // const logoUrl = `https://${process.env.AWS_ORG_LOGO_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}.${timestamp}.${ext}`;    
       return logoUrl;
     } catch (error) {
       this.logger.error(`In getting imageUrl : ${JSON.stringify(error)}`);

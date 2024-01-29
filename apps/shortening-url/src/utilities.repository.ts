@@ -4,7 +4,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { shortening_url } from "@prisma/client";
 
 @Injectable()
-export class ShorteningUrlRepository {
+export class UtilitiesRepository {
     constructor(
         private readonly prisma: PrismaService,
         private readonly logger: Logger
@@ -13,9 +13,10 @@ export class ShorteningUrlRepository {
     async saveShorteningUrl(
         payload
     ): Promise<object> {
-        try {
-            const { referenceId, invitationPayload } = payload;
 
+        try {
+
+            const { referenceId, invitationPayload } = payload;
             const storeShorteningUrl = await this.prisma.shortening_url.upsert({
                 where: { referenceId },
                 update: { invitationPayload },

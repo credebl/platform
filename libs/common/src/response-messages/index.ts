@@ -368,7 +368,8 @@ export const ResponseMessages = {
     },
     shorteningUrl: {
         success: {
-            getshorteningUrl:'shortening Url fetched successfully'
+            getshorteningUrl:'Shortening Url fetched successfully',
+            createShorteningUrl: 'Shortening Url created successfully'
         }
     }
 };

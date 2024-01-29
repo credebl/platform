@@ -1,12 +1,12 @@
 import { Logger, Module } from '@nestjs/common';
-import { ShorteningUrlController } from './shortening-url.controller';
-import { ShorteningUrlService } from './shortening-url.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonModule } from '@credebl/common';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ShorteningUrlRepository } from './shortening-url.repository';
 import { PrismaService } from '@credebl/prisma-service';
+import { UtilitiesController } from './utilities.controller';
+import { UtilitiesService } from './utilities.service';
+import { UtilitiesRepository } from './utilities.repository';
 
 @Module({
   imports: [
@@ -14,13 +14,13 @@ import { PrismaService } from '@credebl/prisma-service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.SHORTENING_URL_NKEY_SEED)
+        options: getNatsOptions(process.env.UTILITIES_NKEY_SEED)
       }
     ]),
     CommonModule,
     CacheModule.register()
   ],
-  controllers: [ShorteningUrlController],
-  providers: [ShorteningUrlService, Logger, PrismaService, ShorteningUrlRepository]
+  controllers: [UtilitiesController],
+  providers: [UtilitiesService, Logger, PrismaService, UtilitiesRepository]
 })
-export class ShorteningUrlModule { }
+export class UtilitiesModule { }

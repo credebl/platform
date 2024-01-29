@@ -1,4 +1,10 @@
 export interface IShorteningUrlData {
     referenceId: string,
-    invitationPayload: object
+    schemaId: string,
+    credDefId: string,
+    invitationUrl: string,
+    attributes: IAttributes[]
 }
+export interface IAttributes {
+    [key: string]: string
+  }

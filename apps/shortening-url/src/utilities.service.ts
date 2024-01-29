@@ -1,18 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { ShorteningUrlRepository } from './shortening-url.repository';
+import { UtilitiesRepository } from './utilities.repository';
 
 @Injectable()
-export class ShorteningUrlService {
+export class UtilitiesService {
     constructor(
         private readonly logger: Logger,
-        private readonly shorteningUrlRepository: ShorteningUrlRepository
+        private readonly utilitiesRepository: UtilitiesRepository
     ) { }
 
     async createAndStoreShorteningUrl(payload): Promise<string> {
         try {
             const { credentialId, schemaId, credDefId, invitationUrl, attributes } = payload;
-            const invitationPaload = {
+            const invitationPayload = {
                 referenceId: credentialId,
                 invitationPayload: {
                     schemaId, 
@@ -21,7 +21,7 @@ export class ShorteningUrlService {
                     attributes
                 }
             };
-            await this.shorteningUrlRepository.saveShorteningUrl(invitationPaload);
+            await this.utilitiesRepository.saveShorteningUrl(invitationPayload);
             return `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/invitation/qr-code/${credentialId}`;
         } catch (error) {
             this.logger.error(`[createAndStoreShorteningUrl] - error in create shortening url: ${JSON.stringify(error)}`);
@@ -31,7 +31,7 @@ export class ShorteningUrlService {
 
     async getShorteningUrl(referenceId: string): Promise<object> {
         try {
-            const getShorteningUrl = await this.shorteningUrlRepository.getShorteningUrl(referenceId);
+            const getShorteningUrl = await this.utilitiesRepository.getShorteningUrl(referenceId);
 
             const getInvitationUrl  = {
                 referenceId: getShorteningUrl.referenceId,

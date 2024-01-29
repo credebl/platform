@@ -72,6 +72,7 @@ export const ResponseMessages = {
             delete: 'Organization deleted successfully',
             orgInvitationDeleted: 'Organization invitation deleted successfully',
             orgCredentials: 'Organization credentials created successfully',
+            fetchedOrgCredentials: 'Organization credentials fetched successfully',
             clientCredentials: 'Client credentials fetched successfully'
         },
         error: {

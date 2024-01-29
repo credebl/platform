@@ -58,16 +58,27 @@ export class ClientRegistrationService {
   async createUsersInKeycloak(
     payload: unknown,
     realm: string,
-    token: string
+    token: string,
+    password: string
   ) {
 
-    const registerUserResponse = await this.commonService.httpPost(
+    await this.commonService.httpPost(
       await this.keycloakUrlService.createUserURL(realm),
       payload,
       this.getAuthHeader(token)
     );
 
-    return registerUserResponse;
+    const getUserResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.getUserByUsernameURL(realm, payload['email']),
+      this.getAuthHeader(token)
+    );
+    const userid = getUserResponse[0].id;
+
+    await this.resetPasswordOfKeycloakUser(realm, password, userid, token);
+
+    return {
+      keycloakUserId: getUserResponse[0].id
+    };
   }
 
   async createUser(
@@ -271,7 +282,9 @@ export class ClientRegistrationService {
         configure: true,
         manage: true
       },
-      attributes: {},
+      attributes: {
+        orgId: `${orgId}`
+      },
       authenticationFlowBindingOverrides: {},
       authorizationServicesEnabled: false,
       bearerOnly: false,

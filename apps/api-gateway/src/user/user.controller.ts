@@ -63,6 +63,7 @@ export class UserController {
     private readonly awsService: AwsService
   ) {}
 
+  
   @Get('/register-keycloak-users')
   @ApiOperation({
     summary: 'Register users to keycloak',
@@ -70,11 +71,11 @@ export class UserController {
   })
   async registerKeycloakUsers(@Res() res: Response): Promise<Response> {
         
-    await this.userService.registerKeycloakUsers('register');
+    const registeredUsers = await this.userService.registerKeycloakUsers('register');
     
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: 'Users registered to keycloak'
+      message: registeredUsers
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

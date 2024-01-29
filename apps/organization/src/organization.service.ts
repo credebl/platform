@@ -257,7 +257,6 @@ export class OrganizationService {
    
   }
 
-
   /**
    * Description: get public organizations
    * @param
@@ -616,6 +615,20 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async fetchOrgCredentials(orgId: string): Promise<IOrgCredentials> {
+    try {
+      const orgCredentials = await this.organizationRepository.getOrganizationDetails(orgId);
+      return {
+        clientId: orgCredentials.clientId,
+        clientSecret: orgCredentials.clientSecret
+      };
+    } catch (error) {
+      this.logger.error(`Error in fetchOrgCredentials : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 
   async getOrgOwner(orgId: string): Promise<IOrganization> {
     try {

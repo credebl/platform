@@ -266,6 +266,22 @@ export class OrganizationController {
 
   }
 
+  @Get('/:orgId/client_credentials')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @ApiOperation({ summary: 'Fetch client credentials for an organization', description: 'Fetch client id and secret for an organization' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async fetchOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+    const orgCredentials = await this.organizationService.fetchOrgCredentials(orgId, reqUser.id);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.fetchedOrgCredentials,
+      data: orgCredentials
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
   /**
   * @returns Users list of organization
   */

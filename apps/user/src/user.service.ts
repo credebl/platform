@@ -28,6 +28,10 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { user } from '@prisma/client';
 import {
   Attribute,
+  ICheckUserDetails,
+  OrgInvitations,
+  PlatformSettings,
+  IShareUserCertificate,
   IOrgUsers,
   InvitationsI,
   PlatformSettingsI,
@@ -35,7 +39,9 @@ import {
   UpdateUserProfile,
   IUserCredentials, 
    IUserInformation,
-    IUsersProfile
+    IUsersProfile,
+    IPuppeteerOption,
+    IShareDegreeCertificateRes
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -604,7 +610,7 @@ export class UserService {
     }
   }
 
-  async shareUserCertificate(shareUserCertificate: ShareUserCertificate): Promise<string> {
+  async shareUserCertificate(shareUserCertificate: IShareUserCertificate): Promise<string> {
 
     const attributeArray = [];
     let attributeJson = {};
@@ -642,8 +648,12 @@ export class UserService {
         throw new NotFoundException('error in get attributes');
     }
 
+    const option: IPuppeteerOption = {height: 0, width: 1000};
+
     const imageBuffer = 
-    await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
+    await this.convertHtmlToImage(template, shareUserCertificate.credentialId, option);
+    const verifyCode = uuidv4();
+
     const imageUrl = await this.awsService.uploadUserCertificate(
       imageBuffer,
       'svg',
@@ -671,15 +681,18 @@ export class UserService {
     return this.userRepository.saveCertificateImageUrl(imageUrl, credentialId);
   }
 
-  async convertHtmlToImage(template: string, credentialId: string): Promise<Buffer> {
+  async convertHtmlToImage(template: string, credentialId: string, option?: IPuppeteerOption): Promise<Buffer> {
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/google-chrome', 
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       protocolTimeout: 200000,
       headless: true
     });
+
+    const options: IPuppeteerOption = (option && 0 < Object.keys(option).length) ? option : {width: 0, height: 1000};
+    
     const page = await browser.newPage();
-    await page.setViewport({ width: 0, height: 1000, deviceScaleFactor: 2});
+    await page.setViewport({ width: options?.width, height: options?.height, deviceScaleFactor: 2});
     await page.setContent(template);
     const screenshot = await page.screenshot();
     await browser.close();

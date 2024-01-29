@@ -181,8 +181,18 @@ export class VerificationController {
     @Body() requestProof: RequestProofDto
   ): Promise<Response> {
 
-    for (const attrData of requestProof.attributes) {
-      await this.validateAttribute(attrData);
+        for (const attrData of requestProof.attributes) {
+            await this.validateAttribute(attrData);
+        }
+
+        requestProof.orgId = orgId;
+        const proofData = await this.verificationService.sendProofRequest(requestProof, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.verification.success.send,
+            data: proofData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
     requestProof.orgId = orgId;

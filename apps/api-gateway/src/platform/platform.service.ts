@@ -35,4 +35,10 @@ export class PlatformService extends BaseService {
         };
         return this.sendNats(this.platformServiceProxy, 'get-network-url', payload);
     }
+
+    async getShorteningUrlById(referenceId: string): Promise<string> {
+    
+        // NATS call
+        return this.sendNatsMessage(this.platformServiceProxy, 'get-shortening-url', referenceId);
+      }
 }

@@ -113,11 +113,11 @@
       "@credebl/aws/*": [
         "libs/aws/src/*"
       ],
-      "credebl/shortening-url": [
-        "libs/shortening-url/src"
+      "credebl/utility": [
+        "libs/utility/src"
       ],
-      "credebl/shortening-url/*": [
-        "libs/shortening-url/src/*"
+      "credebl/utility/*": [
+        "libs/utility/src/*"
       ]
     }
   },

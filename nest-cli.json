@@ -269,13 +269,13 @@
         "tsConfigPath": "libs/aws/tsconfig.lib.json"
       }
     },
-    "shortening-url": {
+    "utility": {
       "type": "application",
-      "root": "apps/shortening-url",
+      "root": "apps/utility",
       "entryFile": "main",
-      "sourceRoot": "apps/shortening-url/src",
+      "sourceRoot": "apps/utility/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/shortening-url/tsconfig.app.json"
+        "tsConfigPath": "apps/utility/tsconfig.app.json"
       }
     }
   }

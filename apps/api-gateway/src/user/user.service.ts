@@ -63,11 +63,7 @@ export class UserService extends BaseService {
   async shareUserCertificate(
     shareUserCredentials: CreateCertificateDto
   ): Promise<Buffer> {
-    if (shareUserCredentials.invitationUrl && 0 < shareUserCredentials.invitationUrl.length) {
-      return this.sendNatsMessage(this.serviceProxy, 'share-degree-certificate', shareUserCredentials);
-    } else {
       return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', shareUserCredentials);
-    }
   }
 
   async get(

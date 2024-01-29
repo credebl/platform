@@ -26,11 +26,6 @@ export class CreateCertificateDto {
   @IsString({ message: 'credDefId should be string' })
   credDefId?: string;
 
-  @ApiProperty({ example: 'InvitationUrl' })
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'schemaId should be string' })
-  invitationUrl?: string;
-
   @ApiProperty({
     example: [
       {

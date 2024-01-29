@@ -57,8 +57,6 @@ import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
-import { DegreeCertificateTemplate } from '../templates/degree-template';
-import * as QRCode from 'qrcode';
 
 @Injectable()
 export class UserService {

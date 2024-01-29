@@ -185,6 +185,14 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'delete-organization', payload);
   }
 
+  async deleteOrgClientCredentials(
+    orgId: string
+  ): Promise<string> {
+    const payload = { orgId };
+
+    return this.sendNatsMessage(this.serviceProxy, 'delete-org-client-credentials', payload);
+  }
+
   async deleteOrganizationInvitation(
     orgId: string,
     invitationId: string

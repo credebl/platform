@@ -3,8 +3,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   IOrgUsers,
-  PlatformSettingsI,
-  ShareUserCertificateI,
+  PlatformSettings,
+  IShareUserCertificate,
   UpdateUserProfile,
   IUserCredentials,
   ISendVerificationEmail,
@@ -488,7 +488,7 @@ export class UserRepository {
     return { totalPages, users };
   }
 
-  async getAttributesBySchemaId(shareUserCertificate: ShareUserCertificate): Promise<schema> {
+  async getAttributesBySchemaId(shareUserCertificate: IShareUserCertificate): Promise<schema> {
     try {
       const getAttributes = await this.prisma.schema.findFirst({
         where: {

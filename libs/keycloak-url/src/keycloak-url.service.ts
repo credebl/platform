@@ -71,4 +71,12 @@ export class KeycloakUrlService {
     return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientid}/client-secret`;
   }
 
+  async GetClientIdpURL(
+    realm: string,
+    idp: string
+  ):Promise<string> {
+
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${idp}`;
+  }
+
 }

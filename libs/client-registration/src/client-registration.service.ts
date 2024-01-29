@@ -60,7 +60,7 @@ export class ClientRegistrationService {
     realm: string,
     token: string,
     password: string
-  ) {
+  ): Promise<{ keycloakUserId: string; }> {
 
     await this.commonService.httpPost(
       await this.keycloakUrlService.createUserURL(realm),
@@ -85,7 +85,7 @@ export class ClientRegistrationService {
     user: CreateUserDto,
     realm: string,
     token: string
-  ) {
+  ): Promise<{ keycloakUserId: string; }> {
     const payload = {
       createdTimestamp: Date.parse(Date.now.toString()),
       username: user.email,
@@ -263,6 +263,27 @@ export class ClientRegistrationService {
     }
   }
 
+  async deleteClient(
+    idpId: string,
+    token: string
+  ) {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const getClientDeleteResponse = await this.commonService.httpDelete(
+      await this.keycloakUrlService.GetClientIdpURL(realmName, idpId),
+      this.getAuthHeader(token)
+    );
+
+    this.logger.log(
+      `Delete realm client ${JSON.stringify(
+        getClientDeleteResponse
+      )}`
+    );
+
+    return getClientDeleteResponse;
+
+  }
 
   async createClient(
     orgName: string,
@@ -363,6 +384,7 @@ export class ClientRegistrationService {
     const client_secret = getClientSercretResponse.value;
 
     return {
+      idpId: id,
       clientId: client_id,
       clientSecret: client_secret
     };

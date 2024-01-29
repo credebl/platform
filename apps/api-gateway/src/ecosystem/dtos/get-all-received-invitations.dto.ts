@@ -1,28 +1,10 @@
-import { Transform, Type } from 'class-transformer';
-import { toNumber } from '@credebl/common/cast.helper';
+
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { Invitation } from '@credebl/enum/enum';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
-export class GetAllSentEcosystemInvitationsDto {
-
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    search = '';
-    
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
+export class GetAllSentEcosystemInvitationsDto extends PaginationDto {
 
     @ApiProperty({ required: false })
     @IsOptional()

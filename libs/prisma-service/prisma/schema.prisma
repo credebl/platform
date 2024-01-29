@@ -91,6 +91,7 @@ model organisation {
   logoUrl               String?
   website               String?                 @db.VarChar
   publicProfile         Boolean                 @default(false)
+  idpId                 String?                 @db.VarChar(500)
   clientId              String?                 @db.VarChar(500)
   clientSecret          String?                 @db.VarChar(500)
   connections           connections[]

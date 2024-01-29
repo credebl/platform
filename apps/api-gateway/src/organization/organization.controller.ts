@@ -464,6 +464,22 @@ export class OrganizationController {
     return res.status(HttpStatus.ACCEPTED).json(finalResponse);
   }
 
+  @Delete('/:orgId/client_credentials')
+  @ApiOperation({ summary: 'Delete Organization Client Credentials', description: 'Delete Organization Client Credentials' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+
+    const deleteResponse = await this.organizationService.deleteOrgClientCredentials(orgId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.ACCEPTED,
+      message: deleteResponse
+    };
+    return res.status(HttpStatus.ACCEPTED).json(finalResponse);
+  }
+
   @Delete('/:orgId/invitations/:invitationId')
   @ApiOperation({ summary: 'Delete organization invitation', description: 'Delete organization invitation' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })

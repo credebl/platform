@@ -97,11 +97,12 @@ export class OrganizationService {
 
       const orgCredentials = await this.registerToKeycloak(organizationDetails.name, organizationDetails.id);
       
-      const {clientId, clientSecret} = orgCredentials;
+      const {clientId, clientSecret, idpId} = orgCredentials;
 
       const updateOrgData = {
         clientId,
-        clientSecret: this.maskString(clientSecret)
+        clientSecret: this.maskString(clientSecret),
+        idpId
       };
 
       const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
@@ -129,6 +130,20 @@ export class OrganizationService {
       return this.clientRegistrationService.createClient(orgName, orgId, token);      
   }
 
+
+  async deleteClientCredentials(orgId: string): Promise<string> {
+      const token = await this.clientRegistrationService.getManagementToken();
+
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+
+      await this.clientRegistrationService.deleteClient(organizationDetails.idpId, token);     
+      
+      return ResponseMessages.organisation.success.deleteCredentials;
+  }
 
   /**
    * Mask string and display last 5 characters
@@ -619,6 +634,9 @@ export class OrganizationService {
   async fetchOrgCredentials(orgId: string): Promise<IOrgCredentials> {
     try {
       const orgCredentials = await this.organizationRepository.getOrganizationDetails(orgId);
+      if (!orgCredentials.clientId) {
+        throw new NotFoundException(ResponseMessages.organisation.error.notExistClientCred);
+      }
       return {
         clientId: orgCredentials.clientId,
         clientSecret: orgCredentials.clientSecret

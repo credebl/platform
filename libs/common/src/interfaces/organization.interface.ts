@@ -43,6 +43,7 @@ export interface IOrganization {
   }
 
 export interface IOrgCredentials {
+  idpId?: string,
   clientId: string,
   clientSecret: string
 }

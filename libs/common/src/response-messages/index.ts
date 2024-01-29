@@ -72,7 +72,8 @@ export const ResponseMessages = {
             orgInvitationDeleted: 'Organization invitation deleted successfully',
             orgCredentials: 'Organization credentials created successfully',
             fetchedOrgCredentials: 'Organization credentials fetched successfully',
-            clientCredentials: 'Client credentials fetched successfully'
+            clientCredentials: 'Client credentials fetched successfully',
+            deleteCredentials:'Organization client credentials deleted'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -91,8 +92,8 @@ export const ResponseMessages = {
             credentialsNotUpdate: 'Unable to update organization credentials',
             invalidOrgId:'Invalid format for orgId',
             orgIdIsRequired:'OrgId is required',
-            clientIdRequired:'clientId is required'
-            
+            clientIdRequired:'clientId is required',
+            notExistClientCred: 'Organization does not have client credentials'            
         }
     },
 

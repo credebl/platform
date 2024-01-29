@@ -182,6 +182,11 @@ export class OrganizationController {
     return this.organizationService.getOrgOwner(orgId);
   }
 
+  @MessagePattern({ cmd: 'fetch-org-client-credentials' })
+  async fetchOrgCredentials(payload: { orgId: string }): Promise<IOrgCredentials> {
+    return this.organizationService.fetchOrgCredentials(payload.orgId);
+  }
+
   @MessagePattern({ cmd: 'delete-organization' })
   async deleteOrganization(payload: { orgId: string }): Promise<boolean> {
     return this.organizationService.deleteOrganization(payload.orgId);

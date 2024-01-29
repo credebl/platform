@@ -103,6 +103,11 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'get-organization-by-id', payload);
   }
 
+  async fetchOrgCredentials(orgId: string, userId: string): Promise<IOrgCredentials> {
+    const payload = { orgId, userId };
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-org-client-credentials', payload);
+  }
+
   /**
    *
    * @param orgId

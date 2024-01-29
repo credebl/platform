@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 
 import * as fs from 'fs';
+import bcrypt = require('bcrypt');
 
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonService } from '@credebl/common';
@@ -299,6 +300,9 @@ export class UserService {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
 
+        const hashedPassword = await bcrypt.hash(decryptedPassword, 10);
+        userInfo.password = hashedPassword;
+
         userInfo.password = decryptedPassword;
         try {          
           keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
@@ -307,7 +311,9 @@ export class UserService {
         }
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
-        userInfo.password = decryptedPassword;
+
+        const hashedPassword = await bcrypt.hash(decryptedPassword, 10);
+        userInfo.password = hashedPassword;
 
         try {          
           keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
@@ -316,7 +322,10 @@ export class UserService {
         }
       }
 
-      await this.userRepository.updateUserDetails(userDetails.id, keycloakDetails.keycloakUserId.toString());
+      await this.userRepository.updateUserDetails(userDetails.id,
+        keycloakDetails.keycloakUserId.toString(),
+        userInfo.password
+      );
 
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
@@ -342,10 +351,6 @@ export class UserService {
       }
       if (false === checkUserDetails.isEmailVerified) {
         throw new NotFoundException(ResponseMessages.user.error.emailNotVerified);
-      }
-      const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
-      if (!resUser) {
-        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
 
       return ResponseMessages.user.success.updateUserProfile;
@@ -387,11 +392,17 @@ export class UserService {
 
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
         const getUserDetails = await this.userRepository.getUserDetails(userData.email.toLowerCase());
-        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return this.generateToken(email.toLowerCase(), decryptedPassword);
+        return this.generateToken(email.toLowerCase(), getUserDetails.password);
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        return this.generateToken(email.toLowerCase(), decryptedPassword);
+
+        const isPasswordMached = await bcrypt.compare(decryptedPassword, userData.password);
+
+        if (!isPasswordMached) {
+          throw new UnauthorizedException('Invalid credentials');
+        }
+
+        return this.generateToken(email.toLowerCase(), userData.password);
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
@@ -828,14 +839,28 @@ export class UserService {
       const { supabaseUsers } = JSON.parse(configData);
 
       for (const user of supabaseUsers) {
-        const createdUser = await this.clientRegistrationService.createUsersInKeycloak(user, process.env.KEYCLOAK_REALM, token);
+
+        const payload = {
+          email: user.email,
+          username: user.email,
+          emailVerified: true,
+          enabled: true
+        };
+
+        const createdUser = await this.clientRegistrationService.createUsersInKeycloak(payload, process.env.KEYCLOAK_REALM, token, user.encrypted_password);
+
+        if (createdUser) {
+
+          const userData = await this.userRepository.checkUserExist(user.email.toLowerCase());
+
+          await this.userRepository.updateUserDetails(userData.id,
+            createdUser.keycloakUserId.toString(),
+            user.encrypted_password
+          );    
+        }
       }
 
-      // const { data: { users }, error } = await this.supabaseService.getClient().auth.admin.listUsers();
-      // console.log(`Supa users::`, users);
-      // console.log(`Supa error::`, error);
-
-      return '';
+      return 'Users registered to keycloak';
     } catch (error) {
       this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

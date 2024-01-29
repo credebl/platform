@@ -17,7 +17,7 @@ import { UtilitiesService } from './utilities.service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.UTILITIES_NKEY_SEED)
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
 
       },
       CommonModule

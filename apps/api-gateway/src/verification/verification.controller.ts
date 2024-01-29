@@ -184,10 +184,11 @@ export class VerificationController {
         }
 
         requestProof.orgId = orgId;
-        await this.verificationService.sendProofRequest(requestProof, user);
+        const proofData = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.send
+            message: ResponseMessages.verification.success.send,
+            data: proofData
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

@@ -505,17 +505,6 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
-    const credOffer = outOfBandCredentialDto?.credentialOffer || [];
-    // if (credOffer.every(item => Boolean(!item?.emailId || '' === item?.emailId.trim()))) {
-    //   throw new BadRequestException(ResponseMessages.issuance.error.emailIdNotPresent);
-    // }
-
-    // if (credOffer.every(offer => (!offer?.attributes || 0 === offer?.attributes?.length ||
-    //   !offer?.attributes?.every(item => item?.name)
-    // ))
-    // ) {
-    //   throw new BadRequestException(ResponseMessages.issuance.error.attributesNotPresent);
-    // }
 
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(
       user,

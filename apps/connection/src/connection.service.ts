@@ -71,7 +71,6 @@ export class ConnectionService {
       const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----getConnections,${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -151,9 +150,9 @@ export class ConnectionService {
     }
   }
 
-  async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<object> {
+  async storeShorteningUrl(referenceId: string): Promise<object> {
     try {
-      return this.connectionRepository.storeShorteningUrl(referenceId, connectionInvitationUrl);
+      return this.connectionRepository.storeShorteningUrl(referenceId);
     } catch (error) {
       this.logger.error(`Error in store agent details : ${JSON.stringify(error)}`);
       throw error;
@@ -168,7 +167,7 @@ export class ConnectionService {
   async getUrl(referenceId: string): Promise<string> {
     try {
       const urlDetails = await this.connectionRepository.getShorteningUrl(referenceId);
-      return urlDetails.url;
+      return urlDetails.referenceId;
     } catch (error) {
       this.logger.error(`Error in get url in connection service: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -294,7 +293,6 @@ export class ConnectionService {
 
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----getConnectionsById,${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }

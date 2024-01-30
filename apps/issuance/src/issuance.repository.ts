@@ -9,8 +9,7 @@ import {
   file_upload,
   org_agents,
   organisation,
-  platform_config,
-  shortening_url
+  platform_config
 } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import {
@@ -215,29 +214,6 @@ export class IssuanceRepository {
   }
 
   /**
-   * Description: Save ShorteningUrl details
-   * @param referenceId
-   * @param connectionInvitationUrl
-   * @returns Get storeShorteningUrl details
-   */
-  // eslint-disable-next-line camelcase
-  async storeShorteningUrl(referenceId: string, connectionInvitationUrl: string): Promise<shortening_url> {
-    try {
-      const createShorteningUrl = await this.prisma.shortening_url.create({
-        data: {
-          referenceId,
-          url: connectionInvitationUrl,
-          type: null
-        }
-      });
-      return createShorteningUrl;
-    } catch (error) {
-      this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
-      throw error;
-    }
-  }
-
-  /**
    * Get platform config details
    * @returns
    */
@@ -375,17 +351,17 @@ export class IssuanceRepository {
     try {
       const fileList = await this.prisma.file_upload.findMany({
         where: {
-          orgId: String(orgId),
+          orgId,
           OR: [
-            { name: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
-            { status: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
-            { upload_type: { contains: getAllfileDetails?.search, mode: 'insensitive' } }
+            { name: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
+            { status: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
+            { upload_type: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } }
           ]
         },
         take: Number(getAllfileDetails?.pageSize),
         skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
         orderBy: {
-          createDateTime: 'desc'
+          createDateTime: 'desc' === getAllfileDetails.sortBy ? 'desc' : 'asc'
         }
       });
 
@@ -404,7 +380,7 @@ export class IssuanceRepository {
 
       const fileCount = await this.prisma.file_upload.count({
         where: {
-          orgId: String(orgId)
+          orgId
         }
       });
 
@@ -439,15 +415,15 @@ export class IssuanceRepository {
         where: {
           fileUploadId: fileId,
           OR: [
-            { error: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
-            { referenceId: { contains: getAllfileDetails?.search, mode: 'insensitive' } },
-            { detailError: { contains: getAllfileDetails?.search, mode: 'insensitive' } }
+            { error: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
+            { referenceId: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
+            { detailError: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } }
           ]
         },
         take: Number(getAllfileDetails?.pageSize),
         skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
         orderBy: {
-          createDateTime: 'desc'
+          createDateTime: 'desc' === getAllfileDetails.sortBy ? 'desc' : 'asc'
         }
       });
       const fileCount = await this.prisma.file_data.count({

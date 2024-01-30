@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, EcoInvitationsPagination, EcosystemDetailsResult, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, IEcosystemInvitation, EcosystemDetailsResult, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -182,6 +182,20 @@ export class EcosystemRepository {
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw error;
+    }
+  }
+
+  async checkEcosystemExist(name: string, ecosystemId:string): Promise<ecosystem[]> {
+    try {
+      return this.prisma.ecosystem.findMany({
+        where: {
+          id:ecosystemId,
+          name
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
     }
   }
 
@@ -442,7 +456,7 @@ export class EcosystemRepository {
     }
   }
 
-  async getInvitationsByEcosystemId(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<object> {
+  async getInvitationsByEcosystemId(ecosystemId: string, pageNumber: number, pageSize: number, search = ''): Promise<IEcosystemInvitation> {
     try {
       const query = {
         ecosystemId,
@@ -524,7 +538,7 @@ async findEcosystemMembers(
   }
 }
 
-  async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<EcoInvitationsPagination> {
+  async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IEcosystemInvitation> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.ecosystem_invitations.findMany({
@@ -675,7 +689,6 @@ async findEcosystemMembers(
         }
       });
       const schemaArray = [];
-      this.logger.error(`In error schemaDetails2: ${JSON.stringify(schemaDetails)}`);
       schemaDetails.map((schemaData) => schemaArray.push(schemaData.resourceId));
       const schemasResult = await this.prisma.schema.findMany({
         where: {
@@ -695,8 +708,6 @@ async findEcosystemMembers(
         }
       });
       const schemasCount = schemaArray.length;
-
-      this.logger.error(`In error schemaDetails3: ${JSON.stringify(schemasResult)}`);
       return { schemasCount, schemasResult };
 
     } catch (error) {

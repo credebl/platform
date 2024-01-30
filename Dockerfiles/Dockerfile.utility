@@ -1,0 +1,67 @@
+# Stage 1: Build the application
+FROM node:18-slim as build
+RUN npm install -g pnpm
+
+# We don't need the standalone Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+
+# Install Google Chrome Stable and fonts
+# Note: this installs the necessary libs to make the browser work with Puppeteer.
+RUN apt-get update && apt-get install gnupg wget -y && \
+    wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
+    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
+    apt-get update && \
+    apt-get install google-chrome-stable -y --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+# RUN apk update && apk list --all-versions chromium
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package.json ./
+
+# Install dependencies
+RUN pnpm install
+
+# Copy the rest of the application code
+COPY . .
+RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+
+# Build the user service
+RUN pnpm run build utility
+
+# Stage 2: Create the final image
+FROM node:18-slim
+
+# We don't need the standalone Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+
+# Install Google Chrome Stable and fonts
+# Note: this installs the necessary libs to make the browser work with Puppeteer.
+RUN apt-get update && apt-get install gnupg wget -y && \
+    wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
+    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
+    apt-get update && \
+    apt-get install google-chrome-stable -y --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+RUN npm install -g pnpm
+
+# Copy the compiled code from the build stage
+COPY --from=build /app/dist/apps/utility/ ./dist/apps/utility/
+
+# Copy the libs folder from the build stage
+COPY --from=build /app/libs/ ./libs/
+#COPY --from=build /app/package.json ./  
+COPY --from=build /app/node_modules  ./node_modules
+
+
+# Set the command to run the microservice
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && npx prisma  && cd ../.. && node dist/apps/utility/main.js"]
+
+# docker build -t user -f Dockerfiles/Dockerfile.user .
+# docker run -d --env-file .env --name user docker.io/library/user
+# docker logs -f user

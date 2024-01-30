@@ -20,7 +20,8 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser: 'User created successfully',
             shareUserCertificate: 'Certificate URL generated successfully',
-            updateUserProfile: 'User profile updated successfully'
+            updateUserProfile: 'User profile updated successfully',
+            degreeCertificate: 'Degree Certificate shared successfully'
         },
         error: {
             exists: 'User already exists',
@@ -372,7 +373,14 @@ export const ResponseMessages = {
         },
         error: {
             registerWebhook: 'Unable to register a webhook url',
-            webhookResponse: 'Error in sending webhook response to org webhook url'
+            webhookResponse: 'Error in sending webhook response to org webhook url',
+            notFound:'Webhook url not found'
+        }
+    },
+    shorteningUrl: {
+        success: {
+            getshorteningUrl:'Shortening Url fetched successfully',
+            createShorteningUrl: 'Shortening Url created successfully'
         }
     }
 };

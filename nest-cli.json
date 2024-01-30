@@ -276,6 +276,15 @@
       "sourceRoot": "apps/notification/src",
       "compilerOptions": {
         "tsConfigPath": "apps/notification/tsconfig.app.json"
+      },
+      "utility": {
+        "type": "application",
+        "root": "apps/utility",
+        "entryFile": "main",
+        "sourceRoot": "apps/utility/src",
+        "compilerOptions": {
+          "tsConfigPath": "apps/utility/tsconfig.app.json"
+        }
       }
     }
   }

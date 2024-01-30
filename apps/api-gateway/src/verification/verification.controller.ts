@@ -184,10 +184,11 @@ export class VerificationController {
         }
 
         requestProof.orgId = orgId;
-        await this.verificationService.sendProofRequest(requestProof, user);
+        const proofData = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.send
+            message: ResponseMessages.verification.success.send,
+            data: proofData
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
@@ -279,22 +280,33 @@ export class VerificationController {
         @Body() proofPresentationPayload: WebhookPresentationProofDto,
         @Res() res: Response
     ): Promise<Response> {
+        proofPresentationPayload.type = 'Verification';
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
-        //     const  webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId);
-        // if (webhookUrl) {
-        //     try {
-        //         await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload});
-        //   } catch (error) {
-        //       throw new RpcException(error.response ? error.response : error);
-        //   }
-        const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload);
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.create,
-            data: webhookProofPresentation
-        };
+       
+            const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
+                this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
+            });
+            const finalResponse: IResponse = {
+                statusCode: HttpStatus.CREATED,
+                message: ResponseMessages.verification.success.create,
+                data: webhookProofPresentation
+            };
+           
+           
+             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId).catch(error => {
+                this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+             });
+            
+        if (webhookUrl) {
+            
+                await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload}).catch(error => {
+                    this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
+                });
+             
+        }
         return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
+
+}
 
     async validateAttribute(
         attrData: object

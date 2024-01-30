@@ -177,7 +177,7 @@ model org_agents {
   ledgers             ledgers?            @relation(fields: [ledgerId], references: [id])
   org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
   organisation        organisation?       @relation(fields: [orgId], references: [id])
-  webhookUrl          String?              @db.VarChar
+  webhookUrl          String?             @db.VarChar
 }
 
 model org_agents_type {
@@ -257,10 +257,13 @@ model credential_definition {
 }
 
 model shortening_url {
-  id          String  @id @default(uuid()) @db.Uuid
-  referenceId String? @db.VarChar(50)
-  url         String?
-  type        String?
+  id                  String    @id @default(uuid()) @db.Uuid
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  referenceId         String?   @unique @db.VarChar(50)
+  invitationPayload   Json?
+  type                String?   @db.VarChar
+  deletedAt           DateTime? @db.Timestamp(6)
 }
 
 model agent_invitations {

@@ -30,7 +30,7 @@ import {
 } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult, IEcosystemInvitation } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -142,12 +142,6 @@ export class EcosystemService {
       lastChangedBy: userId
     };
 
-    const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
-
-    if (ecosystemExist) {
-      throw new ConflictException(ResponseMessages.ecosystem.error.exists);
-    }
-    
     if (name) { updateData.name = name; }
 
     if (description) { updateData.description = description; }
@@ -157,6 +151,15 @@ export class EcosystemService {
     if (logo) { updateData.logoUrl = logo; }
 
     if ('' !== autoEndorsement.toString()) { updateData.autoEndorsement = autoEndorsement; }
+
+    const ecosystemExist = await this.ecosystemRepository.checkEcosystemExist(editEcosystemDto.name, ecosystemId);
+
+    if (0 === ecosystemExist.length) {
+      const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
+      if (ecosystemExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+      }
+    }
 
     const editEcosystem = await this.ecosystemRepository.updateEcosystemById(updateData, ecosystemId);
     if (!editEcosystem) {
@@ -256,7 +259,7 @@ export class EcosystemService {
     pageNumber: number,
     pageSize: number,
     search: string
-  ): Promise<object> {
+  ): Promise<IEcosystemInvitation> {
     try {
       const query = {
         AND: [{ email: userEmail }, { status: { contains: search, mode: 'insensitive' } }]
@@ -818,7 +821,7 @@ export class EcosystemService {
     }
   }
 
-  async getInvitationsByEcosystemId(payload: FetchInvitationsPayload): Promise<object> {
+  async getInvitationsByEcosystemId(payload: FetchInvitationsPayload): Promise<IEcosystemInvitation> {
     try {
       const { ecosystemId, pageNumber, pageSize, search } = payload;
       const ecosystemInvitations = await this.ecosystemRepository.getInvitationsByEcosystemId(
@@ -908,7 +911,6 @@ export class EcosystemService {
         ecosystemLeadAgentDetails?.tenantId
       );
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(ecosystemLeadDetails.orgId);
       }
@@ -1183,15 +1185,11 @@ export class EcosystemService {
         ecosystemMemberDetails,
         ecosystemLeadAgentDetails
       );
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
 
-      this.logger.log(`orgId ::: ${orgId}`);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
-
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, apiKey);
 
@@ -1423,7 +1421,6 @@ export class EcosystemService {
   async getAllEcosystemSchemas(ecosystemSchemas: GetAllSchemaList): Promise<object> {
     try {
       const response = await this.ecosystemRepository.getAllEcosystemSchemasDetails(ecosystemSchemas);
-      this.logger.error(`In error getAllEcosystemSchemas1: ${JSON.stringify(response)}`);
       const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
@@ -1438,7 +1435,6 @@ export class EcosystemService {
         lastPage: Math.ceil(response.schemasCount / ecosystemSchemas.pageSize),
         data: schemasDetails
       };
-      this.logger.error(`In error getAllEcosystemSchemas1: ${JSON.stringify(response)}`);
       return schemasResponse;
     } catch (error) {
       this.logger.error(`In error fetching all ecosystem schemas: ${JSON.stringify(error)}`);

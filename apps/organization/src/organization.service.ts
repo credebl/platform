@@ -156,8 +156,20 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
 
-      await this.clientRegistrationService.deleteClient(organizationDetails.idpId, token);     
-      
+      try {        
+        await this.clientRegistrationService.deleteClient(organizationDetails.idpId, token);     
+        const updateOrgData = {
+          clientId: null,
+          clientSecret: null,
+          idpId: null
+        };
+  
+        await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
+  
+      } catch (error) {
+        throw new InternalServerErrorException('Unable to delete client credentails');
+      }
+
       return ResponseMessages.organisation.success.deleteCredentials;
   }
 

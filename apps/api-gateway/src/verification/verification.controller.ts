@@ -284,9 +284,8 @@ export class VerificationController {
         proofPresentationPayload.type = 'Verification';
         this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
        
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
-    
+                this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
             });
             const finalResponse: IResponse = {
                 statusCode: HttpStatus.CREATED,

@@ -1,13 +1,13 @@
-import {IResponse} from '@credebl/common/interfaces/response.interface';
+import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Logger, Post, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject} from '@nestjs/common';
+import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ConnectionService } from './connection.service';
-import { ConnectionDto, CreateConnectionDto } from './dtos/connection.dto';
+import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -31,7 +31,7 @@ export class ConnectionController {
 
     private readonly logger = new Logger('Connection');
     constructor(private readonly connectionService: ConnectionService,
-    @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy
+        @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy
     ) { }
 
     /**
@@ -80,7 +80,7 @@ export class ConnectionController {
         name: 'sortField',
         enum: SortFields,
         required: false
-      })    
+    })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getConnections(
         @Query() getAllConnectionsDto: GetAllConnectionsDto,
@@ -88,7 +88,7 @@ export class ConnectionController {
         @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
-        
+
         const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllConnectionsDto;
         const connectionSearchCriteria: IConnectionSearchCriteria = {
             pageNumber,
@@ -96,7 +96,7 @@ export class ConnectionController {
             pageSize,
             sortField,
             sortBy
-          };
+        };
         const connectionDetails = await this.connectionService.getConnections(connectionSearchCriteria, user, orgId);
 
         const finalResponse: IResponse = {
@@ -136,6 +136,48 @@ export class ConnectionController {
 
     }
 
+    @Post('/orgs/:orgId/receive-invitation-url')
+    @ApiOperation({ summary: 'Receive Invitation URL', description: 'Receive Invitation URL' })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    async receiveInvitationUrl(
+        @Param('orgId') orgId: string,
+        @Body() receiveInvitationUrl: ReceiveInvitationUrlDto,
+        @User() user: IUserRequestInterface,
+        @Res() res: Response
+    ): Promise<Response> {
+
+        const connectionData = await this.connectionService.receiveInvitationUrl(receiveInvitationUrl, orgId, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.connection.success.receivenvitation,
+            data: connectionData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+    @Post('/orgs/:orgId/receive-invitation')
+    @ApiOperation({ summary: 'Receive Invitation', description: 'Receive Invitation' })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    async receiveInvitation(
+        @Param('orgId') orgId: string,
+        @Body() receiveInvitation: ReceiveInvitationDto,
+        @User() user: IUserRequestInterface,
+        @Res() res: Response
+    ): Promise<Response> {
+
+        const connectionData = await this.connectionService.receiveInvitation(receiveInvitation, orgId, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.connection.success.receivenvitation,
+            data: connectionData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
     /**
    * Catch connection webhook responses.
    * @Body connectionDto
@@ -154,6 +196,7 @@ export class ConnectionController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
+    connectionDto.type = 'Connection';
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
   
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

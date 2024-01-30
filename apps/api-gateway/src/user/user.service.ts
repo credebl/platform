@@ -1,18 +1,17 @@
-import { Inject } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
-import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
-import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { CreateCertificateDto } from './dto/share-certificate.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -62,16 +61,15 @@ export class UserService extends BaseService {
   }
 
   async shareUserCertificate(
-    shareUserCredentials: CreateUserCertificateDto
+    shareUserCredentials: CreateCertificateDto
   ): Promise<Buffer> {
-    const payload = { shareUserCredentials};
-    return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', payload);
+      return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', shareUserCredentials);
   }
-  
+
   async get(
-    getAllUsersDto: GetAllUsersDto
+    paginationDto:PaginationDto
   ): Promise<object> {
-    const { pageNumber, pageSize, search } = getAllUsersDto;
+    const { pageNumber, pageSize, search } = paginationDto;
     const payload = { pageNumber, pageSize, search };
     return this.sendNatsMessage(this.serviceProxy, 'fetch-users', payload);
   }

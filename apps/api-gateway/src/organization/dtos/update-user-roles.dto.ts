@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty} from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsNotEmpty, IsUUID, MinLength} from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -8,10 +8,13 @@ export class UpdateUserRolesDto {
     userId: string;
 
     @ApiProperty({
-        example: [2, 1, 3]
+        example: ['2', '1', '3']
     })
+    
     @IsArray()
-    @IsNotEmpty({ message: 'orgRoleId is required' })
+    @ArrayNotEmpty()
+    @MinLength(0, {each: true})
+    @IsNotEmpty({each: true})
+    @IsUUID('4', { each: true, message: 'Invalid format of orgRoleId' })
     orgRoleId: string[];
-
-    }
+}

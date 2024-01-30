@@ -295,7 +295,7 @@ export interface InvitationResponse {
   lastChangedBy: string;
 }
 
-export interface EcoInvitationsPagination {
+export interface IEcosystemInvitation {
   invitations: InvitationResponse[];
   totalPages: number;
 }
@@ -305,4 +305,87 @@ export interface TransactionPayload {
   ecosystemId: string;
   ecosystemLeadAgentEndPoint?: string;
   orgId?: string;
+}
+
+export interface IEcosystemDashboard {
+    ecosystem: IEcosystemDetails[];
+    membersCount: number;
+    endorsementsCount: number;
+    ecosystemLead: EcosystemLeadDetails;
+  };
+
+ interface IEcosystemDetails {
+  id: string;
+  name: string;
+  description: string;
+  tags: string; 
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: string[];
+}
+
+interface EcosystemLeadDetails {
+  role: string;
+  orgName: string;
+  config: IEcosystemConfigDetails[];
+}
+ interface IEcosystemConfigDetails {
+  id: string;
+  key: string;
+  value: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+}
+
+export interface IEditEcosystem {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: Prisma.JsonValue;
+}
+
+export interface ICreateEcosystem {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: Prisma.JsonValue;
+}
+
+export interface IEcosystemInvitations {
+  id: string;
+  email: string;
+  status: string;
+  ecosystemId: string;
+  userId: string;
+  orgId: string;
+  deletedAt: Date;
+  ecosystem: EcosystemInvitationDetails;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
 }

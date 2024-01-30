@@ -549,9 +549,9 @@ export class IssuanceController {
   ): Promise<Response> {
 issueCredentialDto.type = 'Issuance';
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
-     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
      
+      const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
+        this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);
       });
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,

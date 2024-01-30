@@ -199,9 +199,8 @@ export class ConnectionController {
     connectionDto.type = 'Connection';
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
   
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId).catch(error => {
-       
+        this.logger.debug(`error in saving connection webhook ::: ${JSON.stringify(error)}`);
      });
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

@@ -20,6 +20,7 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser:'User created successfully',
             shareUserCertificate:'Certificate URL generated successfully',
+            degreeCertificate: 'Degree Certificate shared successfully',
             updateUserProfile:'User profile updated successfully'
         },
         error: {
@@ -357,7 +358,6 @@ export const ResponseMessages = {
         notFound: 'Not Found',
         serverError: 'Internal Server error'
     },
-    
     webhook: {
         success: {
             webhookUrlRegister:'Webhook Url registered successfully',
@@ -365,7 +365,14 @@ export const ResponseMessages = {
         },
         error: {
             registerWebhook:'Unable to register a webhook url',
-            webhookResponse:'Error in sending webhook response to org webhook url'
+            webhookResponse:'Error in sending webhook response to org webhook url',
+            notFound:'Webhook url not found'
+        }
+    },
+    shorteningUrl: {
+        success: {
+            getshorteningUrl:'Shortening Url fetched successfully',
+            createShorteningUrl: 'Shortening Url created successfully'
         }
     }
 };

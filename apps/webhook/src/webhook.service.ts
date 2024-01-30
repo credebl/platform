@@ -73,7 +73,7 @@ export class WebhookService {
       } else {
         webhookUrlInfo = await this.webhookRepository.getWebhookUrl(tenantId);
         if (!webhookUrlInfo) {
-          throw new NotFoundException(ResponseMessages.agent.error.tenantIdNotFound);
+          throw new NotFoundException(ResponseMessages.webhook.error.notFound);
         } else {
           return webhookUrlInfo.webhookUrl;
         }
@@ -81,6 +81,7 @@ export class WebhookService {
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    
     }
   }
 

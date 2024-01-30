@@ -47,9 +47,9 @@ import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
-import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { AwsService } from '@credebl/aws/aws.service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { CreateCertificateDto } from './dto/share-certificate.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -321,7 +321,7 @@ export class UserController {
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async shareUserCertificate(
-    @Body() shareUserCredentials: CreateUserCertificateDto,
+    @Body() shareUserCredentials: CreateCertificateDto,
     @Res() res: Response
   ): Promise<Response> {  
     const schemaIdParts = shareUserCredentials.schemaId.split(':');
@@ -331,7 +331,7 @@ export class UserController {
    const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
       const finalResponse: IResponse = {
         statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.shareUserCertificate,
+        message: ResponseMessages.user.success.shareUserCertificate || ResponseMessages.user.success.degreeCertificate,
         label: title,
         data: imageBuffer
       };

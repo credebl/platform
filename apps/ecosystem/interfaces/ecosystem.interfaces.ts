@@ -295,7 +295,7 @@ export interface InvitationResponse {
   lastChangedBy: string;
 }
 
-export interface EcoInvitationsPagination {
+export interface IEcosystemInvitation {
   invitations: InvitationResponse[];
   totalPages: number;
 }
@@ -373,4 +373,19 @@ export interface ICreateEcosystem {
   logoUrl: string;
   autoEndorsement: boolean;
   ledgers: Prisma.JsonValue;
+}
+
+export interface IEcosystemInvitations {
+  id: string;
+  email: string;
+  status: string;
+  ecosystemId: string;
+  userId: string;
+  orgId: string;
+  deletedAt: Date;
+  ecosystem: EcosystemInvitationDetails;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
 }

@@ -208,11 +208,12 @@ export class ConnectionController {
       data: connectionData
     };
     const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId).catch(error => {
-        throw error;
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+  
     });
     if (webhookUrl) {
         await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto }).catch(error => {
-           throw error; 
+            this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
         });
     } 
     return res.status(HttpStatus.CREATED).json(finalResponse);

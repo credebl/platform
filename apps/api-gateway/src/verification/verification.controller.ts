@@ -296,13 +296,13 @@ export class VerificationController {
            
            
              const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId).catch(error => {
-                throw error;
+                this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
              });
             
         if (webhookUrl) {
             
                 await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload}).catch(error => {
-                    throw error;
+                    this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
                 });
              
         }

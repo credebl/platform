@@ -43,6 +43,7 @@ import {
   IssuanceDto,
   IssueCredentialDto,
   OOBCredentialDtoWithEmail,
+  OOBIssueCredentialDto,
   PreviewFileDetails
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -530,6 +531,35 @@ export class IssuanceController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+    /**
+   * Description: Issuer create out-of-band credential
+   * @param user
+   * @param issueCredentialDto
+   */
+    @Post('/orgs/:orgId/credentials/oob/offer')
+    @ApiBearerAuth()
+    @ApiOperation({
+      summary: `Create out-of-band credential offer`,
+      description: `Creates an out-of-band credential offer`
+    })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    async createOOBCredentialOffer(
+      @Param('orgId') orgId: string,
+      @Body() issueCredentialDto: OOBIssueCredentialDto,
+      @Res() res: Response
+    ): Promise<Response> {
+      issueCredentialDto.orgId = orgId;
+      const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.create,
+        data: getCredentialDetails.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
 
   /**
    * Description: webhook Save issued credential details

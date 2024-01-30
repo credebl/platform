@@ -326,8 +326,10 @@ export class VerificationService {
  * @param outOfBandRequestProof 
  * @returns Get requested proof presentation details
  */
-  async sendOutOfBandPresentationRequest(outOfBandRequestProof: IRequestProof): Promise<boolean> {
+  async sendOutOfBandPresentationRequest(outOfBandRequestProof: IRequestProof): Promise<boolean|object> {
     try {
+
+      this.logger.log(`-------outOfBandRequestProof------${JSON.stringify(outOfBandRequestProof)}`);
       const comment = outOfBandRequestProof.comment || '';
       const protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
       const autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'never';
@@ -368,15 +370,38 @@ export class VerificationService {
         }
       };
 
-      const batchSize = 100; // Define the batch size according to your needs
-      const { emailId } = outOfBandRequestProof; // Assuming it's an array
-      await this.sendEmailInBatches(payload, emailId, getAgentDetails, organizationDetails, batchSize);
+      if (outOfBandRequestProof.emailId) {
+        const batchSize = 100; // Define the batch size according to your needs
+        const { emailId } = outOfBandRequestProof; // Assuming it's an array
+        await this.sendEmailInBatches(payload, emailId, getAgentDetails, organizationDetails, batchSize);
       return true;
+      } else {
+        return this.generateOOBProofReq(payload, getAgentDetails);
+      }      
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
       this.verificationErrorHandling(error);
     }
   }
+
+
+  private async generateOOBProofReq(payload: IProofRequestPayload, getAgentDetails: org_agents): Promise<object> {
+    let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    this.logger.log(`cachedApiKey----${agentApiKey}`);
+    if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
+      agentApiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
+    }
+    payload.apiKey = agentApiKey;
+    const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
+
+    this.logger.log(`-----getProofPresentation---${JSON.stringify(getProofPresentation)}`);
+
+    if (!getProofPresentation) {
+      throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
+    }
+    return getProofPresentation;
+  }
+
 
   async sendEmailInBatches(payload: IProofRequestPayload, emailIds: string[] | string, getAgentDetails: org_agents, organizationDetails: organisation, batchSize: number): Promise<void> {
     const accumulatedErrors = [];

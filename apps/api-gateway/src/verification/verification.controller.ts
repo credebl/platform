@@ -253,10 +253,11 @@ export class VerificationController {
         }
 
         outOfBandRequestProof.orgId = orgId;
-        await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
+        const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.send
+            message: ResponseMessages.verification.success.send,
+            data: result
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

@@ -19,7 +19,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
@@ -858,7 +858,6 @@ export class AgentServiceService {
       { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
     );
 
-    this.logger.debug(`API Response Data: ${JSON.stringify(tenantDetails)}`);
     return tenantDetails;
   }
 
@@ -903,7 +902,6 @@ export class AgentServiceService {
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
           })
           .catch(error => {
@@ -924,7 +922,6 @@ export class AgentServiceService {
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
           })
           .catch(error => {
@@ -949,7 +946,6 @@ export class AgentServiceService {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace('#', `${payload.schemaId}`)}`;
         schemaResponse = await this.commonService.httpGet(url, payload.schemaId)
           .then(async (schema) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
           });
 
@@ -958,7 +954,6 @@ export class AgentServiceService {
 
         schemaResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
           .then(async (schema) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(schema)}`);
             return schema;
           });
       }
@@ -984,7 +979,6 @@ export class AgentServiceService {
 
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
 
@@ -997,7 +991,6 @@ export class AgentServiceService {
         };
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
       }
@@ -1017,7 +1010,6 @@ export class AgentServiceService {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID.replace('#', `${payload.credentialDefinitionId}`)}`;
         credDefResponse = await this.commonService.httpGet(url, payload.credentialDefinitionId)
           .then(async (credDef) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
 
@@ -1025,7 +1017,6 @@ export class AgentServiceService {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
         credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
           .then(async (credDef) => {
-            this.logger.debug(`API Response Data: ${JSON.stringify(credDef)}`);
             return credDef;
           });
       }
@@ -1154,7 +1145,7 @@ export class AgentServiceService {
 
     try {
       const data = await this.commonService
-        .httpGet(url, { headers: { 'x-api-key': apiKey } })
+        .httpGet(url, { headers: { 'authorization': apiKey } })
         .then(async response => response)
         .catch(error => this.handleAgentSpinupStatusErrors(error));
 
@@ -1318,6 +1309,30 @@ export class AgentServiceService {
     } catch (error) {
       this.logger.error(`Error in delete wallet in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error);
+    }
+  }
+
+  async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, apiKey: string): Promise<string> {
+    try {
+      const receiveInvitationUrlRes = await this.commonService
+        .httpPost(url, receiveInvitationUrl, { headers: { 'authorization': apiKey } })
+        .then(async response => response);
+      return receiveInvitationUrlRes;
+    } catch (error) {
+      this.logger.error(`Error in receive invitation in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async receiveInvitation(receiveInvitation: IReceiveInvitation, url: string, apiKey: string): Promise<string> {
+    try {
+      const receiveInvitationRes = await this.commonService
+        .httpPost(url, receiveInvitation, { headers: { 'authorization': apiKey } })
+        .then(async response => response);
+      return receiveInvitationRes;
+    } catch (error) {
+      this.logger.error(`Error in receive invitation in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

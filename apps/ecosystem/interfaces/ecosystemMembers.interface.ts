@@ -3,5 +3,6 @@ export interface EcosystemMembersPayload {
     orgId: string,
     pageNumber: number;
     pageSize: number;
-    search: string 
+    search: string;
+    sortBy: string; 
 }

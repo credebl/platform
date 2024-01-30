@@ -20,6 +20,7 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser:'User created successfully',
             shareUserCertificate:'Certificate URL generated successfully',
+            degreeCertificate: 'Degree Certificate shared successfully',
             updateUserProfile:'User profile updated successfully'
         },
         error: {
@@ -75,9 +76,12 @@ export const ResponseMessages = {
             exists: 'An organization name is already exist',
             orgProfileNotFound: 'Organization public profile not found',
             orgSlugIsRequired: 'orgslug is required',
+            invitationIdIsRequired:'Invitation Id is required',
+            userIdIsRequired:'UserId is required',
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
+            orgRoleIdNotFound:'Provided roles not exists in the platform',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
             deleteOrgInvitation: 'Organization does not have access to delete this invitation',
@@ -204,6 +208,7 @@ export const ResponseMessages = {
     connection: {
         success: {
             create: 'Connection created successfully',
+            receivenvitation: 'Invitation received successfully',
             fetchConnection: 'Connection details fetched successfully',
             fetch: 'Connections details fetched successfully'
         },
@@ -353,7 +358,6 @@ export const ResponseMessages = {
         notFound: 'Not Found',
         serverError: 'Internal Server error'
     },
-    
     webhook: {
         success: {
             webhookUrlRegister:'Webhook Url registered successfully',
@@ -361,7 +365,14 @@ export const ResponseMessages = {
         },
         error: {
             registerWebhook:'Unable to register a webhook url',
-            webhookResponse:'Error in sending webhook response to org webhook url'
+            webhookResponse:'Error in sending webhook response to org webhook url',
+            notFound:'Webhook url not found'
+        }
+    },
+    shorteningUrl: {
+        success: {
+            getshorteningUrl:'Shortening Url fetched successfully',
+            createShorteningUrl: 'Shortening Url created successfully'
         }
     }
 };

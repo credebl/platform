@@ -1,7 +1,11 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, IsDefined, MaxLength, ArrayNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsDefined, ArrayNotEmpty, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { toNumber, trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/cast.helper';
+import { IsEnum } from 'class-validator';
+import { SortValue } from '../../enum';
+import { SortFields } from 'apps/connection/src/enum/connection.enum';
 
 class Attribute {
     @ApiProperty()
@@ -15,6 +19,34 @@ class Attribute {
     @IsDefined()
     @Transform(({ value }) => trim(value))
     value: string;
+}
+
+export class OOBIssueCredentialDto {
+
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
+    @IsArray()
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @Type(() => Attribute)
+    attributes: Attribute[];
+
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid credentialDefinitionId' })
+    @IsString({ message: 'credentialDefinitionId should be string' })
+    credentialDefinitionId: string;
+
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid comment' })
+    @IsString({ message: 'comment should be string' })
+    @IsOptional()
+    comment: string;
+
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid protocol-version' })
+    @IsString({ message: 'protocolVersion should be string' })
+    protocolVersion?: string;
+
+    orgId: string;
 }
 
 class CredentialOffer {
@@ -34,34 +66,12 @@ class CredentialOffer {
     emailId: string;
 }
 
-export class IssueCredentialDto {
-
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
-    attributes: Attribute[];
-
-    @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid credentialDefinitionId' })
-    @IsString({ message: 'credentialDefinitionId should be string' })
-    credentialDefinitionId: string;
-
-    @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid comment' })
-    @IsString({ message: 'comment should be string' })
-    @IsOptional()
-    comment: string;
+export class IssueCredentialDto extends OOBIssueCredentialDto {
 
     @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
     @IsNotEmpty({ message: 'Please provide valid connectionId' })
     @IsString({ message: 'connectionId should be string' })
     connectionId: string;
-
-    @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid protocol-version' })
-    @IsString({ message: 'protocol-version should be string' })
-    protocolVersion?: string;
-    orgId: string;
 }
 
 export class IssuanceDto {
@@ -120,6 +130,10 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     contextCorrelationId: string;
+    
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 }
 
 
@@ -137,26 +151,22 @@ export class CredentialAttributes {
     value: string;
 }
 
-export class OutOfBandCredentialOfferDto {
-    @ApiProperty({
-        example: [
-            {
-                'emailId': 'testmail@domain.com',
-                'attributes': [
-                    {
-                        'value': 'string',
-                        'name': 'string'
-                    }
-                ]
-            }
-        ]
-    })
-    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })
-    @IsArray({ message: 'Credential offer details should be array' })
-    @ArrayNotEmpty({ message: 'Credential offer details required' })
+export class OOBCredentialDtoWithEmail {
+    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
+    @IsNotEmpty({ message: 'Please provide valid attributes' })
+    @IsArray({ message: 'attributes should be array'})
+    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads`})
     @ValidateNested({ each: true })
     @Type(() => CredentialOffer)
     credentialOffer: CredentialOffer[];
+
+    @ApiProperty({ example: 'awqx@getnada.com' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
+    @IsNotEmpty({ message: 'Please provide valid email' })
+    @IsString({ message: 'email should be string' })
+    @Transform(({ value }) => value.trim().toLowerCase())
+    @IsOptional()
+    emailId: string;
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid credential definition id' })
@@ -181,62 +191,71 @@ export class OutOfBandCredentialOfferDto {
 
 
 export class PreviewFileDetails {
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
+
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
+
+    @ApiProperty({ required: false, example: '10' })
+    @IsOptional()
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false, example: '1' })
+    @IsOptional()
+    pageNumber: number = 1;
+
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
-    search = '';
+    searchByText: string = '';
 
-    @ApiProperty({ required: false, default: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
 
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortValue = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortBy = '';
-
-    @ApiProperty({ required: false, default: 1 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
 }
 
 export class FileParameter {
-    @ApiProperty({ required: false, default: 1 })
+    @ApiProperty({ required: false, example: '10' })
     @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false, example: '1' })
+    @IsOptional()
+    pageNumber: number = 1;
+
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
+
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
-    search = '';
-
-    @ApiProperty({ required: false, default: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortBy = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortValue = '';
-
+    searchByText: string = '';
 }
 
 export class ClientDetails {

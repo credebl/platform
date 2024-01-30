@@ -1,10 +1,10 @@
 export enum sortValue {
-    ASC = 'ASC',
-    DESC = 'DESC',
+    ASC = 'asc',
+    DESC = 'desc',
 }
 export enum SortValue {
-    ASC = 'ASC',
-    DESC = 'DESC',
+    ASC = 'asc',
+    DESC = 'desc',
 }
 export enum onboardRequestSort {
     id = 'id',

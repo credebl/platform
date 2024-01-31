@@ -11,7 +11,7 @@ import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
-import { IEcosystemDashboard, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @Injectable()
@@ -155,9 +155,9 @@ export class EcosystemService extends BaseService {
     requestSchemaPayload: RequestSchemaDto,
     orgId: string,
     ecosystemId: string
-  ): Promise<object> {
+  ): Promise<IEndorsementTransaction> {
     const payload = { requestSchemaPayload, orgId, ecosystemId };
-    return this.sendNats(this.serviceProxy, 'schema-endorsement-request', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'schema-endorsement-request', payload);
   }
 
   async credDefEndorsementRequest(

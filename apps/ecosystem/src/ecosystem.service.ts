@@ -28,7 +28,7 @@ import {
 } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, IEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, IEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -579,7 +579,7 @@ export class EcosystemService {
     requestSchemaPayload: RequestSchemaEndorsement,
     orgId: string,
     ecosystemId: string
-  ): Promise<object> {
+  ): Promise<IEndorsementTransaction> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -659,11 +659,22 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestSchemaTransaction);
       }
 
-      return this.ecosystemRepository.storeTransactionRequest(
+      const storeTransaction = await this.ecosystemRepository.storeTransactionRequest(
         schemaTransactionResponse,
         requestSchemaPayload,
         endorsementTransactionType.SCHEMA
       );
+
+      // To return selective response
+      delete storeTransaction.requestPayload;
+      delete storeTransaction.responsePayload;
+      delete storeTransaction.lastChangedDateTime;
+      delete storeTransaction.lastChangedBy;
+      delete storeTransaction.deletedAt;
+      delete storeTransaction.requestBody;
+      delete storeTransaction.resourceId;
+
+      return storeTransaction;
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {

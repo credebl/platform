@@ -90,24 +90,15 @@ export interface SignedTransactionMessage {
   };
 }
 
-export interface EndorsementTransactionPayload {
+export interface IEndorsementTransaction {
   id: string;
   endorserDid: string;
   authorDid: string;
-  requestPayload: string;
-  responsePayload: string;
-  requestBody: Prisma.JsonValue;
   status: string;
   ecosystemOrgId: string;
   createDateTime: Date;
   createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
-  deletedAt?: Date;
   type?: string;
-  ecosystemOrgs?: {
-    orgId: string;
-  };
 }
 
 interface SchemaPayload {

@@ -24,7 +24,7 @@ import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { IEcosystemInvitations, IEditEcosystem } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -283,8 +283,8 @@ export class EcosystemController {
   }
 
   @Post('/:ecosystemId/:orgId/transaction/schema')
-  @ApiOperation({ summary: 'Request new schema', description: 'Request new schema' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Request new schema', description: 'Create request for new schema' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_OWNER)
@@ -292,12 +292,13 @@ export class EcosystemController {
   async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
     requestSchemaPayload.userId = user.id;
     
-    await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId, ecosystemId);
+    const createSchemaRequest: IEndorsementTransaction = await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId, ecosystemId);
     const finalResponse: IResponse = {
-      statusCode: 201,
-      message: ResponseMessages.ecosystem.success.schemaRequest
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.schemaRequest,
+      data: createSchemaRequest
     };
-    return res.status(201).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
 
@@ -331,19 +332,20 @@ export class EcosystemController {
 
   @Post('/:ecosystemId/:orgId/transaction/cred-def')
   @ApiOperation({ summary: 'Request new credential-definition', description: 'Request new credential-definition' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('orgId') orgId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
     requestCredDefPayload.userId = user.id;
-    await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
+    const createCredDefRequest = await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
     const finalResponse: IResponse = {
-      statusCode: 201,
-      message: ResponseMessages.ecosystem.success.credDefRequest
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.credDefRequest,
+      data: createCredDefRequest
     };
-    return res.status(201).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Post('/:ecosystemId/:orgId/transaction/sign/:endorsementId')

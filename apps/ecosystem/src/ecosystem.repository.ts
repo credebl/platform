@@ -1063,7 +1063,8 @@ async findEcosystemMembers(
     }
   }
 
-  async updateEndorsementRequestStatus(ecosystemId: string, endorsementId: string): Promise<object> {
+  // eslint-disable-next-line camelcase
+  async updateEndorsementRequestStatus(ecosystemId: string, endorsementId: string): Promise<endorsement_transaction> {
     try {
 
       const endorsementTransaction = await this.prisma.endorsement_transaction.findUnique({

@@ -30,7 +30,6 @@ export class OutOfBandVerification {
 </li>
                           <li>Complete the onboarding process in ADEYA.</li>
                           <li>Open the “Share Credential” link below in this email <i>(This will open the link in the ADEYA App)</i></li>
-                          <li><b>Accept</b> the Credential in ADEYA.</li>
                           <li>Tap the <b>"Send Proof"</b>  button in ADEYA to share you credential data.</li>
                       </ul>
                       <div style="text-align: center; padding-bottom: 20px;">

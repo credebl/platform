@@ -74,6 +74,11 @@ export class EcosystemRepository {
         return createdEcosystem;
       });
 
+      // To return selective object data
+      delete transaction.lastChangedDateTime;
+      delete transaction.lastChangedBy;
+      delete transaction.deletedAt;
+
       return transaction;
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
@@ -89,7 +94,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateEcosystemById(
     data: object,
-     ecosystemId: string): Promise<ecosystem> {
+    ecosystemId: string): Promise<ecosystem> {
     try {
       const editEcosystem = await this.prisma.ecosystem.update({
         where: { id: ecosystemId },
@@ -828,7 +833,8 @@ async findEcosystemMembers(
     schemaTransactionResponse: SchemaTransactionResponse,
     requestBody: object,
     type: endorsementTransactionType
-  ): Promise<object> {
+  // eslint-disable-next-line camelcase
+  ): Promise<endorsement_transaction> {
     try {
       const { endorserDid, authorDid, requestPayload, status, ecosystemOrgId, userId } = schemaTransactionResponse;
       return await this.prisma.endorsement_transaction.create({

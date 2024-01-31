@@ -90,24 +90,15 @@ export interface SignedTransactionMessage {
   };
 }
 
-export interface EndorsementTransactionPayload {
+export interface IEndorsementTransaction {
   id: string;
   endorserDid: string;
   authorDid: string;
-  requestPayload: string;
-  responsePayload: string;
-  requestBody: Prisma.JsonValue;
   status: string;
   ecosystemOrgId: string;
   createDateTime: Date;
   createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
-  deletedAt?: Date;
   type?: string;
-  ecosystemOrgs?: {
-    orgId: string;
-  };
 }
 
 interface SchemaPayload {
@@ -308,17 +299,17 @@ export interface TransactionPayload {
 }
 
 export interface IEcosystemDashboard {
-    ecosystem: IEcosystemDetails[];
-    membersCount: number;
-    endorsementsCount: number;
-    ecosystemLead: EcosystemLeadDetails;
-  };
+  ecosystem: IEcosystemDetails[];
+  membersCount: number;
+  endorsementsCount: number;
+  ecosystemLead: EcosystemLeadDetails;
+};
 
- interface IEcosystemDetails {
+interface IEcosystemDetails {
   id: string;
   name: string;
   description: string;
-  tags: string; 
+  tags: string;
   createDateTime: Date;
   createdBy: string;
   lastChangedDateTime: Date;
@@ -334,7 +325,7 @@ interface EcosystemLeadDetails {
   orgName: string;
   config: IEcosystemConfigDetails[];
 }
- interface IEcosystemConfigDetails {
+interface IEcosystemConfigDetails {
   id: string;
   key: string;
   value: string;
@@ -345,31 +336,18 @@ interface EcosystemLeadDetails {
   deletedAt: Date;
 }
 
-export interface IEditEcosystem {
-  id: string;
-  name: string;
-  description: string;
-  tags: string;
-  createDateTime: Date;
-  createdBy: string;
+export interface IEditEcosystem extends IEcosystem {
   lastChangedDateTime: Date;
   lastChangedBy: string;
-  deletedAt: Date;
-  logoUrl: string;
-  autoEndorsement: boolean;
-  ledgers: Prisma.JsonValue;
 }
 
-export interface ICreateEcosystem {
+export interface IEcosystem {
   id: string;
   name: string;
   description: string;
   tags: string;
   createDateTime: Date;
   createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
-  deletedAt: Date;
   logoUrl: string;
   autoEndorsement: boolean;
   ledgers: Prisma.JsonValue;
@@ -382,10 +360,7 @@ export interface IEcosystemInvitations {
   ecosystemId: string;
   userId: string;
   orgId: string;
-  deletedAt: Date;
   ecosystem: EcosystemInvitationDetails;
   createDateTime: Date;
   createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
 }

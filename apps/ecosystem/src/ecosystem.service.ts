@@ -946,6 +946,9 @@ export class EcosystemService {
         }
         return submitTxn;
       }
+      
+      // To return selective response
+      await this.removeEndorsementTransactionFields(updateSignedTransaction);
 
       return updateSignedTransaction;
     } catch (error) {

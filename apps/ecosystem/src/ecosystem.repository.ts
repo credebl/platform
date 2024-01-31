@@ -950,7 +950,7 @@ async findEcosystemMembers(
     schemaTransactionRequest: string
 
     // eslint-disable-next-line camelcase,
-  ): Promise<object> {
+  ): Promise<endorsement_transaction> {
     try {
       const updatedTransaction = await this.prisma.endorsement_transaction.update({
         where: { id: endorsementId },

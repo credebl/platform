@@ -350,34 +350,36 @@ export class EcosystemController {
 
   @Post('/:ecosystemId/:orgId/transaction/sign/:endorsementId')
   @ApiOperation({ summary: 'Sign transaction', description: 'Sign transaction' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
+    const transactionResponse = await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
     const finalResponse: IResponse = {
-      statusCode: 201,
-      message: ResponseMessages.ecosystem.success.sign
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.sign,
+      data: transactionResponse
     };
-    return res.status(201).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('/:ecosystemId/:orgId/transaction/sumbit/:endorsementId')
-  @ApiOperation({ summary: 'Sumbit transaction', description: 'Sumbit transaction' })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @Post('/:ecosystemId/:orgId/transaction/submit/:endorsementId')
+  @ApiOperation({ summary: 'Submit transaction', description: 'Submit transaction' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async SumbitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId);
+  async SubmitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+    const transactionResponse = await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId);
     const finalResponse: IResponse = {
-      statusCode: 201,
-      message: ResponseMessages.ecosystem.success.submit
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.submit,
+      data: transactionResponse
     };
-    return res.status(201).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
   /**
    * 
@@ -465,10 +467,10 @@ export class EcosystemController {
     const invitationRes = await this.ecosystemService.acceptRejectEcosystemInvitaion(acceptRejectEcosystemInvitation, user.email);
 
     const finalResponse: IResponse = {
-      statusCode: 201,
+      statusCode: HttpStatus.OK,
       message: invitationRes.response
     };
-    return res.status(201).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   /**

@@ -91,6 +91,7 @@ export class OutOfBandRequestProof {
     @IsNotEmpty({ message: 'Email is required' })
     @Transform(({ value }) => trim(value))
     @IsString({ each: true, message: 'Each emailId in the array should be a string' })
+    @IsOptional()
     emailId?: string | string[];
 
     @ApiProperty()

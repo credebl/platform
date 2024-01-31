@@ -872,6 +872,9 @@ async findEcosystemMembers(
           status: EcosystemInvitationStatus.PENDING
         }
       });
+
+      delete deletedInvitation.lastChangedBy;
+      delete deletedInvitation.lastChangedDateTime;
       return deletedInvitation;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);

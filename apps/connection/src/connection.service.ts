@@ -38,7 +38,7 @@ export class ConnectionService {
    */
   async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
 
-    const { orgId, multiUseInvitation, autoAcceptConnection, alias } = payload;
+    const { orgId, multiUseInvitation, autoAcceptConnection, alias, label, imageUrl } = payload;
     try {
       const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
       if (connectionInvitationExist) {
@@ -47,7 +47,6 @@ export class ConnectionService {
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
 
-      // const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
@@ -63,8 +62,8 @@ export class ConnectionService {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: logoImageUrl ? logoImageUrl : undefined,
-        label: organisation.name
+        imageUrl: logoImageUrl ? logoImageUrl : imageUrl ? imageUrl : undefined,
+        label: label || undefined
       };
 
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);

@@ -30,7 +30,7 @@ import {
 } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult, IEcosystemInvitation } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
@@ -297,9 +297,9 @@ export class EcosystemService {
    * @param userId
    * @returns
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string, orgId: string): Promise<string> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string, orgId: string): Promise<IEcosystemInvitations[]> {
     const { invitations, ecosystemId } = bulkInvitationDto;
-
+    const invitationResponse = [];
     try {
       const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
 
@@ -326,7 +326,7 @@ export class EcosystemService {
         const isUserExist = await this.checkUserExistInPlatform(email);
 
         const userData = await this.getEcoUserName(userEmail);
-        
+
         const { firstName } = userData;
 
         const orgDetails: OrganizationData = await this.getOrganizationDetails(orgId, userId);
@@ -334,7 +334,12 @@ export class EcosystemService {
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
-          await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
+          const createInvitation = await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
+          // Removed unnecessary keys from object
+          delete createInvitation.lastChangedDateTime;
+          delete createInvitation.lastChangedBy;
+          delete createInvitation.deletedAt;
+          invitationResponse.push(createInvitation);
           try {
             await this.sendInviteEmailTemplate(email, ecosystemDetails.name, firstName, orgDetails.name, isUserExist);
           } catch (error) {
@@ -342,7 +347,7 @@ export class EcosystemService {
           }
         }
       }
-      return ResponseMessages.ecosystem.success.createInvitation;
+      return invitationResponse;
     } catch (error) {
       this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

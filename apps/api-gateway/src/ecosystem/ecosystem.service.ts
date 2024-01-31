@@ -11,7 +11,7 @@ import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
-import { IEditEcosystem, IEcosystemDashboard, ICreateEcosystem, EcosystemDetailsResult, IEcosystemInvitation } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEditEcosystem, IEcosystemDashboard, ICreateEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @Injectable()
@@ -71,7 +71,7 @@ export class EcosystemService extends BaseService {
     userId: string,
     userEmail: string,
     orgId: string
-  ): Promise<object> {
+  ): Promise<IEcosystemInvitations[]> {
     const payload = { bulkInvitationDto, userId, userEmail, orgId };
 
     return this.sendNatsMessage(this.serviceProxy, 'send-ecosystem-invitation', payload);

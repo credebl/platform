@@ -21,9 +21,9 @@ export class URLUserEmailTemplate {
       
       <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
           
-          <div style="margin: auto; max-width: 450px; padding: 20px 30px; display:block;">
-          <div style="display: block; text-align:center; background-color: white; padding-bottom: 20px; padding-top: 20px;">
-                  <img src="${process.env.BRAND_LOGO}" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+          <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
+          <div style="display: block; text-align:center;">
+                  <img src="${process.env.BRAND_LOGO}" alt="CREDEBL logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
               </div>
               
             <div style="font-family: Montserrat; font-style: normal; font-weight: 500;

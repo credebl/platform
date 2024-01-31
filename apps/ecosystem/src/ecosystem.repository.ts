@@ -73,6 +73,12 @@ export class EcosystemRepository {
         return createdEcosystem;
       });
 
+      // To return selective object data
+      delete transaction.ledgers;
+      delete transaction.lastChangedDateTime;
+      delete transaction.lastChangedBy;
+      delete transaction.deletedAt;
+
       return transaction;
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
@@ -88,7 +94,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateEcosystemById(
     data: object,
-     ecosystemId: string): Promise<ecosystem> {
+    ecosystemId: string): Promise<ecosystem> {
     try {
       const { name, description, tags, logo, autoEndorsement, userId } = createEcosystemDto;
       const editEcosystem = await this.prisma.ecosystem.update({

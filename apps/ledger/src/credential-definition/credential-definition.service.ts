@@ -123,6 +123,10 @@ export class CredentialDefinitionService extends BaseService {
                 credDefData.lastChangedBy = userId;
             }
             const credDefResponse = await this.credentialDefinitionRepository.saveCredentialDefinition(credDefData);
+
+            delete credDefResponse.lastChangedBy;
+            delete credDefResponse.lastChangedDateTime;
+
             return credDefResponse;
 
         } catch (error) {

@@ -1,4 +1,4 @@
-import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { EcosystemService } from './ecosystem.service';
 import { Controller, UseFilters, Put, Post, Get, Body, Param, UseGuards, Query, BadRequestException, Delete, HttpStatus, Res } from '@nestjs/common';
 import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema.dto';
@@ -422,6 +422,8 @@ export class EcosystemController {
    * @returns 
    */
   @Put('transaction/endorsement/auto')
+  // Not required anywhere
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Auto sign and submit transactions',
     description: 'Auto sign and submit transactions'

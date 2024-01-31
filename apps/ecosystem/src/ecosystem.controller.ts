@@ -184,7 +184,7 @@ export class EcosystemController {
    * @param payload
    * @returns submit endorsement request
    */
-  @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
+  @MessagePattern({ cmd: 'submit-endorsement-transaction' })
   async submitTransaction(payload: { endorsementId: string; ecosystemId: string; orgId: string }): Promise<object> {
     return this.ecosystemService.submitTransaction({
       endorsementId: payload.endorsementId,

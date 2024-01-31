@@ -987,6 +987,9 @@ export class EcosystemService {
         }
         return submitTxn;
       }
+      
+      // To return selective response
+      await this.removeEndorsementTransactionFields(updateSignedTransaction);
 
       return updateSignedTransaction;
     } catch (error) {
@@ -1498,7 +1501,12 @@ export class EcosystemService {
 
   async declineEndorsementRequestByLead(ecosystemId: string, endorsementId: string): Promise<object> {
     try {
-      return await this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, endorsementId);
+      const declineResponse = await this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, endorsementId);
+      
+      // To return selective response
+      this.removeEndorsementTransactionFields(declineResponse);
+      
+      return declineResponse;
     } catch (error) {
       this.logger.error(`error in decline endorsement request: ${error}`);
       throw new RpcException(error.response ? error.response : error);

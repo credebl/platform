@@ -217,10 +217,11 @@ export class VerificationController {
         @Param('proofId') proofId: string,
         @Param('orgId') orgId: string
     ): Promise<Response> {
-        await this.verificationService.verifyPresentation(proofId, orgId, user);
+        const verifyData = await this.verificationService.verifyPresentation(proofId, orgId, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.verified
+            message: ResponseMessages.verification.success.verified,
+            data: verifyData
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

@@ -19,7 +19,7 @@ import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy} from '@nestjs/microservices';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -184,36 +184,38 @@ export class ConnectionController {
    * @param orgId
    * @returns Callback URL for connection and created connections details
    */
-    @Post('wh/:orgId/connections/')
-    @ApiExcludeEndpoint()
-    @ApiOperation({
-        summary: 'Catch connection webhook responses',
-        description: 'Callback URL for connection'
-    })
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-    async getConnectionWebhook(
-        @Body() connectionDto: ConnectionDto,
-        @Param('orgId') orgId: string,
-        @Res() res: Response
-    ): Promise<Response> {
-        connectionDto.type = 'Connection';
-        this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
-
-        // const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId);
-
-        // if (webhookUrl) {
-        //   try {
-        //     await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto });
-        // } catch (error) {
-        //     throw new RpcException(error.response ? error.response : error);
-        // }
-        const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId);
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.connection.success.create,
-            data: connectionData
-        };
-
-        return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
-}     
+  @Post('wh/:orgId/connections/')
+  @ApiExcludeEndpoint()
+  @ApiOperation({
+    summary: 'Catch connection webhook responses',
+    description: 'Callback URL for connection'
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  async getConnectionWebhook(
+    @Body() connectionDto: ConnectionDto,
+    @Param('orgId') orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    connectionDto.type = 'Connection';
+    this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
+  
+    const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId).catch(error => {
+        this.logger.debug(`error in saving connection webhook ::: ${JSON.stringify(error)}`);
+     });
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.connection.success.create,
+      data: connectionData
+    };
+    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId).catch(error => {
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+  
+    });
+    if (webhookUrl) {
+        await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto }).catch(error => {
+            this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
+        });
+    } 
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+}

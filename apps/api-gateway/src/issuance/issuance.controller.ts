@@ -61,6 +61,7 @@ import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
+import { error } from 'console';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -531,6 +532,35 @@ export class IssuanceController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+    /**
+   * Description: Issuer create out-of-band credential
+   * @param user
+   * @param issueCredentialDto
+   */
+    @Post('/orgs/:orgId/credentials/oob/offer')
+    @ApiBearerAuth()
+    @ApiOperation({
+      summary: `Create out-of-band credential offer`,
+      description: `Creates an out-of-band credential offer`
+    })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    async createOOBCredentialOffer(
+      @Param('orgId') orgId: string,
+      @Body() issueCredentialDto: OOBIssueCredentialDto,
+      @Res() res: Response
+    ): Promise<Response> {
+      issueCredentialDto.orgId = orgId;
+      const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.create,
+        data: getCredentialDetails.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
   /**
    * Description: webhook Save issued credential details
    * @param user
@@ -547,52 +577,27 @@ export class IssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    // const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId);
-    issueCredentialDto.type = 'Issuance';
+issueCredentialDto.type = 'Issuance';
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
-
-    // if (webhookUrl) {
-    //   try {
-    //     await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto});
-    // } catch (error) {
-    //     throw new RpcException(error.response ? error.response : error);
-    // }
-
-    const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
-    };
+     
+      const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
+        this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);
+      });
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.create,
+        data: getCredentialDetails
+      };    
+      const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId).catch(error => {
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+      });
+      if (webhookUrl) {
+        
+          await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto}).catch(error => {
+            this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
+          });
+      
+    }
     return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
-  /**
-   * Description: Issuer create out-of-band credential
-   * @param user
-   * @param issueCredentialDto
-   */
-  @Post('/orgs/:orgId/credentials/oob/offer')
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: `Create out-of-band credential offer`,
-    description: `Creates an out-of-band credential offer`
-  })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createOOBCredentialOffer(
-    @Param('orgId') orgId: string,
-    @Body() issueCredentialDto: OOBIssueCredentialDto,
-    @Res() res: Response
-  ): Promise<Response> {
-    issueCredentialDto.orgId = orgId;
-    const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
+    }   
 }

@@ -7,13 +7,13 @@ export class WebhookResponseDto {
    
 @ApiProperty()
 @Transform(({ value }) => trim(value))
-@IsNotEmpty({ message: 'webhookUrl is required.' })
-@IsString({ message: 'webhookUrl must be in string format.' })
+@IsNotEmpty({ message: 'webhookUrl is required' })
+@IsString({ message: 'webhookUrl must be in string format' })
 webhookUrl: string;
 
 @ApiProperty()
 @Transform(({ value }) => trim(value))
-@IsNotEmpty({ message: 'data is required.' })
+@IsNotEmpty({ message: 'data is required' })
 @IsObject({ message: 'data must be an object' })
 data:object;
 }

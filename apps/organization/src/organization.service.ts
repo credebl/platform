@@ -61,11 +61,18 @@ export class OrganizationService {
 
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
+      // To return selective object data
+      delete organizationDetails.lastChangedBy;
+      delete organizationDetails.lastChangedDateTime;
+      delete organizationDetails.orgSlug;
+      delete organizationDetails.website;
+
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
       return organizationDetails;
+
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

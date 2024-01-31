@@ -13,7 +13,7 @@ export class SendInvitationDto {
     @Transform(({ value }) => trim(value))
     email: string;
 
-    @ApiProperty({ example: [2, 1, 3] })
+    @ApiProperty({ example: ['string'] })
     @IsNotEmpty({ message: 'Please provide valid orgRoleId' })
     @IsArray()
     @IsUUID('4', { each: true, message: 'Invalid format of orgRoleId' })
@@ -28,7 +28,7 @@ export class BulkSendInvitationDto {
         example: [
             {
                 email: 'awqx@getnada.com',
-                orgRoleId: [1, 2, 3]
+                orgRoleId: ['string']
             }
         ]
     })

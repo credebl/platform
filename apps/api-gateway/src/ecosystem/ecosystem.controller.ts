@@ -28,6 +28,7 @@ import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -405,11 +406,12 @@ export class EcosystemController {
 
     bulkInvitationDto.ecosystemId = ecosystemId;
 
-    await this.ecosystemService.createInvitation(bulkInvitationDto, user.id, user.email, orgId);
+    const ecosystemInvitationResponse: IEcosystemInvitations[] = await this.ecosystemService.createInvitation(bulkInvitationDto, user.id, user.email, orgId);
 
     const finalResponse: IResponse = {
       statusCode: 201,
-      message: ResponseMessages.ecosystem.success.createInvitation
+      message: ResponseMessages.ecosystem.success.createInvitation,
+      data: ecosystemInvitationResponse
     };
 
     return res.status(201).json(finalResponse);

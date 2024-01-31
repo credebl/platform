@@ -308,17 +308,17 @@ export interface TransactionPayload {
 }
 
 export interface IEcosystemDashboard {
-    ecosystem: IEcosystemDetails[];
-    membersCount: number;
-    endorsementsCount: number;
-    ecosystemLead: EcosystemLeadDetails;
-  };
+  ecosystem: IEcosystemDetails[];
+  membersCount: number;
+  endorsementsCount: number;
+  ecosystemLead: EcosystemLeadDetails;
+};
 
- interface IEcosystemDetails {
+interface IEcosystemDetails {
   id: string;
   name: string;
   description: string;
-  tags: string; 
+  tags: string;
   createDateTime: Date;
   createdBy: string;
   lastChangedDateTime: Date;
@@ -334,7 +334,7 @@ interface EcosystemLeadDetails {
   orgName: string;
   config: IEcosystemConfigDetails[];
 }
- interface IEcosystemConfigDetails {
+interface IEcosystemConfigDetails {
   id: string;
   key: string;
   value: string;
@@ -345,30 +345,21 @@ interface EcosystemLeadDetails {
   deletedAt: Date;
 }
 
-export interface IEditEcosystem {
+export interface IEditEcosystem extends IEcosystem {
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+}
+
+export interface IEcosystem {
   id: string;
   name: string;
   description: string;
   tags: string;
   createDateTime: Date;
   createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
-  deletedAt: Date;
   logoUrl: string;
   autoEndorsement: boolean;
   ledgers: Prisma.JsonValue;
-}
-
-export interface ICreateEcosystem {
-  id: string;
-  name: string;
-  description: string;
-  tags: string;
-  createDateTime: Date;
-  createdBy: string;
-  logoUrl: string;
-  autoEndorsement: boolean;
 }
 
 export interface IEcosystemInvitations {

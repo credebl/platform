@@ -8,7 +8,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { IEditEcosystem, IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, ICreateEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations } from '../interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {
@@ -22,7 +22,7 @@ export class EcosystemController {
    */
 
   @MessagePattern({ cmd: 'create-ecosystem' })
-  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<ICreateEcosystem> {
+  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<IEcosystem> {
     return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
   }
 

@@ -11,7 +11,7 @@ import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
-import { IEditEcosystem, IEcosystemDashboard, ICreateEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @Injectable()
@@ -25,7 +25,7 @@ export class EcosystemService extends BaseService {
    * @param createEcosystemDto
    * @returns Ecosystem creation success
    */
-  async createEcosystem(createEcosystemDto: CreateEcosystemDto): Promise<ICreateEcosystem> {
+  async createEcosystem(createEcosystemDto: CreateEcosystemDto): Promise<IEcosystem> {
     const payload = { createEcosystemDto };
     return this.sendNatsMessage(this.serviceProxy, 'create-ecosystem', payload);
   }

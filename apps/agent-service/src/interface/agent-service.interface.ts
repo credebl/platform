@@ -267,7 +267,8 @@ interface IRequestedPredicatesName {
 }
 
 interface IRequestedRestriction {
-    cred_def_id: string;
+    cred_def_id?: string;
+    schema_id?: string;
 }
 
 export interface IAgentSpinUpSatus {

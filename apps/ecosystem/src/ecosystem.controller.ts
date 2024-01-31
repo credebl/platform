@@ -8,7 +8,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem } from '../interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {
@@ -143,7 +143,7 @@ export class EcosystemController {
     requestSchemaPayload: RequestSchemaEndorsement;
     orgId: string;
     ecosystemId: string;
-  }): Promise<object> {
+  }): Promise<IEndorsementTransaction> {
     return this.ecosystemService.requestSchemaEndorsement(
       payload.requestSchemaPayload,
       payload.orgId,

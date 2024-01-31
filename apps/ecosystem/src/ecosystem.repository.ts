@@ -833,7 +833,8 @@ async findEcosystemMembers(
     schemaTransactionResponse: SchemaTransactionResponse,
     requestBody: object,
     type: endorsementTransactionType
-  ): Promise<object> {
+  // eslint-disable-next-line camelcase
+  ): Promise<endorsement_transaction> {
     try {
       const { endorserDid, authorDid, requestPayload, status, ecosystemOrgId, userId } = schemaTransactionResponse;
       return await this.prisma.endorsement_transaction.create({

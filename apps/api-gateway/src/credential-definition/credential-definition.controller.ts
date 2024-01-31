@@ -6,7 +6,7 @@ import { UnauthorizedErrorDto } from 'apps/api-gateway/src/dtos/unauthorized-err
 import { ForbiddenErrorDto } from 'apps/api-gateway/src/dtos/forbidden-error.dto';
 import { User } from '../authz/decorators/user.decorator';
 import { AuthGuard } from '@nestjs/passport';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Response } from 'express';
 import { GetAllCredDefsDto } from './dto/get-all-cred-defs.dto';
@@ -128,14 +128,14 @@ export class CredentialDefinitionController {
     @Body() credDef: CreateCredentialDefinitionDto,
     @Param('orgId') orgId: string,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
 
     credDef.orgId = orgId;
     const credentialsDefinitionDetails = await this.credentialDefinitionService.createCredentialDefinition(credDef, user);
-    const credDefResponse: IResponseType = {
+    const credDefResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.credentialDefinition.success.create,
-      data: credentialsDefinitionDetails.response
+      data: credentialsDefinitionDetails
     };
     return res.status(HttpStatus.CREATED).json(credDefResponse);
   }

@@ -160,7 +160,7 @@ export class EcosystemController {
     requestCredDefPayload: RequestCredDeffEndorsement;
     orgId: string;
     ecosystemId: string;
-  }): Promise<object> {
+  }): Promise<IEndorsementTransaction> {
     return this.ecosystemService.requestCredDeffEndorsement(
       payload.requestCredDefPayload,
       payload.orgId,

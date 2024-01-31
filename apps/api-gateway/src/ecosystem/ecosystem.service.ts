@@ -164,9 +164,9 @@ export class EcosystemService extends BaseService {
     requestCredDefPayload: RequestCredDefDto,
     orgId: string,
     ecosystemId: string
-  ): Promise<object> {
+  ): Promise<IEndorsementTransaction> {
     const payload = { requestCredDefPayload, orgId, ecosystemId };
-    return this.sendNats(this.serviceProxy, 'credDef-endorsement-request', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'credDef-endorsement-request', payload);
   }
 
   async signTransaction(endorsementId: string, ecosystemId: string): Promise<object> {

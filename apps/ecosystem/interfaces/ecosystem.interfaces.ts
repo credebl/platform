@@ -367,12 +367,8 @@ export interface ICreateEcosystem {
   tags: string;
   createDateTime: Date;
   createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
-  deletedAt: Date;
   logoUrl: string;
   autoEndorsement: boolean;
-  ledgers: Prisma.JsonValue;
 }
 
 export interface IEcosystemInvitations {

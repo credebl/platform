@@ -190,6 +190,6 @@ export class EcosystemService extends BaseService {
     orgId: string
   ): Promise<{ response: object }> {
     const payload = { ecosystemId, endorsementId, orgId };
-    return this.sendNats(this.serviceProxy, 'decline-endorsement-transaction', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'decline-endorsement-transaction', payload);
   }
 }

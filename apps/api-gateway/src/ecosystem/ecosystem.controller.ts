@@ -528,12 +528,13 @@ export class EcosystemController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
-    await this.ecosystemService.declineEndorsementRequestByLead(ecosystemId, endorsementId, orgId);
+    const response = await this.ecosystemService.declineEndorsementRequestByLead(ecosystemId, endorsementId, orgId);
     const finalResponse: IResponse = {
-      statusCode: 200,
-      message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction,
+      data: response
     };
-    return res.status(200).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
 

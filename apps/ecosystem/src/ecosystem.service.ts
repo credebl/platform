@@ -718,11 +718,12 @@ export class EcosystemService {
       return storeTransaction;
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      const errorObj = error?.status?.message?.error;
+      if (errorObj) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
+          message: errorObj?.reason
+            ? errorObj?.reason
+            : errorObj,
           statusCode: error?.status?.code
         });
       } else {
@@ -735,7 +736,7 @@ export class EcosystemService {
     requestCredDefPayload: RequestCredDeffEndorsement,
     orgId: string,
     ecosystemId: string
-  ): Promise<object> {
+  ): Promise<IEndorsementTransaction> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -819,18 +820,30 @@ export class EcosystemService {
         userId: requestCredDefPayload.userId
       };
 
-      return this.ecosystemRepository.storeTransactionRequest(
+      const storeTransaction = await this.ecosystemRepository.storeTransactionRequest(
         schemaTransactionResponse,
         requestCredDefPayload,
         endorsementTransactionType.CREDENTIAL_DEFINITION
       );
+
+      // To return selective response
+      delete storeTransaction.requestPayload;
+      delete storeTransaction.responsePayload;
+      delete storeTransaction.lastChangedDateTime;
+      delete storeTransaction.lastChangedBy;
+      delete storeTransaction.deletedAt;
+      delete storeTransaction.requestBody;
+      delete storeTransaction.resourceId;
+
+      return storeTransaction;
     } catch (error) {
       this.logger.error(`In request cred-def endorsement: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      const errorObj = error?.status?.message?.error;
+      if (errorObj) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
+          message: errorObj?.reason
+            ? errorObj?.reason
+            : errorObj,
           statusCode: error?.status?.code
         });
       } else {

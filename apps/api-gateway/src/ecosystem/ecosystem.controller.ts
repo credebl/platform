@@ -328,10 +328,11 @@ export class EcosystemController {
     @Res() res: Response): Promise<Response> {
     createOrgDto.orgId = orgId;
     createOrgDto.userId = user.id;
-    await this.ecosystemService.createEcosystem(createOrgDto);
+    const createEcosystemResponse = await this.ecosystemService.createEcosystem(createOrgDto);
     const finalResponse: IResponse = {
       statusCode: 201,
-      message: ResponseMessages.ecosystem.success.create
+      message: ResponseMessages.ecosystem.success.create,
+      data: createEcosystemResponse
     };
     return res.status(201).json(finalResponse);
   }

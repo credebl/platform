@@ -994,7 +994,7 @@ async findEcosystemMembers(
     schemaTransactionRequest: string
 
     // eslint-disable-next-line camelcase,
-  ): Promise<object> {
+  ): Promise<endorsement_transaction> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.ecosystem_orgs.findMany({

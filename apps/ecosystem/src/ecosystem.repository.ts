@@ -75,7 +75,6 @@ export class EcosystemRepository {
       });
 
       // To return selective object data
-      delete transaction.ledgers;
       delete transaction.lastChangedDateTime;
       delete transaction.lastChangedBy;
       delete transaction.deletedAt;

@@ -32,7 +32,7 @@ import { CreateEcosystem, CredDefMessage, IEcosystemDashboard, LedgerDetails, Or
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
-import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
+import { credential_definition, endorsement_transaction, org_agents, platform_config, schema, user } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 @Injectable()
@@ -570,6 +570,20 @@ export class EcosystemService {
       return userData;
     }
 
+  // eslint-disable-next-line camelcase
+  async removeEndorsementTransactionFields(transactionObject: endorsement_transaction): Promise<void> {
+    const transaction = transactionObject;
+
+    // To return selective response
+    delete transaction.requestPayload;
+    delete transaction.responsePayload;
+    delete transaction.lastChangedDateTime;
+    delete transaction.lastChangedBy;
+    delete transaction.deletedAt;
+    delete transaction.requestBody;
+    delete transaction.resourceId;
+  }
+
   /**
    *
    * @param RequestSchemaEndorsement
@@ -666,13 +680,7 @@ export class EcosystemService {
       );
 
       // To return selective response
-      delete storeTransaction.requestPayload;
-      delete storeTransaction.responsePayload;
-      delete storeTransaction.lastChangedDateTime;
-      delete storeTransaction.lastChangedBy;
-      delete storeTransaction.deletedAt;
-      delete storeTransaction.requestBody;
-      delete storeTransaction.resourceId;
+      await this.removeEndorsementTransactionFields(storeTransaction);
 
       return storeTransaction;
     } catch (error) {
@@ -786,13 +794,7 @@ export class EcosystemService {
       );
 
       // To return selective response
-      delete storeTransaction.requestPayload;
-      delete storeTransaction.responsePayload;
-      delete storeTransaction.lastChangedDateTime;
-      delete storeTransaction.lastChangedBy;
-      delete storeTransaction.deletedAt;
-      delete storeTransaction.requestBody;
-      delete storeTransaction.resourceId;
+      await this.removeEndorsementTransactionFields(storeTransaction);
 
       return storeTransaction;
     } catch (error) {

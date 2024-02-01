@@ -397,7 +397,7 @@ export class VerificationService {
     if (!getProofPresentation) {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
     }
-    return getProofPresentation;
+    return getProofPresentation.response;
   }
 
 

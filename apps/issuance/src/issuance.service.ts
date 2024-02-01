@@ -141,7 +141,11 @@ export class IssuanceService {
           }
         },
         autoAcceptCredential: 'always',
-        comment: comment || ''
+        comment,
+        goalCode: payload.goalCode || undefined,
+        parentThreadId: payload.parentThreadId || undefined,
+        willConfirm: payload.willConfirm || undefined,
+        label: payload.label || undefined
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
 
@@ -376,7 +380,11 @@ export class IssuanceService {
               }
             },
             autoAcceptCredential: 'always',
-            comment
+            comment,
+            goalCode: outOfBandCredential.goalCode || undefined,
+            parentThreadId: outOfBandCredential.parentThreadId || undefined,
+            willConfirm: outOfBandCredential.willConfirm || undefined,
+            label: outOfBandCredential.label || undefined
           };
 
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);

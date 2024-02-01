@@ -13,7 +13,12 @@ export interface IIssuance {
   connectionId: string;
   attributes: Attributes[];
   orgId: string;
-  protocolVersion: string;
+  protocolVersion?: string;
+  goalCode?: string,
+  parentThreadId?: string,
+  willConfirm?: boolean,
+  label?: string
+
 }
 
 export interface IIssueCredentials {
@@ -75,6 +80,10 @@ export interface OutOfBandCredentialOfferPayload {
   emailId?: string;
   attributes?: Attributes[];
   protocolVersion?: string;
+  goalCode?: string,
+  parentThreadId?: string,
+  willConfirm?: boolean,
+  label?: string
 }
 
 export interface OutOfBandCredentialOffer {

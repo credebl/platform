@@ -310,10 +310,11 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-    await this.organizationService.createOrganization(createOrgDto, reqUser.id);
+    const orgData = await this.organizationService.createOrganization(createOrgDto, reqUser.id);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.create
+      message: ResponseMessages.organisation.success.create,
+      data: orgData
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

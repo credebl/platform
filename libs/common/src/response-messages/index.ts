@@ -282,7 +282,7 @@ export const ResponseMessages = {
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent',
             schemaRequest: 'Schema transaction request created successfully',
-            credDefRequest: 'credential-definition transaction request created successfully',
+            credDefRequest: 'Credential definition transaction request created successfully',
             sign: 'Transaction request signed successfully',
             submit: 'Transaction request submitted successfully',
             invitationReject: 'Ecosystem invitation rejected',
@@ -363,7 +363,8 @@ export const ResponseMessages = {
         },
         error: {
             registerWebhook:'Unable to register a webhook url',
-            webhookResponse:'Error in sending webhook response to org webhook url'
+            webhookResponse:'Error in sending webhook response to org webhook url',
+            notFound:'Webhook url not found'
         }
     },
     shorteningUrl: {

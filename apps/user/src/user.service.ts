@@ -39,7 +39,8 @@ import {
   UpdateUserProfile,
   IUserCredentials, 
    IUserInformation,
-    IUsersProfile
+    IUsersProfile,
+    IUserResetPassword
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -56,7 +57,7 @@ import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Injectable()
@@ -247,9 +248,6 @@ export class UserService {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
 
-        // const hashedPassword = await bcrypt.hash(decryptedPassword, 10);
-        // userInfo.password = hashedPassword;
-
         userInfo.password = decryptedPassword;
         try {          
           keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
@@ -259,7 +257,6 @@ export class UserService {
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
 
-        // const hashedPassword = await bcrypt.hash(decryptedPassword, 10);
         userInfo.password = decryptedPassword;
 
         try {          
@@ -271,7 +268,6 @@ export class UserService {
 
       await this.userRepository.updateUserDetails(userDetails.id,
         keycloakDetails.keycloakUserId.toString()
-        // userInfo.password
       );
 
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
@@ -344,17 +340,11 @@ export class UserService {
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
         const getUserDetails = await this.userRepository.getUserDetails(userData.email.toLowerCase());
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return this.generateToken(email.toLowerCase(), decryptedPassword);
+        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       } else {
+
         const decryptedPassword = await this.commonService.decryptPassword(password);
-
-        // const isPasswordMached = await bcrypt.compare(decryptedPassword, userData.password);
-
-        // if (!isPasswordMached) {
-        //   throw new UnauthorizedException('Invalid credentials');
-        // }
-
-        return this.generateToken(email.toLowerCase(), decryptedPassword);
+        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);        
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
@@ -362,9 +352,87 @@ export class UserService {
     }
   }
 
-  async generateToken(email: string, password: string): Promise<ISignInUser> {
+  async resetPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
+    const { email, oldPassword, newPassword } = resetPasswordDto;
+
     try {
-     return await this.clientRegistrationService.getUserToken(email, password);
+      this.validateEmail(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+
+      if (userData && !userData.isEmailVerified) {
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      }
+
+      const decryptedPassword = await this.commonService.decryptPassword(oldPassword);
+      const tokenResponse = this.generateToken(email.toLowerCase(), decryptedPassword, userData);
+
+      if (tokenResponse) {
+        const decryptedNewPassword = await this.commonService.decryptPassword(newPassword);
+        userData.password = decryptedNewPassword;
+        try {    
+          let keycloakDetails = null;    
+          const token = await this.clientRegistrationService.getManagementToken();  
+          keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
+
+          const userDetails = await this.userRepository.updateUserDetails(userData.id,
+            keycloakDetails.keycloakUserId.toString()
+          );
+
+          return {
+            id: userDetails.id,
+            email: userDetails.email
+          };
+    
+        } catch (error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak');
+        }
+      } else {
+        throw new BadRequestException(ResponseMessages.user.error.invalidCredentials);
+      }
+
+    } catch (error) {
+      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async generateToken(email: string, password: string, userData: user): Promise<ISignInUser> {
+    try {
+
+      if (userData.keycloakUserId) {
+        const tokenResponse = await this.clientRegistrationService.getUserToken(email, password);
+        tokenResponse.isRegisteredToSupabase = false;
+        return tokenResponse;
+      } else {
+        const supaInstance = await this.supabaseService.getClient();  
+        const { data, error } = await supaInstance.auth.signInWithPassword({
+          email,
+          password
+        });
+  
+        this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+  
+        if (error) {
+          throw new BadRequestException(error?.message);
+        }
+  
+        const token = data?.session;
+
+        return {
+          // eslint-disable-next-line camelcase
+          access_token: token.access_token,
+          // eslint-disable-next-line camelcase
+          token_type: token.token_type,
+          // eslint-disable-next-line camelcase
+          expires_in: token.expires_in,
+          // eslint-disable-next-line camelcase
+          expires_at: token.expires_at,
+          isRegisteredToSupabase: true
+        };
+      }
     } catch (error) {
       throw new BadRequestException(error?.message);
     }
@@ -470,7 +538,6 @@ export class UserService {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
 
-      
       const invitationsData = await this.getOrgInvitations(
         userData.email,
         payload.status,

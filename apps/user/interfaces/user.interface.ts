@@ -165,3 +165,9 @@ export interface  IUserSignIn{
   password: string;
   isPasskey: boolean;
 }
+
+export interface IUserResetPassword{
+  email: string;
+  oldPassword: string;
+  newPassword: boolean;
+}

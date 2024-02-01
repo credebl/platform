@@ -1,4 +1,4 @@
-import { ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, IUserCredentials, IUsersProfile, IUserInformation, IUserSignIn} from '../interfaces/user.interface';
+import { ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, IUserCredentials, IUsersProfile, IUserInformation, IUserSignIn, IUserResetPassword} from '../interfaces/user.interface';
 import {IOrgUsers, Payload} from '../interfaces/user.interface';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
@@ -8,7 +8,7 @@ import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Controller()
@@ -42,7 +42,13 @@ export class UserController {
 
   @MessagePattern({ cmd: 'user-holder-login' })
   async login(payload: IUserSignIn): Promise<ISignInUser> {
-   return this.userService.login(payload);
+   const loginRes = await this.userService.login(payload);   
+   return loginRes;
+  }
+
+  @MessagePattern({ cmd: 'user-reset-password' })
+  async resetPassword(payload: IUserResetPassword): Promise<IResetPasswordResponse> {
+   return this.userService.resetPassword(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-profile' })

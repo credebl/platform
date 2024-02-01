@@ -38,10 +38,35 @@ export class OOBIssueCredentialDto {
     @IsOptional()
     comment: string;
 
+    @ApiPropertyOptional({ example: 'v1' })
     @IsOptional()
     @IsNotEmpty({ message: 'Please provide valid protocol-version' })
     @IsString({ message: 'protocolVersion should be string' })
     protocolVersion?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid goal code' })
+    @IsString({ message: 'goal code should be string' })
+    goalCode?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid parent thread id' })
+    @IsString({ message: 'parent thread id should be string' })
+    parentThreadId?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid willConfirm' })
+    @IsBoolean({ message: 'willConfirm should be boolean' })
+    willConfirm?: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid label' })
+    @IsString({ message: 'label should be string' })
+    label?: string;
 
     orgId: string;
 }
@@ -125,11 +150,11 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     autoAcceptCredential: string;
-    
+
     @ApiProperty()
     @IsOptional()
     contextCorrelationId: string;
-    
+
     @ApiPropertyOptional()
     @IsOptional()
     type: string;
@@ -154,8 +179,8 @@ export class OOBCredentialDtoWithEmail {
 
     @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array'})
-    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads`})
+    @IsArray({ message: 'attributes should be array' })
+    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })
     @IsOptional()
     credentialOffer: CredentialOffer[];
 
@@ -187,11 +212,35 @@ export class OOBCredentialDtoWithEmail {
     @IsOptional()
     comment: string;
 
-    @ApiProperty({ example: 'v1' })
+    @ApiPropertyOptional({ example: 'v1' })
     @IsOptional()
     @IsNotEmpty({ message: 'Please provide valid protocol version' })
     @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid goal code' })
+    @IsString({ message: 'goal code should be string' })
+    goalCode?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid parent thread id' })
+    @IsString({ message: 'parent thread id should be string' })
+    parentThreadId?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid willConfirm' })
+    @IsBoolean({ message: 'willConfirm should be boolean' })
+    willConfirm?: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid label' })
+    @IsString({ message: 'label should be string' })
+    label?: string;
 
     orgId: string;
 }

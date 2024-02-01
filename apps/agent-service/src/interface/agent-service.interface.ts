@@ -25,6 +25,10 @@ export interface IOutOfBandCredentialOffer {
     comment: string;
     protocolVersion?: string;
     orgId: string;
+    goalCode?: string,
+    parentThreadId?: string,
+    willConfirm?: boolean,
+    label?: string
 }
 
 export interface ITenantDto {
@@ -228,6 +232,10 @@ export interface ISendProofRequestPayload {
     connectionId?: string;
     proofFormats: IProofFormats;
     autoAcceptProof: string;
+    goalCode?:  string;
+    parentThreadId?:  string;
+    willConfirm?: boolean;
+    protocolVersion?: string;
 }
 
 export interface IAgentStatus {

@@ -13,7 +13,12 @@ export interface IIssuance {
   connectionId: string;
   attributes: IAttributes[];
   orgId: string;
-  protocolVersion: string;
+  protocolVersion?: string;
+  goalCode?: string,
+  parentThreadId?: string,
+  willConfirm?: boolean,
+  label?: string
+
 }
 
 interface IIndy {
@@ -130,6 +135,10 @@ export interface OutOfBandCredentialOfferPayload {
   emailId?: string;
   attributes?: IAttributes[];
   protocolVersion?: string;
+  goalCode?: string,
+  parentThreadId?: string,
+  willConfirm?: boolean,
+  label?: string
 }
 
 export interface OutOfBandCredentialOffer {

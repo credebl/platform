@@ -59,9 +59,9 @@ export enum UserCertificateId {
     WORLD_RECORD = 'WorldRecord'
 }
 
-export enum Purpose {
-    ORGANIZATION = 'Organization',
-    USER_CERTIFICATE = 'UserCertificate'
+export enum NodeEnvironment {
+   DEVELOPMENT='DEV',
+   PRODUCTION='PROD'
 }
 
 const transitionMap: { [key in Invitation]: Invitation[] } = {

@@ -367,8 +367,8 @@ export class UserService {
       }
 
       const decryptedPassword = await this.commonService.decryptPassword(oldPassword);
-      const tokenResponse = this.generateToken(email.toLowerCase(), decryptedPassword, userData);
-
+      const tokenResponse = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
+      
       if (tokenResponse) {
         const decryptedNewPassword = await this.commonService.decryptPassword(newPassword);
         userData.password = decryptedNewPassword;
@@ -406,12 +406,17 @@ export class UserService {
   }
 
   async generateToken(email: string, password: string, userData: user): Promise<ISignInUser> {
-    try {
 
       if (userData.keycloakUserId) {
-        const tokenResponse = await this.clientRegistrationService.getUserToken(email, password);
-        tokenResponse.isRegisteredToSupabase = false;
-        return tokenResponse;
+
+        try {
+          const tokenResponse = await this.clientRegistrationService.getUserToken(email, password);
+          tokenResponse.isRegisteredToSupabase = false;
+          return tokenResponse;
+        } catch (error) {
+          throw new BadRequestException(error?.message);
+        }
+       
       } else {
         const supaInstance = await this.supabaseService.getClient();  
         const { data, error } = await supaInstance.auth.signInWithPassword({
@@ -439,9 +444,6 @@ export class UserService {
           isRegisteredToSupabase: true
         };
       }
-    } catch (error) {
-      throw new BadRequestException(error?.message);
-    }
   }
 
   async getProfile(payload: { id }): Promise<IUsersProfile> {

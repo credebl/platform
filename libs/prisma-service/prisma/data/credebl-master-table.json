@@ -1,12 +1,12 @@
 {
   "platformConfigData": {
-    "externalIp": "192.168.0.101",
-    "inboundEndpoint": "192.168.0.101",
+    "externalIp": "##Machine Ip Address/Domain for agent setup##",
+    "inboundEndpoint": "##Machine Ip Address/Domain for agent setup##",
     "username": "credebl",
     "sgApiKey": "###Sendgrid Key###",
-    "emailFrom": "nishad.shirsat@ayanworks.com",
-    "apiEndpoint": "http://.168.0.101:5000",
-    "tailsFileServer": "http://.168.0.101:5000"
+    "emailFrom": "##Senders Mail ID##",
+    "apiEndpoint": "## Platform API Ip Address##",
+    "tailsFileServer": "##Machine Ip Address for agent setup##"
   },
   "platformAdminData": {
     "firstName": "CREDEBL",

@@ -56,7 +56,7 @@ export class ConnectionService {
 
       let logoImageUrl;
       if (organisation.logoUrl) {
-        logoImageUrl = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/orgs/profile/${organisation.id}`;
+        logoImageUrl = organisation.logoUrl;
       }
 
       const connectionPayload = {

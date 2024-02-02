@@ -126,9 +126,26 @@ export class ConnectionRepository {
             });
             return agentDetails;
 
-        } catch (error) {
-            this.logger.error(`Error in saveConnectionWebhook: ${error.message} `);
-            throw error;
+      const agentDetails = await this.prisma.connections.upsert({
+        where: {
+          connectionId: connectionDto?.id
+        },
+        update: {
+          lastChangedDateTime: connectionDto?.lastChangedDateTime,
+          lastChangedBy: organisationId,
+          imageUrl: connectionDto.imageUrl,
+          state: connectionDto?.state
+        },
+        create: {
+          createDateTime: connectionDto?.createDateTime,
+          lastChangedDateTime: connectionDto?.lastChangedDateTime,
+          createdBy: organisationId,
+          lastChangedBy: organisationId,
+          imageUrl: connectionDto.imageUrl,
+          connectionId: connectionDto?.id,
+          state: connectionDto?.state,
+          theirLabel: maskedTheirLabel,
+          orgId: organisationId
         }
       });
       return agentDetails;

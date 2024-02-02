@@ -9,7 +9,12 @@ FROM node:18-alpine as build
 RUN npm install -g pnpm --ignore-scripts \
     && apk update \
     && apk add openssh-client \
-    && apk add aws-cli
+    && apk add aws-cli \
+    && apk add docker \
+    && apk add docker-compose    
+
+RUN docker --version && \
+    docker-compose --version
 
 # Set the working directory
 WORKDIR /app
@@ -40,7 +45,10 @@ FROM node:18-alpine as prod
 RUN npm install -g pnpm --ignore-scripts \
     && apk update \
     && apk add openssh-client \
-    && apk add aws-cli
+    && apk add aws-cli \
+    && apk add docker \
+    && apk add docker-compose 
+
 
 WORKDIR /app
 
@@ -48,6 +56,7 @@ RUN mkdir -p ./agent-provisioning/AFJ/endpoints
 RUN mkdir -p ./agent-provisioning/AFJ/agent-config
 RUN mkdir -p ./agent-provisioning/AFJ/port-file
 RUN mkdir -p ./agent-provisioning/AFJ/token
+
 
 # Copy the compiled code
 COPY --from=build /app/dist/apps/agent-provisioning/ ./dist/apps/agent-provisioning/
@@ -58,15 +67,16 @@ COPY --from=build /app/apps/agent-provisioning/AFJ/port-file ./agent-provisionin
 # Set permissions
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent.sh
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent_ecs.sh
+RUN chmod +x /app/agent-provisioning/AFJ/scripts/docker_start_agent.sh
 RUN chmod 777 /app/agent-provisioning/AFJ/endpoints
 RUN chmod 777 /app/agent-provisioning/AFJ/agent-config
 RUN chmod 777 /app/agent-provisioning/AFJ/token
+
 # Copy the libs folder
 COPY libs/ ./libs/
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js"]
-
 
 # docker build -t agent-provisioning-service -f Dockerfiles/Dockerfile.agent-provisioning .
 # docker run -d --env-file .env --name agent-provisioning-service docker.io/library/agent-provisioning-service

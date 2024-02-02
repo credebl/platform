@@ -18,11 +18,26 @@ TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 
-ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
-INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
+echo "AGENCY: $AGENCY"
+echo "EXTERNAL_IP: $EXTERNAL_IP"
+echo "WALLET_NAME: $WALLET_NAME"
+echo "WALLET_PASSWORD: $WALLET_PASSWORD"
+echo "RANDOM_SEED: $RANDOM_SEED"
+echo "WEBHOOK_HOST: $WEBHOOK_HOST"
+echo "WALLET_STORAGE_HOST: $WALLET_STORAGE_HOST"
+echo "WALLET_STORAGE_PORT: $WALLET_STORAGE_PORT"
+echo "WALLET_STORAGE_USER: $WALLET_STORAGE_USER"
+echo "WALLET_STORAGE_PASSWORD: $WALLET_STORAGE_PASSWORD"
+echo "CONTAINER_NAME: $CONTAINER_NAME"
+echo "PROTOCOL: $PROTOCOL"
+echo "TENANT: $TENANT"
+echo "AFJ_VERSION: $AFJ_VERSION"
+echo "INDY_LEDGER: $INDY_LEDGER"
+
+ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
+INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
 INBOUND_PORT=9001
-
 
 increment_port() {
     local port="$1"
@@ -72,30 +87,33 @@ echo "Last used inbound port: $INBOUND_PORT"
 
 echo "AGENT SPIN-UP STARTED"
 
-if [ -d "${PWD}/apps/agent-provisioning/AFJ/endpoints" ]; then
+if [ -d "${PWD}/agent-provisioning/AFJ/endpoints" ]; then
   echo "Endpoints directory exists."
 else
   echo "Error: Endpoints directory does not exists."
-  mkdir ${PWD}/apps/agent-provisioning/AFJ/endpoints
+  mkdir ${PWD}/agent-provisioning/AFJ/endpoints
 fi
 
-if [ -d "${PWD}/apps/agent-provisioning/AFJ/agent-config" ]; then
+if [ -d "${PWD}/agent-provisioning/AFJ/agent-config" ]; then
   echo "Endpoints directory exists."
 else
   echo "Error: Endpoints directory does not exists."
-  mkdir ${PWD}/apps/agent-provisioning/AFJ/agent-config
+  mkdir ${PWD}/agent-provisioning/AFJ/agent-config
 fi
 
 AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
 
 echo "-----$AGENT_ENDPOINT----"
-CONFIG_FILE="${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
+CONFIG_FILE="${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
+
+echo "--CONFIG_FILE----${CONFIG_FILE}"
 
 # Check if the file exists
 if [ -f "$CONFIG_FILE" ]; then
   # If it exists, remove the file
   rm "$CONFIG_FILE"
 fi
+
 
 cat <<EOF >${CONFIG_FILE}
 {
@@ -134,7 +152,7 @@ EOF
 
 FILE_NAME="docker-compose_${AGENCY}_${CONTAINER_NAME}.yaml"
 
-DOCKER_COMPOSE="${PWD}/apps/agent-provisioning/AFJ/${FILE_NAME}"
+DOCKER_COMPOSE="${PWD}/agent-provisioning/AFJ/${FILE_NAME}"
 
 # Check if the file exists
 if [ -f "$DOCKER_COMPOSE" ]; then
@@ -168,7 +186,7 @@ volumes:
 EOF
 
 if [ $? -eq 0 ]; then
-  cd apps/agent-provisioning/AFJ
+  cd agent-provisioning/AFJ
   echo "docker-compose generated successfully!"
   echo "================="
   echo "spinning up the container"
@@ -176,7 +194,7 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker compose -f $FILE_NAME up -d
+  docker-compose -f $FILE_NAME up -d
   if [ $? -eq 0 ]; then
 
     n=0

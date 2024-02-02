@@ -375,15 +375,21 @@ export class UserService {
         try {    
           let keycloakDetails = null;    
           const token = await this.clientRegistrationService.getManagementToken();  
-          keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
 
-          const userDetails = await this.userRepository.updateUserDetails(userData.id,
-            keycloakDetails.keycloakUserId.toString()
-          );
+          if (userData.keycloakUserId) {
+            
+            keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, token);
+
+          } else {
+            keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
+            await this.userRepository.updateUserDetails(userData.id,
+              keycloakDetails.keycloakUserId.toString()
+            );
+          }
 
           return {
-            id: userDetails.id,
-            email: userDetails.email
+            id: userData.id,
+            email: userData.email
           };
     
         } catch (error) {

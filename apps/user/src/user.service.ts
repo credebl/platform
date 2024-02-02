@@ -11,8 +11,6 @@ import {
   HttpException
 } from '@nestjs/common';
 
-import * as fs from 'fs';
-// import bcrypt = require('bcrypt');
 
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonService } from '@credebl/common';

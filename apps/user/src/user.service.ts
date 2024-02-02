@@ -416,12 +416,17 @@ export class UserService {
         throw new BadRequestException(ResponseMessages.user.error.verifyMail);
       }
 
-      const decryptedPassword = await this.commonService.decryptPassword(oldPassword);
-      const tokenResponse = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
+      const oldDecryptedPassword = await this.commonService.decryptPassword(oldPassword);
+      const newDecryptedPassword = await this.commonService.decryptPassword(newPassword);
+
+      if (oldDecryptedPassword === newDecryptedPassword) {
+        throw new BadRequestException(ResponseMessages.user.error.resetSamePassword);
+      }
+
+      const tokenResponse = await this.generateToken(email.toLowerCase(), oldDecryptedPassword, userData);
       
       if (tokenResponse) {
-        const decryptedNewPassword = await this.commonService.decryptPassword(newPassword);
-        userData.password = decryptedNewPassword;
+        userData.password = newDecryptedPassword;
         try {    
           let keycloakDetails = null;    
           const token = await this.clientRegistrationService.getManagementToken();  

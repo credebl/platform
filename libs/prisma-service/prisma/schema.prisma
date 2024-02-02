@@ -286,7 +286,6 @@ model connections {
   createdBy           String        @db.Uuid
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String        @db.Uuid
-  imageUrl            String?
   connectionId        String        @unique
   theirLabel          String        @default("")
   state               String

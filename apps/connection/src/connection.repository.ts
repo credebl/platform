@@ -154,7 +154,6 @@ export class ConnectionRepository {
         update: {
           lastChangedDateTime: connectionDto?.lastChangedDateTime,
           lastChangedBy: organisationId,
-          imageUrl: connectionDto.imageUrl,
           state: connectionDto?.state
         },
         create: {
@@ -162,7 +161,6 @@ export class ConnectionRepository {
           lastChangedDateTime: connectionDto?.lastChangedDateTime,
           createdBy: organisationId,
           lastChangedBy: organisationId,
-          imageUrl: connectionDto.imageUrl,
           connectionId: connectionDto?.id,
           state: connectionDto?.state,
           theirLabel: maskedTheirLabel,

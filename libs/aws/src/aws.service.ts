@@ -24,7 +24,7 @@ export class AwsService {
   }
  
   async uploadUserCertificate(
-    fileBuffer: Buffer | string,
+    fileBuffer: Buffer,
     ext: string,
     filename: string,
     bucketName: string,
@@ -33,21 +33,20 @@ export class AwsService {
   ): Promise<string> {
     const timestamp = Date.now();
     const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
+
     try {
       await putObjectAsync({
-        Bucket: bucketName,
-        // Bucket: process.env.AWS_PUBLIC_BUCKET_NAME,
+        Bucket: `${process.env.AWS_ORG_LOGO_BUCKET_NAME}`,
         Key: `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.png`,
         Body: fileBuffer,
         ContentEncoding: encoding,
         ContentType: `image/png`
-        // ContentType: ext
       });
 
       const imageUrl = `https://${process.env.AWS_ORG_LOGO_BUCKET_NAME}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;    
       return imageUrl;    
-    } catch (err) {
-      throw new HttpException(err, HttpStatus.SERVICE_UNAVAILABLE);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
 

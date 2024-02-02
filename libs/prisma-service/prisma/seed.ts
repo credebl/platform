@@ -8,15 +8,21 @@ const prisma = new PrismaClient();
 const logger = new Logger('Init seed DB');
 let platformUserId = '';
 
-const configData = fs.readFileSync(`${process.env.PWD}/prisma/data/credebl-master-table.json`, 'utf8');
+const configData = fs.readFileSync(`${process.cwd()}/prisma/data/credebl-master-table.json`, 'utf8');
 const createPlatformConfig = async (): Promise<void> => {
     try {
-        const { platformConfigData } = JSON.parse(configData);
-        const platformConfig = await prisma.platform_config.create({
-            data: platformConfigData
-        });
+        const existPlatformAdmin = await prisma.platform_config.findMany();
 
-        logger.log(platformConfig);
+        if (existPlatformAdmin.length === 0) {
+            const { platformConfigData } = JSON.parse(configData);
+            const platformConfig = await prisma.platform_config.create({
+                data: platformConfigData
+            });
+
+            logger.log(platformConfig);
+        } else {
+            logger.log('Already seeding in platform config');
+        }
     } catch (e) {
         logger.error('An error occurred seeding platformConfig:', e);
     }
@@ -25,11 +31,25 @@ const createPlatformConfig = async (): Promise<void> => {
 const createOrgRoles = async (): Promise<void> => {
     try {
         const { orgRoleData } = JSON.parse(configData);
-        const orgRoles = await prisma.org_roles.createMany({
-            data: orgRoleData
-        });
+        const roleNames = orgRoleData.map(role => role.name);
+        const existOrgRole = await prisma.org_roles.findMany({
+            where: {
+                name: {
+                    in: roleNames
+                }
+            }
+        })
 
-        logger.log(orgRoles);
+        if (existOrgRole.length === 0) {
+            const orgRoles = await prisma.org_roles.createMany({
+                data: orgRoleData
+            });
+
+            logger.log(orgRoles);
+        } else {
+            logger.log('Already seeding in org role');
+        }
+
     } catch (e) {
         logger.error('An error occurred seeding orgRoles:', e);
     }
@@ -38,11 +58,27 @@ const createOrgRoles = async (): Promise<void> => {
 const createAgentTypes = async (): Promise<void> => {
     try {
         const { agentTypeData } = JSON.parse(configData);
-        const agentTypes = await prisma.agents_type.createMany({
-            data: agentTypeData
-        });
 
-        logger.log(agentTypes);
+        const agentType = agentTypeData.map(agentType => agentType.agent);
+        const existAgentType = await prisma.agents_type.findMany({
+            where: {
+                agent: {
+                    in: agentType
+                }
+            }
+        })
+
+        if (existAgentType.length === 0) {
+            const agentTypes = await prisma.agents_type.createMany({
+                data: agentTypeData
+            });
+
+            logger.log(agentTypes);
+        } else {
+            logger.log('Already seeding in agent type');
+        }
+
+
     } catch (e) {
         logger.error('An error occurred seeding agentTypes:', e);
     }
@@ -51,11 +87,26 @@ const createAgentTypes = async (): Promise<void> => {
 const createOrgAgentTypes = async (): Promise<void> => {
     try {
         const { orgAgentTypeData } = JSON.parse(configData);
-        const orgAgentTypes = await prisma.org_agents_type.createMany({
-            data: orgAgentTypeData
-        });
+        const orgAgentType = orgAgentTypeData.map(orgAgentType => orgAgentType.agent);
+        const existAgentType = await prisma.org_agents_type.findMany({
+            where: {
+                agent: {
+                    in: orgAgentType
+                }
+            }
+        })
 
-        logger.log(orgAgentTypes);
+        if (existAgentType.length === 0) {
+            const orgAgentTypes = await prisma.org_agents_type.createMany({
+                data: orgAgentTypeData
+            });
+
+            logger.log(orgAgentTypes);
+        } else {
+            logger.log('Already seeding in org agent type');
+        }
+
+
     } catch (e) {
         logger.error('An error occurred seeding orgAgentTypes:', e);
     }
@@ -66,13 +117,25 @@ const createPlatformUser = async (): Promise<void> => {
         const { platformAdminData } = JSON.parse(configData);
         platformAdminData.email = process.env.PLATFORM_ADMIN_EMAIL;
         platformAdminData.username = process.env.PLATFORM_ADMIN_EMAIL;
-        const platformUser = await prisma.user.create({
-            data: platformAdminData
-        });
 
-        platformUserId = platformUser.id;
+        const existPlatformAdminUser = await prisma.user.findMany({
+            where: {
+                email: platformAdminData.email
+            }
+        })
 
-        logger.log(platformUser);
+        if (existPlatformAdminUser.length === 0) {
+            const platformUser = await prisma.user.create({
+                data: platformAdminData
+            });
+
+            platformUserId = platformUser.id;
+
+            logger.log(platformUser);
+        } else {
+            logger.log('Already seeding in user');
+        }
+
     } catch (e) {
         logger.error('An error occurred seeding platformUser:', e);
     }
@@ -84,11 +147,23 @@ const createPlatformOrganization = async (): Promise<void> => {
         const { platformAdminOrganizationData } = JSON.parse(configData);
         platformAdminOrganizationData.createdBy = platformUserId;
         platformAdminOrganizationData.lastChangedBy = platformUserId;
-        const platformOrganization = await prisma.organisation.create({
-            data: platformAdminOrganizationData
-        });
 
-        logger.log(platformOrganization);
+        const existPlatformAdminUser = await prisma.organisation.findMany({
+            where: {
+                name: platformAdminOrganizationData.name
+            }
+        })
+
+        if (existPlatformAdminUser.length === 0) {
+            const platformOrganization = await prisma.organisation.create({
+                data: platformAdminOrganizationData
+            });
+
+            logger.log(platformOrganization);
+        } else {
+            logger.log('Already seeding in organization');
+        }
+
     } catch (e) {
         logger.error('An error occurred seeding platformOrganization:', e);
     }
@@ -115,15 +190,20 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
             }
         });
 
-        const platformOrganization = await prisma.user_org_roles.create({
-            data: {
-                userId: userId.id,
-                orgRoleId: orgRoleId.id,
-                orgId: orgId.id
-            }
-        });
+        if (!userId && !orgId && !orgRoleId) {
+            const platformOrganization = await prisma.user_org_roles.create({
+                data: {
+                    userId: userId.id,
+                    orgRoleId: orgRoleId.id,
+                    orgId: orgId.id
+                }
+            });
+            logger.log(platformOrganization);
+        } else {
+            logger.log('Already seeding in org_roles');
+        }
 
-        logger.log(platformOrganization);
+
     } catch (e) {
         logger.error('An error occurred seeding platformOrganization:', e);
     }
@@ -132,11 +212,28 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
 const createLedger = async (): Promise<void> => {
     try {
         const { ledgerData } = JSON.parse(configData);
-        const createLedger = await prisma.ledgers.createMany({
-            data: ledgerData
-        });
 
-        logger.log(createLedger);
+        const ledgerIndyNamespace = ledgerData.map(ledger => ledger.indyNamespace);
+        const existLedgerIndyNameSpace = await prisma.ledgers.findMany({
+            where: {
+                indyNamespace: {
+                    in: ledgerIndyNamespace
+                }
+            }
+        })
+
+        if (existLedgerIndyNameSpace.length === 0) {
+
+            const createLedger = await prisma.ledgers.createMany({
+                data: ledgerData
+            });
+
+            logger.log(createLedger);
+        } else {
+            logger.log('Already seeding in ledgers');
+        }
+
+
     } catch (e) {
         logger.error('An error occurred seeding createLedger:', e);
     }
@@ -145,11 +242,27 @@ const createLedger = async (): Promise<void> => {
 const createEcosystemRoles = async (): Promise<void> => {
     try {
         const { ecosystemRoleData } = JSON.parse(configData);
-        const ecosystemRoles = await prisma.ecosystem_roles.createMany({
-            data: ecosystemRoleData
-        });
 
-        logger.log(ecosystemRoles);
+        const ecosystemRoleDetails = ecosystemRoleData.map(ecosystemRole => ecosystemRole.name);
+        const existEcosystemRole = await prisma.ecosystem_roles.findMany({
+            where: {
+                name: {
+                    in: ecosystemRoleDetails
+                }
+            }
+        })
+
+        if (existEcosystemRole.length === 0) {
+            const ecosystemRoles = await prisma.ecosystem_roles.createMany({
+                data: ecosystemRoleData
+            });
+
+            logger.log(ecosystemRoles);
+        } else {
+            logger.log('Already seeding in ecosystem roles');
+        }
+
+
     } catch (e) {
         logger.error('An error occurred seeding ecosystemRoles:', e);
     }
@@ -158,11 +271,28 @@ const createEcosystemRoles = async (): Promise<void> => {
 const createEcosystemConfig = async (): Promise<void> => {
     try {
         const { ecosystemConfigData } = JSON.parse(configData);
-        const configDetails = await prisma.ecosystem_config.createMany({
-            data: ecosystemConfigData
-        });
 
-        logger.log(configDetails);
+        const ecosystemConfigKey = ecosystemConfigData.map(ecosystemConfig => ecosystemConfig.key);
+        const existEcosystemConfig = await prisma.ecosystem_config.findMany({
+            where: {
+                key: {
+                    in: ecosystemConfigKey
+                }
+            }
+        })
+
+
+        if (existEcosystemConfig.length === 0) {
+            const configDetails = await prisma.ecosystem_config.createMany({
+                data: ecosystemConfigData
+            });
+
+            logger.log(configDetails);
+        } else {
+            logger.log('Already seeding in ecosystem config');
+        }
+
+
     } catch (e) {
         logger.error('An error occurred seeding createEcosystemConfig:', e);
     }

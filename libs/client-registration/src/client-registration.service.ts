@@ -53,33 +53,6 @@ export class ClientRegistrationService {
       this.logger.error(`error in keycloakUserRegistration in client-registration: ${JSON.stringify(error)}`);
       throw error;
     }
-
-  }
-
-  async createUsersInKeycloak(
-    payload: unknown,
-    realm: string,
-    token: string,
-    password: string
-  ): Promise<{ keycloakUserId: string; }> {
-
-    await this.commonService.httpPost(
-      await this.keycloakUrlService.createUserURL(realm),
-      payload,
-      this.getAuthHeader(token)
-    );
-
-    const getUserResponse = await this.commonService.httpGet(
-      await this.keycloakUrlService.getUserByUsernameURL(realm, payload['email']),
-      this.getAuthHeader(token)
-    );
-    const userid = getUserResponse[0].id;
-
-    await this.resetPasswordOfKeycloakUser(realm, password, userid, token);
-
-    return {
-      keycloakUserId: getUserResponse[0].id
-    };
   }
 
 

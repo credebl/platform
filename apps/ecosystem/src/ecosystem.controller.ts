@@ -8,7 +8,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { IEditEcosystem, IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, ICreateEcosystem, EcosystemDetailsResult } from '../interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from '../interfaces/ecosystem.interfaces';
 
 @Controller()
 export class EcosystemController {
@@ -22,7 +22,7 @@ export class EcosystemController {
    */
 
   @MessagePattern({ cmd: 'create-ecosystem' })
-  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<ICreateEcosystem> {
+  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<IEcosystem> {
     return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
   }
 
@@ -62,7 +62,7 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'get-ecosystem-invitations' })
   async getEcosystemInvitations(
     @Body() payload: { userEmail: string; status: string; pageNumber: number; pageSize: number; search: string }
-  ): Promise<object> {
+  ): Promise<IEcosystemInvitation> {
     return this.ecosystemService.getEcosystemInvitations(
       payload.userEmail,
       payload.status,
@@ -93,7 +93,7 @@ export class EcosystemController {
     userId: string;
     userEmail: string;
     orgId: string;
-  }): Promise<string> {
+  }): Promise<IEcosystemInvitations[]> {
     return this.ecosystemService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail, payload.orgId);
   }
 
@@ -110,7 +110,7 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'get-sent-invitations-ecosystemId' })
-  async getInvitationsByOrgId(@Body() payload: FetchInvitationsPayload): Promise<object> {
+  async getInvitationsByOrgId(@Body() payload: FetchInvitationsPayload): Promise<IEcosystemInvitation> {
     return this.ecosystemService.getInvitationsByEcosystemId(payload);
   }
 
@@ -143,7 +143,7 @@ export class EcosystemController {
     requestSchemaPayload: RequestSchemaEndorsement;
     orgId: string;
     ecosystemId: string;
-  }): Promise<object> {
+  }): Promise<IEndorsementTransaction> {
     return this.ecosystemService.requestSchemaEndorsement(
       payload.requestSchemaPayload,
       payload.orgId,
@@ -161,7 +161,7 @@ export class EcosystemController {
     requestCredDefPayload: RequestCredDeffEndorsement;
     orgId: string;
     ecosystemId: string;
-  }): Promise<object> {
+  }): Promise<IEndorsementTransaction> {
     return this.ecosystemService.requestCredDeffEndorsement(
       payload.requestCredDefPayload,
       payload.orgId,
@@ -184,7 +184,7 @@ export class EcosystemController {
    * @param payload
    * @returns submit endorsement request
    */
-  @MessagePattern({ cmd: 'sumbit-endorsement-transaction' })
+  @MessagePattern({ cmd: 'submit-endorsement-transaction' })
   async submitTransaction(payload: { endorsementId: string; ecosystemId: string; orgId: string }): Promise<object> {
     return this.ecosystemService.submitTransaction({
       endorsementId: payload.endorsementId,

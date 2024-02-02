@@ -185,6 +185,8 @@ export class SchemaService extends BaseService {
 
             const attributesArray = JSON.parse((await saveResponse).attributes);
             (await saveResponse).attributes = attributesArray;
+            delete (await saveResponse).lastChangedBy;
+            delete (await saveResponse).lastChangedDateTime;
             return saveResponse;
 
           } else if ('finished' === responseObj.state) {
@@ -202,6 +204,8 @@ export class SchemaService extends BaseService {
 
             const attributesArray = JSON.parse((await saveResponse).attributes);
             (await saveResponse).attributes = attributesArray;
+            delete (await saveResponse).lastChangedBy;
+            delete (await saveResponse).lastChangedDateTime;
             return saveResponse;
 
           } else {

@@ -5,7 +5,7 @@ interface IProofRequestAttribute {
     condition?: string;
     value?: string;
     credDefId?: string;
-    schemaId: string;
+    schemaId?: string;
     credentialName: string;
 }
 
@@ -75,7 +75,8 @@ interface IRequestedPredicatesName {
 }
 
 interface IRequestedRestriction {
-    cred_def_id: string;
+    cred_def_id?: string;
+    schema_id?: string;
 }
 
 export interface ISendProofRequestPayload {

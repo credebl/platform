@@ -906,43 +906,6 @@ export class UserService {
     }
   }
 
-  async registerKeycloakUsers(): Promise<string> {
-    try {
-
-      const configData = fs.readFileSync(`${process.cwd()}/apps/user/json-data/supabase-user-data.json`, 'utf8');
-
-      const token = await this.clientRegistrationService.getManagementToken();
-
-      const { supabaseUsers } = JSON.parse(configData);
-
-      for (const user of supabaseUsers) {
-
-        const payload = {
-          email: user.email,
-          username: user.email,
-          emailVerified: true,
-          enabled: true
-        };
-
-        const createdUser = await this.clientRegistrationService.createUsersInKeycloak(payload, process.env.KEYCLOAK_REALM, token, user.encrypted_password);
-
-        if (createdUser) {
-
-          const userData = await this.userRepository.checkUserExist(user.email.toLowerCase());
-
-          await this.userRepository.updateUserDetails(userData.id,
-            createdUser.keycloakUserId.toString()
-          );    
-        }
-      }
-
-      return 'Users registered to keycloak';
-    } catch (error) {
-      this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
   // eslint-disable-next-line camelcase
   async updatePlatformSettings(platformSettings: PlatformSettings): Promise<string> {
     try {

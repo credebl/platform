@@ -104,11 +104,6 @@ export class UserController {
         return this.userService.invitations(payload);
   }
   
-  @MessagePattern({ cmd: 'register-keycloak-users' })
-  async registerKeycloakUsers(): Promise<string> {
-      return this.userService.registerKeycloakUsers();
-  }
-
   /**
    *
    * @param payload

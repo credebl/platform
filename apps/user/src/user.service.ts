@@ -419,7 +419,7 @@ export class UserService {
           tokenResponse.isRegisteredToSupabase = false;
           return tokenResponse;
         } catch (error) {
-          throw new BadRequestException(error?.message);
+          throw new UnauthorizedException(error?.message);
         }
        
       } else {

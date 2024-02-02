@@ -1,6 +1,4 @@
-import { ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, IUserCredentials, IUsersProfile, IUserInformation, IUserSignIn, IUserResetPassword} from '../interfaces/user.interface';
-import {IOrgUsers, Payload} from '../interfaces/user.interface';
-
+import { IOrgUsers, Payload, ICheckUserDetails, PlatformSettings, IShareUserCertificate, UpdateUserProfile, IUsersProfile, IUserInformation, IUserSignIn, IUserCredentials, IUserResetPassword} from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
@@ -117,10 +115,10 @@ export class UserController {
    * @returns User certificate URL
    */
   @MessagePattern({ cmd: 'share-user-certificate' })
-  async shareUserCertificate(payload: {
-    shareUserCredentials: ShareUserCertificate;
-  }): Promise<string> {
-    return this.userService.shareUserCertificate(payload.shareUserCredentials);
+  async shareUserCertificate(
+    shareUserCredentials: IShareUserCertificate
+  ): Promise<string> {
+    return this.userService.shareUserCertificate(shareUserCredentials);
   }
 
   /**

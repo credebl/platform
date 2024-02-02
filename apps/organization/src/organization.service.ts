@@ -25,9 +25,8 @@ import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { IOrgCredentials, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 
-import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 @Injectable()
@@ -68,6 +67,12 @@ export class OrganizationService {
 
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
+      // To return selective object data
+      delete organizationDetails.lastChangedBy;
+      delete organizationDetails.lastChangedDateTime;
+      delete organizationDetails.orgSlug;
+      delete organizationDetails.website;
+
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
@@ -75,6 +80,7 @@ export class OrganizationService {
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
       
       return organizationDetails;
+
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -455,15 +461,23 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
+        const userData = await this.getUserFirstName(userEmail);
+        
+        const {firstName} = userData;
+        const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
+       
+        if (0 === orgRolesDetails.length) {
+          throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+        }
+
         const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
           await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
 
-          const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
           try {
-            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, isUserExist);
+            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, firstName, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
@@ -490,6 +504,7 @@ export class OrganizationService {
     email: string,
     orgName: string,
     orgRolesDetails: object[],
+    firstName:string,
     isUserExist: boolean
   ): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
@@ -498,9 +513,9 @@ export class OrganizationService {
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Invitation`;
+    emailData.emailSubject = `Invitation to join “${orgName}” on CREDEBL`;
 
-    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, orgName, orgRolesDetails, isUserExist);
+    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, orgName, orgRolesDetails, firstName, isUserExist);
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData);
@@ -525,12 +540,32 @@ export class OrganizationService {
           error.status
         );
       });
-
-    if (userData && userData.isEmailVerified) {
+    if (userData?.isEmailVerified) {
       return true;
     }
     return false;
   }
+
+  async getUserFirstName(userEmail: string): Promise<user> {
+    const pattern = { cmd: 'get-user-by-mail' };
+    const payload = { email: userEmail };
+
+    const userData  = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });    
+      return userData;
+    }
+   
 
   async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrganizationInvitations> {
     try {
@@ -676,7 +711,6 @@ export class OrganizationService {
       const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }

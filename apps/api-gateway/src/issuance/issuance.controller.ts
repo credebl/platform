@@ -5,7 +5,6 @@ import {
   Controller,
   Post,
   Body,
-  Logger,
   UseGuards,
   BadRequestException,
   HttpStatus,
@@ -16,7 +15,8 @@ import {
   UseFilters,
   Header,
   UploadedFile,
-  UseInterceptors
+  UseInterceptors,
+  Logger
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -34,7 +34,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { CommonService } from '@credebl/common/common.service';
 import { Response } from 'express';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
@@ -43,7 +42,8 @@ import {
   FileParameter,
   IssuanceDto,
   IssueCredentialDto,
-  OutOfBandCredentialDto,
+  OOBCredentialDtoWithEmail,
+  OOBIssueCredentialDto,
   PreviewFileDetails
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -53,7 +53,6 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { ImageServiceService } from '@credebl/image-service';
 import { FileExportResponse, IIssuedCredentialSearchParams, RequestPayload } from './interfaces';
 import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -62,21 +61,19 @@ import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
+import { error } from 'console';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
-    private readonly imageServiceService: ImageServiceService,
-    private readonly awsService: AwsService,
-    private readonly commonService: CommonService
+    private readonly awsService: AwsService
   ) {}
   private readonly logger = new Logger('IssuanceController');
-  private readonly PAGE: number = 1;
 
   /**
    * @param orgId
@@ -135,7 +132,7 @@ export class IssuanceController {
     summary: `Fetch credentials by credentialRecordId`,
     description: `Fetch credentials credentialRecordId`
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
   async getIssueCredentialsbyCredentialRecordId(
@@ -159,8 +156,8 @@ export class IssuanceController {
   }
 
   @Get('/orgs/:orgId/:credentialDefinitionId/download')
-  @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
   @Header('Content-Disposition', 'attachment; filename="schema.csv"')
   @Header('Content-Type', 'application/csv')
   @ApiOperation({
@@ -178,9 +175,9 @@ export class IssuanceController {
       );
       return res
         .header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`)
-        .status(200)
+        .status(HttpStatus.OK)
         .send(exportedData.fileContent);
-    } catch (error) {}
+    } catch (error) { }
   }
 
   @Post('/orgs/:orgId/bulk/upload')
@@ -191,14 +188,14 @@ export class IssuanceController {
     summary: 'Upload file for bulk issuance',
     description: 'Upload file for bulk issuance.'
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -210,7 +207,6 @@ export class IssuanceController {
       required: ['file'],
       properties: {
         file: {
-          // 👈 this property
           type: 'string',
           format: 'binary'
         }
@@ -258,14 +254,14 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -317,14 +313,14 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -353,45 +349,20 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
   @ApiOperation({
     summary: 'Get the file list for bulk operation',
     description: 'Get all the file list for organization for bulk operation'
-  })
-  @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'search',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortBy',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortValue',
-    type: Number,
-    required: false
   })
   async issuedFileDetails(
     @Param('orgId') orgId: string,
@@ -411,45 +382,20 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
   @ApiOperation({
     summary: 'Get the file data',
     description: 'Get the file data by file id'
-  })
-  @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'search',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortBy',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortValue',
-    type: Number,
-    required: false
   })
   async getFileDetailsByFileId(
     @Param('orgId') orgId: string,
@@ -470,14 +416,14 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: 401,
+    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -517,7 +463,7 @@ export class IssuanceController {
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
     @Param('orgId') orgId: string,
@@ -525,15 +471,6 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     issueCredentialDto.orgId = orgId;
-    const attrData = issueCredentialDto.attributes;
-
-    attrData.forEach((data) => {
-      if ('' === data['name'].trim()) {
-        throw new BadRequestException(`Name must be required`);
-      } else if ('' === data['value'].trim()) {
-        throw new BadRequestException(`Value must be required at position of ${data['name']}`);
-      }
-    });
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
 
@@ -556,21 +493,20 @@ export class IssuanceController {
   @Post('/orgs/:orgId/credentials/oob')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
-    summary: `Create out-of-band credential offer`,
-    description: `Create out-of-band credential offer`
+    summary: `Send out-of-band credential offer via email`,
+    description: `Sends an out-of-band credential offer on provided email`
   })
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
-    @Body() outOfBandCredentialDto: OutOfBandCredentialDto,
+    @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
-   
     const credOffer = outOfBandCredentialDto?.credentialOffer || [];
     if (credOffer.every(item => Boolean(!item?.emailId || '' === item?.emailId.trim()))) {
       throw new BadRequestException(ResponseMessages.issuance.error.emailIdNotPresent);
@@ -578,7 +514,7 @@ export class IssuanceController {
 
     if (credOffer.every(offer => (!offer?.attributes || 0 === offer?.attributes?.length ||
       !offer?.attributes?.every(item => item?.name)
-      ))
+    ))
     ) {
       throw new BadRequestException(ResponseMessages.issuance.error.attributesNotPresent);
     }
@@ -596,6 +532,35 @@ export class IssuanceController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+    /**
+   * Description: Issuer create out-of-band credential
+   * @param user
+   * @param issueCredentialDto
+   */
+    @Post('/orgs/:orgId/credentials/oob/offer')
+    @ApiBearerAuth()
+    @ApiOperation({
+      summary: `Create out-of-band credential offer`,
+      description: `Creates an out-of-band credential offer`
+    })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    async createOOBCredentialOffer(
+      @Param('orgId') orgId: string,
+      @Body() issueCredentialDto: OOBIssueCredentialDto,
+      @Res() res: Response
+    ): Promise<Response> {
+      issueCredentialDto.orgId = orgId;
+      const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.create,
+        data: getCredentialDetails.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
   /**
    * Description: webhook Save issued credential details
    * @param user
@@ -612,14 +577,27 @@ export class IssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
+issueCredentialDto.type = 'Issuance';
     this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
-
-    const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
-    };
+     
+      const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
+        this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);
+      });
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.create,
+        data: getCredentialDetails
+      };    
+      const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId).catch(error => {
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+      });
+      if (webhookUrl) {
+        
+          await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto}).catch(error => {
+            this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
+          });
+      
+    }
     return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
+    }   
 }

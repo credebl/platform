@@ -7,10 +7,9 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
-import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { organisation } from '@prisma/client';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { IOrgCredentials, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 
 @Controller()

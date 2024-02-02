@@ -36,7 +36,6 @@ export class CommonService {
         .post(url, payload, apiKey)
         .toPromise()
         .then((response: any) => {
-          this.logger.log(`SUCCESS in POST : ${JSON.stringify(response.data)}`);
           this.logger.error(response.data);
           return response.data;
         });
@@ -105,7 +104,6 @@ export class CommonService {
         .get(url, config)
         .toPromise()
         .then((data) =>
-          // this.logger.log(`Success Data: ${JSON.stringify(data.data)}`);
           data.data
         );
     } catch (error) {
@@ -174,7 +172,6 @@ export class CommonService {
         .patch(url, payload, apiKey)
         .toPromise()
         .then((response: any) => {
-          this.logger.log(`SUCCESS in POST : ${JSON.stringify(response.data)}`);
           return response.data;
         });
     } catch (error) {

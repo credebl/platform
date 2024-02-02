@@ -1,6 +1,6 @@
 export enum SortValue {
-    ASC = 'ASC',
-    DESC = 'DESC'
+    ASC = 'asc',
+    DESC = 'desc'
 }
 
 export enum AgentType {
@@ -57,6 +57,11 @@ export enum UserCertificateId {
     PARTICIPANT = 'Participant',
     ARBITER = 'Arbiter',
     WORLD_RECORD = 'WorldRecord'
+}
+
+export enum NodeEnvironment {
+   DEVELOPMENT='DEV',
+   PRODUCTION='PROD'
 }
 
 const transitionMap: { [key in Invitation]: Invitation[] } = {

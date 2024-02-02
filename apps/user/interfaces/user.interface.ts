@@ -77,12 +77,19 @@ export interface ISendVerificationEmail {
     multiEcosystemSupport: boolean;
   }
   
-  export interface ShareUserCertificate {
+  export interface IShareUserCertificate {
     schemaId: string;
+    credDefId: string;
     credentialId: string;
     attributes: Attribute[];
+    invitationUrl?: string;
   }
-  
+
+  export interface IShareDegreeCertificateRes {
+    cretificate: string;
+    invitationUrl?: string;
+  }
+
   export interface Attribute {
     [key: string]: string;
     label: string;
@@ -170,4 +177,16 @@ export interface IUserResetPassword{
   email: string;
   oldPassword: string;
   newPassword: boolean;
+}
+export interface IIssueCertificate {
+  courseCode: string;
+  courseName: string;
+  theoryGradeCredits: string;
+  theoryObtainedEarned: string;
+  practicalGradeCredits: string;
+  practicalObtainedEarned: string;
+}
+export  interface IPuppeteerOption{
+  width: number;
+  height: number;
 }

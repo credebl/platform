@@ -63,7 +63,7 @@ export class VerificationController {
   }
 
   @MessagePattern({ cmd: 'send-out-of-band-proof-request' })
-  async sendOutOfBandPresentationRequest(payload: { outOfBandRequestProof: IRequestProof, user: IUserRequest }): Promise<boolean> {
+  async sendOutOfBandPresentationRequest(payload: { outOfBandRequestProof: IRequestProof, user: IUserRequest }): Promise<boolean|object> {
     return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof);
   }
 

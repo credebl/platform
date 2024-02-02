@@ -39,7 +39,6 @@ import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { Invitation } from '@credebl/enum/enum';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
-import { GetAllUsersDto } from './dto/get-all-users.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
@@ -48,14 +47,15 @@ import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
-import { CreateUserCertificateDto } from './dto/share-certificate.dto';
 import { AwsService } from '@credebl/aws/aws.service';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { CreateCertificateDto } from './dto/share-certificate.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
 @ApiTags('users')
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class UserController {
   constructor(
     private readonly userService: UserService,
@@ -91,10 +91,10 @@ export class UserController {
   })
   async get(
     @User() user: IUserRequestInterface,
-    @Query() getAllUsersDto: GetAllUsersDto,
+    @Query() paginationDto: PaginationDto,
     @Res() res: Response
   ): Promise<Response> {
-    const users = await this.userService.get(getAllUsersDto);
+    const users = await this.userService.get(paginationDto);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchUsers,
@@ -224,7 +224,7 @@ export class UserController {
     required: false
   })
   async invitations(
-    @Query() getAllInvitationsDto: GetAllInvitationsDto,
+  @Query() getAllInvitationsDto: GetAllInvitationsDto,
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {
@@ -321,7 +321,7 @@ export class UserController {
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async shareUserCertificate(
-    @Body() shareUserCredentials: CreateUserCertificateDto,
+    @Body() shareUserCredentials: CreateCertificateDto,
     @Res() res: Response
   ): Promise<Response> {  
     const schemaIdParts = shareUserCredentials.schemaId.split(':');
@@ -331,7 +331,7 @@ export class UserController {
    const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
       const finalResponse: IResponse = {
         statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.shareUserCertificate,
+        message: ResponseMessages.user.success.shareUserCertificate || ResponseMessages.user.success.degreeCertificate,
         label: title,
         data: imageBuffer
       };
@@ -371,24 +371,27 @@ export class UserController {
    */
   
 
-  @Put('/password/:email')
-  @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  async addPasskey(
-    @Body() userInfo: AddPasskeyDetailsDto,
-    @Param('email') email: string,
-    @Res() res: Response
-  ): Promise<Response> {
-    const userDetails = await this.userService.addPasskey(email, userInfo);
-    const finalResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.update,
-      data: userDetails
-    };
+ @Put('/password/:email')
+ @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
+ @ApiExcludeEndpoint()
+ @ApiBearerAuth()
+ @UseGuards(AuthGuard('jwt'))
+ 
+ async addPasskey(
+   @Body() userInfo: AddPasskeyDetailsDto,
+   @User() reqUser: user,
+   @Res() res: Response
+ ): Promise<Response> {
 
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
+   const userDetails = await this.userService.addPasskey(reqUser.email, userInfo);
+   const finalResponse = {
+     statusCode: HttpStatus.OK,
+     message: ResponseMessages.user.success.update,
+     data: userDetails
+   };
+
+   return res.status(HttpStatus.OK).json(finalResponse);
+ }
 
   /**
    * @Body platformSettings

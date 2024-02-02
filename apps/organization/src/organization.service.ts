@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import { organisation, user } from '@prisma/client';
 import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
@@ -60,9 +61,7 @@ export class OrganizationService {
       createOrgDto.createdBy = userId;
       createOrgDto.lastChangedBy = userId;
 
-      const allowedExtensions = ['png', 'jpg', 'jpeg'];
-
-      const imageUrl = await this.uploadFileToS3(createOrgDto.logo, allowedExtensions);
+      const imageUrl = await this.uploadFileToS3(createOrgDto.logo);
 
       if (imageUrl) {
         createOrgDto.logo = imageUrl;
@@ -90,17 +89,14 @@ export class OrganizationService {
     }
   }
 
-  //
-  async uploadFileToS3(orgLogo: string, allowedExtensions: string[]): Promise<string> {
+  async uploadFileToS3(orgLogo: string): Promise<string> {
     try {
-      const ext = allowedExtensions.find(extension => orgLogo.endsWith(`.${extension}`)) || 'png';
-      const imgData = Buffer.from(orgLogo, 'base64');
-      // const imageData = converBase64ToImage(base64, pathToSaveImage)
-      // const logoUrl = await this.awsService.uploadUserCertificate(imgData, ext, 'orgLogo', process.env.AWS_ORG_LOGO_BUCKET_NAME,
-      // 'base64', 'orgLogos'); 
+
+      const updatedOrglogo = orgLogo.split(',')[1];
+      const imgData = Buffer.from(updatedOrglogo, 'base64');
       const logoUrl = await this.awsService.uploadUserCertificate(
         imgData,
-        ext,
+        'png',
         'orgLogo',
         process.env.AWS_ORG_LOGO_BUCKET_NAME,
         'base64',
@@ -148,6 +144,14 @@ export class OrganizationService {
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
       updateOrgDto.userId = userId;
+      const imageUrl = await this.uploadFileToS3(updateOrgDto.logo);
+
+      if (imageUrl) {
+        updateOrgDto.logo = imageUrl;
+      } else {
+        throw new BadRequestException('error in uploading image on s3 bucket');
+      }
+
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;

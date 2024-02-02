@@ -17,6 +17,7 @@ import { accessTokenPayloadDto } from './dtos/accessTokenPayloadDto';
 import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
 import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseService } from '@credebl/response';
 
 @Injectable()
 export class ClientRegistrationService {
@@ -79,6 +80,24 @@ export class ClientRegistrationService {
     return {
       keycloakUserId: getUserResponse[0].id
     };
+  }
+
+
+  async resetPasswordOfUser(
+    user: CreateUserDto,
+    realm: string,
+    token: string
+  ): Promise<ResponseService> {
+ 
+    const getUserResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.getUserByUsernameURL(realm, user.email),
+      this.getAuthHeader(token)
+    );
+    const userid = getUserResponse[0].id;
+
+    const passwordResponse = await this.resetPasswordOfKeycloakUser(realm, user.password, userid, token);
+
+    return passwordResponse;
   }
 
   async createUser(

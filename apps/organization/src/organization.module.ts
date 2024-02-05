@@ -18,6 +18,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 
+import { AwsService } from '@credebl/aws';
 @Module({
   imports: [
     ClientsModule.register([
@@ -36,7 +37,8 @@ import { KeycloakUrlService } from '@credebl/keycloak-url';
      Logger, OrgRolesService, UserOrgRolesService, OrgRolesRepository, UserActivityRepository,
       UserOrgRolesRepository, UserRepository, UserActivityService,
       ClientRegistrationService,
-      KeycloakUrlService
+      KeycloakUrlService,
+      AwsService
     ]
 
 })

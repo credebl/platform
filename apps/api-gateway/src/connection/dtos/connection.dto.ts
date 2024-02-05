@@ -67,6 +67,10 @@ export class ConnectionDto {
 
     @ApiPropertyOptional()
     @IsOptional()
+    imageUrl: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
     autoAcceptConnection: boolean;
 
     @ApiPropertyOptional()

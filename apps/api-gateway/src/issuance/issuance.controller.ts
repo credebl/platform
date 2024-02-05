@@ -61,7 +61,6 @@ import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
-import { error } from 'console';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)

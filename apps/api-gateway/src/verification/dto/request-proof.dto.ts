@@ -1,7 +1,8 @@
-import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { AutoAccept } from '@credebl/enum/enum';
 
 export class ProofRequestAttribute {
     @IsString()
@@ -89,7 +90,10 @@ export class RequestProofDto extends ProofPayload {
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()
-    autoAcceptProof: string;
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptProof: AutoAccept;
 }
 
 export class OutOfBandRequestProof extends ProofPayload {
@@ -122,8 +126,12 @@ export class OutOfBandRequestProof extends ProofPayload {
     comment: string;
     orgId: string;
 
-    @IsString({ message: 'autoAcceptProof must be in string' })
+    @ApiPropertyOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
     autoAcceptProof: string;
 }

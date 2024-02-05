@@ -1,4 +1,5 @@
 // eslint-disable-next-line camelcase
+import { AutoAccept } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 
@@ -13,6 +14,7 @@ export interface IIssuance {
   connectionId: string;
   attributes: Attributes[];
   orgId: string;
+  autoAcceptCredential?: AutoAccept,
   protocolVersion?: string;
   goalCode?: string,
   parentThreadId?: string,
@@ -84,6 +86,7 @@ export interface OutOfBandCredentialOfferPayload {
   parentThreadId?: string,
   willConfirm?: boolean,
   label?: string
+  autoAcceptCredential?: string;
 }
 
 export interface OutOfBandCredentialOffer {

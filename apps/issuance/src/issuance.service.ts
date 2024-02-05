@@ -10,7 +10,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { ClientDetails, FileUploadData, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -50,7 +50,7 @@ export class IssuanceService {
   ) { }
 
 
-  async sendCredentialCreateOffer(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
+  async sendCredentialCreateOffer(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[], autoAcceptCredential: AutoAccept): Promise<string> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
@@ -67,7 +67,7 @@ export class IssuanceService {
       // const apiKey = platformConfig?.sgApiKey;
       // let apiKey = await this._getOrgAgentApiKey(orgId);
 
-      let apiKey;
+      let apiKey; 
       apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
@@ -81,7 +81,7 @@ export class IssuanceService {
             credentialDefinitionId
           }
         },
-        autoAcceptCredential: 'always',
+        autoAcceptCredential: autoAcceptCredential || 'always',
         comment
       };
 
@@ -133,7 +133,7 @@ export class IssuanceService {
             credentialDefinitionId
           }
         },
-        autoAcceptCredential: 'always',
+        autoAcceptCredential: payload.autoAcceptCredential || 'always',
         comment,
         goalCode: payload.goalCode || undefined,
         parentThreadId: payload.parentThreadId || undefined,
@@ -350,7 +350,7 @@ export class IssuanceService {
                 credentialDefinitionId
               }
             },
-            autoAcceptCredential: 'always',
+            autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
             comment,
             goalCode: outOfBandCredential.goalCode || undefined,
             parentThreadId: outOfBandCredential.parentThreadId || undefined,

@@ -10,19 +10,19 @@ export class IssuanceController {
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
   async sendCredentialCreateOffer(payload: IIssuance): Promise<string> {
-   
-    const { orgId, user, credentialDefinitionId, comment, connectionId, attributes } = payload;
-    return this.issuanceService.sendCredentialCreateOffer(orgId, user, credentialDefinitionId, comment, connectionId, attributes);
+
+    const { orgId, user, credentialDefinitionId, comment, connectionId, attributes, autoAcceptCredential } = payload;
+    return this.issuanceService.sendCredentialCreateOffer(orgId, user, credentialDefinitionId, comment, connectionId, attributes, autoAcceptCredential);
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })
-  async sendCredentialOutOfBand(payload: IIssuance): Promise<string> { 
+  async sendCredentialOutOfBand(payload: IIssuance): Promise<string> {
     return this.issuanceService.sendCredentialOutOfBand(payload);
   }
 
   @MessagePattern({ cmd: 'get-all-issued-credentials' })
   async getIssueCredentials(payload: IIssueCredentials): Promise<IIssuedCredential> {
-    const { user, orgId, issuedCredentialsSearchCriteria} = payload;
+    const { user, orgId, issuedCredentialsSearchCriteria } = payload;
     return this.issuanceService.getIssueCredentials(user, orgId, issuedCredentialsSearchCriteria);
   }
 
@@ -32,9 +32,9 @@ export class IssuanceController {
     return this.issuanceService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
   }
 
-  
+
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
-  async getIssueCredentialWebhook(payload: IssueCredentialWebhookPayload): Promise<object> { 
+  async getIssueCredentialWebhook(payload: IssueCredentialWebhookPayload): Promise<object> {
     return this.issuanceService.getIssueCredentialWebhook(payload);
   }
 
@@ -67,18 +67,18 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'issued-file-details' })
-  async issuedFiles(payload: {orgId:string, fileParameter:PreviewRequest}): Promise<object> {
+  async issuedFiles(payload: { orgId: string, fileParameter: PreviewRequest }): Promise<object> {
     return this.issuanceService.issuedFileDetails(
-      payload.orgId, 
+      payload.orgId,
       payload.fileParameter
-      );
+    );
   }
   @MessagePattern({ cmd: 'issued-file-data' })
-  async getFileDetailsByFileId(payload: {fileId:string, fileParameter:PreviewRequest}): Promise<object> {
-    return this.issuanceService.getFileDetailsByFileId( 
+  async getFileDetailsByFileId(payload: { fileId: string, fileParameter: PreviewRequest }): Promise<object> {
+    return this.issuanceService.getFileDetailsByFileId(
       payload.fileId,
       payload.fileParameter
-      );
+    );
   }
 
 

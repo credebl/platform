@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
-import { Injectable, Inject} from '@nestjs/common';
-import { ClientProxy} from '@nestjs/microservices';
+import { Injectable, Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
@@ -20,23 +20,23 @@ export class IssuanceService extends BaseService {
     sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<{
         response: object;
     }> {
-       
-        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, user };
-    
+
+        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, user };
+
         return this.sendNats(this.issuanceProxy, 'send-credential-create-offer', payload);
     }
 
     sendCredentialOutOfBand(issueCredentialDto: OOBIssueCredentialDto): Promise<{
         response: object;
     }> {
-        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label };
+        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential };
         return this.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
     }
-    
+
     getIssueCredentials(issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams, user: IUserRequest, orgId: string): Promise<IIssuedCredential> {
         const payload = { issuedCredentialsSearchCriteria, user, orgId };
         return this.sendNatsMessage(this.issuanceProxy, 'get-all-issued-credentials', payload);
-    }      
+    }
 
 
     getIssueCredentialsbyCredentialRecordId(user: IUserRequest, credentialRecordId: string, orgId: string): Promise<{
@@ -121,30 +121,30 @@ export class IssuanceService extends BaseService {
     async _getWebhookUrl(tenantId: string): Promise<string> {
         const pattern = { cmd: 'get-webhookurl' };
         const payload = { tenantId };
-    
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const message = await this.issuanceProxy.send<any>(pattern, payload).toPromise();
-          return message;
-        } catch (error) {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw error;
-        }
-      }
-    
-      async _postWebhookResponse(webhookUrl: string, data:object): Promise<string> {
-        const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
-        const payload = { webhookUrl, data  };
 
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const message = await this.issuanceProxy.send<any>(pattern, payload).toPromise();
-          return message;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const message = await this.issuanceProxy.send<any>(pattern, payload).toPromise();
+            return message;
         } catch (error) {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-       
-        throw error;
+            this.logger.error(`catch: ${JSON.stringify(error)}`);
+            throw error;
         }
-      }
-    
+    }
+
+    async _postWebhookResponse(webhookUrl: string, data: object): Promise<string> {
+        const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
+        const payload = { webhookUrl, data };
+
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const message = await this.issuanceProxy.send<any>(pattern, payload).toPromise();
+            return message;
+        } catch (error) {
+            this.logger.error(`catch: ${JSON.stringify(error)}`);
+
+            throw error;
+        }
+    }
+
 }

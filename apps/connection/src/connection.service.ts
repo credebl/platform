@@ -40,7 +40,7 @@ export class ConnectionService {
    */
   async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
 
-    const { orgId, multiUseInvitation, autoAcceptConnection, alias, label, imageUrl } = payload;
+    const { orgId, multiUseInvitation, autoAcceptConnection, alias, imageUrl, goal, goalCode, handshake, handshakeProtocols } = payload;
     try {
       const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
       if (connectionInvitationExist) {
@@ -65,7 +65,11 @@ export class ConnectionService {
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
         imageUrl: logoImageUrl ? logoImageUrl : imageUrl ? imageUrl : undefined,
-        label: label || undefined
+        label: organisation.name,
+        goal: goal || undefined,
+        goalCode: goalCode || undefined,
+        handshake: handshake || undefined,
+        handshakeProtocols: handshakeProtocols || undefined
       };
 
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);

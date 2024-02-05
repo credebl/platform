@@ -44,7 +44,7 @@ export class IssuanceRepository {
       });
 
       if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.notFound);
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
       return agentDetails;
@@ -469,11 +469,12 @@ export class IssuanceRepository {
     async getOrgAgentType(orgAgentId: string): Promise<string> {
         try {
 
-            const { agent } = await this.prisma.org_agents_type.findFirst({
-                where: {
-                    id: orgAgentId
-                }
-            });
+      return agent;
+    } catch (error) {
+      this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 
             return agent;
         } catch (error) {

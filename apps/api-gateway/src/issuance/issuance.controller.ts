@@ -303,15 +303,11 @@ export class IssuanceController {
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<object> {
-    const perviewCSVDetails = await this.issueCredentialService.previewCSVDetails(
-      requestId,
-      orgId,
-      previewFileDetails
-    );
+    const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,
-      data: perviewCSVDetails
+      data: previewCSVDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -337,11 +333,11 @@ export class IssuanceController {
   })
   async issueBulkCredentials(@Param('requestId') requestId: string, @Param('orgId') orgId: string, @Res() res: Response, @Body() clientDetails: ClientDetails, @User() user: user): Promise<Response> {
     clientDetails.userId = user.id;
-    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
+    const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssunaceDetails.response
+      data: bulkIssuanceDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -439,31 +435,41 @@ export class IssuanceController {
     summary: 'Retry bulk issue credential',
     description: 'Retry bulk issue credential'
   })
-  async retryBulkCredentials(@Param('fileId') fileId: string, @Param('orgId') orgId: string, @Res() res: Response, @Body() clientDetails: ClientDetails): Promise<Response> {
-    const bulkIssunaceDetails = await this.issueCredentialService.retryBulkCredential(fileId, orgId, clientDetails.clientId);
+  async retryBulkCredentials(
+    @Param('fileId') fileId: string,
+    @Param('orgId') orgId: string,
+    @Res() res: Response,
+    @Body() clientDetails: ClientDetails
+  ): Promise<Response> {
+    const bulkIssuanceDetails = await this.issueCredentialService.retryBulkCredential(
+      fileId,
+      orgId,
+      clientDetails.clientId
+    );
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssunaceDetails.response
+      data: bulkIssuanceDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-
-  /**
-   * Description: Issuer send credential to create offer
-   * @param user
-   * @param issueCredentialDto
-   */
+ /**
+  * @param user 
+  * @param orgId 
+  * @param issueCredentialDto 
+  * @param res 
+  * @returns Issuer creates a credential offer and sends it to the holder
+  */
   @Post('/orgs/:orgId/credentials/offer')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Send credential details to create-offer`,
-    description: `Send credential details to create-offer`
+    summary: `Issuer create a credential offer`,
+    description: `Issuer creates a credential offer and sends it to the holder`
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
     @Param('orgId') orgId: string,
@@ -474,10 +480,10 @@ export class IssuanceController {
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
+      data: getCredentialDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

@@ -1,10 +1,11 @@
+/* eslint-disable prefer-destructuring */
 import { organisation, user } from '@prisma/client';
 import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { OrgRolesService } from '@credebl/org-roles';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -15,13 +16,13 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
+import { AwsService } from '@credebl/aws';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
@@ -34,6 +35,7 @@ export class OrganizationService {
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
+    private readonly awsService: AwsService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache
@@ -59,6 +61,14 @@ export class OrganizationService {
       createOrgDto.createdBy = userId;
       createOrgDto.lastChangedBy = userId;
 
+      const imageUrl = await this.uploadFileToS3(createOrgDto.logo);
+
+      if (imageUrl) {
+        createOrgDto.logo = imageUrl;
+      } else {
+        throw new BadRequestException('error in uploading image on s3 bucket');
+      }
+
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
       // To return selective object data
@@ -79,7 +89,26 @@ export class OrganizationService {
     }
   }
 
+  async uploadFileToS3(orgLogo: string): Promise<string> {
+    try {
 
+      const updatedOrglogo = orgLogo.split(',')[1];
+      const imgData = Buffer.from(updatedOrglogo, 'base64');
+      const logoUrl = await this.awsService.uploadUserCertificate(
+        imgData,
+        'png',
+        'orgLogo',
+        process.env.AWS_ORG_LOGO_BUCKET_NAME,
+        'base64',
+        'orgLogos'
+      );
+      return logoUrl;
+    } catch (error) {
+      this.logger.error(`In getting imageUrl : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }  
+    
   /**
    *
    * @param orgName
@@ -115,6 +144,14 @@ export class OrganizationService {
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
       updateOrgDto.userId = userId;
+      const imageUrl = await this.uploadFileToS3(updateOrgDto.logo);
+
+      if (imageUrl) {
+        updateOrgDto.logo = imageUrl;
+      } else {
+        throw new BadRequestException('error in uploading image on s3 bucket');
+      }
+
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;

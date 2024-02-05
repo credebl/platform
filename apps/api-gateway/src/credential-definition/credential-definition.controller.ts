@@ -154,14 +154,14 @@ export class CredentialDefinitionController {
     @Body() credDef: CreateCredentialDefinitionDto,
     @Param('orgId') orgId: string,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
 
     credDef.orgId = orgId;
     const credentialsDefinitionDetails = await this.credentialDefinitionService.createCredentialDefinition(credDef, user);
-    const credDefResponse: IResponseType = {
+    const credDefResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.credentialDefinition.success.create,
-      data: credentialsDefinitionDetails.response
+      data: credentialsDefinitionDetails
     };
     return res.status(HttpStatus.CREATED).json(credDefResponse);
   }

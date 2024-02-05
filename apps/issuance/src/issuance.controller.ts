@@ -1,23 +1,21 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { ClientDetails, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
+import { ClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 
 @Controller()
 export class IssuanceController {
-  private readonly logger = new Logger('issuanceService');
   constructor(private readonly issuanceService: IssuanceService) { }
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<string> {
-   
-    const { orgId, user, credentialDefinitionId, comment, connectionId, attributes } = payload;
-    return this.issuanceService.sendCredentialCreateOffer(orgId, user, credentialDefinitionId, comment, connectionId, attributes);
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICreateOfferResponse> {
+    return this.issuanceService.sendCredentialCreateOffer(payload);
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })
-  async sendCredentialOutOfBand(payload: IIssuance): Promise<string> { 
+  async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{response: object;}> { 
     return this.issuanceService.sendCredentialOutOfBand(payload);
   }
 
@@ -56,7 +54,6 @@ export class IssuanceController {
   async importCSV(payload: {
     importFileDetails: ImportFileDetails
   }): Promise<string> {
-    this.logger.log(`payload.importFileDetails----${payload.importFileDetails}`);
     return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
   }
 

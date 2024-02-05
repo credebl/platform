@@ -30,12 +30,11 @@ import {
 } from '../enums/ecosystem.enum';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { CreateEcosystem, CredDefMessage, IEditEcosystem, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, ICreateEcosystem, EcosystemDetailsResult } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, CredDefMessage, IEcosystemDashboard, LedgerDetails, OrganizationData, RequestCredDeffEndorsement, RequestSchemaEndorsement, SaveSchema, SchemaMessage, SignedTransactionMessage, TransactionPayload, saveCredDef, submitTransactionPayload, IEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
-import { credential_definition, org_agents, platform_config, schema, user } from '@prisma/client';
-// import { CommonService } from '@credebl/common/common.service';
+import { credential_definition, endorsement_transaction, org_agents, platform_config, schema, user } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
@@ -58,7 +57,7 @@ export class EcosystemService {
    */
 
   // eslint-disable-next-line camelcase
-  async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<ICreateEcosystem> {
+  async createEcosystem(createEcosystemDto: CreateEcosystem): Promise<IEcosystem> {
     try {
 
     const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
@@ -142,12 +141,6 @@ export class EcosystemService {
       lastChangedBy: userId
     };
 
-    const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
-
-    if (ecosystemExist) {
-      throw new ConflictException(ResponseMessages.ecosystem.error.exists);
-    }
-    
     if (name) { updateData.name = name; }
 
     if (description) { updateData.description = description; }
@@ -158,10 +151,22 @@ export class EcosystemService {
 
     if ('' !== autoEndorsement.toString()) { updateData.autoEndorsement = autoEndorsement; }
 
+    const ecosystemExist = await this.ecosystemRepository.checkEcosystemExist(editEcosystemDto.name, ecosystemId);
+
+    if (0 === ecosystemExist.length) {
+      const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(editEcosystemDto.name);
+      if (ecosystemExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+      }
+    }
+
     const editEcosystem = await this.ecosystemRepository.updateEcosystemById(updateData, ecosystemId);
     if (!editEcosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.update);
     }
+
+    // Removed unnecessary key from object
+    delete editEcosystem.deletedAt;
 
     return editEcosystem;
   } catch (error) {
@@ -256,7 +261,7 @@ export class EcosystemService {
     pageNumber: number,
     pageSize: number,
     search: string
-  ): Promise<object> {
+  ): Promise<IEcosystemInvitation> {
     try {
       const query = {
         AND: [{ email: userEmail }, { status: { contains: search, mode: 'insensitive' } }]
@@ -294,9 +299,9 @@ export class EcosystemService {
    * @param userId
    * @returns
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string, orgId: string): Promise<IEcosystemInvitations[]> {
     const { invitations, ecosystemId } = bulkInvitationDto;
-
+    const invitationResponse = [];
     try {
       const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
 
@@ -322,18 +327,29 @@ export class EcosystemService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
+        const userData = await this.getEcoUserName(userEmail);
+
+        const { firstName } = userData;
+
+        const orgDetails: OrganizationData = await this.getOrganizationDetails(orgId, userId);
+
         const isInvitationExist = await this.checkInvitationExist(email, ecosystemId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
-          await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
+          const createInvitation = await this.ecosystemRepository.createSendInvitation(email, ecosystemId, userId);
+          // Removed unnecessary keys from object
+          delete createInvitation.lastChangedDateTime;
+          delete createInvitation.lastChangedBy;
+          delete createInvitation.deletedAt;
+          invitationResponse.push(createInvitation);
           try {
-            await this.sendInviteEmailTemplate(email, ecosystemDetails.name, isUserExist);
+            await this.sendInviteEmailTemplate(email, ecosystemDetails.name, firstName, orgDetails.name, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
         }
       }
-      return ResponseMessages.ecosystem.success.createInvitation;
+      return invitationResponse;
     } catch (error) {
       this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -517,16 +533,16 @@ export class EcosystemService {
    * @param ecosystemName
    * @returns Send invitation mail
    */
-  async sendInviteEmailTemplate(email: string, ecosystemName: string, isUserExist: boolean): Promise<boolean> {
+  async sendInviteEmailTemplate(email: string, ecosystemName: string, firstName:string, orgName:string, isUserExist: boolean): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
 
     const urlEmailTemplate = new EcosystemInviteTemplate();
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Invitation`;
+    emailData.emailSubject = `Invitation to join an Ecosystem “${ecosystemName}” on CREDEBL`;
 
-    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, ecosystemName, isUserExist);
+    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, ecosystemName, firstName, orgName, isUserExist);
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData);
@@ -558,6 +574,41 @@ export class EcosystemService {
     return false;
   }
 
+
+  async getEcoUserName(userEmail: string): Promise<user> {
+    const pattern = { cmd: 'get-user-by-mail' };
+    const payload = { email: userEmail };
+
+    const userData  = await this.ecosystemServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });    
+      return userData;
+    }
+
+  // eslint-disable-next-line camelcase
+  async removeEndorsementTransactionFields(transactionObject: endorsement_transaction): Promise<void> {
+    const transaction = transactionObject;
+
+    // To return selective response
+    delete transaction.requestPayload;
+    delete transaction.responsePayload;
+    delete transaction.lastChangedDateTime;
+    delete transaction.lastChangedBy;
+    delete transaction.deletedAt;
+    delete transaction.requestBody;
+    delete transaction.resourceId;
+  }
+
   /**
    *
    * @param RequestSchemaEndorsement
@@ -567,7 +618,7 @@ export class EcosystemService {
     requestSchemaPayload: RequestSchemaEndorsement,
     orgId: string,
     ecosystemId: string
-  ): Promise<object> {
+  ): Promise<IEndorsementTransaction> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -663,18 +714,24 @@ export class EcosystemService {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestSchemaTransaction);
       }
 
-      return this.ecosystemRepository.storeTransactionRequest(
+      const storeTransaction = await this.ecosystemRepository.storeTransactionRequest(
         schemaTransactionResponse,
         requestSchemaPayload,
         endorsementTransactionType.SCHEMA
       );
+
+      // To return selective response
+      await this.removeEndorsementTransactionFields(storeTransaction);
+
+      return storeTransaction;
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      const errorObj = error?.status?.message?.error;
+      if (errorObj) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
+          message: errorObj?.reason
+            ? errorObj?.reason
+            : errorObj,
           statusCode: error?.status?.code
         });
       } else {
@@ -687,7 +744,7 @@ export class EcosystemService {
     requestCredDefPayload: RequestCredDeffEndorsement,
     orgId: string,
     ecosystemId: string
-  ): Promise<object> {
+  ): Promise<IEndorsementTransaction> {
     try {
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
@@ -771,18 +828,24 @@ export class EcosystemService {
         userId: requestCredDefPayload.userId
       };
 
-      return this.ecosystemRepository.storeTransactionRequest(
+      const storeTransaction = await this.ecosystemRepository.storeTransactionRequest(
         schemaTransactionResponse,
         requestCredDefPayload,
         endorsementTransactionType.CREDENTIAL_DEFINITION
       );
+
+      // To return selective response
+      await this.removeEndorsementTransactionFields(storeTransaction);
+
+      return storeTransaction;
     } catch (error) {
       this.logger.error(`In request cred-def endorsement: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      const errorObj = error?.status?.message?.error;
+      if (errorObj) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
+          message: errorObj?.reason
+            ? errorObj?.reason
+            : errorObj,
           statusCode: error?.status?.code
         });
       } else {
@@ -791,7 +854,7 @@ export class EcosystemService {
     }
   }
 
-  async getInvitationsByEcosystemId(payload: FetchInvitationsPayload): Promise<object> {
+  async getInvitationsByEcosystemId(payload: FetchInvitationsPayload): Promise<IEcosystemInvitation> {
     try {
       const { ecosystemId, pageNumber, pageSize, search } = payload;
       const ecosystemInvitations = await this.ecosystemRepository.getInvitationsByEcosystemId(
@@ -881,7 +944,6 @@ export class EcosystemService {
         ecosystemLeadAgentDetails?.tenantId
       );
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(ecosystemLeadDetails.orgId);
       }
@@ -925,6 +987,9 @@ export class EcosystemService {
         }
         return submitTxn;
       }
+      
+      // To return selective response
+      await this.removeEndorsementTransactionFields(updateSignedTransaction);
 
       return updateSignedTransaction;
     } catch (error) {
@@ -946,10 +1011,24 @@ export class EcosystemService {
    *
    * @returns Ecosystem members list
    */
+
   async getEcoystemMembers(payload: EcosystemMembersPayload): Promise<object> {
     try {
-      const { ecosystemId, pageNumber, pageSize, search } = payload;
-      return await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search);
+      const { ecosystemId, pageNumber, pageSize, search, sortBy } = payload;      
+      const getEcosystemMember = await this.ecosystemRepository.findEcosystemMembers(ecosystemId, pageNumber, pageSize, search, sortBy);
+      
+      const ecosystemMemberResponse = {
+        totalItems: getEcosystemMember[1],
+        hasNextPage:
+        payload.pageSize * payload.pageNumber < getEcosystemMember[1],
+        hasPreviousPage: 1 < payload.pageNumber,
+        nextPage: Number(payload.pageNumber) + 1,
+        previousPage: payload.pageNumber - 1,
+        lastPage: Math.ceil(getEcosystemMember[1] / payload.pageSize),
+        data: getEcosystemMember[0]
+      };
+
+      return ecosystemMemberResponse;
     } catch (error) {
       this.logger.error(`In getEcosystemMembers: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -1142,15 +1221,11 @@ export class EcosystemService {
         ecosystemMemberDetails,
         ecosystemLeadAgentDetails
       );
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
 
-      this.logger.log(`orgId ::: ${orgId}`);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
-
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, apiKey);
 
@@ -1382,7 +1457,6 @@ export class EcosystemService {
   async getAllEcosystemSchemas(ecosystemSchemas: GetAllSchemaList): Promise<object> {
     try {
       const response = await this.ecosystemRepository.getAllEcosystemSchemasDetails(ecosystemSchemas);
-      this.logger.error(`In error getAllEcosystemSchemas1: ${JSON.stringify(response)}`);
       const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
@@ -1397,7 +1471,6 @@ export class EcosystemService {
         lastPage: Math.ceil(response.schemasCount / ecosystemSchemas.pageSize),
         data: schemasDetails
       };
-      this.logger.error(`In error getAllEcosystemSchemas1: ${JSON.stringify(response)}`);
       return schemasResponse;
     } catch (error) {
       this.logger.error(`In error fetching all ecosystem schemas: ${JSON.stringify(error)}`);
@@ -1428,7 +1501,12 @@ export class EcosystemService {
 
   async declineEndorsementRequestByLead(ecosystemId: string, endorsementId: string): Promise<object> {
     try {
-      return await this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, endorsementId);
+      const declineResponse = await this.ecosystemRepository.updateEndorsementRequestStatus(ecosystemId, endorsementId);
+      
+      // To return selective response
+      this.removeEndorsementTransactionFields(declineResponse);
+      
+      return declineResponse;
     } catch (error) {
       this.logger.error(`error in decline endorsement request: ${error}`);
       throw new RpcException(error.response ? error.response : error);

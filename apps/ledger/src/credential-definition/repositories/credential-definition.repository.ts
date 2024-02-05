@@ -87,7 +87,7 @@ export class CredentialDefinitionRepository {
                     revocable: true
                 },
                 orderBy: {
-                    [credDefSearchCriteria.sortField]: SortValue.ASC === credDefSearchCriteria.sortBy ? 'asc' : 'desc' 
+                    [credDefSearchCriteria.sortField]: SortValue.DESC === credDefSearchCriteria.sortBy ? 'desc' : 'asc' 
                   },
           
                 take: credDefSearchCriteria.pageSize,
@@ -179,7 +179,7 @@ export class CredentialDefinitionRepository {
                     schemaLedgerId: true
                 },
                 orderBy: {
-                    [credDefSortBy]: 'DESC' === sortValue ? 'desc' : 'asc'
+                    [credDefSortBy]: 'desc' === sortValue ? 'desc' : 'asc'
                 }
             });
 

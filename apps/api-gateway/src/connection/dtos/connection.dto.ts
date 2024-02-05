@@ -67,6 +67,10 @@ export class ConnectionDto {
 
     @ApiPropertyOptional()
     @IsOptional()
+    imageUrl: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
     autoAcceptConnection: boolean;
 
     @ApiPropertyOptional()
@@ -88,6 +92,10 @@ export class ConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     contextCorrelationId: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 }
 
 class ReceiveInvitationCommonDto {

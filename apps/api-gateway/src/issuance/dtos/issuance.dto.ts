@@ -1,28 +1,29 @@
-
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, IsDefined, ArrayNotEmpty, MaxLength, IsEnum } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { toNumber, trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/cast.helper';
+import { SortValue } from '../../enum';
+import { SortFields } from 'apps/connection/src/enum/connection.enum';
 
 class Attribute {
-
-    @IsString()
-    @Transform(({ value }) => value.trim())
-    @IsNotEmpty({ message: 'Please provide a valid attribute name' })
+    @ApiProperty()
+    @IsString({ message: 'Attribute name should be string' })
+    @IsNotEmpty({ message: 'Attribute name is required' })
+    @Transform(({ value }) => trim(value))
+    @Type(() => String)
     name: string;
 
-    @Transform(({ value }) => value.trim())
-    @IsNotEmpty({ message: 'Please provide a valid attribute value' })
-    @IsString()
+    @ApiProperty()
+    @IsDefined()
+    @Transform(({ value }) => trim(value))
     value: string;
 }
 
 export class OOBIssueCredentialDto {
-
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsArray()
+    @IsArray({ message: 'Attributes should be an array' })
+    @ArrayNotEmpty({message: 'Attributes are required'})
     @ValidateNested({ each: true })
-    @ArrayMinSize(1)
     @Type(() => Attribute)
     attributes: Attribute[];
 
@@ -46,28 +47,29 @@ export class OOBIssueCredentialDto {
 }
 
 class CredentialOffer {
-
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
+    @IsNotEmpty({ message: 'Attribute name is required' })
+    @IsArray({ message: 'Attributes should be an array' })
     @ValidateNested({ each: true })
-    @Type(() => Attribute)
     @IsOptional()
+    @Type(() => Attribute)
     attributes: Attribute[];
 
-    @ApiProperty({ example: 'awqx@getnada.com' })
+    @ApiProperty({ example: 'testmail@mailinator.com' })
+    @IsOptional()
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })
+    @MaxLength(256, { message: 'Email must be at most 256 character' })
     @Transform(({ value }) => trim(value))
     emailId: string;
 }
 
 export class IssueCredentialDto extends OOBIssueCredentialDto {
-
-    @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
-    @IsNotEmpty({ message: 'Please provide valid connectionId' })
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'connectionId is required' })
     @IsString({ message: 'connectionId should be string' })
+    @Transform(({ value }) => trim(value))
     connectionId: string;
 }
 
@@ -127,6 +129,10 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     contextCorrelationId: string;
+    
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 }
 
 
@@ -192,62 +198,71 @@ export class OOBCredentialDtoWithEmail {
 
 
 export class PreviewFileDetails {
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
+
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
+
+    @ApiProperty({ required: false, example: '10' })
+    @IsOptional()
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false, example: '1' })
+    @IsOptional()
+    pageNumber: number = 1;
+
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
-    search = '';
+    searchByText: string = '';
 
-    @ApiProperty({ required: false, default: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
 
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortValue = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortBy = '';
-
-    @ApiProperty({ required: false, default: 1 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
 }
 
 export class FileParameter {
-    @ApiProperty({ required: false, default: 1 })
+    @ApiProperty({ required: false, example: '10' })
     @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageNumber = 1;
+    pageSize: number = 10;
+
+    @ApiProperty({ required: false, example: '1' })
+    @IsOptional()
+    pageNumber: number = 1;
+
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortFields)
+    sortField: string = SortFields.CREATED_DATE_TIME;
+
+    @ApiProperty({
+        enum: [SortValue.DESC, SortValue.ASC],
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsEnum(SortValue)
+    sortBy: string = SortValue.DESC;
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Type(() => String)
-    search = '';
-
-    @ApiProperty({ required: false, default: 10 })
-    @IsOptional()
-    @Type(() => Number)
-    @Transform(({ value }) => toNumber(value))
-    pageSize = 10;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortBy = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => String)
-    sortValue = '';
-
+    searchByText: string = '';
 }
 
 export class ClientDetails {

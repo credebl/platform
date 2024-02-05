@@ -22,6 +22,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { ImageServiceService } from '@credebl/image-service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { validate as isValidUUID } from 'uuid';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -309,10 +310,11 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-    await this.organizationService.createOrganization(createOrgDto, reqUser.id);
+    const orgData = await this.organizationService.createOrganization(createOrgDto, reqUser.id);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.create
+      message: ResponseMessages.organisation.success.create,
+      data: orgData
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -348,10 +350,18 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Update user roles', description: 'update user roles' })
-  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidUserId); }})) userId: string, @Res() res: Response): Promise<Response> {
+  async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId') userId: string, @Res() res: Response): Promise<Response> {
 
-    updateUserDto.orgId = orgId;
-    updateUserDto.userId = userId;
+    updateUserDto.orgId = orgId;  
+    updateUserDto.userId = userId.trim();  
+    if (!updateUserDto.userId.length) {
+      throw new BadRequestException(ResponseMessages.organisation.error.userIdIsRequired);
+    }
+
+    if (!isValidUUID(updateUserDto.userId)) {
+      throw new BadRequestException(ResponseMessages.organisation.error.invalidUserId);
+    } 
+
     await this.organizationService.updateUserRoles(updateUserDto, updateUserDto.userId);
 
     const finalResponse: IResponse = {
@@ -415,9 +425,20 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async deleteOrganizationInvitation(
     @Param('orgId') orgId: string, 
-    @Param('invitationId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidInvitationId); }})) invitationId: string, 
+    @Param('invitationId') invitationId: string, 
     @Res() res: Response
     ): Promise<Response> {
+      // eslint-disable-next-line no-param-reassign
+      invitationId = invitationId.trim();
+      if (!invitationId.length) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invitationIdIsRequired);
+      }
+  
+      if (!isValidUUID(invitationId)) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invalidInvitationId);
+      } 
+
+
     await this.organizationService.deleteOrganizationInvitation(orgId, invitationId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -426,3 +447,4 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 }
+

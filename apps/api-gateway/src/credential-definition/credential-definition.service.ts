@@ -16,10 +16,10 @@ export class CredentialDefinitionService extends BaseService {
     super('CredentialDefinitionService');
   }
 
-  createCredentialDefinition(credDef: CreateCredentialDefinitionDto, user: IUserRequestInterface): Promise<{ response: object }> {
+  createCredentialDefinition(credDef: CreateCredentialDefinitionDto, user: IUserRequestInterface): Promise<object> {
     const payload = { credDef, user };
     
-    return this.sendNats(this.credDefServiceProxy, 'create-credential-definition', payload);
+    return this.sendNatsMessage(this.credDefServiceProxy, 'create-credential-definition', payload);
   }
 
   getCredentialDefinitionById(credentialDefinitionId: string, orgId: string): Promise<{ response: object }> {

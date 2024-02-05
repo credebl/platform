@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { ClientDetails, FileUploadData, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { ClientDetails, FileUploadData, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -50,29 +50,32 @@ export class IssuanceService {
   ) { }
 
 
-  async sendCredentialCreateOffer(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICreateOfferResponse> {
     try {
+      const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
-      const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const { agentEndPoint } = agentDetails;
+
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
+      if (!orgAgentType) {
+        throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
+      }
+
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
-
-      // const apiKey = platformConfig?.sgApiKey;
-      // let apiKey = await this._getOrgAgentApiKey(orgId);
 
       let apiKey;
       apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
-      const issueData = {
+      const issueData: IIssueData = {
         protocolVersion: 'v1',
         connectionId,
         credentialFormats: {
@@ -85,17 +88,26 @@ export class IssuanceService {
         comment
       };
 
-      const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
+      const credentialCreateOfferDetails: ICreateOfferResponse = await this._sendCredentialCreateOffer(issueData, url, apiKey);
 
-      return credentialCreateOfferDetails?.response;
+      if (credentialCreateOfferDetails && 0 < Object.keys(credentialCreateOfferDetails).length) {
+        delete credentialCreateOfferDetails._tags;
+        delete credentialCreateOfferDetails.metadata;
+        delete credentialCreateOfferDetails.credentials;
+        delete credentialCreateOfferDetails.credentialAttributes;
+        delete credentialCreateOfferDetails.autoAcceptCredential;
+      }
+
+      return credentialCreateOfferDetails;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
+      if (errorStack) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          error: errorStack?.message ? errorStack?.message : errorStack,
+          statusCode: error?.status?.code,
+          message: ResponseMessages.issuance.error.unableToCreateOffer
         });
-
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
@@ -103,7 +115,7 @@ export class IssuanceService {
   }
 
 
-  async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<string> {
+  async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object; }> {
     try {
       const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -116,12 +128,12 @@ export class IssuanceService {
       }
 
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       let apiKey;
       apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey---${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -135,22 +147,46 @@ export class IssuanceService {
           }
         },
         autoAcceptCredential: 'always',
-        comment
+        comment: comment || ''
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
 
-      return credentialCreateOfferDetails?.response;
+      return credentialCreateOfferDetails;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+
+      const errorStack = error?.status?.message?.error;
+      if (errorStack) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          message: errorStack?.reason ? errorStack?.reason : errorStack,
           statusCode: error?.status?.code
         });
 
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
+    }
+  }
+
+  // Created this function to avoid the impact of actual "natsCall" function for other operations
+  // Once implement this for all component then we'll remove the duplicate function
+  async natsCallAgent(pattern: IPattern, payload: ISendOfferNatsPayload): Promise<ICreateOfferResponse> {
+    try {
+      const createOffer = await this.issuanceServiceProxy
+        .send<ICreateOfferResponse>(pattern, payload)
+        .toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+      return createOffer;
+    } catch (error) {
+      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -180,13 +216,11 @@ export class IssuanceService {
     }
   }
 
-  async _sendCredentialCreateOffer(issueData: object, url: string, apiKey: string): Promise<{
-    response: string;
-  }> {
+  async _sendCredentialCreateOffer(issueData: IIssueData, url: string, apiKey: string): Promise<ICreateOfferResponse> {
     try {
       const pattern = { cmd: 'agent-send-credential-create-offer' };
-      const payload = { issueData, url, apiKey };
-      return await this.natsCall(pattern, payload);
+      const payload: ISendOfferNatsPayload = { issueData, url, apiKey };
+      return await this.natsCallAgent(pattern, payload);
     } catch (error) {
       this.logger.error(`[_sendCredentialCreateOffer] [NATS call]- error in create credentials : ${JSON.stringify(error)}`);
       throw error;
@@ -257,7 +291,6 @@ export class IssuanceService {
       // const apiKey = platformConfig?.sgApiKey;
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -331,7 +364,6 @@ export class IssuanceService {
       // const { apiKey } = agentDetails;
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
@@ -559,7 +591,6 @@ export class IssuanceService {
       const fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       await createFile(filePath, fileName, csv);
-      this.logger.log(`File created - ${fileName}`);
       const fullFilePath = join(process.cwd(), `uploadedFiles/exports/${fileName}`);
 
       if (!checkIfFileOrDirectoryExists(fullFilePath)) {
@@ -579,15 +610,10 @@ export class IssuanceService {
 
 
   async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
-    this.logger.log(`START importAndPreviewDataForIssuance----${JSON.stringify(importFileDetails)}`);
     try {
 
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
-
-      this.logger.log(`credDefResponse----${JSON.stringify(credDefResponse)}`);
-
-      this.logger.log(`csvFile::::::${JSON.stringify(importFileDetails.fileKey)}`);
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
       const csvData: string = getFileDetails.Body.toString();
@@ -598,8 +624,6 @@ export class IssuanceService {
         transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
         complete: (results) => results.data
       });
-
-      this.logger.log(`parsedData----${JSON.stringify(parsedData)}`);
 
       if (0 >= parsedData.data.length) {
         throw new BadRequestException(`File data is empty`);
@@ -679,7 +703,7 @@ export class IssuanceService {
           throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
         }
         const parsedData = JSON.parse(cachedData as string).fileData.data;
-        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortValue));
+        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortField));
         const finalData = paginator(parsedData, previewRequest.pageNumber, previewRequest.pageSize);
 
         return finalData;
@@ -704,7 +728,7 @@ export class IssuanceService {
         totalItems: fileData.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileData.fileCount,
         hasPreviousPage: 1 < getAllfileDetails.pageNumber,
-        nextPage: getAllfileDetails.pageNumber + 1,
+        nextPage: Number(getAllfileDetails.pageNumber) + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
         lastPage: Math.ceil(fileData.fileCount / getAllfileDetails.pageSize),
         data: fileData.fileDataList
@@ -733,7 +757,7 @@ export class IssuanceService {
         totalItems: fileDetails.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
         hasPreviousPage: 1 < getAllfileDetails.pageNumber,
-        nextPage: getAllfileDetails.pageNumber + 1,
+        nextPage: Number(getAllfileDetails.pageNumber) + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
         lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
         data: fileDetails.fileList
@@ -777,10 +801,8 @@ export class IssuanceService {
       );
     }
 
-    this.logger.log(`requestId----${JSON.stringify(requestId)}`);
     try {
       const cachedData = await this.cacheManager.get(requestId);
-      this.logger.log(`cachedData----${JSON.stringify(cachedData)}`);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
@@ -821,7 +843,6 @@ export class IssuanceService {
       }
       for (const element of respFile) {
         try {
-          this.logger.log(`element----${JSON.stringify(element)}`);
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
@@ -873,7 +894,6 @@ export class IssuanceService {
 
       for (const element of respFile) {
         try {
-          this.logger.log(`element----${JSON.stringify(element)}`);
           const payload = {
             data: element.credential_data,
             fileUploadId: element.fileUploadId,
@@ -924,7 +944,6 @@ export class IssuanceService {
       detailError: '',
       jobId: ''
     };
-    this.logger.log(`jobDetails----${JSON.stringify(jobDetails)}`);
 
     fileUploadData.fileUpload = jobDetails.fileUploadId;
     fileUploadData.fileRow = JSON.stringify(jobDetails);
@@ -958,7 +977,7 @@ export class IssuanceService {
       }
     } catch (error) {
       this.logger.error(
-        `error in issuanceBulkCredential for data ${JSON.stringify(jobDetails)} : ${JSON.stringify(error)}`
+        `error in issuanceBulkCredential for data : ${JSON.stringify(error)}`
       );
       fileUploadData.isError = true;
       fileUploadData.error = JSON.stringify(error.error) ? JSON.stringify(error.error) : JSON.stringify(error);
@@ -988,9 +1007,6 @@ export class IssuanceService {
           status,
           lastChangedDateTime: new Date()
         });
-
-        this.logger.log(`jobDetails.clientId----${JSON.stringify(jobDetails.clientId)}`);
-
 
       }
     } catch (error) {
@@ -1050,7 +1066,6 @@ export class IssuanceService {
       });
       return isFalsyForColumnValue;
     });
-    this.logger.log(`isNullish: ${isNullish}`);
     if (isNullish) {
       throw new BadRequestException(
         `Empty data found at row ${rowIndex} and column ${columnIndex}`
@@ -1058,7 +1073,7 @@ export class IssuanceService {
     }
   }
 
-   async _getOrgAgentApiKey(orgId: string): Promise<string> {
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
     const pattern = { cmd: 'get-org-agent-api-key' };
     const payload = { orgId };
 

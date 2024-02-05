@@ -112,6 +112,12 @@
       ],
       "@credebl/aws/*": [
         "libs/aws/src/*"
+      ],
+      "credebl/utility": [
+        "libs/utility/src"
+      ],
+      "credebl/utility/*": [
+        "libs/utility/src/*"
       ]
     }
   },

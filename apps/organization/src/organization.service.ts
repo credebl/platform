@@ -1,10 +1,11 @@
+/* eslint-disable prefer-destructuring */
 import { organisation, user } from '@prisma/client';
 import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { OrgRolesService } from '@credebl/org-roles';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -15,13 +16,13 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
+import { AwsService } from '@credebl/aws';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
@@ -34,6 +35,7 @@ export class OrganizationService {
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
+    private readonly awsService: AwsService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache
@@ -59,20 +61,54 @@ export class OrganizationService {
       createOrgDto.createdBy = userId;
       createOrgDto.lastChangedBy = userId;
 
+      const imageUrl = await this.uploadFileToS3(createOrgDto.logo);
+
+      if (imageUrl) {
+        createOrgDto.logo = imageUrl;
+      } else {
+        throw new BadRequestException('error in uploading image on s3 bucket');
+      }
+
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
+
+      // To return selective object data
+      delete organizationDetails.lastChangedBy;
+      delete organizationDetails.lastChangedDateTime;
+      delete organizationDetails.orgSlug;
+      delete organizationDetails.website;
 
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
       return organizationDetails;
+
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
+  async uploadFileToS3(orgLogo: string): Promise<string> {
+    try {
 
+      const updatedOrglogo = orgLogo.split(',')[1];
+      const imgData = Buffer.from(updatedOrglogo, 'base64');
+      const logoUrl = await this.awsService.uploadUserCertificate(
+        imgData,
+        'png',
+        'orgLogo',
+        process.env.AWS_ORG_LOGO_BUCKET_NAME,
+        'base64',
+        'orgLogos'
+      );
+      return logoUrl;
+    } catch (error) {
+      this.logger.error(`In getting imageUrl : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }  
+    
   /**
    *
    * @param orgName
@@ -108,6 +144,14 @@ export class OrganizationService {
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
       updateOrgDto.userId = userId;
+      const imageUrl = await this.uploadFileToS3(updateOrgDto.logo);
+
+      if (imageUrl) {
+        updateOrgDto.logo = imageUrl;
+      } else {
+        throw new BadRequestException('error in uploading image on s3 bucket');
+      }
+
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
@@ -323,15 +367,23 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
+        const userData = await this.getUserFirstName(userEmail);
+        
+        const {firstName} = userData;
+        const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
+       
+        if (0 === orgRolesDetails.length) {
+          throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+        }
+
         const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
           await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
 
-          const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
           try {
-            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, isUserExist);
+            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, firstName, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
@@ -358,6 +410,7 @@ export class OrganizationService {
     email: string,
     orgName: string,
     orgRolesDetails: object[],
+    firstName:string,
     isUserExist: boolean
   ): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
@@ -366,9 +419,9 @@ export class OrganizationService {
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Invitation`;
+    emailData.emailSubject = `Invitation to join “${orgName}” on CREDEBL`;
 
-    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, orgName, orgRolesDetails, isUserExist);
+    emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(email, orgName, orgRolesDetails, firstName, isUserExist);
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData);
@@ -393,12 +446,32 @@ export class OrganizationService {
           error.status
         );
       });
-
-    if (userData && userData.isEmailVerified) {
+    if (userData?.isEmailVerified) {
       return true;
     }
     return false;
   }
+
+  async getUserFirstName(userEmail: string): Promise<user> {
+    const pattern = { cmd: 'get-user-by-mail' };
+    const payload = { email: userEmail };
+
+    const userData  = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });    
+      return userData;
+    }
+   
 
   async fetchUserInvitation(email: string, status: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrganizationInvitations> {
     try {
@@ -516,7 +589,6 @@ export class OrganizationService {
       const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
       // const apiKey = await this._getOrgAgentApiKey(orgId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }

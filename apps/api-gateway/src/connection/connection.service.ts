@@ -25,6 +25,10 @@ export class ConnectionService extends BaseService {
         imageUrl: connectionDto.imageUrl,
         multiUseInvitation: connectionDto.multiUseInvitation,
         autoAcceptConnection: connectionDto.autoAcceptConnection,
+        goalCode: connectionDto.goalCode,
+        goal: connectionDto.goal,
+        handshake: connectionDto.handshake,
+        handshakeProtocols: connectionDto.handshakeProtocols,
         user
       };
 

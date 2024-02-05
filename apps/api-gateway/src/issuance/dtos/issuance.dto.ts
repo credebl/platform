@@ -5,6 +5,7 @@ import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 import { SortValue } from '../../enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { AutoAccept } from '@credebl/enum/enum';
 
 class Attribute {
     @ApiProperty()
@@ -63,6 +64,15 @@ class CredentialsIssuanceDto {
     @IsString({ message: 'label should be string' })
     label?: string;
 
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
+    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptCredential?: string;
+
     orgId: string;
 }
 
@@ -101,6 +111,15 @@ export class IssueCredentialDto extends OOBIssueCredentialDto {
     @IsString({ message: 'connectionId should be string' })
     @Transform(({ value }) => trim(value))
     connectionId: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
+    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptCredential?: string;
 }
 
 export class IssuanceDto {

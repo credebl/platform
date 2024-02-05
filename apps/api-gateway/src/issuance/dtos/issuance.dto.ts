@@ -1,9 +1,7 @@
-
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsDefined, ArrayNotEmpty, MaxLength } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, IsDefined, ArrayNotEmpty, MaxLength, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
-import { IsEnum } from 'class-validator';
 import { SortValue } from '../../enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 
@@ -11,8 +9,8 @@ class Attribute {
     @ApiProperty()
     @IsString({ message: 'Attribute name should be string' })
     @IsNotEmpty({ message: 'Attribute name is required' })
-    @Type(() => String)
     @Transform(({ value }) => trim(value))
+    @Type(() => String)
     name: string;
 
     @ApiProperty()
@@ -22,11 +20,10 @@ class Attribute {
 }
 
 export class OOBIssueCredentialDto {
-
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsArray()
+    @IsArray({ message: 'Attributes should be an array' })
+    @ArrayNotEmpty({message: 'Attributes are required'})
     @ValidateNested({ each: true })
-    @ArrayMinSize(1)
     @Type(() => Attribute)
     attributes: Attribute[];
 
@@ -50,16 +47,17 @@ export class OOBIssueCredentialDto {
 }
 
 class CredentialOffer {
-    @ApiProperty()
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
+    @IsNotEmpty({ message: 'Attribute name is required' })
     @IsArray({ message: 'Attributes should be an array' })
-    @ArrayNotEmpty({ message: 'Attributes are required' })
     @ValidateNested({ each: true })
     @Type(() => Attribute)
     attributes: Attribute[];
 
-    @ApiProperty()
-    @IsEmail({}, { message: 'Email is invalid' })
+    @ApiProperty({ example: 'testmail@mailinator.com' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
+    @IsString({ message: 'Email should be a string' })
     @MaxLength(256, { message: 'Email must be at most 256 character' })
     @Transform(({ value }) => trim(value))
     @Type(() => String)
@@ -67,10 +65,10 @@ class CredentialOffer {
 }
 
 export class IssueCredentialDto extends OOBIssueCredentialDto {
-
-    @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
-    @IsNotEmpty({ message: 'Please provide valid connectionId' })
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'connectionId is required' })
     @IsString({ message: 'connectionId should be string' })
+    @Transform(({ value }) => trim(value))
     connectionId: string;
 }
 

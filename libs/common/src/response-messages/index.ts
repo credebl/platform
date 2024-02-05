@@ -223,16 +223,16 @@ export const ResponseMessages = {
         success: {
             create: 'Credentials offer created successfully',
             createOOB: 'Out-of-band credentials offer created successfully',
-            fetch: 'Issued Credentials details fetched successfully',
-            importCSV: 'File imported sucessfully',
-            previewCSV: 'File details fetched sucessfully',
+            fetch: 'Issued Credential details fetched successfully',
+            importCSV: 'File imported successfully',
+            previewCSV: 'File details fetched successfully',
             bulkIssuance: 'Issuance process started. It will take some time',
             notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
-            agentEndPointNotFound: 'agent end point Not Found',
+            agentEndPointNotFound: 'Agent details not found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
             notFound: 'History not found',
@@ -250,7 +250,9 @@ export const ResponseMessages = {
             retry: 'Credentials do not exist for retry',
             walletError: 'Credential Issuance failed due to error in Wallet Agent',
             emailIdNotPresent: 'EmailId is empty or not present',
-            attributesNotPresent: 'Attributes are not present or not empty'
+            attributesNotPresent: 'Attributes are not present or not empty',
+            unableToCreateOffer: 'Unable to create offer',
+            orgAgentTypeNotFound: 'Organization agent type not found'
         }
     },
     verification: {
@@ -284,7 +286,7 @@ export const ResponseMessages = {
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent',
             schemaRequest: 'Schema transaction request created successfully',
-            credDefRequest: 'credential-definition transaction request created successfully',
+            credDefRequest: 'Credential definition transaction request created successfully',
             sign: 'Transaction request signed successfully',
             submit: 'Transaction request submitted successfully',
             invitationReject: 'Ecosystem invitation rejected',

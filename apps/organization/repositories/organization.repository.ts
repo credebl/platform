@@ -172,6 +172,7 @@ export class OrganizationRepository {
     }
   }
 
+
   async getAllOrgInvitations(
     email: string,
     status: string,

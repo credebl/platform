@@ -42,6 +42,7 @@ import {
   IssuanceDto,
   IssueCredentialDto,
   OOBCredentialDtoWithEmail,
+  OOBIssueCredentialDto,
   PreviewFileDetails
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -298,11 +299,11 @@ export class IssuanceController {
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<object> {
-    const perviewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
+    const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,
-      data: perviewCSVDetails
+      data: previewCSVDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -334,11 +335,11 @@ export class IssuanceController {
     @User() user: user
   ): Promise<Response> {
     clientDetails.userId = user.id;
-    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
+    const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssunaceDetails.response
+      data: bulkIssuanceDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -435,7 +436,7 @@ export class IssuanceController {
     @Res() res: Response,
     @Body() clientDetails: ClientDetails
   ): Promise<Response> {
-    const bulkIssunaceDetails = await this.issueCredentialService.retryBulkCredential(
+    const bulkIssuanceDetails = await this.issueCredentialService.retryBulkCredential(
       fileId,
       orgId,
       clientDetails.clientId
@@ -443,25 +444,27 @@ export class IssuanceController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssunaceDetails.response
+      data: bulkIssuanceDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  /**
-   * Description: Issuer send credential to create offer
-   * @param user
-   * @param issueCredentialDto
-   */
+ /**
+  * @param user 
+  * @param orgId 
+  * @param issueCredentialDto 
+  * @param res 
+  * @returns Issuer creates a credential offer and sends it to the holder
+  */
   @Post('/orgs/:orgId/credentials/offer')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Send credential details to create-offer`,
-    description: `Send credential details to create-offer`
+    summary: `Issuer create a credential offer`,
+    description: `Issuer creates a credential offer and sends it to the holder`
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
     @Param('orgId') orgId: string,
@@ -472,10 +475,10 @@ export class IssuanceController {
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
+      data: getCredentialDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -518,6 +521,35 @@ export class IssuanceController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+    /**
+   * Description: Issuer create out-of-band credential
+   * @param user
+   * @param issueCredentialDto
+   */
+    @Post('/orgs/:orgId/credentials/oob/offer')
+    @ApiBearerAuth()
+    @ApiOperation({
+      summary: `Create out-of-band credential offer`,
+      description: `Creates an out-of-band credential offer`
+    })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    async createOOBCredentialOffer(
+      @Param('orgId') orgId: string,
+      @Body() issueCredentialDto: OOBIssueCredentialDto,
+      @Res() res: Response
+    ): Promise<Response> {
+      issueCredentialDto.orgId = orgId;
+      const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.create,
+        data: getCredentialDetails.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
 
   /**
    * Description: webhook Save issued credential details

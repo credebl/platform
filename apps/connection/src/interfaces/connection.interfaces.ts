@@ -61,6 +61,7 @@ export interface ICreateConnectionPayload {
   lastChangedDateTime: string;
   id: string;
   state: string;
+  imageUrl: string;
   orgDid?: string;
   theirLabel: string;
   autoAcceptConnection: boolean;

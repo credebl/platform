@@ -44,29 +44,32 @@ export class IssuanceService {
   ) { }
 
 
-  async sendCredentialCreateOffer(orgId: number, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[]): Promise<string> {
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICreateOfferResponse> {
     try {
+      const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
-      const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      const { agentEndPoint } = agentDetails;
+
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
+      if (!orgAgentType) {
+        throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
+      }
+
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
-
-      // const apiKey = platformConfig?.sgApiKey;
-      // let apiKey = await this._getOrgAgentApiKey(orgId);
 
       let apiKey;
       apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
-      const issueData = {
+      const issueData: IIssueData = {
         protocolVersion: 'v1',
         connectionId,
         credentialFormats: {
@@ -79,17 +82,26 @@ export class IssuanceService {
         comment
       };
 
-      const credentialCreateOfferDetails = await this._sendCredentialCreateOffer(issueData, url, apiKey);
+      const credentialCreateOfferDetails: ICreateOfferResponse = await this._sendCredentialCreateOffer(issueData, url, apiKey);
 
-      return credentialCreateOfferDetails?.response;
+      if (credentialCreateOfferDetails && 0 < Object.keys(credentialCreateOfferDetails).length) {
+        delete credentialCreateOfferDetails._tags;
+        delete credentialCreateOfferDetails.metadata;
+        delete credentialCreateOfferDetails.credentials;
+        delete credentialCreateOfferDetails.credentialAttributes;
+        delete credentialCreateOfferDetails.autoAcceptCredential;
+      }
+
+      return credentialCreateOfferDetails;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
+      if (errorStack) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          error: errorStack?.message ? errorStack?.message : errorStack,
+          statusCode: error?.status?.code,
+          message: ResponseMessages.issuance.error.unableToCreateOffer
         });
-
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
@@ -97,7 +109,7 @@ export class IssuanceService {
   }
 
 
-  async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<string> {
+  async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object; }> {
     try {
       const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -110,6 +122,7 @@ export class IssuanceService {
       }
 
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
@@ -128,22 +141,46 @@ export class IssuanceService {
           }
         },
         autoAcceptCredential: 'always',
-        comment
+        comment: comment || ''
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
 
-      return credentialCreateOfferDetails?.response;
+      return credentialCreateOfferDetails;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+
+      const errorStack = error?.status?.message?.error;
+      if (errorStack) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          message: errorStack?.reason ? errorStack?.reason : errorStack,
           statusCode: error?.status?.code
         });
 
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
+    }
+  }
+
+  // Created this function to avoid the impact of actual "natsCall" function for other operations
+  // Once implement this for all component then we'll remove the duplicate function
+  async natsCallAgent(pattern: IPattern, payload: ISendOfferNatsPayload): Promise<ICreateOfferResponse> {
+    try {
+      const createOffer = await this.issuanceServiceProxy
+        .send<ICreateOfferResponse>(pattern, payload)
+        .toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+      return createOffer;
+    } catch (error) {
+      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -173,13 +210,11 @@ export class IssuanceService {
     }
   }
 
-  async _sendCredentialCreateOffer(issueData: object, url: string, apiKey: string): Promise<{
-    response: string;
-  }> {
+  async _sendCredentialCreateOffer(issueData: IIssueData, url: string, apiKey: string): Promise<ICreateOfferResponse> {
     try {
       const pattern = { cmd: 'agent-send-credential-create-offer' };
-      const payload = { issueData, url, apiKey };
-      return await this.natsCall(pattern, payload);
+      const payload: ISendOfferNatsPayload = { issueData, url, apiKey };
+      return await this.natsCallAgent(pattern, payload);
     } catch (error) {
       this.logger.error(`[_sendCredentialCreateOffer] [NATS call]- error in create credentials : ${JSON.stringify(error)}`);
       throw error;
@@ -1024,7 +1059,7 @@ export class IssuanceService {
     }
   }
 
-   async _getOrgAgentApiKey(orgId: string): Promise<string> {
+  async _getOrgAgentApiKey(orgId: string): Promise<string> {
     const pattern = { cmd: 'get-org-agent-api-key' };
     const payload = { orgId };
 

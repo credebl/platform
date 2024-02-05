@@ -1,23 +1,23 @@
 
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
-import { IsEnum } from 'class-validator';
 import { SortValue } from '../../enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { AutoAccept } from '@credebl/enum/enum';
 
 class Attribute {
-
-    @IsString()
-    @Transform(({ value }) => value.trim())
-    @IsNotEmpty({ message: 'Please provide a valid attribute name' })
+    @ApiProperty()
+    @IsString({ message: 'Attribute name should be string' })
+    @IsNotEmpty({ message: 'Attribute name is required' })
+    @Transform(({ value }) => trim(value))
+    @Type(() => String)
     name: string;
 
-    @Transform(({ value }) => value.trim())
-    @IsNotEmpty({ message: 'Please provide a valid attribute value' })
-    @IsString()
+    @ApiProperty()
+    @IsDefined()
+    @Transform(({ value }) => trim(value))
     value: string;
 }
 
@@ -87,28 +87,29 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
 }
 
 class CredentialOffer {
-
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
+    @IsNotEmpty({ message: 'Attribute name is required' })
+    @IsArray({ message: 'Attributes should be an array' })
     @ValidateNested({ each: true })
-    @Type(() => Attribute)
     @IsOptional()
+    @Type(() => Attribute)
     attributes: Attribute[];
 
-    @ApiProperty({ example: 'awqx@getnada.com' })
+    @ApiProperty({ example: 'testmail@mailinator.com' })
+    @IsOptional()
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })
+    @MaxLength(256, { message: 'Email must be at most 256 character' })
     @Transform(({ value }) => trim(value))
     emailId: string;
 }
 
 export class IssueCredentialDto extends OOBIssueCredentialDto {
-
-    @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
-    @IsNotEmpty({ message: 'Please provide valid connectionId' })
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'connectionId is required' })
     @IsString({ message: 'connectionId should be string' })
+    @Transform(({ value }) => trim(value))
     connectionId: string;
 
     @ApiPropertyOptional()

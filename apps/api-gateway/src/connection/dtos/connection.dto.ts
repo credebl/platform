@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -31,8 +31,33 @@ export class CreateConnectionDto {
     @ApiPropertyOptional()
     @IsBoolean()
     @IsOptional()
-    @IsNotEmpty({ message: 'autoAcceptConnection should be boolean' })
+    @IsNotEmpty({ message: 'Please provide autoAcceptConnection' })
     autoAcceptConnection: boolean;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide goalCode' })
+    goalCode: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide goal' })
+    goal: string;
+
+    @ApiPropertyOptional()
+    @IsBoolean()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide handshake' })
+    handshake: boolean;
+
+    @ApiPropertyOptional()
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsOptional()
+    @IsString({ each: true })
+    handshakeProtocols: string[];
 
     orgId: string;
 }

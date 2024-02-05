@@ -10,6 +10,10 @@ export interface IConnection {
   imageUrl: string;
   multiUseInvitation: boolean;
   autoAcceptConnection: boolean;
+  goalCode: string;
+  goal: string;
+  handshake: string;
+  handshakeProtocols: string[];
   orgId: string;
 }
 export interface IUserRequestInterface {

@@ -64,3 +64,16 @@ export enum NodeEnvironment {
    PRODUCTION='production'
 }
 
+export enum AutoAccept {
+    Always = "always",
+    ContentApproved = "contentApproved",
+    Never = "never"
+}
+
+const transitionMap: { [key in Invitation]: Invitation[] } = {
+    [Invitation.PENDING]: [Invitation.ACCEPTED, Invitation.REJECTED],
+    [Invitation.ACCEPTED]: [],
+    [Invitation.REJECTED]: []
+};
+
+export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));

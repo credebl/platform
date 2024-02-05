@@ -27,7 +27,7 @@ export class CreateOrganizationDto {
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'logo must be in string format.' })
-    logo: string;
+    logo?: string = '';    
 
     @ApiPropertyOptional()
     @IsOptional()

@@ -1,4 +1,4 @@
-import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, IsBoolean, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
@@ -10,7 +10,8 @@ export class UpdateOrganizationDto {
 
     orgId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'Organization name is required.' })
     @MinLength(2, { message: 'Organization name must be at least 2 characters.' })
@@ -19,6 +20,7 @@ export class UpdateOrganizationDto {
     name: string;
 
     @ApiPropertyOptional()
+    @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'Description is required.' })
     @MinLength(2, { message: 'Description must be at least 2 characters.' })
@@ -26,17 +28,18 @@ export class UpdateOrganizationDto {
     @IsString({ message: 'Description must be in string format.' })
     description: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'logo must be in string format.' })
-    logo: string;
+    logo?: string = '';
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
-    website: string;
+    website?: string;
 
     @ApiPropertyOptional({ example: true })
+    @IsOptional()
     @IsBoolean({ message: 'isPublic should be boolean' })
     @IsOptional()
     isPublic?: boolean = false;

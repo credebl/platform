@@ -67,14 +67,13 @@ export class OrganizationService {
       createOrgDto.createdBy = userId;
       createOrgDto.lastChangedBy = userId;
 
-      const imageUrl = await this.uploadFileToS3(createOrgDto.logo);
-
-      if (imageUrl) {
+      if (await this.isValidBase64(createOrgDto?.logo)) {
+        const imageUrl = await this.uploadFileToS3(createOrgDto.logo);
         createOrgDto.logo = imageUrl;
       } else {
-        throw new BadRequestException('error in uploading image on s3 bucket');
+        createOrgDto.logo = '';
       }
-
+            
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
       // To return selective object data
@@ -192,9 +191,23 @@ export class OrganizationService {
       return inputString;
     }
   }
+  
+  async isValidBase64 (value: string): Promise<boolean> {
+    try {
+      if (!value || 'string' !== typeof value) {
+        return false;
+      }
+  
+      const base64Regex = /^data:image\/([a-zA-Z]*);base64,([^\"]*)$/;
+      const matches = value.match(base64Regex);
+      return Boolean(matches) && 3 === matches.length;
+    } catch (error) {
+      return false;
+    }
+  };
+
   async uploadFileToS3(orgLogo: string): Promise<string> {
     try {
-
       const updatedOrglogo = orgLogo.split(',')[1];
       const imgData = Buffer.from(updatedOrglogo, 'base64');
       const logoUrl = await this.awsService.uploadUserCertificate(
@@ -247,12 +260,12 @@ export class OrganizationService {
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
       updateOrgDto.userId = userId;
-      const imageUrl = await this.uploadFileToS3(updateOrgDto.logo);
-
-      if (imageUrl) {
+      
+      if (await this.isValidBase64(updateOrgDto.logo)) {
+        const imageUrl = await this.uploadFileToS3(updateOrgDto.logo);
         updateOrgDto.logo = imageUrl;
       } else {
-        throw new BadRequestException('error in uploading image on s3 bucket');
+        delete updateOrgDto.logo;
       }
 
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);

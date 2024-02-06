@@ -15,6 +15,9 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { ClientRegistrationService } from '@credebl/client-registration';
+import { KeycloakUrlService } from '@credebl/keycloak-url';
+
 import { AwsService } from '@credebl/aws';
 @Module({
   imports: [
@@ -32,7 +35,10 @@ import { AwsService } from '@credebl/aws';
   providers: [
     OrganizationService, OrganizationRepository, PrismaService,
      Logger, OrgRolesService, UserOrgRolesService, OrgRolesRepository, UserActivityRepository,
-      UserOrgRolesRepository, UserRepository, UserActivityService, AwsService
+      UserOrgRolesRepository, UserRepository, UserActivityService,
+      ClientRegistrationService,
+      KeycloakUrlService,
+      AwsService
     ]
 
 })

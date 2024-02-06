@@ -20,8 +20,9 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser:'User created successfully',
             shareUserCertificate:'Certificate URL generated successfully',
-            degreeCertificate: 'Degree Certificate shared successfully',
-            updateUserProfile:'User profile updated successfully'
+            updateUserProfile:'User profile updated successfully',
+            resetPassword: 'Password reset successfully',
+            degreeCertificate: 'Degree Certificate shared successfully'
         },
         error: {
             exists: 'User already exists',
@@ -54,7 +55,8 @@ export const ResponseMessages = {
             invalidInvitationId:'Organization invitation does not exist',
             invitationAlreadyPending:'Organization invitation is already in pending state',
             emailIsNotVerified:'Email is not verified',
-            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already'
+            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already',
+            resetSamePassword: 'New password should not be the current password'
         }
     },
     organisation: {
@@ -70,7 +72,11 @@ export const ResponseMessages = {
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
             delete: 'Organization deleted successfully',
-            orgInvitationDeleted: 'Organization invitation deleted successfully'
+            orgInvitationDeleted: 'Organization invitation deleted successfully',
+            orgCredentials: 'Organization credentials created successfully',
+            fetchedOrgCredentials: 'Organization credentials fetched successfully',
+            clientCredentials: 'Client credentials fetched successfully',
+            deleteCredentials:'Organization client credentials deleted'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -89,8 +95,11 @@ export const ResponseMessages = {
             orgNotFound: 'Organization not found',
             orgNotMatch: 'Organization does not have access',
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
+            credentialsNotUpdate: 'Unable to update organization credentials',
             invalidOrgId:'Invalid format for orgId',
             orgIdIsRequired:'OrgId is required',
+            clientIdRequired:'clientId is required',
+            notExistClientCred: 'Organization does not have client credentials',          
             invalidUserId:'Invalid format of userId',
             invalidInvitationId:'Invalid format for invitaion id',
             ecosystemIdIsRequired:'ecosystemId is required'

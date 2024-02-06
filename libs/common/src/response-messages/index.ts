@@ -274,6 +274,7 @@ export const ResponseMessages = {
         },
         error: {
             notFound: 'Organization agent not found',
+            proofNotSend: 'Proof request is not sent',
             agentUrlNotFound: 'agent url not found',
             schemaIdNotFound: 'Schema Id is required',
             predicatesValueNotNumber: 'The attribuite value is not a number',

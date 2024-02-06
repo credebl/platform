@@ -316,21 +316,11 @@ export class VerificationController {
 
         if (!attrData['attributeName']) {
             throw new BadRequestException('attributeName must be required');
-        } else if (!attrData['schemaId']) {
-            throw new BadRequestException('schemaId must be required');
         }
 
-        if (undefined !== attrData['schemaId'] && '' === attrData['schemaId'].trim()) {
-            throw new BadRequestException('schemaId cannot be empty');
-        }
-
-        if (!attrData['credDefId']) {
-            throw new BadRequestException('credDefId must be required');
-        }
-
-        if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
-            throw new BadRequestException('credDefId cannot be empty');
-        }
+        // if (attrData.hasOwnProperty('attributeName')) {
+        //     throw new BadRequestException('attributeName must be unique');
+        // }
 
         if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
             throw new BadRequestException('condition cannot be empty');

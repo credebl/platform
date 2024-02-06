@@ -984,8 +984,11 @@ export class EcosystemService {
         if (!submitTxn) {
           await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
-        }
-        return submitTxn;
+        } 
+        return {
+          autoEndorsement:ecosystemDetails.autoEndorsement,
+          submitTxn
+       };
       }
       
       // To return selective response

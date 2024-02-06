@@ -175,7 +175,6 @@ export class ReceiveInvitationUrlDto extends ReceiveInvitationCommonDto {
     @IsOptional()
     @IsString({ message: 'invitationUrl must be a string' })
     @IsNotEmpty({ message: 'please provide valid invitationUrl' })
-    @IsUrl({}, { message: 'Invalid invitationUrl format' })
     invitationUrl: string;
 }
 

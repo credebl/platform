@@ -317,8 +317,6 @@ export class VerificationController {
 
         if (!attrData['attributeName']) {
             throw new BadRequestException('attributeName must be required');
-        } else if (!attrData['schemaId']) {
-            throw new BadRequestException('schemaId must be required');
         }
 
         if (undefined !== attrData['schemaId'] && '' === attrData['schemaId'].trim()) {

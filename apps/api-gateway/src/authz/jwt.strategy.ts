@@ -53,8 +53,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     let userDetails = null;
 
-    if (payload.hasOwnProperty('clientId')) {
-      const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['clientId']);
+    if (payload.hasOwnProperty('client_id')) {
+      const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
       
       this.logger.log('Organization details fetched');
       if (!orgDetails) {

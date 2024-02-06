@@ -187,7 +187,11 @@ export class VerificationService {
             version: ''
           }
         },
-        autoAcceptProof: ''
+        autoAcceptProof: '',
+        label: '',
+        goalCode: '',
+        parentThreadId: '',
+        willConfirm: false
       };
 
       const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
@@ -206,7 +210,10 @@ export class VerificationService {
             requested_predicates: requestedPredicates
           }
         },
-        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : 'never'
+        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : 'never',
+        goalCode: requestProof.goalCode || undefined,
+        parentThreadId: requestProof.parentThreadId || undefined,
+        willConfirm: requestProof.willConfirm || undefined
       };
 
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
@@ -366,7 +373,10 @@ export class VerificationService {
               requested_predicates: requestedPredicates
             }
           },
-          autoAcceptProof
+          autoAcceptProof,
+          goalCode: outOfBandRequestProof.goalCode || undefined, 
+          parentThreadId: outOfBandRequestProof.parentThreadId || undefined,
+          willConfirm: outOfBandRequestProof.willConfirm || undefined
         }
       };
 

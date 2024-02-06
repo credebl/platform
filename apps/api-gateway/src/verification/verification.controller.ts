@@ -216,10 +216,11 @@ export class VerificationController {
         @Param('proofId') proofId: string,
         @Param('orgId') orgId: string
     ): Promise<Response> {
-        await this.verificationService.verifyPresentation(proofId, orgId, user);
+        const verifyData = await this.verificationService.verifyPresentation(proofId, orgId, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.verified
+            message: ResponseMessages.verification.success.verified,
+            data: verifyData
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
@@ -253,10 +254,11 @@ export class VerificationController {
         }
 
         outOfBandRequestProof.orgId = orgId;
-        await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
+        const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.verification.success.send
+            message: ResponseMessages.verification.success.send,
+            data: result
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

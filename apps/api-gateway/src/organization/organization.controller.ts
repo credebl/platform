@@ -21,6 +21,7 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { ImageServiceService } from '@credebl/image-service';
+import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { validate as isValidUUID } from 'uuid';
 
@@ -265,6 +266,22 @@ export class OrganizationController {
 
   }
 
+  @Get('/:orgId/client_credentials')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @ApiOperation({ summary: 'Fetch client credentials for an organization', description: 'Fetch client id and secret for an organization' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async fetchOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+    const orgCredentials = await this.organizationService.fetchOrgCredentials(orgId, reqUser.id);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.fetchedOrgCredentials,
+      data: orgCredentials
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
   /**
   * @returns Users list of organization
   */
@@ -310,12 +327,58 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-    await this.organizationService.createOrganization(createOrgDto, reqUser.id);
+    const orgData = await this.organizationService.createOrganization(createOrgDto, reqUser.id);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.create
+      message: ResponseMessages.organisation.success.create,
+      data: orgData
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * 
+   * @param orgId 
+   * @param res 
+   * @param reqUser 
+   * @returns Organization Client Credentials
+   */
+  @Post('/:orgId/client_credentials')
+  @Roles(OrgRoles.OWNER)
+  @ApiOperation({ summary: 'Create credentials for an organization', description: 'Create client id and secret for an organization' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async createOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+    const orgCredentials = await this.organizationService.createOrgCredentials(orgId, reqUser.id);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.organisation.success.orgCredentials,
+      data: orgCredentials
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/:clientId/token')
+  @ApiOperation({ summary: 'Authenticate client for credentials', description: 'Authenticate client for credentials' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async clientLoginCredentials(
+    @Param('clientId') clientId: string,
+    @Body() clientCredentialsDto: ClientCredentialsDto,
+    @Res() res: Response): Promise<Response> {
+    clientCredentialsDto.clientId = clientId.trim();
+
+    if (!clientCredentialsDto.clientId) {
+      throw new BadRequestException(ResponseMessages.organisation.error.clientIdRequired);
+    }
+
+    const orgCredentials = await this.organizationService.clientLoginCredentials(clientCredentialsDto);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.clientCredentials,
+      data: orgCredentials
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Post('/:orgId/invitations')
@@ -415,6 +478,21 @@ export class OrganizationController {
     return res.status(HttpStatus.ACCEPTED).json(finalResponse);
   }
 
+  @Delete('/:orgId/client_credentials')
+  @ApiOperation({ summary: 'Delete Organization Client Credentials', description: 'Delete Organization Client Credentials' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+
+    const deleteResponse = await this.organizationService.deleteOrgClientCredentials(orgId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.ACCEPTED,
+      message: deleteResponse
+    };
+    return res.status(HttpStatus.ACCEPTED).json(finalResponse);
+  }
 
   @Delete('/:orgId/invitations/:invitationId')
   @ApiOperation({ summary: 'Delete organization invitation', description: 'Delete organization invitation' })

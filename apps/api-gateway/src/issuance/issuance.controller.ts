@@ -6,7 +6,6 @@ import {
   Post,
   Body,
   UseGuards,
-  BadRequestException,
   HttpStatus,
   Res,
   Query,
@@ -43,6 +42,7 @@ import {
   IssuanceDto,
   IssueCredentialDto,
   OOBCredentialDtoWithEmail,
+  OOBIssueCredentialDto,
   PreviewFileDetails
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -60,7 +60,6 @@ import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
-import { error } from 'console';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -71,7 +70,7 @@ export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
     private readonly awsService: AwsService
-  ) {}
+  ) { }
   private readonly logger = new Logger('IssuanceController');
 
   /**
@@ -299,11 +298,11 @@ export class IssuanceController {
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<object> {
-    const perviewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
+    const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,
-      data: perviewCSVDetails
+      data: previewCSVDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -335,11 +334,11 @@ export class IssuanceController {
     @User() user: user
   ): Promise<Response> {
     clientDetails.userId = user.id;
-    const bulkIssunaceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
+    const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssunaceDetails.response
+      data: bulkIssuanceDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -436,7 +435,7 @@ export class IssuanceController {
     @Res() res: Response,
     @Body() clientDetails: ClientDetails
   ): Promise<Response> {
-    const bulkIssunaceDetails = await this.issueCredentialService.retryBulkCredential(
+    const bulkIssuanceDetails = await this.issueCredentialService.retryBulkCredential(
       fileId,
       orgId,
       clientDetails.clientId
@@ -444,25 +443,27 @@ export class IssuanceController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssunaceDetails.response
+      data: bulkIssuanceDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  /**
-   * Description: Issuer send credential to create offer
-   * @param user
-   * @param issueCredentialDto
-   */
+ /**
+  * @param user 
+  * @param orgId 
+  * @param issueCredentialDto 
+  * @param res 
+  * @returns Issuer creates a credential offer and sends it to the holder
+  */
   @Post('/orgs/:orgId/credentials/offer')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Send credential details to create-offer`,
-    description: `Send credential details to create-offer`
+    summary: `Issuer create a credential offer`,
+    description: `Issuer creates a credential offer and sends it to the holder`
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
     @Param('orgId') orgId: string,
@@ -473,29 +474,29 @@ export class IssuanceController {
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
+      data: getCredentialDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**
-   * Description: credential issuance out-of-band
-   * @param user
-   * @param outOfBandCredentialDto
-   * @param orgId
-   * @param res
-   * @returns
+   * 
+   * @param user 
+   * @param outOfBandCredentialDto 
+   * @param orgId 
+   * @param res 
+   * @returns Issuer creates a out-of-band credential offers and sends them to holders via emails
    */
-  @Post('/orgs/:orgId/credentials/oob')
+  @Post('/orgs/:orgId/credentials/oob/email')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
-    summary: `Send out-of-band credential offer via email`,
-    description: `Sends an out-of-band credential offer on provided email`
+    summary: `Creates a out-of-band credential offer and sends them via emails`,
+    description: `Issuer creates a out-of-band credential offers and sends them to holders via emails`
   })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
@@ -506,30 +507,48 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
-    const credOffer = outOfBandCredentialDto?.credentialOffer || [];
-    if (credOffer.every(item => Boolean(!item?.emailId || '' === item?.emailId.trim()))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.emailIdNotPresent);
-    }
-
-    if (credOffer.every(offer => (!offer?.attributes || 0 === offer?.attributes?.length ||
-      !offer?.attributes?.every(item => item?.name)
-    ))
-    ) {
-      throw new BadRequestException(ResponseMessages.issuance.error.attributesNotPresent);
-    }
 
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(
       user,
       outOfBandCredentialDto
     );
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.issuance.success.fetch,
+      message: ResponseMessages.issuance.success.createOOB,
       data: getCredentialDetails.response
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+    /**
+   * Description: Issuer create out-of-band credential
+   * @param user
+   * @param issueCredentialDto
+   */
+    @Post('/orgs/:orgId/credentials/oob/offer')
+    @ApiBearerAuth()
+    @ApiOperation({
+      summary: `Create out-of-band credential offer`,
+      description: `Creates an out-of-band credential offer`
+    })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    async createOOBCredentialOffer(
+      @Param('orgId') orgId: string,
+      @Body() issueCredentialDto: OOBIssueCredentialDto,
+      @Res() res: Response
+    ): Promise<Response> {
+      issueCredentialDto.orgId = orgId;
+      const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.create,
+        data: getCredentialDetails.response
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
 
   /**
    * Description: webhook Save issued credential details

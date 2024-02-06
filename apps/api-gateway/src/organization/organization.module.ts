@@ -8,7 +8,7 @@ import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
-
+import { AwsService } from '@credebl/aws';
 @Module({
   imports: [
     HttpModule,
@@ -24,7 +24,7 @@ import { ImageServiceService } from '@credebl/image-service';
     ])
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService, ImageServiceService]
+  providers: [OrganizationService, CommonService, ImageServiceService, AwsService]
 })
 export class OrganizationModule { }
 

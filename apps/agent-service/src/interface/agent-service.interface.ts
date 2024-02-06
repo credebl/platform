@@ -25,6 +25,10 @@ export interface IOutOfBandCredentialOffer {
     comment: string;
     protocolVersion?: string;
     orgId: string;
+    goalCode?: string,
+    parentThreadId?: string,
+    willConfirm?: boolean,
+    label?: string
 }
 
 export interface ITenantDto {
@@ -95,7 +99,6 @@ export interface IWalletProvision {
     walletStoragePort: string;
     walletStorageUser: string;
     walletStoragePassword: string;
-    internalIp: string;
     containerName: string;
     agentType: string;
     orgName: string;
@@ -103,6 +106,7 @@ export interface IWalletProvision {
     afjVersion: string;
     protocol: string;
     tenant: boolean;
+    inboundEndpoint: string;
     apiKey?: string;
 }
 
@@ -229,6 +233,10 @@ export interface ISendProofRequestPayload {
     connectionId?: string;
     proofFormats: IProofFormats;
     autoAcceptProof: string;
+    goalCode?:  string;
+    parentThreadId?:  string;
+    willConfirm?: boolean;
+    protocolVersion?: string;
 }
 
 export interface IAgentStatus {
@@ -267,7 +275,8 @@ interface IRequestedPredicatesName {
 }
 
 interface IRequestedRestriction {
-    cred_def_id: string;
+    cred_def_id?: string;
+    schema_id?: string;
 }
 
 export interface IAgentSpinUpSatus {

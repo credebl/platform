@@ -7,9 +7,10 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
-import { IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { organisation } from '@prisma/client';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 
 @Controller()
 export class OrganizationController {
@@ -25,6 +26,16 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'create-organization' })
   async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string }): Promise<organisation> {
     return this.organizationService.createOrganization(payload.createOrgDto, payload.userId);
+  }
+
+  /**
+   * 
+   * @param payload 
+   * @returns organization client credentials
+   */
+  @MessagePattern({ cmd: 'create-org-credentials' })
+  async createOrgCredentials(@Body() payload: { orgId: string; userId: string }): Promise<IOrgCredentials> {
+    return this.organizationService.createOrgCredentials(payload.orgId);
   }
 
   /**
@@ -165,13 +176,33 @@ export class OrganizationController {
     return this.organizationService.getOrgPofile(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'get-organization-owner' })
+  async getOrgOwner(orgId: string): Promise<IOrganization> {
+    return this.organizationService.getOrgOwner(orgId);
+  }
+
+  @MessagePattern({ cmd: 'fetch-org-client-credentials' })
+  async fetchOrgCredentials(payload: { orgId: string }): Promise<IOrgCredentials> {
+    return this.organizationService.fetchOrgCredentials(payload.orgId);
+  }
+
   @MessagePattern({ cmd: 'delete-organization' })
   async deleteOrganization(payload: { orgId: string }): Promise<boolean> {
     return this.organizationService.deleteOrganization(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'delete-org-client-credentials' })
+  async deleteOrganizationCredentials(payload: { orgId: string }): Promise<string> {
+    return this.organizationService.deleteClientCredentials(payload.orgId);
+  }
+
   @MessagePattern({ cmd: 'delete-organization-invitation' })
   async deleteOrganizationInvitation(payload: { orgId: string; invitationId: string; }): Promise<boolean> {
     return this.organizationService.deleteOrganizationInvitation(payload.orgId, payload.invitationId);
+  }
+
+  @MessagePattern({ cmd: 'authenticate-client-credentials' })
+  async clientLoginCredentails(payload: { clientId: string; clientSecret: string;}): Promise<IAccessTokenData> {
+    return this.organizationService.clientLoginCredentails(payload);
   }
 }

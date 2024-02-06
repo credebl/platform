@@ -20,7 +20,8 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser: 'User created successfully',
             shareUserCertificate: 'Certificate URL generated successfully',
-            updateUserProfile: 'User profile updated successfully',
+            updateUserProfile:'User profile updated successfully',
+            resetPassword: 'Password reset successfully',
             degreeCertificate: 'Degree Certificate shared successfully'
         },
         error: {
@@ -54,7 +55,8 @@ export const ResponseMessages = {
             invalidInvitationId: 'Organization invitation does not exist',
             invitationAlreadyPending: 'Organization invitation is already in pending state',
             emailIsNotVerified: 'Email is not verified',
-            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already'
+            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already',
+            resetSamePassword: 'New password should not be the current password'
         }
     },
     organisation: {
@@ -70,7 +72,11 @@ export const ResponseMessages = {
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
             delete: 'Organization deleted successfully',
-            orgInvitationDeleted: 'Organization invitation deleted successfully'
+            orgInvitationDeleted: 'Organization invitation deleted successfully',
+            orgCredentials: 'Organization credentials created successfully',
+            fetchedOrgCredentials: 'Organization credentials fetched successfully',
+            clientCredentials: 'Client credentials fetched successfully',
+            deleteCredentials:'Organization client credentials deleted'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -93,8 +99,7 @@ export const ResponseMessages = {
             orgIdIsRequired: 'OrgId is required',
             invalidUserId: 'Invalid format of userId',
             invalidInvitationId: 'Invalid format for invitaion id',
-            ecosystemIdIsRequired: 'ecosystemId is required'
-
+            ecosystemIdIsRequired: 'ecosystemId is required'            
         }
     },
 
@@ -222,21 +227,23 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            fetch: 'Issued Credentials details fetched successfully',
-            importCSV: 'File imported sucessfully',
-            previewCSV: 'File details fetched sucessfully',
+            createOOB: 'Out-of-band credentials offer created successfully',
+            fetch: 'Issued Credential details fetched successfully',
+            importCSV: 'File imported successfully',
+            previewCSV: 'File details fetched successfully',
             bulkIssuance: 'Issuance process started. It will take some time',
             notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
-            agentEndPointNotFound: 'agent end point Not Found',
+            agentEndPointNotFound: 'Agent details not found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
             notFound: 'History not found',
             credentialOfferNotFound: 'Credential offer not found',
             invitationNotFound: 'Invitation not found',
+            unableToCreateOOBOffer: 'Unable to create out-of-band credential offer',
             platformConfigNotFound: 'Platform config details not found',
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',
@@ -248,7 +255,9 @@ export const ResponseMessages = {
             retry: 'Credentials do not exist for retry',
             walletError: 'Credential Issuance failed due to error in Wallet Agent',
             emailIdNotPresent: 'EmailId is empty or not present',
-            attributesNotPresent: 'Attributes are not present or not empty'
+            attributesNotPresent: 'Attributes are not present or not empty',
+            unableToCreateOffer: 'Unable to create offer',
+            orgAgentTypeNotFound: 'Organization agent type not found'
         }
     },
     verification: {
@@ -273,7 +282,7 @@ export const ResponseMessages = {
         }
     },
     ecosystem: {
-        success: {
+            success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem details updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
@@ -282,16 +291,17 @@ export const ResponseMessages = {
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent',
             schemaRequest: 'Schema transaction request created successfully',
-            credDefRequest: 'credential-definition transaction request created successfully',
-            sign: 'Transaction request signed successfully',
-            submit: 'Transaction request submitted successfully',
+            credDefRequest: 'Credential definition transaction request created successfully',
+            sign: 'Endorsement request approved',
+            submit: 'Endorsement request submitted to ledger',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
             fetchEndorsors: 'Endorser transactions fetched successfully',
-            DeclineEndorsementTransaction: 'Decline endorsement request successfully',
+            DeclineEndorsementTransaction: 'Endorsement request declined',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
             fetchMembers: 'Ecosystem members fetched successfully',
-            allschema: 'Schema details fetched sucessfully'
+            allschema: 'Schema details fetched sucessfully',
+            AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

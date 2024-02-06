@@ -80,7 +80,7 @@ export const ResponseMessages = {
         error: {
             exists: 'An organization name is already exist',
             orgProfileNotFound: 'Organization public profile not found',
-            orgSlugIsRequired: 'orgslug is required',
+            orgSlugIsRequired: 'orgSlug is required',
             invitationIdIsRequired:'Invitation Id is required',
             userIdIsRequired:'UserId is required',
             rolesNotExist: 'Provided roles not exists in the platform',
@@ -98,18 +98,22 @@ export const ResponseMessages = {
             invalidOrgId:'Invalid format for orgId',
             orgIdIsRequired:'OrgId is required',
             clientIdRequired:'clientId is required',
-            notExistClientCred: 'Organization does not have client credentials'            
+            notExistClientCred: 'Organization does not have client credentials',          
+            invalidUserId:'Invalid format of userId',
+            invalidInvitationId:'Invalid format for invitation id',
+            ecosystemIdIsRequired:'ecosystemId is required',
+            roleNotMatch: 'User does not have access'
         }
     },
 
     fido: {
         success: {
             RegistrationOption: 'Registration option created successfully',
-            verifyRegistration: 'Verify registration sucessfully',
+            verifyRegistration: 'Verify registration successfully',
             updateUserDetails: 'User details updated successfully',
             generateAuthenticationOption: 'Authentication option generated successfully',
-            deleteDevice: 'Device deleted sucessfully',
-            updateDeviceName: 'Device name updated sucessfully',
+            deleteDevice: 'Device deleted successfully',
+            updateDeviceName: 'Device name updated successfully',
             login: 'User login successfully'
         },
         error: {
@@ -271,7 +275,7 @@ export const ResponseMessages = {
             notFound: 'Organization agent not found',
             agentUrlNotFound: 'agent url not found',
             schemaIdNotFound: 'Schema Id is required',
-            predicatesValueNotNumber: 'The attribuite value is not a number',
+            predicatesValueNotNumber: 'Attribute value is not a number',
             proofPresentationNotFound: 'Proof presentations not found',
             verifiedProofNotFound: 'Proof presentation not found',
             proofNotFound: 'Proof presentation not found',
@@ -299,7 +303,7 @@ export const ResponseMessages = {
             DeclineEndorsementTransaction: 'Endorsement request declined',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
             fetchMembers: 'Ecosystem members fetched successfully',
-            allschema: 'Schema details fetched sucessfully',
+            allschema: 'Schema details fetched successfully',
             AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
         },
         error: {

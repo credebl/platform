@@ -19,7 +19,7 @@ export class CreateConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
-    @IsUrl({}, { message: 'Invalid imageUrl format' })
+    @IsString()
     imageUrl: string;
 
     @ApiPropertyOptional()
@@ -141,7 +141,7 @@ class ReceiveInvitationCommonDto {
     @IsOptional()
     @IsString({ message: 'imageUrl must be a string' })
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
-    @IsUrl({}, { message: 'Invalid imageUrl format' })
+    @IsString()
     imageUrl: string;
 
     @ApiPropertyOptional()
@@ -261,7 +261,7 @@ class InvitationDto {
     @IsString()
     @IsOptional()
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
-    @IsUrl({}, { message: 'Invalid imageUrl format' })
+    @IsString()
     imageUrl?: string;
 }
 

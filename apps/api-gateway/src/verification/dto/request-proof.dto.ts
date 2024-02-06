@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -10,7 +10,7 @@ export class ProofRequestAttribute {
     attributeName: string;
 
     @IsString()
-    @IsNotEmpty({ message: 'schemaId is required.' })
+    @IsOptional()
     schemaId?: string;
 
     @IsString()
@@ -25,7 +25,6 @@ export class ProofRequestAttribute {
 
     @IsString()
     @IsOptional()
-    @IsNotEmpty({ message: 'credDefId is required.' })
     credDefId?: string;
 }
 
@@ -57,10 +56,10 @@ class ProofPayload {
 
 export class RequestProofDto extends ProofPayload {
     @ApiProperty()
+    @IsString()
     @Transform(({ value }) => trim(value))
     @Transform(({ value }) => toLowerCase(value))
     @IsNotEmpty({ message: 'connectionId is required.' })
-    @MaxLength(36, { message: 'connectionId must be at most 36 character.' })
     connectionId: string;
 
     @ApiProperty({

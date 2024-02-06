@@ -141,6 +141,7 @@ class ReceiveInvitationCommonDto {
     @IsOptional()
     @IsString({ message: 'imageUrl must be a string' })
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    @IsString()
     imageUrl: string;
 
     @ApiPropertyOptional()
@@ -260,6 +261,7 @@ class InvitationDto {
     @IsString()
     @IsOptional()
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    @IsString()
     imageUrl?: string;
 }
 

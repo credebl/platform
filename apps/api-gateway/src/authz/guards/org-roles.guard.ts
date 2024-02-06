@@ -81,6 +81,12 @@ export class OrgRolesGuard implements CanActivate {
       throw new HttpException('organization is required', HttpStatus.BAD_REQUEST);
     }
 
-    return requiredRoles.some((role) => user.selectedOrg?.orgRoles.includes(role));
+    // Sending user friendly message if a user attempts to access an API that is inaccessible to their role
+    const roleAccess = requiredRoles.some((role) => user.selectedOrg?.orgRoles.includes(role));
+    if (!roleAccess) {
+      throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+    }
+
+    return roleAccess;
   }
 }

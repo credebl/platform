@@ -182,5 +182,17 @@ export interface  IUserSignIn{
 export interface IUserResetPassword{
   email: string;
   oldPassword: string;
-  newPassword: boolean;
+  newPassword: string;
+}
+export interface IIssueCertificate {
+  courseCode: string;
+  courseName: string;
+  theoryGradeCredits: string;
+  theoryObtainedEarned: string;
+  practicalGradeCredits: string;
+  practicalObtainedEarned: string;
+}
+export  interface IPuppeteerOption{
+  width: number;
+  height: number;
 }

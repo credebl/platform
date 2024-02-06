@@ -269,7 +269,7 @@ export const ResponseMessages = {
         }
     },
     ecosystem: {
-        success: {
+            success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem details updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
@@ -279,15 +279,16 @@ export const ResponseMessages = {
             createInvitation: 'Ecosystem invitations sent',
             schemaRequest: 'Schema transaction request created successfully',
             credDefRequest: 'Credential definition transaction request created successfully',
-            sign: 'Transaction request signed successfully',
-            submit: 'Transaction request submitted successfully',
+            sign: 'Endorsement request approved',
+            submit: 'Endorsement request submitted to ledger',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
             fetchEndorsors: 'Endorser transactions fetched successfully',
-            DeclineEndorsementTransaction: 'Decline endorsement request successfully',
+            DeclineEndorsementTransaction: 'Endorsement request declined',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
             fetchMembers: 'Ecosystem members fetched successfully',
-            allschema: 'Schema details fetched sucessfully'
+            allschema: 'Schema details fetched sucessfully',
+            AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

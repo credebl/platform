@@ -138,7 +138,7 @@ model user_devices {
 model platform_config {
   id                  String    @id @default(uuid()) @db.Uuid
   externalIp          String    @db.VarChar
-  lastInternalId      String    @db.VarChar
+  inboundEndpoint      String    @db.VarChar
   username            String    @db.VarChar
   sgApiKey            String    @db.VarChar
   emailFrom           String    @db.VarChar

@@ -176,7 +176,7 @@ export interface  IUserSignIn{
 export interface IUserResetPassword{
   email: string;
   oldPassword: string;
-  newPassword: boolean;
+  newPassword: string;
 }
 export interface IIssueCertificate {
   courseCode: string;

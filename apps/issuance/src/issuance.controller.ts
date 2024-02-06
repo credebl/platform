@@ -21,7 +21,7 @@ export class IssuanceController {
 
   @MessagePattern({ cmd: 'get-all-issued-credentials' })
   async getIssueCredentials(payload: IIssueCredentials): Promise<IIssuedCredential> {
-    const { user, orgId, issuedCredentialsSearchCriteria} = payload;
+    const { user, orgId, issuedCredentialsSearchCriteria } = payload;
     return this.issuanceService.getIssueCredentials(user, orgId, issuedCredentialsSearchCriteria);
   }
 
@@ -31,9 +31,9 @@ export class IssuanceController {
     return this.issuanceService.getIssueCredentialsbyCredentialRecordId(user, credentialRecordId, orgId);
   }
 
-  
+
   @MessagePattern({ cmd: 'webhook-get-issue-credential' })
-  async getIssueCredentialWebhook(payload: IssueCredentialWebhookPayload): Promise<object> { 
+  async getIssueCredentialWebhook(payload: IssueCredentialWebhookPayload): Promise<object> {
     return this.issuanceService.getIssueCredentialWebhook(payload);
   }
 
@@ -66,18 +66,18 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'issued-file-details' })
-  async issuedFiles(payload: {orgId:string, fileParameter:PreviewRequest}): Promise<object> {
+  async issuedFiles(payload: { orgId: string, fileParameter: PreviewRequest }): Promise<object> {
     return this.issuanceService.issuedFileDetails(
-      payload.orgId, 
+      payload.orgId,
       payload.fileParameter
-      );
+    );
   }
   @MessagePattern({ cmd: 'issued-file-data' })
-  async getFileDetailsByFileId(payload: {fileId:string, fileParameter:PreviewRequest}): Promise<object> {
-    return this.issuanceService.getFileDetailsByFileId( 
+  async getFileDetailsByFileId(payload: { fileId: string, fileParameter: PreviewRequest }): Promise<object> {
+    return this.issuanceService.getFileDetailsByFileId(
       payload.fileId,
       payload.fileParameter
-      );
+    );
   }
 
 

@@ -69,7 +69,7 @@ export interface ISendVerificationEmail {
   }
   export interface PlatformSettings {
     externalIp: string;
-    lastInternalId: string;
+    inboundEndpoint: string;
     sgApiKey: string;
     emailFrom: string;
     apiEndPoint: string;
@@ -173,6 +173,11 @@ export interface  IUserSignIn{
   isPasskey: boolean;
 }
 
+export interface IUserResetPassword{
+  email: string;
+  oldPassword: string;
+  newPassword: boolean;
+}
 export interface IIssueCertificate {
   courseCode: string;
   courseName: string;

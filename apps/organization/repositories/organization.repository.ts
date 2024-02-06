@@ -13,7 +13,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { IOrganizationInvitations, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganization, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
 export class OrganizationRepository {
@@ -161,14 +161,50 @@ export class OrganizationRepository {
 
   async getOrganizationDetails(orgId: string): Promise<organisation> {
     try {
-      return this.prisma.organisation.findFirst({
+      return this.prisma.organisation.findFirstOrThrow({
         where: {
           id: orgId
-        }
+        }        
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getOrganizationOwnerDetails(orgId: string, role: string): Promise<IOrganization> {
+    try {
+      return this.prisma.organisation.findFirstOrThrow({
+        where: {
+          id: orgId
+        },
+        include: {
+          userOrgRoles: {
+            where: {
+              orgRole: {
+                name: role
+              }
+            },
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  username: true,
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  isEmailVerified: true
+                }
+              },
+              orgRole: true
+            }
+          }
+        }
+        
+      });
+    } catch (error) {
+      this.logger.error(`error in getOrganizationOwnerDetails: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -188,6 +224,22 @@ export class OrganizationRepository {
     };
     return this.getOrgInvitationsPagination(query, pageNumber, pageSize);
   }
+
+  async updateOrganizationById(
+    data: object,
+     orgId: string): Promise<organisation> {
+    try {
+      const orgDetails = await this.prisma.organisation.update({
+        where: { id: orgId },
+        data
+      });
+      return orgDetails;
+    } catch (error) {
+      this.logger.error(`Error in updateOrganizationById: ${error.message}`);
+      throw error;
+    }
+  }
+
 
   async getOrgInvitations(
     queryObject: object

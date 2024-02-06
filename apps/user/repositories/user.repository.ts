@@ -202,6 +202,47 @@ export class UserRepository {
     }
   }
 
+  /**
+   * 
+   * @param id 
+   * @returns 
+   */
+  async getUserByKeycloakId(id: string): Promise<object> {
+    try {
+      return this.prisma.user.findFirstOrThrow({
+        where: {
+          keycloakUserId: id
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          isEmailVerified: true,
+          clientId: true,
+          clientSecret: true,
+          supabaseUserId: true,
+          userOrgRoles: {
+            include: {
+              orgRole: true,
+              organisation: {
+                include: {
+                  // eslint-disable-next-line camelcase
+                  org_agents: true
+                }
+              }
+            }
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error in getUserByKeycloakId: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+
   async findUserByEmail(email: string): Promise<object> {
     const queryOptions: UserQueryOptions = {
       email
@@ -321,7 +362,10 @@ export class UserRepository {
    * @returns Updates organization details
    */
   // eslint-disable-next-line camelcase
-  async updateUserDetails(id: string, supabaseUserId: string): Promise<user> {
+  async updateUserDetails(
+    id: string, 
+    keycloakId: string
+    ): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
@@ -329,7 +373,7 @@ export class UserRepository {
         },
         data: {
           isEmailVerified: true,
-          supabaseUserId
+          keycloakUserId: keycloakId
         }
       });
       return updateUserDetails;
@@ -587,7 +631,7 @@ export class UserRepository {
         },
         data: {
           externalIp: updatePlatformSettings.externalIp,
-          lastInternalId: updatePlatformSettings.lastInternalId,
+          inboundEndpoint: updatePlatformSettings.inboundEndpoint,
           sgApiKey: updatePlatformSettings.sgApiKey,
           emailFrom: updatePlatformSettings.emailFrom,
           apiEndpoint: updatePlatformSettings.apiEndPoint

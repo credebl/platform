@@ -23,6 +23,7 @@ import { AuthTokenResponse } from './dtos/auth-token-res.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
 import { AddUserDetailsDto } from '../user/dto/add-user.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
 
 
 @Controller('auth')
@@ -100,6 +101,7 @@ export class AuthzController {
 
     if (loginUserDto.email) {
       const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password, loginUserDto.isPasskey);
+
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.user.success.login,
@@ -110,6 +112,25 @@ export class AuthzController {
     } else {
       throw new UnauthorizedException(`Please provide valid credentials`);
     }
+  }
+
+  @Post('/reset-password')
+  @ApiOperation({
+    summary: 'Reset password',
+    description: 'Reset Password of the user'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto, @Res() res: Response): Promise<Response> {
+
+      const userData = await this.authzService.resetPassword(resetPasswordDto);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.OK,
+        message: ResponseMessages.user.success.resetPassword,
+        data: userData
+      };
+
+      return res.status(HttpStatus.OK).json(finalResponse);
+   
   }
 
 }

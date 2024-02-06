@@ -64,6 +64,12 @@ export enum NodeEnvironment {
    PRODUCTION='PROD'
 }
 
+export enum AutoAccept {
+    Always = "always",
+    ContentApproved = "contentApproved",
+    Never = "never"
+}
+
 const transitionMap: { [key in Invitation]: Invitation[] } = {
     [Invitation.PENDING]: [Invitation.ACCEPTED, Invitation.REJECTED],
     [Invitation.ACCEPTED]: [],

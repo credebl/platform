@@ -17,6 +17,7 @@ import { accessTokenPayloadDto } from './dtos/accessTokenPayloadDto';
 import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
 import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseService } from '@credebl/response';
 
 @Injectable()
 export class ClientRegistrationService {
@@ -52,14 +53,31 @@ export class ClientRegistrationService {
       this.logger.error(`error in keycloakUserRegistration in client-registration: ${JSON.stringify(error)}`);
       throw error;
     }
+  }
 
+
+  async resetPasswordOfUser(
+    user: CreateUserDto,
+    realm: string,
+    token: string
+  ): Promise<ResponseService> {
+ 
+    const getUserResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.getUserByUsernameURL(realm, user.email),
+      this.getAuthHeader(token)
+    );
+    const userid = getUserResponse[0].id;
+
+    const passwordResponse = await this.resetPasswordOfKeycloakUser(realm, user.password, userid, token);
+
+    return passwordResponse;
   }
 
   async createUser(
     user: CreateUserDto,
     realm: string,
     token: string
-  ) {
+  ): Promise<{ keycloakUserId: string; }> {
     const payload = {
       createdTimestamp: Date.parse(Date.now.toString()),
       username: user.email,
@@ -200,7 +218,7 @@ export class ClientRegistrationService {
       return;
     }
     try {
-      const realmName = process.env.KEYCLOAK_CREDEBL_REALM;
+      const realmName = process.env.KEYCLOAK_REALM;
       const getClientResponse = await this.commonService.httpGet(
         await this.keycloakUrlService.GetClientURL(realmName, clientId),
         this.getAuthHeader(token)
@@ -237,17 +255,39 @@ export class ClientRegistrationService {
     }
   }
 
+  async deleteClient(
+    idpId: string,
+    token: string
+  ) {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const getClientDeleteResponse = await this.commonService.httpDelete(
+      await this.keycloakUrlService.GetClientIdpURL(realmName, idpId),
+      this.getAuthHeader(token)
+    );
+
+    this.logger.log(
+      `Delete realm client ${JSON.stringify(
+        getClientDeleteResponse
+      )}`
+    );
+
+    return getClientDeleteResponse;
+
+  }
 
   async createClient(
-    name: string,
+    orgName: string,
+    orgId: string,
     token: string
   ) {
 
     //create client for respective created realm in order to access its resources
-    const realmName = process.env.KEYCLOAK_CREDEBL_REALM;
+    const realmName = process.env.KEYCLOAK_REALM;
     const clientPayload = {
-      clientId: `admin-${name}`,
-      name: `admin-${name}`,
+      clientId: `${orgId}`,
+      name: `${orgName}`,
       adminUrl: process.env.KEYCLOAK_ADMIN_URL,
       alwaysDisplayInConsole: false,
       access: {
@@ -255,7 +295,9 @@ export class ClientRegistrationService {
         configure: true,
         manage: true
       },
-      attributes: {},
+      attributes: {
+        orgId: `${orgId}`
+      },
       authenticationFlowBindingOverrides: {},
       authorizationServicesEnabled: false,
       bearerOnly: false,
@@ -310,7 +352,7 @@ export class ClientRegistrationService {
     );
 
     const getClientResponse = await this.commonService.httpGet(
-      await this.keycloakUrlService.GetClientURL(realmName, `admin-${name}`),
+      await this.keycloakUrlService.GetClientURL(realmName, `${orgId}`),
       this.getAuthHeader(token)
     );
     this.logger.debug(
@@ -334,9 +376,7 @@ export class ClientRegistrationService {
     const client_secret = getClientSercretResponse.value;
 
     return {
-      //  response: JSON.stringify(
-      //     registerAppResponse
-      //   )
+      idpId: id,
       clientId: client_id,
       clientSecret: client_secret
     };
@@ -439,7 +479,7 @@ export class ClientRegistrationService {
       ) {
         throw new Error('Invalid inputs while getting token.');
       }
-      const strURL = await this.keycloakUrlService.GetSATURL('credebl-platform');
+      const strURL = await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM);
       this.logger.log(`getToken URL: ${strURL}`);
       const config = {
         headers: {
@@ -447,7 +487,7 @@ export class ClientRegistrationService {
         }
       };
       const tokenResponse = await this.commonService.httpPost(
-        await this.keycloakUrlService.GetSATURL('credebl-platform'),
+        await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM),
         qs.stringify(payload)
         , config);
 
@@ -540,7 +580,7 @@ export class ClientRegistrationService {
         throw new Error('Invalid inputs while getting token.');
       }
 
-      const strURL = await this.keycloakUrlService.GetSATURL('credebl-platform');
+      const strURL = await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM);
       this.logger.log(`getToken URL: ${strURL}`);
       const config = {
         headers: {
@@ -549,7 +589,7 @@ export class ClientRegistrationService {
       };
 
       const tokenResponse = await this.commonService.httpPost(
-        await this.keycloakUrlService.GetSATURL('credebl-platform'),
+        await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM),
         qs.stringify(payload)
         , config);
 

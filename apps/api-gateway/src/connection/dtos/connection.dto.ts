@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -19,6 +19,7 @@ export class CreateConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    @IsUrl({}, { message: 'Invalid imageUrl format' })
     imageUrl: string;
 
     @ApiPropertyOptional()
@@ -30,8 +31,33 @@ export class CreateConnectionDto {
     @ApiPropertyOptional()
     @IsBoolean()
     @IsOptional()
-    @IsNotEmpty({ message: 'autoAcceptConnection should be boolean' })
+    @IsNotEmpty({ message: 'Please provide autoAcceptConnection' })
     autoAcceptConnection: boolean;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide goalCode' })
+    goalCode: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide goal' })
+    goal: string;
+
+    @ApiPropertyOptional()
+    @IsBoolean()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide handshake' })
+    handshake: boolean;
+
+    @ApiPropertyOptional()
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsOptional()
+    @IsString({ each: true })
+    handshakeProtocols: string[];
 
     orgId: string;
 }
@@ -115,6 +141,7 @@ class ReceiveInvitationCommonDto {
     @IsOptional()
     @IsString({ message: 'imageUrl must be a string' })
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    @IsUrl({}, { message: 'Invalid imageUrl format' })
     imageUrl: string;
 
     @ApiPropertyOptional()
@@ -148,64 +175,93 @@ export class ReceiveInvitationUrlDto extends ReceiveInvitationCommonDto {
     @IsOptional()
     @IsString({ message: 'invitationUrl must be a string' })
     @IsNotEmpty({ message: 'please provide valid invitationUrl' })
+    @IsUrl({}, { message: 'Invalid imageUrl format' })
     invitationUrl: string;
 }
 
 
 class ServiceDto {
+    @ApiProperty()
     @IsString()
+    @IsNotEmpty({ message: 'please provide valid id' })
     id: string;
 
+    @ApiProperty()
     @IsString()
+    @IsNotEmpty({ message: 'please provide valid serviceEndpoint' })
+    @IsUrl({}, { message: 'Invalid serviceEndpoint format' })
     serviceEndpoint: string;
 
+    @ApiProperty()
     @IsString()
+    @IsNotEmpty({ message: 'please provide valid type' })
     type: string;
 
+    @ApiProperty()
     @IsString({ each: true })
     recipientKeys: string[];
 
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString({ each: true })
     routingKeys: string[];
 
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString({ each: true })
     accept: string[];
 }
 
 class InvitationDto {
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
+    @IsNotEmpty({ message: 'please provide valid @id' })
     '@id': string;
 
+    @ApiProperty()
     @IsString()
+    @IsNotEmpty({ message: 'please provide valid @type' })
     '@type': string;
 
+    @ApiProperty()
     @IsString()
+    @IsNotEmpty({ message: 'please provide valid label' })
     label: string;
 
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString()
+    @IsNotEmpty({ message: 'please provide valid goalCode' })
     goalCode: string;
 
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString()
+    @IsNotEmpty({ message: 'please provide valid goal' })
     goal: string;
 
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString({ each: true })
     accept: string[];
 
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString({ each: true })
     // eslint-disable-next-line camelcase
     handshake_protocols: string[];
 
+    @ApiProperty()
     @ValidateNested({ each: true })
     @Type(() => ServiceDto)
     services: ServiceDto[];
 
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    @IsUrl({}, { message: 'Invalid imageUrl format' })
     imageUrl?: string;
 }
 

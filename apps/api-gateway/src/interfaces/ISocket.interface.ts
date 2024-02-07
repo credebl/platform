@@ -6,4 +6,5 @@ export interface ISocketInterface {
     error?: string;
     connectionId?: string;
     demoFlow?: string;
+    fileUploadId?: string;
 }

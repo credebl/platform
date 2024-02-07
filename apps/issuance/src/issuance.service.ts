@@ -1023,7 +1023,7 @@ export class IssuanceService {
       fileUploadData.detailError = `${JSON.stringify(error)}`;
       if (!isErrorOccurred) {
         isErrorOccurred = true;
-        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error });
+        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId, error });
       }
 
     }
@@ -1037,7 +1037,7 @@ export class IssuanceService {
 
         if (!jobDetails.isRetry) {
           this.cacheManager.del(jobDetails.cacheId);
-          socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId });
+          socket.emit('bulk-issuance-process-completed', {clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId});
         } else {
           socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId });
         }

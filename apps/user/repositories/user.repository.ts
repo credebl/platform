@@ -15,7 +15,7 @@ import {
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { schema, user } from '@prisma/client';
+import { schema, token, user } from '@prisma/client';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -609,6 +609,69 @@ export class UserRepository {
       return updateUserDetails;
     } catch (error) {
       this.logger.error(`Error in update isEmailVerified: ${error.message} `);
+      throw error;
+    }
+  }
+
+  /**
+   * 
+   * @param userId 
+   * @param token 
+   * @param expireTime 
+   * @returns token details
+   */
+  async createTokenForResetPassword(userId: string, token: string, expireTime: Date): Promise<token> {
+    try {
+      const createResetPasswordToken = await this.prisma.token.create({
+        data: {
+          token,
+          userId,
+          expiresAt: expireTime
+        }
+      });
+      return createResetPasswordToken;
+    } catch (error) {
+      this.logger.error(`Error in createTokenForResetPassword: ${error.message} `);
+      throw error;
+    }
+  }
+
+  /**
+   * 
+   * @param userId 
+   * @param token 
+   * @returns reset password token details
+   */
+  async getResetPasswordTokenDetails(userId: string, token: string): Promise<token> {
+    try {
+      const tokenDetails = await this.prisma.token.findUnique({
+        where: {
+          userId,
+          token
+        }
+      });
+      return tokenDetails;
+    } catch (error) {
+      this.logger.error(`Error in getResetPasswordTokenDetails: ${error.message} `);
+      throw error;
+    }
+  }
+
+  /**
+   * 
+   * @param id 
+   * @returns token delete records
+   */
+  async deleteResetPasswordToken(id: string): Promise<token> {
+    try {
+      const tokenDeleteDetails = await this.prisma.token.delete({
+        where: {
+          id
+        }
+      });
+      return tokenDeleteDetails;
+    } catch (error) {
+      this.logger.error(`Error in deleteResetPasswordToken: ${error.message} `);
       throw error;
     }
   }

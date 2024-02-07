@@ -42,4 +42,5 @@ export interface ISignInUser {
       export interface IResetPasswordResponse {
         id: string;
         email: string;
-      }      
+      }    
+        

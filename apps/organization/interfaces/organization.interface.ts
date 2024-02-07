@@ -6,6 +6,11 @@ export interface IUserOrgRoles {
   orgRole: IOrgRole
 }
 
+export interface IClientCredentials {
+  clientId: string;
+  clientSecret: string;
+}
+
 export interface IUpdateOrganization {
   name: string;
   description?: string;
@@ -71,12 +76,13 @@ interface ILedgers {
   networkType: string
 }
 
-export interface IGetOrgs {
+export interface IGetOrganization {
+  totalCount:number;
   totalPages:number;
-  organizations : IAllOrganizations[];
+  organizations : IGetAllOrganizations[];
 }
 
-interface IAllOrganizations {
+interface IGetAllOrganizations{
   id: string,
   name: string,
   description: string,
@@ -117,13 +123,6 @@ interface IOrganizationPagination {
   id: string;
   name: string;
   logoUrl: string;
-}
-
-export interface IOrganizationDashboard {
-  usersCount: number,
-  schemasCount: number,
-  credentialsCount: number,
-  presentationsCount:number
 }
 
 export interface Payload {

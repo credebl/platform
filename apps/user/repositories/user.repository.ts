@@ -4,7 +4,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   IOrgUsers,
   PlatformSettings,
-  ShareUserCertificate,
+  IShareUserCertificate,
   UpdateUserProfile,
   IUserCredentials,
   ISendVerificationEmail,
@@ -38,12 +38,18 @@ export class UserRepository {
    */
   async createUser(userEmailVerification:ISendVerificationEmail, verifyCode: string): Promise<user> {
     try {
-      const saveResponse = await this.prisma.user.create({
-        data: {
+      const saveResponse = await this.prisma.user.upsert({
+        where: {
+          email: userEmailVerification.email
+        },
+        create: {
           username: userEmailVerification.username,
           email: userEmailVerification.email,
           verificationCode: verifyCode.toString(),
           publicProfile: true
+        },
+        update: {
+          verificationCode: verifyCode.toString()
         }
       });
 
@@ -70,7 +76,7 @@ export class UserRepository {
       });
     } catch (error) {
       this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 
@@ -196,6 +202,47 @@ export class UserRepository {
     }
   }
 
+  /**
+   * 
+   * @param id 
+   * @returns 
+   */
+  async getUserByKeycloakId(id: string): Promise<object> {
+    try {
+      return this.prisma.user.findFirstOrThrow({
+        where: {
+          keycloakUserId: id
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          isEmailVerified: true,
+          clientId: true,
+          clientSecret: true,
+          supabaseUserId: true,
+          userOrgRoles: {
+            include: {
+              orgRole: true,
+              organisation: {
+                include: {
+                  // eslint-disable-next-line camelcase
+                  org_agents: true
+                }
+              }
+            }
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error in getUserByKeycloakId: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+
   async findUserByEmail(email: string): Promise<object> {
     const queryOptions: UserQueryOptions = {
       email
@@ -224,6 +271,7 @@ export class UserRepository {
         profileImg: true,
         publicProfile: true,
         supabaseUserId: true,
+        isEmailVerified: true,
         userOrgRoles: {
           select:{
             id: true,
@@ -314,7 +362,10 @@ export class UserRepository {
    * @returns Updates organization details
    */
   // eslint-disable-next-line camelcase
-  async updateUserDetails(id: string, supabaseUserId: string): Promise<user> {
+  async updateUserDetails(
+    id: string, 
+    keycloakId: string
+    ): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
@@ -322,7 +373,7 @@ export class UserRepository {
         },
         data: {
           isEmailVerified: true,
-          supabaseUserId
+          keycloakUserId: keycloakId
         }
       });
       return updateUserDetails;
@@ -485,7 +536,7 @@ export class UserRepository {
     return { totalPages, users };
   }
 
-  async getAttributesBySchemaId(shareUserCertificate: ShareUserCertificate): Promise<schema> {
+  async getAttributesBySchemaId(shareUserCertificate: IShareUserCertificate): Promise<schema> {
     try {
       const getAttributes = await this.prisma.schema.findFirst({
         where: {
@@ -580,7 +631,7 @@ export class UserRepository {
         },
         data: {
           externalIp: updatePlatformSettings.externalIp,
-          lastInternalId: updatePlatformSettings.lastInternalId,
+          inboundEndpoint: updatePlatformSettings.inboundEndpoint,
           sgApiKey: updatePlatformSettings.sgApiKey,
           emailFrom: updatePlatformSettings.emailFrom,
           apiEndpoint: updatePlatformSettings.apiEndPoint

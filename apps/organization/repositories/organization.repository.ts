@@ -6,13 +6,14 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IGetOrgById, IGetOrgs, IOrgInvitationsPagination, IOrganizationDashboard, IUpdateOrganization } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { IOrganizationInvitations, IOrganization, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
 export class OrganizationRepository {
@@ -64,7 +65,7 @@ export class OrganizationRepository {
       return orgData;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 
@@ -92,7 +93,7 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 
@@ -148,7 +149,7 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -160,10 +161,10 @@ export class OrganizationRepository {
 
   async getOrganizationDetails(orgId: string): Promise<organisation> {
     try {
-      return this.prisma.organisation.findFirst({
+      return this.prisma.organisation.findFirstOrThrow({
         where: {
           id: orgId
-        }
+        }        
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
@@ -171,13 +172,50 @@ export class OrganizationRepository {
     }
   }
 
+  async getOrganizationOwnerDetails(orgId: string, role: string): Promise<IOrganization> {
+    try {
+      return this.prisma.organisation.findFirstOrThrow({
+        where: {
+          id: orgId
+        },
+        include: {
+          userOrgRoles: {
+            where: {
+              orgRole: {
+                name: role
+              }
+            },
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  username: true,
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  isEmailVerified: true
+                }
+              },
+              orgRole: true
+            }
+          }
+        }
+        
+      });
+    } catch (error) {
+      this.logger.error(`error in getOrganizationOwnerDetails: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+
   async getAllOrgInvitations(
     email: string,
     status: string,
     pageNumber: number,
     pageSize: number,
     search = ''
-  ): Promise<IOrgInvitationsPagination> {
+  ): Promise<IOrganizationInvitations> {
 
     this.logger.log(search);
     const query = {
@@ -186,6 +224,22 @@ export class OrganizationRepository {
     };
     return this.getOrgInvitationsPagination(query, pageNumber, pageSize);
   }
+
+  async updateOrganizationById(
+    data: object,
+     orgId: string): Promise<organisation> {
+    try {
+      const orgDetails = await this.prisma.organisation.update({
+        where: { id: orgId },
+        data
+      });
+      return orgDetails;
+    } catch (error) {
+      this.logger.error(`Error in updateOrganizationById: ${error.message}`);
+      throw error;
+    }
+  }
+
 
   async getOrgInvitations(
     queryObject: object
@@ -205,7 +259,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IOrgInvitationsPagination> {
+  async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IOrganizationInvitations> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.org_invitations.findMany({
@@ -253,7 +307,7 @@ export class OrganizationRepository {
     }
   }
 
-  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrgInvitationsPagination> {
+  async getInvitationsByOrgId(orgId: string, pageNumber: number, pageSize: number, search = ''): Promise<IOrganizationInvitations> {
     try {
       const query = {
         orgId,
@@ -266,7 +320,7 @@ export class OrganizationRepository {
       return this.getOrgInvitationsPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 
@@ -369,7 +423,7 @@ export class OrganizationRepository {
 
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw new error;
     }
   }
 
@@ -391,7 +445,7 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -422,7 +476,7 @@ export class OrganizationRepository {
     filterOptions: object,
     pageNumber: number,
     pageSize: number
-  ): Promise<IGetOrgs> {
+  ): Promise<IGetOrganization> {
     try {
       const sortByName = 'asc';
       const result = await this.prisma.$transaction([
@@ -471,7 +525,7 @@ export class OrganizationRepository {
       const totalCount = result[1];
       const totalPages = Math.ceil(totalCount / pageSize);
 
-      return { totalPages, organizations };
+      return { totalCount, totalPages, organizations };
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

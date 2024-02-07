@@ -36,12 +36,11 @@ export class CommonService {
         .post(url, payload, apiKey)
         .toPromise()
         .then((response: any) => {
-          this.logger.log(`SUCCESS in POST : ${JSON.stringify(response.data)}`);
           this.logger.error(response.data);
           return response.data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in POST : ${error}`);
+      this.logger.error(`ERROR in POST : ${JSON.stringify(error)}`);
       if (
         error
           .toString()
@@ -68,6 +67,7 @@ export class CommonService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
+            message: error.message,
             error: error.response.data ? error.response.data : error.message
           },
           HttpStatus.BAD_REQUEST
@@ -83,15 +83,17 @@ export class CommonService {
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
-      } else {
+      } 
+      
         throw new HttpException(
           {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            statusCode: error.response.status,
+            message: error.message,
             error: error.response.data ? error.response.data : error.message
           },
-          HttpStatus.INTERNAL_SERVER_ERROR
+          error.response.status
         );
-      }
+      
     }
   }
 
@@ -102,7 +104,6 @@ export class CommonService {
         .get(url, config)
         .toPromise()
         .then((data) =>
-          // this.logger.log(`Success Data: ${JSON.stringify(data.data)}`);
           data.data
         );
     } catch (error) {
@@ -171,7 +172,6 @@ export class CommonService {
         .patch(url, payload, apiKey)
         .toPromise()
         .then((response: any) => {
-          this.logger.log(`SUCCESS in POST : ${JSON.stringify(response.data)}`);
           return response.data;
         });
     } catch (error) {

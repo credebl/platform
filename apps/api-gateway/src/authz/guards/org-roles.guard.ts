@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
+import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 
 import { HttpException } from '@nestjs/common';
 import { HttpStatus } from '@nestjs/common';
@@ -7,7 +7,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Reflector } from '@nestjs/core';
 import { ResponseMessages } from '@credebl/common/response-messages';
-
+import { validate as isValidUUID } from 'uuid';
 @Injectable()
 export class OrgRolesGuard implements CanActivate {
   constructor(private reflector: Reflector) { }            // eslint-disable-next-line array-callback-return
@@ -25,21 +25,31 @@ export class OrgRolesGuard implements CanActivate {
       return true;
     }
 
-    // Request requires org check, proceed with it
     const req = context.switchToHttp().getRequest();
-
     const { user } = req;
+  
+    req.params.orgId = req.params?.orgId ? req.params?.orgId?.trim() : '';
+    req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
+    req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
 
-    if (req.params.orgId || req.query.orgId || req.body.orgId) {
-      const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
 
+    if (!orgId) {
+      throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
+    }
+
+    if (!isValidUUID(orgId)) {
+      throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+    }
+  
+    if (orgId) {     
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
           return false;
         }
-        return orgDetails.orgId.toString() === orgId.toString();
+        return orgDetails.orgId.toString().trim() === orgId.toString().trim();
       });
-
+      
       if (!specificOrg) {
         throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
       }
@@ -47,7 +57,7 @@ export class OrgRolesGuard implements CanActivate {
       user.selectedOrg = specificOrg;
       // eslint-disable-next-line array-callback-return
       user.selectedOrg.orgRoles = user.userOrgRoles.map((orgRoleItem) => {
-        if (orgRoleItem.orgId && orgRoleItem.orgId.toString() === orgId.toString()) {
+        if (orgRoleItem.orgId && orgRoleItem.orgId.toString().trim() === orgId.toString().trim()) {
           return orgRoleItem.orgRole.name;
         }
       });
@@ -71,6 +81,12 @@ export class OrgRolesGuard implements CanActivate {
       throw new HttpException('organization is required', HttpStatus.BAD_REQUEST);
     }
 
-    return requiredRoles.some((role) => user.selectedOrg?.orgRoles.includes(role));
+    // Sending user friendly message if a user attempts to access an API that is inaccessible to their role
+    const roleAccess = requiredRoles.some((role) => user.selectedOrg?.orgRoles.includes(role));
+    if (!roleAccess) {
+      throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+    }
+
+    return roleAccess;
   }
 }

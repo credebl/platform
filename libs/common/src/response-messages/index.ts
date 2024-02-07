@@ -20,7 +20,9 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser:'User created successfully',
             shareUserCertificate:'Certificate URL generated successfully',
-            updateUserProfile:'User profile updated successfully'
+            updateUserProfile:'User profile updated successfully',
+            resetPassword: 'Password reset successfully',
+            degreeCertificate: 'Degree Certificate shared successfully'
         },
         error: {
             exists: 'User already exists',
@@ -38,6 +40,8 @@ export const ResponseMessages = {
             invalidCredentials: 'Invalid Credentials',
             registerFido: 'Please complete your fido registration',
             invitationNotFound: 'Invitation not found',
+            invitationAlreadyAccepted:'Organization invitation already accepted',
+            invitationAlreadyRejected:'Organization invitation already rejected',
             invalidInvitationStatus: 'Invalid invitation status',
             invalidKeycloakId: 'keycloakId is invalid',
             invalidEmail: 'Invalid Email Id!',
@@ -46,7 +50,13 @@ export const ResponseMessages = {
             emailNotVerified: 'The verification link has already been sent to your email address. please verify',
             userNotRegisterd: 'The user has not yet completed the registration process',
             InvalidEmailDomain :'Email from this domain is not allowed',
-            credentialNotFound: 'User credentials not found'
+            credentialNotFound: 'User credentials not found',
+            invalidOrgId:'Organization does not exist',
+            invalidInvitationId:'Organization invitation does not exist',
+            invitationAlreadyPending:'Organization invitation is already in pending state',
+            emailIsNotVerified:'Email is not verified',
+            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already',
+            resetSamePassword: 'New password should not be the current password'
         }
     },
     organisation: {
@@ -62,32 +72,49 @@ export const ResponseMessages = {
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
             delete: 'Organization deleted successfully',
-            orgInvitationDeleted: 'Organization invitation deleted successfully'
+            orgInvitationDeleted: 'Organization invitation deleted successfully',
+            orgCredentials: 'Organization credentials created successfully',
+            fetchedOrgCredentials: 'Organization credentials fetched successfully',
+            clientCredentials: 'Client credentials fetched successfully',
+            deleteCredentials:'Organization client credentials deleted'
         },
         error: {
             exists: 'An organization name is already exist',
-            profileNotFound: 'Organization public profile not found',
+            orgProfileNotFound: 'Organization public profile not found',
+            orgSlugIsRequired: 'orgSlug is required',
+            invitationIdIsRequired:'Invitation Id is required',
+            userIdIsRequired:'UserId is required',
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
+            orgRoleIdNotFound:'Provided roles not exists in the platform',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
             deleteOrgInvitation: 'Organization does not have access to delete this invitation',
             notFound: 'Organization agent not found',
             orgNotFound: 'Organization not found',
             orgNotMatch: 'Organization does not have access',
-            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status'
+            invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
+            credentialsNotUpdate: 'Unable to update organization credentials',
+            invalidOrgId:'Invalid format for orgId',
+            orgIdIsRequired:'OrgId is required',
+            clientIdRequired:'clientId is required',
+            notExistClientCred: 'Organization does not have client credentials',          
+            invalidUserId:'Invalid format of userId',
+            invalidInvitationId:'Invalid format for invitation id',
+            ecosystemIdIsRequired:'ecosystemId is required',
+            roleNotMatch: 'User does not have access'
         }
     },
 
     fido: {
         success: {
             RegistrationOption: 'Registration option created successfully',
-            verifyRegistration: 'Verify registration sucessfully',
+            verifyRegistration: 'Verify registration successfully',
             updateUserDetails: 'User details updated successfully',
             generateAuthenticationOption: 'Authentication option generated successfully',
-            deleteDevice: 'Device deleted sucessfully',
-            updateDeviceName: 'Device name updated sucessfully',
+            deleteDevice: 'Device deleted successfully',
+            updateDeviceName: 'Device name updated successfully',
             login: 'User login successfully'
         },
         error: {
@@ -153,7 +180,9 @@ export const ResponseMessages = {
     agent: {
         success: {
             create: 'Agent process initiated successfully. Please wait',
-            health: 'Agent health details retrieved successfully.'
+            health: 'Agent health details retrieved successfully.',
+            webhookUrlRegister:'Webhook Url registered successfully',
+            getWebhookUrl:'Webhook Url fetched successfully'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -178,12 +207,17 @@ export const ResponseMessages = {
             walletAlreadyProcessing: 'Your wallet is already processing',
             notAbleToSpinp: 'Agent not able to spun up',
             platformAdminNotAbleToSpinp: 'Platform admin agent is not spun up',
-            seedCharCount: 'seed must be at most 32 characters'
+            seedCharCount: 'seed must be at most 32 characters',
+            nullTenantId:'TenantId must not be null',
+            tenantIdNotFound:'TenantId not found',
+            invalidTenantIdIdFormat:'Invalid tenantId format',
+            requiredTenantId:'Tenant Id is required'
         }
     },
     connection: {
         success: {
             create: 'Connection created successfully',
+            receivenvitation: 'Invitation received successfully',
             fetchConnection: 'Connection details fetched successfully',
             fetch: 'Connections details fetched successfully'
         },
@@ -197,21 +231,23 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
+            createOOB: 'Out-of-band credentials offer created successfully',
             fetch: 'Issued Credential details fetched successfully',
-            importCSV: 'File imported sucessfully',
-            previewCSV: 'File details fetched sucessfully',
+            importCSV: 'File imported successfully',
+            previewCSV: 'File details fetched successfully',
             bulkIssuance: 'Issuance process started. It will take some time',
             notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
-            agentEndPointNotFound: 'agent end point Not Found',
+            agentEndPointNotFound: 'Agent details not found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
             notFound: 'History not found',
             credentialOfferNotFound: 'Credential offer not found',
             invitationNotFound: 'Invitation not found',
+            unableToCreateOOBOffer: 'Unable to create out-of-band credential offer',
             platformConfigNotFound: 'Platform config details not found',
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',
@@ -223,14 +259,16 @@ export const ResponseMessages = {
             retry: 'Credentials do not exist for retry',
             walletError: 'Credential Issuance failed due to error in Wallet Agent',
             emailIdNotPresent: 'EmailId is empty or not present',
-            attributesNotPresent: 'Attributes are not present or not empty'
+            attributesNotPresent: 'Attributes are not present or not empty',
+            unableToCreateOffer: 'Unable to create offer',
+            orgAgentTypeNotFound: 'Organization agent type not found'
         }
     },
     verification: {
         success: {
             fetch: 'Proof presentations details fetched successfully.',
-            create: 'Presentation of proof details created successfully.',
-            proofFormData: 'Proof presentation form data received successfully.',
+            create: 'Presentation of proof received successfully.',
+            verifiedProofDetails: 'Proof presentation details fetched successfully.',
             send: 'Proof request send successfully.',
             verified: 'Proof presentation verified successfully.'
         },
@@ -238,15 +276,17 @@ export const ResponseMessages = {
             notFound: 'Organization agent not found',
             agentUrlNotFound: 'agent url not found',
             schemaIdNotFound: 'Schema Id is required',
-            predicatesValueNotNumber: 'The attribuite value is not a number',
+            predicatesValueNotNumber: 'Attribute value is not a number',
             proofPresentationNotFound: 'Proof presentations not found',
+            verifiedProofNotFound: 'Proof presentation not found',
+            proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             emailSend: 'Unable to send email to the user'
         }
     },
     ecosystem: {
-        success: {
+            success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem details updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
@@ -255,16 +295,17 @@ export const ResponseMessages = {
             getInvitation: 'Ecosystem invitations fetched successfully',
             createInvitation: 'Ecosystem invitations sent',
             schemaRequest: 'Schema transaction request created successfully',
-            credDefRequest: 'credential-definition transaction request created successfully',
-            sign: 'Transaction request signed successfully',
-            submit: 'Transaction request submitted successfully',
+            credDefRequest: 'Credential definition transaction request created successfully',
+            sign: 'Endorsement request approved',
+            submit: 'Endorsement request submitted to ledger',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
             fetchEndorsors: 'Endorser transactions fetched successfully',
-            DeclineEndorsementTransaction: 'Decline endorsement request successfully',
+            DeclineEndorsementTransaction: 'Endorsement request declined',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
             fetchMembers: 'Ecosystem members fetched successfully',
-            allschema: 'Schema details fetched sucessfully'
+            allschema: 'Schema details fetched successfully',
+            AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
         },
         error: {
             notCreated: 'Error while creating ecosystem',
@@ -328,5 +369,22 @@ export const ResponseMessages = {
         notAcceptable: 'Not Acceptable',
         notFound: 'Not Found',
         serverError: 'Internal Server error'
+    },
+    webhook: {
+        success: {
+            webhookUrlRegister:'Webhook Url registered successfully',
+            getWebhookUrl:'Webhook Url fetched successfully'
+        },
+        error: {
+            registerWebhook:'Unable to register a webhook url',
+            webhookResponse:'Error in sending webhook response to org webhook url',
+            notFound:'Webhook url not found'
+        }
+    },
+    shorteningUrl: {
+        success: {
+            getshorteningUrl:'Shortening Url fetched successfully',
+            createShorteningUrl: 'Shortening Url created successfully'
+        }
     }
 };

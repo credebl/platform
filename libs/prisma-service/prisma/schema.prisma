@@ -31,6 +31,16 @@ model user {
   user_activities     user_activity[]
   userDevices         user_devices[]
   userOrgRoles        user_org_roles[]
+  token               token[]
+}
+
+model token {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    String
+  user      user     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 }
 
 model user_activity {

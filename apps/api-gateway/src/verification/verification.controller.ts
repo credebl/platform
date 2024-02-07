@@ -318,9 +318,9 @@ export class VerificationController {
             throw new BadRequestException('attributeName must be required');
         }
 
-        // if (attrData.hasOwnProperty('attributeName')) {
-        //     throw new BadRequestException('attributeName must be unique');
-        // }
+        if (attrData.hasOwnProperty['attributeName']) {
+            throw new BadRequestException('attributeName must be unique');
+        }
 
         if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
             throw new BadRequestException('condition cannot be empty');

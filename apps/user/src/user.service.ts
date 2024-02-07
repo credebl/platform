@@ -60,6 +60,7 @@ import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
+import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 
 @Injectable()
 export class UserService {
@@ -413,6 +414,131 @@ export class UserService {
     if (isFidoVerified) {
       await this.userRepository.addUserPassword(email.toLowerCase(), password);
       return true;
+    }
+  }
+
+  /**
+   * Forgot password
+   * @param forgotPasswordDto 
+   * @returns 
+   */
+  async forgotPassword(forgotPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
+    const { email } = forgotPasswordDto;
+
+    try {
+      this.validateEmail(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+
+      if (userData && !userData.isEmailVerified) {
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      }
+
+      const token = uuidv4();
+      const expirationTime = new Date();
+      expirationTime.setHours(expirationTime.getHours() + 1); // Set expiration time to 1 hour from now
+  
+      const tokenCreated = await this.userRepository.createTokenForResetPassword(userData.id, token, expirationTime);
+
+      if (!tokenCreated) {
+        throw new InternalServerErrorException(ResponseMessages.user.error.resetPasswordLink);
+      }
+
+      try {
+        await this.sendEmailForResetPassword(email, tokenCreated.token);
+      } catch (error) {
+        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+      }
+
+      return {
+        id: tokenCreated.id,
+        email: userData.email
+      };
+      
+    } catch (error) {
+      this.logger.error(`Error In forgotPassword : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Send email for token verification of reset password
+   * @param email 
+   * @param verificationCode 
+   * @returns 
+   */
+  async sendEmailForResetPassword(email: string, verificationCode: string): Promise<boolean> {
+    try {
+      const platformConfigData = await this.prisma.platform_config.findMany();
+
+      const urlEmailTemplate = new URLUserResetPasswordTemplate();
+      const emailData = new EmailDto();
+      emailData.emailFrom = platformConfigData[0].emailFrom;
+      emailData.emailTo = email;
+      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Important: Password Reset Request`;
+
+      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, verificationCode);
+      const isEmailSent = await sendEmail(emailData);
+      if (isEmailSent) {
+        return isEmailSent;
+      } else {
+        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+      }
+    } catch (error) {
+      this.logger.error(`Error in sendEmailForResetPassword: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Create reset password token
+   * @param resetPasswordDto 
+   * @returns user details
+   */
+  async resetTokenPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
+    
+    const { email, password, token } = resetPasswordDto;
+
+    try {
+      this.validateEmail(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+
+      if (userData && !userData.isEmailVerified) {
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      }
+ 
+      const tokenDetails = await this.userRepository.getResetPasswordTokenDetails(userData.id, token);
+
+      if (!tokenDetails || (new Date() > tokenDetails.expiresAt)) {
+        throw new BadRequestException(ResponseMessages.user.error.invalidResetLink);
+      }
+
+      const decryptedPassword = await this.commonService.decryptPassword(password);
+      try {        
+        const authToken = await this.clientRegistrationService.getManagementToken();  
+        userData.password = decryptedPassword;
+        await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
+        await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, password);
+      } catch (error) {
+        this.logger.error(`Error reseting the password`, error);
+        throw new InternalServerErrorException('Error while reseting user password');
+      }
+
+      await this.userRepository.deleteResetPasswordToken(tokenDetails.id);
+
+      return {
+        id: userData.id,
+        email: userData.email
+      };
+      
+    } catch (error) {
+      this.logger.error(`Error In resetTokenPassword : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

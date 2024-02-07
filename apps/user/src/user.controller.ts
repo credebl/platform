@@ -49,6 +49,16 @@ export class UserController {
    return this.userService.resetPassword(payload);
   }
 
+  @MessagePattern({ cmd: 'user-set-token-password' })
+  async resetTokenPassword(payload: IUserResetPassword): Promise<IResetPasswordResponse> {   
+    return this.userService.resetTokenPassword(payload);
+  }
+
+  @MessagePattern({ cmd: 'user-forgot-password' })
+  async forgotPassword(payload: IUserResetPassword): Promise<IResetPasswordResponse> {
+   return this.userService.forgotPassword(payload);
+  }
+
   @MessagePattern({ cmd: 'get-user-profile' })
   async getProfile(payload: { id }): Promise<IUsersProfile> {
     return this.userService.getProfile(payload);

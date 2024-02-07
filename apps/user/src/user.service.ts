@@ -296,6 +296,13 @@ export class UserService {
         throw new NotFoundException(ResponseMessages.user.error.emailNotVerified);
       }
 
+      const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
+      const tokenResponse = await this.generateToken(email.toLowerCase(), decryptedPassword, checkUserDetails);
+
+      if (!tokenResponse) {
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
+      }
+
       const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
       if (!resUser) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
@@ -353,6 +360,13 @@ export class UserService {
     }
   }
 
+  async updateFidoVerifiedUser(email: string, isFidoVerified: boolean, password: string): Promise<boolean> {
+    if (isFidoVerified) {
+      await this.userRepository.addUserPassword(email.toLowerCase(), password);
+      return true;
+    }
+  }
+
   async resetPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
     const { email, oldPassword, newPassword } = resetPasswordDto;
 
@@ -383,14 +397,16 @@ export class UserService {
           const token = await this.clientRegistrationService.getManagementToken();  
 
           if (userData.keycloakUserId) {
-            
+
             keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, token);
+            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
 
           } else {
             keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
             await this.userRepository.updateUserDetails(userData.id,
               keycloakDetails.keycloakUserId.toString()
             );
+            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
           }
 
           return {

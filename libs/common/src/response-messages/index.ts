@@ -22,7 +22,8 @@ export const ResponseMessages = {
             shareUserCertificate:'Certificate URL generated successfully',
             updateUserProfile:'User profile updated successfully',
             resetPassword: 'Password reset successfully',
-            degreeCertificate: 'Degree Certificate shared successfully'
+            degreeCertificate: 'Degree Certificate shared successfully',
+            resetPasswordLink: 'Reset password link has been sent to your mail'
         },
         error: {
             exists: 'User already exists',
@@ -56,7 +57,9 @@ export const ResponseMessages = {
             invitationAlreadyPending:'Organization invitation is already in pending state',
             emailIsNotVerified:'Email is not verified',
             invitationStatusUpdateInvalid: 'Status update is invalid. Request is already',
-            resetSamePassword: 'New password should not be the current password'
+            resetSamePassword: 'New password should not be the current password',
+            resetPasswordLink: 'Unable to create reset password token',
+            invalidResetLink: 'Invalid reset password link or expired'
         }
     },
     organisation: {

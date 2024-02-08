@@ -648,8 +648,9 @@ export class EcosystemService {
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(String(orgId))
       ]);
+      const existSchema = schemaRequestExist && schemaRequestExist.filter(schema => schema.status === endorsementTransactionStatus.REQUESTED || schema.status === endorsementTransactionStatus.SIGNED || schema.status === endorsementTransactionStatus.SUBMITED);
 
-      if (0 !== schemaRequestExist.length) {
+      if (0 < existSchema.length) {
         throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
       }
 

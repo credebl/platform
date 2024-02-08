@@ -524,85 +524,44 @@ export class VerificationService {
     try {
       let requestedAttributes = {};
       const requestedPredicates = {};
-      const attributeWithSchemaIdExists = proofRequestpayload.attributes.some(attribute => attribute.schemaId);
+      const attributeWithSchemaIdExists = proofRequestpayload.attributes;
       if (attributeWithSchemaIdExists) {
         requestedAttributes = Object.fromEntries(proofRequestpayload.attributes.map((attribute, index) => {
-
+  
           const attributeElement = attribute.attributeName;
           const attributeReferent = `additionalProp${index + 1}`;
-
           if (!attribute.condition && !attribute.value) {
-
-            const keys = Object.keys(requestedAttributes);
-
-            if (0 < keys.length) {
-              let attributeFound = false;
-
-              for (const attr of keys) {
-                if (
-                  requestedAttributes[attr].restrictions.some(res => res.schema_id) ===
-                  proofRequestpayload.attributes[index].schemaId
-                ) {
-                  requestedAttributes[attr].name.push(attributeElement);
-                  attributeFound = true;
-                }
-
-                if (attr === keys[keys.length - 1] && !attributeFound) {
-                  requestedAttributes[attributeReferent] = {
-                    name: attributeElement,
-                    restrictions: [
-                      {
-                        cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                        schema_id: proofRequestpayload.attributes[index].schemaId
-                      }
-                    ]
-                  };
-                }
+  
+            return [
+              attributeReferent,
+              {
+                name: attributeElement
               }
-            } else {
-              return [
-                attributeReferent,
-                {
-                  name: attributeElement,
-                  restrictions: [
-                    {
-                      cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                      schema_id: proofRequestpayload.attributes[index].schemaId
-                    }
-                  ]
-                }
-              ];
-            }
+            ];
           } else {
             requestedPredicates[attributeReferent] = {
               p_type: attribute.condition,
-              restrictions: [
-                {
-                  cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                  schema_id: proofRequestpayload.attributes[index].schemaId
-                }
-              ],
               name: attributeElement,
               p_value: parseInt(attribute.value)
             };
           }
-
+  
           return [attributeReferent];
         }));
-
+  
         return {
           requestedAttributes,
           requestedPredicates
         };
       } else {
-        throw new BadRequestException(ResponseMessages.verification.error.schemaIdNotFound);
+        throw new BadRequestException(ResponseMessages.verification.error.proofNotSend);
       }
     } catch (error) {
       this.logger.error(`[proofRequestPayload] - error in proof request payload : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);      
      
     } 
-   }
+  }  
 
   /**
   * Description: Fetch agent url 

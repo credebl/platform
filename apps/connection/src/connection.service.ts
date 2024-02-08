@@ -413,7 +413,7 @@ export class ConnectionService {
 
 
     } catch (error) {
-      this.logger.error(`[receiveInvitationUrl] - error in rece ive invitation url : ${JSON.stringify(error)}`);
+      this.logger.error(`[receiveInvitationUrl] - error in receive invitation url : ${JSON.stringify(error)}`);
 
       if (error?.response?.error?.reason) {
         throw new RpcException({

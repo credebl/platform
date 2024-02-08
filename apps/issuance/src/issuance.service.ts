@@ -369,9 +369,9 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
       }
 
-      if (!(credentialOffer && 0 < credentialOffer.length)) {
-        throw new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound);
-      }
+      // if (!(credentialOffer && 0 < credentialOffer.length)) {
+      //   throw new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound);
+      // }
 
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {

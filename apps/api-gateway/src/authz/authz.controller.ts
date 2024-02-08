@@ -4,6 +4,7 @@ import {
   Get,
   HttpStatus,
   Logger,
+  Param,
   Post,
   Query,
   Res,
@@ -24,6 +25,8 @@ import { LoginUserDto } from '../user/dto/login-user.dto';
 import { AddUserDetailsDto } from '../user/dto/add-user.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { ForgotPasswordDto } from './dtos/forgot-password.dto';
+import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 
 
 @Controller('auth')
@@ -132,5 +135,46 @@ export class AuthzController {
       return res.status(HttpStatus.OK).json(finalResponse);
    
   }
+
+  @Post('/forgot-password')
+  @ApiOperation({
+    summary: 'Forgot password',
+    description: 'Forgot Password of the user'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Res() res: Response): Promise<Response> {
+
+      const userData = await this.authzService.forgotPassword(forgotPasswordDto);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.OK,
+        message: ResponseMessages.user.success.resetPasswordLink,
+        data: userData
+      };
+
+      return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/password-reset/:email')
+  @ApiOperation({
+    summary: 'Reset password with token',
+    description: 'Reset Password of the user using token'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async resetNewPassword(
+    @Param('email') email: string,
+    @Body() resetTokenPasswordDto: ResetTokenPasswordDto,
+    @Res() res: Response): Promise<Response> {      
+      resetTokenPasswordDto.email = email.trim();
+      const userData = await this.authzService.resetNewPassword(resetTokenPasswordDto);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.OK,
+        message: ResponseMessages.user.success.resetPassword,
+        data: userData
+      };
+
+      return res.status(HttpStatus.OK).json(finalResponse);
+   
+  }
+
 
 }

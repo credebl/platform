@@ -651,7 +651,11 @@ export class EcosystemService {
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
-      const existSchema = schemaRequestExist && schemaRequestExist.filter(schema => schema.status === endorsementTransactionStatus.REQUESTED || schema.status === endorsementTransactionStatus.SIGNED || schema.status === endorsementTransactionStatus.SUBMITED);
+
+  const existSchema = schemaRequestExist?.filter(schema => schema.status === endorsementTransactionStatus.REQUESTED ||
+  schema.status === endorsementTransactionStatus.SIGNED ||
+  schema.status === endorsementTransactionStatus.SUBMITED
+) ?? [];
 
       if (0 < existSchema.length) {
         throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);

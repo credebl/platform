@@ -179,8 +179,17 @@ export class VerificationController {
         @Body() requestProof: RequestProofDto
     ): Promise<Response> {
 
+        const attributeArray = [];
         for (const attrData of requestProof.attributes) {
-            await this.validateAttribute(attrData);
+          if (0 === attributeArray.length) {
+            attributeArray.push(Object.values(attrData)[0]);
+          } else if (!attributeArray.includes(Object.values(attrData)[0])) {
+            attributeArray.push(Object.values(attrData)[0]);
+          } else {
+            throw new BadRequestException('Please provide unique attribute names');
+          }           
+          
+          await this.validateAttribute(attrData);
         }
 
         requestProof.orgId = orgId;
@@ -316,21 +325,7 @@ export class VerificationController {
 
         if (!attrData['attributeName']) {
             throw new BadRequestException('attributeName must be required');
-        } else if (!attrData['schemaId']) {
-            throw new BadRequestException('schemaId must be required');
-        }
-
-        if (undefined !== attrData['schemaId'] && '' === attrData['schemaId'].trim()) {
-            throw new BadRequestException('schemaId cannot be empty');
-        }
-
-        if (!attrData['credDefId']) {
-            throw new BadRequestException('credDefId must be required');
-        }
-
-        if (undefined !== attrData['credDefId'] && '' === attrData['credDefId'].trim()) {
-            throw new BadRequestException('credDefId cannot be empty');
-        }
+        } 
 
         if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
             throw new BadRequestException('condition cannot be empty');
@@ -347,4 +342,3 @@ export class VerificationController {
         }
     }
 }
-

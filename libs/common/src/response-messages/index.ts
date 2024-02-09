@@ -59,8 +59,8 @@ export const ResponseMessages = {
             invitationStatusUpdateInvalid: 'Status update is invalid. Request is already',
             resetSamePassword: 'New password should not be the current password',
             resetPasswordLink: 'Unable to create reset password token',
-            invalidResetLink: 'Invalid reset password link or expired',
-            invalidAccessToken: 'Invalid access token'
+            invalidResetLink: 'Invalid or expired reset password link',
+            invalidAccessToken: 'Authentication failed'
         }
     },
     organisation: {

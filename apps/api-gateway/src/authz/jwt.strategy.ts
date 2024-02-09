@@ -1,10 +1,9 @@
 import * as dotenv from 'dotenv';
 
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, NotFoundException } from '@nestjs/common';
 
 import { JwtPayload } from './jwt-payload.interface';
-import { NotFoundException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { UserService } from '../user/user.service';
 import * as jwt from 'jsonwebtoken';
@@ -30,6 +29,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       secretOrKeyProvider: (request, jwtToken, done) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decodedToken: any = jwt.decode(jwtToken);
+
+        if (!decodedToken) {
+          throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
+        }
 
         const audiance = decodedToken.iss.toString();
         const jwtOptions = {

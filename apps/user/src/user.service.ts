@@ -221,7 +221,7 @@ export class UserService {
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.emailIsNotVerified);
       }
-      if (checkUserDetails.supabaseUserId) {
+      if (checkUserDetails.keycloakUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
       if (false === checkUserDetails.isEmailVerified) {
@@ -972,7 +972,7 @@ export class UserService {
       const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase());
       if (userDetails && !userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
-      } else if (userDetails && userDetails.supabaseUserId) {
+      } else if (userDetails && userDetails.keycloakUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {
@@ -983,7 +983,7 @@ export class UserService {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isRegistrationCompleted: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId
+          isRegistrationCompleted: null !== userDetails.keycloakUserId && undefined !== userDetails.keycloakUserId
 
         };
         return userVerificationDetails;

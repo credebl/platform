@@ -354,16 +354,11 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
-      this.logger.log(`agentDetails ::: ${JSON.stringify(agentDetails)}`);
-
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
 
-      this.logger.log(`orgAgentType ::: ${JSON.stringify(orgAgentType)}`);
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentDetails.agentEndPoint, agentDetails.tenantId);
       const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
-
-      this.logger.log(`organizationDetails ::: ${JSON.stringify(organizationDetails)}`);
 
       if (!organizationDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
@@ -400,11 +395,7 @@ export class IssuanceService {
             label: outOfBandCredential.label || undefined
           };
 
-          this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
-
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
-
-          this.logger.log(`credentialCreateOfferDetails ::: ${JSON.stringify(credentialCreateOfferDetails)}`);
 
           if (!credentialCreateOfferDetails) {
             errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
@@ -412,7 +403,6 @@ export class IssuanceService {
           }
 
           const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
-          this.logger.log(`invitationId ::: ${JSON.stringify(invitationId)}`);
 
           if (!invitationId) {
             errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
@@ -426,7 +416,6 @@ export class IssuanceService {
           const qrCodeOptions = { type: 'image/png' };
           const outOfBandIssuanceQrCode = await QRCode.toDataURL(agentEndPoint, qrCodeOptions);
           const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
-          this.logger.log(`platformConfigData ::: ${JSON.stringify(platformConfigData)}`);
 
           if (!platformConfigData) {
             errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
@@ -447,7 +436,6 @@ export class IssuanceService {
           ];
 
           const isEmailSent = await sendEmail(this.emailData);
-          this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
           
           if (!isEmailSent) {
             errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
@@ -987,7 +975,6 @@ export class IssuanceService {
     fileUploadData.referenceId = jobDetails.data.email;
     fileUploadData.jobId = jobDetails.id;
 
-    this.logger.log(`fileUploadData ::: ${JSON.stringify(fileUploadData)}`);
     let isErrorOccurred = false;
     try {
 
@@ -997,8 +984,6 @@ export class IssuanceService {
         attributes: [],
         emailId: jobDetails.data.email
       };
-
-      this.logger.log(`oobIssuancepayload ::: ${JSON.stringify(oobIssuancepayload)}`);
 
       for (const key in jobDetails.data) {
         if (jobDetails.data.hasOwnProperty(key) && 'email' !== key) {
@@ -1010,8 +995,6 @@ export class IssuanceService {
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload
       );
-
-      this.logger.log(`oobCredentials ::: ${JSON.stringify(oobCredentials)}`);
 
       if (oobCredentials) {
         await this.issuanceRepository.deleteFileDataByJobId(jobDetails.id);

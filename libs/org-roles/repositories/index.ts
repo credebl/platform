@@ -54,13 +54,10 @@ export class OrgRolesRepository {
                     description: true
                 }
             });
-            this.logger.log(`In getroleDetails: ${JSON.stringify(roleDetails)}`);
-
             return roleDetails;
         } catch (error) {
-            this.logger.error(`In get org-roles repository: ${JSON.stringify(error)}`);
-            throw new InternalServerErrorException('Bad Request');
-
+            this.logger.error(`In get org-roles by id repository : ${JSON.stringify(error)}`);
+            throw error;
         }
     }
 }

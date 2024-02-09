@@ -11,6 +11,7 @@ import {
   HttpException
 } from '@nestjs/common';
 
+
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonService } from '@credebl/common';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -31,12 +32,15 @@ import {
   ICheckUserDetails,
   OrgInvitations,
   PlatformSettings,
-  ShareUserCertificate,
+  IShareUserCertificate,
   IOrgUsers,
   UpdateUserProfile,
   IUserCredentials, 
    IUserInformation,
-    IUsersProfile
+    IUsersProfile,
+    IUserResetPassword,
+    IPuppeteerOption,
+    IShareDegreeCertificateRes
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -53,8 +57,9 @@ import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
+import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 
 @Injectable()
 export class UserService {
@@ -78,7 +83,7 @@ export class UserService {
    * @param userEmailVerification
    * @returns
    */
-  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<ISendVerificationEmail> {
+  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
       const { email } = userEmailVerification;
 
@@ -90,9 +95,9 @@ export class UserService {
           throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
         }
       }
-      const userDetails = await this.userRepository.checkUserExist(userEmailVerification.email);
+      const userDetails = await this.userRepository.checkUserExist(email);
 
-      if (userDetails && userDetails.isEmailVerified) {
+      if (userDetails?.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
 
@@ -101,12 +106,12 @@ export class UserService {
       }
 
       const verifyCode = uuidv4();
-      const uniqueUsername = await this.createUsername(userEmailVerification.email, verifyCode);
+      const uniqueUsername = await this.createUsername(email, verifyCode);
       userEmailVerification.username = uniqueUsername;
       const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
 
       try {
-        await this.sendEmailForVerification(userEmailVerification.email, resUser.verificationCode);
+        await this.sendEmailForVerification(email, resUser.verificationCode);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -156,7 +161,7 @@ export class UserService {
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
       emailData.emailTo = email;
-      emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Email Verification`;
+      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Verify your email to activate your account`;
 
       emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode);
       const isEmailSent = await sendEmail(emailData);
@@ -211,56 +216,60 @@ export class UserService {
       if (!userInfo.email) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email);
+      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email.toLowerCase());
 
       if (!checkUserDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+        throw new NotFoundException(ResponseMessages.user.error.emailIsNotVerified);
       }
-      if (checkUserDetails.supabaseUserId) {
+      if (checkUserDetails.keycloakUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
       if (false === checkUserDetails.isEmailVerified) {
         throw new NotFoundException(ResponseMessages.user.error.verifyEmail);
       }
-      const resUser = await this.userRepository.updateUserInfo(userInfo.email, userInfo);
+      const resUser = await this.userRepository.updateUserInfo(userInfo.email.toLowerCase(), userInfo);
       if (!resUser) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
-      const userDetails = await this.userRepository.getUserDetails(userInfo.email);
+      const userDetails = await this.userRepository.getUserDetails(userInfo.email.toLowerCase());
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
 
-      let supaUser;
+      let keycloakDetails = null;
+
+      const token = await this.clientRegistrationService.getManagementToken();
 
       if (userInfo.isPasskey) {
-        const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
-        const userDetails = await this.userRepository.getUserDetails(email);
+        const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
+        const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
         const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
 
         if (!resUser) {
           throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
         }
-        supaUser = await this.supabaseService.getClient().auth.signUp({
-          email,
-          password: decryptedPassword
-        });
+
+        userInfo.password = decryptedPassword;
+        try {          
+          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
+        } catch (error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak');
+        }
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
 
-        supaUser = await this.supabaseService.getClient().auth.signUp({
-          email,
-          password: decryptedPassword
-        });
+        userInfo.password = decryptedPassword;
+
+        try {          
+          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
+        } catch (error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak');
+        }
       }
 
-      if (supaUser.error) {
-        throw new InternalServerErrorException(supaUser.error?.message);
-      }
-
-      const supaId = supaUser.data?.user?.id;
-
-      await this.userRepository.updateUserDetails(userDetails.id, supaId.toString());
+      await this.userRepository.updateUserDetails(userDetails.id,
+        keycloakDetails.keycloakUserId.toString()
+      );
 
       const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
@@ -274,20 +283,28 @@ export class UserService {
 
   async addPasskey(email: string, userInfo: AddPasskeyDetailsDto): Promise<string> {
     try {
-      if (!email) {
+      if (!email.toLowerCase()) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(email);
+      const checkUserDetails = await this.userRepository.getUserDetails(email.toLowerCase());
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
-      if (!checkUserDetails.supabaseUserId) {
+      if (!checkUserDetails.keycloakUserId) {
         throw new ConflictException(ResponseMessages.user.error.notFound);
       }
       if (false === checkUserDetails.isEmailVerified) {
         throw new NotFoundException(ResponseMessages.user.error.emailNotVerified);
       }
-      const resUser = await this.userRepository.addUserPassword(email, userInfo.password);
+
+      const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
+      const tokenResponse = await this.generateToken(email.toLowerCase(), decryptedPassword, checkUserDetails);
+
+      if (!tokenResponse) {
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
+      }
+
+      const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
       if (!resUser) {
         throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
       }
@@ -300,7 +317,7 @@ export class UserService {
   }
 
   private validateEmail(email: string): void {
-    if (!validator.isEmail(email)) {
+    if (!validator.isEmail(email.toLowerCase())) {
       throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
     }
   }
@@ -314,8 +331,9 @@ export class UserService {
     const { email, password, isPasskey } = loginUserDto;
 
     try {
-      this.validateEmail(email);
-      const userData = await this.userRepository.checkUserExist(email);
+
+      this.validateEmail(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
@@ -329,12 +347,13 @@ export class UserService {
       }
 
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-        const getUserDetails = await this.userRepository.getUserDetails(userData.email);
+        const getUserDetails = await this.userRepository.getUserDetails(userData.email.toLowerCase());
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return this.generateToken(email, decryptedPassword);
+        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       } else {
+
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        return this.generateToken(email, decryptedPassword);
+        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);        
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
@@ -342,28 +361,237 @@ export class UserService {
     }
   }
 
-  async generateToken(email: string, password: string): Promise<ISignInUser> {
+  async updateFidoVerifiedUser(email: string, isFidoVerified: boolean, password: string): Promise<boolean> {
+    if (isFidoVerified) {
+      await this.userRepository.addUserPassword(email.toLowerCase(), password);
+      return true;
+    }
+  }
+
+  /**
+   * Forgot password
+   * @param forgotPasswordDto 
+   * @returns 
+   */
+  async forgotPassword(forgotPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
+    const { email } = forgotPasswordDto;
+
     try {
-      const supaInstance = await this.supabaseService.getClient();
-      this.logger.error(`supaInstance::`, supaInstance);
-
-      const { data, error } = await supaInstance.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      this.logger.error(`Supa Login Error::`, JSON.stringify(error));
-
-      if (error) {
-        throw new BadRequestException(error?.message);
+      this.validateEmail(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
 
-      const token = data?.session;
+      if (userData && !userData.isEmailVerified) {
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      }
+
+      const token = uuidv4();
+      const expirationTime = new Date();
+      expirationTime.setHours(expirationTime.getHours() + 1); // Set expiration time to 1 hour from now
+  
+      const tokenCreated = await this.userRepository.createTokenForResetPassword(userData.id, token, expirationTime);
+
+      if (!tokenCreated) {
+        throw new InternalServerErrorException(ResponseMessages.user.error.resetPasswordLink);
+      }
+
+      try {
+        await this.sendEmailForResetPassword(email, tokenCreated.token);
+      } catch (error) {
+        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+      }
+
+      return {
+        id: tokenCreated.id,
+        email: userData.email
+      };
       
-      return token;
     } catch (error) {
+      this.logger.error(`Error In forgotPassword : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  /**
+   * Send email for token verification of reset password
+   * @param email 
+   * @param verificationCode 
+   * @returns 
+   */
+  async sendEmailForResetPassword(email: string, verificationCode: string): Promise<boolean> {
+    try {
+      const platformConfigData = await this.prisma.platform_config.findMany();
+
+      const urlEmailTemplate = new URLUserResetPasswordTemplate();
+      const emailData = new EmailDto();
+      emailData.emailFrom = platformConfigData[0].emailFrom;
+      emailData.emailTo = email;
+      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Important: Password Reset Request`;
+
+      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, verificationCode);
+      const isEmailSent = await sendEmail(emailData);
+      if (isEmailSent) {
+        return isEmailSent;
+      } else {
+        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+      }
+    } catch (error) {
+      this.logger.error(`Error in sendEmailForResetPassword: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Create reset password token
+   * @param resetPasswordDto 
+   * @returns user details
+   */
+  async resetTokenPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
+    
+    const { email, password, token } = resetPasswordDto;
+
+    try {
+      this.validateEmail(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+
+      if (userData && !userData.isEmailVerified) {
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      }
+ 
+      const tokenDetails = await this.userRepository.getResetPasswordTokenDetails(userData.id, token);
+
+      if (!tokenDetails || (new Date() > tokenDetails.expiresAt)) {
+        throw new BadRequestException(ResponseMessages.user.error.invalidResetLink);
+      }
+
+      const decryptedPassword = await this.commonService.decryptPassword(password);
+      try {        
+        const authToken = await this.clientRegistrationService.getManagementToken();  
+        userData.password = decryptedPassword;
+        await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
+        await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, password);
+      } catch (error) {
+        this.logger.error(`Error reseting the password`, error);
+        throw new InternalServerErrorException('Error while reseting user password');
+      }
+
+      await this.userRepository.deleteResetPasswordToken(tokenDetails.id);
+
+      return {
+        id: userData.id,
+        email: userData.email
+      };
+      
+    } catch (error) {
+      this.logger.error(`Error In resetTokenPassword : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async resetPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
+    const { email, oldPassword, newPassword } = resetPasswordDto;
+
+    try {
+      this.validateEmail(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+
+      if (userData && !userData.isEmailVerified) {
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+      }
+
+      const oldDecryptedPassword = await this.commonService.decryptPassword(oldPassword);
+      const newDecryptedPassword = await this.commonService.decryptPassword(newPassword);
+
+      if (oldDecryptedPassword === newDecryptedPassword) {
+        throw new BadRequestException(ResponseMessages.user.error.resetSamePassword);
+      }
+
+      const tokenResponse = await this.generateToken(email.toLowerCase(), oldDecryptedPassword, userData);
+      
+      if (tokenResponse) {
+        userData.password = newDecryptedPassword;
+        try {    
+          let keycloakDetails = null;    
+          const token = await this.clientRegistrationService.getManagementToken();  
+
+          if (userData.keycloakUserId) {
+
+            keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, token);
+            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
+
+          } else {
+            keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
+            await this.userRepository.updateUserDetails(userData.id,
+              keycloakDetails.keycloakUserId.toString()
+            );
+            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
+          }
+
+          return {
+            id: userData.id,
+            email: userData.email
+          };
+    
+        } catch (error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak');
+        }
+      } else {
+        throw new BadRequestException(ResponseMessages.user.error.invalidCredentials);
+      }
+
+    } catch (error) {
+      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async generateToken(email: string, password: string, userData: user): Promise<ISignInUser> {
+
+      if (userData.keycloakUserId) {
+
+        try {
+          const tokenResponse = await this.clientRegistrationService.getUserToken(email, password);
+          tokenResponse.isRegisteredToSupabase = false;
+          return tokenResponse;
+        } catch (error) {
+          throw new UnauthorizedException(error?.message);
+        }
+       
+      } else {
+        const supaInstance = await this.supabaseService.getClient();  
+        const { data, error } = await supaInstance.auth.signInWithPassword({
+          email,
+          password
+        });
+  
+        this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+  
+        if (error) {
+          throw new BadRequestException(error?.message);
+        }
+  
+        const token = data?.session;
+
+        return {
+          // eslint-disable-next-line camelcase
+          access_token: token.access_token,
+          // eslint-disable-next-line camelcase
+          token_type: token.token_type,
+          // eslint-disable-next-line camelcase
+          expires_in: token.expires_in,
+          // eslint-disable-next-line camelcase
+          expires_at: token.expires_at,
+          isRegisteredToSupabase: true
+        };
+      }
   }
 
   async getProfile(payload: { id }): Promise<IUsersProfile> {
@@ -441,6 +669,15 @@ export class UserService {
     }
   }
 
+  async findKeycloakUser(payload: { id }): Promise<object> {
+    try {
+      return await this.userRepository.getUserByKeycloakId(payload.id);
+    } catch (error) {
+      this.logger.error(`Error in findKeycloakUser: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async findUserByEmail(payload: { email }): Promise<object> {
     try {
       return await this.userRepository.findUserByEmail(payload.email);
@@ -457,7 +694,6 @@ export class UserService {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
 
-      
       const invitationsData = await this.getOrgInvitations(
         userData.email,
         payload.status,
@@ -539,7 +775,7 @@ export class UserService {
    * @param userId
    * @returns Organization invitation status
    */
-  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<string> {
+  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(userId);
       return this.fetchInvitationsStatus(acceptRejectInvitation, userId, userData.email);
@@ -549,7 +785,7 @@ export class UserService {
     }
   }
 
-  async shareUserCertificate(shareUserCertificate: ShareUserCertificate): Promise<string> {
+  async shareUserCertificate(shareUserCertificate: IShareUserCertificate): Promise<string> {
 
     const attributeArray = [];
     let attributeJson = {};
@@ -587,15 +823,17 @@ export class UserService {
         throw new NotFoundException('error in get attributes');
     }
 
+    const option: IPuppeteerOption = {height: 0, width: 1000};
+
     const imageBuffer = 
-    await this.convertHtmlToImage(template, shareUserCertificate.credentialId);
+    await this.convertHtmlToImage(template, shareUserCertificate.credentialId, option);
     const verifyCode = uuidv4();
 
     const imageUrl = await this.awsService.uploadUserCertificate(
       imageBuffer,
       'svg',
-      verifyCode,
       'certificates',
+      process.env.AWS_PUBLIC_BUCKET_NAME,
       'base64'
     );
     const existCredentialId = await this.userRepository.getUserCredentialsById(shareUserCertificate.credentialId);
@@ -618,15 +856,18 @@ export class UserService {
     return this.userRepository.saveCertificateImageUrl(imageUrl, credentialId);
   }
 
-  async convertHtmlToImage(template: string, credentialId: string): Promise<Buffer> {
+  async convertHtmlToImage(template: string, credentialId: string, option?: IPuppeteerOption): Promise<Buffer> {
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/google-chrome', 
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       protocolTimeout: 200000,
       headless: true
     });
+
+    const options: IPuppeteerOption = (option && 0 < Object.keys(option).length) ? option : {width: 0, height: 1000};
+    
     const page = await browser.newPage();
-    await page.setViewport({ width: 0, height: 1000, deviceScaleFactor: 2});
+    await page.setViewport({ width: options?.width, height: options?.height, deviceScaleFactor: 2});
     await page.setContent(template);
     const screenshot = await page.screenshot();
     await browser.close();
@@ -644,7 +885,7 @@ export class UserService {
     acceptRejectInvitation: AcceptRejectInvitationDto,
     userId: string,
     email: string
-  ): Promise<string> {
+  ): Promise<IUserInvitations> {
     try {
       const pattern = { cmd: 'update-invitation-status' };
 
@@ -660,7 +901,8 @@ export class UserService {
           throw new HttpException(
             {
               statusCode: error.statusCode,
-              error: error.message
+              error: error.error,
+              message: error.message
             },
             error.error
           );
@@ -727,21 +969,22 @@ export class UserService {
 
   async checkUserExist(email: string): Promise<ICheckUserDetails> {
     try {
-      const userDetails = await this.userRepository.checkUniqueUserExist(email);
+      const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase());
       if (userDetails && !userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
-      } else if (userDetails && userDetails.supabaseUserId) {
+      } else if (userDetails && userDetails.keycloakUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {
-          isExist: false
+          isRegistrationCompleted: false,
+          isEmailVerified: false
         };
       } else {
         const userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isSupabase: null !== userDetails.supabaseUserId && undefined !== userDetails.supabaseUserId,
-          isExist: true
+          isRegistrationCompleted: null !== userDetails.keycloakUserId && undefined !== userDetails.keycloakUserId
+
         };
         return userVerificationDetails;
       }
@@ -750,7 +993,6 @@ export class UserService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
 
   async getUserActivity(userId: string, limit: number): Promise<IUsersActivity[]> {
     try {

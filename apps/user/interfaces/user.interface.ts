@@ -69,7 +69,7 @@ export interface ISendVerificationEmail {
   }
   export interface PlatformSettings {
     externalIp: string;
-    lastInternalId: string;
+    inboundEndpoint: string;
     sgApiKey: string;
     emailFrom: string;
     apiEndPoint: string;
@@ -77,24 +77,29 @@ export interface ISendVerificationEmail {
     multiEcosystemSupport: boolean;
   }
   
-  export interface ShareUserCertificate {
+  export interface IShareUserCertificate {
     schemaId: string;
+    credDefId: string;
     credentialId: string;
     attributes: Attribute[];
+    invitationUrl?: string;
   }
-  
+
+  export interface IShareDegreeCertificateRes {
+    cretificate: string;
+    invitationUrl?: string;
+  }
+
   export interface Attribute {
     [key: string]: string;
     label: string;
   }
   
   export interface ICheckUserDetails {
-    isExist: boolean;
     isEmailVerified?: boolean;
     isFidoVerified?: boolean;
-    isSupabase?: boolean;
+    isRegistrationCompleted?: boolean;
   }
-
   export interface IUserCredentials {
     id: string;
     imageUrl?: string;
@@ -166,4 +171,24 @@ export interface  IUserSignIn{
   email: string;
   password: string;
   isPasskey: boolean;
+}
+
+export interface IUserResetPassword{
+  email: string;
+  oldPassword?: string;
+  newPassword?: string;
+  token?: string;
+  password?: string;
+}
+export interface IIssueCertificate {
+  courseCode: string;
+  courseName: string;
+  theoryGradeCredits: string;
+  theoryObtainedEarned: string;
+  practicalGradeCredits: string;
+  practicalObtainedEarned: string;
+}
+export  interface IPuppeteerOption{
+  width: number;
+  height: number;
 }

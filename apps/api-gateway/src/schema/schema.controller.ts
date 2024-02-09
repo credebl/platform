@@ -25,8 +25,8 @@ import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schem
 @Controller('orgs')
 @ApiTags('schemas')
 @ApiBearerAuth()
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class SchemaController {
   constructor(private readonly appService: SchemaService
   ) { }
@@ -39,7 +39,7 @@ export class SchemaController {
     summary: 'Get schema information from the ledger using its schema ID.',
     description: 'Get schema information from the ledger using its schema ID.'
   })
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
     @Res() res: Response,
     @Param('orgId') orgId: string,
@@ -140,15 +140,16 @@ export class SchemaController {
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: 201, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<object> {
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
 
     schema.orgId = orgId;
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: schemaDetails.response
+      message: ResponseMessages.schema.success.create,
+      data: schemaDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

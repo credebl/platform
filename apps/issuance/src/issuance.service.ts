@@ -347,7 +347,9 @@ export class IssuanceService {
         comment,
         credentialDefinitionId,
         orgId,
-        protocolVersion
+        protocolVersion, 
+        attributes,
+        emailId
       } = outOfBandCredential;
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -384,7 +386,7 @@ export class IssuanceService {
             protocolVersion: protocolVersion || 'v1',
             credentialFormats: {
               indy: {
-                attributes: iterator.attributes,
+                attributes: iterator.attributes || attributes,
                 credentialDefinitionId
               }
             },
@@ -469,6 +471,8 @@ export class IssuanceService {
           const batchPromises = batch.map((iterator, index) => sendEmailForCredentialOffer(iterator, iterator.emailId, index));
           emailPromises.push(Promise.all(batchPromises));
         }
+      }  else {
+        emailPromises.push(sendEmailForCredentialOffer({}, emailId, 1));
       }
 
       const results = await Promise.all(emailPromises);

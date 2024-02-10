@@ -21,7 +21,7 @@ RUN pnpm run build connection
 
 # Stage 2: Create the final image
 FROM node:18-alpine
-RUN npm install -g pnpm
+RUN npm install -g pnpm --ignore-scripts
 # Set the working directory
 WORKDIR /app
 

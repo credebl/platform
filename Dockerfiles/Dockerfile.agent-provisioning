@@ -1,15 +1,17 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
+# RUN npm install -g pnpm
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
 
-RUN set -eux \
-    && apk --no-cache add \
-        openssh-client \
-        aws-cli \
-        docker \
-        docker-compose \
-    && npm install -g pnpm --ignore-scripts \
-    && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
-    && rm -rf /var/cache/apk/*
+USER nonroot
+
+
+# RUN apk add aws-cli
+RUN npm install -g pnpm --ignore-scripts \
+    && apk update \
+    && apk add openssh-client \
+    && apk add aws-cli
 
 # Set the working directory
 WORKDIR /app
@@ -33,16 +35,15 @@ RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
 FROM node:18-alpine as prod
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
 
-RUN set -eux \
-    && apk --no-cache add \
-        openssh-client \
-        aws-cli \
-        docker \
-        docker-compose \
-    && npm install -g pnpm --ignore-scripts \
-    && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
-    && rm -rf /var/cache/apk/*
+USER nonroot
+# RUN apk add aws-cli
+RUN npm install -g pnpm --ignore-scripts \
+    && apk update \
+    && apk add openssh-client \
+    && apk add aws-cli
 
 WORKDIR /app
 

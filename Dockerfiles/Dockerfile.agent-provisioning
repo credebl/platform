@@ -8,7 +8,7 @@ USER nonroot
 
 
 # RUN apk add aws-cli
-RUN npm install -g pnpm --ignore-scripts \
+RUN npm install --ignore-scripts -g pnpm \
     && apk update \
     && apk add openssh-client \
     && apk add aws-cli
@@ -39,7 +39,7 @@ RUN addgroup -S nonroot \
 
 USER nonroot
 # RUN apk add aws-cli
-RUN npm install -g pnpm --ignore-scripts \
+RUN npm install --ignore-scripts -g pnpm  \
     && apk update \
     && apk add openssh-client \
     && apk add aws-cli

@@ -1,9 +1,13 @@
+import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsString, IsNotEmpty, IsEmail } from 'class-validator';
 export class ResetPasswordDto {
-    @ApiProperty()
-    @IsNotEmpty({message:'Please provide valid email'})
-    @IsString({message:'Email should be string'})
+    @ApiProperty({ example: 'awqx@getnada.com' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
+    @IsNotEmpty({ message: 'Email is required' })
+    @IsString({ message: 'Email should be a string' })
+    @Transform(({ value }) => trim(value))
     email: string;
 
     @ApiProperty()

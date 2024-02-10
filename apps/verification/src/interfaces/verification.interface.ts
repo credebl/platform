@@ -1,3 +1,4 @@
+import { AutoAccept } from "@credebl/enum/enum";
 import { IUserRequest } from "@credebl/user-request/user-request.interface";
 
 interface IProofRequestAttribute {
@@ -5,7 +6,7 @@ interface IProofRequestAttribute {
     condition?: string;
     value?: string;
     credDefId?: string;
-    schemaId: string;
+    schemaId?: string;
     credentialName: string;
 }
 
@@ -14,9 +15,12 @@ export interface IRequestProof {
     connectionId?: string;
     attributes: IProofRequestAttribute[];
     comment: string;
-    autoAcceptProof: string;
-    protocolVersion: string;
-    emailId?: string[]
+    autoAcceptProof: AutoAccept;
+    protocolVersion?: string;
+    emailId?: string[];
+    goalCode?: string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
 }
 
 export interface IGetAllProofPresentations {
@@ -34,13 +38,13 @@ export interface IVerifyPresentation {
     apiKey: string;
 }
 
-export interface ProofFormDataPayload {
+export interface IVerifiedProofData {
     url: string;
     apiKey: string;
 }
 
-export interface ProofFormData {
-    id: string;
+export interface IProofPresentationData {
+    proofId: string;
     orgId: string; 
     user: IUserRequest;
 }
@@ -75,7 +79,8 @@ interface IRequestedPredicatesName {
 }
 
 interface IRequestedRestriction {
-    cred_def_id: string;
+    cred_def_id?: string;
+    schema_id?: string;
 }
 
 export interface ISendProofRequestPayload {
@@ -85,6 +90,9 @@ export interface ISendProofRequestPayload {
     proofFormats: IProofFormats;
     autoAcceptProof: string;
     label?: string;
+    goalCode?: string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
 }
 
 export interface IProofRequestPayload {
@@ -132,5 +140,5 @@ export interface IProofRequestSearchCriteria {
     sortField: string;
     sortBy: string;
     searchByText: string;
-  }  
+  }   
   

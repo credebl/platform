@@ -132,7 +132,8 @@ export class AgentServiceRepository {
                     agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
                     orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
                     tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
-                    ledgerId: storeOrgAgentDetails.ledgerId[0]
+                    ledgerId: storeOrgAgentDetails.ledgerId[0],
+                    apiKey: storeOrgAgentDetails.apiKey
                 },
                 select: {
                     id: true

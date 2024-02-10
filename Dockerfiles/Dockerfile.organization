@@ -1,6 +1,10 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
-RUN npm install -g pnpm
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
+
+USER nonroot
+RUN npm install --ignore-scripts -g pnpm
 # Set the working directory
 WORKDIR /app
 
@@ -8,7 +12,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN pnpm i
+RUN pnpm i --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -20,7 +24,11 @@ RUN pnpm run build organization
 
 # Stage 2: Create the final image
 FROM node:18-alpine
-RUN npm install -g pnpm
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
+
+USER nonroot
+RUN npm install --ignore-scripts -g pnpm
 # Set the working directory
 WORKDIR /app
 

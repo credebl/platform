@@ -20,6 +20,7 @@ export interface IWalletProvision {
     protocol: string;
     afjVersion: string;
     tenant: boolean;
+    inboundEndpoint: string;
     apiKey?:string;
 }
 

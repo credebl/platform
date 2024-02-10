@@ -1,6 +1,6 @@
 export enum SortValue {
-    ASC = 'ASC',
-    DESC = 'DESC'
+    ASC = 'asc',
+    DESC = 'desc'
 }
 
 export enum AgentType {
@@ -33,10 +33,10 @@ export enum EcosystemConfigSettings {
     AUTO_ENDORSEMENT = 'autoEndorsement',
     PARTICIPATE_IN_ECOSYSTEM = 'participateInEcosystem',
     MULTI_ECOSYSTEM = 'multiEcosystemSupport'
-    
+
 }
 
-export enum EndorserTransactionType{
+export enum EndorserTransactionType {
     SCHEMA = 'schema',
     CREDENTIAL_DEFINITION = 'credential-definition',
 }
@@ -58,3 +58,22 @@ export enum UserCertificateId {
     ARBITER = 'Arbiter',
     WORLD_RECORD = 'WorldRecord'
 }
+
+export enum NodeEnvironment {
+   DEVELOPMENT='DEV',
+   PRODUCTION='PROD'
+}
+
+export enum AutoAccept {
+    Always = "always",
+    ContentApproved = "contentApproved",
+    Never = "never"
+}
+
+const transitionMap: { [key in Invitation]: Invitation[] } = {
+    [Invitation.PENDING]: [Invitation.ACCEPTED, Invitation.REJECTED],
+    [Invitation.ACCEPTED]: [],
+    [Invitation.REJECTED]: []
+};
+
+export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));

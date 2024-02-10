@@ -4,7 +4,7 @@ RUN addgroup -S nonroot \
     && adduser -S nonroot -G nonroot
 
 USER nonroot
-RUN npm install -g pnpm
+RUN npm install --ignore-scripts -g pnpm
 # Set the working directory
 WORKDIR /app
 
@@ -29,7 +29,7 @@ RUN addgroup -S nonroot \
     && adduser -S nonroot -G nonroot
 
 USER nonroot
-RUN npm install -g pnpm
+RUN npm install --ignore-scripts -g pnpm
 # Set the working directory
 WORKDIR /app
 

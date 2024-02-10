@@ -1,5 +1,9 @@
 # Stage 1: Build the application
 FROM node:18-slim as build
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
+
+USER nonroot
 RUN npm install -g pnpm
 
 # We don't need the standalone Chromium
@@ -33,6 +37,10 @@ RUN pnpm run build user
 
 # Stage 2: Create the final image
 FROM node:18-slim
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
+
+USER nonroot
 
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true

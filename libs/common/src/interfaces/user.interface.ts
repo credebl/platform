@@ -4,6 +4,7 @@ export interface ISignInUser {
         expires_in?: number;
         expires_at?: number;
         refresh_token?: string;
+        isRegisteredToSupabase?: boolean;
       }
       export interface IVerifyUserEmail{
         email: string;
@@ -36,4 +37,10 @@ export interface ISignInUser {
         id: string;
         name: string;
         logoUrl: string;
-      }      
+      }   
+      
+      export interface IResetPasswordResponse {
+        id: string;
+        email: string;
+      }    
+        

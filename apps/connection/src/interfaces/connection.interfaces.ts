@@ -10,6 +10,10 @@ export interface IConnection {
   imageUrl: string;
   multiUseInvitation: boolean;
   autoAcceptConnection: boolean;
+  goalCode: string;
+  goal: string;
+  handshake: string;
+  handshakeProtocols: string[];
   orgId: string;
 }
 export interface IUserRequestInterface {
@@ -61,6 +65,7 @@ export interface ICreateConnectionPayload {
   lastChangedDateTime: string;
   id: string;
   state: string;
+  imageUrl: string;
   orgDid?: string;
   theirLabel: string;
   autoAcceptConnection: boolean;

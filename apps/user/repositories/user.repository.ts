@@ -15,7 +15,7 @@ import {
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { schema, user } from '@prisma/client';
+import { schema, token, user } from '@prisma/client';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -202,6 +202,47 @@ export class UserRepository {
     }
   }
 
+  /**
+   * 
+   * @param id 
+   * @returns 
+   */
+  async getUserByKeycloakId(id: string): Promise<object> {
+    try {
+      return this.prisma.user.findFirstOrThrow({
+        where: {
+          keycloakUserId: id
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          isEmailVerified: true,
+          clientId: true,
+          clientSecret: true,
+          supabaseUserId: true,
+          userOrgRoles: {
+            include: {
+              orgRole: true,
+              organisation: {
+                include: {
+                  // eslint-disable-next-line camelcase
+                  org_agents: true
+                }
+              }
+            }
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error in getUserByKeycloakId: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+
   async findUserByEmail(email: string): Promise<object> {
     const queryOptions: UserQueryOptions = {
       email
@@ -321,7 +362,10 @@ export class UserRepository {
    * @returns Updates organization details
    */
   // eslint-disable-next-line camelcase
-  async updateUserDetails(id: string, supabaseUserId: string): Promise<user> {
+  async updateUserDetails(
+    id: string, 
+    keycloakId: string
+    ): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
@@ -329,7 +373,7 @@ export class UserRepository {
         },
         data: {
           isEmailVerified: true,
-          supabaseUserId
+          keycloakUserId: keycloakId
         }
       });
       return updateUserDetails;
@@ -574,6 +618,69 @@ export class UserRepository {
   }
 
   /**
+   * 
+   * @param userId 
+   * @param token 
+   * @param expireTime 
+   * @returns token details
+   */
+  async createTokenForResetPassword(userId: string, token: string, expireTime: Date): Promise<token> {
+    try {
+      const createResetPasswordToken = await this.prisma.token.create({
+        data: {
+          token,
+          userId,
+          expiresAt: expireTime
+        }
+      });
+      return createResetPasswordToken;
+    } catch (error) {
+      this.logger.error(`Error in createTokenForResetPassword: ${error.message} `);
+      throw error;
+    }
+  }
+
+  /**
+   * 
+   * @param userId 
+   * @param token 
+   * @returns reset password token details
+   */
+  async getResetPasswordTokenDetails(userId: string, token: string): Promise<token> {
+    try {
+      const tokenDetails = await this.prisma.token.findUnique({
+        where: {
+          userId,
+          token
+        }
+      });
+      return tokenDetails;
+    } catch (error) {
+      this.logger.error(`Error in getResetPasswordTokenDetails: ${error.message} `);
+      throw error;
+    }
+  }
+
+  /**
+   * 
+   * @param id 
+   * @returns token delete records
+   */
+  async deleteResetPasswordToken(id: string): Promise<token> {
+    try {
+      const tokenDeleteDetails = await this.prisma.token.delete({
+        where: {
+          id
+        }
+      });
+      return tokenDeleteDetails;
+    } catch (error) {
+      this.logger.error(`Error in deleteResetPasswordToken: ${error.message} `);
+      throw error;
+    }
+  }
+
+  /**
    *
    * @Body updatePlatformSettings
    * @returns Update platform settings
@@ -587,7 +694,7 @@ export class UserRepository {
         },
         data: {
           externalIp: updatePlatformSettings.externalIp,
-          lastInternalId: updatePlatformSettings.lastInternalId,
+          inboundEndpoint: updatePlatformSettings.inboundEndpoint,
           sgApiKey: updatePlatformSettings.sgApiKey,
           emailFrom: updatePlatformSettings.emailFrom,
           apiEndpoint: updatePlatformSettings.apiEndPoint

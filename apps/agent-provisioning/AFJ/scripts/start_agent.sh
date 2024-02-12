@@ -17,27 +17,27 @@ PROTOCOL=${12}
 TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
+INBOUND_ENDPOINT=${16}
 
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
 INBOUND_PORT=9001
 
-
 increment_port() {
-    local port="$1"
-    local lower_limit="$2"
+  local port="$1"
+  local lower_limit="$2"
 
-    while [ "$port" -le "$lower_limit" ]; do
-        port=$((port + 1))  # Increment the port using arithmetic expansion
-    done
+  while [ "$port" -le "$lower_limit" ]; do
+    port=$((port + 1)) # Increment the port using arithmetic expansion
+  done
 
-    echo "$port"
+  echo "$port"
 }
 
 # Check if admin port file exists and if not, create and initialize it
 if [ ! -e "$ADMIN_PORT_FILE" ]; then
-    echo "$ADMIN_PORT" > "$ADMIN_PORT_FILE"
+  echo "$ADMIN_PORT" >"$ADMIN_PORT_FILE"
 fi
 
 # Read the last used admin port number from the file
@@ -48,12 +48,12 @@ echo "Last used admin port: $last_used_admin_port"
 last_used_admin_port=$(increment_port "$last_used_admin_port" "$last_used_admin_port")
 
 # Save the updated admin port number back to the file and update the global variable
-echo "$last_used_admin_port" > "$ADMIN_PORT_FILE"
+echo "$last_used_admin_port" >"$ADMIN_PORT_FILE"
 ADMIN_PORT="$last_used_admin_port"
 
 # Check if inbound port file exists and if not, create and initialize it
 if [ ! -e "$INBOUND_PORT_FILE" ]; then
-    echo "$INBOUND_PORT" > "$INBOUND_PORT_FILE"
+  echo "$INBOUND_PORT" >"$INBOUND_PORT_FILE"
 fi
 
 # Read the last used inbound port number from the file
@@ -64,7 +64,7 @@ echo "Last used inbound port: $last_used_inbound_port"
 last_used_inbound_port=$(increment_port "$last_used_inbound_port" "$last_used_inbound_port")
 
 # Save the updated inbound port number back to the file and update the global variable
-echo "$last_used_inbound_port" > "$INBOUND_PORT_FILE"
+echo "$last_used_inbound_port" >"$INBOUND_PORT_FILE"
 INBOUND_PORT="$last_used_inbound_port"
 
 echo "Last used admin port: $ADMIN_PORT"
@@ -86,7 +86,29 @@ else
   mkdir ${PWD}/apps/agent-provisioning/AFJ/agent-config
 fi
 
-AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
+if [ -d "${PWD}/apps/agent-provisioning/AFJ/token" ]; then
+  echo "token directory exists."
+else
+  echo "Error: token directory does not exists."
+  mkdir ${PWD}/apps/agent-provisioning/AFJ/token
+fi
+
+# Define a regular expression pattern for IP address
+IP_REGEX="^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$"
+
+# Check if the input is a domain
+if echo "$INBOUND_ENDPOINT" | grep -qP "^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"; then
+  echo "INBOUND_ENDPOINT is a domain: $INBOUND_ENDPOINT"
+  AGENT_ENDPOINT=$INBOUND_ENDPOINT
+else
+  # Check if the input is an IP address
+  if [[ $INBOUND_ENDPOINT =~ $IP_REGEX ]]; then
+    echo "INBOUND_ENDPOINT is an IP address: $INBOUND_ENDPOINT"
+    AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
+  else
+    echo "Invalid input for INBOUND_ENDPOINT: $INBOUND_ENDPOINT"
+  fi
+fi
 
 echo "-----$AGENT_ENDPOINT----"
 CONFIG_FILE="${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
@@ -209,13 +231,13 @@ if [ $? -eq 0 ]; then
 
     # Print the extracted token
     echo "Token: $token"
-    
+
     ENDPOINT="${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json"
 
     # Check if the file exists
     if [ -f "$ENDPOINT" ]; then
-    # If it exists, remove the file
-    rm "$ENDPOINT"
+      # If it exists, remove the file
+      rm "$ENDPOINT"
     fi
     cat <<EOF >${ENDPOINT}
     {

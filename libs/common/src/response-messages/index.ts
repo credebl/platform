@@ -20,8 +20,10 @@ export const ResponseMessages = {
             fetchPlatformSettings: 'Platform settings fetched',
             signUpUser:'User created successfully',
             shareUserCertificate:'Certificate URL generated successfully',
+            updateUserProfile:'User profile updated successfully',
+            resetPassword: 'Password reset successfully',
             degreeCertificate: 'Degree Certificate shared successfully',
-            updateUserProfile:'User profile updated successfully'
+            resetPasswordLink: 'Reset password link has been sent to your mail'
         },
         error: {
             exists: 'User already exists',
@@ -54,7 +56,11 @@ export const ResponseMessages = {
             invalidInvitationId:'Organization invitation does not exist',
             invitationAlreadyPending:'Organization invitation is already in pending state',
             emailIsNotVerified:'Email is not verified',
-            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already'
+            invitationStatusUpdateInvalid: 'Status update is invalid. Request is already',
+            resetSamePassword: 'New password should not be the current password',
+            resetPasswordLink: 'Unable to create reset password token',
+            invalidResetLink: 'Invalid or expired reset password link',
+            invalidAccessToken: 'Authentication failed'
         }
     },
     organisation: {
@@ -70,12 +76,16 @@ export const ResponseMessages = {
             getOrganizations: 'Organizations details fetched successfully',
             updateUserRoles: 'User roles updated successfully',
             delete: 'Organization deleted successfully',
-            orgInvitationDeleted: 'Organization invitation deleted successfully'
+            orgInvitationDeleted: 'Organization invitation deleted successfully',
+            orgCredentials: 'Organization credentials created successfully',
+            fetchedOrgCredentials: 'Organization credentials fetched successfully',
+            clientCredentials: 'Client credentials fetched successfully',
+            deleteCredentials:'Organization client credentials deleted'
         },
         error: {
             exists: 'An organization name is already exist',
             orgProfileNotFound: 'Organization public profile not found',
-            orgSlugIsRequired: 'orgslug is required',
+            orgSlugIsRequired: 'orgSlug is required',
             invitationIdIsRequired:'Invitation Id is required',
             userIdIsRequired:'UserId is required',
             rolesNotExist: 'Provided roles not exists in the platform',
@@ -89,23 +99,26 @@ export const ResponseMessages = {
             orgNotFound: 'Organization not found',
             orgNotMatch: 'Organization does not have access',
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
+            credentialsNotUpdate: 'Unable to update organization credentials',
             invalidOrgId:'Invalid format for orgId',
             orgIdIsRequired:'OrgId is required',
+            clientIdRequired:'clientId is required',
+            notExistClientCred: 'Organization does not have client credentials',          
             invalidUserId:'Invalid format of userId',
-            invalidInvitationId:'Invalid format for invitaion id',
-            ecosystemIdIsRequired:'ecosystemId is required'
-            
+            invalidInvitationId:'Invalid format for invitation id',
+            ecosystemIdIsRequired:'ecosystemId is required',
+            roleNotMatch: 'User does not have access'
         }
     },
 
     fido: {
         success: {
             RegistrationOption: 'Registration option created successfully',
-            verifyRegistration: 'Verify registration sucessfully',
+            verifyRegistration: 'Verify registration successfully',
             updateUserDetails: 'User details updated successfully',
             generateAuthenticationOption: 'Authentication option generated successfully',
-            deleteDevice: 'Device deleted sucessfully',
-            updateDeviceName: 'Device name updated sucessfully',
+            deleteDevice: 'Device deleted successfully',
+            updateDeviceName: 'Device name updated successfully',
             login: 'User login successfully'
         },
         error: {
@@ -222,21 +235,23 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
-            fetch: 'Issued Credentials details fetched successfully',
-            importCSV: 'File imported sucessfully',
-            previewCSV: 'File details fetched sucessfully',
+            createOOB: 'Out-of-band credentials offer created successfully',
+            fetch: 'Issued Credential details fetched successfully',
+            importCSV: 'File imported successfully',
+            previewCSV: 'File details fetched successfully',
             bulkIssuance: 'Issuance process started. It will take some time',
             notFound: 'Schema records not found'
         },
         error: {
             exists: 'Credentials is already exist',
             credentialsNotFound: 'Credentials not found',
-            agentEndPointNotFound: 'agent end point Not Found',
+            agentEndPointNotFound: 'Agent details not found',
             organizationNotFound: 'organization Not Found',
             agentUrlNotFound: 'agent url not found',
             notFound: 'History not found',
             credentialOfferNotFound: 'Credential offer not found',
             invitationNotFound: 'Invitation not found',
+            unableToCreateOOBOffer: 'Unable to create out-of-band credential offer',
             platformConfigNotFound: 'Platform config details not found',
             emailSend: 'Unable to send email to the user',
             previewFile: 'Error while fetching file details',
@@ -248,7 +263,9 @@ export const ResponseMessages = {
             retry: 'Credentials do not exist for retry',
             walletError: 'Credential Issuance failed due to error in Wallet Agent',
             emailIdNotPresent: 'EmailId is empty or not present',
-            attributesNotPresent: 'Attributes are not present or not empty'
+            attributesNotPresent: 'Attributes are not present or not empty',
+            unableToCreateOffer: 'Unable to create offer',
+            orgAgentTypeNotFound: 'Organization agent type not found'
         }
     },
     verification: {
@@ -261,9 +278,10 @@ export const ResponseMessages = {
         },
         error: {
             notFound: 'Organization agent not found',
+            proofNotSend: 'Proof request is not sent',
             agentUrlNotFound: 'agent url not found',
             schemaIdNotFound: 'Schema Id is required',
-            predicatesValueNotNumber: 'The attribuite value is not a number',
+            predicatesValueNotNumber: 'Attribute value is not a number',
             proofPresentationNotFound: 'Proof presentations not found',
             verifiedProofNotFound: 'Proof presentation not found',
             proofNotFound: 'Proof presentation not found',
@@ -273,7 +291,7 @@ export const ResponseMessages = {
         }
     },
     ecosystem: {
-        success: {
+            success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem details updated successfully',
             delete: 'Ecosystem invitations deleted successfully',
@@ -283,15 +301,16 @@ export const ResponseMessages = {
             createInvitation: 'Ecosystem invitations sent',
             schemaRequest: 'Schema transaction request created successfully',
             credDefRequest: 'Credential definition transaction request created successfully',
-            sign: 'Transaction request signed successfully',
-            submit: 'Transaction request submitted successfully',
+            sign: 'Endorsement request approved',
+            submit: 'Endorsement request submitted to ledger',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
             fetchEndorsors: 'Endorser transactions fetched successfully',
-            DeclineEndorsementTransaction: 'Decline endorsement request successfully',
+            DeclineEndorsementTransaction: 'Endorsement request declined',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
             fetchMembers: 'Ecosystem members fetched successfully',
-            allschema: 'Schema details fetched sucessfully'
+            allschema: 'Schema details fetched successfully',
+            AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

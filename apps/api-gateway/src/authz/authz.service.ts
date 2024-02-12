@@ -9,7 +9,10 @@ import {
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AddUserDetailsDto } from '../user/dto/add-user.dto';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
+import { IResetPasswordResponse, ISendVerificationEmail, ISignInUser, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { ForgotPasswordDto } from './dtos/forgot-password.dto';
+import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 
 @Injectable()
 @WebSocketGateway()
@@ -41,6 +44,18 @@ export class AuthzService extends BaseService {
   async login(email: string, password?: string, isPasskey = false): Promise<ISignInUser> {
     const payload = { email, password, isPasskey };
     return this.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
+  }
+  
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<IResetPasswordResponse> {
+    return this.sendNatsMessage(this.authServiceProxy, 'user-reset-password', resetPasswordDto);
+  }
+  
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<IResetPasswordResponse> {
+    return this.sendNatsMessage(this.authServiceProxy, 'user-forgot-password', forgotPasswordDto);
+  }
+
+  async resetNewPassword(resetTokenPasswordDto: ResetTokenPasswordDto): Promise<IResetPasswordResponse> {
+    return this.sendNatsMessage(this.authServiceProxy, 'user-set-token-password', resetTokenPasswordDto);
   }
 
   async addUserDetails(userInfo: AddUserDetailsDto): Promise<string> {

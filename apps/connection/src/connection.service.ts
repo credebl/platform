@@ -61,7 +61,6 @@ export class ConnectionService {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        // imageUrl: organisation.logoUrl ? organisation.logoUrl : imageUrl ? imageUrl : undefined,
         imageUrl: organisation?.logoUrl || imageUrl || undefined,
         label: organisation.name,
         goal: goal || undefined,

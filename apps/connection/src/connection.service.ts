@@ -56,12 +56,13 @@ export class ConnectionService {
       }
 
       this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
-      
+
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: organisation.logoUrl ? organisation.logoUrl : imageUrl ? imageUrl : undefined,
+        // imageUrl: organisation.logoUrl ? organisation.logoUrl : imageUrl ? imageUrl : undefined,
+        imageUrl: organisation?.logoUrl || imageUrl || undefined,
         label: organisation.name,
         goal: goal || undefined,
         goalCode: goalCode || undefined,

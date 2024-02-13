@@ -221,6 +221,7 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<object> {
     try {
+
       if (file) {
         const fileKey: string = uuidv4();
         try {
@@ -232,7 +233,7 @@ export class IssuanceController {
         const reqPayload: RequestPayload = {
           credDefId: credentialDefinitionId,
           fileKey,
-          fileName: fileDetails['fileName'].split('.csv')[0]
+          fileName: fileDetails['fileName'] || file?.filename || file?.originalname
         };
 
         const importCsvDetails = await this.issueCredentialService.importCsv(reqPayload);
@@ -326,21 +327,59 @@ export class IssuanceController {
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      nullable: false,
+      required: ['file'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary'
+        }
+      }
+    },
+    required: true
+  })
+  @UseInterceptors(FileInterceptor('file'))
+
   async issueBulkCredentials(
     @Param('requestId') requestId: string,
     @Param('orgId') orgId: string,
     @Res() res: Response,
     @Body() clientDetails: ClientDetails,
-    @User() user: user
+    @User() user: user,
+    @Query('credDefId') credentialDefinitionId?: string,
+    @Body() fileDetails?: object,
+    @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
+
     clientDetails.userId = user.id;
-    const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails);
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssuanceDetails.response
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    let reqPayload: RequestPayload;
+
+    if (file && clientDetails?.isSelectiveIssuance) {
+      const fileKey: string = uuidv4();
+      try {
+        await this.awsService.uploadCsvFile(fileKey, file.buffer);
+      } catch (error) {
+        throw new RpcException(error.response ? error.response : error);
+      }
+
+      reqPayload = {
+        credDefId: credentialDefinitionId,
+        fileKey,
+        fileName: fileDetails['fileName'] || file?.filename || file?.originalname
+      };
+    }
+      const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails, reqPayload);
+
+      const finalResponse: IResponse = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.issuance.success.bulkIssuance,
+        data: bulkIssuanceDetails
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Get('/orgs/:orgId/bulk/files')

@@ -10,7 +10,6 @@ export class ProofRequestAttribute {
     attributeName: string;
 
     @IsString()
-    @IsNotEmpty({ message: 'schemaId is required.' })
     @IsOptional()
     schemaId?: string;
 

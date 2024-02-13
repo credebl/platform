@@ -188,10 +188,11 @@ export interface FileUploadData {
   jobId: string;
 }
 
-export interface ClientDetails {
+export interface IClientDetails {
   clientId: string;
-
   userId?: string;
+  isSelectiveIssuance?: boolean;
+  fileName?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;

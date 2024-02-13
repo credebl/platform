@@ -395,6 +395,8 @@ export class IssuanceService {
             label: outOfBandCredential.label || undefined
           };
 
+          this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
+
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
 
           if (!credentialCreateOfferDetails) {
@@ -434,8 +436,9 @@ export class IssuanceService {
               disposition: 'attachment'
             }
           ];
-
+          
           const isEmailSent = await sendEmail(this.emailData);
+          this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
           
           if (!isEmailSent) {
             errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
@@ -634,7 +637,7 @@ export class IssuanceService {
   }
 
 
-  async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
+  async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
     try {
 
       const credDefResponse =
@@ -670,9 +673,7 @@ export class IssuanceService {
 
       // Output invalid emails
       if (0 < invalidEmails.length) {
-
         throw new BadRequestException(`Invalid emails found in the chosen file`);
-
       }
 
       const fileData: string[] = parsedData.data.map(Object.values);
@@ -701,7 +702,7 @@ export class IssuanceService {
       
       const newCacheKey = uuidv4();
 
-      await this.cacheManager.set(newCacheKey, JSON.stringify(resData), 3600);
+      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(resData), 60000);
 
       return newCacheKey;
 
@@ -804,7 +805,7 @@ export class IssuanceService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails): Promise<string> {
+  async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: ImportFileDetails): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -827,11 +828,17 @@ export class IssuanceService {
     }
 
     try {
-      const cachedData = await this.cacheManager.get(requestId);
+      let cachedData = await this.cacheManager.get(requestId);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
 
+      if (cachedData) {
+         await this.cacheManager.del(requestId);
+         await this.importAndPreviewDataForIssuance(reqPayload, requestId);
+        //  await this.cacheManager.set(requestId, reqPayload);
+        cachedData = await this.cacheManager.get(requestId);
+      }     
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
 
@@ -1023,8 +1030,8 @@ export class IssuanceService {
           0 === errorCount ? FileUploadStatus.completed : FileUploadStatus.partially_completed;
 
         if (!jobDetails.isRetry) {
-          this.cacheManager.del(jobDetails.cacheId);
           socket.emit('bulk-issuance-process-completed', {clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId});
+          this.cacheManager.del(jobDetails.cacheId);
         } else {
           socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId });
         }
@@ -1033,7 +1040,6 @@ export class IssuanceService {
           status,
           lastChangedDateTime: new Date()
         });
-
       }
     } catch (error) {
       this.logger.error(`Error in completing bulk issuance process: ${error}`);

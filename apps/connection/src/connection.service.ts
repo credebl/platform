@@ -54,16 +54,12 @@ export class ConnectionService {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
 
-      let logoImageUrl;
-      if (organisation.logoUrl) {
-        logoImageUrl = organisation.logoUrl;
-      }
-
+      this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: logoImageUrl ? logoImageUrl : imageUrl ? imageUrl : undefined,
+        imageUrl: organisation.logoUrl || imageUrl || undefined,
         label: organisation.name,
         goal: goal || undefined,
         goalCode: goalCode || undefined,

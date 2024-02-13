@@ -221,6 +221,7 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<object> {
     try {
+
       if (file) {
         const fileKey: string = uuidv4();
         try {
@@ -232,7 +233,7 @@ export class IssuanceController {
         const reqPayload: RequestPayload = {
           credDefId: credentialDefinitionId,
           fileKey,
-          fileName: file.filename || file.originalname
+          fileName: fileDetails['fileName'] || file?.filename || file?.originalname
         };
 
         const importCsvDetails = await this.issueCredentialService.importCsv(reqPayload);
@@ -346,30 +347,31 @@ export class IssuanceController {
   async issueBulkCredentials(
     @Param('requestId') requestId: string,
     @Param('orgId') orgId: string,
-    @Query('credDefId') credentialDefinitionId: string,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    @Body() fileDetails: any,
-    @UploadedFile() file: Express.Multer.File,
     @Res() res: Response,
     @Body() clientDetails: ClientDetails,
-    @User() user: user
+    @User() user: user,
+    @Query('credDefId') credentialDefinitionId?: string,
+    @Body() fileDetails?: object,
+    @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
+
     clientDetails.userId = user.id;
-    if (file) {
+    let reqPayload: RequestPayload;
+
+    if (file && clientDetails?.isSelectiveIssuance) {
       const fileKey: string = uuidv4();
       try {
-       
         await this.awsService.uploadCsvFile(fileKey, file.buffer);
       } catch (error) {
         throw new RpcException(error.response ? error.response : error);
       }
 
-      const reqPayload: RequestPayload = {
+      reqPayload = {
         credDefId: credentialDefinitionId,
         fileKey,
-        fileName: file?.filename || file.originalname || fileDetails?.file?.filename
+        fileName: fileDetails['fileName'] || file?.filename || file?.originalname
       };
-
+    }
       const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails, reqPayload);
 
       const finalResponse: IResponse = {
@@ -378,8 +380,6 @@ export class IssuanceController {
         data: bulkIssuanceDetails
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
-  
-    } 
   }
 
   @Get('/orgs/:orgId/bulk/files')

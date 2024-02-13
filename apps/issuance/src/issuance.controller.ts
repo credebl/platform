@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { ClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
+import { IClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
@@ -82,7 +82,7 @@ export class IssuanceController {
 
 
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
-  async issueBulkCredentials(payload: { requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: ImportFileDetails }): Promise<string> {
+  async issueBulkCredentials(payload: { requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails }): Promise<string> {
     return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientDetails, payload.reqPayload);
   }
 

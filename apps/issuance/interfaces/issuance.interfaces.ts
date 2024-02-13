@@ -188,10 +188,22 @@ export interface FileUploadData {
     jobId: string;
 }
 
-export interface ClientDetails {
-   
-    clientId: string;
-
-    userId?: string;
-
+export interface IClientDetails {
+  clientId: string;
+  userId?: string;
+  isSelectiveIssuance?: boolean;
+  fileName?: string;
+}
+export interface IIssuedCredentialsSearchInterface {
+  issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
+  user: IUserRequestInterface;
+  orgId: string;
+}
+export interface IIssuedCredentialsSearchCriteria {
+  pageNumber: number;
+  pageSize: number;
+  sortField: string;
+  sortBy: string;
+  searchByText: string;
+  user?: IUserRequestInterface;
 }

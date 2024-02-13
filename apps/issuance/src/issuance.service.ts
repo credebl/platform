@@ -9,8 +9,8 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { ClientDetails, FileUploadData, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
+import { FileUploadData, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -805,7 +805,7 @@ export class IssuanceService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: ImportFileDetails): Promise<string> {
+  async issueBulkCredential(requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -833,7 +833,7 @@ export class IssuanceService {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
 
-      if (cachedData) {
+      if (cachedData && clientDetails?.isSelectiveIssuance) {
          await this.cacheManager.del(requestId);
          await this.importAndPreviewDataForIssuance(reqPayload, requestId);
         //  await this.cacheManager.set(requestId, reqPayload);

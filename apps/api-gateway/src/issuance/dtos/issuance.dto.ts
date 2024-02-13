@@ -1,37 +1,31 @@
 
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
-import { IsEnum } from 'class-validator';
 import { SortValue } from '../../enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { AutoAccept } from '@credebl/enum/enum';
 
 class Attribute {
-
-    @IsString()
-    @Transform(({ value }) => value.trim())
-    @IsNotEmpty({ message: 'Please provide a valid attribute name' })
+    @ApiProperty()
+    @IsString({ message: 'Attribute name should be string' })
+    @IsNotEmpty({ message: 'Attribute name is required' })
+    @Transform(({ value }) => trim(value))
+    @Type(() => String)
     name: string;
 
-    @Transform(({ value }) => value.trim())
-    @IsNotEmpty({ message: 'Please provide a valid attribute value' })
-    @IsString()
+    @ApiProperty()
+    @IsDefined()
+    @Transform(({ value }) => trim(value))
     value: string;
 }
 
-export class OOBIssueCredentialDto {
-
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsArray()
-    @ValidateNested({ each: true })
-    @ArrayMinSize(1)
-    @Type(() => Attribute)
-    attributes: Attribute[];
-
+class CredentialsIssuanceDto {
     @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid credentialDefinitionId' })
-    @IsString({ message: 'credentialDefinitionId should be string' })
+    @IsNotEmpty({ message: 'Please provide valid credential definition id' })
+    @IsString({ message: 'credential definition id should be string' })
+    @Transform(({ value }) => value.trim())
     credentialDefinitionId: string;
 
     @ApiProperty({ example: 'string' })
@@ -40,38 +34,91 @@ export class OOBIssueCredentialDto {
     @IsOptional()
     comment: string;
 
+    @ApiPropertyOptional({ example: 'v1' })
     @IsOptional()
-    @IsNotEmpty({ message: 'Please provide valid protocol-version' })
-    @IsString({ message: 'protocolVersion should be string' })
+    @IsNotEmpty({ message: 'Please provide valid protocol version' })
+    @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid goal code' })
+    @IsString({ message: 'goal code should be string' })
+    goalCode?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid parent thread id' })
+    @IsString({ message: 'parent thread id should be string' })
+    parentThreadId?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid willConfirm' })
+    @IsBoolean({ message: 'willConfirm should be boolean' })
+    willConfirm?: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid label' })
+    @IsString({ message: 'label should be string' })
+    label?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
+    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptCredential?: string;
 
     orgId: string;
 }
 
-class CredentialOffer {
+export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
 
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
+    @IsArray()
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @Type(() => Attribute)
+    attributes: Attribute[];
+}
+
+class CredentialOffer {
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
+    @IsNotEmpty({ message: 'Attribute name is required' })
+    @IsArray({ message: 'Attributes should be an array' })
     @ValidateNested({ each: true })
     @Type(() => Attribute)
-    @IsOptional()
     attributes: Attribute[];
 
-    @ApiProperty({ example: 'awqx@getnada.com' })
+    @ApiProperty({ example: 'testmail@mailinator.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })
+    @MaxLength(256, { message: 'Email must be at most 256 character' })
     @Transform(({ value }) => trim(value))
+    @Type(() => String)
     emailId: string;
 }
 
 export class IssueCredentialDto extends OOBIssueCredentialDto {
-
-    @ApiProperty({ example: '3fa85f64-5717-4562-b3fc-2c963f66afa6' })
-    @IsNotEmpty({ message: 'Please provide valid connectionId' })
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'connectionId is required' })
     @IsString({ message: 'connectionId should be string' })
+    @Transform(({ value }) => trim(value))
     connectionId: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
+    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptCredential?: string;
 }
 
 export class IssuanceDto {
@@ -126,11 +173,11 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     autoAcceptCredential: string;
-    
+
     @ApiProperty()
     @IsOptional()
     contextCorrelationId: string;
-    
+
     @ApiPropertyOptional()
     @IsOptional()
     type: string;
@@ -152,12 +199,12 @@ export class CredentialAttributes {
 }
 
 export class OOBCredentialDtoWithEmail {
-
     @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array'})
-    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads`})
-    @IsOptional()
+    @IsArray({ message: 'attributes should be array' })
+    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })
+    @ValidateNested({ each: true })
+    @Type(() => CredentialOffer)
     credentialOffer: CredentialOffer[];
 
     @ApiProperty({ example: 'awqx@getnada.com' })
@@ -168,14 +215,6 @@ export class OOBCredentialDtoWithEmail {
     @IsOptional()
     emailId: string;
 
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @IsArray({ message: 'attributes should be array' })
-    @ValidateNested({ each: true })
-    @Type(() => Attribute)
-    @IsOptional()
-    attributes: Attribute[];
-
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid credential definition id' })
     @IsString({ message: 'credential definition id should be string' })
@@ -183,10 +222,10 @@ export class OOBCredentialDtoWithEmail {
     credentialDefinitionId: string;
 
     @ApiProperty({ example: 'string' })
+    @IsOptional()
     @IsNotEmpty({ message: 'Please provide valid comment' })
     @IsString({ message: 'comment should be string' })
-    @IsOptional()
-    comment: string;
+    comment?: string;
 
     @ApiProperty({ example: 'v1' })
     @IsOptional()
@@ -229,8 +268,6 @@ export class PreviewFileDetails {
     @Transform(({ value }) => trim(value))
     @Type(() => String)
     searchByText: string = '';
-
-
 }
 
 export class FileParameter {

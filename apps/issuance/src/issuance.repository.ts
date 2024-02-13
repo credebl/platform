@@ -44,7 +44,7 @@ export class IssuanceRepository {
       });
 
       if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.notFound);
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
       return agentDetails;
@@ -509,6 +509,7 @@ export class IssuanceRepository {
       return agent;
     } catch (error) {
       this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

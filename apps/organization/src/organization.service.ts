@@ -1,10 +1,11 @@
+/* eslint-disable prefer-destructuring */
 import { organisation, user } from '@prisma/client';
 import { Injectable, Logger, ConflictException, InternalServerErrorException, HttpException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { OrgRolesService } from '@credebl/org-roles';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -15,16 +16,20 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { NotFoundException } from '@nestjs/common';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
+import { AwsService } from '@credebl/aws';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { IOrganizationInvitations, IOrganizationDashboard  } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+
+import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
+import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -34,9 +39,11 @@ export class OrganizationService {
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
+    private readonly awsService: AwsService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly clientRegistrationService: ClientRegistrationService
   ) { }
 
   /**
@@ -48,6 +55,7 @@ export class OrganizationService {
   // eslint-disable-next-line camelcase
   async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<organisation> {
     try {
+
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
 
       if (organizationExist) {
@@ -59,6 +67,13 @@ export class OrganizationService {
       createOrgDto.createdBy = userId;
       createOrgDto.lastChangedBy = userId;
 
+      if (await this.isValidBase64(createOrgDto?.logo)) {
+        const imageUrl = await this.uploadFileToS3(createOrgDto.logo);
+        createOrgDto.logo = imageUrl;
+      } else {
+        createOrgDto.logo = '';
+      }
+            
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
       // To return selective object data
@@ -70,7 +85,9 @@ export class OrganizationService {
       const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
       await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
+
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
+      
       return organizationDetails;
 
     } catch (error) {
@@ -79,7 +96,135 @@ export class OrganizationService {
     }
   }
 
+  /**
+   * 
+   * @param orgId 
+   * @returns organization client credentials
+   */
+  async createOrgCredentials(orgId: string): Promise<IOrgCredentials> {
+    try {
 
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+
+      if (!organizationDetails) {
+        throw new ConflictException(ResponseMessages.organisation.error.orgNotFound);
+      }
+
+      const orgCredentials = await this.registerToKeycloak(organizationDetails.name, organizationDetails.id);
+      
+      const {clientId, clientSecret, idpId} = orgCredentials;
+
+      const updateOrgData = {
+        clientId,
+        clientSecret: this.maskString(clientSecret),
+        idpId
+      };
+
+      const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
+
+      if (!updatedOrg) {
+        throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate);
+      }
+
+      return orgCredentials;
+    
+    } catch (error) {
+      this.logger.error(`In createOrgCredentials : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Register the organization to keycloak
+   * @param orgName 
+   * @param orgId 
+   * @returns client credentials
+   */
+  async registerToKeycloak(orgName: string, orgId: string): Promise<IOrgCredentials> {
+      const token = await this.clientRegistrationService.getManagementToken();
+      return this.clientRegistrationService.createClient(orgName, orgId, token);      
+  }
+
+
+  async deleteClientCredentials(orgId: string): Promise<string> {
+      const token = await this.clientRegistrationService.getManagementToken();
+
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+
+      try {        
+        await this.clientRegistrationService.deleteClient(organizationDetails.idpId, token);     
+        const updateOrgData = {
+          clientId: null,
+          clientSecret: null,
+          idpId: null
+        };
+  
+        await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
+  
+      } catch (error) {
+        throw new InternalServerErrorException('Unable to delete client credentails');
+      }
+
+      return ResponseMessages.organisation.success.deleteCredentials;
+  }
+
+  /**
+   * Mask string and display last 5 characters
+   * @param inputString 
+   * @returns 
+   */
+  maskString(inputString: string): string {
+    if (5 <= inputString.length) {
+      // Extract the last 5 characters
+      const lastFiveCharacters = inputString.slice(-8);
+
+      // Create a masked string with '*' characters
+      const maskedString = '*'.repeat(inputString.length - 8) + lastFiveCharacters;
+
+      return maskedString;
+    } else {
+      // If the inputString is less than 5 characters, return the original string
+      return inputString;
+    }
+  }
+  
+  async isValidBase64 (value: string): Promise<boolean> {
+    try {
+      if (!value || 'string' !== typeof value) {
+        return false;
+      }
+  
+      const base64Regex = /^data:image\/([a-zA-Z]*);base64,([^\"]*)$/;
+      const matches = value.match(base64Regex);
+      return Boolean(matches) && 3 === matches.length;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  async uploadFileToS3(orgLogo: string): Promise<string> {
+    try {
+      const updatedOrglogo = orgLogo.split(',')[1];
+      const imgData = Buffer.from(updatedOrglogo, 'base64');
+      const logoUrl = await this.awsService.uploadUserCertificate(
+        imgData,
+        'png',
+        'orgLogo',
+        process.env.AWS_ORG_LOGO_BUCKET_NAME,
+        'base64',
+        'orgLogos'
+      );
+      return logoUrl;
+    } catch (error) {
+      this.logger.error(`In getting imageUrl : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }  
+    
   /**
    *
    * @param orgName
@@ -115,6 +260,14 @@ export class OrganizationService {
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
       updateOrgDto.orgSlug = orgSlug;
       updateOrgDto.userId = userId;
+      
+      if (await this.isValidBase64(updateOrgDto.logo)) {
+        const imageUrl = await this.uploadFileToS3(updateOrgDto.logo);
+        updateOrgDto.logo = imageUrl;
+      } else {
+        delete updateOrgDto.logo;
+      }
+
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
@@ -157,6 +310,34 @@ export class OrganizationService {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
+   
+    const {clientId, clientSecret} = clientCredentials;
+    return this.authenticateClientKeycloak(clientId, clientSecret);
+  }
+
+
+  async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
+
+    try {
+
+      const payload = new ClientCredentialTokenPayloadDto();
+      // eslint-disable-next-line camelcase
+      payload.client_id = clientId;
+      // eslint-disable-next-line camelcase
+      payload.client_secret = clientSecret;
+      payload.scope = 'email profile';
+      
+      const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload);
+      return mgmtTokenResponse;
+
+    } catch (error) {
+      this.logger.error(`Error in authenticateClientKeycloak : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+   
   }
 
   /**
@@ -546,6 +727,34 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async fetchOrgCredentials(orgId: string): Promise<IOrgCredentials> {
+    try {
+      const orgCredentials = await this.organizationRepository.getOrganizationDetails(orgId);
+      if (!orgCredentials.clientId) {
+        throw new NotFoundException(ResponseMessages.organisation.error.notExistClientCred);
+      }
+      return {
+        clientId: orgCredentials.clientId,
+        clientSecret: orgCredentials.clientSecret
+      };
+    } catch (error) {
+      this.logger.error(`Error in fetchOrgCredentials : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+
+  async getOrgOwner(orgId: string): Promise<IOrganization> {
+    try {
+      const orgDetails = await this.organizationRepository.getOrganizationOwnerDetails(orgId, OrgRoles.OWNER);
+      return orgDetails;
+    } catch (error) {
+      this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 
   async deleteOrganization(orgId: string): Promise<boolean> {
     try {

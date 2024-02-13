@@ -6,6 +6,11 @@ export interface IUserOrgRoles {
   orgRole: IOrgRole
 }
 
+export interface IClientCredentials {
+  clientId: string;
+  clientSecret: string;
+}
+
 export interface IUpdateOrganization {
   name: string;
   description?: string;

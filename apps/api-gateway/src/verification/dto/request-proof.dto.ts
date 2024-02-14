@@ -109,3 +109,47 @@ export class OutOfBandRequestProof {
     @IsOptional()
     protocolVersion: string;
 }
+
+
+interface IProofFormats {
+    indy: IndyProof
+}
+
+interface IndyProof {
+    name: string;
+    version: string;
+    requested_attributes: IRequestedAttributes;
+    requested_predicates: IRequestedPredicates;
+}
+
+interface IRequestedAttributes {
+    [key: string]: IRequestedAttributesName;
+}
+
+interface IRequestedAttributesName {
+    name: string;
+    restrictions: IRequestedRestriction[]
+}
+
+interface IRequestedPredicates {
+    [key: string]: IRequestedPredicatesName;
+}
+
+interface IRequestedPredicatesName {
+    name: string;
+    restrictions: IRequestedRestriction[]
+}
+
+interface IRequestedRestriction {
+    cred_def_id?: string;
+    schema_id?: string;
+}
+
+export interface ISendProofRequestPayload {
+    protocolVersion?: string;
+    comment?: string;
+    connectionId?: string;
+    proofFormats: IProofFormats;
+    autoAcceptProof?: string;
+    label?: string;
+}

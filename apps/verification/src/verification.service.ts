@@ -326,20 +326,18 @@ export class VerificationService {
  * @param outOfBandRequestProof 
  * @returns Get requested proof presentation details
  */
-  async sendOutOfBandPresentationRequest(outOfBandRequestProof: IRequestProof): Promise<boolean|object> {
+  async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean|object> {
     try {
 
       this.logger.log(`-------outOfBandRequestProof------${JSON.stringify(outOfBandRequestProof)}`);
-      const comment = outOfBandRequestProof.comment || '';
-      const protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
-      const autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'never';
+      outOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
-      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
+      // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
 
-
-      const [getAgentDetails, organizationDetails] = await Promise.all([
-        this.verificationRepository.getAgentEndPoint(outOfBandRequestProof.orgId),
-        this.verificationRepository.getOrganization(outOfBandRequestProof.orgId)
+      const [getAgentDetails] = await Promise.all([
+        this.verificationRepository.getAgentEndPoint(user.orgId),
+        this.verificationRepository.getOrganization(user.orgId)
       ]);
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
@@ -348,36 +346,31 @@ export class VerificationService {
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
       this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(outOfBandRequestProof.orgId);
+        apiKey = await this._getOrgAgentApiKey(user.orgId);
       }
       const payload: IProofRequestPayload
         = {
         apiKey,
         url,
-        proofRequestPayload: {
-          protocolVersion,
-          comment,
-          label: organizationDetails?.name,
-          proofFormats: {
-            indy: {
-              name: 'Proof Request',
-              version: '1.0',
-              requested_attributes: requestedAttributes,
-              requested_predicates: requestedPredicates
-            }
-          },
-          autoAcceptProof
-        }
+        proofRequestPayload: outOfBandRequestProof
       };
+      
+      const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
+      this.logger.log(`-----getProofPresentation---${JSON.stringify(getProofPresentation)}`);
+      if (!getProofPresentation) {
+        throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
+      }
+      return getProofPresentation.response;
 
-      if (outOfBandRequestProof.emailId) {
-        const batchSize = 100; // Define the batch size according to your needs
-        const { emailId } = outOfBandRequestProof; // Assuming it's an array
-        await this.sendEmailInBatches(payload, emailId, getAgentDetails, organizationDetails, batchSize);
-      return true;
-      } else {
-        return this.generateOOBProofReq(payload, getAgentDetails);
-      }      
+      // Unused code : to be segregated
+      // if (outOfBandRequestProof.emailId) {
+      //   const batchSize = 100; // Define the batch size according to your needs
+      //   const { emailId } = outOfBandRequestProof; // Assuming it's an array
+      //   await this.sendEmailInBatches(payload, emailId, getAgentDetails, organizationDetails, batchSize);
+      // return true;
+      // } else {
+      // return this.generateOOBProofReq(payload, getAgentDetails);
+      // }      
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
       this.verificationErrorHandling(error);

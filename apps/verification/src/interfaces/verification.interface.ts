@@ -80,11 +80,11 @@ interface IRequestedRestriction {
 }
 
 export interface ISendProofRequestPayload {
-    protocolVersion: string;
-    comment: string;
+    protocolVersion?: string;
+    comment?: string;
     connectionId?: string;
     proofFormats: IProofFormats;
-    autoAcceptProof: string;
+    autoAcceptProof?: string;
     label?: string;
 }
 

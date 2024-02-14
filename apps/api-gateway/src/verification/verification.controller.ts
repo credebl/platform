@@ -16,7 +16,7 @@ import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards,
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
+import { ISendProofRequestPayload, OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -245,15 +245,10 @@ export class VerificationController {
     async sendOutOfBandPresentationRequest(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Body() outOfBandRequestProof: OutOfBandRequestProof,
+        @Body() outOfBandRequestProof: ISendProofRequestPayload,
         @Param('orgId') orgId: string
     ): Promise<Response> {
-
-        for (const attrData of outOfBandRequestProof.attributes) {
-            await this.validateAttribute(attrData);
-        }
-
-        outOfBandRequestProof.orgId = orgId;
+        user.orgId = orgId;
         const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,

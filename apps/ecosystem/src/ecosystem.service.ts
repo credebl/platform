@@ -652,7 +652,12 @@ export class EcosystemService {
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
 
-      if (0 !== schemaRequestExist.length) {
+  const existSchema = schemaRequestExist?.filter(schema => schema.status === endorsementTransactionStatus.REQUESTED ||
+  schema.status === endorsementTransactionStatus.SIGNED ||
+  schema.status === endorsementTransactionStatus.SUBMITED
+) ?? [];
+
+      if (0 < existSchema.length) {
         throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
       }
 
@@ -761,8 +766,13 @@ export class EcosystemService {
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
+   
+      const existsCredDef = credDefRequestExist?.filter(tag => tag.status === endorsementTransactionStatus.REQUESTED ||
+        tag.status === endorsementTransactionStatus.SIGNED ||
+        tag.status === endorsementTransactionStatus.SUBMITED
+      ) ?? [];
 
-      if (0 !== credDefRequestExist.length) {
+      if (0 < existsCredDef.length) {
         throw new ConflictException(ResponseMessages.ecosystem.error.credDefAlreadyExist);
       }
 
@@ -984,8 +994,11 @@ export class EcosystemService {
         if (!submitTxn) {
           await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
-        }
-        return submitTxn;
+        } 
+        return {
+          autoEndorsement:ecosystemDetails.autoEndorsement,
+          submitTxn
+       };
       }
       
       // To return selective response

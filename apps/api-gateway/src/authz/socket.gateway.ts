@@ -108,15 +108,16 @@ export class SocketGateway implements OnGatewayConnection {
     this.logger.log(`bulk-issuance-process-completed ${payload.clientId}`);
     this.server
       .to(payload.clientId)
-      .emit('bulk-issuance-process-completed');
+      .emit('bulk-issuance-process-completed', {fileUploadId: payload.fileUploadId});
   }
 
   @SubscribeMessage('error-in-bulk-issuance-process')
   async handleBulkIssuanceErrorResponse(client:string, payload: ISocketInterface): Promise<void> {
     this.logger.log(`error-in-bulk-issuance-process ${payload.clientId}`);
+    const error = 'string' === typeof payload?.error ? payload?.error : payload?.error?.error;
     this.server
       .to(payload.clientId)
-      .emit('error-in-bulk-issuance-process', payload.error);
+      .emit('error-in-bulk-issuance-process', {error, fileUploadId: payload.fileUploadId});
   }
 
   @SubscribeMessage('bulk-issuance-process-retry-completed')

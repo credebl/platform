@@ -363,13 +363,19 @@ export class EcosystemController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
     const transactionResponse = await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.sign,
-      data: transactionResponse
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
+    
+    const responseMessage =
+    true === transactionResponse['autoEndorsement']
+      ? ResponseMessages.ecosystem.success.AutoSignAndSubmit
+      : ResponseMessages.ecosystem.success.sign;
+
+  const finalResponse: IResponse = {
+    statusCode: HttpStatus.CREATED,
+    message: responseMessage,
+    data: transactionResponse
+  };
+  return res.status(HttpStatus.CREATED).json(finalResponse);
+}
 
   @Post('/:ecosystemId/:orgId/transaction/submit/:endorsementId')
   @ApiOperation({ summary: 'Submit transaction', description: 'Submit transaction' })

@@ -1,3 +1,4 @@
+import { AutoAccept } from "@credebl/enum/enum";
 import { IUserRequest } from "@credebl/user-request/user-request.interface";
 
 interface IProofRequestAttribute {
@@ -14,9 +15,12 @@ export interface IRequestProof {
     connectionId?: string;
     attributes: IProofRequestAttribute[];
     comment: string;
-    autoAcceptProof: string;
-    protocolVersion: string;
-    emailId?: string[]
+    autoAcceptProof: AutoAccept;
+    protocolVersion?: string;
+    emailId?: string[];
+    goalCode?: string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
 }
 
 export interface IGetAllProofPresentations {
@@ -86,6 +90,9 @@ export interface ISendProofRequestPayload {
     proofFormats: IProofFormats;
     autoAcceptProof?: string;
     label?: string;
+    goalCode?: string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
 }
 
 export interface IProofRequestPayload {

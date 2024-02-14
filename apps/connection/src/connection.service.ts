@@ -40,7 +40,7 @@ export class ConnectionService {
    */
   async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
 
-    const { orgId, multiUseInvitation, autoAcceptConnection, alias, label } = payload;
+    const { orgId, multiUseInvitation, autoAcceptConnection, alias, imageUrl, goal, goalCode, handshake, handshakeProtocols } = payload;
     try {
       const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
       if (connectionInvitationExist) {
@@ -48,23 +48,25 @@ export class ConnectionService {
       }
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
 
-      let logoImageUrl;
-      if (organisation.logoUrl) {
-        logoImageUrl = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/orgs/profile/${organisation.id}`;
-      }
+      this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
 
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation || true,
         autoAcceptConnection: autoAcceptConnection || true,
         alias: alias || undefined,
-        imageUrl: logoImageUrl ? logoImageUrl : undefined,
-        label: label || undefined
+        imageUrl: organisation?.logoUrl || imageUrl || undefined,
+        label: organisation.name,
+        goal: goal || undefined,
+        goalCode: goalCode || undefined,
+        handshake: handshake || undefined,
+        handshakeProtocols: handshakeProtocols || undefined
       };
 
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
@@ -408,7 +410,7 @@ export class ConnectionService {
 
 
     } catch (error) {
-      this.logger.error(`[receiveInvitationUrl] - error in rece ive invitation url : ${JSON.stringify(error)}`);
+      this.logger.error(`[receiveInvitationUrl] - error in receive invitation url : ${JSON.stringify(error)}`);
 
       if (error?.response?.error?.reason) {
         throw new RpcException({

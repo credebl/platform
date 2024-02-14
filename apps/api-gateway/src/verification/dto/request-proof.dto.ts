@@ -1,7 +1,8 @@
-import { IsArray, IsEmail, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { AutoAccept } from '@credebl/enum/enum';
 
 export class ProofRequestAttribute {
     @IsString()
@@ -9,7 +10,7 @@ export class ProofRequestAttribute {
     attributeName: string;
 
     @IsString()
-    @IsNotEmpty({ message: 'schemaId is required.' })
+    @IsOptional()
     schemaId?: string;
 
     @IsString()
@@ -24,16 +25,41 @@ export class ProofRequestAttribute {
 
     @IsString()
     @IsOptional()
-    @IsNotEmpty({ message: 'credDefId is required.' })
     credDefId?: string;
 }
 
-export class RequestProofDto {
+class ProofPayload {
+    @ApiPropertyOptional()
+    @IsString({ message: 'goalCode must be in string' })
+    @IsNotEmpty({ message: 'please provide valid goalCode' })
+    @IsOptional()
+    goalCode: string;
+
+    @ApiPropertyOptional()
+    @IsString({ message: 'parentThreadId must be in string' })
+    @IsNotEmpty({ message: 'please provide valid parentThreadId' })
+    @IsOptional()
+    parentThreadId: string;
+
+    @ApiPropertyOptional()
+    @IsBoolean({ message: 'willConfirm must be in boolean' })
+    @IsNotEmpty({ message: 'please provide valid willConfirm' })
+    @IsOptional()
+    willConfirm: boolean;
+
+    @ApiPropertyOptional()
+    @IsString({ message: 'protocolVersion must be in string' })
+    @IsNotEmpty({ message: 'please provide valid protocol version' })
+    @IsOptional()
+    protocolVersion: string;
+}
+
+export class RequestProofDto extends ProofPayload {
     @ApiProperty()
+    @IsString()
     @Transform(({ value }) => trim(value))
     @Transform(({ value }) => toLowerCase(value))
     @IsNotEmpty({ message: 'connectionId is required.' })
-    @MaxLength(36, { message: 'connectionId must be at most 36 character.' })
     connectionId: string;
 
     @ApiProperty({
@@ -52,24 +78,24 @@ export class RequestProofDto {
     @IsNotEmpty({ message: 'please provide valid attributes' })
     attributes: ProofRequestAttribute[];
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
+    @IsString({ message: 'comment must be in string' })
     comment: string;
 
     orgId: string;
 
+    @ApiPropertyOptional()
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()
-    autoAcceptProof: string;
-
-    @IsString({ message: 'protocolVersion must be in string' })
-    @IsNotEmpty({ message: 'please provide valid protocol version' })
-    @IsOptional()
-    protocolVersion: string;
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptProof: AutoAccept;
 }
 
-export class OutOfBandRequestProof {
+export class OutOfBandRequestProof extends ProofPayload {
     @ApiProperty({
         'example': [
             {
@@ -99,15 +125,14 @@ export class OutOfBandRequestProof {
     comment: string;
     orgId: string;
 
-    @IsString({ message: 'autoAcceptProof must be in string' })
+    @ApiPropertyOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
     autoAcceptProof: string;
-
-    @IsString({ message: 'protocol version must be in string' })
-    @IsNotEmpty({ message: 'please provide valid protocol version' })
-    @IsOptional()
-    protocolVersion: string;
 }
 
 

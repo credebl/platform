@@ -42,13 +42,7 @@ export class ConnectionService {
 
     const { orgId, multiUseInvitation, autoAcceptConnection, alias, imageUrl, goal, goalCode, handshake, handshakeProtocols } = payload;
     try {
-      const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
-      if (connectionInvitationExist) {
-        return connectionInvitationExist;
-      }
-
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
@@ -83,13 +77,14 @@ export class ConnectionService {
       } else {
         shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
       }
-
+    
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
         shortenedUrl,
         agentId,
         orgId
       );
       return saveConnectionDetails;
+      
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {

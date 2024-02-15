@@ -17,7 +17,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -269,12 +269,46 @@ export class OrganizationService {
       }
 
       const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
+
+      if (organizationDetails?.logoUrl !== organizationExist?.filter['logoUrl'] || organizationDetails?.name !== organizationExist?.filter['name']) {
+        await this._createConnection(updateOrgDto?.logo, updateOrgDto?.name, orgId);
+      }
+
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
-      return organizationDetails;
+      return organizationDetails; 
     } catch (error) {
       this.logger.error(`In update organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  async _createConnection(
+    orgName: string,
+    logoUrl: string,
+    orgId: string
+  ): Promise<ICreateConnectionUrl> {
+    const pattern = { cmd: 'create-connection1' };
+    
+    const payload = {
+      orgName,
+      logoUrl,
+      orgId
+    };
+    const connectionInvitationData = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return connectionInvitationData;
   }
 
   /**

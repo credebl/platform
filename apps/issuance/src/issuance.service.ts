@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { ClientDetails, FileUploadData, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadData, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -346,7 +346,9 @@ export class IssuanceService {
         comment,
         credentialDefinitionId,
         orgId,
-        protocolVersion
+        protocolVersion, 
+        attributes,
+        emailId
       } = outOfBandCredential;
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -383,7 +385,7 @@ export class IssuanceService {
             protocolVersion: protocolVersion || 'v1',
             credentialFormats: {
               indy: {
-                attributes: iterator.attributes,
+                attributes: iterator.attributes || attributes,
                 credentialDefinitionId
               }
             },
@@ -394,6 +396,8 @@ export class IssuanceService {
             willConfirm: outOfBandCredential.willConfirm || undefined,
             label: outOfBandCredential.label || undefined
           };
+
+          this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
 
           const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
 
@@ -434,8 +438,9 @@ export class IssuanceService {
               disposition: 'attachment'
             }
           ];
-
+          
           const isEmailSent = await sendEmail(this.emailData);
+          this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
           
           if (!isEmailSent) {
             errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
@@ -468,6 +473,8 @@ export class IssuanceService {
           const batchPromises = batch.map((iterator, index) => sendEmailForCredentialOffer(iterator, iterator.emailId, index));
           emailPromises.push(Promise.all(batchPromises));
         }
+      }  else {
+        emailPromises.push(sendEmailForCredentialOffer({}, emailId, 1));
       }
 
       const results = await Promise.all(emailPromises);
@@ -632,7 +639,7 @@ export class IssuanceService {
   }
 
 
-  async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails): Promise<string> {
+  async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
     try {
 
       const credDefResponse =
@@ -668,9 +675,7 @@ export class IssuanceService {
 
       // Output invalid emails
       if (0 < invalidEmails.length) {
-
         throw new BadRequestException(`Invalid emails found in the chosen file`);
-
       }
 
       const fileData: string[] = parsedData.data.map(Object.values);
@@ -699,7 +704,7 @@ export class IssuanceService {
 
       const newCacheKey = uuidv4();
 
-      await this.cacheManager.set(newCacheKey, JSON.stringify(resData), 3600);
+      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(resData), 60000);
 
       return newCacheKey;
 
@@ -802,7 +807,7 @@ export class IssuanceService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails): Promise<string> {
+  async issueBulkCredential(requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails): Promise<string> {
     const fileUpload: {
       lastChangedDateTime: Date;
       name?: string;
@@ -825,11 +830,17 @@ export class IssuanceService {
     }
 
     try {
-      const cachedData = await this.cacheManager.get(requestId);
+      let cachedData = await this.cacheManager.get(requestId);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
 
+      if (cachedData && clientDetails?.isSelectiveIssuance) {
+         await this.cacheManager.del(requestId);
+         await this.importAndPreviewDataForIssuance(reqPayload, requestId);
+        //  await this.cacheManager.set(requestId, reqPayload);
+        cachedData = await this.cacheManager.get(requestId);
+      }     
       const parsedData = JSON.parse(cachedData as string).fileData.data;
       const parsedPrimeDetails = JSON.parse(cachedData as string);
 
@@ -1021,8 +1032,8 @@ export class IssuanceService {
           0 === errorCount ? FileUploadStatus.completed : FileUploadStatus.partially_completed;
 
         if (!jobDetails.isRetry) {
-          this.cacheManager.del(jobDetails.cacheId);
           socket.emit('bulk-issuance-process-completed', {clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId});
+          this.cacheManager.del(jobDetails.cacheId);
         } else {
           socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId });
         }
@@ -1031,7 +1042,6 @@ export class IssuanceService {
           status,
           lastChangedDateTime: new Date()
         });
-
       }
     } catch (error) {
       this.logger.error(`Error in completing bulk issuance process: ${error}`);

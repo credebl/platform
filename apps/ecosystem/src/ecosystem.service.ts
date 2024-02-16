@@ -824,12 +824,11 @@ export class EcosystemService {
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
-
-      const existsCredDef = credDefRequestExist?.filter(
-          (tag) => tag.status === endorsementTransactionStatus.REQUESTED ||
-            tag.status === endorsementTransactionStatus.SIGNED ||
-            tag.status === endorsementTransactionStatus.SUBMITED
-        ) ?? [];
+   
+      const existsCredDef = credDefRequestExist?.filter(tag => tag.status === endorsementTransactionStatus.REQUESTED ||
+        tag.status === endorsementTransactionStatus.SIGNED ||
+        tag.status === endorsementTransactionStatus.SUBMITED
+      ) ?? [];
 
       if (0 < existsCredDef.length) {
         throw new ConflictException(ResponseMessages.ecosystem.error.credDefAlreadyExist);

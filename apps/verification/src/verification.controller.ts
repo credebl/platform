@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { IProofPresentation, IProofPresentationData, IProofRequests, IRequestProof } from './interfaces/verification.interface';
+import { IProofPresentation, IProofPresentationData, IProofRequests, IRequestProof, ISendProofRequestPayload } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { presentations } from '@prisma/client';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
@@ -63,8 +63,8 @@ export class VerificationController {
   }
 
   @MessagePattern({ cmd: 'send-out-of-band-proof-request' })
-  async sendOutOfBandPresentationRequest(payload: { outOfBandRequestProof: IRequestProof, user: IUserRequest }): Promise<boolean|object> {
-    return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof);
+  async sendOutOfBandPresentationRequest(payload: { outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest }): Promise<boolean|object> {
+    return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof, payload.user);
   }
 
   @MessagePattern({ cmd: 'get-verified-proof-details' })

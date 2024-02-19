@@ -25,12 +25,12 @@ import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { AwsService } from '@credebl/aws';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { IOrgCredentials, IOrganization } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 
 import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
+import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -54,7 +54,7 @@ export class OrganizationService {
    */
 
   // eslint-disable-next-line camelcase
-  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<organisation> {
+  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string, keycloakUserId: string): Promise<organisation> {
     try {
 
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
@@ -90,13 +90,20 @@ export class OrganizationService {
       delete organizationDetails.orgSlug;
       delete organizationDetails.website;
 
-      const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
+      const orgCredentials = await this.registerToKeycloak(organizationDetails.name, organizationDetails.id, keycloakUserId);
+      
+      const {clientId, idpId} = orgCredentials;
 
-      if (createOrgDto.notificationWebhook) {
-        await this.storeOrgWebhookEndpoint(organizationDetails.id, createOrgDto.notificationWebhook);
+      const updateOrgData = {
+        clientId,
+        idpId
+      };
+
+      const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, organizationDetails.id);
+
+      if (!updatedOrg) {
+        throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate);
       }
-
-      await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, organizationDetails.id);
 
       await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization created`, 'Get started with inviting users to join organization');
       
@@ -113,7 +120,7 @@ export class OrganizationService {
    * @param orgId 
    * @returns organization client credentials
    */
-  async createOrgCredentials(orgId: string): Promise<IOrgCredentials> {
+  async createOrgCredentials(orgId: string, userId: string, keycloakUserId: string): Promise<IOrgCredentials> {
     try {
 
       const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
@@ -121,16 +128,34 @@ export class OrganizationService {
       if (!organizationDetails) {
         throw new ConflictException(ResponseMessages.organisation.error.orgNotFound);
       }
-
-      const orgCredentials = await this.registerToKeycloak(organizationDetails.name, organizationDetails.id);
       
-      const {clientId, clientSecret, idpId} = orgCredentials;
+      let updateOrgData = {};
+      let generatedClientSecret = '';
 
-      const updateOrgData = {
-        clientId,
-        clientSecret: this.maskString(clientSecret),
-        idpId
-      };
+      if (organizationDetails.idpId) {
+
+        const token = await this.clientRegistrationService.getManagementToken();
+
+        generatedClientSecret = await this.clientRegistrationService.generateClientSecret(organizationDetails.idpId, token);
+
+        updateOrgData = {
+          clientSecret: this.maskString(generatedClientSecret)
+        };
+
+      } else {
+
+        const orgCredentials = await this.registerToKeycloak(organizationDetails.name, organizationDetails.id, keycloakUserId);
+
+        const { clientId, idpId, clientSecret } = orgCredentials;
+
+        generatedClientSecret = clientSecret;
+
+        updateOrgData = {
+          clientId,
+          clientSecret: this.maskString(clientSecret),
+          idpId
+        };
+      }
 
       const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
 
@@ -138,7 +163,11 @@ export class OrganizationService {
         throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate);
       }
 
-      return orgCredentials;
+      return {
+        idpId: updatedOrg.idpId,
+        clientId: updatedOrg.clientId,
+        clientSecret: generatedClientSecret
+      };
     
     } catch (error) {
       this.logger.error(`In createOrgCredentials : ${JSON.stringify(error)}`);
@@ -152,9 +181,44 @@ export class OrganizationService {
    * @param orgId 
    * @returns client credentials
    */
-  async registerToKeycloak(orgName: string, orgId: string): Promise<IOrgCredentials> {
+  async registerToKeycloak(orgName: string, orgId: string, userId: string): Promise<IOrgCredentials> {
       const token = await this.clientRegistrationService.getManagementToken();
-      return this.clientRegistrationService.createClient(orgName, orgId, token);      
+      const orgDetails = await this.clientRegistrationService.createClient(orgName, orgId, token);  
+      
+      const orgRolesList = [
+        OrgRoles.OWNER,
+        OrgRoles.ADMIN,
+        OrgRoles.ISSUER,
+        OrgRoles.VERIFIER,
+        OrgRoles.MEMBER
+      ];
+
+      try {
+        for (const role of orgRolesList) {
+          await this.clientRegistrationService.createClientRole(
+            orgDetails.idpId,
+            token,
+            role,
+            role
+            );          
+        }        
+      } catch (error) {
+        this.logger.error(`Error In creating client roles : ${JSON.stringify(error)}`);
+        throw new InternalServerErrorException('Unable to create client roles');
+      }
+
+      const ownerRole = await this.clientRegistrationService.getClientSpecificRoles(orgDetails.idpId, token, OrgRoles.OWNER);
+
+      const payload = [
+        {
+          id: ownerRole.id,
+          name: ownerRole.name
+        }
+      ];
+
+      await this.clientRegistrationService.createUserClientRole(orgDetails.idpId, token, userId, payload);
+
+      return orgDetails;
   }
 
 
@@ -478,9 +542,22 @@ export class OrganizationService {
    */
 
 
-  async getOrgRoles(): Promise< IOrgRoles[]> {
+  async getOrgRoles(orgId: string): Promise<IClientRoles[]> {
     try {
-      return this.orgRoleService.getOrgRoles();
+
+      if (!orgId) {
+        throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired); 
+      }
+
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+
+      const token = await this.clientRegistrationService.getManagementToken();
+
+      return this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
     } catch (error) {
       this.logger.error(`In getOrgRoles : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -546,9 +623,16 @@ export class OrganizationService {
 
         const isUserExist = await this.checkUserExistInPlatform(email);
 
-        const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
-       
-        if (0 === orgRolesDetails.length) {
+        const userData = await this.getUserFirstName(userEmail);
+        
+        const {firstName} = userData;
+
+        const token = await this.clientRegistrationService.getManagementToken();
+        const clientRolesList = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
+
+        const matchedRoles = clientRolesList.filter(role => orgRoleId.includes(role.id.trim()));
+     
+        if (orgRoleId.length !== matchedRoles.length) {
           throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
         }
 
@@ -556,10 +640,10 @@ export class OrganizationService {
 
         if (!isInvitationExist && userEmail !== invitation.email) {
 
-          await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
+          await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), matchedRoles.map(role => role.id));
 
           try {
-            await this.sendInviteEmailTemplate(email, organizationDetails.name, orgRolesDetails, firstName, isUserExist);
+            await this.sendInviteEmailTemplate(email, organizationDetails.name, matchedRoles, firstName, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
@@ -676,6 +760,12 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.user.error.invalidOrgId);
       }
 
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+
+      if (!organizationDetails) {
+        throw new ConflictException(ResponseMessages.organisation.error.orgNotFound);
+      }
+
       const invitationStatus = invitation.status as Invitation;
       if (!transition(invitationStatus, payload.status)) {
         throw new BadRequestException(`${ResponseMessages.user.error.invitationStatusUpdateInvalid} ${invitation.status}`);
@@ -690,9 +780,15 @@ export class OrganizationService {
       if (status === Invitation.REJECTED) {
         return ResponseMessages.user.success.invitationReject;
       }
-      for (const roleId of invitation.orgRoles) {
-        await this.userOrgRoleService.createUserOrgRole(userId, roleId, orgId);
-      }
+
+      const token = await this.clientRegistrationService.getManagementToken();
+
+      const clientRoles = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
+
+      const rolesPayload: { id: string; name: string}[] = clientRoles.filter(orgRole => (invitation.orgRoles.includes(orgRole.id.trim()) 
+      && {id: orgRole.id, name: orgRole.name}));
+
+      await this.clientRegistrationService.createUserClientRole(organizationDetails.idpId, token, userId, rolesPayload);
 
       return ResponseMessages.user.success.invitationAccept;
 

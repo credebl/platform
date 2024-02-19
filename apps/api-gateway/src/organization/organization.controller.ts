@@ -93,7 +93,7 @@ export class OrganizationController {
  * @returns get organization roles
  */
 
-  @Get('/roles')
+  @Get('/:orgId/roles')
   @ApiOperation({
     summary: 'Fetch org-roles details',
     description: 'Fetch org-roles details'
@@ -101,9 +101,9 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getOrgRoles(@Res() res: Response): Promise<Response> {
+  async getOrgRoles(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response): Promise<Response> {
 
-    const orgRoles = await this.organizationService.getOrgRoles();
+    const orgRoles = await this.organizationService.getOrgRoles(orgId.trim());
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -324,7 +324,11 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-    const orgData = await this.organizationService.createOrganization(createOrgDto, reqUser.id);
+    
+    // eslint-disable-next-line prefer-destructuring
+    const keycloakUserId = reqUser.keycloakUserId;
+
+    const orgData = await this.organizationService.createOrganization(createOrgDto, reqUser.id, keycloakUserId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.create,
@@ -346,9 +350,13 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  async createOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<IResponseType> {
-    const orgCredentials = await this.organizationService.createOrgCredentials(orgId, reqUser.id);
-    const finalResponse: IResponseType = {
+  async createOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+
+    // eslint-disable-next-line prefer-destructuring
+    const keycloakUserId = reqUser.keycloakUserId;
+    
+    const orgCredentials = await this.organizationService.createOrgCredentials(orgId, reqUser.id, keycloakUserId);
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.orgCredentials,
       data: orgCredentials

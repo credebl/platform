@@ -391,5 +391,15 @@ export const ResponseMessages = {
             getshorteningUrl:'Shortening Url fetched successfully',
             createShorteningUrl: 'Shortening Url created successfully'
         }
-    }
+    },
+    notification: {
+        success: {
+            register: 'Notification webhook registration process completed successfully',
+            sendNotification: 'Notification send successfully'
+        },
+        error: {
+            notFound: 'Notification record not found.',
+            invalidUrl: 'Invalid URL'
+        }
+    },
 };

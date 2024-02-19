@@ -3,7 +3,7 @@
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
+import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
@@ -97,6 +97,35 @@ export class OrganizationRepository {
     }
   }
 
+  async getAgentInvitationDetails(orgId: string): Promise<agent_invitations> {
+    try {
+      const response = await this.prisma.agent_invitations.findUnique({
+        where: {
+          id: orgId
+        }        
+      });
+      return response;
+    } catch (error) {
+      this.logger.error(`error in getting agent invitation details: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateConnectionInvitationDetails(orgId: string, connectionInvitation: string): Promise<Prisma.BatchPayload> {
+    try {
+        const temp = await this.prisma.agent_invitations.updateMany({
+          where: {orgId},
+          data: {
+            connectionInvitation
+          }
+        });
+        return temp;
+
+    } catch (error) {
+        this.logger.error(`Error in updating connection invitation details: ${JSON.stringify(error)}`);
+        throw error;
+    }
+  }
 
   /**
    *
@@ -538,9 +567,9 @@ export class OrganizationRepository {
   * @returns Organization exist details
   */
 
-  async checkOrganizationExist(name: string, orgId: string): Promise<organisation[]> {
+  async checkOrganizationExist(name: string, orgId: string): Promise<organisation> {
     try {
-      return this.prisma.organisation.findMany({
+      return this.prisma.organisation.findUnique({
         where: {
           id: orgId,
           name

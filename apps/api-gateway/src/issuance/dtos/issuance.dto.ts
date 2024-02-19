@@ -19,6 +19,12 @@ class Attribute {
     @IsDefined()
     @Transform(({ value }) => trim(value))
     value: string;
+
+    @ApiProperty()
+    @IsBoolean()
+    @IsNotEmpty({ message: 'isRequired property is required' })
+    isRequired: boolean;
+
 }
 
 class CredentialsIssuanceDto {
@@ -77,17 +83,24 @@ class CredentialsIssuanceDto {
 }
 
 export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
-
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsArray()
-    @ValidateNested({ each: true })
-    @ArrayMinSize(1)
-    @Type(() => Attribute)
-    attributes: Attribute[];
+  @ApiProperty({
+    example: [
+      {
+        value: 'string',
+        name: 'string',
+        isRequired: 'boolean'
+      }
+    ]
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @Type(() => Attribute)
+  attributes: Attribute[];
 }
 
 class CredentialOffer {
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string', 'isRequired':'boolean' }] })
     @IsNotEmpty({ message: 'Attribute name is required' })
     @IsArray({ message: 'Attributes should be an array' })
     @ValidateNested({ each: true })
@@ -199,7 +212,7 @@ export class CredentialAttributes {
 }
 
 export class OOBCredentialDtoWithEmail {
-    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
+    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string', 'isRequired':'boolean' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })

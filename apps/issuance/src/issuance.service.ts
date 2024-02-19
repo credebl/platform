@@ -53,6 +53,26 @@ export class IssuanceService {
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICreateOfferResponse> {
     try {
       const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
+// console.log("1234567890", attributes);
+
+      const attrError = [];
+      if (0 < attributes?.length) {
+        attributes?.forEach((attribute, i) => {
+      
+            if (attribute.isRequired && !attribute.value) {
+              attrError.push(`attributes.${i}.Value of "${attribute.name}" is required`);
+              return true;
+            }
+            
+            return attribute.isRequired && !attribute.value;
+          });
+      
+        if (0 < attrError.length) {
+          throw new BadRequestException(attrError);
+        }
+        }
+      
+
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       if (!agentDetails) {
@@ -118,9 +138,26 @@ export class IssuanceService {
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object; }> {
     try {
       const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
+
+      const attrError = [];
+      if (0 < attributes?.length) {
+        attributes?.forEach((attribute, i) => {
+      
+            if (attribute.isRequired && !attribute.value) {
+              attrError.push(`attributes.${i}.Value of "${attribute.name}" is required`);
+              return true;
+            }
+            
+            return attribute.isRequired && !attribute.value;
+          });
+      
+        if (0 < attrError.length) {
+          throw new BadRequestException(attrError);
+        }
+        }
+
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
-      // const platformConfig: platform_config = await this.issuanceRepository.getPlatformConfigDetails();
 
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
@@ -351,6 +388,26 @@ export class IssuanceService {
         emailId
       } = outOfBandCredential;
 
+      const attrError = [];
+if (0 < credentialOffer?.length) {
+  credentialOffer?.forEach((credential, i) => {
+  credential.attributes.forEach((attribute, i2) => {
+
+      if (attribute.isRequired && !attribute.value) {
+        attrError.push(`credentialOffer.${i}.attributes.${i2}.Value of "${attribute.name}" is required`);
+        return true;
+      }
+      
+      return attribute.isRequired && !attribute.value;
+    });
+
+  });
+
+  if (0 < attrError.length) {
+    throw new BadRequestException(attrError);
+  }
+  }
+   
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);

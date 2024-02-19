@@ -4,6 +4,8 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 
 export interface IAttributes {
+  attributeName: string;
+  isRequired: boolean;
   name: string;
   value: string;
 }

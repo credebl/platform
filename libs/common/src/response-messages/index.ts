@@ -392,9 +392,14 @@ export const ResponseMessages = {
             createShorteningUrl: 'Shortening Url created successfully'
         }
     },
-    storeObject: {
+    notification: {
         success: {
-            storeObject: 'Object stored successfully'
+            register: 'Notification webhook registration process completed successfully',
+            sendNotification: 'Notification send successfully'
+        },
+        error: {
+            notFound: 'Notification record not found.',
+            invalidUrl: 'Invalid URL'
         }
-    } 
+    },
 };

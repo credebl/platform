@@ -26,6 +26,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { UtilitiesModule } from './utilities/utilities.module';
     EcosystemModule,
     UtilitiesModule,
     WebhookModule,
+    NotificationModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     BullModule.forRoot({
       redis: {

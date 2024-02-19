@@ -8,9 +8,9 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
 import { organisation } from '@prisma/client';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
+import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 
 @Controller()
 export class OrganizationController {
@@ -24,8 +24,8 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'create-organization' })
-  async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string }): Promise<organisation> {
-    return this.organizationService.createOrganization(payload.createOrgDto, payload.userId);
+  async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string, keycloakUserId: string }): Promise<organisation> {
+    return this.organizationService.createOrganization(payload.createOrgDto, payload.userId, payload.keycloakUserId);
   }
 
   /**
@@ -34,8 +34,8 @@ export class OrganizationController {
    * @returns organization client credentials
    */
   @MessagePattern({ cmd: 'create-org-credentials' })
-  async createOrgCredentials(@Body() payload: { orgId: string; userId: string }): Promise<IOrgCredentials> {
-    return this.organizationService.createOrgCredentials(payload.orgId);
+  async createOrgCredentials(@Body() payload: { orgId: string; userId: string, keycloakUserId: string }): Promise<IOrgCredentials> {
+    return this.organizationService.createOrgCredentials(payload.orgId, payload.userId, payload.keycloakUserId);
   }
 
   /**
@@ -113,8 +113,8 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'get-org-roles' })
-  async getOrgRoles(): Promise<IOrgRoles[]> {
-    return this.organizationService.getOrgRoles();
+  async getOrgRoles(payload: {orgId: string}): Promise<IClientRoles[]> {
+    return this.organizationService.getOrgRoles(payload.orgId);
   }
 
   /**

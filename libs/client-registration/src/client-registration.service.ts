@@ -18,6 +18,7 @@ import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
 import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ResponseService } from '@credebl/response';
+import { IClientRoles } from './interfaces/client.interface';
 
 @Injectable()
 export class ClientRegistrationService {
@@ -186,7 +187,6 @@ export class ClientRegistrationService {
     }
   }
 
-
   async getManagementTokenForMobile() {
     try {
       const payload = new ClientCredentialTokenPayloadDto();
@@ -277,6 +277,183 @@ export class ClientRegistrationService {
 
   }
 
+  async createUserClientRole(
+    idpId: string,
+    token: string,
+    userId: string,
+    payload: object[]
+  ): Promise<string> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientRolesResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId, idpId),
+      payload,
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `createUserClientRolesResponse ${JSON.stringify(
+        createClientRolesResponse
+      )}`
+    );
+
+    return 'User client role is assigned';  
+  }
+
+  async createUserHolderRole(
+    token: string,
+    userId: string,
+    payload: object[]
+  ): Promise<string> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientRolesResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId),
+      payload,
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `createUserHolderRole ${JSON.stringify(
+        createClientRolesResponse
+      )}`
+    );
+
+    return 'User holder role is assigned';  
+  }
+
+  async getAllClientRoles(
+    idpId: string,
+    token: string
+  ): Promise<IClientRoles[]> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const clientRolesResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetClientRoleURL(realmName, idpId),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `getAllClientRoles ${JSON.stringify(
+        clientRolesResponse
+      )}`
+    );
+
+    return clientRolesResponse;  
+  }
+
+  async getClientSpecificRoles(
+    idpId: string,
+    token: string,
+    roleName: string
+  ): Promise<IClientRoles> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const clientRolesResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetClientRoleURL(realmName, idpId, roleName),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `getClientSpecificRoles ${JSON.stringify(
+        clientRolesResponse
+      )}`
+    );
+
+    return clientRolesResponse;  
+  }
+
+  async getAllRealmRoles(
+    token: string
+  ): Promise<IClientRoles[]> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const realmRolesResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetRealmRoleURL(realmName),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `getAllRealmRoles ${JSON.stringify(
+        realmRolesResponse
+      )}`
+    );
+
+    return realmRolesResponse;  
+  }
+
+
+  async createClientRole(
+    idpId: string,
+    token: string,
+    name: string,
+    description: string
+  ): Promise<string> {
+
+    const payload = {
+      clientRole: true,
+      name,
+      description 
+    };
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientRolesResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetClientRoleURL(realmName, idpId),
+      payload,
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `createClientRolesResponse ${JSON.stringify(
+        createClientRolesResponse
+      )}`
+    );
+
+    return 'Client role is created';
+  
+  }
+
+  async generateClientSecret(
+    idpId: string,
+    token: string
+  ): Promise<string> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientSercretResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetClientSecretURL(realmName, idpId),
+      {},
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `ClientRegistrationService create realm client secret ${JSON.stringify(
+        createClientSercretResponse
+      )}`
+    );
+
+    const getClientSercretResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetClientSecretURL(realmName, idpId),
+      this.getAuthHeader(token)
+    );
+    this.logger.debug(
+      `ClientRegistrationService get client secret ${JSON.stringify(
+        getClientSercretResponse
+      )}`
+    );
+    this.logger.log(`${getClientSercretResponse.value}`);
+    const clientSecret = getClientSercretResponse.value;
+
+    return clientSecret;
+  
+  }
+
   async createClient(
     orgName: string,
     orgId: string,
@@ -324,20 +501,7 @@ export class ClientRegistrationService {
       publicClient: false,
       frontchannelLogout: false,
       fullScopeAllowed: false,
-      nodeReRegistrationTimeout: 0,
-      defaultClientScopes: [
-        'web-origins',
-        'role_list',
-        'profile',
-        'roles',
-        'email'
-      ],
-      optionalClientScopes: [
-        'address',
-        'phone',
-        'offline_access',
-        'microprofile-jwt'
-      ]
+      nodeReRegistrationTimeout: 0
     };
 
     const createClientResponse = await this.commonService.httpPost(

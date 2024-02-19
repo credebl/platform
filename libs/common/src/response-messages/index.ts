@@ -91,7 +91,7 @@ export const ResponseMessages = {
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
-            orgRoleIdNotFound:'Provided roles not exists in the platform',
+            orgRoleIdNotFound:'Provided roles not exists for this organization',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
             deleteOrgInvitation: 'Organization does not have access to delete this invitation',

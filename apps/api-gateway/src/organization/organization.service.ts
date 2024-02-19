@@ -6,7 +6,6 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { organisation } from '@prisma/client';
 import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
@@ -14,6 +13,7 @@ import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganization
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -26,8 +26,8 @@ export class OrganizationService extends BaseService {
    * @param createOrgDto
    * @returns Organization creation Success
    */
-  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string): Promise<organisation> {
-    const payload = { createOrgDto, userId };
+  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string, keycloakUserId: string): Promise<organisation> {
+    const payload = { createOrgDto, userId, keycloakUserId };
     return this.sendNatsMessage(this.serviceProxy, 'create-organization', payload);
   }
 
@@ -37,8 +37,8 @@ export class OrganizationService extends BaseService {
    * @param userId 
    * @returns Orgnization client credentials
    */
-  async createOrgCredentials(orgId: string, userId: string): Promise<IOrgCredentials> {
-    const payload = { orgId, userId };
+  async createOrgCredentials(orgId: string, userId: string, keycloakUserId: string): Promise<IOrgCredentials> {
+    const payload = { orgId, userId, keycloakUserId };
     return this.sendNatsMessage(this.serviceProxy, 'create-org-credentials', payload);
   }
 
@@ -133,8 +133,8 @@ export class OrganizationService extends BaseService {
    * @returns get organization roles
    */
 
-  async getOrgRoles(): Promise<IOrgRoles[]> {
-    const payload = {};
+  async getOrgRoles(orgId: string): Promise<IClientRoles[]> {
+    const payload = {orgId};
     return this.sendNatsMessage(this.serviceProxy, 'get-org-roles', payload);
   }
 

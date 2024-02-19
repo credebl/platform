@@ -294,7 +294,7 @@ export class OrganizationService {
     logoUrl: string,
     orgId: string
   ): Promise<ICreateConnectionUrl> {
-    const pattern = { cmd: 'create-connection1' };
+    const pattern = { cmd: 'create-connection' };
 
     const payload = {
       orgName,

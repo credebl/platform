@@ -5,6 +5,7 @@ export interface IUsersProfile {
   firstName?: string;
   lastName?: string;
   supabaseUserId?: string;
+  keycloakUserId?: string;
   userOrgRoles?: IUserOrgRole[];
 }
 

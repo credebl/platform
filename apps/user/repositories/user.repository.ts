@@ -224,6 +224,7 @@ export class UserRepository {
           clientId: true,
           clientSecret: true,
           supabaseUserId: true,
+          keycloakUserId: true,
           userOrgRoles: {
             include: {
               orgRole: true,
@@ -272,6 +273,7 @@ export class UserRepository {
         profileImg: true,
         publicProfile: true,
         supabaseUserId: true,
+        keycloakUserId: true,
         isEmailVerified: true,
         userOrgRoles: {
           select:{

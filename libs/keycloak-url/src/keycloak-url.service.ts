@@ -71,6 +71,48 @@ export class KeycloakUrlService {
     return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientid}/client-secret`;
   }
 
+  async GetClientRoleURL(
+    realm: string,
+    clientid: string,
+    roleName = ''
+  ):Promise<string> {
+
+    if ('' === roleName) {
+      return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientid}/roles`;
+    }
+
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientid}/roles/${roleName}`;
+
+  }
+
+  async GetRealmRoleURL(
+    realm: string,
+    roleName = ''
+  ):Promise<string> {
+
+    if ('' === roleName) {
+      return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/roles`;
+    }
+
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/roles/${roleName}`;
+
+  }
+
+  async GetClientUserRoleURL(
+    realm: string,
+    userId: string,
+    clientId?: string
+  ):Promise<string> {
+
+    if (clientId) {
+      return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/users/${userId}/role-mappings/clients/${clientId}`;
+    }
+
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/users/${userId}/role-mappings/realm`;
+
+  }
+  
+
   async GetClientIdpURL(
     realm: string,
     idp: string

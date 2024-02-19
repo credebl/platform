@@ -18,10 +18,89 @@ class Attribute {
     @IsDefined()
     @Transform(({ value }) => trim(value))
     value: string;
+
+    @ApiProperty()
+    @IsBoolean()
+    @IsNotEmpty({ message: 'isRequired property is required' })
+    isRequired: boolean;
+
+}
+
+class CredentialsIssuanceDto {
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid credential definition id' })
+    @IsString({ message: 'credential definition id should be string' })
+    @Transform(({ value }) => value.trim())
+    credentialDefinitionId: string;
+
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid comment' })
+    @IsString({ message: 'comment should be string' })
+    @IsOptional()
+    comment: string;
+
+    @ApiPropertyOptional({ example: 'v1' })
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid protocol version' })
+    @IsString({ message: 'protocol version should be string' })
+    protocolVersion?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid goal code' })
+    @IsString({ message: 'goal code should be string' })
+    goalCode?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid parent thread id' })
+    @IsString({ message: 'parent thread id should be string' })
+    parentThreadId?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid willConfirm' })
+    @IsBoolean({ message: 'willConfirm should be boolean' })
+    willConfirm?: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid label' })
+    @IsString({ message: 'label should be string' })
+    label?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
+    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptCredential?: string;
+
+    orgId: string;
+}
+
+export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
+  @ApiProperty({
+    example: [
+      {
+        value: 'string',
+        name: 'string',
+        isRequired: 'boolean'
+      }
+    ]
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @Type(() => Attribute)
+  attributes: Attribute[];
 }
 
 class CredentialOffer {
-    @ApiProperty()
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string', 'isRequired':'boolean' }] })
+    @IsNotEmpty({ message: 'Attribute name is required' })
     @IsArray({ message: 'Attributes should be an array' })
     @ArrayNotEmpty({ message: 'Attributes are required' })
     @ValidateNested({ each: true })
@@ -132,20 +211,10 @@ export class CredentialAttributes {
     value: string;
 }
 
-export class OutOfBandCredentialOfferDto {
-    @ApiProperty({
-        example: [
-            {
-                'emailId': 'testmail@domain.com',
-                'attributes': [
-                    {
-                        'value': 'string',
-                        'name': 'string'
-                    }
-                ]
-            }
-        ]
-    })
+export class OOBCredentialDtoWithEmail {
+    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string', 'isRequired':'boolean' }] }] })
+    @IsNotEmpty({ message: 'Please provide valid attributes' })
+    @IsArray({ message: 'attributes should be array' })
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })
     @IsArray({ message: 'Credential offer details should be array' })
     @ArrayNotEmpty({ message: 'Credential offer details required' })

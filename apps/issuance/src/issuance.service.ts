@@ -48,7 +48,6 @@ export class IssuanceService {
   async sendCredentialCreateOffer(orgId: string, user: IUserRequest, credentialDefinitionId: string, comment: string, connectionId: string, attributes: object[], autoAcceptCredential: AutoAccept): Promise<string> {
     try {
       const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
-// console.log("1234567890", attributes);
 
       const attrError = [];
       if (0 < attributes?.length) {

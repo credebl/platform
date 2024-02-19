@@ -1,24 +1,34 @@
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { trim } from '@credebl/common/cast.helper';
 
 
-@ApiExtraModels()
+class AttributeValues {
 
-class AttributeValue {
-
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty({ message: 'attributeName is required.' })
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'attributeName is required' })
   attributeName: string;
 
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty({ message: 'schemaDataType is required.' })
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'schemaDataType is required' })
   schemaDataType: string;
 
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty({ message: 'displayName is required.' })
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'displayName is required' })
   displayName: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  @IsNotEmpty({ message: 'isRequired property is required' })
+  isRequired: boolean;
+
 }
 
 
@@ -37,17 +47,22 @@ export class RequestSchemaDto {
   version: string;
 
   @ApiProperty({
+    type: [AttributeValues],
     'example': [
       {
         attributeName: 'name',
         schemaDataType: 'string',
-        displayName: 'Name'
+        displayName: 'Name',
+        isRequired: 'true'
       }
     ]
   })
   @IsArray({ message: 'attributes must be an array' })
-  @IsNotEmpty({ message: 'please provide valid attributes' })
-  attributes: AttributeValue[];
+  @IsNotEmpty({ message: 'attributes are required' })
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => AttributeValues)
+  attributes: AttributeValues[];
 
   @ApiProperty()
   @IsBoolean({ message: 'endorse must be a boolean.' })

@@ -35,7 +35,7 @@ export class SchemaService extends BaseService {
     schema: ISchemaPayload,
     user: IUserRequestInterface,
     orgId: string
-  ): Promise<ISchemaData> {
+   ): Promise<ISchemaData> {
 
     let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
     if (!apiKey || null === apiKey || undefined === apiKey) {
@@ -69,16 +69,18 @@ export class SchemaService extends BaseService {
 
         const schemaAttributeLength = 0;
         if (schema.attributes.length === schemaAttributeLength) {
-          throw new NotAcceptableException(
-            ResponseMessages.schema.error.insufficientAttributes
-          );
-        } else if (schema.attributes.length > schemaAttributeLength) {
-
-          const trimmedAttributes = schema.attributes.map(attribute => ({
-            attributeName: attribute.attributeName.trim(),
-            schemaDataType: attribute.schemaDataType,
-            displayName: attribute.displayName.trim()
-          }));
+            throw new NotAcceptableException(
+              ResponseMessages.schema.error.insufficientAttributes,
+              { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
+            );
+          } else if (schema.attributes.length > schemaAttributeLength) {
+            
+            const trimmedAttributes = schema.attributes.map(attribute => ({
+              attributeName: attribute.attributeName.trim(),
+              schemaDataType: attribute.schemaDataType,
+              displayName: attribute.displayName.trim(),
+              isRequired: attribute.isRequired
+            }));
 
 
           const attributeNamesLowerCase = trimmedAttributes.map(attribute => attribute.attributeName.toLowerCase());
@@ -111,7 +113,17 @@ export class SchemaService extends BaseService {
           const did = schema.orgDid?.split(':').length >= 4 ? schema.orgDid : orgDid;
 
           const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
+          
           const attributeArray = trimmedAttributes.map(item => item.attributeName);
+
+          const isRequiredAttributeExists = trimmedAttributes.some(attribute => attribute.isRequired);
+
+           if (!isRequiredAttributeExists) {
+             throw new BadRequestException(
+               ResponseMessages.schema.error.atLeastOneRequired
+             );
+           }
+
           let schemaResponseFromAgentService;
           if (OrgAgentType.DEDICATED === orgAgentType) {
             const issuerId = did;

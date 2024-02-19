@@ -156,7 +156,8 @@ export const ResponseMessages = {
             credentialDefinitionNotFound: 'No credential definition exist',
             notStoredCredential: 'User credential not stored',
             agentDetailsNotFound: 'Agent details not found',
-            failedFetchSchema: 'Failed to fetch schema data'
+            failedFetchSchema: 'Failed to fetch schema data',
+            atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`'
         }
     },
     credentialDefinition: {

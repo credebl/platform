@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
@@ -23,6 +23,11 @@ class AttributeValue {
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'displayName is required' })
     displayName: string;
+
+    @ApiProperty()
+    @IsBoolean()
+    @IsNotEmpty({ message: 'isRequired property is required' })
+    isRequired: boolean;
 }
 
 export class CreateSchemaDto {
@@ -44,12 +49,14 @@ export class CreateSchemaDto {
             {
                 attributeName: 'name',
                 schemaDataType: 'string',
-                displayName: 'Name'
+                displayName: 'Name',
+                isRequired: 'true'
             }
         ]
     })
     @IsArray({ message: 'attributes must be an array' })
     @IsNotEmpty({ message: 'attributes are required' })
+    @ArrayMinSize(1)
     @ValidateNested({ each: true })
     @Type(() => AttributeValue)
     attributes: AttributeValue[];

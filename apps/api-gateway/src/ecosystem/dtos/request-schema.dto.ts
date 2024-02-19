@@ -15,12 +15,6 @@ class AttributeValues {
   @ApiProperty()
   @IsString()
   @Transform(({ value }) => trim(value))
-  @IsNotEmpty({ message: 'schemaDataType is required' })
-  schemaDataType: string;
-
-  @ApiProperty()
-  @IsString()
-  @Transform(({ value }) => trim(value))
   @IsNotEmpty({ message: 'displayName is required' })
   displayName: string;
 
@@ -28,6 +22,12 @@ class AttributeValues {
   @IsBoolean()
   @IsNotEmpty({ message: 'isRequired property is required' })
   isRequired: boolean;
+
+  @ApiProperty()
+  @IsString()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'schemaDataType is required' })
+  schemaDataType: string;
 
 }
 

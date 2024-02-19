@@ -53,7 +53,6 @@ export class IssuanceService {
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICreateOfferResponse> {
     try {
       const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
-// console.log("1234567890", attributes);
 
       const attrError = [];
       if (0 < attributes?.length) {

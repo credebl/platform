@@ -718,10 +718,10 @@ export class OrganizationService {
    */
   async updateOrgInvitation(payload: UpdateInvitationDto): Promise<string> {
     try {
-      const { orgId, status, invitationId, userId } = payload;
+      const { orgId, status, invitationId, userId, email } = payload;
       const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
-      if (!invitation) {
+      if (!invitation || (invitation && invitation.email !== email)) {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
       }
 

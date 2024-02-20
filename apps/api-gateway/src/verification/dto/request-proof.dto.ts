@@ -6,15 +6,17 @@ import { AutoAccept } from '@credebl/enum/enum';
 
 
 export class ProofRequestAttribute {
-    
+
     @ValidateIf((obj) => obj.attributeNames === undefined)
-    @IsString()
+    @IsNotEmpty()
+    @IsString({each:true})
     attributeName?: string;
 
     @ValidateIf((obj) => obj.attributeName === undefined)
     @IsArray({ message: 'attributeNames must be an array.' })
-    @IsString({ each: true })
-    @ArrayNotEmpty({ message: 'array cant be empty' })
+    @ArrayNotEmpty({ message: 'array can not be empty' })
+    @IsString({ each: true})
+    @IsNotEmpty({ each: true, message: 'each element cannot be empty' })
     attributeNames?: string[];
 
     @ApiPropertyOptional()
@@ -171,6 +173,7 @@ interface IRequestedAttributes {
 
 interface IRequestedAttributesName {
     name: string;
+    names?: string;
     restrictions: IRequestedRestriction[]
 }
 

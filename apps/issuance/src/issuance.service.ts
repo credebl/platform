@@ -144,25 +144,24 @@ export class IssuanceService {
 
       const hasRequiredAttributes = attributes?.some(attribute => attribute.isRequired);
 
-      if (hasRequiredAttributes) {
+     if (hasRequiredAttributes) {
+       const attributeError = [];
+       if (0 < attributes?.length) {
+         attributes?.forEach((attribute, i) => {
+           if (attribute.isRequired && !attribute.value) {
+             attributeError.push(`attributes.${i}.Value of "${attribute.name}" is required`);
+             return true;
+           }
 
-      const attrError = [];
-      if (0 < attributes?.length) {
-        attributes?.forEach((attribute, i) => {
-      
-            if (attribute.isRequired && !attribute.value) {
-              attrError.push(`attributes.${i}.Value of "${attribute.name}" is required`);
-              return true;
-            }
-            
-            return attribute.isRequired && !attribute.value;
-          });
-      
-        if (0 < attrError.length) {
-          throw new BadRequestException(attrError);
-        }
-        }
-      }
+           return attribute.isRequired && !attribute.value;
+         });
+
+         if (0 < attributeError.length) {
+           throw new BadRequestException(attributeError);
+         }
+       }
+     }
+
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
 

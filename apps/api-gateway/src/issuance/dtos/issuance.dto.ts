@@ -20,10 +20,11 @@ class Attribute {
     @Transform(({ value }) => trim(value))
     value: string;
 
-    @ApiProperty()
+    @ApiProperty({ default: false })
     @IsBoolean()
+    @IsOptional()
     @IsNotEmpty({ message: 'isRequired property is required' })
-    isRequired: boolean;
+    isRequired?: boolean = false;
 
 }
 
@@ -88,7 +89,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
       {
         value: 'string',
         name: 'string',
-        isRequired: 'boolean'
+        isRequired: false
       }
     ]
   })

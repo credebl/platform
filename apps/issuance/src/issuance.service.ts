@@ -51,26 +51,30 @@ export class IssuanceService {
 
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICreateOfferResponse> {
+
     try {
       const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
 
-      const attrError = [];
-      if (0 < attributes?.length) {
-        attributes?.forEach((attribute, i) => {
-      
-            if (attribute.isRequired && !attribute.value) {
-              attrError.push(`attributes.${i}.Value of "${attribute.name}" is required`);
-              return true;
+      const hasRequiredAttribute = attributes?.some(attribute => attribute.isRequired);
+
+      if (hasRequiredAttribute) {
+        const attrError = [];
+
+          if (0 < attributes?.length) {
+            attributes?.forEach((attribute, i) => {
+              
+                if (attribute.isRequired && !attribute.value) {
+                  attrError.push(`attributes.${i}.Value of "${attribute.name}" is required`);
+                  return true;
+                }          
+                return attribute.isRequired && !attribute.value;
+              });
+          
+            if (0 < attrError.length) {
+              throw new BadRequestException(attrError);
             }
-            
-            return attribute.isRequired && !attribute.value;
-          });
-      
-        if (0 < attrError.length) {
-          throw new BadRequestException(attrError);
-        }
-        }
-      
+            }
+      }    
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
@@ -138,6 +142,10 @@ export class IssuanceService {
     try {
       const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
 
+      const hasRequiredAttribute = attributes?.some(attribute => attribute.isRequired);
+
+      if (hasRequiredAttribute) {
+
       const attrError = [];
       if (0 < attributes?.length) {
         attributes?.forEach((attribute, i) => {
@@ -154,7 +162,7 @@ export class IssuanceService {
           throw new BadRequestException(attrError);
         }
         }
-
+      }
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
 
@@ -387,25 +395,28 @@ export class IssuanceService {
         emailId
       } = outOfBandCredential;
 
-      const attrError = [];
-if (0 < credentialOffer?.length) {
-  credentialOffer?.forEach((credential, i) => {
-  credential.attributes.forEach((attribute, i2) => {
+const hasRequiredAttribute = credentialOffer?.some((credential) => credential.attributes.some((attribute) => attribute.isRequired)
+);
+      if (hasRequiredAttribute) {
+        const attrError = [];
+        if (0 < credentialOffer?.length) {
+          credentialOffer?.forEach((credential, i) => {
+            credential.attributes.forEach((attribute, i2) => {
+              if (attribute.isRequired && !attribute.value) {
+                attrError.push(`credentialOffer.${i}.attributes.${i2}.Value of "${attribute.name}" is required`);
+                return true;
+              }
 
-      if (attribute.isRequired && !attribute.value) {
-        attrError.push(`credentialOffer.${i}.attributes.${i2}.Value of "${attribute.name}" is required`);
-        return true;
+              return attribute.isRequired && !attribute.value;
+            });
+          });
+
+          if (0 < attrError.length) {
+            throw new BadRequestException(attrError);
+          }
+        }
       }
-      
-      return attribute.isRequired && !attribute.value;
-    });
 
-  });
-
-  if (0 < attrError.length) {
-    throw new BadRequestException(attrError);
-  }
-  }
    
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {

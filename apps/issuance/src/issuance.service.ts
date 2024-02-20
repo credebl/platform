@@ -142,9 +142,9 @@ export class IssuanceService {
     try {
       const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
 
-      const hasRequiredAttribute = attributes?.some(attribute => attribute.isRequired);
+      const hasRequiredAttributes = attributes?.some(attribute => attribute.isRequired);
 
-      if (hasRequiredAttribute) {
+      if (hasRequiredAttributes) {
 
       const attrError = [];
       if (0 < attributes?.length) {

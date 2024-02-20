@@ -309,6 +309,16 @@ export class ClientDetails {
     @Type(() => String)
     clientId = '';
 
-    userId?: string;
+    @ApiProperty({ required: false, example: 'issue-data.csv' })
+    @IsOptional()
+    @Type(() => String)
+    fileName = '';
 
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Type(() => Boolean)
+    isSelectiveIssuance?: boolean = false;
+
+    userId?: string;
+    
 }

@@ -394,7 +394,7 @@ export const ResponseMessages = {
     notification: {
         success: {
             register: 'Notification webhook registration process completed successfully',
-            sendNotification: 'Notification send successfully'
+            sendNotification: 'Notification sent successfully'
         },
         error: {
             notFound: 'Notification record not found.',

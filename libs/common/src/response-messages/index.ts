@@ -40,7 +40,7 @@ export const ResponseMessages = {
             verifyMail: 'Please verify your email',
             invalidCredentials: 'Invalid Credentials',
             registerFido: 'Please complete your fido registration',
-            invitationNotFound: 'Invitation not found',
+            invitationNotFound: 'Invitation not found for this user',
             invitationAlreadyAccepted:'Organization invitation already accepted',
             invitationAlreadyRejected:'Organization invitation already rejected',
             invalidInvitationStatus: 'Invalid invitation status',

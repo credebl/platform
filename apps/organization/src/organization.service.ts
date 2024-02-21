@@ -248,13 +248,10 @@ export class OrganizationService {
   async updateOrganization(updateOrgDto: IUpdateOrganization, userId: string, orgId: string): Promise<organisation> {
     try {
 
-      const organizationExist = await this.organizationRepository.checkOrganizationExist(updateOrgDto.name, orgId);
+      const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name);
 
-      if (!organizationExist) { //organizationExist is empty
-        const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name);
-        if (organizationExist) {
-          throw new ConflictException(ResponseMessages.organisation.error.exists);
-        }
+      if (organizationExist && organizationExist.id !== orgId) {
+        throw new ConflictException(ResponseMessages.organisation.error.exists);
       }
 
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
@@ -273,9 +270,7 @@ export class OrganizationService {
 
       if (!checkAgentIsExists?.connectionInvitation && !checkAgentIsExists?.agentId) {
       organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
-      }
-
-      if (checkAgentIsExists?.connectionInvitation && checkAgentIsExists?.agentId && (organizationDetails?.logoUrl !== organizationExist?.logoUrl || organizationDetails?.name !== organizationExist?.name)) {
+      } else if (organizationDetails?.logoUrl !== organizationExist?.logoUrl || organizationDetails?.name !== organizationExist?.name) {
         const invitationData = await this._createConnection(updateOrgDto?.logo, updateOrgDto?.name, orgId);
         await this.organizationRepository.updateConnectionInvitationDetails(orgId, invitationData?.connectionInvitation);
       }

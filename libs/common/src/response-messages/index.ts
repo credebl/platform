@@ -390,5 +390,10 @@ export const ResponseMessages = {
             getshorteningUrl:'Shortening Url fetched successfully',
             createShorteningUrl: 'Shortening Url created successfully'
         }
-    }
+    },
+    storeObject: {
+        success: {
+            storeObject: 'Object stored successfully'
+        }
+    } 
 };

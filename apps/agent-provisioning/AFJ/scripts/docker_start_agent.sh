@@ -106,8 +106,6 @@ AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
 echo "-----$AGENT_ENDPOINT----"
 CONFIG_FILE="${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
 
-echo "--CONFIG_FILE----${CONFIG_FILE}"
-
 # Check if the file exists
 if [ -f "$CONFIG_FILE" ]; then
   # If it exists, remove the file
@@ -159,25 +157,27 @@ if [ -f "$DOCKER_COMPOSE" ]; then
   # If it exists, remove the file
   rm "$DOCKER_COMPOSE"
 fi
+echo ${PWD}
 cat <<EOF >${DOCKER_COMPOSE}
 version: '3'
 
 services:
-  agent:
+  agent:  
     image: $AFJ_VERSION
 
     container_name: ${AGENCY}_${CONTAINER_NAME}
     restart: always
     environment:
       AFJ_REST_LOG_LEVEL: 1
+      ROOT_PATH: ${ROOT_PATH}
     ports:
      - ${INBOUND_PORT}:${INBOUND_PORT}
      - ${ADMIN_PORT}:${ADMIN_PORT}
    
     volumes: 
-      - ./agent-config/${AGENCY}_${CONTAINER_NAME}.json:/config.json   
+      - ${ROOT_PATH}:/agent-config   
       
-    command: --auto-accept-connections --config /config.json
+    command: --auto-accept-connections --config /agent-config/${AGENCY}_${CONTAINER_NAME}.json
       
 volumes:
   pgdata:
@@ -194,7 +194,7 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker-compose -f $FILE_NAME up -d
+  docker compose -f $FILE_NAME up -d
   if [ $? -eq 0 ]; then
 
     n=0

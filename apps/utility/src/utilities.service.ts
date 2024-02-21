@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { UtilitiesRepository } from './utilities.repository';
+import { AwsService } from '@credebl/aws';
+import { IUtilities } from '../interfaces/shortening-url.interface';
+import { S3 } from 'aws-sdk';
 
 @Injectable()
 export class UtilitiesService {
     constructor(
         private readonly logger: Logger,
-        private readonly utilitiesRepository: UtilitiesRepository
+        private readonly utilitiesRepository: UtilitiesRepository,
+        private readonly awsService: AwsService
     ) { }
 
     async createAndStoreShorteningUrl(payload): Promise<string> {
@@ -42,6 +46,17 @@ export class UtilitiesService {
         } catch (error) {
             this.logger.error(`[getShorteningUrl] - error in get shortening url: ${JSON.stringify(error)}`);
             throw new RpcException(error);
+        }
+    }
+
+    async storeObject(payload: {persistent: boolean, storeObj: IUtilities}): Promise<string> {
+        try {
+            const timestamp = Date.now();
+            const uploadResult:S3.ManagedUpload.SendData = await this.awsService.storeObject(payload.persistent, timestamp, payload.storeObj);
+            const url: string = `https://${uploadResult.Bucket}.s3.${process.env.AWS_S3_STOREOBJECT_REGION}.amazonaws.com/${uploadResult.Key}`;
+            return url;
+        } catch (error) {
+            throw new Error('An error occurred while uploading data to S3.');
         }
     }
 }

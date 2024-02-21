@@ -1,5 +1,5 @@
 import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { Controller, UseFilters, Post, Body, Res, HttpStatus } from '@nestjs/common';
+import { Controller, UseFilters, Post, Body, Res, HttpStatus, Param } from '@nestjs/common';
 import  IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -20,7 +20,7 @@ export class UtilitiesController {
   constructor(
     private readonly utilitiesService: UtilitiesService
   ) { }
-
+  
 
   @Post('/')
   @ApiOperation({ summary: 'Create a shorteningurl', description: 'Create a shortening url' })
@@ -30,6 +30,21 @@ export class UtilitiesController {
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.shorteningUrl.success.createShorteningUrl,
+      data: shorteningUrl
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/store-object/:persistent')
+  @ApiOperation({ summary: 'Store an object and return a short url to it', description: 'Create a short url representing the object' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  async storeObject(@Body() storeObjectDto: UtilitiesDto, @Param('persistent') persistent: boolean, @Res() res: Response): Promise<Response> {
+    // eslint-disable-next-line no-console
+    console.log(storeObjectDto);
+    const shorteningUrl = await this.utilitiesService.storeObject(persistent.valueOf(), storeObjectDto);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.storeObject.success.storeObject,
       data: shorteningUrl
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);

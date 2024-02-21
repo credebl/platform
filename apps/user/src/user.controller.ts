@@ -97,6 +97,12 @@ export class UserController {
   async findUserByEmail(payload: { email }): Promise<object> {
     return this.userService.findUserByEmail(payload);
   }
+
+  @MessagePattern({ cmd: 'get-user-by-user-id' })
+  async findUserByUserId(id: string): Promise<object> {
+    return this.userService.findUserByUserId(id);
+  }
+
   /**
    * @param credentialId
    * @returns User credentials

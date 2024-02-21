@@ -1,4 +1,4 @@
-import { BadRequestException, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
+import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 
 import { HttpException } from '@nestjs/common';
 import { HttpStatus } from '@nestjs/common';
@@ -69,7 +69,12 @@ export class EcosystemRolesGuard implements CanActivate {
       throw new HttpException('organization & ecosystem is required', HttpStatus.BAD_REQUEST);
     }
 
-    return requiredRoles.some((role) => user.ecosystemOrgRole === role);
-    
+    // Sending user friendly message if a user attempts to access an API that is inaccessible to their role
+    const roleAccess = requiredRoles.some((role) => user.ecosystemOrgRole === role);
+    if (!roleAccess) {
+      throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+    }
+
+    return roleAccess;
   }
 }

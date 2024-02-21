@@ -20,9 +20,11 @@ export interface ISchema {
 }
 
 export interface IAttributeValue {
+    isRequired: boolean;    
     attributeName: string;
     schemaDataType: string;
-    displayName: string
+    displayName: string;
+
 }
 
 export interface ISchemaPayload {

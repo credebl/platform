@@ -84,6 +84,7 @@ model user_org_roles {
   userId       String        @db.Uuid
   orgRoleId    String        @db.Uuid
   orgId        String?       @db.Uuid
+  idpRoleId    String?       @db.Uuid
   organisation organisation? @relation(fields: [orgId], references: [id])
   orgRole      org_roles     @relation(fields: [orgRoleId], references: [id])
   user         user          @relation(fields: [userId], references: [id])

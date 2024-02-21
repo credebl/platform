@@ -23,6 +23,18 @@ export interface IUpdateOrganization {
 
 }
 
+export interface ICreateConnectionUrl {
+  id: string;
+  orgId: string;
+  agentId: string;
+  connectionInvitation: string;
+  multiUse: boolean;
+  createDateTime: Date;
+  createdBy: number;
+  lastChangedDateTime: Date;
+  lastChangedBy: number;
+}
+
 export interface IOrgAgent {
   url: string;
   apiKey: string;

@@ -3,7 +3,6 @@ import { Injectable, InternalServerErrorException, Logger, NotFoundException } f
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import {
-  agent_invitations,
   credentials,
   file_data,
   file_upload,
@@ -180,35 +179,6 @@ export class IssuanceRepository {
       return credentialDetails;
     } catch (error) {
       this.logger.error(`Error in get saveIssuedCredentialDetails: ${error.message} `);
-      throw error;
-    }
-  }
-
-  /**
-   * Description: Save connection details
-   * @param connectionInvitation
-   * @param agentId
-   * @param orgId
-   * @returns Get connection details
-   */
-  // eslint-disable-next-line camelcase
-  async saveAgentConnectionInvitations(
-    connectionInvitation: string,
-    agentId: string,
-    orgId: string
-  ): Promise<agent_invitations> {
-    try {
-      const agentInvitationData = await this.prisma.agent_invitations.create({
-        data: {
-          orgId,
-          agentId,
-          connectionInvitation,
-          multiUse: true
-        }
-      });
-      return agentInvitationData;
-    } catch (error) {
-      this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
       throw error;
     }
   }

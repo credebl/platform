@@ -69,6 +69,12 @@ export class EcosystemRolesGuard implements CanActivate {
       throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
     }
 
+    // Sending user friendly message if a user attempts to access an API that is inaccessible to their role
+    const roleAccess = requiredRoles.some((role) => user.ecosystemOrgRole === role);
+    if (!roleAccess) {
+      throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+    }
+
     return roleAccess;
   }
 }

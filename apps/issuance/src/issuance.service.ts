@@ -783,7 +783,7 @@ const credefError = [];
         throw new BadRequestException(`Invalid emails found in the chosen file`);
       }
 
-      const fileData: string[] = parsedData.data.map(Object.values);
+      const fileData: string[][] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
 
       const attributesArray = JSON.parse(credDefResponse.attributes);
@@ -798,7 +798,7 @@ const credefError = [];
       }
 
       await this.validateFileHeaders(fileHeader, attributeNameArray);
-      await this.validateFileData(fileData);
+      await this.validateFileData(fileData, attributesArray, fileHeader);
 
       const resData = {
         schemaLedgerId: credDefResponse.schemaLedgerId,
@@ -814,8 +814,8 @@ const credefError = [];
       return newCacheKey;
 
     } catch (error) {
-      this.logger.error(`error in validating credentials : ${error}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`error in validating credentials : ${error.response}`);
+      throw  new RpcException(error.response ? error.response : error);
     } finally {
       // await this.awsService.deleteFile(importFileDetails.fileKey);
       // this.logger.error(`Deleted uploaded file after processing.`);
@@ -1166,7 +1166,6 @@ const credefError = [];
   ): Promise<void> {
     try {
       const fileSchemaHeader: string[] = fileHeader.slice();
-
       if ('email' === fileHeader[0]) {
         fileSchemaHeader.splice(0, 1);
       } else {
@@ -1190,25 +1189,38 @@ const credefError = [];
     }
   }
 
-  async validateFileData(fileData: string[]): Promise<void> {
-    let rowIndex: number = 0;
-    let columnIndex: number = 0;
-    const isNullish = Object.values(fileData).some((value) => {
-      columnIndex = 0;
-      rowIndex++;
-      const isFalsyForColumnValue = Object.values(value).some((colvalue) => {
-        columnIndex++;
-        if (null === colvalue || '' == colvalue) {
-          return true;
-        }
-        return false;
+  async validateFileData(fileData: string[][], attributesArray: { attributeName: string, schemaDataType: string,  displayName: string, isRequired: boolean }[], fileHeader: string[]): Promise<void> {
+    try { 
+      const filedata = fileData.map((item: string[]) => {
+       const fileHeaderData = item?.map((element, j) => ({
+           value: element,
+           header: fileHeader[j]
+         }));
+       return fileHeaderData;
       });
-      return isFalsyForColumnValue;
-    });
-    if (isNullish) {
-      throw new BadRequestException(
-        `Empty data found at row ${rowIndex} and column ${columnIndex}`
-      );
+       
+       const errorFileData = [];
+   
+       filedata.forEach((attr, i) => {
+        attr.forEach((eachElement) => {
+
+         attributesArray.forEach((eachItem) => {
+           if (eachItem.attributeName === eachElement.header) {
+               if (eachItem.isRequired && !eachElement.value) {
+                 errorFileData.push(`Attribute ${eachItem.attributeName} is required at row ${i + 1}`);
+               }
+           }
+           });
+           return eachElement;
+         });
+         return attr;
+       });
+   
+       if (0 < errorFileData.length) {
+         throw new BadRequestException(errorFileData);
+       }
+    } catch (error) {
+      throw error;
     }
   }
 

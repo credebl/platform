@@ -111,9 +111,17 @@ services:
       - verification
     build:
       context: ./  # Adjust the context path as needed
-      dockerfile: Dockerfiles/Dockerfile.agnet-provisioning
+      dockerfile: Dockerfiles/Dockerfile.agent-provisioning
+      args:
+        - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
     env_file:
       - ./.env
+    environment:
+      - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
+    volumes:
+      - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /app/agent-provisioning/AFJ/token:/app/agent-provisioning/AFJ/token
   agent-service:
     depends_on:
       - nats  # Use depends_on instead of needs
@@ -125,11 +133,16 @@ services:
       - organization
       - verification
       - agent-provisioning
+    command: sh -c 'until (docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
     build:
       context: ./  # Adjust the context path as needed
       dockerfile: Dockerfiles/Dockerfile.agent-service
     env_file:
       - ./.env
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    volumes_from:
+      - agent-provisioning
  
   
   

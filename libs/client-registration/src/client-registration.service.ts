@@ -301,6 +301,28 @@ export class ClientRegistrationService {
     return 'User client role is assigned';  
   }
 
+  async deleteUserClientRoles(
+    idpId: string,
+    token: string,
+    userId: string
+  ): Promise<string> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientRolesResponse = await this.commonService.httpDelete(
+      await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId, idpId),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `deleteUserClientRoles ${JSON.stringify(
+        createClientRolesResponse
+      )}`
+    );
+
+    return 'User client role is deleted';  
+  }
+
   async createUserHolderRole(
     token: string,
     userId: string,
@@ -730,7 +752,7 @@ export class ClientRegistrationService {
       payload.username = email;
       payload.password = password;
 
-      this.logger.log(`User Token Payload: ${JSON.stringify(payload)}`);
+      // this.logger.log(`User Token Payload: ${JSON.stringify(payload)}`);
 
 
       if (

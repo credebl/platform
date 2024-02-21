@@ -775,6 +775,27 @@ export class OrganizationService {
     return userData;
   }
 
+  async getUserUserId(userId: string): Promise<user> {
+    const pattern = { cmd: 'get-user-by-user-id' };
+    // const payload = { id: userId };
+
+    const userData = await this.organizationServiceProxy
+      .send(pattern, userId)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.error,
+            message: error.message
+          },
+          error.status
+        );
+      });
+    return userData;
+  }
+
   async fetchUserInvitation(
     email: string,
     status: string,
@@ -886,11 +907,33 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.userNotFound);
       }
 
-      const isRolesExist = await this.orgRoleService.getOrgRolesByIds(roleIds);
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
 
-      if (isRolesExist && 0 === isRolesExist.length) {
-        throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist);
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
+
+      // const roleIdsList = [];
+
+      const token = await this.clientRegistrationService.getManagementToken();
+      const clientRolesList = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
+      // const orgRoles = await this.orgRoleService.getOrgRoles();
+
+      const matchedRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim())).map((role) => role.name);
+
+      if (roleIds.length !== matchedRoles.length) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+      }
+
+      const userData = await this.getUserUserId(userId);
+
+      // const isRolesExist = await this.orgRoleService.getOrgRolesByIds(roleIds);
+
+      // if (isRolesExist && 0 === isRolesExist.length) {
+      //   throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist);
+      // }
+
+      await this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId);
 
       const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
 

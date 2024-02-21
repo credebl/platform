@@ -504,6 +504,11 @@ export class UserService {
     }
   }
 
+  findUserByUserId(id: string): Promise<IUsersProfile> {
+    return this.userRepository.getUserById(id);
+
+  }
+
   async resetPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
     const { email, oldPassword, newPassword } = resetPasswordDto;
 
@@ -789,7 +794,7 @@ export class UserService {
   async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(userId);
-      return this.fetchInvitationsStatus(acceptRejectInvitation, userData.keycloakUserId, userData.email);
+      return this.fetchInvitationsStatus(acceptRejectInvitation, userData.keycloakUserId, userData.email, userId);
     } catch (error) {
       this.logger.error(`acceptRejectInvitations: ${error}`);
       throw new RpcException(error.response ? error.response : error);
@@ -894,15 +899,16 @@ export class UserService {
    */
   async fetchInvitationsStatus(
     acceptRejectInvitation: AcceptRejectInvitationDto,
-    userId: string,
-    email: string
+    keycloakUserId: string,
+    email: string,
+    userId: string
   ): Promise<IUserInvitations> {
     try {
       const pattern = { cmd: 'update-invitation-status' };
 
       const { orgId, invitationId, status } = acceptRejectInvitation;
 
-      const payload = { userId, orgId, invitationId, status, email };
+      const payload = { userId, keycloakUserId, orgId, invitationId, status, email };
 
       const invitationsData = await this.userServiceProxy
         .send(pattern, payload)

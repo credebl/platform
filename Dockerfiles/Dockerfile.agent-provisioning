@@ -16,6 +16,11 @@ RUN npm install -g pnpm --ignore-scripts \
 RUN docker --version && \
     docker-compose --version
 
+ARG ROOT_PATH
+ENV ROOT_PATH ${ROOT_PATH}
+
+RUN echo "ROOT_PATH is set to: $ROOT_PATH"
+
 # Set the working directory
 WORKDIR /app
 
@@ -76,7 +81,7 @@ RUN chmod 777 /app/agent-provisioning/AFJ/token
 COPY libs/ ./libs/
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js $ROOT_PATH"]
 
 # docker build -t agent-provisioning-service -f Dockerfiles/Dockerfile.agent-provisioning .
 # docker run -d --env-file .env --name agent-provisioning-service docker.io/library/agent-provisioning-service

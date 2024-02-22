@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { UtilitiesRepository } from './utilities.repository';
 import { AwsService } from '@credebl/aws';
-import { IUtilities } from '../interfaces/shortening-url.interface';
+// import { IUtilities } from '../interfaces/shortening-url.interface';
 import { S3 } from 'aws-sdk';
 
 @Injectable()
@@ -49,7 +49,7 @@ export class UtilitiesService {
         }
     }
 
-    async storeObject(payload: {persistent: boolean, storeObj: IUtilities}): Promise<string> {
+    async storeObject(payload: {persistent: boolean, storeObj: object}): Promise<string> {
         try {
             const timestamp = Date.now();
             const uploadResult:S3.ManagedUpload.SendData = await this.awsService.storeObject(payload.persistent, timestamp, payload.storeObj);

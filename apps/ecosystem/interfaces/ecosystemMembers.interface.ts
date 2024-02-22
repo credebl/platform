@@ -5,4 +5,5 @@ export interface EcosystemMembersPayload {
     pageSize: number;
     search: string;
     sortBy: string; 
+    sortField: string;
 }

@@ -70,6 +70,13 @@ export enum AutoAccept {
     Never = "never"
 }
 
+export enum SortMembers {
+    CREATED_DATE_TIME = 'createDateTime',
+    STATUS = 'status',
+    ID = 'id',
+    ORGANIZATION = 'organization'
+}
+
 const transitionMap: { [key in Invitation]: Invitation[] } = {
     [Invitation.PENDING]: [Invitation.ACCEPTED, Invitation.REJECTED],
     [Invitation.ACCEPTED]: [],

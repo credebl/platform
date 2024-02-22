@@ -77,7 +77,16 @@ export class ConnectionService {
       }
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
       const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
+      // Need to implement shortening invitation logic
+      // Krishna start
+      // const connectionInvitaion = createConnectionInvitation?.message?.invitation;
+      // make call to function that will call
+      // const shortenedUrl = await this.storeObjectAndReturnUrl(connectionInvitaion, multiUseInvitation);
+      // Krishna end
+      // eslint-disable-next-line no-console
+      console.log("This is Invitation object::::::", createConnectionInvitation?.message?.invitation);
       let shortenedUrl;
+
       if (agentDetails?.tenantId) {
         shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationObject}`;
       } else {
@@ -513,5 +522,31 @@ export class ConnectionService {
           }, error.error);
       });
   }
+
+  // Krishna Start
+  async storeObjectAndReturnUrl(urlObjectReference: unknown, multiUseInvitation: boolean): Promise<string> {
+    const persistent:boolean = multiUseInvitation;
+    const connectionInvitation: unknown = urlObjectReference;
+
+    //nats call in agent-service to create an invitation url
+    const pattern = { cmd: 'store-object-return-url' };
+    const payload = { persistent, connectionInvitation};
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
+    }
+  }
+  // Krishna End
 }
 

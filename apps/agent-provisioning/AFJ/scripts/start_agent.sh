@@ -21,8 +21,8 @@ INBOUND_ENDPOINT=${16}
 
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
-ADMIN_PORT=8001
-INBOUND_PORT=9001
+ADMIN_PORT=4001
+INBOUND_PORT=5001
 
 increment_port() {
   local port="$1"
@@ -227,7 +227,7 @@ if [ $? -eq 0 ]; then
     container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
 
     # Extract the token from the logs using sed
-    token=$(echo "$container_logs" | sed -nE 's/.*API Toekn: ([^ ]+).*/\1/p')
+    token=$(echo "$container_logs" | sed -nE 's/.*API Token: ([^ ]+).*/\1/p')
 
     # Print the extracted token
     echo "Token: $token"

@@ -156,7 +156,8 @@ export const ResponseMessages = {
             credentialDefinitionNotFound: 'No credential definition exist',
             notStoredCredential: 'User credential not stored',
             agentDetailsNotFound: 'Agent details not found',
-            failedFetchSchema: 'Failed to fetch schema data'
+            failedFetchSchema: 'Failed to fetch schema data',
+            atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`'
         }
     },
     credentialDefinition: {
@@ -391,5 +392,15 @@ export const ResponseMessages = {
             getshorteningUrl:'Shortening Url fetched successfully',
             createShorteningUrl: 'Shortening Url created successfully'
         }
-    }
+    },
+    notification: {
+        success: {
+            register: 'Notification webhook registration process completed successfully',
+            sendNotification: 'Notification sent successfully'
+        },
+        error: {
+            notFound: 'Notification record not found.',
+            invalidUrl: 'Invalid URL'
+        }
+    },
 };

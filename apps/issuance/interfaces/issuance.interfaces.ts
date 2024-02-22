@@ -4,6 +4,8 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 
 export interface IAttributes {
+  attributeName: string;
+  isRequired: boolean;
   name: string;
   value: string;
 }
@@ -188,10 +190,11 @@ export interface FileUploadData {
   jobId: string;
 }
 
-export interface ClientDetails {
+export interface IClientDetails {
   clientId: string;
-
   userId?: string;
+  isSelectiveIssuance?: boolean;
+  fileName?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;

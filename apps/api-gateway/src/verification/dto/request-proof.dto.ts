@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -170,14 +170,13 @@ export class SendProofRequestPayload {
             }
         ]
     })
-    @IsArray({ message: 'attributes must be in array' })
     @IsObject({ each: true })
-    @IsNotEmpty({ message: 'please provide valid attributes' })
+    @IsNotEmpty({ message: 'please provide valid proofFormat' })
     proofFormats: IProofFormats;
 
     @ApiPropertyOptional()
     @IsString({ message: 'auto accept proof must be in string' })
-    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
+    @IsNotEmpty({ message: 'please provide from valid auto accept proof options' })
     @IsOptional()
     @IsEnum(AutoAccept, {
         message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
@@ -190,9 +189,9 @@ export class SendProofRequestPayload {
     label: string;
 
     @ApiPropertyOptional()
-    @IsString({ message: 'parentThreadId must be in string' })
-    @IsNotEmpty({ message: 'please provide valid parentThreadId' })
     @IsOptional()
+    @IsUUID()
+    @IsNotEmpty({ message: 'please provide valid parentThreadId' })
     parentThreadId: string;  
 }
 

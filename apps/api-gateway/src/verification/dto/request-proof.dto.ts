@@ -169,6 +169,13 @@ export class SendProofRequestPayload {
     @IsString({ message: 'comment must be in string' })
     comment: string;
 
+    @ApiProperty()
+    @IsString()
+    @Transform(({ value }) => trim(value))
+    @Transform(({ value }) => toLowerCase(value))
+    @IsNotEmpty({ message: 'connectionId is required.' })
+    connectionId: string;
+
     @ApiProperty({
         'example': [
             {
@@ -176,16 +183,7 @@ export class SendProofRequestPayload {
                     name: 'Verify national identity',
                     version: '1.0',
                     // eslint-disable-next-line camelcase
-                    requested_attributes: {
-                        verifynameAddress: {
-                            names: ['name', 'address'],
-                            restrictions: [{ 'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:National ID:1.0.0' }]
-                        },
-                        verifyBirthPlace: {
-                            name: 'Place',
-                            restrictions: [{ 'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:Birth Certificate:1.0.0' }]
-                        }
-                    },
+                    requested_attributes: {},
                     // eslint-disable-next-line camelcase
                     requested_predicates: {}
                 }
@@ -214,12 +212,6 @@ export class SendProofRequestPayload {
     @IsOptional()
     @IsUUID()
     @IsNotEmpty({ message: 'please provide valid parentThreadId' })
-    parentThreadId: string;
-
-    @ApiProperty({ example: true })
-    @IsBoolean()
-    @IsOptional()
-    @IsNotEmpty({message:'Please provide the flag for shorten url.'})
-    isShortenUrl?: boolean;
+    parentThreadId: string;  
 }
 

@@ -42,10 +42,6 @@ export class ConnectionService {
 
     const { orgId, multiUseInvitation, autoAcceptConnection, alias, imageUrl, goal, goalCode, handshake, handshakeProtocols } = payload;
     try {
-      const connectionInvitationExist = await this.connectionRepository.getConnectionInvitationByOrgId(orgId);
-      if (connectionInvitationExist) {
-        return connectionInvitationExist;
-      }
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
 

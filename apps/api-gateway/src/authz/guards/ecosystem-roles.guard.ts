@@ -50,17 +50,17 @@ export class EcosystemRolesGuard implements CanActivate {
       const ecosystemOrgData = await this.ecosystemService.fetchEcosystemOrg(ecosystemId, orgId);
 
       if (!ecosystemOrgData) {
-        throw new ForbiddenException('Organization does not match');
+        throw new ForbiddenException(ResponseMessages.organisation.error.orgDoesNotMatch);
       }
 
       user.ecosystemOrgRole = ecosystemOrgData['ecosystemRole']['name'];
 
       if (!user.ecosystemOrgRole) {
-        throw new ForbiddenException('Ecosystem role not match');
+        throw new ForbiddenException(ResponseMessages.ecosystem.error.ecosystemRoleNotMatch);
       }
 
     } else {
-      throw new BadRequestException('organization & ecosystem is required');
+      throw new BadRequestException(ResponseMessages.ecosystem.error.orgEcoIdRequired);
     }
 
     // Sending user friendly message if a user attempts to access an API that is inaccessible to their role

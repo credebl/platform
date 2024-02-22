@@ -359,39 +359,7 @@ export class CredentialAttributes {
 }
 
 export class OOBCredentialDtoWithEmail {
-    @ApiProperty({ example: [
-      {
-        'emailId': 'xyz@example.com',
-        'credential': {
-          '@context': [
-            'https://www.w3.org/2018/credentials/v1',
-            'https://www.w3.org/2018/credentials/examples/v1'
-          ],
-          'type': [
-            'VerifiableCredential',
-            'UniversityDegreeCredential'
-          ],
-          'issuer': {
-            'id': 'did:key:z6Mkn72LVp3mq1fWSefkSMh5V7qrmGfCV4KH3K6SoTM21ouM'
-          },
-          'issuanceDate': '2019-10-12T07:20:50.52Z',
-          'credentialSubject': {
-            'id': 'did:key:z6Mkn72LVp3mq1fWSefkSMh5V7qrmGfCV4KH3K6SoTM21ouM',
-            'degree': {
-              'type': 'BachelorDegree',
-              'name': 'Bachelor of Science and Arts'
-            }
-          }
-        },
-        'options': {
-          'proofType': 'Ed25519Signature2018',
-          'proofPurpose': 'assertionMethod'
-        }
-      }
-    ]
-    
- 
-      })
+    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })

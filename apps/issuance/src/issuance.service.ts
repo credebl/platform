@@ -60,20 +60,20 @@ export class IssuanceService {
 
         attributesArray.forEach((attribute) => {
           if (attribute.attributeName && attribute.isRequired) {
-
-            payload.attributes.map((attr) => {
+            
+            payload.attributes.map((attr) => { 
               if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
                 schemaResponseError.push(
                   `Attribute ${attribute.attributeName} is required`
                 );
               }
               return true;
-            });
+             });
           }
         });
         if (0 < schemaResponseError.length) {
-          throw new BadRequestException(schemaResponseError);
-
+            throw new BadRequestException(schemaResponseError);
+          
         }
 
       }
@@ -146,35 +146,34 @@ export class IssuanceService {
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
-    
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType} = payload;
-      if (credentialType === IssueCredentialType.INDY) {
-        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
-  
-        if (schemadetailsResponse?.attributes) {
-          const schemadetailsResponseError = [];
-          const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
-  
-          attributesArray.forEach((attribute) => {
-            if (attribute.attributeName && attribute.isRequired) {
-              
-              payload.attributes.map((attr) => { 
-                if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                  schemadetailsResponseError.push(
-                    `Attribute '${attribute.attributeName}' is required but has an empty value.`
-                  );
-                }
-                return true;
-               });
-            }
-          });
-          if (0 < schemadetailsResponseError.length) {
-            throw new BadRequestException(schemadetailsResponseError);
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
+
+      const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+        credentialDefinitionId
+      );
+
+      if (schemadetailsResponse?.attributes) {
+        const schemadetailsResponseError = [];
+        const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
+
+        attributesArray.forEach((attribute) => {
+          if (attribute.attributeName && attribute.isRequired) {
+            
+            payload.attributes.map((attr) => { 
+              if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+                schemadetailsResponseError.push(
+                  `Attribute '${attribute.attributeName}' is required but has an empty value.`
+                );
+              }
+              return true;
+             });
           }
-  
+        });
+        if (0 < schemadetailsResponseError.length) {
+          throw new BadRequestException(schemadetailsResponseError);
         }
+      }
+
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -332,8 +331,8 @@ export class IssuanceService {
         .pipe(
           map((response) => (
             {
-              response
-            }))
+            response
+          }))
         ).toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -481,59 +480,58 @@ export class IssuanceService {
         credentialType
       } = outOfBandCredential;
 
-
-    if (IssueCredentialType.INDY === credentialType) {
-
         const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
           credentialDefinitionId
         );
 
-      let attributesArray: IAttributes[] = [];
-      if (schemaResponse?.attributes) {
+        let attributesArray:IAttributes[] = [];
+        if (schemaResponse?.attributes) {
 
-        attributesArray = JSON.parse(schemaResponse.attributes);
-      }
-
-      if (0 < attributes?.length) {
-        const attrError = [];
-        attributesArray.forEach((schemaAttribute, i) => {
-          if (schemaAttribute.isRequired) {
-
-            const attribute = attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
-            if (!attribute?.value) {
-              attrError.push(
-                `attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
-              );
-            }
-
-          }
-
-        });
-        if (0 < attrError.length) {
-          throw new BadRequestException(attrError);
+           attributesArray = JSON.parse(schemaResponse.attributes);
         }
-      }
-      if (0 < credentialOffer?.length) {
-        const credefError = [];
-        credentialOffer.forEach((credentialAttribute, index) => {
 
-          attributesArray.forEach((schemaAttribute, i) => {
+        if (0 < attributes?.length) {
+const attrError = [];
+            attributesArray.forEach((schemaAttribute, i) => {
+              if (schemaAttribute.isRequired) {
 
-            const attribute = credentialAttribute.attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
-
-            if (schemaAttribute.isRequired && !attribute?.value) {
-              credefError.push(
-                `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
-              );
+                const attribute = attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
+                if (!attribute?.value) {
+                  attrError.push(
+                    `attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
+                  );
+                }
+                
+              }
+              
+            });
+            if (0 < attrError.length) {
+              throw new BadRequestException(attrError);
             }
-
-          });
-        });
-        if (0 < credefError.length) {
-          throw new BadRequestException(credefError);
         }
-       }  
-      
+        if (0 < credentialOffer?.length) {
+const credefError = [];
+          credentialOffer.forEach((credentialAttribute, index) => {
+            
+            attributesArray.forEach((schemaAttribute, i) => {
+
+                const attribute = credentialAttribute.attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
+
+                if (schemaAttribute.isRequired && !attribute?.value) {
+                  credefError.push(
+                    `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
+                  );
+                }
+                //
+                
+              });
+            });
+            if (0 < credefError.length) {
+              throw new BadRequestException(credefError);
+            }
+        }
+
+       
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { organisation } = agentDetails;
@@ -715,7 +713,7 @@ export class IssuanceService {
     }
   }
 
-
+  
   async _outOfBandCredentialOffer(outOfBandIssuancePayload: object, url: string, apiKey: string): Promise<{
     response;
   }> {
@@ -747,8 +745,8 @@ export class IssuanceService {
       switch (issuanceMethodLabel) {
         case 'create-offer': {
           url = orgAgentType === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
-            : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
+              : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
               : null;
           break;
@@ -756,8 +754,8 @@ export class IssuanceService {
 
         case 'create-offer-oob': {
           url = orgAgentType === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
-            : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
+              : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
               : null;
           break;
@@ -765,18 +763,18 @@ export class IssuanceService {
 
         case 'get-issue-credentials': {
           url = orgAgentType === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
-            : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
+              : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'get-issue-credential-by-credential-id': {
-
+          
           url = orgAgentType === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
-            : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
+              : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`.replace('#', credentialRecordId).replace('@', tenantId)
               : null;
           break;
@@ -844,7 +842,7 @@ export class IssuanceService {
 
   async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
     try {
-
+      
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
 
@@ -913,7 +911,10 @@ export class IssuanceService {
 
     } catch (error) {
       this.logger.error(`error in validating credentials : ${error.response}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw  new RpcException(error.response ? error.response : error);
+    } finally {
+      // await this.awsService.deleteFile(importFileDetails.fileKey);
+      // this.logger.error(`Deleted uploaded file after processing.`);
     }
   }
 
@@ -1290,36 +1291,36 @@ export class IssuanceService {
     }
   }
 
-  async validateFileData(fileData: string[][], attributesArray: { attributeName: string, schemaDataType: string, displayName: string, isRequired: boolean }[], fileHeader: string[]): Promise<void> {
-    try {
+  async validateFileData(fileData: string[][], attributesArray: { attributeName: string, schemaDataType: string,  displayName: string, isRequired: boolean }[], fileHeader: string[]): Promise<void> {
+    try { 
       const filedata = fileData.map((item: string[]) => {
-        const fileHeaderData = item?.map((element, j) => ({
-          value: element,
-          header: fileHeader[j]
-        }));
-        return fileHeaderData;
+       const fileHeaderData = item?.map((element, j) => ({
+           value: element,
+           header: fileHeader[j]
+         }));
+       return fileHeaderData;
       });
-
-      const errorFileData = [];
-
-      filedata.forEach((attr, i) => {
+       
+       const errorFileData = [];
+   
+       filedata.forEach((attr, i) => {
         attr.forEach((eachElement) => {
 
-          attributesArray.forEach((eachItem) => {
-            if (eachItem.attributeName === eachElement.header) {
-              if (eachItem.isRequired && !eachElement.value) {
-                errorFileData.push(`Attribute ${eachItem.attributeName} is required at row ${i + 1}`);
-              }
-            }
-          });
-          return eachElement;
-        });
-        return attr;
-      });
-
-      if (0 < errorFileData.length) {
-        throw new BadRequestException(errorFileData);
-      }
+         attributesArray.forEach((eachItem) => {
+           if (eachItem.attributeName === eachElement.header) {
+               if (eachItem.isRequired && !eachElement.value) {
+                 errorFileData.push(`Attribute ${eachItem.attributeName} is required at row ${i + 1}`);
+               }
+           }
+           });
+           return eachElement;
+         });
+         return attr;
+       });
+   
+       if (0 < errorFileData.length) {
+         throw new BadRequestException(errorFileData);
+       }
     } catch (error) {
       throw error;
     }
@@ -1336,9 +1337,9 @@ export class IssuanceService {
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException({
-        status: error.status,
-        error: error.message
-      }, error.status);
+          status: error.status,
+          error: error.message
+        }, error.status);
     }
   }
 

@@ -125,7 +125,7 @@ export class EcosystemService extends BaseService {
     return this.sendNats(this.serviceProxy, 'accept-reject-ecosystem-invitations', payload);
   }
 
-  async fetchEcosystemOrg(ecosystemId: string, orgId: string): Promise<{ response: object }> {
+  async fetchEcosystemOrg(ecosystemId: string, orgId: string): Promise<object> {
     const payload = { ecosystemId, orgId };
     return this.sendNatsMessage(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
   }

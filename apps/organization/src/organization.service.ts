@@ -802,9 +802,8 @@ export class OrganizationService {
         status
       };
 
-      await this.organizationRepository.updateOrgInvitation(invitationId, data);
-
       if (status === Invitation.REJECTED) {
+        await this.organizationRepository.updateOrgInvitation(invitationId, data);
         return ResponseMessages.user.success.invitationReject;
       }
 
@@ -851,13 +850,32 @@ export class OrganizationService {
 
       const token = await this.clientRegistrationService.getManagementToken();
       const clientRolesList = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
-      // const orgRoles = await this.orgRoleService.getOrgRoles();
+      const orgRoles = await this.orgRoleService.getOrgRoles();
 
-      const matchedRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim())).map((role) => role.name);
+      const matchedClientRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim()));
+      // .map((role) => role.name);
+      // const matchedOrgRoles = orgRoles.filter((role) => matchedClientRoles.some(clientRole => clientRole.name === role.name));
 
-      if (roleIds.length !== matchedRoles.length) {
+      if (roleIds.length !== matchedClientRoles.length) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
       }
+
+      const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = matchedClientRoles.map((clientRole: IClientRoles) => {
+        let roleObj: { roleId: string;  name: string; idpRoleId: string} = null;
+
+        for (let index = 0; index < orgRoles.length; index++) {
+          if (orgRoles[index].name === clientRole.name) {
+            roleObj = {
+              roleId: orgRoles[index].id,
+              name: orgRoles[index].name,
+              idpRoleId: clientRole.id
+            };
+            break;
+          }
+        }
+
+        return roleObj;
+      });
 
       const userData = await this.getUserUserId(userId);
 
@@ -867,13 +885,17 @@ export class OrganizationService {
       //   throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist);
       // }
 
-      await this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId);
+      // await this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId);
 
-      const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
+      // const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
 
-      if (0 === deleteUserRecords['count']) {
-        throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles);
-      }
+      const [
+        ,
+        deletedUserRoleRecords
+      ] = await Promise.all([
+        this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId),
+        this.userOrgRoleService.deleteOrgRoles(userId, orgId)
+      ]);
 
       return this.userOrgRoleService.updateUserOrgRole(userId, orgId, roleIds);
 

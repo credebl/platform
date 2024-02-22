@@ -32,8 +32,30 @@ export class OrgRolesGuard implements CanActivate {
     req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
     req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
 
-    if (req.params.orgId || req.query.orgId || req.body.orgId) {
-      const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+
+    if (!orgId) {
+      throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
+    }
+
+    if (!isValidUUID(orgId)) {
+      throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+    }    
+  
+    if (orgId) {  
+      
+        const orgDetails = user.resource_access[orgId];
+
+        if (orgDetails) {
+          const orgRoles: string[] = orgDetails.roles;
+          const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
+    
+          if (!roleAccess) {
+            throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+          }
+          return roleAccess;
+        }
+
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
           return false;

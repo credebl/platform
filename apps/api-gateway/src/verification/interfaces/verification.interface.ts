@@ -88,4 +88,5 @@ interface IRequestedRestriction {
     schema_issuer_did?: string;
     schema_name?: string;
     issuer_did?: string;
+    schema_version?: string;
 }

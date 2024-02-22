@@ -46,10 +46,14 @@ export class UserOrgRolesService {
    * @param roleIds 
    * @returns 
    */
-  async updateUserOrgRole(userId: string, orgId: string, roleIds: string[], idpRoleId?: string): Promise<boolean> {
+  async updateUserOrgRole(
+    userId: string,
+    orgId: string,
+    roleIdList: {roleId: string, idpRoleId: string}[]
+     ): Promise<boolean> {
   
-    for (const role of roleIds) {
-      this.userOrgRoleRepository.createUserOrgRole(userId, role, orgId, idpRoleId);
+    for (const roleData of roleIdList) {
+      this.userOrgRoleRepository.createUserOrgRole(userId, roleData.roleId, orgId, roleData.idpRoleId);
     }
 
     return true;

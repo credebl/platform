@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UtilitiesService } from './utilities.service';
 import { IShorteningUrlData } from '../interfaces/shortening-url.interface';
-import { IUtilities } from '../interfaces/shortening-url.interface';
+// import { IUtilities } from '../interfaces/shortening-url.interface';
 
 @Controller()
 export class UtilitiesController {
@@ -18,8 +18,8 @@ export class UtilitiesController {
     return this.utilitiesService.getShorteningUrl(referenceId);
   }
 
-  @MessagePattern({ cmd: 'store-object' })
-  async storeObject(payload: {persistent: boolean, storeObj: IUtilities}): Promise<string> {
+  @MessagePattern({ cmd: 'store-object-return-url' })
+  async storeObject(payload: {persistent: boolean, storeObj: object}): Promise<string> {
   return this.utilitiesService.storeObject(payload);
   }
 }

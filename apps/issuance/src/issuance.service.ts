@@ -815,7 +815,7 @@ const credefError = [];
 
     } catch (error) {
       this.logger.error(`error in validating credentials : ${error.response}`);
-      throw  new RpcException(error.response ? error.response : error);
+      throw new Error(error.response.message ? error.response.message : error);
     } finally {
       // await this.awsService.deleteFile(importFileDetails.fileKey);
       // this.logger.error(`Deleted uploaded file after processing.`);

@@ -19,10 +19,11 @@ class Attribute {
     @Transform(({ value }) => trim(value))
     value: string;
 
-    @ApiProperty()
+    @ApiProperty({ default: false })
     @IsBoolean()
+    @IsOptional()
     @IsNotEmpty({ message: 'isRequired property is required' })
-    isRequired: boolean;
+    isRequired?: boolean = false;
 
 }
 
@@ -86,8 +87,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
     example: [
       {
         value: 'string',
-        name: 'string',
-        isRequired: 'boolean'
+        name: 'string'
       }
     ]
   })
@@ -99,7 +99,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
 }
 
 class CredentialOffer {
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string', 'isRequired':'boolean' }] })
+    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
     @IsNotEmpty({ message: 'Attribute name is required' })
     @IsArray({ message: 'Attributes should be an array' })
     @ArrayNotEmpty({ message: 'Attributes are required' })
@@ -108,8 +108,8 @@ class CredentialOffer {
     @Type(() => Attribute)
     attributes: Attribute[];
 
-    @ApiProperty()
-    @IsEmail({}, { message: 'Email is invalid' })
+    @ApiProperty({ example: 'testmail@xyz.com' })
+    @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @MaxLength(256, { message: 'Email must be at most 256 character' })
     @Transform(({ value }) => trim(value))
@@ -212,7 +212,7 @@ export class CredentialAttributes {
 }
 
 export class OOBCredentialDtoWithEmail {
-    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string', 'isRequired':'boolean' }] }] })
+    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })

@@ -40,9 +40,22 @@ export class OrgRolesGuard implements CanActivate {
 
     if (!isValidUUID(orgId)) {
       throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-    }
+    }    
   
-    if (orgId) {     
+    if (orgId) {  
+      
+        const orgDetails = user.resource_access[orgId];
+
+        if (orgDetails) {
+          const orgRoles: string[] = orgDetails.roles;
+          const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
+    
+          if (!roleAccess) {
+            throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+          }
+          return roleAccess;
+        }
+
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
           return false;

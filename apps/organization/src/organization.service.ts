@@ -260,7 +260,14 @@ export class OrganizationService {
       const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
       this.logger.log(`deleteUserRecords::`, deleteUserRecords);
 
-      await this.userOrgRoleService.updateUserOrgRole(userId, orgId, [ownerRoleData.id], ownerRoleClient.id);
+      const roleIdList = [
+        {
+          roleId: ownerRoleData.id,
+          idpRoleId: ownerRoleClient.id
+        }
+      ];      
+
+      await this.userOrgRoleService.updateUserOrgRole(userId, orgId, roleIdList);
     }
 
     return orgDetails;
@@ -846,9 +853,8 @@ export class OrganizationService {
         status
       };
 
-      await this.organizationRepository.updateOrgInvitation(invitationId, data);
-
       if (status === Invitation.REJECTED) {
+        await this.organizationRepository.updateOrgInvitation(invitationId, data);
         return ResponseMessages.user.success.invitationReject;
       }
 
@@ -857,15 +863,15 @@ export class OrganizationService {
 
       const orgRoles = await this.orgRoleService.getOrgRolesByIds(invitation.orgRoles);
 
-      const rolesPayload: { id: string; name: string; idpId: string }[] = orgRoles.map((orgRole: IOrgRole) => {
-        let roleObj: { id: string; name: string; idpId: string } = null;
+      const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = orgRoles.map((orgRole: IOrgRole) => {
+        let roleObj: { roleId: string;  name: string; idpRoleId: string} = null;
 
         for (let index = 0; index < clientRolesList.length; index++) {
           if (clientRolesList[index].name === orgRole.name) {
             roleObj = {
-              id: orgRole.id,
+              roleId: orgRole.id,
               name: orgRole.name,
-              idpId: clientRolesList[index].id
+              idpRoleId: clientRolesList[index].id
             };
             break;
           }
@@ -874,16 +880,11 @@ export class OrganizationService {
         return roleObj;
       });
 
-      await this.clientRegistrationService.createUserClientRole(
-        organizationDetails.idpId,
-        token,
-        keycloakUserId,
-        rolesPayload.map((role) => ({ id: role.idpId, name: role.name }))
-      );
-
-      for (const roleData of rolesPayload) {
-        await this.userOrgRoleService.createUserOrgRole(userId, roleData.id, orgId, roleData.idpId);
-      }
+      await Promise.all([
+        this.organizationRepository.updateOrgInvitation(invitationId, data),
+        this.clientRegistrationService.createUserClientRole(organizationDetails.idpId, token, keycloakUserId, rolesPayload.map(role => ({id: role.idpRoleId, name: role.name}))),
+        this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload)
+      ]);
 
       return ResponseMessages.user.success.invitationAccept;
     } catch (error) {
@@ -917,13 +918,32 @@ export class OrganizationService {
 
       const token = await this.clientRegistrationService.getManagementToken();
       const clientRolesList = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
-      // const orgRoles = await this.orgRoleService.getOrgRoles();
+      const orgRoles = await this.orgRoleService.getOrgRoles();
 
-      const matchedRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim())).map((role) => role.name);
+      const matchedClientRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim()));
+      // .map((role) => role.name);
+      // const matchedOrgRoles = orgRoles.filter((role) => matchedClientRoles.some(clientRole => clientRole.name === role.name));
 
-      if (roleIds.length !== matchedRoles.length) {
+      if (roleIds.length !== matchedClientRoles.length) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
       }
+
+      const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = matchedClientRoles.map((clientRole: IClientRoles) => {
+        let roleObj: { roleId: string;  name: string; idpRoleId: string} = null;
+
+        for (let index = 0; index < orgRoles.length; index++) {
+          if (orgRoles[index].name === clientRole.name) {
+            roleObj = {
+              roleId: orgRoles[index].id,
+              name: orgRoles[index].name,
+              idpRoleId: clientRole.id
+            };
+            break;
+          }
+        }
+
+        return roleObj;
+      });
 
       const userData = await this.getUserUserId(userId);
 
@@ -933,15 +953,31 @@ export class OrganizationService {
       //   throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist);
       // }
 
-      await this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId);
+      // await this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId);
 
-      const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
+      // const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
 
-      if (0 === deleteUserRecords['count']) {
+      const [
+        ,
+        deletedUserRoleRecords
+      ] = await Promise.all([
+        this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId),
+        this.userOrgRoleService.deleteOrgRoles(userId, orgId)
+      ]);
+
+       if (0 === deletedUserRoleRecords['count']) {
         throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles);
-      }
+      }  
 
-      return this.userOrgRoleService.updateUserOrgRole(userId, orgId, roleIds);
+      const [
+        ,
+        isUserRoleUpdated
+      ] = await Promise.all([
+        this.clientRegistrationService.createUserClientRole(organizationDetails.idpId, token, userData.keycloakUserId, rolesPayload.map(role => ({id: role.idpRoleId, name: role.name}))),
+        this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload)
+      ]);
+  
+      return isUserRoleUpdated;
     } catch (error) {
       this.logger.error(`Error in updateUserRoles: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

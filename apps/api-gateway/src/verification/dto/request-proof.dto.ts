@@ -1,8 +1,9 @@
-import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
+import { IProofFormats } from '../interfaces/verification.interface';
 
 export class ProofRequestAttribute {
     @IsString()
@@ -135,46 +136,62 @@ export class OutOfBandRequestProof extends ProofPayload {
     autoAcceptProof: string;
 }
 
+export class SendProofRequestPayload {
 
-interface IProofFormats {
-    indy: IndyProof
-}
+    @ApiPropertyOptional()
+    @IsString({ message: 'protocolVersion must be in string' })
+    @IsNotEmpty({ message: 'please provide valid protocol version' })
+    @IsOptional()
+    protocolVersion: string;
 
-interface IndyProof {
-    name: string;
-    version: string;
-    requested_attributes: IRequestedAttributes;
-    requested_predicates: IRequestedPredicates;
-}
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'comment must be in string' })
+    comment: string;
 
-interface IRequestedAttributes {
-    [key: string]: IRequestedAttributesName;
-}
+    @ApiProperty()
+    @IsString()
+    @Transform(({ value }) => trim(value))
+    @Transform(({ value }) => toLowerCase(value))
+    @IsNotEmpty({ message: 'connectionId is required.' })
+    connectionId: string;
 
-interface IRequestedAttributesName {
-    name: string;
-    restrictions: IRequestedRestriction[]
-}
-
-interface IRequestedPredicates {
-    [key: string]: IRequestedPredicatesName;
-}
-
-interface IRequestedPredicatesName {
-    name: string;
-    restrictions: IRequestedRestriction[]
-}
-
-interface IRequestedRestriction {
-    cred_def_id?: string;
-    schema_id?: string;
-}
-
-export interface ISendProofRequestPayload {
-    protocolVersion?: string;
-    comment?: string;
-    connectionId?: string;
+    @ApiProperty({
+        'example': [
+            {
+                indy: {
+                    name: 'Verify national identity',
+                    version: '1.0',
+                    // eslint-disable-next-line camelcase
+                    requested_attributes: {},
+                    // eslint-disable-next-line camelcase
+                    requested_predicates: {}
+                }
+            }
+        ]
+    })
+    @IsObject({ each: true })
+    @IsNotEmpty({ message: 'please provide valid proofFormat' })
     proofFormats: IProofFormats;
-    autoAcceptProof?: string;
-    label?: string;
+
+    @ApiPropertyOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
+    @IsNotEmpty({ message: 'please provide from valid auto accept proof options' })
+    @IsOptional()
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptProof: AutoAccept;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'label must be in string' })
+    label: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsUUID()
+    @IsNotEmpty({ message: 'please provide valid parentThreadId' })
+    parentThreadId: string;  
 }
+

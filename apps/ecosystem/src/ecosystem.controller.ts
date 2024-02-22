@@ -79,7 +79,7 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'fetch-ecosystem-members' })
   async getEcosystemMembers(@Body() payload: EcosystemMembersPayload): Promise<object> {
-    return this.ecosystemService.getEcoystemMembers(payload);
+    return this.ecosystemService.getEcosystemMembers(payload);
   }
 
   /**

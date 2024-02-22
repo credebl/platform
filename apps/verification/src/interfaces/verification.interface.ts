@@ -65,7 +65,8 @@ interface IRequestedAttributes {
 }
 
 interface IRequestedAttributesName {
-    name: string;
+    name?: string;
+    names?: string;
     restrictions: IRequestedRestriction[]
 }
 

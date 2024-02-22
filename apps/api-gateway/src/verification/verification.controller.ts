@@ -16,7 +16,7 @@ import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards,
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { ISendProofRequestPayload, OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
+import { SendProofRequestPayload, OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -254,7 +254,7 @@ export class VerificationController {
     async sendOutOfBandPresentationRequest(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Body() outOfBandRequestProof: ISendProofRequestPayload,
+        @Body() outOfBandRequestProof: SendProofRequestPayload,
         @Param('orgId') orgId: string
     ): Promise<Response> {
         user.orgId = orgId;

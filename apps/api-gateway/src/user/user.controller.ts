@@ -50,6 +50,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { AwsService } from '@credebl/aws/aws.service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { CreateCertificateDto } from './dto/share-certificate.dto';
+import { UserAccessGuard } from '../authz/guards/user-access-guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -132,7 +133,7 @@ export class UserController {
     summary: 'Fetch login user details',
     description: 'Fetch login user details'
   })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   async getProfile(@User() reqUser: user, @Res() res: Response): Promise<Response> {
     const userData = await this.userService.getProfile(reqUser.id);
@@ -154,7 +155,7 @@ export class UserController {
     summary: 'Get all platform and ecosystem settings',
     description: 'Get all platform and ecosystem settings'
   })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)
   @ApiBearerAuth()
   async getPlatformSettings(@Res() res: Response): Promise<Response> {
@@ -174,7 +175,7 @@ export class UserController {
     summary: 'users activity',
     description: 'Fetch users activity'
   })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   @ApiQuery({ name: 'limit', required: true })
   async getUserActivities(
@@ -201,7 +202,7 @@ export class UserController {
     summary: 'organization invitations',
     description: 'Fetch organization invitations'
   })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   @ApiQuery({
     name: 'pageNumber',
@@ -293,7 +294,7 @@ export class UserController {
     summary: 'accept/reject organization invitation',
     description: 'Accept or Reject organization invitations'
   })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   async acceptRejectInvitaion(
       @Body() acceptRejectInvitation: AcceptRejectInvitationDto,
@@ -349,7 +350,7 @@ export class UserController {
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   async updateUserProfile(
     @Body() updateUserProfileDto: UpdateUserProfileDto,
     @User() reqUser: user,
@@ -375,7 +376,7 @@ export class UserController {
  @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
  @ApiExcludeEndpoint()
  @ApiBearerAuth()
- @UseGuards(AuthGuard('jwt'))
+ @UseGuards(AuthGuard('jwt'), UserAccessGuard)
  
  async addPasskey(
    @Body() userInfo: AddPasskeyDetailsDto,
@@ -403,7 +404,7 @@ export class UserController {
     summary: 'Update platform and ecosystem settings',
     description: 'Update platform and ecosystem settings'
   })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)
   @ApiBearerAuth()
   async updatePlatformSettings(

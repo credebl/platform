@@ -10,6 +10,7 @@ export class CreateOrganizationDto {
   createdBy?:string;
   updatedBy?:string;
   lastChangedBy?:string;
+  notificationWebhook?: string;
 }
 
 export class CreateUserRoleOrgDto {

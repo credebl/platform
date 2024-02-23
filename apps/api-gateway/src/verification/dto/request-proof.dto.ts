@@ -1,29 +1,43 @@
-import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
 import { IProofFormats } from '../interfaces/verification.interface';
 
-export class ProofRequestAttribute {
-    @IsString()
-    @IsNotEmpty({ message: 'attributeName is required.' })
-    attributeName: string;
 
+export class ProofRequestAttribute {
+
+    @ValidateIf((obj) => obj.attributeNames === undefined)
+    @IsNotEmpty()
+    @IsString({each:true})
+    attributeName?: string;
+
+    @ValidateIf((obj) => obj.attributeName === undefined)
+    @IsArray({ message: 'attributeNames must be an array.' })
+    @ArrayNotEmpty({ message: 'array can not be empty' })
+    @IsString({ each: true})
+    @IsNotEmpty({ each: true, message: 'each element cannot be empty' })
+    attributeNames?: string[];
+
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     schemaId?: string;
 
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     @IsNotEmpty({ message: 'condition is required.' })
     condition?: string;
 
+    @ApiPropertyOptional()
     @IsOptional()
     @IsNotEmpty({ message: 'value is required.' })
     @IsNumberString({}, { message: 'Value must be a number' })
     value?: string;
 
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     credDefId?: string;
@@ -72,11 +86,14 @@ export class RequestProofDto extends ProofPayload {
                 credDefId: 'string',
                 schemaId: 'string'
             }
-        ]
+        ],
+        type: () => [ProofRequestAttribute]
     })
     @IsArray({ message: 'attributes must be in array' })
+    @ValidateNested()
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
+    @Type(() => ProofRequestAttribute)
     attributes: ProofRequestAttribute[];
 
     @ApiPropertyOptional()
@@ -106,11 +123,14 @@ export class OutOfBandRequestProof extends ProofPayload {
                 credDefId: '',
                 schemaId: ''
             }
-        ]
+        ],
+        type: () => [ProofRequestAttribute]
     })
     @IsArray({ message: 'attributes must be in array' })
+    @ValidateNested({each: true})
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
+    @Type(() => ProofRequestAttribute)
     attributes: ProofRequestAttribute[];
 
     @ApiProperty()

@@ -188,8 +188,7 @@ export class VerificationController {
           } else {
             throw new BadRequestException('Please provide unique attribute names');
           }           
-          
-          await this.validateAttribute(attrData);
+
         }
 
         requestProof.orgId = orgId;
@@ -313,27 +312,4 @@ export class VerificationController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
 }
-
-    async validateAttribute(
-        attrData: object
-    ): Promise<void> {
-
-        if (!attrData['attributeName']) {
-            throw new BadRequestException('attributeName must be required');
-        } 
-
-        if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
-            throw new BadRequestException('condition cannot be empty');
-        }
-
-        if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
-            throw new BadRequestException('value cannot be empty');
-        }
-
-        if (attrData['condition']) {
-            if (isNaN(attrData['value'])) {
-                throw new BadRequestException('value must be an integer');
-            }
-        }
-    }
 }

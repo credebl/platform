@@ -1,5 +1,6 @@
 /* eslint-disable prefer-destructuring */
-import { organisation, user } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { org_invitations, organisation, user } from '@prisma/client';
 import {
   Injectable,
   Logger,
@@ -105,29 +106,35 @@ export class OrganizationService {
       delete organizationDetails.orgSlug;
       delete organizationDetails.website;
 
-      const orgCredentials = await this.registerToKeycloak(
-        organizationDetails.name,
-        organizationDetails.id,
-        keycloakUserId,
-        userId,
-        false
-      );
+      try {
+        const orgCredentials = await this.registerToKeycloak(
+          organizationDetails.name,
+          organizationDetails.id,
+          keycloakUserId,
+          userId,
+          false
+        );
 
-      const { clientId, idpId } = orgCredentials;
+        const { clientId, idpId } = orgCredentials;
 
-      const updateOrgData = {
-        clientId,
-        idpId
-      };
-
-      const updatedOrg = await this.organizationRepository.updateOrganizationById(
-        updateOrgData,
-        organizationDetails.id
-      );
-
-      if (!updatedOrg) {
-        throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate);
+        const updateOrgData = {
+          clientId,
+          idpId
+        };
+  
+        const updatedOrg = await this.organizationRepository.updateOrganizationById(
+          updateOrgData,
+          organizationDetails.id
+        );
+  
+        if (!updatedOrg) {
+          throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate);
+        }
+      } catch (error) {
+        this.logger.error(`Error In creating client : ${JSON.stringify(error)}`);
+        throw new InternalServerErrorException('Unable to create client');
       }
+
       if (createOrgDto.notificationWebhook) {
         await this.storeOrgWebhookEndpoint(organizationDetails.id, createOrgDto.notificationWebhook);
       }
@@ -174,23 +181,29 @@ export class OrganizationService {
           clientSecret: this.maskString(generatedClientSecret)
         };
       } else {
-        const orgCredentials = await this.registerToKeycloak(
-          organizationDetails.name,
-          organizationDetails.id,
-          keycloakUserId,
-          userId,
-          true
-        );
 
-        const { clientId, idpId, clientSecret } = orgCredentials;
-
-        generatedClientSecret = clientSecret;
-
-        updateOrgData = {
-          clientId,
-          clientSecret: this.maskString(clientSecret),
-          idpId
-        };
+        try {
+          const orgCredentials = await this.registerToKeycloak(
+            organizationDetails.name,
+            organizationDetails.id,
+            keycloakUserId,
+            userId,
+            true
+          );
+  
+          const { clientId, idpId, clientSecret } = orgCredentials;
+  
+          generatedClientSecret = clientSecret;
+  
+          updateOrgData = {
+            clientId,
+            clientSecret: this.maskString(clientSecret),
+            idpId
+          };
+        } catch (error) {
+          this.logger.error(`Error In creating client : ${JSON.stringify(error)}`);
+          throw new InternalServerErrorException('Unable to create client');
+        }
       }
 
       const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
@@ -228,14 +241,9 @@ export class OrganizationService {
 
     const orgRolesList = [OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER];
 
-    try {
       for (const role of orgRolesList) {
         await this.clientRegistrationService.createClientRole(orgDetails.idpId, token, role, role);
-      }
-    } catch (error) {
-      this.logger.error(`Error In creating client roles : ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException('Unable to create client roles');
-    }
+      }   
 
     const ownerRoleClient = await this.clientRegistrationService.getClientSpecificRoles(
       orgDetails.idpId,
@@ -250,24 +258,28 @@ export class OrganizationService {
       }
     ];
 
-    await this.clientRegistrationService.createUserClientRole(orgDetails.idpId, token, keycloakUserId, payload);
-
     const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
 
     if (!shouldUpdateRole) {
-      await this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, orgId, ownerRoleClient.id);
-    } else {
-      const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
-      this.logger.log(`deleteUserRecords::`, deleteUserRecords);
 
+      await Promise.all([
+        this.clientRegistrationService.createUserClientRole(orgDetails.idpId, token, keycloakUserId, payload),
+        this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, orgId, ownerRoleClient.id)
+      ]);
+      
+    } else {
       const roleIdList = [
         {
           roleId: ownerRoleData.id,
           idpRoleId: ownerRoleClient.id
         }
-      ];      
-
-      await this.userOrgRoleService.updateUserOrgRole(userId, orgId, roleIdList);
+      ];     
+      
+      await Promise.all([
+        this.clientRegistrationService.createUserClientRole(orgDetails.idpId, token, keycloakUserId, payload),
+        this.userOrgRoleService.deleteOrgRoles(userId, orgId),
+        this.userOrgRoleService.updateUserOrgRole(userId, orgId, roleIdList)
+      ]);
     }
 
     return orgDetails;
@@ -576,6 +588,10 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
 
+      if (!organizationDetails.idpId) {
+        return this.orgRoleService.getOrgRoles();
+      }
+
       const token = await this.clientRegistrationService.getManagementToken();
 
       return this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
@@ -622,21 +638,13 @@ export class OrganizationService {
     }
   }
 
-  /**
-   *
-   * @Body sendInvitationDto
-   * @returns createInvitation
-   */
-
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
+  async createInvitationByOrgRoles(
+    bulkInvitationDto: BulkSendInvitationDto,
+    userEmail: string,
+    userId: string,
+    orgName: string
+    ): Promise<void> {
     const { invitations, orgId } = bulkInvitationDto;
-
-    try {
-      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
-
-      const token = await this.clientRegistrationService.getManagementToken();
-      const clientRolesList = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
-      const orgRoles = await this.orgRoleService.getOrgRoles();
 
       for (const invitation of invitations) {
         const { orgRoleId, email } = invitation;
@@ -644,51 +652,120 @@ export class OrganizationService {
         const isUserExist = await this.checkUserExistInPlatform(email);
 
         const userData = await this.getUserFirstName(userEmail);
-
-        const { firstName } = userData;
-
-        const matchedRoles = clientRolesList
-          .filter((role) => orgRoleId.includes(role.id.trim()))
-          .map((role) => role.name);
-
-        if (orgRoleId.length !== matchedRoles.length) {
+        
+        const {firstName} = userData;
+        const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
+       
+        if (0 === orgRolesDetails.length) {
           throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
         }
-
-        const filteredOrgRoles = orgRoles.filter((role) => matchedRoles.includes(role.name.trim()));
-
-        // const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
-
-        // if (0 === orgRolesDetails.length) {
-        //   throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
-        // }
 
         const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
         if (!isInvitationExist && userEmail !== invitation.email) {
-          // await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), matchedRoles.map(role => role.id));
 
-          await this.organizationRepository.createSendInvitation(
-            email,
-            String(orgId),
-            String(userId),
-            filteredOrgRoles.map((role) => role.id)
-          );
+          await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
 
           try {
-            // await this.sendInviteEmailTemplate(email, organizationDetails.name, matchedRoles, firstName, isUserExist);
-            await this.sendInviteEmailTemplate(
-              email,
-              organizationDetails.name,
-              filteredOrgRoles,
-              firstName,
-              isUserExist
-            );
+            await this.sendInviteEmailTemplate(email, orgName, orgRolesDetails, firstName, isUserExist);
           } catch (error) {
             throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
           }
         }
       }
+  }
+
+  async createInvitationByClientRoles(
+    bulkInvitationDto: BulkSendInvitationDto,
+    userEmail: string,
+    userId: string,
+    orgName: string,
+    idpId: string
+    ): Promise<void> {
+    const { invitations, orgId } = bulkInvitationDto;
+
+    const token = await this.clientRegistrationService.getManagementToken();
+    const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
+    const orgRoles = await this.orgRoleService.getOrgRoles();
+
+    for (const invitation of invitations) {
+      const { orgRoleId, email } = invitation;
+
+      const isUserExist = await this.checkUserExistInPlatform(email);
+
+      const userData = await this.getUserFirstName(userEmail);
+
+      const { firstName } = userData;
+
+      const matchedRoles = clientRolesList
+        .filter((role) => orgRoleId.includes(role.id.trim()))
+        .map((role) => role.name);
+
+      if (orgRoleId.length !== matchedRoles.length) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+      }
+
+      const filteredOrgRoles = orgRoles.filter((role) => matchedRoles.includes(role.name.trim()));
+
+      const isInvitationExist = await this.checkInvitationExist(email, orgId);
+
+      if (!isInvitationExist && userEmail !== invitation.email) {
+
+        await this.organizationRepository.createSendInvitation(
+          email,
+          String(orgId),
+          String(userId),
+          filteredOrgRoles.map((role) => role.id)
+        );
+
+        try {
+          await this.sendInviteEmailTemplate(
+            email,
+            orgName,
+            filteredOrgRoles,
+            firstName,
+            isUserExist
+          );
+        } catch (error) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+        }
+      }
+    }
+  }
+
+  /**
+   *
+   * @Body sendInvitationDto
+   * @returns createInvitation
+   */
+
+  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
+    const { orgId } = bulkInvitationDto;
+
+    try {
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+
+      if (!organizationDetails.idpId) {
+        await this.createInvitationByOrgRoles(
+           bulkInvitationDto,
+           userEmail,
+           userId,
+           organizationDetails.name
+           );
+      } else {
+        await this.createInvitationByClientRoles(
+          bulkInvitationDto,
+          userEmail,
+          userId,
+          organizationDetails.name,
+          organizationDetails.idpId
+        );
+      }
+
       await this.userActivityService.createActivity(
         userId,
         organizationDetails.id,
@@ -818,6 +895,49 @@ export class OrganizationService {
     }
   }
 
+  async updateClientInvitation(
+    // eslint-disable-next-line camelcase
+    invitation: org_invitations,
+    idpId: string,
+    userId: string,
+    keycloakUserId: string,
+    orgId: string,
+    status: string
+  ): Promise<void> {
+    const token = await this.clientRegistrationService.getManagementToken();
+      const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
+
+      const orgRoles = await this.orgRoleService.getOrgRolesByIds(invitation.orgRoles);
+
+      const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = orgRoles.map((orgRole: IOrgRole) => {
+        let roleObj: { roleId: string;  name: string; idpRoleId: string} = null;
+
+        for (let index = 0; index < clientRolesList.length; index++) {
+          if (clientRolesList[index].name === orgRole.name) {
+            roleObj = {
+              roleId: orgRole.id,
+              name: orgRole.name,
+              idpRoleId: clientRolesList[index].id
+            };
+            break;
+          }
+        }
+
+        return roleObj;
+      });
+
+      const data = {
+        status
+      };
+
+      await Promise.all([
+        this.organizationRepository.updateOrgInvitation(invitation.id, data),
+        this.clientRegistrationService.createUserClientRole(idpId, token, keycloakUserId, rolesPayload.map(role => ({id: role.idpRoleId, name: role.name}))),
+        this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload)
+      ]);
+
+  }
+
   /**
    *
    * @param payload
@@ -858,33 +978,15 @@ export class OrganizationService {
         return ResponseMessages.user.success.invitationReject;
       }
 
-      const token = await this.clientRegistrationService.getManagementToken();
-      const clientRolesList = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
+      if (organizationDetails.idpId) {
+        await this.updateClientInvitation(invitation, organizationDetails.idpId, userId, keycloakUserId, orgId, status);
+      } else {
+        await this.organizationRepository.updateOrgInvitation(invitationId, data);
 
-      const orgRoles = await this.orgRoleService.getOrgRolesByIds(invitation.orgRoles);
-
-      const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = orgRoles.map((orgRole: IOrgRole) => {
-        let roleObj: { roleId: string;  name: string; idpRoleId: string} = null;
-
-        for (let index = 0; index < clientRolesList.length; index++) {
-          if (clientRolesList[index].name === orgRole.name) {
-            roleObj = {
-              roleId: orgRole.id,
-              name: orgRole.name,
-              idpRoleId: clientRolesList[index].id
-            };
-            break;
-          }
+        for (const roleId of invitation.orgRoles) {
+          await this.userOrgRoleService.createUserOrgRole(userId, roleId, orgId);
         }
-
-        return roleObj;
-      });
-
-      await Promise.all([
-        this.organizationRepository.updateOrgInvitation(invitationId, data),
-        this.clientRegistrationService.createUserClientRole(organizationDetails.idpId, token, keycloakUserId, rolesPayload.map(role => ({id: role.idpRoleId, name: role.name}))),
-        this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload)
-      ]);
+      }
 
       return ResponseMessages.user.success.invitationAccept;
     } catch (error) {
@@ -914,16 +1016,12 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
 
-      // const roleIdsList = [];
-
       const token = await this.clientRegistrationService.getManagementToken();
       const clientRolesList = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
       const orgRoles = await this.orgRoleService.getOrgRoles();
 
       const matchedClientRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim()));
-      // .map((role) => role.name);
-      // const matchedOrgRoles = orgRoles.filter((role) => matchedClientRoles.some(clientRole => clientRole.name === role.name));
-
+   
       if (roleIds.length !== matchedClientRoles.length) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
       }
@@ -946,16 +1044,6 @@ export class OrganizationService {
       });
 
       const userData = await this.getUserUserId(userId);
-
-      // const isRolesExist = await this.orgRoleService.getOrgRolesByIds(roleIds);
-
-      // if (isRolesExist && 0 === isRolesExist.length) {
-      //   throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist);
-      // }
-
-      // await this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId);
-
-      // const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
 
       const [
         ,

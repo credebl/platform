@@ -19,6 +19,13 @@ class Attribute {
     @IsDefined()
     @Transform(({ value }) => trim(value))
     value: string;
+
+    @ApiProperty({ default: false })
+    @IsBoolean()
+    @IsOptional()
+    @IsNotEmpty({ message: 'isRequired property is required' })
+    isRequired?: boolean = false;
+
 }
 
 class CredentialsIssuanceDto {
@@ -77,13 +84,19 @@ class CredentialsIssuanceDto {
 }
 
 export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
-
-    @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
-    @IsArray()
-    @ValidateNested({ each: true })
-    @ArrayMinSize(1)
-    @Type(() => Attribute)
-    attributes: Attribute[];
+  @ApiProperty({
+    example: [
+      {
+        value: 'string',
+        name: 'string'
+      }
+    ]
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @Type(() => Attribute)
+  attributes: Attribute[];
 }
 
 class CredentialOffer {
@@ -94,7 +107,7 @@ class CredentialOffer {
     @Type(() => Attribute)
     attributes: Attribute[];
 
-    @ApiProperty({ example: 'testmail@mailinator.com' })
+    @ApiProperty({ example: 'testmail@xyz.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })
@@ -206,14 +219,6 @@ export class OOBCredentialDtoWithEmail {
     @ValidateNested({ each: true })
     @Type(() => CredentialOffer)
     credentialOffer: CredentialOffer[];
-
-    @ApiProperty({ example: 'awqx@getnada.com' })
-    @IsEmail({}, { message: 'Please provide a valid email' })
-    @IsNotEmpty({ message: 'Please provide valid email' })
-    @IsString({ message: 'email should be string' })
-    @Transform(({ value }) => value.trim().toLowerCase())
-    @IsOptional()
-    emailId: string;
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid credential definition id' })

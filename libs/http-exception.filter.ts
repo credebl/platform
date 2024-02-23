@@ -39,6 +39,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
             httpStatus = HttpStatus.BAD_REQUEST;
             message = exception?.response?.message || exception?.message;
             break;
+          case 'P2023': // Inconsistent column data: {message}
+            httpStatus = HttpStatus.BAD_REQUEST;
+            message = exception?.meta?.message || exception?.message;
+            break;
           case 'P2018': // The required connected records were not found. {details}
           case 'P2025': // An operation failed because it depends on one or more records that were required but not found. {cause}
           case 'P2015': // A related record could not be found. {details}

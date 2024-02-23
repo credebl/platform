@@ -1,22 +1,22 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
-
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
 import { IProofFormats } from '../interfaces/verification.interface';
+
 
 export class ProofRequestAttribute {
 
     @ValidateIf((obj) => obj.attributeNames === undefined)
     @IsNotEmpty()
-    @IsString()
+    @IsString({each:true})
     attributeName?: string;
 
     @ValidateIf((obj) => obj.attributeName === undefined)
     @IsArray({ message: 'attributeNames must be an array.' })
     @ArrayNotEmpty({ message: 'array can not be empty' })
-    @IsString({ each: true })
+    @IsString({ each: true})
     @IsNotEmpty({ each: true, message: 'each element cannot be empty' })
     attributeNames?: string[];
 
@@ -127,7 +127,7 @@ export class OutOfBandRequestProof extends ProofPayload {
         type: () => [ProofRequestAttribute]
     })
     @IsArray({ message: 'attributes must be in array' })
-    @ValidateNested({ each: true })
+    @ValidateNested({each: true})
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
     @Type(() => ProofRequestAttribute)

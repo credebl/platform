@@ -721,13 +721,13 @@ export class VerificationService {
       const payload = { apiKey, url };
 
       const getProofPresentationById = await this._getVerifiedProofDetails(payload);
-
+     
       if (!getProofPresentationById?.response?.presentation) {
         throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.notFound
         });
-      }
+        }
 
       const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;
       const requestedPredicates = getProofPresentationById?.response?.request?.indy?.requested_predicates;
@@ -737,22 +737,23 @@ export class VerificationService {
       const extractedDataArray: IProofPresentationDetails[] = [];
 
       if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
+      
+
+      if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
         for (const key in requestedAttributes) {
 
           if (requestedAttributes.hasOwnProperty(key)) {
             const requestedAttributeKey = requestedAttributes[key];
             const attributeName = requestedAttributeKey.name;
-
+            
             if (requestedAttributeKey?.restrictions) {
 
               credDefId = requestedAttributeKey?.restrictions[0]?.cred_def_id;
               schemaId = requestedAttributeKey?.restrictions[0]?.schema_id;
-
             } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
 
               credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
               schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
-
             }
 
             if (revealedAttrs.hasOwnProperty(key)) {
@@ -795,7 +796,7 @@ export class VerificationService {
             const attribute = requestedAttributes[key];
             const attributeName = attribute.name;
 
-
+           
             [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
 
 
@@ -810,12 +811,13 @@ export class VerificationService {
           }
         }
       } else if (0 !== Object.keys(requestedPredicates).length) {
-
         for (const key in requestedPredicates) {
 
           if (requestedPredicates.hasOwnProperty(key)) {
             const attribute = requestedPredicates[key];
             const attributeName = attribute?.name;
+        
+            [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
 
             [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
             const extractedData: IProofPresentationDetails = {
@@ -855,6 +857,23 @@ export class VerificationService {
 
     if (attribute?.restrictions) {
 
+      credDefId = attribute?.restrictions[0]?.cred_def_id;
+      schemaId = attribute?.restrictions[0]?.schema_id;
+    } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
+
+      credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
+      schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
+    }
+
+    return [credDefId, schemaId];
+  }
+
+  async _schemaCredDefRestriction(attribute, getProofPresentationById): Promise<string[]> {
+    let credDefId;
+    let schemaId;
+
+    if (attribute?.restrictions) {
+              
       credDefId = attribute?.restrictions[0]?.cred_def_id;
       schemaId = attribute?.restrictions[0]?.schema_id;
     } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {

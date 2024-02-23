@@ -126,6 +126,11 @@ export class AgentServiceController {
     return this.agentServiceService.getAgentHealthDetails(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'get-ledger-config' })
+  async getLedgerConfig(payload: { user: IUserRequestInterface }): Promise<object> {
+    return this.agentServiceService.getLedgerConfigDetails(payload.user);
+  }
+
   //DONE
   @MessagePattern({ cmd: 'agent-send-out-of-band-proof-request' })
   async sendOutOfBandProofRequest(payload: {

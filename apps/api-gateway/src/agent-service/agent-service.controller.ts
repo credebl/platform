@@ -75,6 +75,29 @@ export class AgentController {
 
   }
 
+  @Get('/orgs/:orgId/agents/ledgerConfig')
+  @ApiOperation({
+    summary: 'Get the ledger config details',
+    description: 'Get the ledger config details'
+  })
+  @UseGuards(AuthGuard('jwt'))
+  async getLedgerDetails(
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<Response> {
+
+    const ledgerConfigData = await this.agentService.getLedgerConfig(reqUser);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.agent.success.ledgerConfig,
+      data: ledgerConfigData
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
   /**
    * Spinup the agent by organization
    * @param agentSpinupDto 

@@ -186,6 +186,7 @@ export const ResponseMessages = {
         success: {
             create: 'Agent process initiated successfully. Please wait',
             health: 'Agent health details retrieved successfully.',
+            ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
             getWebhookUrl:'Webhook Url fetched successfully'
         },
@@ -402,5 +403,5 @@ export const ResponseMessages = {
             notFound: 'Notification record not found.',
             invalidUrl: 'Invalid URL'
         }
-    },
+    }
 };

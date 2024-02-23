@@ -1133,6 +1133,17 @@ export class AgentServiceService {
     }
   }
 
+  async getLedgerConfigDetails(user: IUserRequestInterface): Promise<object> {
+    try {
+      const getLedgerConfigData = await this.agentServiceRepository.getLedgerConfigByOrgId();
+      return getLedgerConfigData;
+        
+    } catch (error) {
+      this.logger.error(`Error in send out of band proof request in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async sendOutOfBandProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
     try {
       const sendProofRequest = await this.commonService

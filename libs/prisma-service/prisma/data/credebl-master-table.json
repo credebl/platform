@@ -186,5 +186,27 @@
       "key": "multiEcosystemSupport",
       "value": "false"
     }
+  ],
+  "ledgerConfig": [
+    {
+      "name": "indy",
+      "details":  {
+        "bcovrin": {
+            "testnet":"did:indy:bcovrin:testnet"
+        },
+        "indicio": {
+            "testnet":"did:indy:indicio:testnet",
+            "demonet":"did:indy:indicio:demonet",
+            "mainnet":"did:indy:indicio:mainnet"
+        }
+    }
+    },
+    {
+      "name": "polygon",
+      "details": {
+        "mainnet": "did:polygon:testnet",
+        "testnet": "did:polygon:mainnet"
+    }
+    }
   ]
 }

@@ -43,4 +43,11 @@ export class AgentService extends BaseService {
         
     }
 
+    async getLedgerConfig(user: user): Promise<object> {
+        const payload = { user };
+
+        // NATS call
+        return this.sendNatsMessage(this.agentServiceProxy, 'get-ledger-config', payload);
+    }
+
 }

@@ -107,7 +107,8 @@ export const ResponseMessages = {
             invalidUserId:'Invalid format of userId',
             invalidInvitationId:'Invalid format for invitation id',
             ecosystemIdIsRequired:'ecosystemId is required',
-            roleNotMatch: 'User does not have access'
+            roleNotMatch: 'User does not have access',
+            orgDoesNotMatch: 'Organization does not match'
         }
     },
 
@@ -354,7 +355,9 @@ export const ResponseMessages = {
             updateSchemaId: 'Error while updating the schema id',
             updateCredDefId: 'Error while updating the credential-definition',
             invalidMessage: 'Invalid transaction details. Missing "message" property.',
-            invalidTransactionMessage: 'Invalid transaction details'
+            invalidTransactionMessage: 'Invalid transaction details',
+            ecosystemRoleNotMatch: 'Ecosystem role not match',
+            orgEcoIdRequired: 'OrgId & EcosystemId is required'
         }
     },
     bulkIssuance: {

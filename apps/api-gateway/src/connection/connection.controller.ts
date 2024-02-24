@@ -20,6 +20,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { ClientProxy} from '@nestjs/microservices';
+import { QuestionDto} from './dtos/question-answer.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -107,6 +108,29 @@ export class ConnectionController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
+    
+    @Get('orgs/:orgId/question-answer/question/:tenantId')
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+    @ApiOperation({
+        summary: `Get question-answer record`,
+        description: `Get question-answer record`
+    })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    async getQuestionAnswersRecord(
+        @Param('tenantId') tenantId: string,
+        @Param('orgId') orgId: string,
+        @Res() res: Response
+    ): Promise<Response> {
+        const record = await this.connectionService.getQuestionAnswersRecord(tenantId, orgId);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.connection.success.fetchConnection,
+            data: record
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
+    }
+
     /**
         * Create out-of-band connection legacy invitation
         * @param connectionDto 
@@ -127,6 +151,33 @@ export class ConnectionController {
 
         connectionDto.orgId = orgId;
         const connectionData = await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.connection.success.create,
+            data: connectionData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+
+    }
+
+    @Post('/orgs/:orgId/question-answer/question/:connectionId/:tenantId')
+    @ApiOperation({ summary: '', description: 'question-answer/question' })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    async sendQuestion(
+        @Param('orgId') orgId: string,
+        @Param('connectionId') connectionId: string,
+        @Param('tenantId') tenantId: string,
+        @Body() questionDto: QuestionDto,
+        @User() reqUser: IUserRequestInterface,
+        @Res() res: Response
+    ): Promise<Response> {
+
+        questionDto.orgId = orgId;
+        questionDto.connectionId = connectionId;
+        questionDto.tenantId = tenantId;
+        const connectionData = await this.connectionService.sendQuestion(questionDto);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.connection.success.create,
@@ -192,6 +243,42 @@ export class ConnectionController {
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async getConnectionWebhook(
+    @Body() connectionDto: ConnectionDto,
+    @Param('orgId') orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    connectionDto.type = 'Connection';
+    this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
+  
+    const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId).catch(error => {
+        this.logger.debug(`error in saving connection webhook ::: ${JSON.stringify(error)}`);
+     });
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.connection.success.create,
+      data: connectionData
+    };
+    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId).catch(error => {
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+  
+    });
+    if (webhookUrl) {
+        await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto }).catch(error => {
+            this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
+        });
+    } 
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+
+  @Post('wh/:orgId/question-answer/')
+  @ApiExcludeEndpoint()
+  @ApiOperation({
+    summary: 'Catch connection webhook responses',
+    description: 'Callback URL for connection'
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  async getQuestionAnswerWebhook(
     @Body() connectionDto: ConnectionDto,
     @Param('orgId') orgId: string,
     @Res() res: Response

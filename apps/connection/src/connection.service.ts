@@ -21,6 +21,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 
 @Injectable()
 export class ConnectionService {
@@ -312,6 +313,41 @@ export class ConnectionService {
     }
   }
 
+  async getQuestionAnswersRecord(tenantId: string, orgId: string): Promise<object> {
+    try {
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const { agentEndPoint } = agentDetails;
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+
+      const label = 'get-question-answer-record';
+      const url = await this.getQuestionAnswerAgentUrl(label, orgAgentType, agentEndPoint, agentDetails?.tenantId);
+      
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const record = await this._getQuestionAnswersRecord(url, apiKey);
+      return record;
+
+
+    } catch (error) {
+      this.logger.error(`[sendQuestion] - error in get question answer record: ${error}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
   async _getConnectionsByConnectionId(
     url: string,
     apiKey: string
@@ -326,6 +362,29 @@ export class ConnectionService {
       .catch(error => {
         this.logger.error(
           `[_getConnectionsByConnectionId] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
+        );
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error?.message?.error ? error.error?.message?.error : error.error,
+            message: error.message
+          }, error.error);
+      });
+  }
+
+  async _getQuestionAnswersRecord(
+    url: string,
+    apiKey: string
+  ): Promise<object> {
+
+    const pattern = { cmd: 'agent-get-question-answer-record' };
+    const payload = { url, apiKey };
+    return this.connectionServiceProxy
+      .send<IConnectionDetailsById>(pattern, payload)
+      .toPromise()
+      .catch(error => {
+        this.logger.error(
+          `[_getQuestionAnswersRecord] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
         );
         throw new HttpException(
           {
@@ -354,6 +413,51 @@ export class ConnectionService {
       return url;
     } catch (error) {
       this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getQuestionAnswerAgentUrl(
+    label: string,
+    orgAgentType: string,
+    agentEndPoint: string,
+    tenantId: string,
+    connectionId?: string
+  ): Promise<string> {
+    try {
+
+      let url;
+      switch (label) {
+        case 'send-question': {
+          url = orgAgentType === OrgAgentType.DEDICATED
+              ? `${agentEndPoint}${CommonConstants.URL_SEND_QUESTION}`
+              : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`.replace('#', connectionId).replace('@', tenantId)
+              : null;
+          break;
+        }
+
+        case 'get-question-answer-record': {
+          url = orgAgentType === OrgAgentType.DEDICATED
+              ? `${agentEndPoint}${CommonConstants.URL_QUESTION_ANSWER_RECORD}`
+              : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_QUESTION_ANSWER_RECORD}`.replace('#', tenantId)
+              : null;
+          break;
+        }
+
+        default: {
+          break;
+        }
+      }
+
+      if (!url) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
+      }
+
+      return url;
+    } catch (error) {
+      this.logger.error(`Error get question answer agent Url: ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -508,6 +612,77 @@ export class ConnectionService {
             message: error.message
           }, error.error);
       });
+  }
+
+  async _sendQuestion(
+    questionPayload: IQuestionPayload,
+    url: string,
+    apiKey: string
+  ): Promise<object> {
+
+    const pattern = { cmd: 'agent-send-question' };
+    const payload = { questionPayload, url, apiKey };
+
+    return this.connectionServiceProxy
+      .send<object>(pattern, payload)
+      .toPromise()
+      .catch(error => {
+        this.logger.error(
+          `[_sendQuestion] [NATS call]- error in send question : ${JSON.stringify(error)}`
+        );
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error?.message?.error ? error.error?.message?.error : error.error,
+            message: error.message
+          }, error.error);
+      });
+
+    
+  }
+
+  async sendQuestion(payload: IQuestionPayload): Promise<object> {
+
+    const { detail, validResponses, question, orgId, connectionId} = payload;
+    try {
+
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+
+      const { agentEndPoint} = agentDetails;
+     
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
+      }
+
+      const questionPayload = {
+        detail,
+        validResponses,
+        question
+      };
+
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const label = 'send-question';
+      const url = await this.getQuestionAnswerAgentUrl(label, orgAgentType, agentEndPoint, agentDetails?.tenantId, connectionId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const createQuestion = await this._sendQuestion(questionPayload, url, apiKey);
+      return createQuestion;
+     
+    } catch (error) {
+      this.logger.error(`[sendQuestion] - error in sending question: ${error}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
   }
 }
 

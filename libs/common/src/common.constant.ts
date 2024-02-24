@@ -73,7 +73,8 @@ export enum CommonConstants {
   URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
   URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
-  
+  URL_SEND_QUESTION = '/question-answer/question',
+  URL_QUESTION_ANSWER_RECORD = '/question-answer',
 
   // SCHEMA & CRED DEF SERVICES
   URL_SCHM_CREATE_SCHEMA = '/schemas',
@@ -106,8 +107,10 @@ export enum CommonConstants {
   URL_SHAGENT_ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/#',
   URL_SHAGENT_RECEIVE_INVITATION_URL = '/multi-tenancy/receive-invitation-url/#',
   URL_SHAGENT_RECEIVE_INVITATION = '/multi-tenancy/receive-invitation/#',
-
-
+  URL_SHAGENT_SEND_QUESTION = '/multi-tenancy/question-answer/question/#/@',
+  URL_SHAGENT_SEND_ANSWER = '/multi-tenancy/question-answer/answer/#/@',
+  URL_SHAGENT_QUESTION_ANSWER_RECORD = '/multi-tenancy/question-answer/#',
+  
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',
   URL_GET_PROOF_PRESENTATIONS = '/proofs',

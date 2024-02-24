@@ -1109,15 +1109,16 @@ export class EcosystemService {
    * @returns Ecosystem members list
    */
 
-  async getEcoystemMembers(payload: EcosystemMembersPayload): Promise<object> {
+  async getEcosystemMembers(payload: EcosystemMembersPayload): Promise<object> {
     try {
-      const { ecosystemId, pageNumber, pageSize, search, sortBy } = payload;
+      const { ecosystemId, pageNumber, pageSize, search, sortBy, sortField } = payload;
       const getEcosystemMember = await this.ecosystemRepository.findEcosystemMembers(
         ecosystemId,
         pageNumber,
         pageSize,
         search,
-        sortBy
+        sortBy,
+        sortField
       );
 
       const ecosystemMemberResponse = {

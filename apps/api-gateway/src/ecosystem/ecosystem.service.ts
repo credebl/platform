@@ -93,11 +93,10 @@ export class EcosystemService extends BaseService {
    */
   async getEcosystemMembers(
     ecosystemId: string,
-    getEcosystemMembers: GetAllEcosystemMembersDto
+    payload: GetAllEcosystemMembersDto
   ): Promise<{ response: object }> {
-    const { pageNumber, pageSize, search, sortBy } = getEcosystemMembers;
-    const payload = { ecosystemId, pageNumber, pageSize, search, sortBy };
-    return this.sendNats(this.serviceProxy, 'fetch-ecosystem-members', payload);
+    payload['ecosystemId'] = ecosystemId;
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-ecosystem-members', payload);
   }
 
   /**
@@ -126,9 +125,9 @@ export class EcosystemService extends BaseService {
     return this.sendNats(this.serviceProxy, 'accept-reject-ecosystem-invitations', payload);
   }
 
-  async fetchEcosystemOrg(ecosystemId: string, orgId: string): Promise<{ response: object }> {
+  async fetchEcosystemOrg(ecosystemId: string, orgId: string): Promise<object> {
     const payload = { ecosystemId, orgId };
-    return this.sendNats(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
   }
 
   async getEndorsementTranasactions(

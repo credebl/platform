@@ -35,3 +35,14 @@ export class QuestionDto {
     connectionId: string;
     tenantId: string;
 }
+
+export class QuestionAnswerWebhookDto {
+    
+    @ApiProperty()
+    @IsOptional()
+    record:object;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
+}

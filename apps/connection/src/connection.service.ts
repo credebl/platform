@@ -430,7 +430,7 @@ export class ConnectionService {
       switch (label) {
         case 'send-question': {
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_SEND_QUESTION}`
+              ? `${agentEndPoint}${CommonConstants.URL_SEND_QUESTION}`.replace('#', connectionId)
               : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`.replace('#', connectionId).replace('@', tenantId)
               : null;

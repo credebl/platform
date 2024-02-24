@@ -73,7 +73,7 @@ export enum CommonConstants {
   URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
   URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
-  URL_SEND_QUESTION = '/question-answer/question',
+  URL_SEND_QUESTION = '/question-answer/question/#',
   URL_QUESTION_ANSWER_RECORD = '/question-answer',
 
   // SCHEMA & CRED DEF SERVICES

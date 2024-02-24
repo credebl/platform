@@ -18,17 +18,7 @@ export class ConnectionService extends BaseService {
     questionDto: QuestionDto
   ): Promise<object> {
     try {
-      const questionDetails = {
-         detail: questionDto.detail,
-         validResponses: questionDto.validResponses,
-         question:questionDto.question,
-         orgId : questionDto.orgId,
-         connectionId :questionDto.connectionId,
-         tenantId :questionDto.tenantId 
-
-      };
-
-      return this.sendNatsMessage(this.connectionServiceProxy, 'send-question', questionDetails);
+      return this.sendNatsMessage(this.connectionServiceProxy, 'send-question', questionDto);
     } catch (error) {
       throw new RpcException(error.response);
     }

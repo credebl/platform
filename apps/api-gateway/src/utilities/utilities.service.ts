@@ -15,8 +15,9 @@ export class UtilitiesService extends BaseService {
   }
 
   async storeObject(persistent: boolean, storeObj: StoreObjectDto): Promise<string> {
-    // const payload = {persistent, storeObj};
-    return `This is the storeObject:::::::: ${JSON.stringify(storeObj)}`;
-    // return this.sendNatsMessage(this.serviceProxy, 'store-object-return-url', payload);
+    const payload = {persistent, storeObj};
+    // eslint-disable-next-line no-console
+    console.log('Reached in api-gateway services. The object to store is::::::: ', JSON.stringify(payload.storeObj));
+    return this.sendNatsMessage(this.serviceProxy, 'store-object-return-url', payload);
   }
 }

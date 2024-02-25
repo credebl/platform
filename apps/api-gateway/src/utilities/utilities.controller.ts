@@ -39,14 +39,16 @@ export class UtilitiesController {
   @Post('/store-object/:persistent')
   @ApiOperation({ summary: 'Store an object and return a short url to it', description: 'Create a short url representing the object' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async storeObject(@Body() storeObjectDto: StoreObjectDto, @Param('persistent') persistent: boolean, @Res() res: Response): Promise<Response> {
     // eslint-disable-next-line no-console
-    console.log(storeObjectDto);
+    console.log('Reached in api-gateway controller. The object to store is::::::: ', JSON.stringify(storeObjectDto.data));
     const shorteningUrl = await this.utilitiesService.storeObject(persistent.valueOf(), storeObjectDto);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.storeObject.success.storeObject,
       data: shorteningUrl
+      // data: 'success'
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

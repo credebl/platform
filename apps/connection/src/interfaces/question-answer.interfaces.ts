@@ -11,6 +11,5 @@ export interface IValidResponses {
   }
 
   export interface IQuestionAnswerPayload {
-    tenantId: string;
     orgId: string;
   }

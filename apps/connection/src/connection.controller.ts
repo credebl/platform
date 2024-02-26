@@ -85,7 +85,7 @@ export class ConnectionController {
 
   @MessagePattern({ cmd: 'get-question-answer-record' })
   async getQuestionAnswersRecord(payload: IQuestionAnswerPayload): Promise<object> {
-    const { tenantId, orgId } = payload;
-    return this.connectionService.getQuestionAnswersRecord(tenantId, orgId);
+    const { orgId } = payload;
+    return this.connectionService.getQuestionAnswersRecord(orgId);
   }
 }

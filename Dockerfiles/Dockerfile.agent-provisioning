@@ -54,9 +54,8 @@ RUN set -eux \
         docker \
         docker-compose \
     && npm install -g pnpm --ignore-scripts \
-    && rm -rf /var/cache/apk/*   
-
-
+    && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 

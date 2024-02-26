@@ -302,9 +302,9 @@ export class SchemaRepository {
     issuerId: string;
     orgId: string;
     ledgerId: string;
-  }[]> {
+  }> {
     try {
-      return this.prisma.schema.findMany({
+      return this.prisma.schema.findFirstOrThrow({
         where: {
           name: payload.schemaName,
           version: payload.version

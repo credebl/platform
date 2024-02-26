@@ -79,7 +79,7 @@ export class SchemaController {
     issuerId: string;
     orgId: string;
     ledgerId: string;
-  }[]> {
+  }> {
     return this.schemaService.schemaExist(payload);
   }
 }

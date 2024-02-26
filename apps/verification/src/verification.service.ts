@@ -517,7 +517,7 @@ export class VerificationService {
       const requestedPredicates = {};
       const {attributes} = proofRequestpayload;
       if (attributes) {
-        requestedAttributes = Object.fromEntries(attributes.map((attribute, index) => {
+        requestedAttributes = Object.fromEntries(proofRequestpayload.attributes.map((attribute, index) => {
   
           const attributeElement = attribute.attributeName || attribute.attributeNames;
           const attributeReferent = `additionalProp${index + 1}`;
@@ -527,7 +527,7 @@ export class VerificationService {
             return [
               attributeReferent,
               {
-                [attributeKey]: attributeElement,
+                name: attributeElement,
                 restrictions: [
                   {
                     cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,

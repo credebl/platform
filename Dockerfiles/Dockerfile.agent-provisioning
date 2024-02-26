@@ -6,12 +6,14 @@ FROM node:18-alpine as build
 # RUN apk add openssh-client
 # RUN apk update
 # RUN apk add aws-cli
-RUN npm install -g pnpm --ignore-scripts \
-    && apk update \
-    && apk add openssh-client \
-    && apk add aws-cli \
-    && apk add docker \
-    && apk add docker-compose    
+RUN set -eux \
+    && apk --no-cache add \
+        openssh-client \
+        aws-cli \
+        docker \
+        docker-compose \
+    && npm install -g pnpm --ignore-scripts \
+    && rm -rf /var/cache/apk/*   
 
 RUN docker --version && \
     docker-compose --version
@@ -47,12 +49,15 @@ FROM node:18-alpine as prod
 # RUN apk add openssh-client
 # RUN apk update
 # RUN apk add aws-cli
-RUN npm install -g pnpm --ignore-scripts \
-    && apk update \
-    && apk add openssh-client \
-    && apk add aws-cli \
-    && apk add docker \
-    && apk add docker-compose 
+RUN set -eux \
+    && apk --no-cache add \
+        openssh-client \
+        aws-cli \
+        docker \
+        docker-compose \
+    && npm install -g pnpm --ignore-scripts \
+    && rm -rf /var/cache/apk/*   
+
 
 
 WORKDIR /app

@@ -159,7 +159,7 @@ export class ConnectionController {
 
     }
 
-    @Post('/orgs/:orgId/question-answer/question/:connectionId/:tenantId')
+    @Post('/orgs/:orgId/question-answer/question/:connectionId')
     @ApiOperation({ summary: '', description: 'send question' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)

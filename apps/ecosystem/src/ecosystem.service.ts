@@ -53,13 +53,13 @@ import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsem
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import {
-// eslint-disable-next-line camelcase
+  // eslint-disable-next-line camelcase
   credential_definition,
-// eslint-disable-next-line camelcase
+  // eslint-disable-next-line camelcase
   endorsement_transaction,
-// eslint-disable-next-line camelcase
+  // eslint-disable-next-line camelcase
   org_agents,
-// eslint-disable-next-line camelcase
+  // eslint-disable-next-line camelcase
   platform_config,
   schema,
   user
@@ -679,9 +679,15 @@ export class EcosystemService {
     ecosystemId: string
   ): Promise<IEndorsementTransaction> {
     try {
-      const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
-
       const { name, version } = requestSchemaPayload;
+      const alreadySchemaExist = await this._schemaExist(version, name);
+      this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist)}`);
+
+      if (alreadySchemaExist) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+      }
+
+      const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
       if (0 === name.length) {
         throw new BadRequestException(ResponseMessages.schema.error.nameNotEmpty);
@@ -711,7 +717,8 @@ export class EcosystemService {
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
 
-      const existSchema = schemaRequestExist?.filter(
+      const existSchema =
+        schemaRequestExist?.filter(
           (schema) => schema.status === endorsementTransactionStatus.REQUESTED ||
             schema.status === endorsementTransactionStatus.SIGNED ||
             schema.status === endorsementTransactionStatus.SUBMITED
@@ -803,6 +810,26 @@ export class EcosystemService {
     }
   }
 
+  async _schemaExist(version: string, schemaName: string): Promise<string> {
+    const pattern = { cmd: 'schema-exist' };
+    const payload = { version, schemaName };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
+    }
+  }
+
   async requestCredDeffEndorsement(
     requestCredDefPayload: RequestCredDeffEndorsement,
     orgId: string,
@@ -824,11 +851,13 @@ export class EcosystemService {
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
-   
-      const existsCredDef = credDefRequestExist?.filter(tag => tag.status === endorsementTransactionStatus.REQUESTED ||
-        tag.status === endorsementTransactionStatus.SIGNED ||
-        tag.status === endorsementTransactionStatus.SUBMITED
-      ) ?? [];
+
+      const existsCredDef =
+        credDefRequestExist?.filter(
+          (tag) => tag.status === endorsementTransactionStatus.REQUESTED ||
+            tag.status === endorsementTransactionStatus.SIGNED ||
+            tag.status === endorsementTransactionStatus.SUBMITED
+        ) ?? [];
 
       const existsCredDef = credDefRequestExist?.filter(
           (tag) => tag.status === endorsementTransactionStatus.REQUESTED ||
@@ -884,7 +913,7 @@ export class EcosystemService {
         // To return selective response
         await this.removeEndorsementTransactionFields(storeTransaction);
 
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
         return storeTransaction;
       } else {
         const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberDetails.orgAgentTypeId);

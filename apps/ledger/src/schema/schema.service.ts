@@ -11,7 +11,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { schema } from '@prisma/client';
-import { ISchema, ISchemaCredDeffSearchInterface, ISchemaPayload, ISchemaSearchCriteria } from './interfaces/schema-payload.interface';
+import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
@@ -483,5 +483,29 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async schemaExist(payload: ISchemaExist): Promise<{
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    name: string;
+    version: string;
+    attributes: string;
+    schemaLedgerId: string;
+    publisherDid: string;
+    issuerId: string;
+    orgId: string;
+    ledgerId: string;
+  }> {
+    try {
+      const schemaExist = await this.schemaRepository.schemaExist(payload);
+      return schemaExist;
+    
+    } catch (error) {
+      this.logger.error(`Error in schema exist: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 
 }

@@ -495,7 +495,7 @@ export class SchemaService extends BaseService {
     issuerId: string;
     orgId: string;
     ledgerId: string;
-  }> {
+  }[]> {
     try {
       const schemaExist = await this.schemaRepository.schemaExist(payload);
       return schemaExist;

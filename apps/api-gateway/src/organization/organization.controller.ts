@@ -389,6 +389,28 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  @Post('/resiter-org-map-users')
+  @ApiOperation({
+    summary: 'Register client and map users',
+    description: 'Register client and map users'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async registerOrgsMapUsers(@User() user: user, @Res() res: Response): Promise<Response> {
+
+    await this.organizationService.registerOrgsMapUsers(user.id);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: 'Organization client created and users mapped to client'
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+
+  }
+
   @Post('/:orgId/invitations')
   @ApiOperation({
     summary: 'Create organization invitation',

@@ -293,7 +293,7 @@ export class ConnectionService {
     }
   }
 
-  async getQuestionAnswersRecord(tenantId: string, orgId: string): Promise<object> {
+  async getQuestionAnswersRecord(orgId: string): Promise<object> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
@@ -403,7 +403,7 @@ export class ConnectionService {
     label: string,
     orgAgentType: string,
     agentEndPoint: string,
-    tenantId: string,
+    tenantId?: string,
     connectionId?: string
   ): Promise<string> {
     try {

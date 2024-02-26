@@ -2,7 +2,7 @@
 import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
-import { ISchema, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
+import { ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
 import { SortValue } from '@credebl/enum/enum';
@@ -12,23 +12,18 @@ import { ICredDefWithCount } from '@credebl/common/interfaces/schema.interface';
 export class SchemaRepository {
   private readonly logger = new Logger('SchemaRepository');
 
-  constructor(
-    private prisma: PrismaService
-  ) { }
+  constructor(private prisma: PrismaService) {}
   async saveSchema(schemaResult: ISchema): Promise<schema> {
     try {
       if (schemaResult.schema.schemaName) {
-        const schema = await this.schemaExists(
-          schemaResult.schema.schemaName,
-          schemaResult.schema.schemaVersion
-        );
+        const schema = await this.schemaExists(schemaResult.schema.schemaName, schemaResult.schema.schemaVersion);
 
         const schemaLength = 0;
-        if (schema.length !== schemaLength) {        
-          throw new ConflictException(
-            ResponseMessages.schema.error.exists,
-            { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
-          );
+        if (schema.length !== schemaLength) {
+          throw new ConflictException(ResponseMessages.schema.error.exists, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.conflict
+          });
         }
         const saveResult = await this.prisma.schema.create({
           data: {
@@ -96,7 +91,7 @@ export class SchemaRepository {
           issuerId: true
         },
         orderBy: {
-          [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc' 
+          [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc'
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
@@ -111,11 +106,10 @@ export class SchemaRepository {
       return { schemasCount, schemasResult };
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
-      throw new InternalServerErrorException(
-        ResponseMessages.schema.error.failedFetchSchema,
-        { cause: new Error(), description: error.message }
-      );
-
+      throw new InternalServerErrorException(ResponseMessages.schema.error.failedFetchSchema, {
+        cause: new Error(),
+        description: error.message
+      });
     }
   }
 
@@ -138,11 +132,13 @@ export class SchemaRepository {
     }
   }
 
-  async getAgentType(orgId: string): Promise<organisation & {
-    org_agents: (org_agents & {
-      org_agent_type: org_agents_type;
-    })[];
-  }> {
+  async getAgentType(orgId: string): Promise<
+    organisation & {
+      org_agents: (org_agents & {
+        org_agent_type: org_agents_type;
+      })[];
+    }
+  > {
     try {
       const agentDetails = await this.prisma.organisation.findUnique({
         where: {
@@ -164,16 +160,12 @@ export class SchemaRepository {
   }
 
   async getSchemasCredDeffList(payload: ISchemaSearchCriteria): Promise<ICredDefWithCount> {
+    const { orgId, schemaId } = payload;
 
-    const {orgId, schemaId} = payload;
-    
     try {
       const credDefResult = await this.prisma.credential_definition.findMany({
         where: {
-          AND: [
-            { orgId },
-            { schemaLedgerId: schemaId }
-          ]
+          AND: [{ orgId }, { schemaLedgerId: schemaId }]
         },
         select: {
           tag: true,
@@ -190,10 +182,7 @@ export class SchemaRepository {
       });
       const credDefCount = await this.prisma.credential_definition.count({
         where: {
-          AND: [
-            { orgId },
-            { schemaLedgerId: schemaId }
-          ]
+          AND: [{ orgId }, { schemaLedgerId: schemaId }]
         }
       });
       return { credDefResult, credDefCount };
@@ -202,7 +191,7 @@ export class SchemaRepository {
       throw error;
     }
   }
- 
+
   async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<{
     schemasCount: number;
     schemasResult: {
@@ -216,7 +205,7 @@ export class SchemaRepository {
       issuerId: string;
       orgId: string;
     }[];
-  }> { 
+  }> {
     try {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
@@ -240,7 +229,7 @@ export class SchemaRepository {
           issuerId: true
         },
         orderBy: {
-          [payload.sortField]: 'desc' === payload.sortBy ? 'desc' : 'asc' 
+          [payload.sortField]: 'desc' === payload.sortBy ? 'desc' : 'asc'
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
@@ -265,7 +254,6 @@ export class SchemaRepository {
           schemaLedgerId: schemaId
         }
       });
-
     } catch (error) {
       this.logger.error(`Error in getting get schema by schema ledger id: ${error}`);
       throw error;
@@ -274,7 +262,6 @@ export class SchemaRepository {
 
   async getOrgAgentType(orgAgentId: string): Promise<string> {
     try {
-
       const { agent } = await this.prisma.org_agents_type.findFirst({
         where: {
           id: orgAgentId
@@ -295,9 +282,36 @@ export class SchemaRepository {
           indyNamespace: LedgerName
         }
       });
-
     } catch (error) {
       this.logger.error(`Error in getting get schema by schema ledger id: ${error}`);
+      throw error;
+    }
+  }
+
+  async schemaExist(payload: ISchemaExist): Promise<{
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    name: string;
+    version: string;
+    attributes: string;
+    schemaLedgerId: string;
+    publisherDid: string;
+    issuerId: string;
+    orgId: string;
+    ledgerId: string;
+  }> {
+    try {
+      return this.prisma.schema.findFirstOrThrow({
+        where: {
+          name: payload.schemaName,
+          version: payload.version
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getting get schema by name and version: ${error}`);
       throw error;
     }
   }

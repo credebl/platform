@@ -118,6 +118,11 @@ export class OrganizationController {
     return this.organizationService.getOrgRoles(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'register-orgs-users-map' })
+  async registerOrgsMapUsers(): Promise<string> {
+    return this.organizationService.registerOrgsMapUsers();
+  }
+
   /**
    * Description: create new organization invitation
    * @param payload invitation Details

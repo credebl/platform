@@ -60,7 +60,8 @@ export class UtilitiesService {
             return url;
             // return 'success';
         } catch (error) {
-            throw new Error('An error occurred while uploading data to S3.');
+            Logger.error(error);
+            throw new Error('An error occurred while uploading data to S3. Error::::::');
         }
     }
 }

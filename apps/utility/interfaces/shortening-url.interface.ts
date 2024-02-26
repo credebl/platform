@@ -18,28 +18,25 @@ export interface IUtilities {
 }
 // export type StoreObjectDto = InvitationDto;
 
-interface ServiceDto {
-  id: string;
-  serviceEndpoint: string;
-  type: string;
-  recipientKeys: string[];
-  routingKeys: string[];
-  accept: string[];
-}
+// interface IService {
+//   id: string;
+//   serviceEndpoint: string;
+//   type: string;
+//   recipientKeys: string[];
+//   routingKeys: string[];
+//   accept: string[];
+// }
 
-export interface IInvitation {
-  '@id': string;
+export interface ILegacyInvitation {
   '@type': string;
+  '@id': string;
   label: string;
-  goalCode: string;
-  goal: string;
-  accept: string[];
-  // eslint-disable-next-line camelcase
-  handshake_protocols: string[];
-  services: ServiceDto[];
   imageUrl?: string;
+  recipientKeys: string[];
+  serviceEndpoint: string;
+  routingKeys: string[]
 }
 
 export interface IStoreObject {
-  data: IInvitation;
+  data: ILegacyInvitation;
 }

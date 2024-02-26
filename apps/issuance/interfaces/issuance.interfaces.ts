@@ -228,33 +228,3 @@ export interface OrgAgent {
   orgAgentTypeId: string;
   tenantId: string;
 }
-
-interface IData{
-  'base64': string
-}
-
-interface IRequestAttach{
-  '@id': string,
-  'mime-type': string,
-  data: IData;
-}
-
-interface IService {
-  id: string;
-  serviceEndpoint: string;
-  type: string;
-  recipientKeys: string[];
-  routingKeys: string[];
-  accept: string[];
-}
-
-// This is the Interface for response of out of band issuance
-export interface IOobIssuanceInvitation {
-  '@type': string;
-  '@id': string;
-  label: string;
-  accept: string[];
-  handshake_protocols: string[];
-  services: IService[];
-  'requests~attach': IRequestAttach[]
-}

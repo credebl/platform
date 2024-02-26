@@ -222,4 +222,20 @@ export class AgentServiceController {
   }): Promise<string> {
     return this.agentServiceService.receiveInvitation(payload.receiveInvitation, payload.url, payload.apiKey);
   }
+
+  @MessagePattern({ cmd: 'agent-send-question' })
+  async sendQuestion(payload: {
+    url,
+    apiKey,
+    questionPayload
+  }): Promise<object> {
+    
+    return this.agentServiceService.sendQuestion(payload.questionPayload, payload.url, payload.apiKey);
+  }
+
+  @MessagePattern({ cmd: 'agent-get-question-answer-record' })
+  async getQuestionAnswersRecord(payload: { url: string, apiKey: string }): Promise<object> {
+    return this.agentServiceService.getQuestionAnswersRecord(payload.url, payload.apiKey);
+  }
+
 }

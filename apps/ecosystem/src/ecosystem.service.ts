@@ -681,9 +681,9 @@ export class EcosystemService {
     try {
       const { name, version } = requestSchemaPayload;
       const alreadySchemaExist = await this._schemaExist(version, name);
-      this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist.length)}`);
+      this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist)}`);
 
-      if (0 !== alreadySchemaExist.length) {
+      if (alreadySchemaExist) {
         throw new BadRequestException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
       }
 
@@ -854,12 +854,6 @@ export class EcosystemService {
 
       const existsCredDef =
         credDefRequestExist?.filter(
-          (tag) => tag.status === endorsementTransactionStatus.REQUESTED ||
-            tag.status === endorsementTransactionStatus.SIGNED ||
-            tag.status === endorsementTransactionStatus.SUBMITED
-        ) ?? [];
-
-      const existsCredDef = credDefRequestExist?.filter(
           (tag) => tag.status === endorsementTransactionStatus.REQUESTED ||
             tag.status === endorsementTransactionStatus.SIGNED ||
             tag.status === endorsementTransactionStatus.SUBMITED

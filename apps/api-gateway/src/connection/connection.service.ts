@@ -88,10 +88,11 @@ export class ConnectionService extends BaseService {
 
 
   getQuestionAnswersRecord(
+    tenantId: string,
     orgId: string
   ): Promise<object> {
-    
-    return this.sendNatsMessage(this.connectionServiceProxy, 'get-question-answer-record', orgId);
+    const payload = {  tenantId, orgId };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'get-question-answer-record', payload);
   }
 
   receiveInvitationUrl(

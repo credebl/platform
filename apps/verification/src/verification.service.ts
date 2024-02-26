@@ -344,10 +344,7 @@ export class VerificationService {
       ]);
 
       const imageUrl = getOrganization?.logoUrl;
-      const label = getOrganization?.name;
-
       outOfBandRequestProof['imageUrl'] = imageUrl;
-      outOfBandRequestProof['label'] = label;
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
@@ -559,10 +556,11 @@ export class VerificationService {
     try {
       let requestedAttributes = {}; 
       const requestedPredicates = {};
-      const { attributes } = proofRequestpayload;
+      const {attributes} = proofRequestpayload;
       if (attributes) {
-        requestedAttributes = Object.fromEntries(attributes.map((attribute, index) => {
-          const attributeElement = attribute.attributeName || attribute.attributeNames;
+        requestedAttributes = Object.fromEntries(proofRequestpayload.attributes.map((attribute, index) => {
+  
+          const attributeElement = attribute.attributeName;
           const attributeReferent = `additionalProp${index + 1}`;
           const attributeKey = attribute.attributeName ? 'name' : 'names';
           

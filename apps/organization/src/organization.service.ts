@@ -1235,6 +1235,18 @@ export class OrganizationService {
     }
   }
 
+  async registerOrgsMapUsers(): Promise<string> {
+
+    try {
+     
+      return '';
+    } catch (error) {
+      this.logger.error(`Error in registerOrgsMapUsers: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+
+    }
+  }
+
   async deleteOrganizationInvitation(orgId: string, invitationId: string): Promise<boolean> {
     try {      
       const invitationDetails = await this.organizationRepository.getInvitationById(invitationId);

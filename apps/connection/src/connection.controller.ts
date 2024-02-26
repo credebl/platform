@@ -12,7 +12,7 @@ import {
 } from './interfaces/connection.interfaces';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IQuestionAnswerPayload, IQuestionPayload } from './interfaces/question-answer.interfaces';
+import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 
 @Controller()
 export class ConnectionController {
@@ -84,8 +84,7 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'get-question-answer-record' })
-  async getQuestionAnswersRecord(payload: IQuestionAnswerPayload): Promise<object> {
-    const { orgId } = payload;
+  async getQuestionAnswersRecord(orgId: string): Promise<object> {
     return this.connectionService.getQuestionAnswersRecord(orgId);
   }
 }

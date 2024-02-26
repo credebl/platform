@@ -684,7 +684,7 @@ export class EcosystemService {
       this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist.length)}`);
 
       if (0 !== alreadySchemaExist.length) {
-        throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+        throw new BadRequestException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
       }
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);

@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UtilitiesService } from './utilities.service';
 import { IShorteningUrlData, IStoreObject } from '../interfaces/shortening-url.interface';
@@ -19,11 +19,13 @@ export class UtilitiesController {
 
   @MessagePattern({ cmd: 'store-object-return-url' })
   async storeObject(payload: {persistent: boolean, storeObj: IStoreObject}): Promise<string> {
-    // eslint-disable-next-line no-console
-    console.log('Reached in Utility microservice controller. The object to store is::::::: ', JSON.stringify(payload.storeObj));
+    try {
     const url:string = await this.utilitiesService.storeObject(payload);
-    // eslint-disable-next-line no-console
-    console.log('Received `url` in Utility microservice controller:::::::', url);
-  return url;
+    return url;
+    } catch (error) {
+      Logger.error(error);
+      throw new Error('Error occured in Utility Microservices Controller');
+    }
+    
   }
 }

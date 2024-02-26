@@ -98,6 +98,7 @@ export interface ISendProofRequestPayload {
     goalCode?: string;
     parentThreadId?: string;
     willConfirm?: boolean;
+    imageUrl?: string;
 }
 
 export interface IProofRequestPayload {

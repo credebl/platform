@@ -72,6 +72,12 @@ class CredentialsIssuanceDto {
 
     @ApiPropertyOptional()
     @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    @IsString({ message: 'imageUrl must be a string' })
+    imageUrl?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsEnum(AutoAccept, {
@@ -240,6 +246,8 @@ export class OOBCredentialDtoWithEmail {
     @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
 
+    imageUrl?: string;
+    
     orgId: string;
 }
 

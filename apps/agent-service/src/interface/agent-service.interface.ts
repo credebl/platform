@@ -42,6 +42,18 @@ export interface ITenantDto {
     clientSocketId?: string;
 }
 
+export interface DidCreate {
+    keyType: KeyType
+    seed: string
+    domain?: string
+    method: string
+    network?: string
+    did?: string
+    role?: string
+    endorserDid?: string
+    didDocument?: object
+  }
+
 export interface ITenantSchema {
     tenantId?: string;
     attributes: string[];

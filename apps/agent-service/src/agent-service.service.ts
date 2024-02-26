@@ -468,7 +468,8 @@ export class AgentServiceService {
     const writeDid = 'write-did';
     const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(ledgerId);
     const agentDidWriteUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);
+    // return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);
+    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, did);
   }
 
   private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {
@@ -515,6 +516,7 @@ export class AgentServiceService {
   }
 
   async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {
+  // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, did?: string): Promise<object> {
     const retryOptions = {
       retries: 10
     };
@@ -522,7 +524,8 @@ export class AgentServiceService {
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
-          return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });
+          // return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });
+          return this.commonService.httpPost(agentUrl, { seed, did }, { headers: { 'authorization': apiKey } });
         } else if (agentApiState === 'get-did-doc') {
           return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
         }
@@ -771,10 +774,21 @@ export class AgentServiceService {
     const createTenantOptions = {
       config: { label },
       seed,
-      did: did ? did : undefined,
-      method: ledgerIds.indyNamespace
+      did: did ? did : undefined
+      // method: ledgerIds.indyNamespace
     };
 
+    // const createDidOptions = {
+    //     keyType: "ed25519",
+    //     seed,
+    //     domain,
+    //     method,
+    //     network,
+    //     did,
+    //     role,
+    //     endorserDid,
+    //     didDocument: {}      
+    // };
 
     // Invoke an API request from the agent to create multi-tenant agent
     const tenantDetails = await this.commonService.httpPost(
@@ -782,6 +796,14 @@ export class AgentServiceService {
       createTenantOptions,
       { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
     );
+
+    // if (tenantDetails) {
+    //   await this.commonService.httpPost(
+    //     `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}`,
+    //     createTenantOptions,
+    //     { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
+    //   );
+    // }
 
     return tenantDetails;
   }

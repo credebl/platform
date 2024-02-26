@@ -290,7 +290,7 @@ export class ConnectionService {
     }
   }
 
-  async getQuestionAnswersRecord(orgId: string): Promise<object> {
+  async getQuestionAnswersRecord(tenantId: string, orgId: string): Promise<object> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
@@ -324,6 +324,11 @@ export class ConnectionService {
       }
     }
   }
+
+  async _getConnectionsByConnectionId(
+    url: string,
+    apiKey: string
+  ): Promise<IConnectionDetailsById> {
 
   async _getConnectionsByConnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
     //nats call in agent service for fetch connection details
@@ -370,6 +375,28 @@ export class ConnectionService {
       });
   }
 
+  async _getQuestionAnswersRecord(
+    url: string,
+    apiKey: string
+  ): Promise<object> {
+
+    const pattern = { cmd: 'agent-get-question-answer-record' };
+    const payload = { url, apiKey };
+    return this.connectionServiceProxy
+      .send<IConnectionDetailsById>(pattern, payload)
+      .toPromise()
+      .catch(error => {
+        this.logger.error(
+          `[_getQuestionAnswersRecord] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
+        );
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error?.message?.error ? error.error?.message?.error : error.error,
+            message: error.message
+          }, error.error);
+      });
+  }
 
   /**
    * Description: Fetch agent url
@@ -397,7 +424,7 @@ export class ConnectionService {
     label: string,
     orgAgentType: string,
     agentEndPoint: string,
-    tenantId?: string,
+    tenantId: string,
     connectionId?: string
   ): Promise<string> {
     try {
@@ -595,6 +622,77 @@ export class ConnectionService {
           error.error
         );
       });
+  }
+
+  async _sendQuestion(
+    questionPayload: IQuestionPayload,
+    url: string,
+    apiKey: string
+  ): Promise<object> {
+
+    const pattern = { cmd: 'agent-send-question' };
+    const payload = { questionPayload, url, apiKey };
+
+    return this.connectionServiceProxy
+      .send<object>(pattern, payload)
+      .toPromise()
+      .catch(error => {
+        this.logger.error(
+          `[_sendQuestion] [NATS call]- error in send question : ${JSON.stringify(error)}`
+        );
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error?.message?.error ? error.error?.message?.error : error.error,
+            message: error.message
+          }, error.error);
+      });
+
+    
+  }
+
+  async sendQuestion(payload: IQuestionPayload): Promise<object> {
+
+    const { detail, validResponses, question, orgId, connectionId} = payload;
+    try {
+
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+
+      const { agentEndPoint} = agentDetails;
+     
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
+      }
+
+      const questionPayload = {
+        detail,
+        validResponses,
+        question
+      };
+
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const label = 'send-question';
+      const url = await this.getQuestionAnswerAgentUrl(label, orgAgentType, agentEndPoint, agentDetails?.tenantId, connectionId);
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const createQuestion = await this._sendQuestion(questionPayload, url, apiKey);
+      return createQuestion;
+     
+    } catch (error) {
+      this.logger.error(`[sendQuestion] - error in sending question: ${error}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
   }
 
   async _sendQuestion(

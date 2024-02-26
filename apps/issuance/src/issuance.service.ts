@@ -110,8 +110,10 @@ export class IssuanceService {
         connectionId,
         credentialFormats: {
           indy: {
-            attributes,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
             credentialDefinitionId
+            
           }
         },
         autoAcceptCredential: payload.autoAcceptCredential || 'always',
@@ -198,7 +200,8 @@ export class IssuanceService {
         protocolVersion: protocolVersion || 'v1',
         credentialFormats: {
           indy: {
-            attributes,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
             credentialDefinitionId
           }
         },
@@ -449,7 +452,6 @@ const credefError = [];
                     `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
                   );
                 }
-                //
                 
               });
             });
@@ -490,7 +492,8 @@ const credefError = [];
             protocolVersion: protocolVersion || 'v1',
             credentialFormats: {
               indy: {
-                attributes: iterator.attributes || attributes,
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                attributes: (iterator.attributes || attributes).map(({ isRequired, ...rest }) => rest),
                 credentialDefinitionId
               }
             },

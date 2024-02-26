@@ -292,7 +292,7 @@ export class ConnectionService {
     }
   }
 
-  async getQuestionAnswersRecord(tenantId: string, orgId: string): Promise<object> {
+  async getQuestionAnswersRecord(orgId: string): Promise<object> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);

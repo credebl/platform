@@ -19,7 +19,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation, IQuestionPayload } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
@@ -1305,5 +1305,34 @@ export class AgentServiceService {
       throw error;
     }
   }  
+
+  async sendQuestion(questionPayload: IQuestionPayload, url: string, apiKey: string): Promise<object> {
+    try {
+      const sendQuestionRes = await this.commonService
+        .httpPost(url, questionPayload, { headers: { 'authorization': apiKey } })
+        .then(async response => response);
+      return sendQuestionRes;
+    } catch (error) {
+      this.logger.error(`Error in send question in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getQuestionAnswersRecord(url: string, apiKey: string): Promise<object> {
+
+    try {
+      const data = await this.commonService
+        .httpGet(url, { headers: { 'authorization': apiKey } })
+        .then(async response => response)
+        .catch(error => this.handleAgentSpinupStatusErrors(error));
+
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in getQuestionAnswersRecord in agent service : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+
+  }
+
 }
 

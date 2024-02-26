@@ -9,8 +9,3 @@ export interface IValidResponses {
     connectionId?: string;
     tenantId?: string;
   }
-
-  export interface IQuestionAnswerPayload {
-    tenantId: string;
-    orgId: string;
-  }

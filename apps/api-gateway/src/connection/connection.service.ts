@@ -6,11 +6,22 @@ import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvita
 import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
+import { QuestionDto } from './dtos/question-answer.dto';
 
 @Injectable()
 export class ConnectionService extends BaseService {
   constructor(@Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy) {
     super('ConnectionService');
+  }
+
+  sendQuestion(
+    questionDto: QuestionDto
+  ): Promise<object> {
+    try {
+      return this.sendNatsMessage(this.connectionServiceProxy, 'send-question', questionDto);
+    } catch (error) {
+      throw new RpcException(error.response);
+    }
   }
 
   createLegacyConnectionInvitation(
@@ -73,6 +84,15 @@ export class ConnectionService extends BaseService {
   ): Promise<IConnectionDetailsById> {
     const payload = { user, connectionId, orgId };
     return this.sendNatsMessage(this.connectionServiceProxy, 'get-connection-details-by-connectionId', payload);
+  }
+
+
+  getQuestionAnswersRecord(
+    tenantId: string,
+    orgId: string
+  ): Promise<object> {
+    const payload = {  tenantId, orgId };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'get-question-answer-record', payload);
   }
 
   receiveInvitationUrl(

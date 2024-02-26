@@ -178,7 +178,8 @@ export class IssuanceService {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
 
-      const { agentEndPoint } = agentDetails;
+      const { agentEndPoint, organisation } = agentDetails;
+
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
@@ -208,7 +209,9 @@ export class IssuanceService {
         goalCode: payload.goalCode || undefined,
         parentThreadId: payload.parentThreadId || undefined,
         willConfirm: payload.willConfirm || undefined,
-        label: payload.label || undefined
+        imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
+        label: organisation?.name,
+        comment: comment || ''
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
 
@@ -457,9 +460,10 @@ const credefError = [];
               throw new BadRequestException(credefError);
             }
         }
-
-       
+      
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+
+      const { organisation } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
@@ -500,7 +504,8 @@ const credefError = [];
             goalCode: outOfBandCredential.goalCode || undefined,
             parentThreadId: outOfBandCredential.parentThreadId || undefined,
             willConfirm: outOfBandCredential.willConfirm || undefined,
-            label: outOfBandCredential.label || undefined
+            label: organisation?.name,
+            imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
           };
 
           this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
@@ -1091,13 +1096,19 @@ const credefError = [];
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
     fileUploadData.jobId = jobDetails.id;
+    const {orgId} = jobDetails;
 
+    const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+    // eslint-disable-next-line camelcase
+
+    const { organisation } = agentDetails;
     let isErrorOccurred = false;
     try {
 
       const oobIssuancepayload = {
         credentialDefinitionId: jobDetails.credentialDefinitionId,
         orgId: jobDetails.orgId,
+        label: organisation?.name,
         attributes: [],
         emailId: jobDetails.data.email
       };

@@ -388,12 +388,6 @@ export class OOBCredentialDtoWithEmail {
     @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
 
-    @ApiProperty({ example: 'jsonld' })
-    @IsNotEmpty({ message: 'Please provide credential type ' })
-    @Transform(({ value }) => trim(value).toLocaleLowerCase())
-    @IsOptional()
-    credentialType:IssueCredentialType;
-
     imageUrl?: string;
     
     orgId: string;

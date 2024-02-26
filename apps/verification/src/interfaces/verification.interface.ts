@@ -100,7 +100,6 @@ export interface ISendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
-    isShortenUrl?: boolean;
 }
 
 export interface IProofRequestPayload {

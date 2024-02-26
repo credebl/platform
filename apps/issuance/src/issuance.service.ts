@@ -529,8 +529,7 @@ const credefError = [];
               throw new BadRequestException(credefError);
             }
         }
-
-       
+      
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { organisation } = agentDetails;
@@ -574,7 +573,8 @@ const credefError = [];
             goalCode: outOfBandCredential.goalCode || undefined,
             parentThreadId: outOfBandCredential.parentThreadId || undefined,
             willConfirm: outOfBandCredential.willConfirm || undefined,
-            label: outOfBandCredential.label || undefined
+            label: organisation?.name,
+            imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
           };
 
           this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
@@ -1162,7 +1162,7 @@ const credefError = [];
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
     fileUploadData.jobId = jobDetails.id;
-    const { orgId } = jobDetails;
+    const {orgId} = jobDetails;
 
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
     // eslint-disable-next-line camelcase

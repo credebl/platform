@@ -9,6 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GetAllSchemaList } from '../interfaces/endorsements.interface';
+import { SortValue } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -160,7 +161,7 @@ export class EcosystemRepository {
           }
         })
       ]);
-  
+
       return {
         ecosystemDetails,
         totalCount: ecosystemCount
@@ -170,7 +171,7 @@ export class EcosystemRepository {
       throw error;
     }
   }
-  
+
 
   /**
    * 
@@ -486,62 +487,67 @@ export class EcosystemRepository {
    * @returns users list
    */
 
-async findEcosystemMembers(
-  ecosystemId: string,
-  pageNumber: number,
-  pageSize: number,
-  search: string,
-  sortBy: string
-): Promise<object> {
-  try {
-    const result = await this.prisma.$transaction([
-      this.prisma.ecosystem_orgs.findMany({
-        where: {
-          ecosystemId,
-          OR: [
-            {
-              organisation: {
-                name: { contains: search, mode: 'insensitive' },
-                // eslint-disable-next-line camelcase
-                org_agents: {
-                  some: {
-                    orgDid: { contains: search, mode: 'insensitive' }
+  async findEcosystemMembers(
+    ecosystemId: string,
+    pageNumber: number,
+    pageSize: number,
+    search: string,
+    sortBy: string,
+    sortField: string
+  ): Promise<object> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.ecosystem_orgs.findMany({
+          where: {
+            ecosystemId,
+            OR: [
+              {
+                organisation: {
+                  name: { contains: search, mode: 'insensitive' }
+                }
+              },
+              {
+                organisation: {
+                  // eslint-disable-next-line camelcase
+                  org_agents: {
+                    some: {
+                      orgDid: { contains: search, mode: 'insensitive' }
+                    }
                   }
                 }
               }
+            ]
+          },
+          include: {
+            ecosystem: true,
+            ecosystemRole: true,
+            organisation: {
+              select: {
+                name: true,
+                orgSlug: true,
+                // eslint-disable-next-line camelcase
+                org_agents: true
+              }
             }
-          ]
-        },
-        include: {
-          ecosystem: true,
-          ecosystemRole: true,
-          organisation: {
-            select: {
-              name: true,
-              orgSlug: true,
-              // eslint-disable-next-line camelcase
-              org_agents: true
-            }
+          },
+          take: Number(pageSize),
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            [sortField]: SortValue.ASC === sortBy ? 'asc' : 'desc'
           }
-        },
-        take: Number(pageSize),
-        skip: (pageNumber - 1) * pageSize,
-        orderBy: {
-          createDateTime: 'asc' === sortBy ? 'asc' : 'desc'
-        }
-      }),
-      this.prisma.ecosystem_orgs.count({
-        where: {
-          ecosystemId
-        }
-      })
-    ]);
-    return result;
-  } catch (error) {
-    this.logger.error(`error: ${JSON.stringify(error)}`);
-    throw error;
+        }),
+        this.prisma.ecosystem_orgs.count({
+          where: {
+            ecosystemId
+          }
+        })
+      ]);
+      return result;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
   }
-}
 
   async getEcosystemInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IEcosystemInvitation> {
     try {
@@ -590,18 +596,18 @@ async findEcosystemMembers(
   async fetchEcosystemOrg(
     payload: object
   ): Promise<object> {
-
+      
     return this.prisma.ecosystem_orgs.findFirst({
-      where: {
-        ...payload
-      },
-      select: {
-        ecosystem: true,
-        ecosystemRole: true,
-        organisation: true
-      }
-    });
-
+        where: {
+          ...payload
+        },
+        select: {
+          ecosystem: true,
+          ecosystemRole: true,
+          organisation: true
+        }
+      });
+      
   }
 
 
@@ -833,7 +839,7 @@ async findEcosystemMembers(
     schemaTransactionResponse: SchemaTransactionResponse,
     requestBody: object,
     type: endorsementTransactionType
-  // eslint-disable-next-line camelcase
+    // eslint-disable-next-line camelcase
   ): Promise<endorsement_transaction> {
     try {
       const { endorserDid, authorDid, requestPayload, status, ecosystemOrgId, userId } = schemaTransactionResponse;

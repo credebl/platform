@@ -5,9 +5,9 @@ import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-se
 
 export interface IAttributes {
   attributeName: string;
-  isRequired: boolean;
   name: string;
   value: string;
+  isRequired?: boolean;
 }
 export interface IIssuance {
   user?: IUserRequest;

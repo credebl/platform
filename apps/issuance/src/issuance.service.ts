@@ -111,7 +111,7 @@ export class IssuanceService {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             attributes: (attributes).map(({ isRequired, ...rest }) => rest),
             credentialDefinitionId
-
+            
           }
         },
         autoAcceptCredential: autoAcceptCredential || 'always',
@@ -522,7 +522,6 @@ const credefError = [];
                     `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
                   );
                 }
-                //
                 
               });
             });
@@ -561,45 +560,22 @@ const credefError = [];
       const sendEmailForCredentialOffer = async (iterator, emailId, index): Promise<boolean> => {
         const iterationNo = index + 1;
         try {
-          if (IssueCredentialType.INDY === credentialType) {
-          
-            outOfBandIssuancePayload = {
-              protocolVersion: protocolVersion || 'v1',
-              credentialFormats: {
-                indy: {
-                  attributes: iterator.attributes || attributes,
-                  credentialDefinitionId
-                }
-              },
-              autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
-              comment,
-              goalCode: outOfBandCredential.goalCode || undefined,
-              parentThreadId: outOfBandCredential.parentThreadId || undefined,
-              willConfirm: outOfBandCredential.willConfirm || undefined,
-              label: outOfBandCredential.label || undefined,
-              imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
-            };
-          }
-
-          if (IssueCredentialType.JSONLD === credentialType) {
-            outOfBandIssuancePayload = {
-              protocolVersion:'v2',
-              credentialFormats: {
-                jsonld: {
-                  credential: iterator.credential,
-                  options: iterator.options
-                }
-              },
-              autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
-              comment,
-              goalCode: outOfBandCredential.goalCode || undefined,
-              parentThreadId: outOfBandCredential.parentThreadId || undefined,
-              willConfirm: outOfBandCredential.willConfirm || undefined,
-              label: outOfBandCredential.label || undefined,
-              imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
-            };
-          }
-          
+          const outOfBandIssuancePayload = {
+            protocolVersion: protocolVersion || 'v1',
+            credentialFormats: {
+              indy: {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                attributes: (iterator.attributes || attributes).map(({ isRequired, ...rest }) => rest),
+                credentialDefinitionId
+              }
+            },
+            autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+            comment,
+            goalCode: outOfBandCredential.goalCode || undefined,
+            parentThreadId: outOfBandCredential.parentThreadId || undefined,
+            willConfirm: outOfBandCredential.willConfirm || undefined,
+            label: outOfBandCredential.label || undefined
+          };
 
           this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
 

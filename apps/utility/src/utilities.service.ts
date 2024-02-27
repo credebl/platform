@@ -4,7 +4,11 @@ import { UtilitiesRepository } from './utilities.repository';
 import { AwsService } from '@credebl/aws';
 // import { IUtilities } from '../interfaces/shortening-url.interface';
 import { S3 } from 'aws-sdk';
-import { IStoreObject } from '../interfaces/shortening-url.interface';
+import {
+    // IStoreObject,
+    IOobIssuanceInvitation,
+    ILegacyInvitation
+   } from '../interfaces/shortening-url.interface';
 
 @Injectable()
 export class UtilitiesService {
@@ -50,12 +54,12 @@ export class UtilitiesService {
         }
     }
 
-    async storeObject(payload: {persistent: boolean, storeObj: IStoreObject}): Promise<string> {
+    async storeObject(payload: {persistent: boolean, storeObj: IOobIssuanceInvitation | ILegacyInvitation}): Promise<string> {
         try {
             // eslint-disable-next-line no-console
-            console.log('received here. StoreObj::::::', JSON.stringify(payload.storeObj.data));
+            console.log('received here. StoreObj::::::', JSON.stringify(payload.storeObj));
             const timestamp = Date.now();
-            const uploadResult:S3.ManagedUpload.SendData = await this.awsService.storeObject(payload.persistent, timestamp, payload.storeObj.data);
+            const uploadResult:S3.ManagedUpload.SendData = await this.awsService.storeObject(payload.persistent, timestamp, payload.storeObj);
             const url: string = `https://${uploadResult.Bucket}.s3.${process.env.AWS_S3_STOREOBJECT_REGION}.amazonaws.com/${uploadResult.Key}`;
             return url;
             // return 'success';

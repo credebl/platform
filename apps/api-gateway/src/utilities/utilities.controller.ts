@@ -9,7 +9,8 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { UtilitiesDto } from './dtos/shortening-url.dto';
 import { UtilitiesService } from './utilities.service';
-import { StoreObjectDto } from './dtos/store-object.dto';
+import { LegacyInvitationDto, OobIssuanceInvitationDto } from './dtos/store-object.dto';
+// import { StoreObjectDto } from './dtos/store-object.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('utilities')
@@ -40,9 +41,9 @@ export class UtilitiesController {
   @ApiOperation({ summary: 'Store an object and return a short url to it', description: 'Create a short url representing the object' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  async storeObject(@Body() storeObjectDto: StoreObjectDto, @Param('persistent') persistent: boolean, @Res() res: Response): Promise<Response> {
+  async storeObject(@Body() storeObjectDto: OobIssuanceInvitationDto | LegacyInvitationDto, @Param('persistent') persistent: boolean, @Res() res: Response): Promise<Response> {
     // eslint-disable-next-line no-console
-    console.log('Reached in api-gateway controller. The object to store is::::::: ', JSON.stringify(storeObjectDto.data));
+    console.log('Reached in api-gateway controller. The object to store is::::::: ', JSON.stringify(storeObjectDto));
     const shorteningUrl = await this.utilitiesService.storeObject(persistent.valueOf(), storeObjectDto);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

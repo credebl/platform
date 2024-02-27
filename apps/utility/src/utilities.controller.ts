@@ -1,7 +1,11 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UtilitiesService } from './utilities.service';
-import { IShorteningUrlData, IStoreObject } from '../interfaces/shortening-url.interface';
+import { IShorteningUrlData, 
+  // IStoreObject,
+  IOobIssuanceInvitation,
+  ILegacyInvitation
+ } from '../interfaces/shortening-url.interface';
 
 @Controller()
 export class UtilitiesController {
@@ -18,7 +22,7 @@ export class UtilitiesController {
   }
 
   @MessagePattern({ cmd: 'store-object-return-url' })
-  async storeObject(payload: {persistent: boolean, storeObj: IStoreObject}): Promise<string> {
+  async storeObject(payload: {persistent: boolean, storeObj: IOobIssuanceInvitation | ILegacyInvitation}): Promise<string> {
     try {
     const url:string = await this.utilitiesService.storeObject(payload);
     return url;

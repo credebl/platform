@@ -14,6 +14,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   FileUploadData,
   IssueCredentialWebhookPayload,
+  OrgAgent,
   PreviewRequest,
   SchemaDetails
 } from '../interfaces/issuance.interfaces';
@@ -34,11 +35,14 @@ export class IssuanceRepository {
    * @returns Get getAgentEndPoint details
    */
   // eslint-disable-next-line camelcase
-  async getAgentEndPoint(orgId: string): Promise<org_agents> {
+  async getAgentEndPoint(orgId: string): Promise<OrgAgent> {
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
           orgId
+        },
+        include: {
+          organisation: true
         }
       });
 

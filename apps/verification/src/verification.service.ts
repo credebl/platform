@@ -342,10 +342,13 @@ export class VerificationService {
 
       // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
 
-      const [getAgentDetails] = await Promise.all([
+      const [getAgentDetails, getOrganization] = await Promise.all([
         this.verificationRepository.getAgentEndPoint(user.orgId),
         this.verificationRepository.getOrganization(user.orgId)
       ]);
+
+      const imageUrl = getOrganization?.logoUrl;
+      outOfBandRequestProof['imageUrl'] = imageUrl;
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
@@ -514,8 +517,8 @@ export class VerificationService {
     try {
       let requestedAttributes = {};
       const requestedPredicates = {};
-      const attributeWithSchemaIdExists = proofRequestpayload.attributes;
-      if (attributeWithSchemaIdExists) {
+      const {attributes} = proofRequestpayload;
+      if (attributes) {
         requestedAttributes = Object.fromEntries(proofRequestpayload.attributes.map((attribute, index) => {
   
           const attributeElement = attribute.attributeName;
@@ -525,7 +528,13 @@ export class VerificationService {
             return [
               attributeReferent,
               {
-                name: attributeElement
+                name: attributeElement,
+                restrictions: [
+                  {
+                    cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
+                    schema_id: proofRequestpayload.attributes[index].schemaId
+                  }
+                ]
               }
             ];
           } else {
@@ -678,8 +687,6 @@ export class VerificationService {
       const extractedDataArray: IProofPresentationDetails[] = [];
 
       if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
-      
-
         for (const key in requestedAttributes) {
 
           if (requestedAttributes.hasOwnProperty(key)) {
@@ -690,10 +697,12 @@ export class VerificationService {
 
               credDefId = requestedAttributeKey?.restrictions[0]?.cred_def_id;
               schemaId = requestedAttributeKey?.restrictions[0]?.schema_id;
+
             } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
 
               credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
               schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
+
             }
 
             if (revealedAttrs.hasOwnProperty(key)) {
@@ -708,11 +717,16 @@ export class VerificationService {
         }
 
         for (const key in requestedPredicates) {
+
           if (requestedPredicates.hasOwnProperty(key)) {
             const attribute = requestedPredicates[key];
+
             const attributeName = attribute?.name;
-            const credDefId = attribute?.restrictions[0]?.cred_def_id;
-            const schemaId = attribute?.restrictions[0]?.schema_id;
+
+            if (attribute?.restrictions) {
+              credDefId = attribute?.restrictions[0]?.cred_def_id;
+              schemaId = attribute?.restrictions[0]?.schema_id;
+            }
 
             const extractedData: IProofPresentationDetails = {
               [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,
@@ -746,6 +760,7 @@ export class VerificationService {
           }
         }
       } else if (0 !== Object.keys(requestedPredicates).length) {
+
         for (const key in requestedPredicates) {
 
           if (requestedPredicates.hasOwnProperty(key)) {
@@ -753,9 +768,8 @@ export class VerificationService {
             const attributeName = attribute?.name;
         
             [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
-
             const extractedData: IProofPresentationDetails = {
-              [attributeName]: `${requestedPredicates?.p_type}${requestedPredicates?.p_value}`,
+              [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,
               'credDefId': credDefId || null,
               'schemaId': schemaId || null
             };

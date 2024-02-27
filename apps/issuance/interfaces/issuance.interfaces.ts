@@ -1,14 +1,15 @@
 // eslint-disable-next-line camelcase
 import { AutoAccept } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 
 export interface IAttributes {
   attributeName: string;
-  isRequired: boolean;
   name: string;
   value: string;
+  isRequired?: boolean;
 }
 export interface IIssuance {
   user?: IUserRequest;
@@ -153,7 +154,8 @@ export interface OutOfBandCredentialOfferPayload {
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
-  label?: string
+  label?: string,
+  imageUrl?: string,
   autoAcceptCredential?: string;
   credentialType?:IssueCredentialType;
 }
@@ -220,4 +222,21 @@ export interface IIssuedCredentialsSearchCriteria {
   sortBy: string;
   searchByText: string;
   user?: IUserRequestInterface;
+}
+
+export interface OrgAgent {
+  organisation: organisation;
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  orgDid: string;
+  verkey: string;
+  agentEndPoint: string;
+  agentId: string;
+  isDidPublic: boolean;
+  ledgerId: string;
+  orgAgentTypeId: string;
+  tenantId: string;
 }

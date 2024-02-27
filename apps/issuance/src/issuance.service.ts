@@ -110,8 +110,10 @@ export class IssuanceService {
         connectionId,
         credentialFormats: {
           indy: {
-            attributes,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
             credentialDefinitionId
+            
           }
         },
         autoAcceptCredential: payload.autoAcceptCredential || 'always',
@@ -178,7 +180,8 @@ export class IssuanceService {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // eslint-disable-next-line camelcase
 
-      const { agentEndPoint } = agentDetails;
+      const { agentEndPoint, organisation } = agentDetails;
+
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
@@ -198,7 +201,8 @@ export class IssuanceService {
         protocolVersion: protocolVersion || 'v1',
         credentialFormats: {
           indy: {
-            attributes,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
             credentialDefinitionId
           }
         },
@@ -206,7 +210,8 @@ export class IssuanceService {
         goalCode: payload.goalCode || undefined,
         parentThreadId: payload.parentThreadId || undefined,
         willConfirm: payload.willConfirm || undefined,
-        label: payload.label || undefined,
+        imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
+        label: organisation?.name,
         comment: comment || ''
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
@@ -452,7 +457,6 @@ const credefError = [];
                     `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
                   );
                 }
-                //
                 
               });
             });
@@ -461,7 +465,10 @@ const credefError = [];
             }
         }
        }  
+      
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+
+      const { organisation } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
@@ -503,7 +510,8 @@ const credefError = [];
               goalCode: outOfBandCredential.goalCode || undefined,
               parentThreadId: outOfBandCredential.parentThreadId || undefined,
               willConfirm: outOfBandCredential.willConfirm || undefined,
-              label: outOfBandCredential.label || undefined
+              label: outOfBandCredential.label || undefined,
+              imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
             };
           }
 
@@ -521,7 +529,8 @@ const credefError = [];
               goalCode: outOfBandCredential.goalCode || undefined,
               parentThreadId: outOfBandCredential.parentThreadId || undefined,
               willConfirm: outOfBandCredential.willConfirm || undefined,
-              label: outOfBandCredential.label || undefined
+              label: outOfBandCredential.label || undefined,
+              imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
             };
           }
           
@@ -1114,13 +1123,19 @@ const credefError = [];
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
     fileUploadData.jobId = jobDetails.id;
+    const {orgId} = jobDetails;
 
+    const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+    // eslint-disable-next-line camelcase
+
+    const { organisation } = agentDetails;
     let isErrorOccurred = false;
     try {
 
       const oobIssuancepayload = {
         credentialDefinitionId: jobDetails.credentialDefinitionId,
         orgId: jobDetails.orgId,
+        label: organisation?.name,
         attributes: [],
         emailId: jobDetails.data.email
       };

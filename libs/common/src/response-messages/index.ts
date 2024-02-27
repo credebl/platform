@@ -410,5 +410,5 @@ export const ResponseMessages = {
             notFound: 'Notification record not found.',
             invalidUrl: 'Invalid URL'
         }
-    },
+    }
 };

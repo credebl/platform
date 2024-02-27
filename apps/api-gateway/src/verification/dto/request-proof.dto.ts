@@ -10,7 +10,7 @@ export class ProofRequestAttribute {
 
     @ValidateIf((obj) => obj.attributeNames === undefined)
     @IsNotEmpty()
-    @IsString({each:true})
+    @IsString()
     attributeName?: string;
 
     @ValidateIf((obj) => obj.attributeName === undefined)

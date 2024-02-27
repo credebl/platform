@@ -50,7 +50,7 @@ export class CreateSchemaDto {
                 attributeName: 'name',
                 schemaDataType: 'string',
                 displayName: 'Name',
-                isRequired: 'true'
+                isRequired: true
             }
         ]
     })

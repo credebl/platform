@@ -75,3 +75,7 @@ export interface IIssuedCredentialSearchParams {
     searchByText: string;
 }
 
+export enum IssueCredentialType {
+    JSONLD = 'jsonld',
+    INDY = 'indy'
+}

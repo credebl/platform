@@ -15,7 +15,9 @@ import {
   Header,
   UploadedFile,
   UseInterceptors,
-  Logger
+  Logger,
+  BadRequestException,
+  NotFoundException
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -52,7 +54,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { FileExportResponse, IIssuedCredentialSearchParams, RequestPayload } from './interfaces';
+import { FileExportResponse, IIssuedCredentialSearchParams, IssueCredentialType, RequestPayload } from './interfaces';
 import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
@@ -539,14 +541,30 @@ export class IssuanceController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiQuery({
+    name:'credentialType',
+    enum: IssueCredentialType
+  })
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
+    @Query('credentialType') credentialType: IssueCredentialType,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
+    outOfBandCredentialDto.credentialType = credentialType;
+    const credOffer = outOfBandCredentialDto?.credentialOffer || [];
+    if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType) {
+      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
+}
+    if (outOfBandCredentialDto.credentialType === IssueCredentialType.JSONLD   && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
+    }
 
+    if (outOfBandCredentialDto.credentialType   ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
+    }
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(
       user,
       outOfBandCredentialDto

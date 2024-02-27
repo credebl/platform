@@ -2,6 +2,7 @@
 import { AutoAccept } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
+import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 
 export interface IAttributes {
   attributeName: string;
@@ -127,12 +128,22 @@ export interface ICredentialAttributesInterface {
   value: string;
 }
 
+export interface ICredential{
+  '@context':[];
+  type: string[];
+}
+export interface IOptions{
+  proofType:string;
+  proofPurpose:string;
+}
 export interface CredentialOffer {
   emailId: string;
   attributes: IAttributes[];
+  credential?:ICredential;
+  options?:IOptions
 }
 export interface OutOfBandCredentialOfferPayload {
-  credentialDefinitionId: string;
+  credentialDefinitionId?: string;
   orgId: string;
   comment?: string;
   credentialOffer?: CredentialOffer[];
@@ -144,6 +155,7 @@ export interface OutOfBandCredentialOfferPayload {
   willConfirm?: boolean,
   label?: string
   autoAcceptCredential?: string;
+  credentialType?:IssueCredentialType;
 }
 
 export interface OutOfBandCredentialOffer {

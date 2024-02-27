@@ -1,11 +1,13 @@
 
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 import { SortValue } from '../../enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { AutoAccept } from '@credebl/enum/enum';
+import { IssueCredentialType } from '../interfaces';
+
 
 class Attribute {
     @ApiProperty()
@@ -99,13 +101,74 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   attributes: Attribute[];
 }
 
+class CredentialSubject {
+ @ApiProperty()
+ @IsNotEmpty({ message: 'id is required' })  
+ @Type(() => String) 
+ id:string;
+}
+class Credential {
+    @ApiProperty()
+    @IsNotEmpty({ message: 'context  is required' })
+    '@context':[];
+
+    @ApiProperty()
+    @IsNotEmpty({ message: 'type is required' })
+    type: string[];
+
+    @ApiProperty()
+    @IsString({ message: 'id should be string' })
+    @IsNotEmpty({ message: 'id  is required' })
+    @Type(() => String)
+    @IsOptional()
+    id?:string;
+
+    @ApiProperty()
+    @IsString({ message: 'issuer  should be string' })
+    @IsNotEmpty({ message: 'issuer is required' })
+    @Type(() => String)
+    issuer:string;
+
+    @ApiProperty()
+    @IsString({ message: 'issuance date should be string' })
+    @IsNotEmpty({ message: 'issuance date is required' })
+    @Type(() => String)
+    issuanceDate:string;
+   
+    @ApiProperty()
+    @IsString({ message: 'expiration date should be string' })
+    @IsNotEmpty({ message: 'expiration date  is required' })
+    @Type(() => String)
+    @IsOptional()
+    expirationDate?:string;
+
+    @ApiProperty()
+    @IsNotEmpty({ message: ' credential subject required' })
+    @ValidateNested({ each: true })
+    @Type(() => CredentialSubject)
+    credentialSubject:CredentialSubject;
+    [key: string]: unknown;
+   
+  }
+  class Options {
+    @ApiProperty({ required: true })
+    @IsNotEmpty({ message: 'Proof type is required' })
+    @Type(() => String)
+    proofType:string;
+
+    @ApiProperty({ required: true })
+    @IsNotEmpty({ message: ' Proof purpose is required' })
+    @Type(() => String)
+    proofPurpose: string;
+  }
 class CredentialOffer {
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
     @IsNotEmpty({ message: 'Attribute name is required' })
     @IsArray({ message: 'Attributes should be an array' })
     @ValidateNested({ each: true })
     @Type(() => Attribute)
-    attributes: Attribute[];
+    @IsOptional()
+    attributes?: Attribute[];
 
     @ApiProperty({ example: 'testmail@xyz.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
@@ -115,6 +178,21 @@ class CredentialOffer {
     @Transform(({ value }) => trim(value))
     @Type(() => String)
     emailId: string;
+
+    @IsNotEmpty({ message: 'Please provide valid credential' })
+    @IsObject({ message: 'credential should be an object' })
+    @Type(() => Credential)
+    @IsOptional()
+    credential?:Credential;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid options' })
+    @IsObject({ message: 'options should be an object' })
+    @ValidateNested({ each: true })
+    @Type(() => Options)
+    options?:Options;
+
 }
 
 export class IssueCredentialDto extends OOBIssueCredentialDto {
@@ -212,7 +290,38 @@ export class CredentialAttributes {
 }
 
 export class OOBCredentialDtoWithEmail {
-    @ApiProperty({ example: [{ 'emailId': 'abc@example.com', 'attributes': [{ 'value': 'string', 'name': 'string' }] }] })
+    @ApiProperty({ example: [
+      {
+        'emailId': 'xyz@example.com',
+        'credential': {
+          '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://www.w3.org/2018/credentials/examples/v1'
+          ],
+          'type': [
+            'VerifiableCredential',
+            'UniversityDegreeCredential'
+          ],
+          'issuer': {
+            'id': 'did:key:z6MkivTqhrvieQufnHBNHmejocwooSws2zPvYqyAA6T2qeZQ'
+          },
+          'issuanceDate': '2019-10-12T07:20:50.52Z',
+          'credentialSubject': {
+            'degree': {
+              'type': 'BachelorDegree',
+              'name': 'Bachelor of Science and Arts'
+            }
+          }
+        },
+        'options': {
+          'proofType': 'Ed25519Signature2018',
+          'proofPurpose': 'assertionMethod'
+        }
+      }
+    ]
+    
+ 
+      })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })
@@ -223,8 +332,9 @@ export class OOBCredentialDtoWithEmail {
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid credential definition id' })
     @IsString({ message: 'credential definition id should be string' })
+    @IsOptional()
     @Transform(({ value }) => value.trim())
-    credentialDefinitionId: string;
+    credentialDefinitionId?: string;
 
     @ApiProperty({ example: 'string' })
     @IsOptional()
@@ -237,6 +347,13 @@ export class OOBCredentialDtoWithEmail {
     @IsNotEmpty({ message: 'Please provide valid protocol version' })
     @IsString({ message: 'protocol version should be string' })
     protocolVersion?: string;
+
+    @ApiProperty({ example: 'jsonld' })
+    @IsNotEmpty({ message: 'Please provide credential type ' })
+    // @IsEnum({ message: 'Credential type should be enum' })
+    @Transform(({ value }) => trim(value).toLocaleLowerCase())
+    @IsOptional()
+    credentialType:IssueCredentialType;
 
     orgId: string;
 }

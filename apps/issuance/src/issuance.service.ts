@@ -29,7 +29,7 @@ import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
-import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
+import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 
@@ -404,8 +404,11 @@ export class IssuanceService {
         orgId,
         protocolVersion, 
         attributes,
-        emailId
+        emailId,
+        credentialType
       } = outOfBandCredential;
+
+       if (IssueCredentialType.INDY === credentialType) {
 
         const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
           credentialDefinitionId
@@ -457,8 +460,7 @@ const credefError = [];
               throw new BadRequestException(credefError);
             }
         }
-
-       
+       }  
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -482,25 +484,47 @@ const credefError = [];
 
       const errors = [];
       const emailPromises = [];
-
+      let outOfBandIssuancePayload;
       const sendEmailForCredentialOffer = async (iterator, emailId, index): Promise<boolean> => {
         const iterationNo = index + 1;
         try {
-          const outOfBandIssuancePayload = {
-            protocolVersion: protocolVersion || 'v1',
-            credentialFormats: {
-              indy: {
-                attributes: iterator.attributes || attributes,
-                credentialDefinitionId
-              }
-            },
-            autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
-            comment,
-            goalCode: outOfBandCredential.goalCode || undefined,
-            parentThreadId: outOfBandCredential.parentThreadId || undefined,
-            willConfirm: outOfBandCredential.willConfirm || undefined,
-            label: outOfBandCredential.label || undefined
-          };
+          if (IssueCredentialType.INDY === credentialType) {
+          
+            outOfBandIssuancePayload = {
+              protocolVersion: protocolVersion || 'v1',
+              credentialFormats: {
+                indy: {
+                  attributes: iterator.attributes || attributes,
+                  credentialDefinitionId
+                }
+              },
+              autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+              comment,
+              goalCode: outOfBandCredential.goalCode || undefined,
+              parentThreadId: outOfBandCredential.parentThreadId || undefined,
+              willConfirm: outOfBandCredential.willConfirm || undefined,
+              label: outOfBandCredential.label || undefined
+            };
+          }
+
+          if (IssueCredentialType.JSONLD === credentialType) {
+            outOfBandIssuancePayload = {
+              protocolVersion:'v2',
+              credentialFormats: {
+                jsonld: {
+                  credential: iterator.credential,
+                  options: iterator.options
+                }
+              },
+              autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+              comment,
+              goalCode: outOfBandCredential.goalCode || undefined,
+              parentThreadId: outOfBandCredential.parentThreadId || undefined,
+              willConfirm: outOfBandCredential.willConfirm || undefined,
+              label: outOfBandCredential.label || undefined
+            };
+          }
+          
 
           this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
 

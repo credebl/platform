@@ -734,9 +734,6 @@ export class VerificationService {
       const extractedDataArray: IProofPresentationDetails[] = [];
 
       if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
-      
-
-      if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
         for (const key in requestedAttributes) {
 
           if (requestedAttributes.hasOwnProperty(key)) {
@@ -747,10 +744,12 @@ export class VerificationService {
 
               credDefId = requestedAttributeKey?.restrictions[0]?.cred_def_id;
               schemaId = requestedAttributeKey?.restrictions[0]?.schema_id;
+
             } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
 
               credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
               schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
+
             }
 
             if (revealedAttrs.hasOwnProperty(key)) {
@@ -808,14 +807,13 @@ export class VerificationService {
           }
         }
       } else if (0 !== Object.keys(requestedPredicates).length) {
+
         for (const key in requestedPredicates) {
 
           if (requestedPredicates.hasOwnProperty(key)) {
             const attribute = requestedPredicates[key];
             const attributeName = attribute?.name;
         
-            [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
-
             [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
             const extractedData: IProofPresentationDetails = {
               [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,

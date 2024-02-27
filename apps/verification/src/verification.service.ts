@@ -515,20 +515,21 @@ export class VerificationService {
     requestedPredicates;
   }> {
     try {
-      let requestedAttributes = {};
+      let requestedAttributes = {}; 
       const requestedPredicates = {};
       const {attributes} = proofRequestpayload;
       if (attributes) {
-        requestedAttributes = Object.fromEntries(proofRequestpayload.attributes.map((attribute, index) => {
+        requestedAttributes = Object.fromEntries(attributes.map((attribute, index) => {
   
-          const attributeElement = attribute.attributeName;
+          const attributeElement = attribute.attributeName || attribute.attributeNames;
           const attributeReferent = `additionalProp${index + 1}`;
+          const attributeKey = attribute.attributeName ? 'name' : 'names';
           if (!attribute.condition && !attribute.value) {
   
             return [
               attributeReferent,
               {
-                name: attributeElement,
+                [attributeKey]: attributeElement,
                 restrictions: [
                   {
                     cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,

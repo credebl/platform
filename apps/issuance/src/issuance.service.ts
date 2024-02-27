@@ -752,8 +752,6 @@ const credefError = [];
   async exportSchemaToCSV(credentialDefinitionId: string): Promise<object> {
     try {
       const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
-
-      // console.log(`Export CSV`);
       
       const jsonData = [];
       const attributesArray = JSON.parse(schemaResponse.attributes);

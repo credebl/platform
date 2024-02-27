@@ -67,3 +67,8 @@ export interface ISchemaCredDeffSearchInterface {
     user: IUserRequestInterface,
 }
 
+export interface ISchemaExist {
+   schemaName: string;
+   version: string;
+}
+

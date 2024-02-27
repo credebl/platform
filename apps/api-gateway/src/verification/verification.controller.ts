@@ -16,7 +16,7 @@ import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards,
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { ISendProofRequestPayload, OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
+import { SendProofRequestPayload, RequestProofDto } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -188,8 +188,7 @@ export class VerificationController {
           } else {
             throw new BadRequestException('Please provide unique attribute names');
           }           
-          
-          await this.validateAttribute(attrData);
+
         }
 
         requestProof.orgId = orgId;
@@ -247,14 +246,14 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: OutOfBandRequestProof })
+    @ApiBody({ type: SendProofRequestPayload })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async sendOutOfBandPresentationRequest(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Body() outOfBandRequestProof: ISendProofRequestPayload,
+        @Body() outOfBandRequestProof: SendProofRequestPayload,
         @Param('orgId') orgId: string
     ): Promise<Response> {
         user.orgId = orgId;
@@ -313,27 +312,4 @@ export class VerificationController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
 }
-
-    async validateAttribute(
-        attrData: object
-    ): Promise<void> {
-
-        if (!attrData['attributeName']) {
-            throw new BadRequestException('attributeName must be required');
-        } 
-
-        if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
-            throw new BadRequestException('condition cannot be empty');
-        }
-
-        if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
-            throw new BadRequestException('value cannot be empty');
-        }
-
-        if (attrData['condition']) {
-            if (isNaN(attrData['value'])) {
-                throw new BadRequestException('value must be an integer');
-            }
-        }
-    }
 }

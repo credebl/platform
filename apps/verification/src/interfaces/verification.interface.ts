@@ -65,7 +65,8 @@ interface IRequestedAttributes {
 }
 
 interface IRequestedAttributesName {
-    name: string;
+    name?: string;
+    names?: string;
     restrictions: IRequestedRestriction[]
 }
 
@@ -81,6 +82,10 @@ interface IRequestedPredicatesName {
 interface IRequestedRestriction {
     cred_def_id?: string;
     schema_id?: string;
+    schema_issuer_did?: string;
+    schema_name?: string;
+    issuer_did?: string;
+    schema_version?: string;
 }
 
 export interface ISendProofRequestPayload {
@@ -93,6 +98,7 @@ export interface ISendProofRequestPayload {
     goalCode?: string;
     parentThreadId?: string;
     willConfirm?: boolean;
+    imageUrl?: string;
 }
 
 export interface IProofRequestPayload {

@@ -348,41 +348,6 @@ export class ConnectionService {
     }
   }
 
-  async getQuestionAnswersRecord(orgId: string): Promise<object> {
-    try {
-      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const { agentEndPoint } = agentDetails;
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-      }
-
-      const label = 'get-question-answer-record';
-      const url = await this.getQuestionAnswerAgentUrl(label, orgAgentType, agentEndPoint, agentDetails?.tenantId);
-      
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const record = await this._getQuestionAnswersRecord(url, apiKey);
-      return record;
-
-
-    } catch (error) {
-      this.logger.error(`[sendQuestion] - error in get question answer record: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
-    }
-  }
-
   async _getConnectionsByConnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
     //nats call in agent service for fetch connection details
     const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
@@ -424,34 +389,10 @@ export class ConnectionService {
             status: error.statusCode,
             error: error.error?.message?.error ? error.error?.message?.error : error.error,
             message: error.message
-          },
-          error.error
-        );
-      });
-  }
-
-  async _getQuestionAnswersRecord(
-    url: string,
-    apiKey: string
-  ): Promise<object> {
-
-    const pattern = { cmd: 'agent-get-question-answer-record' };
-    const payload = { url, apiKey };
-    return this.connectionServiceProxy
-      .send<IConnectionDetailsById>(pattern, payload)
-      .toPromise()
-      .catch(error => {
-        this.logger.error(
-          `[_getQuestionAnswersRecord] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
-        );
-        throw new HttpException(
-          {
-            status: error.statusCode,
-            error: error.error?.message?.error ? error.error?.message?.error : error.error,
-            message: error.message
           }, error.error);
       });
   }
+
 
   /**
    * Description: Fetch agent url
@@ -751,7 +692,7 @@ export class ConnectionService {
   }
 
   async storeObjectAndReturnUrl(connectionInvitation, persistent: boolean): Promise<string> {
-    const utilityRequestBodyString = JSON.stringify({ data: connectionInvitation });
+    const utilityRequestBodyString = JSON.stringify(connectionInvitation);
     const storeObj = JSON.parse(utilityRequestBodyString);
 
     //nats call in agent-service to create an invitation url

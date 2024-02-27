@@ -18,14 +18,14 @@ export interface IUtilities {
 }
 // export type StoreObjectDto = InvitationDto;
 
-// interface IService {
-//   id: string;
-//   serviceEndpoint: string;
-//   type: string;
-//   recipientKeys: string[];
-//   routingKeys: string[];
-//   accept: string[];
-// }
+interface IService {
+  id: string;
+  serviceEndpoint: string;
+  type: string;
+  recipientKeys: string[];
+  routingKeys: string[];
+  accept: string[];
+}
 
 export interface ILegacyInvitation {
   '@type': string;
@@ -37,6 +37,30 @@ export interface ILegacyInvitation {
   routingKeys: string[]
 }
 
+interface IData{
+  'base64': string
+}
+
+interface IRequestAttach{
+  '@id': string,
+  'mime-type': string,
+  data: IData;
+}
+
+export interface IOobIssuanceInvitation {
+  '@type': string;
+  '@id': string;
+  label: string;
+  accept: string[];
+  handshake_protocols: string[];
+  services: IService[];
+  'requests~attach': IRequestAttach[]
+  // imageUrl?: string;
+  // recipientKeys: string[];
+  // serviceEndpoint: string;
+  // routingKeys: string[]
+}
+
 export interface IStoreObject {
-  data: ILegacyInvitation;
+  data: ILegacyInvitation | unknown;
 }

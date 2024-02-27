@@ -328,11 +328,7 @@ export class ConnectionService {
     }
   }
 
-  async _getConnectionsByConnectionId(
-    url: string,
-    apiKey: string
-  ): Promise<IConnectionDetailsById> {
-
+  async _getConnectionsByConnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
     //nats call in agent service for fetch connection details
     const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
     const payload = { url, apiKey };
@@ -376,6 +372,7 @@ export class ConnectionService {
           }, error.error);
       });
   }
+
 
   /**
    * Description: Fetch agent url
@@ -604,7 +601,7 @@ export class ConnectionService {
   }
 
   async storeObjectAndReturnUrl(connectionInvitation, persistent: boolean): Promise<string> {
-    const utilityRequestBodyString = JSON.stringify({ data: connectionInvitation });
+    const utilityRequestBodyString = JSON.stringify(connectionInvitation);
     const storeObj = JSON.parse(utilityRequestBodyString);
 
     //nats call in agent-service to create an invitation url

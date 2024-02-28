@@ -554,6 +554,9 @@ export class IssuanceController {
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
     outOfBandCredentialDto.credentialType = credentialType;
+
+    // console.log("outOfBandCredentialDto::",JSON.stringify(outOfBandCredentialDto, null, 2));
+
     const credOffer = outOfBandCredentialDto?.credentialOffer || [];
     if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType) {
       throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);

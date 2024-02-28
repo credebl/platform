@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/array-type */
 
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum, IsObject } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum, IsObject} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 import { SortValue } from '../../enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { AutoAccept } from '@credebl/enum/enum';
-import { IssueCredentialType } from '../interfaces';
-
+import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
+import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 
 class Attribute {
     @ApiProperty()
@@ -107,16 +108,28 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   attributes: Attribute[];
 }
 
-class CredentialSubject {
- @ApiProperty()
- @IsNotEmpty({ message: 'id is required' })  
- @Type(() => String) 
- id:string;
+
+// class CredentialSubject  {
+//     @ApiProperty()
+//     @IsNotEmpty({ message: 'id is required ' })  
+//     @Type(() => String) 
+//     id:string;
+  
+//     // [key:string]:any;
+//   }
+
+
+class Issuer {
+  @ApiProperty()
+  @IsNotEmpty({ message: 'id is required' })  
+  @Type(() => String) 
+  id:string | { id?: string };
 }
 class Credential {
     @ApiProperty()
     @IsNotEmpty({ message: 'context  is required' })
-    '@context':[];
+    @IsCredentialJsonLdContext()
+    '@context': Array<string | JsonObject>;
 
     @ApiProperty()
     @IsNotEmpty({ message: 'type is required' })
@@ -129,11 +142,11 @@ class Credential {
     @IsOptional()
     id?:string;
 
+    
     @ApiProperty()
-    @IsString({ message: 'issuer  should be string' })
-    @IsNotEmpty({ message: 'issuer is required' })
-    @Type(() => String)
-    issuer:string;
+    @ValidateNested({ each: true })
+    @Type(() => Issuer)
+    issuer:Issuer;
 
     @ApiProperty()
     @IsString({ message: 'issuance date should be string' })
@@ -148,25 +161,75 @@ class Credential {
     @IsOptional()
     expirationDate?:string;
 
-    @ApiProperty()
-    @IsNotEmpty({ message: ' credential subject required' })
-    @ValidateNested({ each: true })
-    @Type(() => CredentialSubject)
-    credentialSubject:CredentialSubject;
-    [key: string]: unknown;
+    // @ApiProperty()
+    // @IsNotEmpty({ message: ' credential subject required' })
+    // @Type(() => Object)
+    // credentialSubject: CredentialSubject;
+
+     @ApiProperty()
+     @IsNotEmpty({ message: ' credential subject required' })
+     credentialSubject: SingleOrArray<JsonObject>;
+     [key: string]: unknown
    
   }
-  class Options {
-    @ApiProperty({ required: true })
-    @IsNotEmpty({ message: 'Proof type is required' })
-    @Type(() => String)
-    proofType:string;
 
-    @ApiProperty({ required: true })
-    @IsNotEmpty({ message: ' Proof purpose is required' })
-    @Type(() => String)
-    proofPurpose: string;
+  export class JsonLdCredentialDetailCredentialStatus {
+    public constructor(options: JsonLdCredentialDetailCredentialStatusOptions) {
+      if (options) {
+        this.type = options.type;
+      }
+    }
+    @IsString()
+    public type!: string;
   }
+  export class JsonLdCredentialDetailOptions {
+    public constructor(options: JsonLdCredentialDetailOptionsOptions) {
+      if (options) {
+        this.proofPurpose = options.proofPurpose;
+        this.created = options.created;
+        this.domain = options.domain;
+        this.challenge = options.challenge;
+        this.credentialStatus = options.credentialStatus;
+        this.proofType = options.proofType;
+      }
+    }
+  
+    @IsString()
+    @IsNotEmpty({ message: 'proof purpose is required' })
+    public proofPurpose!: string;
+  
+    @IsString()
+    @IsOptional()
+    public created?: string;
+  
+    @IsString()
+    @IsOptional()
+    public domain?: string;
+  
+    @IsString()
+    @IsOptional()
+    public challenge?: string;
+  
+    @IsString()
+    @IsNotEmpty({ message: 'proof type is required' })
+    public proofType!: string;
+  
+    @IsOptional()
+    @IsObject()
+    public credentialStatus?: JsonLdCredentialDetailCredentialStatus;
+  }
+
+  // class Options {
+  //   @ApiProperty({ required: true })
+  //   @IsNotEmpty({ message: 'Proof type is required' })
+  //   @Type(() => String)
+  //   proofType:string;
+
+  //   @ApiProperty({ required: true })
+  //   @IsNotEmpty({ message: ' Proof purpose is required' })
+  //   @Type(() => String)
+  //   proofPurpose: string;
+  // }
 class CredentialOffer {
     @ApiProperty({ example: [{ 'value': 'string', 'name': 'string' }] })
     @IsNotEmpty({ message: 'Attribute name is required' })
@@ -189,16 +252,25 @@ class CredentialOffer {
     @IsObject({ message: 'credential should be an object' })
     @Type(() => Credential)
     @IsOptional()
+    @ValidateNested({ each: true })
     credential?:Credential;
+
+    // @ApiProperty()
+    // @IsOptional()
+    // @IsNotEmpty({ message: 'Please provide valid options' })
+    // @IsObject({ message: 'options should be an object' })
+    // @ValidateNested({ each: true })
+    // @Type(() => Options)
+    // options?:Options;
 
     @ApiProperty()
     @IsOptional()
     @IsNotEmpty({ message: 'Please provide valid options' })
     @IsObject({ message: 'options should be an object' })
     @ValidateNested({ each: true })
-    @Type(() => Options)
-    options?:Options;
-
+    @Type(() => JsonLdCredentialDetailOptions)
+    options?:JsonLdCredentialDetailOptions;
+    
 }
 
 export class IssueCredentialDto extends OOBIssueCredentialDto {
@@ -309,10 +381,11 @@ export class OOBCredentialDtoWithEmail {
             'UniversityDegreeCredential'
           ],
           'issuer': {
-            'id': 'did:key:z6MkivTqhrvieQufnHBNHmejocwooSws2zPvYqyAA6T2qeZQ'
+            'id': 'did:key:z6Mkn72LVp3mq1fWSefkSMh5V7qrmGfCV4KH3K6SoTM21ouM'
           },
           'issuanceDate': '2019-10-12T07:20:50.52Z',
           'credentialSubject': {
+
             'degree': {
               'type': 'BachelorDegree',
               'name': 'Bachelor of Science and Arts'

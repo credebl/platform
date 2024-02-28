@@ -413,6 +413,9 @@ export class IssuanceService {
         credentialType
       } = outOfBandCredential;
 
+
+      // console.log("cbcb",JSON.stringify(outOfBandCredential, null, 2 ) )
+
        if (IssueCredentialType.INDY === credentialType) {
 
         const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
@@ -516,6 +519,7 @@ const credefError = [];
           }
 
           if (IssueCredentialType.JSONLD === credentialType) {
+            // console.log("outOfBandIssuancePayload", JSON.stringify(outOfBandIssuancePayload, null, 2))
             outOfBandIssuancePayload = {
               protocolVersion:'v2',
               credentialFormats: {

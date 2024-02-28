@@ -19,6 +19,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { platform_config } from '@prisma/client';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+// Not a valid way to import: Krishna
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 
@@ -78,12 +79,11 @@ export class ConnectionService {
       const apiKey = await this._getOrgAgentApiKey(orgId);
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-      const connectionInvitaion = createConnectionInvitation?.message?.invitation;
-      const shortenedUrl = await this.storeObjectAndReturnUrl(
-        connectionInvitaion,
+      const connectionInvitaionUrl = createConnectionInvitation?.message?.invitationUrl;
+      const shortenedUrl: string = await this.storeObjectAndReturnUrl(
+        connectionInvitaionUrl,
         connectionPayload.multiUseInvitation
       );
-      Logger.verbose('This is Invitation object::::::', createConnectionInvitation?.message?.invitation);
 
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
         shortenedUrl,
@@ -670,10 +670,8 @@ export class ConnectionService {
   }
 }
 
-  async storeObjectAndReturnUrl(connectionInvitation, persistent: boolean): Promise<string> {
-    const utilityRequestBodyString = JSON.stringify(connectionInvitation);
-    const storeObj = JSON.parse(utilityRequestBodyString);
-
+  async storeObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
+    const storeObj = connectionInvitationUrl;
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };
     const payload = { persistent, storeObj };

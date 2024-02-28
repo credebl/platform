@@ -5,11 +5,6 @@ import { AwsService } from '@credebl/aws';
 // import { IUtilities } from '../interfaces/shortening-url.interface';
 import { S3 } from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
-import {
-    // IStoreObject,
-    IOobIssuanceInvitation,
-    ILegacyInvitation
-   } from '../interfaces/shortening-url.interface';
 
 @Injectable()
 export class UtilitiesService {
@@ -55,7 +50,7 @@ export class UtilitiesService {
         }
     }
 
-    async storeObject(payload: {persistent: boolean, storeObj: IOobIssuanceInvitation | ILegacyInvitation}): Promise<string> {
+    async storeObject(payload: {persistent: boolean, storeObj: unknown}): Promise<string> {
         try {
             const uuid = uuidv4();
             const uploadResult:S3.ManagedUpload.SendData = await this.awsService.storeObject(payload.persistent, uuid, payload.storeObj);

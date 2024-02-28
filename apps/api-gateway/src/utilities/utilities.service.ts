@@ -17,8 +17,6 @@ export class UtilitiesService extends BaseService {
 
   async storeObject(persistent: boolean, storeObj: LegacyInvitationDto | OobIssuanceInvitationDto): Promise<string> {
     const payload = {persistent, storeObj};
-    // eslint-disable-next-line no-console
-    console.log('Reached in api-gateway services. The object to store is::::::: ', JSON.stringify(payload.storeObj));
     return this.sendNatsMessage(this.serviceProxy, 'store-object-return-url', payload);
   }
 }

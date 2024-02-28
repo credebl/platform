@@ -36,7 +36,6 @@ export class CommonService {
         .post(url, payload, apiKey)
         .toPromise()
         .then((response: any) => {
-          this.logger.error(response.data);
           return response.data;
         });
     } catch (error) {

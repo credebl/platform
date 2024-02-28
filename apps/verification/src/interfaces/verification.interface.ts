@@ -46,7 +46,7 @@ export interface IVerifiedProofData {
 
 export interface IProofPresentationData {
     proofId: string;
-    orgId: string; 
+    orgId: string;
     user: IUserRequest;
 }
 
@@ -100,6 +100,7 @@ export interface ISendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
+    isShortenUrl?: boolean;
 }
 
 export interface IProofRequestPayload {
@@ -139,7 +140,7 @@ export interface IProofRequests {
     proofRequestsSearchCriteria: IProofRequestSearchCriteria;
     user: IUserRequest;
     orgId: string;
-  }
+}
 
 export interface IProofRequestSearchCriteria {
     pageNumber: number;
@@ -147,5 +148,5 @@ export interface IProofRequestSearchCriteria {
     sortField: string;
     sortBy: string;
     searchByText: string;
-  }   
-  
+}
+

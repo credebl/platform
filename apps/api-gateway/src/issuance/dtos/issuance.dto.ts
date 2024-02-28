@@ -104,11 +104,12 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   @Type(() => Attribute)
   attributes: Attribute[];
 
-  @ApiPropertyOptional({
-    example: true
+  @ApiProperty({
+    example: false
   })
-  @IsBoolean({message: 'shortenUrl must be boolean'})
-  shortenUrl: boolean;
+  @IsNotEmpty()
+  @IsBoolean({message: 'IsShortenUrl must be boolean'})
+  IsShortenUrl: boolean;
 }
 
 class CredentialOffer {

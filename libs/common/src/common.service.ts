@@ -27,11 +27,6 @@ export class CommonService {
 
   async httpPost(url: string, payload?: any, apiKey?: any) {
     try {
-      this.logger.debug(
-        `httpPost service: URL : ${url} \nAPI KEY : ${JSON.stringify(
-          apiKey
-        )} \nPAYLOAD : ${JSON.stringify(payload)}`
-      );
       return await this.httpService
         .post(url, payload, apiKey)
         .toPromise()
@@ -98,7 +93,6 @@ export class CommonService {
 
   async httpGet(url: string, config?: any) {
     try {
-      this.logger.debug(`httpGet service URL: ${url}`);
       return await this.httpService
         .get(url, config)
         .toPromise()
@@ -162,11 +156,6 @@ export class CommonService {
 
   async httpPatch(url: string, payload?: any, apiKey?: any) {
     try {
-      this.logger.debug(
-        `httpPatch service: URL : ${url} \nAPI KEY : ${JSON.stringify(
-          apiKey
-        )} \nPAYLOAD : ${JSON.stringify(payload)}`
-      );
       return await this.httpService
         .patch(url, payload, apiKey)
         .toPromise()
@@ -230,7 +219,6 @@ export class CommonService {
 
   async httpDelete(url: string, config?: unknown): Promise<object> {
     try {
-      this.logger.debug(`httpDelete service URL: ${url}`);
       return await this.httpService
         .delete(url, config)
         .toPromise()
@@ -298,11 +286,6 @@ export class CommonService {
     config?: any
   ): Promise<ResponseService> {
     try {
-      this.logger.debug(
-        `httpPut service: URL : ${url} \nCONFIG : ${JSON.stringify(
-          config
-        )} \nPAYLOAD : ${JSON.stringify(payload)}`
-      );
       const response = await this.httpService
         .put(url, payload, config)
         .toPromise();

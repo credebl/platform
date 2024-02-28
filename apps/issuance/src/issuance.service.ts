@@ -60,20 +60,20 @@ export class IssuanceService {
 
         attributesArray.forEach((attribute) => {
           if (attribute.attributeName && attribute.isRequired) {
-            
-            payload.attributes.map((attr) => { 
+
+            payload.attributes.map((attr) => {
               if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
                 schemaResponseError.push(
                   `Attribute ${attribute.attributeName} is required`
                 );
               }
               return true;
-             });
+            });
           }
         });
         if (0 < schemaResponseError.length) {
-            throw new BadRequestException(schemaResponseError);
-          
+          throw new BadRequestException(schemaResponseError);
+
         }
 
       }
@@ -111,7 +111,7 @@ export class IssuanceService {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             attributes: (attributes).map(({ isRequired, ...rest }) => rest),
             credentialDefinitionId
-            
+
           }
         },
         autoAcceptCredential: autoAcceptCredential || 'always',
@@ -146,7 +146,7 @@ export class IssuanceService {
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, IsShortenUrl } = payload;
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, isShortenUrl } = payload;
 
       const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
         credentialDefinitionId
@@ -158,15 +158,15 @@ export class IssuanceService {
 
         attributesArray.forEach((attribute) => {
           if (attribute.attributeName && attribute.isRequired) {
-            
-            payload.attributes.map((attr) => { 
+
+            payload.attributes.map((attr) => {
               if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
                 schemadetailsResponseError.push(
                   `Attribute '${attribute.attributeName}' is required but has an empty value.`
                 );
               }
               return true;
-             });
+            });
           }
         });
         if (0 < schemadetailsResponseError.length) {
@@ -214,8 +214,8 @@ export class IssuanceService {
         comment: comment || ''
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
-      if (IsShortenUrl.valueOf()) {
-        const invitationObject: IOobIssuanceInvitation = credentialCreateOfferDetails.response?.invitation;
+      if (isShortenUrl) {
+        const invitationObject: IOobIssuanceInvitation = credentialCreateOfferDetails.response?.invitationUrl;
         const url: string = await this.storeObjectReturnUrl(invitationObject);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
       }
@@ -237,14 +237,14 @@ export class IssuanceService {
   }
 
   async storeObjectReturnUrl(storeObj: IOobIssuanceInvitation): Promise<string> {
-    const persistent:boolean = false;
+    const persistent: boolean = false;
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };
     const payload = { persistent, storeObj };
 
     try {
       const message = await this.issuanceServiceProxy
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .send<any>(pattern, payload)
         .toPromise()
         .catch((error) => {
@@ -306,8 +306,8 @@ export class IssuanceService {
         .pipe(
           map((response) => (
             {
-            response
-          }))
+              response
+            }))
         ).toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -449,61 +449,61 @@ export class IssuanceService {
         comment,
         credentialDefinitionId,
         orgId,
-        protocolVersion, 
+        protocolVersion,
         attributes,
         emailId
       } = outOfBandCredential;
 
-        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
+      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+        credentialDefinitionId
+      );
 
-        let attributesArray:IAttributes[] = [];
-        if (schemaResponse?.attributes) {
+      let attributesArray: IAttributes[] = [];
+      if (schemaResponse?.attributes) {
 
-           attributesArray = JSON.parse(schemaResponse.attributes);
-        }
+        attributesArray = JSON.parse(schemaResponse.attributes);
+      }
 
-        if (0 < attributes?.length) {
-const attrError = [];
-            attributesArray.forEach((schemaAttribute, i) => {
-              if (schemaAttribute.isRequired) {
+      if (0 < attributes?.length) {
+        const attrError = [];
+        attributesArray.forEach((schemaAttribute, i) => {
+          if (schemaAttribute.isRequired) {
 
-                const attribute = attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
-                if (!attribute?.value) {
-                  attrError.push(
-                    `attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
-                  );
-                }
-                
-              }
-              
-            });
-            if (0 < attrError.length) {
-              throw new BadRequestException(attrError);
+            const attribute = attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
+            if (!attribute?.value) {
+              attrError.push(
+                `attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
+              );
             }
+
+          }
+
+        });
+        if (0 < attrError.length) {
+          throw new BadRequestException(attrError);
         }
-        if (0 < credentialOffer?.length) {
-const credefError = [];
-          credentialOffer.forEach((credentialAttribute, index) => {
-            
-            attributesArray.forEach((schemaAttribute, i) => {
+      }
+      if (0 < credentialOffer?.length) {
+        const credefError = [];
+        credentialOffer.forEach((credentialAttribute, index) => {
 
-                const attribute = credentialAttribute.attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
+          attributesArray.forEach((schemaAttribute, i) => {
 
-                if (schemaAttribute.isRequired && !attribute?.value) {
-                  credefError.push(
-                    `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
-                  );
-                }
-                
-              });
-            });
-            if (0 < credefError.length) {
-              throw new BadRequestException(credefError);
+            const attribute = credentialAttribute.attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
+
+            if (schemaAttribute.isRequired && !attribute?.value) {
+              credefError.push(
+                `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
+              );
             }
+
+          });
+        });
+        if (0 < credefError.length) {
+          throw new BadRequestException(credefError);
         }
-      
+      }
+
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { organisation } = agentDetails;
@@ -627,7 +627,7 @@ const credefError = [];
           const batchPromises = batch.map((iterator, index) => sendEmailForCredentialOffer(iterator, iterator.emailId, index));
           emailPromises.push(Promise.all(batchPromises));
         }
-      }  else {
+      } else {
         emailPromises.push(sendEmailForCredentialOffer({}, emailId, 1));
       }
 
@@ -666,7 +666,7 @@ const credefError = [];
     }
   }
 
-  
+
   async _outOfBandCredentialOffer(outOfBandIssuancePayload: object, url: string, apiKey: string): Promise<{
     response;
   }> {
@@ -698,8 +698,8 @@ const credefError = [];
       switch (issuanceMethodLabel) {
         case 'create-offer': {
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
-              : orgAgentType === OrgAgentType.SHARED
+            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
               : null;
           break;
@@ -707,8 +707,8 @@ const credefError = [];
 
         case 'create-offer-oob': {
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
-              : orgAgentType === OrgAgentType.SHARED
+            ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
               : null;
           break;
@@ -716,18 +716,18 @@ const credefError = [];
 
         case 'get-issue-credentials': {
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
-              : orgAgentType === OrgAgentType.SHARED
+            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'get-issue-credential-by-credential-id': {
-          
+
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
-              : orgAgentType === OrgAgentType.SHARED
+            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`.replace('#', credentialRecordId).replace('@', tenantId)
               : null;
           break;
@@ -752,7 +752,7 @@ const credefError = [];
   async exportSchemaToCSV(credentialDefinitionId: string): Promise<object> {
     try {
       const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
-      
+
       const jsonData = [];
       const attributesArray = JSON.parse(schemaResponse.attributes);
 
@@ -795,7 +795,7 @@ const credefError = [];
 
   async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
     try {
-      
+
       const credDefResponse =
         await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
 
@@ -864,8 +864,8 @@ const credefError = [];
 
     } catch (error) {
       this.logger.error(`error in validating credentials : ${error.response}`);
-      throw  new RpcException(error.response ? error.response : error);
-    } 
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
   async previewFileDataForIssuance(
@@ -1136,7 +1136,7 @@ const credefError = [];
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails.data.email;
     fileUploadData.jobId = jobDetails.id;
-    const {orgId} = jobDetails;
+    const { orgId } = jobDetails;
 
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
     // eslint-disable-next-line camelcase
@@ -1189,7 +1189,7 @@ const credefError = [];
           0 === errorCount ? FileUploadStatus.completed : FileUploadStatus.partially_completed;
 
         if (!jobDetails.isRetry) {
-          socket.emit('bulk-issuance-process-completed', {clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId});
+          socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId });
           this.cacheManager.del(jobDetails.cacheId);
         } else {
           socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId });
@@ -1241,36 +1241,36 @@ const credefError = [];
     }
   }
 
-  async validateFileData(fileData: string[][], attributesArray: { attributeName: string, schemaDataType: string,  displayName: string, isRequired: boolean }[], fileHeader: string[]): Promise<void> {
-    try { 
+  async validateFileData(fileData: string[][], attributesArray: { attributeName: string, schemaDataType: string, displayName: string, isRequired: boolean }[], fileHeader: string[]): Promise<void> {
+    try {
       const filedata = fileData.map((item: string[]) => {
-       const fileHeaderData = item?.map((element, j) => ({
-           value: element,
-           header: fileHeader[j]
-         }));
-       return fileHeaderData;
+        const fileHeaderData = item?.map((element, j) => ({
+          value: element,
+          header: fileHeader[j]
+        }));
+        return fileHeaderData;
       });
-       
-       const errorFileData = [];
-   
-       filedata.forEach((attr, i) => {
+
+      const errorFileData = [];
+
+      filedata.forEach((attr, i) => {
         attr.forEach((eachElement) => {
 
-         attributesArray.forEach((eachItem) => {
-           if (eachItem.attributeName === eachElement.header) {
-               if (eachItem.isRequired && !eachElement.value) {
-                 errorFileData.push(`Attribute ${eachItem.attributeName} is required at row ${i + 1}`);
-               }
-           }
-           });
-           return eachElement;
-         });
-         return attr;
-       });
-   
-       if (0 < errorFileData.length) {
-         throw new BadRequestException(errorFileData);
-       }
+          attributesArray.forEach((eachItem) => {
+            if (eachItem.attributeName === eachElement.header) {
+              if (eachItem.isRequired && !eachElement.value) {
+                errorFileData.push(`Attribute ${eachItem.attributeName} is required at row ${i + 1}`);
+              }
+            }
+          });
+          return eachElement;
+        });
+        return attr;
+      });
+
+      if (0 < errorFileData.length) {
+        throw new BadRequestException(errorFileData);
+      }
     } catch (error) {
       throw error;
     }
@@ -1287,9 +1287,9 @@ const credefError = [];
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException({
-          status: error.status,
-          error: error.message
-        }, error.status);
+        status: error.status,
+        error: error.message
+      }, error.status);
     }
   }
 

@@ -1,10 +1,11 @@
 import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, IsDefined, MaxLength, ArrayNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
-import { SortValue } from '../../enum';
-import { SortFields } from 'apps/connection/src/enum/connection.enum';
+
 import { AutoAccept } from '@credebl/enum/enum';
+import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { SortValue } from '../../enum';
+import { trim } from '@credebl/common/cast.helper';
 
 class Attribute {
     @ApiProperty()
@@ -106,9 +107,10 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   @ApiProperty({
     example: false
   })
+  @IsOptional()
   @IsNotEmpty()
-  @IsBoolean({message: 'IsShortenUrl must be boolean'})
-  IsShortenUrl: boolean;
+  @IsBoolean({message: 'isShortenUrl must be boolean'})
+  isShortenUrl?: boolean;
 }
 
 class CredentialOffer {

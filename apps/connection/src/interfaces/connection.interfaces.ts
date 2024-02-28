@@ -1,6 +1,7 @@
 // eslint-disable-next-line camelcase
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { organisation } from '@prisma/client';
+// Not a valid way to import: Krishna
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IConnection {
@@ -97,7 +98,7 @@ export interface IConnectionInvitation {
 }
 interface IInvitation {
   invitation: string;
-
+  invitationUrl: string;
 }
 
 interface IService {

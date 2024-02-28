@@ -9,8 +9,6 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { UtilitiesDto } from './dtos/shortening-url.dto';
 import { UtilitiesService } from './utilities.service';
-import { LegacyInvitationDto, OobIssuanceInvitationDto } from './dtos/store-object.dto';
-// import { StoreObjectDto } from './dtos/store-object.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('utilities')
@@ -37,12 +35,12 @@ export class UtilitiesController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('/store-object/:persistent')
+  @Post('/store-object/:persist')
   @ApiOperation({ summary: 'Store an object and return a short url to it', description: 'Create a short url representing the object' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  async storeObject(@Body() storeObjectDto: OobIssuanceInvitationDto | LegacyInvitationDto, @Param('persistent') persistent: boolean, @Res() res: Response): Promise<Response> {
-    const shorteningUrl = await this.utilitiesService.storeObject(persistent.valueOf(), storeObjectDto);
+  async storeObject(@Body() storeObjectDto: unknown, @Param('persist') persist: boolean, @Res() res: Response): Promise<Response> {
+    const shorteningUrl = await this.utilitiesService.storeObject(persist.valueOf(), storeObjectDto);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.storeObject.success.storeObject,

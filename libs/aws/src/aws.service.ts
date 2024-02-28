@@ -95,7 +95,7 @@ export class AwsService {
   }
 
   async storeObject(persistent: boolean, key: string, body: unknown): Promise<S3.ManagedUpload.SendData> {
-    const objKey: string = persistent.valueOf() ? `persistent/${key}` : `default/${key}`;
+    const objKey: string = persistent.valueOf() ? `persist/${key}` : `default/${key}`;
     const buf = Buffer.from(JSON.stringify(body));
     const params: AWS.S3.PutObjectRequest = {
       Bucket: process.env.AWS_S3_STOREOBJECT_BUCKET,

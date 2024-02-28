@@ -30,13 +30,8 @@ export class IssuanceService extends BaseService {
     sendCredentialOutOfBand(issueCredentialDto: OOBIssueCredentialDto): Promise<{
         response: object;
     }> {
-        // Krishna
-        // Add shortenUrl flag while constructing the payload and pass it to the microservice
-        // Add logic to handle it in the micoservice controller
-        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, shortenUrl: issueCredentialDto.shortenUrl };
-        // eslint-disable-next-line no-console
-        console.log('This is the shortenUrl I\'m sending from api-ageway shortenUrl', issueCredentialDto.shortenUrl);
-        return this.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
+        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, IsShortenUrl: issueCredentialDto.IsShortenUrl };
+        return this.sendNatsMessage(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
     }
 
     getIssueCredentials(issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams, user: IUserRequest, orgId: string): Promise<IIssuedCredential> {

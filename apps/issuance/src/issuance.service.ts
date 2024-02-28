@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IOobIssuanceInvitation, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -146,7 +146,7 @@ export class IssuanceService {
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, shortenUrl } = payload;
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, IsShortenUrl } = payload;
 
       const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
         credentialDefinitionId
@@ -214,22 +214,11 @@ export class IssuanceService {
         comment: comment || ''
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
-      // eslint-disable-next-line no-console
-      console.log('Hello I\'m here Krish');// eslint-disable-next-line no-console
-      console.log('This is shortenURl::::', shortenUrl.valueOf());
-      // eslint-disable-next-line no-console
-      console.log('This is credentialCreateOfferDetails', JSON.stringify(credentialCreateOfferDetails));
-      if (shortenUrl.valueOf()) {
-        const invitationObject = credentialCreateOfferDetails.response?.invitation;
-        const url: string = await this.storeObjectReturnUrl(invitationObject); //storeObjectReturnURl
-        credentialCreateOfferDetails.response['shortenUrl'] = url;
-        // credentialCreateOfferDetails.response = { shortenUrl: url, ...credentialCreateOfferDetails.response};
+      if (IsShortenUrl.valueOf()) {
+        const invitationObject: IOobIssuanceInvitation = credentialCreateOfferDetails.response?.invitation;
+        const url: string = await this.storeObjectReturnUrl(invitationObject);
+        credentialCreateOfferDetails.response['invitationUrl'] = url;
       }
-      // Krishna
-      // if (shortenUrl){
-      //   const invitationObject = credentialCreateOfferDetails?.response?.
-      // }
-      // We are getting the credentialOfferDetails here
       return credentialCreateOfferDetails;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
@@ -247,9 +236,7 @@ export class IssuanceService {
     }
   }
 
-  async storeObjectReturnUrl(connectionInvitation): Promise<string> {
-    const utilityRequestBodyString = JSON.stringify(connectionInvitation);
-    const storeObj = JSON.parse(utilityRequestBodyString);
+  async storeObjectReturnUrl(storeObj: IOobIssuanceInvitation): Promise<string> {
     const persistent:boolean = false;
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };

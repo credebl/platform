@@ -13,7 +13,8 @@ import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { IOrganization } from '@credebl/common/interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganization, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
+import { OrgRoles } from 'libs/org-roles/enums';
 
 @Injectable()
 export class OrganizationRepository {
@@ -486,6 +487,43 @@ export class OrganizationRepository {
           organisation: true
         }
       });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getUnregisteredClientOrgs(): Promise<organisation[]> {
+    try {
+      const recordsWithNullValues = await this.prisma.organisation.findMany({
+        where: {
+          idpId: null
+        },
+        include: {
+          userOrgRoles: {
+            where: {
+              orgRole: {
+                name: OrgRoles.OWNER
+              }
+            },
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  username: true,
+                  id: true,
+                  keycloakUserId: true,
+                  isEmailVerified: true
+                }
+              },
+              orgRole: true
+            }
+          }
+        }
+      });
+
+      return recordsWithNullValues;
+      
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw error;

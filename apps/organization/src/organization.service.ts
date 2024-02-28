@@ -26,14 +26,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import {
-  IGetOrgById,
-  IGetOrganization,
-  IUpdateOrganization,
-  IOrgAgent,
-  IClientCredentials,
-  IOrgRole
-} from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -385,13 +378,11 @@ export class OrganizationService {
   // eslint-disable-next-line camelcase
   async updateOrganization(updateOrgDto: IUpdateOrganization, userId: string, orgId: string): Promise<organisation> {
     try {
-      const organizationExist = await this.organizationRepository.checkOrganizationExist(updateOrgDto.name, orgId);
 
-      if (0 === organizationExist.length) {
-        const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name);
-        if (organizationExist) {
-          throw new ConflictException(ResponseMessages.organisation.error.exists);
-        }
+      const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name);
+
+      if (organizationExist && organizationExist.id !== orgId) {
+        throw new ConflictException(ResponseMessages.organisation.error.exists);
       }
 
       const orgSlug = await this.createOrgSlug(updateOrgDto.name);
@@ -405,13 +396,17 @@ export class OrganizationService {
         delete updateOrgDto.logo;
       }
 
-      const organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
-      await this.userActivityService.createActivity(
-        userId,
-        organizationDetails.id,
-        `${organizationDetails.name} organization updated`,
-        'Organization details updated successfully'
-      );
+      let organizationDetails;
+      const checkAgentIsExists = await this.organizationRepository.getAgentInvitationDetails(orgId);
+
+      if (!checkAgentIsExists?.connectionInvitation && !checkAgentIsExists?.agentId) {
+      organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
+      } else if (organizationDetails?.logoUrl !== organizationExist?.logoUrl || organizationDetails?.name !== organizationExist?.name) {
+        const invitationData = await this._createConnection(updateOrgDto?.logo, updateOrgDto?.name, orgId);
+        await this.organizationRepository.updateConnectionInvitationDetails(orgId, invitationData?.connectionInvitation);
+      }
+
+      await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
       return organizationDetails;
     } catch (error) {
       this.logger.error(`In update organization : ${JSON.stringify(error)}`);
@@ -419,6 +414,36 @@ export class OrganizationService {
     }
   }
 
+
+  async _createConnection(
+    orgName: string,
+    logoUrl: string,
+    orgId: string
+  ): Promise<ICreateConnectionUrl> {
+    const pattern = { cmd: 'create-connection' };
+
+    const payload = {
+      orgName,
+      logoUrl,
+      orgId
+    };
+    const connectionInvitationData = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return connectionInvitationData;
+  }
+  
   /**
    * @returns Get created organizations details
    */

@@ -107,7 +107,8 @@ export const ResponseMessages = {
             invalidUserId:'Invalid format of userId',
             invalidInvitationId:'Invalid format for invitation id',
             ecosystemIdIsRequired:'ecosystemId is required',
-            roleNotMatch: 'User does not have access'
+            roleNotMatch: 'User does not have access',
+            orgDoesNotMatch: 'Organization does not match'
         }
     },
 
@@ -224,7 +225,9 @@ export const ResponseMessages = {
             create: 'Connection created successfully',
             receivenvitation: 'Invitation received successfully',
             fetchConnection: 'Connection details fetched successfully',
-            fetch: 'Connections details fetched successfully'
+            fetch: 'Connections details fetched successfully',
+            questionAnswerRecord: 'Question Answer record fetched successfully',
+            questionSend:'Question sent successfully'
         },
         error: {
             exists: 'Connection is already exist',
@@ -353,7 +356,9 @@ export const ResponseMessages = {
             updateSchemaId: 'Error while updating the schema id',
             updateCredDefId: 'Error while updating the credential-definition',
             invalidMessage: 'Invalid transaction details. Missing "message" property.',
-            invalidTransactionMessage: 'Invalid transaction details'
+            invalidTransactionMessage: 'Invalid transaction details',
+            ecosystemRoleNotMatch: 'Ecosystem role not match',
+            orgEcoIdRequired: 'OrgId & EcosystemId is required'
         }
     },
     bulkIssuance: {
@@ -402,5 +407,5 @@ export const ResponseMessages = {
             notFound: 'Notification record not found.',
             invalidUrl: 'Invalid URL'
         }
-    },
+    }
 };

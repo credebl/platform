@@ -12,6 +12,7 @@ import {
 } from './interfaces/connection.interfaces';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 
 @Controller()
 export class ConnectionController {
@@ -75,5 +76,15 @@ export class ConnectionController {
   async receiveInvitation(payload: IReceiveInvitationByOrg): Promise<IReceiveInvitationResponse> {
     const { user, receiveInvitation, orgId } = payload;
     return this.connectionService.receiveInvitation(user, receiveInvitation, orgId);
+  }
+  
+  @MessagePattern({ cmd: 'send-question' })
+  async sendQuestion(payload: IQuestionPayload): Promise<object> {
+    return this.connectionService.sendQuestion(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-question-answer-record' })
+  async getQuestionAnswersRecord(orgId: string): Promise<object> {
+    return this.connectionService.getQuestionAnswersRecord(orgId);
   }
 }

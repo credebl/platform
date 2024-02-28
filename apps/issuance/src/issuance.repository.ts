@@ -3,7 +3,6 @@ import { Injectable, InternalServerErrorException, Logger, NotFoundException } f
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import {
-  agent_invitations,
   credentials,
   file_data,
   file_upload,
@@ -15,6 +14,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   FileUploadData,
   IssueCredentialWebhookPayload,
+  OrgAgent,
   PreviewRequest,
   SchemaDetails
 } from '../interfaces/issuance.interfaces';
@@ -35,11 +35,14 @@ export class IssuanceRepository {
    * @returns Get getAgentEndPoint details
    */
   // eslint-disable-next-line camelcase
-  async getAgentEndPoint(orgId: string): Promise<org_agents> {
+  async getAgentEndPoint(orgId: string): Promise<OrgAgent> {
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
           orgId
+        },
+        include: {
+          organisation: true
         }
       });
 
@@ -180,35 +183,6 @@ export class IssuanceRepository {
       return credentialDetails;
     } catch (error) {
       this.logger.error(`Error in get saveIssuedCredentialDetails: ${error.message} `);
-      throw error;
-    }
-  }
-
-  /**
-   * Description: Save connection details
-   * @param connectionInvitation
-   * @param agentId
-   * @param orgId
-   * @returns Get connection details
-   */
-  // eslint-disable-next-line camelcase
-  async saveAgentConnectionInvitations(
-    connectionInvitation: string,
-    agentId: string,
-    orgId: string
-  ): Promise<agent_invitations> {
-    try {
-      const agentInvitationData = await this.prisma.agent_invitations.create({
-        data: {
-          orgId,
-          agentId,
-          connectionInvitation,
-          multiUse: true
-        }
-      });
-      return agentInvitationData;
-    } catch (error) {
-      this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
       throw error;
     }
   }

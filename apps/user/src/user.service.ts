@@ -221,7 +221,7 @@ export class UserService {
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.emailIsNotVerified);
       }
-      if (checkUserDetails.keycloakUserId) {
+      if (checkUserDetails.keycloakUserId || (!checkUserDetails.keycloakUserId && checkUserDetails.supabaseUserId)) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
       if (false === checkUserDetails.isEmailVerified) {
@@ -990,6 +990,8 @@ export class UserService {
       if (userDetails && !userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
       } else if (userDetails && userDetails.keycloakUserId) {
+        throw new ConflictException(ResponseMessages.user.error.exists);
+      } else if (userDetails && !userDetails.keycloakUserId && userDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {

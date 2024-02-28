@@ -277,6 +277,9 @@ interface IRequestedPredicatesName {
 interface IRequestedRestriction {
     cred_def_id?: string;
     schema_id?: string;
+    schema_issuer_did?: string;
+    schema_name?: string;
+    issuer_did?: string;
 }
 
 export interface IAgentSpinUpSatus {
@@ -413,3 +416,14 @@ interface ITags {
     threadId: string;
 }
 
+export interface IValidResponses {
+    text: string;
+  }
+  export interface IQuestionPayload {
+    detail: string;
+    validResponses: IValidResponses[];
+    question: string;
+    orgId?: string;
+    connectionId: string;
+    tenantId: string;
+  }

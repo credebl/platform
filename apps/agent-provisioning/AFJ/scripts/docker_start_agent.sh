@@ -17,27 +17,42 @@ PROTOCOL=${12}
 TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
-INBOUND_ENDPOINT=${16}
 
-ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
-INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
-ADMIN_PORT=4001
-INBOUND_PORT=5001
+echo "AGENCY: $AGENCY"
+echo "EXTERNAL_IP: $EXTERNAL_IP"
+echo "WALLET_NAME: $WALLET_NAME"
+echo "WALLET_PASSWORD: $WALLET_PASSWORD"
+echo "RANDOM_SEED: $RANDOM_SEED"
+echo "WEBHOOK_HOST: $WEBHOOK_HOST"
+echo "WALLET_STORAGE_HOST: $WALLET_STORAGE_HOST"
+echo "WALLET_STORAGE_PORT: $WALLET_STORAGE_PORT"
+echo "WALLET_STORAGE_USER: $WALLET_STORAGE_USER"
+echo "WALLET_STORAGE_PASSWORD: $WALLET_STORAGE_PASSWORD"
+echo "CONTAINER_NAME: $CONTAINER_NAME"
+echo "PROTOCOL: $PROTOCOL"
+echo "TENANT: $TENANT"
+echo "AFJ_VERSION: $AFJ_VERSION"
+echo "INDY_LEDGER: $INDY_LEDGER"
+
+ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
+INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
+ADMIN_PORT=8001
+INBOUND_PORT=9001
 
 increment_port() {
-  local port="$1"
-  local lower_limit="$2"
+    local port="$1"
+    local lower_limit="$2"
 
-  while [ "$port" -le "$lower_limit" ]; do
-    port=$((port + 1)) # Increment the port using arithmetic expansion
-  done
+    while [ "$port" -le "$lower_limit" ]; do
+        port=$((port + 1))  # Increment the port using arithmetic expansion
+    done
 
-  echo "$port"
+    echo "$port"
 }
 
 # Check if admin port file exists and if not, create and initialize it
 if [ ! -e "$ADMIN_PORT_FILE" ]; then
-  echo "$ADMIN_PORT" >"$ADMIN_PORT_FILE"
+    echo "$ADMIN_PORT" > "$ADMIN_PORT_FILE"
 fi
 
 # Read the last used admin port number from the file
@@ -48,12 +63,12 @@ echo "Last used admin port: $last_used_admin_port"
 last_used_admin_port=$(increment_port "$last_used_admin_port" "$last_used_admin_port")
 
 # Save the updated admin port number back to the file and update the global variable
-echo "$last_used_admin_port" >"$ADMIN_PORT_FILE"
+echo "$last_used_admin_port" > "$ADMIN_PORT_FILE"
 ADMIN_PORT="$last_used_admin_port"
 
 # Check if inbound port file exists and if not, create and initialize it
 if [ ! -e "$INBOUND_PORT_FILE" ]; then
-  echo "$INBOUND_PORT" >"$INBOUND_PORT_FILE"
+    echo "$INBOUND_PORT" > "$INBOUND_PORT_FILE"
 fi
 
 # Read the last used inbound port number from the file
@@ -64,7 +79,7 @@ echo "Last used inbound port: $last_used_inbound_port"
 last_used_inbound_port=$(increment_port "$last_used_inbound_port" "$last_used_inbound_port")
 
 # Save the updated inbound port number back to the file and update the global variable
-echo "$last_used_inbound_port" >"$INBOUND_PORT_FILE"
+echo "$last_used_inbound_port" > "$INBOUND_PORT_FILE"
 INBOUND_PORT="$last_used_inbound_port"
 
 echo "Last used admin port: $ADMIN_PORT"
@@ -72,52 +87,31 @@ echo "Last used inbound port: $INBOUND_PORT"
 
 echo "AGENT SPIN-UP STARTED"
 
-if [ -d "${PWD}/apps/agent-provisioning/AFJ/endpoints" ]; then
+if [ -d "${PWD}/agent-provisioning/AFJ/endpoints" ]; then
   echo "Endpoints directory exists."
 else
   echo "Error: Endpoints directory does not exists."
-  mkdir ${PWD}/apps/agent-provisioning/AFJ/endpoints
+  mkdir ${PWD}/agent-provisioning/AFJ/endpoints
 fi
 
-if [ -d "${PWD}/apps/agent-provisioning/AFJ/agent-config" ]; then
+if [ -d "${PWD}/agent-provisioning/AFJ/agent-config" ]; then
   echo "Endpoints directory exists."
 else
   echo "Error: Endpoints directory does not exists."
-  mkdir ${PWD}/apps/agent-provisioning/AFJ/agent-config
+  mkdir ${PWD}/agent-provisioning/AFJ/agent-config
 fi
 
-if [ -d "${PWD}/apps/agent-provisioning/AFJ/token" ]; then
-  echo "token directory exists."
-else
-  echo "Error: token directory does not exists."
-  mkdir ${PWD}/apps/agent-provisioning/AFJ/token
-fi
-
-# Define a regular expression pattern for IP address
-IP_REGEX="^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$"
-
-# Check if the input is a domain
-if echo "$INBOUND_ENDPOINT" | grep -qP "^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"; then
-  echo "INBOUND_ENDPOINT is a domain: $INBOUND_ENDPOINT"
-  AGENT_ENDPOINT=$INBOUND_ENDPOINT
-else
-  # Check if the input is an IP address
-  if [[ $INBOUND_ENDPOINT =~ $IP_REGEX ]]; then
-    echo "INBOUND_ENDPOINT is an IP address: $INBOUND_ENDPOINT"
-    AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
-  else
-    echo "Invalid input for INBOUND_ENDPOINT: $INBOUND_ENDPOINT"
-  fi
-fi
+AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
 
 echo "-----$AGENT_ENDPOINT----"
-CONFIG_FILE="${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
+CONFIG_FILE="${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
 
 # Check if the file exists
 if [ -f "$CONFIG_FILE" ]; then
   # If it exists, remove the file
   rm "$CONFIG_FILE"
 fi
+
 
 cat <<EOF >${CONFIG_FILE}
 {
@@ -156,32 +150,34 @@ EOF
 
 FILE_NAME="docker-compose_${AGENCY}_${CONTAINER_NAME}.yaml"
 
-DOCKER_COMPOSE="${PWD}/apps/agent-provisioning/AFJ/${FILE_NAME}"
+DOCKER_COMPOSE="${PWD}/agent-provisioning/AFJ/${FILE_NAME}"
 
 # Check if the file exists
 if [ -f "$DOCKER_COMPOSE" ]; then
   # If it exists, remove the file
   rm "$DOCKER_COMPOSE"
 fi
+echo ${PWD}
 cat <<EOF >${DOCKER_COMPOSE}
 version: '3'
 
 services:
-  agent:
+  agent:  
     image: $AFJ_VERSION
 
     container_name: ${AGENCY}_${CONTAINER_NAME}
     restart: always
     environment:
       AFJ_REST_LOG_LEVEL: 1
+      ROOT_PATH: ${ROOT_PATH}
     ports:
      - ${INBOUND_PORT}:${INBOUND_PORT}
      - ${ADMIN_PORT}:${ADMIN_PORT}
    
     volumes: 
-      - ./agent-config/${AGENCY}_${CONTAINER_NAME}.json:/config.json   
+      - ${ROOT_PATH}:/agent-config   
       
-    command: --auto-accept-connections --config /config.json
+    command: --auto-accept-connections --config /agent-config/${AGENCY}_${CONTAINER_NAME}.json
       
 volumes:
   pgdata:
@@ -190,7 +186,7 @@ volumes:
 EOF
 
 if [ $? -eq 0 ]; then
-  cd apps/agent-provisioning/AFJ
+  cd agent-provisioning/AFJ
   echo "docker-compose generated successfully!"
   echo "================="
   echo "spinning up the container"
@@ -227,17 +223,17 @@ if [ $? -eq 0 ]; then
     container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
 
     # Extract the token from the logs using sed
-    token=$(echo "$container_logs" | sed -nE 's/.*API Token: ([^ ]+).*/\1/p')
+    token=$(echo "$container_logs" | sed -nE 's/.*API Toekn: ([^ ]+).*/\1/p')
 
     # Print the extracted token
     echo "Token: $token"
-
+    
     ENDPOINT="${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json"
 
     # Check if the file exists
     if [ -f "$ENDPOINT" ]; then
-      # If it exists, remove the file
-      rm "$ENDPOINT"
+    # If it exists, remove the file
+    rm "$ENDPOINT"
     fi
     cat <<EOF >${ENDPOINT}
     {

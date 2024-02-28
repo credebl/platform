@@ -29,7 +29,7 @@ export class IssuanceService extends BaseService {
     sendCredentialOutOfBand(issueCredentialDto: OOBIssueCredentialDto): Promise<{
         response: object;
     }> {
-        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, IsShortenUrl: issueCredentialDto.IsShortenUrl };
+        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, isShortenUrl: issueCredentialDto.isShortenUrl };
         return this.sendNatsMessage(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
     }
 

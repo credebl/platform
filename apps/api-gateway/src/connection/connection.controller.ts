@@ -109,20 +109,19 @@ export class ConnectionController {
     }
 
     
-    @Get('orgs/:orgId/question-answer/question/:tenantId')
+    @Get('orgs/:orgId/question-answer/question')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
     @ApiOperation({
         summary: `Get question-answer record`,
         description: `Get question-answer record`
     })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getQuestionAnswersRecord(
-        @Param('tenantId') tenantId: string,
         @Param('orgId') orgId: string,
         @Res() res: Response
     ): Promise<Response> {
-        const record = await this.connectionService.getQuestionAnswersRecord(tenantId, orgId);
+        const record = await this.connectionService.getQuestionAnswersRecord(orgId);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.connection.success.questionAnswerRecord,
@@ -160,15 +159,14 @@ export class ConnectionController {
 
     }
 
-    @Post('/orgs/:orgId/question-answer/question/:connectionId/:tenantId')
-    @ApiOperation({ summary: '', description: 'question-answer/question' })
+    @Post('/orgs/:orgId/question-answer/question/:connectionId')
+    @ApiOperation({ summary: '', description: 'send question' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async sendQuestion(
         @Param('orgId') orgId: string,
         @Param('connectionId') connectionId: string,
-        @Param('tenantId') tenantId: string,
         @Body() questionDto: QuestionDto,
         @User() reqUser: IUserRequestInterface,
         @Res() res: Response
@@ -176,7 +174,6 @@ export class ConnectionController {
 
         questionDto.orgId = orgId;
         questionDto.connectionId = connectionId;
-        questionDto.tenantId = tenantId;
         const questionData = await this.connectionService.sendQuestion(questionDto);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,

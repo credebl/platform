@@ -33,7 +33,6 @@ export class QuestionDto {
 
     orgId: string;
     connectionId: string;
-    tenantId: string;
 }
 
 export class QuestionAnswerWebhookDto {

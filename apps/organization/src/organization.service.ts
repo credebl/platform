@@ -1228,6 +1228,42 @@ export class OrganizationService {
   async registerOrgsMapUsers(): Promise<string> {
 
     try {
+
+      const unregisteredOrgsList = await this.organizationRepository.getUnregisteredClientOrgs();
+
+      for (const org of unregisteredOrgsList) {
+        const ownerUser = 0 < org['userOrgRoles'].length && org['userOrgRoles'][0].user;
+        const orgObj = {
+          id: org.id,
+          idpId: org.idpId,
+          name: org.name,
+          ownerId: ownerUser.id,
+          ownerEmail: ownerUser.email,
+          ownerKeycloakId: ownerUser.keycloakUserId
+        };
+
+        if (orgObj.ownerKeycloakId) {
+          const orgCredentials = await this.registerToKeycloak(
+            orgObj.name,
+            orgObj.id,
+            orgObj.ownerKeycloakId,
+            orgObj.ownerId,
+            true
+          );
+
+          const { clientId, idpId, clientSecret } = orgCredentials;
+    
+          const updateOrgData = {
+            clientId,
+            clientSecret: this.maskString(clientSecret),
+            idpId
+          };
+
+          const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgObj.id);
+          
+          this.logger.log(`updatedOrg::`, updatedOrg);
+        }      
+      }
      
       return '';
     } catch (error) {

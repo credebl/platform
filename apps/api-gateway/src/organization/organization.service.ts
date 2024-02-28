@@ -149,8 +149,8 @@ export class OrganizationService extends BaseService {
     return this.sendNats(this.serviceProxy, 'send-invitation', payload);
   }
 
-  async registerOrgsMapUsers(userId: string): Promise<string> {
-    const payload = {userId};
+  async registerOrgsMapUsers(): Promise<string> {
+    const payload = {};
     return this.sendNatsMessage(this.serviceProxy, 'register-orgs-users-map', payload);
   }
 

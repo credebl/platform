@@ -395,12 +395,9 @@ export class OrganizationController {
     description: 'Register client and map users'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiBearerAuth()
-  async registerOrgsMapUsers(@User() user: user, @Res() res: Response): Promise<Response> {
+  async registerOrgsMapUsers(@Res() res: Response): Promise<Response> {
 
-    await this.organizationService.registerOrgsMapUsers(user.id);
+    await this.organizationService.registerOrgsMapUsers();
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

@@ -222,7 +222,6 @@ export class VerificationService {
       const verificationMethodLabel = 'request-proof';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(requestProof.orgId);
       }
@@ -336,7 +335,6 @@ export class VerificationService {
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean | object> {
     try {
 
-      this.logger.log(`-------outOfBandRequestProof------${JSON.stringify(outOfBandRequestProof)}`);
       outOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
@@ -439,14 +437,12 @@ export class VerificationService {
 
   private async generateOOBProofReq(payload: IProofRequestPayload, getAgentDetails: org_agents): Promise<object> {
     let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    this.logger.log(`cachedApiKey----${agentApiKey}`);
     if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
       agentApiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
     }
     payload.apiKey = agentApiKey;
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
 
-    this.logger.log(`-----getProofPresentation---${JSON.stringify(getProofPresentation)}`);
 
     if (!getProofPresentation) {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
@@ -485,7 +481,6 @@ export class VerificationService {
 
   async sendOutOfBandProofRequest(payload: IProofRequestPayload, email: string, getAgentDetails: org_agents, organizationDetails: organisation): Promise<boolean> {
     let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    this.logger.log(`cachedApiKey----${agentApiKey}`);
     if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
       agentApiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
     }
@@ -720,7 +715,7 @@ export class VerificationService {
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', proofId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
+    
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }

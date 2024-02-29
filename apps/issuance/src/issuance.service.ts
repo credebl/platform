@@ -29,7 +29,7 @@ import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
-import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
+import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 
@@ -148,33 +148,35 @@ export class IssuanceService {
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, isShortenUrl } = payload;
 
-      const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType, isShortenUrl } = payload;
+      if (credentialType === IssueCredentialType.INDY) {
+        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
 
-      if (schemadetailsResponse?.attributes) {
-        const schemadetailsResponseError = [];
-        const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
+        if (schemadetailsResponse?.attributes) {
+          const schemadetailsResponseError = [];
+          const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
 
-        attributesArray.forEach((attribute) => {
-          if (attribute.attributeName && attribute.isRequired) {
+          attributesArray.forEach((attribute) => {
+            if (attribute.attributeName && attribute.isRequired) {
 
-            payload.attributes.map((attr) => {
-              if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                schemadetailsResponseError.push(
-                  `Attribute '${attribute.attributeName}' is required but has an empty value.`
-                );
-              }
-              return true;
-            });
+              payload.attributes.map((attr) => {
+                if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+                  schemadetailsResponseError.push(
+                    `Attribute '${attribute.attributeName}' is required but has an empty value.`
+                  );
+                }
+                return true;
+              });
+            }
+          });
+          if (0 < schemadetailsResponseError.length) {
+            throw new BadRequestException(schemadetailsResponseError);
           }
-        });
-        if (0 < schemadetailsResponseError.length) {
-          throw new BadRequestException(schemadetailsResponseError);
-        }
 
+        }
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -196,24 +198,48 @@ export class IssuanceService {
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
+      let issueData;
+      if (credentialType === IssueCredentialType.INDY) {
 
-      const issueData = {
-        protocolVersion: protocolVersion || 'v1',
-        credentialFormats: {
-          indy: {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
-            credentialDefinitionId
-          }
-        },
-        autoAcceptCredential: payload.autoAcceptCredential || 'always',
-        goalCode: payload.goalCode || undefined,
-        parentThreadId: payload.parentThreadId || undefined,
-        willConfirm: payload.willConfirm || undefined,
-        imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
-        label: organisation?.name,
-        comment: comment || ''
-      };
+        issueData = {
+          protocolVersion: protocolVersion || 'v1',
+          credentialFormats: {
+            indy: {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              attributes: (attributes).map(({ isRequired, ...rest }) => rest),
+              credentialDefinitionId
+            }
+          },
+          autoAcceptCredential: payload.autoAcceptCredential || 'always',
+          goalCode: payload.goalCode || undefined,
+          parentThreadId: payload.parentThreadId || undefined,
+          willConfirm: payload.willConfirm || undefined,
+          imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
+          label: organisation?.name,
+          comment: comment || ''
+        };
+
+      }
+
+      if (credentialType === IssueCredentialType.JSONLD) {
+        issueData = {
+          protocolVersion: protocolVersion || 'v2',
+          credentialFormats: {
+            jsonld: {
+              credential,
+              options
+            }
+          },
+          autoAcceptCredential: payload.autoAcceptCredential || 'always',
+          goalCode: payload.goalCode || undefined,
+          parentThreadId: payload.parentThreadId || undefined,
+          willConfirm: payload.willConfirm || undefined,
+          imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
+          label: organisation?.name,
+          comment: comment || ''
+        };
+      }
+
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
       if (isShortenUrl) {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
@@ -453,12 +479,16 @@ export class IssuanceService {
         orgId,
         protocolVersion,
         attributes,
-        emailId
+        emailId,
+        credentialType
       } = outOfBandCredential;
 
-      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
+
+    if (IssueCredentialType.INDY === credentialType) {
+
+        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
 
       let attributesArray: IAttributes[] = [];
       if (schemaResponse?.attributes) {
@@ -506,6 +536,8 @@ export class IssuanceService {
         }
       }
 
+       }
+
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { organisation } = agentDetails;
@@ -531,27 +563,49 @@ export class IssuanceService {
 
       const errors = [];
       const emailPromises = [];
-
+      let outOfBandIssuancePayload;
       const sendEmailForCredentialOffer = async (iterator, emailId, index): Promise<boolean> => {
         const iterationNo = index + 1;
         try {
-          const outOfBandIssuancePayload = {
-            protocolVersion: protocolVersion || 'v1',
-            credentialFormats: {
-              indy: {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                attributes: (iterator.attributes || attributes).map(({ isRequired, ...rest }) => rest),
-                credentialDefinitionId
-              }
-            },
-            autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
-            comment,
-            goalCode: outOfBandCredential.goalCode || undefined,
-            parentThreadId: outOfBandCredential.parentThreadId || undefined,
-            willConfirm: outOfBandCredential.willConfirm || undefined,
-            label: organisation?.name,
-            imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
-          };
+          if (IssueCredentialType.INDY === credentialType) {
+
+            outOfBandIssuancePayload = {
+              protocolVersion: protocolVersion || 'v1',
+              credentialFormats: {
+                indy: {
+                  attributes: iterator.attributes || attributes,
+                  credentialDefinitionId
+                }
+              },
+              autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+              comment,
+              goalCode: outOfBandCredential.goalCode || undefined,
+              parentThreadId: outOfBandCredential.parentThreadId || undefined,
+              willConfirm: outOfBandCredential.willConfirm || undefined,
+              label: outOfBandCredential.label || undefined,
+              imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
+            };
+          }
+
+          if (IssueCredentialType.JSONLD === credentialType) {
+            outOfBandIssuancePayload = {
+              protocolVersion: 'v2',
+              credentialFormats: {
+                jsonld: {
+                  credential: iterator.credential,
+                  options: iterator.options
+                }
+              },
+              autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+              comment,
+              goalCode: outOfBandCredential.goalCode || undefined,
+              parentThreadId: outOfBandCredential.parentThreadId || undefined,
+              willConfirm: outOfBandCredential.willConfirm || undefined,
+              label: outOfBandCredential.label || undefined,
+              imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
+            };
+          }
+
 
           this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
 

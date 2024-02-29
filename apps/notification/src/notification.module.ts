@@ -16,7 +16,7 @@ import { NotificationRepository } from './notification.repository';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.ISSUANCE_NKEY_SEED)
+        options: getNatsOptions(process.env.NOTIFICATION_NKEY_SEED)
       }
     ]),
     CommonModule,

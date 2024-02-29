@@ -21,8 +21,8 @@ INBOUND_ENDPOINT=${16}
 
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
-ADMIN_PORT=4001
-INBOUND_PORT=5001
+ADMIN_PORT=8001
+INBOUND_PORT=9001
 
 increment_port() {
   local port="$1"

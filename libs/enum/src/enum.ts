@@ -20,6 +20,12 @@ export declare enum KeyType {
     K256 = 'k256'
 }
 
+export enum DidMethod {
+    INDY = 'indy',
+    KEY = 'key',
+    WEB = 'web'
+}
+
 export enum Ledgers {
     Bcovrin_Testnet = 'Bcovrin Testnet',
     Indicio_Testnet = 'Indicio Testnet',

@@ -19,7 +19,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation, IQuestionPayload } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation, IQuestionPayload, IDidCreate, IWallet, ITenantRecord } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
@@ -36,6 +36,14 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+
+interface IPayload {
+  seed: string;
+  keyType: string;
+  method: string;
+  network: string;
+  role: string;
+}
 
 @Injectable()
 @WebSocketGateway()
@@ -464,18 +472,34 @@ export class AgentServiceService {
 
 
   private async _getAgentDid(payload: IStoreOrgAgentDetails): Promise<object> {
-    const { agentEndPoint, apiKey, seed, ledgerId, did } = payload;
+    // const { agentEndPoint, apiKey, seed, ledgerId, did } = payload;
+    const { agentEndPoint, apiKey, ledgerId } = payload;
+
+    const agentPayload: IPayload = {
+      seed: '10111111011110110011110000011011',
+      keyType: 'ed25519',
+      method: 'indy',
+      network: 'bcovrin:testnet',
+      role: 'endorser'
+    };
     const writeDid = 'write-did';
     const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(ledgerId);
     const agentDidWriteUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
     // return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);
-    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, did);
+    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, agentPayload);
   }
 
   private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {
     const getDidDic = 'get-did-doc';
+    const didCreationPayload: IPayload = {
+      seed: '10111111011110110011110000011011',
+      keyType: 'ed25519',
+      method: 'indy',
+      network: 'bcovrin:testnet',
+      role: 'endorser' 
+    };
     const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}`.replace('#', agentDid['did']);
-    return this._retryAgentSpinup(getDidMethodUrl, payload.apiKey, getDidDic);
+    return this._retryAgentSpinup(getDidMethodUrl, payload.apiKey, getDidDic, didCreationPayload);
   }
 
   private _buildStoreOrgAgentData(payload: IStoreOrgAgentDetails, getDidMethod: object, orgAgentTypeId: string): IStoreOrgAgentDetails {
@@ -515,17 +539,18 @@ export class AgentServiceService {
     this.logger.error(`[_storeOrgAgentDetails] - Error in store agent details : ${JSON.stringify(error)}`);
   }
 
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {
-  // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, did?: string): Promise<object> {
+  // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPayload): Promise<object> {
+
+    const { seed, keyType, method, network, role} = payload;
     const retryOptions = {
       retries: 10
     };
-
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
           // return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });
-          return this.commonService.httpPost(agentUrl, { seed, did }, { headers: { 'authorization': apiKey } });
+          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role}, { headers: { 'authorization': apiKey } });
         } else if (agentApiState === 'get-did-doc') {
           return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
         }
@@ -738,6 +763,92 @@ export class AgentServiceService {
     }
   }
 
+  /**
+   * Create wallet
+   * @param payload 
+   * @returns wallet details
+   */
+  async createWallet(payload: IWallet): Promise<ITenantRecord> {
+    try {
+    const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
+    const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
+
+    const { label } = payload;
+    const createTenantOptions = {
+      config: { label }
+    };
+
+    const tenantDetails = await this.commonService.httpPost(
+      `${getPlatformAgentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
+      createTenantOptions,
+      { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
+    );
+
+    return tenantDetails;
+
+    } catch (error) {
+      this.logger.error(`error in create wallet : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Create did
+   * @param payload 
+   * @returns did and didDocument
+   */
+    async createDid(payload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
+      try {  
+
+      // const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(payload.orgId);
+      // console.log('agentDetails::', agentDetails);
+      // const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      // console.log('getOrgAgentType::', getOrgAgentType);
+      // let url;
+
+      // if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
+      //   url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;  
+      // } else if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
+      //   url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', agentDetails.tenantId);  
+      // }
+
+      let url;
+      // if (payload.orgId) {
+        // url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', agentDetails.tenantId);
+        // url = `http://192.168.1.63:8010${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', '0fc74f21-59ea-4a6f-85d7-50939b59b1fc');
+
+
+      const didDetails = await this.commonService.httpPost(
+        `http://192.168.1.63:8010${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', '0fc74f21-59ea-4a6f-85d7-50939b59b1fc'),
+        payload,
+        // { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
+        { headers: { 'authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZ2VudEluZm8iOiJhZ2VudEluZm8iLCJpYXQiOjE3MDcyOTEyMjN9.DN56mzc4qk6fGbetpxGWmyBaW0ndXat06ye1_-ZOtaQ' } }
+      );
+  
+      // const didDetails = await this.commonService.httpPost(url);
+      return didDetails;
+
+  
+      // } catch (error) {
+      //   this.logger.error(`error in create did : ${JSON.stringify(error)}`);
+      //   throw new RpcException(error.response ? error.response : error);
+      // }
+    // }  
+  } catch (error) {
+    this.logger.error(`error in create did : ${JSON.stringify(error)}`);
+    // throw new RpcException(error.response ? error.response : error);
+
+    if (error?.response?.error?.message) {
+      throw new RpcException({
+        statusCode: error?.response?.status,
+        error: error?.response?.error?.message
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
+    }
+
+  }
+} 
   private async getPlatformAdminAndNotify(clientSocketId: string | undefined): Promise<IOrgAgentsResponse> {
     const socket = await this.createSocketInstance();
     if (clientSocketId) {
@@ -774,36 +885,15 @@ export class AgentServiceService {
     const createTenantOptions = {
       config: { label },
       seed,
-      did: did ? did : undefined
-      // method: ledgerIds.indyNamespace
+      did: did ? did : undefined,
+      method: ledgerIds.indyNamespace
     };
 
-    // const createDidOptions = {
-    //     keyType: "ed25519",
-    //     seed,
-    //     domain,
-    //     method,
-    //     network,
-    //     did,
-    //     role,
-    //     endorserDid,
-    //     didDocument: {}      
-    // };
-
-    // Invoke an API request from the agent to create multi-tenant agent
     const tenantDetails = await this.commonService.httpPost(
       `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
       createTenantOptions,
       { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
     );
-
-    // if (tenantDetails) {
-    //   await this.commonService.httpPost(
-    //     `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}`,
-    //     createTenantOptions,
-    //     { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
-    //   );
-    // }
 
     return tenantDetails;
   }

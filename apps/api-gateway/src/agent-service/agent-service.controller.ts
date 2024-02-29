@@ -32,6 +32,9 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { CreateDidDto } from './dto/create-did.dto';
+import { validateDid } from '@credebl/common/did.validator';
+import { CreateWalletDto } from './dto/create-wallet.dto';
 
 const seedLength = 32;
 @UseFilters(CustomExceptionFilter)
@@ -195,4 +198,70 @@ export class AgentController {
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+  /**
+   * Create wallet
+   * @param orgId 
+   * @returns wallet
+   */
+     @Post('/orgs/:orgId/agents/createWallet')
+     @ApiOperation({
+       summary: 'Create wallet',
+       description: 'Create wallet'
+     })
+     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+     async createWallet(
+       @Param('orgId') orgId: string,
+       @Body() createWalletDto: CreateWalletDto,
+       @User() user: user,
+       @Res() res: Response
+     ): Promise<Response> {
+   
+      createWalletDto.orgId = orgId;
+      const walletDetails = await this.agentService.createWallet(createWalletDto, user);
+   
+       const finalResponse: IResponse = {
+         statusCode: HttpStatus.CREATED,
+         message: ResponseMessages.agent.success.createWallet,
+         data: walletDetails
+       };
+   
+       return res.status(HttpStatus.CREATED).json(finalResponse);
+     }
+  
+  // This function will be used after multiple did method implementation in create wallet
+   /**
+   * Create did
+   * @param orgId 
+   * @returns did
+   */
+   @Post('/orgs/:orgId/agents/createDid')
+   @ApiOperation({
+     summary: 'Create did',
+     description: 'Create did'
+   })
+   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+   async createDid(
+     @Param('orgId') orgId: string,
+     @Body() createDidDto: CreateDidDto,
+     @User() user: user,
+     @Res() res: Response
+   ): Promise<Response> {
+  
+    validateDid(createDidDto);
+
+     const didDetails = await this.agentService.createDid(createDidDto, orgId, user);
+ 
+     const finalResponse: IResponse = {
+       statusCode: HttpStatus.CREATED,
+       message: ResponseMessages.agent.success.createDid,
+       data: didDetails
+     };
+ 
+     return res.status(HttpStatus.CREATED).json(finalResponse);
+   }
 }

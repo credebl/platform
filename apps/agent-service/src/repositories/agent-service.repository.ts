@@ -1,7 +1,7 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { ledgerConfig, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
+import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
 import { ICreateOrgAgent, IStoreOrgAgentDetails, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
@@ -322,6 +322,23 @@ export class AgentServiceRepository {
         }
     }
 
+    // eslint-disable-next-line camelcase
+    async getOrgAgentType(orgAgentId: string): Promise<org_agents_type> {
+        try {
+          const orgAgent = await this.prisma.org_agents_type.findUnique({
+            where: {
+              id: orgAgentId
+            }
+          });
+         
+          return orgAgent;
+
+        } catch (error) {
+          this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+          throw error;
+        }
+      }
+    
     async getPlatfomAdminUser(platformAdminUserEmail: string): Promise<user> {
         try {
             const platformAdminUser = await this.prisma.user.findUnique({

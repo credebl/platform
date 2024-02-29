@@ -6,6 +6,8 @@ import { AgentSpinupDto } from './dto/agent-service.dto';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { AgentSpinUpSatus } from './interface/agent-service.interface';
 import { AgentStatus } from './interface/agent-service.interface';
+import { CreateDidDto } from './dto/create-did.dto';
+import { CreateWalletDto } from './dto/create-wallet.dto';
 
 @Injectable()
 export class AgentService extends BaseService {
@@ -33,6 +35,19 @@ export class AgentService extends BaseService {
 
         // NATS call
         return this.sendNatsMessage(this.agentServiceProxy, 'create-tenant', payload);
+    }
+
+    async createDid(createDidDto: CreateDidDto, orgId:string, user: user): Promise<object> {
+        const payload = { createDidDto, orgId, user };
+
+        // NATS call
+        return this.sendNatsMessage(this.agentServiceProxy, 'create-did', payload);
+    }
+
+    async createWallet(createWalletDto: CreateWalletDto, user: user): Promise<object> {
+        const payload = { createWalletDto, user };
+        // NATS call
+        return this.sendNatsMessage(this.agentServiceProxy, 'create-wallet', payload);
     }
 
     async getAgentHealth(user: user, orgId:string): Promise<AgentStatus> {

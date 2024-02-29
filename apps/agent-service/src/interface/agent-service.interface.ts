@@ -42,18 +42,25 @@ export interface ITenantDto {
     clientSocketId?: string;
 }
 
-export interface DidCreate {
-    keyType: KeyType
-    seed: string
-    domain?: string
-    method: string
-    network?: string
-    did?: string
-    role?: string
-    endorserDid?: string
-    didDocument?: object
-  }
+export interface IWallet {
+    label: string;
+    orgId: string;
+    did?: string;
+    clientSocketId?: string;
+}
 
+export interface IDidCreate {
+    tenantId: string;
+    keyType: KeyType;
+    seed: string;
+    domain?: string;
+    network?: string;
+    method: string;
+    did?: string;
+    role?: string;
+    endorserDid?: string;
+    didDocument?: object;
+}
 export interface ITenantSchema {
     tenantId?: string;
     attributes: string[];
@@ -308,8 +315,7 @@ interface IConfig {
     label: string;
     walletConfig: IWalletConfig;
 }
-
-interface ITenantRecord {
+export interface ITenantRecord {
     _tags: string;
     metadata: string;
     id: string;
@@ -323,6 +329,7 @@ export interface ICreateTenant {
     did: string;
     verkey: string;
 }
+
 
 export interface IOrgAgent {
     agentSpinUpStatus: number;

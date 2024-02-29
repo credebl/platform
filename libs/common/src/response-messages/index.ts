@@ -186,6 +186,8 @@ export const ResponseMessages = {
     agent: {
         success: {
             create: 'Agent process initiated successfully. Please wait',
+            createWallet: 'Wallet created successfully',
+            createDid: 'Did created successfully',
             health: 'Agent health details retrieved successfully.',
             ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',

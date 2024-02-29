@@ -372,7 +372,7 @@ export class VerificationService {
       //apply presentation shorting URL
       if (isShortenUrl) {
         const proofRequestInvitationUrl: string = getProofPresentation?.response?.invitationUrl;
-        const shortenedUrl: string = await this.storeObjectAndReturnUrl(proofRequestInvitationUrl, false);
+        const shortenedUrl: string = await this.storeVerificationObjectAndReturnUrl(proofRequestInvitationUrl, false);
         this.logger.log('shortenedUrl', shortenedUrl);
         if (shortenedUrl) {
           getProofPresentation.response.invitationUrl = shortenedUrl;
@@ -398,7 +398,7 @@ export class VerificationService {
     }
   }
 
-  async storeObjectAndReturnUrl(storeObj: string, persistent: boolean): Promise<string> {
+  async storeVerificationObjectAndReturnUrl(storeObj: string, persistent: boolean): Promise<string> {
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };
     const payload = { persistent, storeObj };
@@ -410,7 +410,7 @@ export class VerificationService {
         .toPromise()
         .catch((error) => {
           this.logger.error(
-            `[storeObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+            `[storeVerificationObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
               error
             )}`
           );

@@ -5,7 +5,10 @@ import { IShorteningUrlData } from '../interfaces/shortening-url.interface';
 
 @Controller()
 export class UtilitiesController {
-  constructor(private readonly utilitiesService: UtilitiesService) {}
+  constructor(
+    private readonly utilitiesService: UtilitiesService,
+    private readonly logger: Logger
+  ) {}
 
   @MessagePattern({ cmd: 'create-shortening-url' })
   async createAndStoreShorteningUrl(payload: IShorteningUrlData): Promise<string> {
@@ -18,14 +21,13 @@ export class UtilitiesController {
   }
 
   @MessagePattern({ cmd: 'store-object-return-url' })
-  async storeObject(payload: {persistent: boolean, storeObj: unknown}): Promise<string> {
+  async storeObject(payload: { persistent: boolean; storeObj: unknown }): Promise<string> {
     try {
-    const url:string = await this.utilitiesService.storeObject(payload);
-    return url;
+      const url: string = await this.utilitiesService.storeObject(payload);
+      return url;
     } catch (error) {
-      Logger.error(error);
+      this.logger.error(error);
       throw new Error('Error occured in Utility Microservices Controller');
     }
-    
   }
 }

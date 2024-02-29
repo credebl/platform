@@ -148,33 +148,35 @@ export class IssuanceService {
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
-
-      const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
-
-      if (schemadetailsResponse?.attributes) {
-        const schemadetailsResponseError = [];
-        const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
-
-        attributesArray.forEach((attribute) => {
-          if (attribute.attributeName && attribute.isRequired) {
-            
-            payload.attributes.map((attr) => { 
-              if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                schemadetailsResponseError.push(
-                  `Attribute '${attribute.attributeName}' is required but has an empty value.`
-                );
-              }
-              return true;
-             });
+    
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType} = payload;
+      if (credentialType === IssueCredentialType.INDY) {
+        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
+  
+        if (schemadetailsResponse?.attributes) {
+          const schemadetailsResponseError = [];
+          const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
+  
+          attributesArray.forEach((attribute) => {
+            if (attribute.attributeName && attribute.isRequired) {
+              
+              payload.attributes.map((attr) => { 
+                if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+                  schemadetailsResponseError.push(
+                    `Attribute '${attribute.attributeName}' is required but has an empty value.`
+                  );
+                }
+                return true;
+               });
+            }
+          });
+          if (0 < schemadetailsResponseError.length) {
+            throw new BadRequestException(schemadetailsResponseError);
           }
-        });
-        if (0 < schemadetailsResponseError.length) {
-          throw new BadRequestException(schemadetailsResponseError);
+  
         }
-
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -196,8 +198,10 @@ export class IssuanceService {
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
+   let issueData;
+      if (credentialType === IssueCredentialType.INDY) {
 
-      const issueData = {
+       issueData = {
         protocolVersion: protocolVersion || 'v1',
         credentialFormats: {
           indy: {
@@ -214,6 +218,28 @@ export class IssuanceService {
         label: organisation?.name,
         comment: comment || ''
       };
+
+    }
+
+    if (credentialType === IssueCredentialType.JSONLD) {
+      issueData = {
+        protocolVersion: protocolVersion || 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential,
+            options
+          }
+        },
+        autoAcceptCredential: payload.autoAcceptCredential || 'always',
+        goalCode: payload.goalCode || undefined,
+        parentThreadId: payload.parentThreadId || undefined,
+        willConfirm: payload.willConfirm || undefined,
+        imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
+        label: organisation?.name,
+        comment: comment || ''
+      };
+    }
+
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
 
       return credentialCreateOfferDetails;
@@ -414,9 +440,7 @@ export class IssuanceService {
       } = outOfBandCredential;
 
 
-      // console.log("cbcb",JSON.stringify(outOfBandCredential, null, 2 ) )
-
-       if (IssueCredentialType.INDY === credentialType) {
+    if (IssueCredentialType.INDY === credentialType) {
 
         const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
           credentialDefinitionId
@@ -519,7 +543,6 @@ const credefError = [];
           }
 
           if (IssueCredentialType.JSONLD === credentialType) {
-            // console.log("outOfBandIssuancePayload", JSON.stringify(outOfBandIssuancePayload, null, 2))
             outOfBandIssuancePayload = {
               protocolVersion:'v2',
               credentialFormats: {

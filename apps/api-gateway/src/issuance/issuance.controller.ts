@@ -1,3 +1,4 @@
+/* eslint-disable default-param-last */
 /* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable camelcase */
@@ -548,15 +549,12 @@ export class IssuanceController {
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
-    @Query('credentialType') credentialType: IssueCredentialType,
+    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
     outOfBandCredentialDto.credentialType = credentialType;
-
-    // console.log("outOfBandCredentialDto::",JSON.stringify(outOfBandCredentialDto, null, 2));
-
     const credOffer = outOfBandCredentialDto?.credentialOffer || [];
     if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType) {
       throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
@@ -592,15 +590,21 @@ export class IssuanceController {
       summary: `Create out-of-band credential offer`,
       description: `Creates an out-of-band credential offer`
     })
+    @ApiQuery({
+      name:'credentialType',
+      enum: IssueCredentialType
+    })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     async createOOBCredentialOffer(
+      @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
       @Param('orgId') orgId: string,
       @Body() issueCredentialDto: OOBIssueCredentialDto,
       @Res() res: Response
     ): Promise<Response> {
       issueCredentialDto.orgId = orgId;
+      issueCredentialDto.credentialType = credentialType;
       const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,

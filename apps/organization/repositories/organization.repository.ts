@@ -14,7 +14,6 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IOrganizationInvitations, IOrganization, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
-import { OrgRoles } from 'libs/org-roles/enums';
 
 @Injectable()
 export class OrganizationRepository {
@@ -487,11 +486,6 @@ export class OrganizationRepository {
         },
         include: {
           userOrgRoles: {
-            where: {
-              orgRole: {
-                name: OrgRoles.OWNER
-              }
-            },
             include: {
               user: {
                 select: {

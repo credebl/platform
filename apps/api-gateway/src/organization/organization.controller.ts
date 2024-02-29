@@ -394,6 +394,9 @@ export class OrganizationController {
     summary: 'Register client and map users',
     description: 'Register client and map users'
   })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async registerOrgsMapUsers(@Res() res: Response): Promise<Response> {
 
@@ -509,6 +512,7 @@ export class OrganizationController {
   @ApiOperation({ summary: 'Delete Organization Client Credentials', description: 'Delete Organization Client Credentials' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
+  @ApiExcludeEndpoint()
   @UseGuards(AuthGuard('jwt'))
   async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
 

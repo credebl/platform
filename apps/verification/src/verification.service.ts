@@ -369,8 +369,8 @@ export class VerificationService {
       const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
       //apply presentation shorting URL
       if (isShortenUrl) {
-        const proofRequestInvitation: string = getProofPresentation?.response?.invitationUrl;
-        const shortenedUrl: string = await this.storeObjectAndReturnUrl(proofRequestInvitation, false);
+        const proofRequestInvitationUrl: string = getProofPresentation?.response?.invitationUrl;
+        const shortenedUrl: string = await this.storeObjectAndReturnUrl(proofRequestInvitationUrl, false);
         this.logger.log('shortenedUrl', shortenedUrl);
         if (shortenedUrl) {
           getProofPresentation.response.invitationUrl = shortenedUrl;

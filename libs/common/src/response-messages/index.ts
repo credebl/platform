@@ -410,7 +410,7 @@ export const ResponseMessages = {
     },
     storeObject: {
         success: {
-            storeObject: 'Object stored successfully'
+            storeObject: 'Data stored successfully'
         }
     } 
 };

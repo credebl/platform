@@ -56,7 +56,7 @@ export class UtilitiesService {
             const url: string = `https://${uploadResult.Bucket}.s3.${process.env.AWS_S3_STOREOBJECT_REGION}.amazonaws.com/${uploadResult.Key}`;
             return url;
         } catch (error) {
-            Logger.error(error);
+            this.logger.error(error);
             throw new Error('An error occurred while uploading data to S3. Error::::::');
         }
     }

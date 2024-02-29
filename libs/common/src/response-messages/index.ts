@@ -272,7 +272,10 @@ export const ResponseMessages = {
             emailIdNotPresent: 'EmailId is empty or not present',
             attributesNotPresent: 'Attributes are not present or not empty',
             unableToCreateOffer: 'Unable to create offer',
-            orgAgentTypeNotFound: 'Organization agent type not found'
+            orgAgentTypeNotFound: 'Organization agent type not found',
+            credentialNotPresent: 'credential is required',
+            optionsNotPresent:'options are required',
+            invalidCredentialType:'invalid credential type'
         }
     },
     verification: {

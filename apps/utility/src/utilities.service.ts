@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { UtilitiesRepository } from './utilities.repository';
 import { AwsService } from '@credebl/aws';
-// import { IUtilities } from '../interfaces/shortening-url.interface';
 import { S3 } from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
 

@@ -286,7 +286,6 @@ export class VerificationController {
         @Res() res: Response
     ): Promise<Response> {
         proofPresentationPayload.type = 'Verification';
-        this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
        
             const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
                 this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);

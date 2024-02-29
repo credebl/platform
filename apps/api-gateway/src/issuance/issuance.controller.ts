@@ -603,7 +603,6 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
 issueCredentialDto.type = 'Issuance';
-    this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
      
       const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
         this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);

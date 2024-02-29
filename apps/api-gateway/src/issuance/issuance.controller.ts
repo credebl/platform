@@ -223,7 +223,6 @@ export class IssuanceController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
-    try {
 
       if (file) {
         const fileKey: string = uuidv4();
@@ -247,9 +246,7 @@ export class IssuanceController {
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
       }
-    } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
-    }
+
   }
 
   @Get('/orgs/:orgId/:requestId/preview')

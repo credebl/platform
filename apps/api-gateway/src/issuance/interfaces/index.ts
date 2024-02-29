@@ -1,3 +1,6 @@
+import { JsonLdCredentialDetailCredentialStatus } from '../dtos/issuance.dto';
+import { JsonValue } from '../utils/helper';
+
 export interface IUserRequestInterface {
     userId: string;
     email: string;
@@ -75,3 +78,24 @@ export interface IIssuedCredentialSearchParams {
     searchByText: string;
 }
 
+export enum IssueCredentialType {
+    JSONLD = 'jsonld',
+    INDY = 'indy'
+}
+
+export interface JsonObject {
+    [property: string]: JsonValue
+  }
+
+  export interface JsonLdCredentialDetailCredentialStatusOptions {
+    type: string
+  }
+
+  export interface JsonLdCredentialDetailOptionsOptions {
+    proofPurpose: string
+    created?: string
+    domain?: string
+    challenge?: string
+    credentialStatus?: JsonLdCredentialDetailCredentialStatus
+    proofType: string
+  }

@@ -39,3 +39,9 @@ interface Attribute {
     name: string;
     value: string;
   }
+
+  export class GenericDto {
+  @ApiProperty()
+  @IsNotEmpty()  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: string | object;
+}

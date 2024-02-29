@@ -18,6 +18,6 @@ async function bootstrap(): Promise<void> {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen();
-  logger.log('Issuance-Service Microservice is listening to NATS ');
+  logger.log('Notification-Service Microservice is listening to NATS ');
 }
 bootstrap();

@@ -242,12 +242,12 @@ export class IssuanceService {
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
       if (isShortenUrl) {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
-        const url: string = await this.storeObjectReturnUrl(invitationUrl);
+        const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
       }
       return credentialCreateOfferDetails;
     } catch (error) {
-      this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
+      this.logger.error(`[storeIssuanceObjectReturnUrl] - error in create credentials : ${JSON.stringify(error)}`);
 
       const errorStack = error?.status?.message?.error;
       if (errorStack) {
@@ -262,7 +262,7 @@ export class IssuanceService {
     }
   }
 
-  async storeObjectReturnUrl(storeObj: string): Promise<string> {
+  async storeIssuanceObjectReturnUrl(storeObj: string): Promise<string> {
     // Set default to false, since currently our invitation are not multi-use
     const persistent: boolean = false;
     //nats call in agent-service to create an invitation url

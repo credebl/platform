@@ -100,28 +100,6 @@ interface IInvitation {
   invitationUrl: string;
 }
 
-interface IService {
-  id: string;
-  serviceEndpoint: string;
-  type: string;
-  recipientKeys: string[];
-  routingKeys: string[];
-  accept: string[];
-}
-
-export interface ILegacyInvitation {
-  '@id': string;
-  '@type': string;
-  label: string;
-  goalCode: string;
-  goal: string;
-  accept: string[];
-  // eslint-disable-next-line camelcase
-  handshake_protocols: string[];
-  services: IService[];
-  imageUrl?: string;
-}
-
 export interface OrgAgent {
   organisation: organisation;
   id: string;

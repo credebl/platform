@@ -1,0 +1,41 @@
+# Stage 1: Build the application
+FROM node:18-alpine as build
+RUN npm install -g pnpm --ignore-scripts
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package.json ./
+#COPY package-lock.json ./
+
+# Install dependencies
+RUN pnpm i --ignore-scripts
+
+# Copy the rest of the application code
+COPY . .
+RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+
+# Build the notification service
+RUN npm run build notification
+
+
+# Stage 2: Create the final image
+FROM node:18-alpine
+RUN npm install -g pnpm --ignore-scripts
+# Set the working directory
+WORKDIR /app
+
+# Copy the compiled code from the build stage
+COPY --from=build /app/dist/apps/notification/ ./dist/apps/notification/
+
+# Copy the libs folder from the build stage
+COPY --from=build /app/libs/ ./libs/
+#COPY --from=build /app/package.json ./  
+COPY --from=build /app/node_modules  ./node_modules
+
+# Set the command to run the microservice
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/notification/main.js"]
+
+# docker build -t notification -f Dockerfiles/Dockerfile.notification .
+# docker run -d --env-file .env --name notification docker.io/library/notification
+# docker logs -f notification

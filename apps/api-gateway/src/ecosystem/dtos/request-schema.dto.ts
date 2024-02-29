@@ -53,7 +53,7 @@ export class RequestSchemaDto {
         attributeName: 'name',
         schemaDataType: 'string',
         displayName: 'Name',
-        isRequired: 'true'
+        isRequired: true
       }
     ]
   })

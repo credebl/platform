@@ -1035,6 +1035,26 @@ export class EcosystemRepository {
     }
   }
 
+  async schemaExist(schemaName: string, schemaVersion: string): Promise<schema[]> {
+    try {
+      return this.prisma.schema.findMany({
+        where: {
+          name: {
+            contains: schemaName,
+            mode: 'insensitive'
+          },
+          version: {
+            contains: schemaVersion,
+            mode: 'insensitive'
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in schemaExists: ${error}`);
+      throw error;
+    }
+  }
+
   // eslint-disable-next-line camelcase
   async saveCredDef(credDefResult: saveCredDef): Promise<credential_definition> {
     try {

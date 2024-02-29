@@ -425,7 +425,7 @@ export class EcosystemService {
    * @param userId
    * @returns Ecosystem invitation status
    */
-  async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto): Promise<string> {
+  async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto, email: string): Promise<string> {
     try {
       const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(
         EcosystemConfigSettings.MULTI_ECOSYSTEM
@@ -442,8 +442,7 @@ export class EcosystemService {
       }
 
       const { orgId, status, invitationId, orgName, orgDid, userId } = acceptRejectInvitation;
-      const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId);
-
+      const invitation = await this.ecosystemRepository.getEcosystemInvitationById(invitationId, email);
       if (!invitation) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.invitationNotFound);
       }

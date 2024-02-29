@@ -38,7 +38,6 @@ export class CredentialDefinitionService extends BaseService {
             const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(credDef.orgId);
             // const apiKey = await this._getOrgAgentApiKey(credDef.orgId);
             let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-            this.logger.log(`cachedApiKey----${apiKey}`);
            if (!apiKey || null === apiKey  ||  undefined === apiKey) {
              apiKey = await this._getOrgAgentApiKey(credDef.orgId);
             }
@@ -184,7 +183,7 @@ export class CredentialDefinitionService extends BaseService {
             const orgAgentType = await this.credentialDefinitionRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
             // const apiKey = await this._getOrgAgentApiKey(String(orgId));
             let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-            this.logger.log(`cachedApiKey----${apiKey}`);
+        
            if (!apiKey || null === apiKey  ||  undefined === apiKey) {
              apiKey = await this._getOrgAgentApiKey(String(orgId));
             }

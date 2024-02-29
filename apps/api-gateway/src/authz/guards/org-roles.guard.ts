@@ -1,7 +1,5 @@
 import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 
-import { HttpException } from '@nestjs/common';
-import { HttpStatus } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { ROLES_KEY } from '../decorators/roles.decorator';
@@ -34,15 +32,11 @@ export class OrgRolesGuard implements CanActivate {
 
     const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
 
-    if (!orgId) {
-      throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
-    }
+    if (orgId) {  
 
     if (!isValidUUID(orgId)) {
       throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
     }    
-  
-    if (orgId) {  
       
         const orgDetails = user.resource_access[orgId];
 
@@ -91,7 +85,7 @@ export class OrgRolesGuard implements CanActivate {
       return false;
 
     } else {
-      throw new HttpException('organization is required', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('organization is required');
     }
 
     // Sending user friendly message if a user attempts to access an API that is inaccessible to their role

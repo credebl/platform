@@ -356,11 +356,12 @@ export class EcosystemRepository {
    * @returns Invitation details
    */
   // eslint-disable-next-line camelcase
-  async getEcosystemInvitationById(id: string): Promise<ecosystem_invitations> {
+  async getEcosystemInvitationById(id: string, email: string): Promise<ecosystem_invitations> {
     try {
       return this.prisma.ecosystem_invitations.findUnique({
         where: {
-          id
+          id,
+          email
         },
         include: {
           ecosystem: true

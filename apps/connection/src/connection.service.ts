@@ -82,7 +82,7 @@ export class ConnectionService {
       }
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
       const connectionInvitaionUrl: string = createConnectionInvitation?.message?.invitationUrl;
-      const shortenedUrl: string = await this.storeObjectAndReturnUrl(
+      const shortenedUrl: string = await this.storeConnectionObjectAndReturnUrl(
         connectionInvitaionUrl,
         connectionPayload.multiUseInvitation
       );
@@ -690,7 +690,7 @@ export class ConnectionService {
     }
   }
 
-  async storeObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
+  async storeConnectionObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
     const storeObj = connectionInvitationUrl;
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };
@@ -703,7 +703,7 @@ export class ConnectionService {
         .toPromise()
         .catch((error) => {
           this.logger.error(
-            `[storeObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+            `[storeConnectionObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
               error
             )}`
           );

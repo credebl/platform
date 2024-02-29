@@ -215,8 +215,8 @@ export class IssuanceService {
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
       if (isShortenUrl) {
-        const invitationObject: IOobIssuanceInvitation = credentialCreateOfferDetails.response?.invitationUrl;
-        const url: string = await this.storeObjectReturnUrl(invitationObject);
+        const invitationUrl: IOobIssuanceInvitation = credentialCreateOfferDetails.response?.invitationUrl;
+        const url: string = await this.storeObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
       }
       return credentialCreateOfferDetails;
@@ -237,6 +237,7 @@ export class IssuanceService {
   }
 
   async storeObjectReturnUrl(storeObj: IOobIssuanceInvitation): Promise<string> {
+    // Set default to false, since currently our invitation are not multi-use
     const persistent: boolean = false;
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };

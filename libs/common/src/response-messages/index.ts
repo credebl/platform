@@ -407,5 +407,10 @@ export const ResponseMessages = {
             notFound: 'Notification record not found.',
             invalidUrl: 'Invalid URL'
         }
-    }
+    },
+    storeObject: {
+        success: {
+            storeObject: 'Data stored successfully'
+        }
+    } 
 };

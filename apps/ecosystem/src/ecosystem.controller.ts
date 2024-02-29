@@ -104,9 +104,10 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'accept-reject-ecosystem-invitations' })
   async acceptRejectEcosystemInvitations(payload: {
-    acceptRejectInvitation: AcceptRejectEcosystemInvitationDto;
+    acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
+    userEmail: string
   }): Promise<string> {
-    return this.ecosystemService.acceptRejectEcosystemInvitations(payload.acceptRejectInvitation);
+    return this.ecosystemService.acceptRejectEcosystemInvitations(payload.acceptRejectInvitation, payload.userEmail);
   }
 
   @MessagePattern({ cmd: 'get-sent-invitations-ecosystemId' })

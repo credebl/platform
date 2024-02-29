@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IOobIssuanceInvitation, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -216,7 +216,7 @@ export class IssuanceService {
       };
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
       if (isShortenUrl) {
-        const invitationUrl: IOobIssuanceInvitation = credentialCreateOfferDetails.response?.invitationUrl;
+        const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
         const url: string = await this.storeObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
       }
@@ -237,7 +237,7 @@ export class IssuanceService {
     }
   }
 
-  async storeObjectReturnUrl(storeObj: IOobIssuanceInvitation): Promise<string> {
+  async storeObjectReturnUrl(storeObj: string): Promise<string> {
     // Set default to false, since currently our invitation are not multi-use
     const persistent: boolean = false;
     //nats call in agent-service to create an invitation url

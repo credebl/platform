@@ -500,11 +500,6 @@ export class OrganizationRepository {
         },
         include: {
           userOrgRoles: {
-            where: {
-              orgRole: {
-                name: OrgRoles.OWNER
-              }
-            },
             include: {
               user: {
                 select: {

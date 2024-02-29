@@ -1022,6 +1022,73 @@ export class OrganizationService {
     }
   }
 
+  async updateUserClientRoles(
+    // eslint-disable-next-line camelcase
+    roleIds: string[],
+    idpId: string,
+    userId: string,
+    orgId: string
+  ): Promise<boolean> {
+    const token = await this.clientRegistrationService.getManagementToken();
+    const clientRolesList = await this.clientRegistrationService.getAllClientRoles(
+      idpId,
+      token
+    );
+    const orgRoles = await this.orgRoleService.getOrgRoles();
+
+    const matchedClientRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim()));
+
+    if (roleIds.length !== matchedClientRoles.length) {
+      throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+    }
+
+    const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = matchedClientRoles.map(
+      (clientRole: IClientRoles) => {
+        let roleObj: { roleId: string; name: string; idpRoleId: string } = null;
+
+        for (let index = 0; index < orgRoles.length; index++) {
+          if (orgRoles[index].name === clientRole.name) {
+            roleObj = {
+              roleId: orgRoles[index].id,
+              name: orgRoles[index].name,
+              idpRoleId: clientRole.id
+            };
+            break;
+          }
+        }
+
+        return roleObj;
+      }
+    );
+
+    const userData = await this.getUserUserId(userId);
+
+    const [, deletedUserRoleRecords] = await Promise.all([
+      this.clientRegistrationService.deleteUserClientRoles(
+        idpId,
+        token,
+        userData.keycloakUserId
+      ),
+      this.userOrgRoleService.deleteOrgRoles(userId, orgId)
+    ]);
+
+    if (0 === deletedUserRoleRecords['count']) {
+      throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles);
+    }
+
+    const [, isUserRoleUpdated] = await Promise.all([
+      this.clientRegistrationService.createUserClientRole(
+        idpId,
+        token,
+        userData.keycloakUserId,
+        rolesPayload.map((role) => ({ id: role.idpRoleId, name: role.name }))
+      ),
+      this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload)
+    ]);
+
+    return isUserRoleUpdated;
+  }
+
   /**
    *
    * @param orgId
@@ -1044,44 +1111,33 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
 
-      const token = await this.clientRegistrationService.getManagementToken();
-      const clientRolesList = await this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
-      const orgRoles = await this.orgRoleService.getOrgRoles();
+      if (!organizationDetails.idpId) {
+        const isRolesExist = await this.orgRoleService.getOrgRolesByIds(roleIds);
 
-      const matchedClientRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim()));
-   
-      if (roleIds.length !== matchedClientRoles.length) {
-        throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
-      }
-
-      const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = matchedClientRoles.map((clientRole: IClientRoles) => {
-        let roleObj: { roleId: string;  name: string; idpRoleId: string} = null;
-
-        for (let index = 0; index < orgRoles.length; index++) {
-          if (orgRoles[index].name === clientRole.name) {
-            roleObj = {
-              roleId: orgRoles[index].id,
-              name: orgRoles[index].name,
-              idpRoleId: clientRole.id
-            };
-            break;
-          }
+        if (isRolesExist && 0 === isRolesExist.length) {
+          throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist);
         }
 
-        return roleObj;
-      });
+        const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
 
-      const userData = await this.getUserUserId(userId);
+        if (0 === deleteUserRecords['count']) {
+          throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles);
+        }
 
-      const [
-        ,
-        deletedUserRoleRecords
-      ] = await Promise.all([
-        this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, userData.keycloakUserId),
-        this.userOrgRoleService.deleteOrgRoles(userId, orgId)
-      ]);
+        for (const role of roleIds) {
+          this.userOrgRoleService.createUserOrgRole(userId, role, orgId);
+        }
 
-      return this.userOrgRoleService.updateUserOrgRole(userId, orgId, roleIds);
+        return true;
+      } else {
+
+        return this.updateUserClientRoles(
+          roleIds,
+          organizationDetails.idpId,
+          userId,
+          organizationDetails.id          
+        );      
+      }
 
     } catch (error) {
       this.logger.error(`Error in updateUserRoles: ${JSON.stringify(error)}`);
@@ -1230,9 +1286,19 @@ export class OrganizationService {
     try {
 
       const unregisteredOrgsList = await this.organizationRepository.getUnregisteredClientOrgs();
+      
+      if (!unregisteredOrgsList || 0 === unregisteredOrgsList.length) {
+        throw new NotFoundException('Unregistered client organizations not found');
+      }      
 
       for (const org of unregisteredOrgsList) {
-        const ownerUser = 0 < org['userOrgRoles'].length && org['userOrgRoles'][0].user;
+        const userOrgRoles = 0 < org['userOrgRoles'].length && org['userOrgRoles'];
+
+        const ownerUserList = 0 < org['userOrgRoles'].length 
+        && userOrgRoles.filter(userOrgRole => userOrgRole.orgRole.name === OrgRoles.OWNER);
+
+        const ownerUser = 0 < ownerUserList.length && ownerUserList[0].user;
+
         const orgObj = {
           id: org.id,
           idpId: org.idpId,
@@ -1262,6 +1328,47 @@ export class OrganizationService {
           const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgObj.id);
           
           this.logger.log(`updatedOrg::`, updatedOrg);
+
+          const usersToRegisterList = userOrgRoles.filter(userOrgRole => null !== userOrgRole.user.keycloakUserId);
+          
+            const token = await this.clientRegistrationService.getManagementToken();
+            const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
+
+            const deletedUserDetails: string[] = [];
+            for (const userRole of usersToRegisterList) {
+              const user = userRole.user;
+
+              const matchedClientRoles = clientRolesList.filter((role) => userRole.orgRole.name === role.name)
+              .map(clientRole => ({roleId: userRole.orgRole.id, idpRoleId: clientRole.id, name: clientRole.name}));
+
+              if (!deletedUserDetails.includes(user.id)) {
+                const [, deletedUserRoleRecords] = await Promise.all([
+                  this.clientRegistrationService.deleteUserClientRoles(idpId, token, user.keycloakUserId),
+                  this.userOrgRoleService.deleteOrgRoles(user.id, orgObj.id)
+                ]);
+  
+                this.logger.log(`deletedUserRoleRecords::`, deletedUserRoleRecords);
+
+                deletedUserDetails.push(user.id);
+              }
+
+           
+              await Promise.all([
+                this.clientRegistrationService.createUserClientRole(
+                  idpId,
+                  token,
+                  user.keycloakUserId,
+                  matchedClientRoles.map((role) => ({ id: role.idpRoleId, name: role.name }))
+                ),
+                this.userOrgRoleService.updateUserOrgRole(
+                  user.id,
+                  orgObj.id,
+                  matchedClientRoles.map((role) => ({ roleId: role.roleId, idpRoleId: role.idpRoleId }))
+                )
+              ]);
+              this.logger.log(`Organization client created and users mapped to roles`);
+
+            }      
         }      
       }
      

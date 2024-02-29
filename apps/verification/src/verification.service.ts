@@ -369,8 +369,8 @@ export class VerificationService {
       const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
       //apply presentation shorting URL
       if (isShortenUrl) {
-        const proofRequestInvitation = getProofPresentation?.response?.invitationUrl;
-        const shortenedUrl = await this.storeObjectAndReturnUrl(proofRequestInvitation, false);
+        const proofRequestInvitation: string = getProofPresentation?.response?.invitationUrl;
+        const shortenedUrl: string = await this.storeObjectAndReturnUrl(proofRequestInvitation, false);
         this.logger.log('shortenedUrl', shortenedUrl);
         if (shortenedUrl) {
           getProofPresentation.response.invitationUrl = shortenedUrl;
@@ -396,10 +396,7 @@ export class VerificationService {
     }
   }
 
-  async storeObjectAndReturnUrl(proofRequestInvitation, persistent: boolean): Promise<string> {
-    const utilityRequestBodyString = JSON.stringify(proofRequestInvitation);
-    const storeObj = JSON.parse(utilityRequestBodyString);
-
+  async storeObjectAndReturnUrl(storeObj: string, persistent: boolean): Promise<string> {
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };
     const payload = { persistent, storeObj };

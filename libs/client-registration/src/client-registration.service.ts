@@ -164,7 +164,6 @@ export class ClientRegistrationService {
         `${process.env.KEYCLOAK_DOMAIN}admin/realms/${process.env.KEYCLOAK_REALM}/users/${payload['sub']}`,
         this.getAuthHeader(token)
       );
-      this.logger.debug(`keycloak user ${JSON.stringify(userInfoResponse)}`);
       return userInfoResponse.data;
     } catch (error) {
       this.logger.error(`[getUserInfo]: ${JSON.stringify(error)}`);
@@ -236,7 +235,6 @@ export class ClientRegistrationService {
         this.getAuthHeader(token)
       );
 
-      this.logger.debug(`Existing apps response ${JSON.stringify(response)}`);
 
       return {
         clientId: client_id,

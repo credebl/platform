@@ -684,7 +684,7 @@ export class EcosystemService {
       this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist.length)}`);
 
       if (0 !== alreadySchemaExist.length) {
-        throw new BadRequestException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+        throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
       }
 
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
@@ -1321,11 +1321,13 @@ export class EcosystemService {
 
   async submitTransaction(transactionPayload: TransactionPayload): Promise<object> {
     try {
-      const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
+     const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
         endorsementTransactionStatus.SIGNED
       );
+
+
       if (!endorsementTransactionPayload) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
       }
@@ -1353,10 +1355,23 @@ export class EcosystemService {
         ecosystemMemberDetails,
         ecosystemLeadAgentDetails
       );
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-     if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-       apiKey = await this._getOrgAgentApiKey(orgId);
+     
+      const isSchemaExists = await this.ecosystemRepository.schemaExist(
+       payload.schema.name,
+        payload.schema.version
+        );
+
+        if (0 !== isSchemaExists.length) {
+          this.logger.error(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+          throw new ConflictException(
+            ResponseMessages.ecosystem.error.schemaAlreadyExist,
+            { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+          );
+        }
+
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
       }
 
 
@@ -1408,7 +1423,7 @@ export class EcosystemService {
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateCredDefId);
         }
         return this.handleCredDefSubmission(
-          endorsementTransactionPayload,
+          endorsementTransactionPayload, 
           ecosystemMemberDetails,
           submitTransactionRequest
         );
@@ -1447,11 +1462,12 @@ export class EcosystemService {
       const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
       return { message };
     } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      this.logger.error(` agent-submit-transaction catch: ${JSON.stringify(error)}`);
       throw new HttpException(
         {
           status: error.status,
-          error: error.message
+          message: error.message,
+          error: error.error
         },
         error.status
       );

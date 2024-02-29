@@ -239,7 +239,6 @@ export class IssuanceService {
           comment: comment || ''
         };
       }
-
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
       if (isShortenUrl) {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
@@ -616,19 +615,16 @@ export class IssuanceService {
             return false;
           }
 
-          const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
+          const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+          const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
 
-          if (!invitationId) {
+          if (!invitationUrl) {
             errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
             return false;
           }
 
-          const agentEndPoint = agentDetails.tenantId
-            ? `${agentDetails.agentEndPoint}/multi-tenancy/url/${agentDetails.tenantId}/${invitationId}`
-            : `${agentDetails.agentEndPoint}/url/${invitationId}`;
-
           const qrCodeOptions = { type: 'image/png' };
-          const outOfBandIssuanceQrCode = await QRCode.toDataURL(agentEndPoint, qrCodeOptions);
+          const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenUrl, qrCodeOptions);
           const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
 
           if (!platformConfigData) {
@@ -639,7 +635,7 @@ export class IssuanceService {
           this.emailData.emailFrom = platformConfigData.emailFrom;
           this.emailData.emailTo = emailId;
           this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-          this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, agentEndPoint);
+          this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, shortenUrl);
           this.emailData.emailAttachments = [
             {
               filename: 'qrcode.png',

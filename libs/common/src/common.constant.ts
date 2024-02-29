@@ -310,6 +310,12 @@ export enum CommonConstants {
   TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
   TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#',
 
+  // Static values to up platform Agent
+  SEED = '101111110111101100111100000Seed1',
+  KEYTYPE = 'ed25519',
+  METHOD = 'indy',
+  NETWORK = 'bcovrin:testnet',
+  ROLE = 'endorser' 
 
  //CacheInfo
 CACHE_APIKEY_KEY = "apiKey",

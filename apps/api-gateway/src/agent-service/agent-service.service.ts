@@ -4,7 +4,7 @@ import { user } from '@prisma/client';
 import { BaseService } from 'libs/service/base.service';
 import { AgentSpinupDto } from './dto/agent-service.dto';
 import { CreateTenantDto } from './dto/create-tenant.dto';
-import { AgentSpinUpSatus } from './interface/agent-service.interface';
+import { AgentSpinUpSatus, IWalletRecord } from './interface/agent-service.interface';
 import { AgentStatus } from './interface/agent-service.interface';
 import { CreateDidDto } from './dto/create-did.dto';
 import { CreateWalletDto } from './dto/create-wallet.dto';
@@ -44,7 +44,7 @@ export class AgentService extends BaseService {
         return this.sendNatsMessage(this.agentServiceProxy, 'create-did', payload);
     }
 
-    async createWallet(createWalletDto: CreateWalletDto, user: user): Promise<object> {
+    async createWallet(createWalletDto: CreateWalletDto, user: user): Promise<IWalletRecord> {
         const payload = { createWalletDto, user };
         // NATS call
         return this.sendNatsMessage(this.agentServiceProxy, 'create-wallet', payload);

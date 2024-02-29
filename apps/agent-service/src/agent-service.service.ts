@@ -19,7 +19,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation, IQuestionPayload, IDidCreate, IWallet, ITenantRecord } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation, IQuestionPayload, IDidCreate, IWallet, ITenantRecord, IPlatformAgent } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
@@ -472,34 +472,35 @@ export class AgentServiceService {
 
 
   private async _getAgentDid(payload: IStoreOrgAgentDetails): Promise<object> {
-    // const { agentEndPoint, apiKey, seed, ledgerId, did } = payload;
-    const { agentEndPoint, apiKey, ledgerId } = payload;
+    // const { agentEndPoint, apiKey, seed, ledgerId, did } = payload;   //initial change to up platform agent
+    const { agentEndPoint, apiKey, ledgerId } = payload;   //current change as per latest change in afj-controller to up platform agent
 
-    const agentPayload: IPayload = {
-      seed: '10111111011110110011110000011011',
-      keyType: 'ed25519',
-      method: 'indy',
-      network: 'bcovrin:testnet',
-      role: 'endorser'
+    //we take this values as static because of latest changes in afj controller to up agent of platform
+    const platformAgent: IPlatformAgent = {
+      seed: `${CommonConstants.SEED}`,
+      keyType: `${CommonConstants.KEYTYPE}`,
+      method: `${CommonConstants.METHOD}`,
+      network: `${CommonConstants.NETWORK}`,
+      role: `${CommonConstants.ROLE}`
     };
     const writeDid = 'write-did';
     const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(ledgerId);
     const agentDidWriteUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-    // return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);
-    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, agentPayload);
+    // return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);  //initial change to up platform agent
+    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, platformAgent);  //current change as per latest change in afj-controller to up platform agent
   }
 
   private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {
     const getDidDic = 'get-did-doc';
-    const didCreationPayload: IPayload = {
-      seed: '10111111011110110011110000011011',
-      keyType: 'ed25519',
-      method: 'indy',
-      network: 'bcovrin:testnet',
-      role: 'endorser' 
+    const platformAgent: IPlatformAgent = {
+      seed: `${CommonConstants.SEED}`,
+      keyType: `${CommonConstants.KEYTYPE}`,
+      method: `${CommonConstants.METHOD}`,
+      network: `${CommonConstants.NETWORK}`,
+      role: `${CommonConstants.ROLE}`
     };
     const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}`.replace('#', agentDid['did']);
-    return this._retryAgentSpinup(getDidMethodUrl, payload.apiKey, getDidDic, didCreationPayload);
+    return this._retryAgentSpinup(getDidMethodUrl, payload.apiKey, getDidDic, platformAgent);
   }
 
   private _buildStoreOrgAgentData(payload: IStoreOrgAgentDetails, getDidMethod: object, orgAgentTypeId: string): IStoreOrgAgentDetails {
@@ -539,8 +540,8 @@ export class AgentServiceService {
     this.logger.error(`[_storeOrgAgentDetails] - Error in store agent details : ${JSON.stringify(error)}`);
   }
 
-  // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPayload): Promise<object> {
+  // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {  //initial change to up platform agent
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPayload): Promise<object> {  //current change as per latest change in afj-controller to up platform agent
 
     const { seed, keyType, method, network, role} = payload;
     const retryOptions = {
@@ -549,8 +550,8 @@ export class AgentServiceService {
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
-          // return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });
-          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role}, { headers: { 'authorization': apiKey } });
+          // return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });   //initial change to up platform agent
+          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role}, { headers: { 'authorization': apiKey } });  //current change as per latest change in afj-controller to up platform agent
         } else if (agentApiState === 'get-did-doc') {
           return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
         }
@@ -770,7 +771,8 @@ export class AgentServiceService {
    */
   async createWallet(payload: IWallet): Promise<ITenantRecord> {
     try {
-    const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
+    const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
+
     const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
 
     const { label } = payload;
@@ -798,45 +800,31 @@ export class AgentServiceService {
    * @returns did and didDocument
    */
     async createDid(payload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
-      try {  
+      try {      
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
 
-      // const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(payload.orgId);
-      // console.log('agentDetails::', agentDetails);
-      // const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      // console.log('getOrgAgentType::', getOrgAgentType);
-      // let url;
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this.getOrgAgentApiKey(orgId);
+      }
 
-      // if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
-      //   url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;  
-      // } else if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
-      //   url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', agentDetails.tenantId);  
-      // }
-
+      const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       let url;
-      // if (payload.orgId) {
-        // url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', agentDetails.tenantId);
-        // url = `http://192.168.1.63:8010${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', '0fc74f21-59ea-4a6f-85d7-50939b59b1fc');
 
+      if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
+        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;  
+      } else if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
+        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', agentDetails.tenantId);  
+      }
 
-      const didDetails = await this.commonService.httpPost(
-        `http://192.168.1.63:8010${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', '0fc74f21-59ea-4a6f-85d7-50939b59b1fc'),
-        payload,
-        // { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
-        { headers: { 'authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZ2VudEluZm8iOiJhZ2VudEluZm8iLCJpYXQiOjE3MDcyOTEyMjN9.DN56mzc4qk6fGbetpxGWmyBaW0ndXat06ye1_-ZOtaQ' } }
-      );
-  
-      // const didDetails = await this.commonService.httpPost(url);
+      const didDetails = await this.commonService.httpPost(url, payload, 
+        { headers: { 'authorization': apiKey } }
+        );
+
       return didDetails;
 
-  
-      // } catch (error) {
-      //   this.logger.error(`error in create did : ${JSON.stringify(error)}`);
-      //   throw new RpcException(error.response ? error.response : error);
-      // }
-    // }  
-  } catch (error) {
+    } catch (error) {
     this.logger.error(`error in create did : ${JSON.stringify(error)}`);
-    // throw new RpcException(error.response ? error.response : error);
 
     if (error?.response?.error?.message) {
       throw new RpcException({

@@ -165,7 +165,6 @@ export class ClientRegistrationService {
         `${process.env.KEYCLOAK_DOMAIN}admin/realms/${process.env.KEYCLOAK_REALM}/users/${payload['sub']}`,
         this.getAuthHeader(token)
       );
-      this.logger.debug(`keycloak user ${JSON.stringify(userInfoResponse)}`);
       return userInfoResponse.data;
     } catch (error) {
       this.logger.error(`[getUserInfo]: ${JSON.stringify(error)}`);
@@ -182,6 +181,7 @@ export class ClientRegistrationService {
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
     } catch (error) {
+      this.logger.error(`Error in getManagementToken: ${JSON.stringify(error)}`);
 
       throw error;
     }
@@ -235,7 +235,6 @@ export class ClientRegistrationService {
         this.getAuthHeader(token)
       );
 
-      this.logger.debug(`Existing apps response ${JSON.stringify(response)}`);
 
       return {
         clientId: client_id,
@@ -657,7 +656,6 @@ export class ClientRegistrationService {
 
   async getToken(payload: ClientCredentialTokenPayloadDto) {
     try {
-      this.logger.log(`getting token : ${JSON.stringify(payload)}`);
       if (
         'client_credentials' !== payload.grant_type ||
         !payload.client_id ||
@@ -752,9 +750,6 @@ export class ClientRegistrationService {
       payload.username = email;
       payload.password = password;
 
-      // this.logger.log(`User Token Payload: ${JSON.stringify(payload)}`);
-
-
       if (
         'password' !== payload.grant_type ||
         !payload.client_id ||
@@ -779,9 +774,6 @@ export class ClientRegistrationService {
         qs.stringify(payload)
         , config);
 
-      this.logger.debug(
-        `ClientRegistrationService token ${JSON.stringify(tokenResponse)}`
-      );
       return tokenResponse;
 
     } catch (error) {

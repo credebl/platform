@@ -2,7 +2,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IStoreOrgAgentDetails, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent } from '../interface/agent-service.interface';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgent } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -122,16 +122,15 @@ export class AgentServiceRepository {
      * @returns
      */
     // eslint-disable-next-line camelcase
-    async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
+    async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgent): Promise<IStoreAgent> {
         try {
-        const {did, verkey, isDidPublic, agentSpinUpStatus, walletName, agentsTypeId, orgId, agentEndPoint, agentId, orgAgentTypeId, tenantId, ledgerId, apiKey} = storeOrgAgentDetails;
+        const {did, isDidPublic, agentSpinUpStatus, walletName, agentsTypeId, orgId, agentEndPoint, agentId, orgAgentTypeId, tenantId, ledgerId, apiKey} = storeOrgAgentDetails;
             return this.prisma.org_agents.update({
                 where: {
                     id: storeOrgAgentDetails.id
                 },
                 data: {
                     orgDid:did,
-                    verkey,
                     isDidPublic,
                     agentSpinUpStatus,
                     walletName,
@@ -141,7 +140,7 @@ export class AgentServiceRepository {
                     agentId: agentId ? agentId : null,
                     orgAgentTypeId: orgAgentTypeId ? orgAgentTypeId : null,
                     tenantId: tenantId ? tenantId : null,
-                    ledgerId: ledgerId[0],
+                    ledgerId, // remove the unknown and check the `storeOrgAgentDetails` impact
                     apiKey
                 },
                 select: {

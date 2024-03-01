@@ -48,8 +48,4 @@ export class CreateDidDto {
     @ApiPropertyOptional()
     @IsString({ message: 'endorser did must be in string format.' })
     endorserDid?: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    didDocument?: object;
 }

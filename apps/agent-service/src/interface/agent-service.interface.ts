@@ -58,7 +58,6 @@ export interface IDidCreate {
     did?: string;
     role?: string;
     endorserDid?: string;
-    didDocument?: object;
 }
 export interface ITenantSchema {
     tenantId?: string;

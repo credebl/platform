@@ -95,16 +95,17 @@ export class ConnectionService {
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      // if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      //   throw new RpcException({
+      //     message: error?.status?.message?.error?.reason
+      //       ? error?.status?.message?.error?.reason
+      //       : error?.status?.message?.error,
+      //     statusCode: error?.status?.code
+      //   });
+      // } else {
+      //   throw new RpcException(error.response ? error.response : error);
+      // }
+      this.handleError(error);
     }
   }
 
@@ -334,16 +335,17 @@ export class ConnectionService {
 
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in get question answer record: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      // if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      //   throw new RpcException({
+      //     message: error?.status?.message?.error?.reason
+      //       ? error?.status?.message?.error?.reason
+      //       : error?.status?.message?.error,
+      //     statusCode: error?.status?.code
+      //   });
+      // } else {
+      //   throw new RpcException(error.response ? error.response : error);
+      // }
+      this.handleError(error);
     }
   }
 
@@ -677,16 +679,17 @@ export class ConnectionService {
      
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in sending question: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      // if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      //   throw new RpcException({
+      //     message: error?.status?.message?.error?.reason
+      //       ? error?.status?.message?.error?.reason
+      //       : error?.status?.message?.error,
+      //     statusCode: error?.status?.code
+      //   });
+      // } else {
+      //   throw new RpcException(error.response ? error.response : error);
+      // }
+      this.handleError(error);
     }
   }
 
@@ -726,6 +729,20 @@ export class ConnectionService {
         },
         error.status
       );
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  handleError(error): never {
+    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      throw new RpcException({
+        message: error?.status?.message?.error?.reason
+          ? error?.status?.message?.error?.reason
+          : error?.status?.message?.error,
+        statusCode: error?.status?.code
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

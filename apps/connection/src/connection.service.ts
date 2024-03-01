@@ -732,8 +732,8 @@ export class ConnectionService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  handleError(error): never {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  handleError(error) {
     if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
       throw new RpcException({
         message: error?.status?.message?.error?.reason

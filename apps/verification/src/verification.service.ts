@@ -402,26 +402,27 @@ export class VerificationService {
     const payload = { persistent, storeObj };
 
     try {
-      const message = await this.verificationServiceProxy
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .send<any>(pattern, payload)
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(
-            `[storeVerificationObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
-              error
-            )}`
-          );
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.error?.message?.error ? error.error?.message?.error : error.error,
-              message: error.message
-            },
-            error.error
-          );
-        });
-      return message;
+      // const message = await this.verificationServiceProxy
+      //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      //   .send<any>(pattern, payload)
+      //   .toPromise()
+      //   .catch((error) => {
+      //     this.logger.error(
+      //       `[storeVerificationObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+      //         error
+      //       )}`
+      //     );
+      //     throw new HttpException(
+      //       {
+      //         status: error.statusCode,
+      //         error: error.error?.message?.error ? error.error?.message?.error : error.error,
+      //         message: error.message
+      //       },
+      //       error.error
+      //     );
+      //   });
+      const natsCall = await this.natsCall(pattern, payload);
+      return natsCall.response;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(

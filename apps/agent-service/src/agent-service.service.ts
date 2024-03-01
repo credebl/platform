@@ -36,6 +36,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { ledgerName } from '@credebl/common/cast.helper';
 
 interface IPayload {
   seed: string;
@@ -590,6 +591,35 @@ export class AgentServiceService {
     }
   }
 
+  async _getALlLedgerDetails(): Promise<{
+    response;
+  }> {
+    try {
+      const pattern = {
+        cmd: 'get-all-ledgers'
+      };
+      const payload = {};
+      return this.agentServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`error in while fetching all the ledger details : ${JSON.stringify(error)}`);
+    }
+  }
+
 
   async _walletProvision(payload: IWalletProvision): Promise<{
     response;
@@ -670,47 +700,22 @@ export class AgentServiceService {
     let agentProcess;
 
     try {
+      const {network} = payload;
+       const ledger = await ledgerName(network); //check the ledger type from the database
+       const ledgerList = await this._getALlLedgerDetails(); //validation
+    
+      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(Ledgers.Indicio_Demonet);//pass the details based on the ledger
 
-      // Get orgaization agent details by orgId
-      const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
-
-      if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error(`Your wallet has already been created.`);
-        throw new BadRequestException(
-          ResponseMessages.agent.error.walletAlreadyCreated,
-          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-        );
-      }
-
-      if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error(`Your wallet has already processing.`);
-        throw new BadRequestException(
-          ResponseMessages.agent.error.walletAlreadyProcessing,
-          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-        );
-      }
-
-      // Get ledgers details
-      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(Ledgers.Indicio_Demonet);
-      const ledgerIds = ledgerIdData.map(ledger => ledger?.id);
-
-      payload.ledgerId = !payload.ledgerId || 0 === payload.ledgerId?.length ? ledgerIds : payload.ledgerId;
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
 
       // Create and stored agent details  
       agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user?.id);
-
+  
       // Get platform admin details
       const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
 
-      // Get genesis URLs by ledger Id
-      const ledgerDetails: ledgers[] = await this.agentServiceRepository.getGenesisUrl(payload.ledgerId);
-
-      for (const iterator of ledgerDetails) {
-
         // Create tenant in agent controller
-        const tenantDetails = await this.createTenantAndNotify(payload, iterator, platformAdminSpinnedUp);
-
+        const tenantDetails = await this.createTenantAndNotify(payload, platformAdminSpinnedUp);
         if (AgentSpinUpStatus.COMPLETED !== platformAdminSpinnedUp.org_agents[0].agentSpinUpStatus) {
           this.logger.error(`Platform-admin agent is not spun-up`);
           throw new NotFoundException(
@@ -719,6 +724,7 @@ export class AgentServiceService {
           );
         }
 
+
         // Get org agent type details by shared agent
         const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
 
@@ -726,33 +732,29 @@ export class AgentServiceService {
         const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
 
         const storeOrgAgentData: IStoreOrgAgentDetails = {
-          did: tenantDetails['did'],
-          verkey: tenantDetails['verkey'],
+          did: tenantDetails.DIDCreationOption.did,
           isDidPublic: true,
           agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
           agentsTypeId: agentTypeId,
           orgId: payload.orgId,
           agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
           orgAgentTypeId,
-          tenantId: tenantDetails['tenantRecord']['id'],
+          tenantId: tenantDetails.walletResponseDetails['id'],
           walletName: payload.label,
           ledgerId: payload.ledgerId,
           id: agentProcess?.id
         };
-
         // Get organization data
         const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
-
         this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
         await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
         this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
 
         // Create the legacy connection invitation
-        this._createLegacyConnectionInvitation(payload.orgId, user, getOrganization.name);
-
+        const connectionInvitation = await this._createLegacyConnectionInvitation(payload.orgId, user, getOrganization.name);
         this.notifyClientSocket('invitation-url-creation-success', payload.clientSocketId);
-      }
+      
     } catch (error) {
       this.handleError(error, payload.clientSocketId);
 
@@ -875,29 +877,84 @@ export class AgentServiceService {
    * @param platformAdminSpinnedUp 
    * @returns Get tanant status
    */
-  private async createTenantAndNotify(payload: ITenantDto, ledgerIds: ledgers, platformAdminSpinnedUp: IOrgAgentsResponse): Promise<ICreateTenant> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async createTenantAndNotify(payload: ITenantDto, platformAdminSpinnedUp: IOrgAgentsResponse): Promise<any> {
+    const WalletSetupPayload = {...payload};
     const socket = await this.createSocketInstance();
-    if (payload.clientSocketId) {
-      socket.emit('agent-spinup-process-initiated', { clientId: payload.clientSocketId });
+    if (WalletSetupPayload.clientSocketId) {
+      socket.emit('agent-spinup-process-initiated', { clientId: WalletSetupPayload.clientSocketId });
     }
+    const walletLabel = WalletSetupPayload.label;
 
-    const { label, seed, did } = payload;
-    const createTenantOptions = {
-      config: { label },
-      seed,
-      did: did ? did : undefined,
-      method: ledgerIds.indyNamespace
+    delete WalletSetupPayload.label;
+    delete WalletSetupPayload.clientSocketId;
+    delete WalletSetupPayload.orgId;
+    delete WalletSetupPayload.ledgerId;
+
+ 
+   const walletResponseDetails = await this._createTenantWallet(walletLabel, platformAdminSpinnedUp.org_agents[0].agentEndPoint, platformAdminSpinnedUp.org_agents[0].apiKey);
+   if (!walletResponseDetails && !walletResponseDetails.id) {
+    throw new InternalServerErrorException('Error while creating the wallet');
+   }
+    const didCreateOption = {
+      didPayload: WalletSetupPayload,
+      agentEndpoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
+      apiKey: platformAdminSpinnedUp.org_agents[0].apiKey,
+      tenantId: walletResponseDetails.id
     };
-
-    const tenantDetails = await this.commonService.httpPost(
-      `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
-      createTenantOptions,
-      { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
-    );
-
-    return tenantDetails;
+    const DIDCreationOption = await this._createDID(didCreateOption);
+    if (!DIDCreationOption) {
+      throw new InternalServerErrorException('Error while creating the wallet');
+     }
+  //  const walletSetupResponse = {
+  //   walletResponse: walletResponseDetails,
+  //   didResponse: DIDCreationOption
+  //  };
+    return {walletResponseDetails, DIDCreationOption};
   }
+//
 
+ /**
+   * Create tenant wallet on the agent
+   * @param createTenantWalletPayload
+   * @returns Get tanant status
+   */
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ private async _createTenantWallet(label, endpoint, agentApiKey): Promise<any> {
+  
+  
+  const createTenantOptions = {
+    config: { label }
+  };
+  // Invoke an API request from the agent to create multi-tenant agent
+  const tenantDetails = await this.commonService.httpPost(
+    `${endpoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
+    createTenantOptions,
+    { headers: { authorization: agentApiKey } }
+  );
+
+  return tenantDetails;
+}
+
+ /**
+   * Create tenant wallet on the agent
+   * @param _createDID
+   * @returns Get tanant status
+   */
+ private async _createDID(didCreateOption): Promise<ICreateTenant> {
+
+  
+  const {didPayload, agentEndpoint, apiKey, tenantId} = didCreateOption;
+  
+  // Invoke an API request from the agent to create multi-tenant agent
+  const didDetails = await this.commonService.httpPost(
+    `${agentEndpoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${tenantId}`,
+    didPayload,
+    { headers: { authorization: apiKey } }
+  );
+
+  return didDetails;
+}
   private async createSocketInstance(): Promise<Socket> {
     return io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,

@@ -124,25 +124,25 @@ export class AgentServiceRepository {
     // eslint-disable-next-line camelcase
     async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
         try {
-
+        const {did, verkey, isDidPublic, agentSpinUpStatus, walletName, agentsTypeId, orgId, agentEndPoint, agentId, orgAgentTypeId, tenantId, ledgerId, apiKey} = storeOrgAgentDetails;
             return this.prisma.org_agents.update({
                 where: {
                     id: storeOrgAgentDetails.id
                 },
                 data: {
-                    orgDid: storeOrgAgentDetails.did,
-                    verkey: storeOrgAgentDetails.verkey,
-                    isDidPublic: storeOrgAgentDetails.isDidPublic,
-                    agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
-                    walletName: storeOrgAgentDetails.walletName,
-                    agentsTypeId: storeOrgAgentDetails.agentsTypeId,
-                    orgId: storeOrgAgentDetails.orgId,
-                    agentEndPoint: storeOrgAgentDetails.agentEndPoint,
-                    agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
-                    orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
-                    tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
-                    ledgerId: storeOrgAgentDetails.ledgerId[0],
-                    apiKey: storeOrgAgentDetails.apiKey
+                    orgDid:did,
+                    verkey,
+                    isDidPublic,
+                    agentSpinUpStatus,
+                    walletName,
+                    agentsTypeId,
+                    orgId,
+                    agentEndPoint,
+                    agentId: agentId ? agentId : null,
+                    orgAgentTypeId: orgAgentTypeId ? orgAgentTypeId : null,
+                    tenantId: tenantId ? tenantId : null,
+                    ledgerId: ledgerId[0],
+                    apiKey
                 },
                 select: {
                     id: true

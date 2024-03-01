@@ -78,7 +78,7 @@ export class AgentController {
 
   }
 
-  @Get('/orgs/:orgId/agents/ledgerConfig')
+  @Get('/orgs/agents/ledgerConfig')
   @ApiOperation({
     summary: 'Get the ledger config details',
     description: 'Get the ledger config details'

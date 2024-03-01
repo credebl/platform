@@ -164,6 +164,27 @@ export interface IStoreOrgAgentDetails {
     agentType?: string;
 }
 
+export interface IStoreOrgAgent {
+    id?: string;
+    clientSocketId?: string;
+    agentEndPoint?: string;
+    apiKey?: string;
+    seed?: string;
+    did?: string;
+    verkey?: string;
+    isDidPublic?: boolean;
+    agentSpinUpStatus?: number;
+    walletName?: string;
+    agentsTypeId?: string;
+    orgId?: string;
+    agentId?: string;
+    orgAgentTypeId?: string;
+    tenantId?: string;
+    ledgerId?: unknown;
+    agentType?: string;
+}
+
+
 export interface IConnectionDetails {
     multiUseInvitation?: boolean;
     autoAcceptConnection: boolean;
@@ -456,4 +477,23 @@ export interface IValidResponses {
     orgId?: string;
     connectionId: string;
     tenantId: string;
+  }
+
+interface Ledger {
+    id: string;
+    createDateTime: string;
+    lastChangedDateTime: string;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    registerDIDEndpoint: string;
+    registerDIDPayload: string;
+    indyNamespace: string;
+    networkUrl: string | null;
+  }
+  
+  export interface LedgerListResponse {
+    response: Ledger[];
   }

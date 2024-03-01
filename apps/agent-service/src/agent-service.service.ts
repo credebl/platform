@@ -19,7 +19,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
-import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation, IQuestionPayload, IDidCreate, IWallet, ITenantRecord, IPlatformAgent } from './interface/agent-service.interface';
+import { IGetCredDefAgentRedirection, IConnectionDetails, IUserRequestInterface, IAgentSpinupDto, IStoreOrgAgentDetails, ITenantCredDef, ITenantDto, ITenantSchema, IWalletProvision, ISendProofRequestPayload, IIssuanceCreateOffer, IOutOfBandCredentialOffer, IAgentSpinUpSatus, ICreateTenant, IAgentStatus, ICreateOrgAgent, IOrgAgentsResponse, IProofPresentation, IAgentProofRequest, IPresentation, IReceiveInvitationUrl, IReceiveInvitation, IQuestionPayload, IDidCreate, IWallet, ITenantRecord, IPlatformAgent, LedgerListResponse, IOrgLedgers, IStoreOrgAgent } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
@@ -701,12 +701,20 @@ export class AgentServiceService {
     let agentProcess;
 
     try {
-      const {network} = payload;
-       const ledger = await ledgerName(network); //check the ledger type from the database
-       const ledgerList = await this._getALlLedgerDetails(); //validation
-    
-      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(Ledgers.Indicio_Demonet);//pass the details based on the ledger
 
+      const { network } = payload;
+      const ledger = await ledgerName(network);
+
+      const ledgerList = await this._getALlLedgerDetails() as unknown as LedgerListResponse;
+      const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
+      if (!isLedgerExist) {
+          throw new BadRequestException(
+            ResponseMessages.agent.error.invalidLedger,
+            { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+          );
+      }
+      
+      const ledgerIdData: IOrgLedgers[] = await this.agentServiceRepository.getLedgerDetails(ledger);
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
 
       // Create and stored agent details  
@@ -715,7 +723,7 @@ export class AgentServiceService {
       // Get platform admin details
       const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
 
-        // Create tenant in agent controller
+        // Create tenant wallet and DID
         const tenantDetails = await this.createTenantAndNotify(payload, platformAdminSpinnedUp);
         if (AgentSpinUpStatus.COMPLETED !== platformAdminSpinnedUp.org_agents[0].agentSpinUpStatus) {
           this.logger.error(`Platform-admin agent is not spun-up`);
@@ -726,13 +734,13 @@ export class AgentServiceService {
         }
 
 
-        // Get org agent type details by shared agent
+        // Get shared agent type
         const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-
-        // Get agent type details by AFJ agent
+    
+        // Get agent type details
         const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
 
-        const storeOrgAgentData: IStoreOrgAgentDetails = {
+        const storeOrgAgentData: IStoreOrgAgent = {
           did: tenantDetails.DIDCreationOption.did,
           isDidPublic: true,
           agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
@@ -742,12 +750,15 @@ export class AgentServiceService {
           orgAgentTypeId,
           tenantId: tenantDetails.walletResponseDetails['id'],
           walletName: payload.label,
-          ledgerId: payload.ledgerId,
+          ledgerId: ledgerIdData[0].id,
           id: agentProcess?.id
         };
+       
         // Get organization data
         const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
+
         this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
+
         await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
         this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
@@ -865,6 +876,7 @@ export class AgentServiceService {
    * @param platformAdminSpinnedUp 
    * @returns Get tanant status
    */
+  
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async createTenantAndNotify(payload: ITenantDto, platformAdminSpinnedUp: IOrgAgentsResponse): Promise<any> {
     const WalletSetupPayload = {...payload};
@@ -907,6 +919,7 @@ export class AgentServiceService {
    * @param createTenantWalletPayload
    * @returns Get tanant status
    */
+
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
  private async _createTenantWallet(label, endpoint, agentApiKey): Promise<any> {
   
@@ -983,9 +996,9 @@ export class AgentServiceService {
           issuerId: payload.issuerId
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
-          .then(async (schema) => {
-            return schema;
-          })
+        .then(async (schema) => {
+          return schema;
+        })
           .catch(error => {
             throw new InternalServerErrorException(
               ResponseMessages.agent.error.agentDown,
@@ -1003,10 +1016,10 @@ export class AgentServiceService {
           issuerId: payload.payload.issuerId
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
-          .then(async (schema) => {
-            return schema;
-          })
-          .catch(error => {
+        .then(async (schema) => {
+          return schema;
+        })
+                    .catch(error => {
             throw new InternalServerErrorException(
               ResponseMessages.agent.error.agentDown,
               { cause: new Error(), description: ResponseMessages.errorMessages.serverError }
@@ -1027,17 +1040,17 @@ export class AgentServiceService {
       if (OrgAgentType.DEDICATED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace('#', `${payload.schemaId}`)}`;
         schemaResponse = await this.commonService.httpGet(url, payload.schemaId)
-          .then(async (schema) => {
-            return schema;
-          });
+        .then(async (schema) => {
+          return schema;
+        });
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`.replace('@', `${payload.payload.schemaId}`).replace('#', `${payload.tenantId}`);
 
         schemaResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
-          .then(async (schema) => {
-            return schema;
-          });
+        .then(async (schema) => {
+          return schema;
+        });
       }
       return schemaResponse;
     } catch (error) {
@@ -1060,9 +1073,9 @@ export class AgentServiceService {
         };
 
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
-          .then(async (credDef) => {
-            return credDef;
-          });
+        .then(async (credDef) => {
+          return credDef;
+        });
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CRED_DEF}`.replace('#', `${payload.tenantId}`);
@@ -1072,9 +1085,9 @@ export class AgentServiceService {
           issuerId: payload.payload.issuerId
         };
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
-          .then(async (credDef) => {
-            return credDef;
-          });
+        .then(async (credDef) => {
+          return credDef;
+        });
       }
 
       return credDefResponse;
@@ -1091,16 +1104,16 @@ export class AgentServiceService {
       if (OrgAgentType.DEDICATED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID.replace('#', `${payload.credentialDefinitionId}`)}`;
         credDefResponse = await this.commonService.httpGet(url, payload.credentialDefinitionId)
-          .then(async (credDef) => {
-            return credDef;
-          });
+        .then(async (credDef) => {
+          return credDef;
+        });
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
         credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
-          .then(async (credDef) => {
-            return credDef;
-          });
+        .then(async (credDef) => {
+          return credDef;
+        });
       }
       return credDefResponse;
     } catch (error) {

@@ -315,7 +315,7 @@ export enum CommonConstants {
   KEYTYPE = 'ed25519',
   METHOD = 'indy',
   NETWORK = 'bcovrin:testnet',
-  ROLE = 'endorser' 
+  ROLE = 'endorser',
 
  //CacheInfo
 CACHE_APIKEY_KEY = "apiKey",

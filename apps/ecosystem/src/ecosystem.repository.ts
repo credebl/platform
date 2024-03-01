@@ -356,11 +356,12 @@ export class EcosystemRepository {
    * @returns Invitation details
    */
   // eslint-disable-next-line camelcase
-  async getEcosystemInvitationById(id: string): Promise<ecosystem_invitations> {
+  async getEcosystemInvitationById(id: string, email: string): Promise<ecosystem_invitations> {
     try {
       return this.prisma.ecosystem_invitations.findUnique({
         where: {
-          id
+          id,
+          email
         },
         include: {
           ecosystem: true
@@ -1031,6 +1032,26 @@ export class EcosystemRepository {
       return saveResult;
     } catch (error) {
       this.logger.error(`Error in storing schema for submit transaction: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async schemaExist(schemaName: string, schemaVersion: string): Promise<schema[]> {
+    try {
+      return this.prisma.schema.findMany({
+        where: {
+          name: {
+            contains: schemaName,
+            mode: 'insensitive'
+          },
+          version: {
+            contains: schemaVersion,
+            mode: 'insensitive'
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in schemaExists: ${error}`);
       throw error;
     }
   }

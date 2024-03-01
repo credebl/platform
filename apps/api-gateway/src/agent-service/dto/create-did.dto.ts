@@ -5,7 +5,7 @@ import { MaxLength, IsString, Matches, IsNotEmpty, IsOptional } from 'class-vali
 
 export class CreateDidDto {
 
-    @ApiProperty({ example: 'dfuhgfklskmjngrjekjfgjjfkoekfdad' })
+    @ApiProperty({ example: '000000000000000000000000000Seed1' })
     @MaxLength(32, { message: 'seed must be at most 32 characters.' })
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'seed is required' })
@@ -46,11 +46,6 @@ export class CreateDidDto {
     @ApiProperty({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
     @IsOptional()
     @ApiPropertyOptional()
-    @IsString({ message: 'role must be in string format.' })
+    @IsString({ message: 'endorser did must be in string format.' })
     endorserDid?: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    didDocument?: object;
-
 }

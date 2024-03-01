@@ -56,7 +56,6 @@ export interface IWallet {
 }
 
 export interface IDidCreate {
-    tenantId: string;
     keyType: KeyType;
     seed: string;
     domain?: string;
@@ -65,7 +64,6 @@ export interface IDidCreate {
     did?: string;
     role?: string;
     endorserDid?: string;
-    didDocument?: object;
 }
 export interface ITenantSchema {
     tenantId?: string;
@@ -166,7 +164,6 @@ export interface IStoreOrgAgentDetails {
     agentType?: string;
 }
 
-
 export interface IConnectionDetails {
     multiUseInvitation?: boolean;
     autoAcceptConnection: boolean;
@@ -203,6 +200,14 @@ export interface IOrganizationAgentInterface {
 
 }
 
+export interface IPlatformAgent {
+    seed: string;
+    keyType: string;
+    method: string;
+    network: string;
+    role: string;
+  }
+  
 export interface IOrgAgentInterface {
     orgDid: string;
     verkey: string;

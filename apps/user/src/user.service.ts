@@ -284,6 +284,8 @@ export class UserService {
       ];
 
       await this.clientRegistrationService.createUserHolderRole(token,  keycloakDetails.keycloakUserId.toString(), payload);
+      const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
+      await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
 
       return ResponseMessages.user.success.signUpUser;
     } catch (error) {

@@ -6,9 +6,9 @@ import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-se
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 
 export interface IAttributes {
-  attributeName: string;
   name: string;
   value: string;
+  attributeName?: string;
   isRequired?: boolean;
 }
 export interface IIssuance {
@@ -18,27 +18,26 @@ export interface IIssuance {
   connectionId: string;
   attributes: IAttributes[];
   orgId: string;
-  autoAcceptCredential?: AutoAccept,
+  autoAcceptCredential?: AutoAccept;
   protocolVersion?: string;
-  goalCode?: string,
-  parentThreadId?: string,
-  willConfirm?: boolean,
-  label?: string
-
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
+  label?: string;
 }
 
 interface IIndy {
-  attributes: IAttributes[],
-  credentialDefinitionId: string
+  attributes: IAttributes[];
+  credentialDefinitionId: string;
 }
 
 export interface IIssueData {
   protocolVersion?: string;
   connectionId: string;
   credentialFormats: {
-    indy: IIndy
-  },
-  autoAcceptCredential: string,
+    indy: IIndy;
+  };
+  autoAcceptCredential: string;
   comment?: string;
 }
 
@@ -83,8 +82,8 @@ export interface IPattern {
 }
 
 export interface ISendOfferNatsPayload {
-  issueData: IIssueData,
-  url: string,
+  issueData: IIssueData;
+  url: string;
   apiKey: string;
 }
 
@@ -129,19 +128,19 @@ export interface ICredentialAttributesInterface {
   value: string;
 }
 
-export interface ICredential{
-  '@context':[];
+export interface ICredential {
+  '@context': [];
   type: string[];
 }
-export interface IOptions{
-  proofType:string;
-  proofPurpose:string;
+export interface IOptions {
+  proofType: string;
+  proofPurpose: string;
 }
 export interface CredentialOffer {
   emailId: string;
   attributes: IAttributes[];
-  credential?:ICredential;
-  options?:IOptions
+  credential?: ICredential;
+  options?: IOptions;
 }
 export interface OutOfBandCredentialOfferPayload {
   credentialDefinitionId?: string;
@@ -151,13 +150,13 @@ export interface OutOfBandCredentialOfferPayload {
   emailId?: string;
   attributes?: IAttributes[];
   protocolVersion?: string;
-  goalCode?: string,
-  parentThreadId?: string,
-  willConfirm?: boolean,
-  label?: string,
-  imageUrl?: string,
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
+  label?: string;
+  imageUrl?: string;
   autoAcceptCredential?: string;
-  credentialType?:IssueCredentialType;
+  credentialType?: IssueCredentialType;
 }
 
 export interface OutOfBandCredentialOffer {
@@ -177,11 +176,11 @@ export interface ImportFileDetails {
 }
 
 export interface PreviewRequest {
-  pageNumber: number,
-  pageSize: number,
-  searchByText: string,
-  sortField: string,
-  sortBy: string
+  pageNumber: number;
+  pageSize: number;
+  searchByText: string;
+  sortField: string;
+  sortBy: string;
 }
 
 export interface FileUpload {
@@ -239,4 +238,21 @@ export interface OrgAgent {
   ledgerId: string;
   orgAgentTypeId: string;
   tenantId: string;
+}
+
+export interface SendEmailCredentialOffer {
+  iterator;
+  emailId;
+  index;
+  credentialType; 
+  protocolVersion;
+  attributes; 
+  credentialDefinitionId; 
+  outOfBandCredential;
+  comment;
+  organisation; 
+  errors;
+  url;
+  apiKey; 
+  organizationDetails;
 }

@@ -567,12 +567,12 @@ export class IssuanceService {
         const iterationNo = index + 1;
         try {
           if (IssueCredentialType.INDY === credentialType) {
-
             outOfBandIssuancePayload = {
               protocolVersion: protocolVersion || 'v1',
               credentialFormats: {
                 indy: {
-                  attributes: iterator.attributes || attributes,
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  attributes: (iterator.attributes).map(({ isRequired, ...rest }) => rest) || (attributes).map(({ isRequired, ...rest }) => rest),
                   credentialDefinitionId
                 }
               },

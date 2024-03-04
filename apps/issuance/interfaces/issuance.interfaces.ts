@@ -240,3 +240,20 @@ export interface OrgAgent {
   orgAgentTypeId: string;
   tenantId: string;
 }
+
+export interface SendEmailCredentialOffer {
+  iterator: CredentialOffer;
+  emailId: string;
+  index: number;
+  credentialType: IssueCredentialType; 
+  protocolVersion: string;
+  attributes: IAttributes[]; 
+  credentialDefinitionId: string; 
+  outOfBandCredential: OutOfBandCredentialOfferPayload;
+  comment: string;
+  organisation: organisation; 
+  errors;
+  url: string;
+  apiKey: string; 
+  organizationDetails: organisation;
+}

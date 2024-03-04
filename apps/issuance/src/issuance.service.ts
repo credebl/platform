@@ -557,7 +557,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
 
           return this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
         });
-        emailPromises.push(Promise.all(batchPromises));
+        emailPromises.push(batchPromises);
       }
     } else {
       emailPromises.push(this.sendEmailForCredentialOffer(sendEmailCredentialOffer));

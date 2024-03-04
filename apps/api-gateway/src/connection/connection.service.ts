@@ -5,7 +5,7 @@ import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
-import { IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
+import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { QuestionDto } from './dtos/question-answer.dto';
 
 @Injectable()
@@ -75,6 +75,15 @@ export class ConnectionService extends BaseService {
   ): Promise<IConnectionList> {
     const payload = { connectionSearchCriteria, user, orgId };
     return this.sendNatsMessage(this.connectionServiceProxy, 'get-all-connections', payload);
+  }
+
+  getConnectionListFromAgent(
+    connectionSearchCriteria: AgentConnectionSearchCriteria,
+    user: IUserRequest,
+    orgId: string
+  ): Promise<IConnectionList> {
+    const payload = { connectionSearchCriteria, user, orgId };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'get-all-agent-connection-list', payload);
   }
 
   getConnectionsById(

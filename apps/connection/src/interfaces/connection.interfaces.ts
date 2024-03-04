@@ -80,6 +80,12 @@ export interface IFetchConnections {
   orgId: string;
 }
 
+export interface GetAllConnections {
+  connectionSearchCriteria: AgentConnectionSearchCriteria;
+  user: IUserRequest;
+  orgId: string;
+}
+
 export interface IFetchConnectionById {
   user: IUserRequest;
   connectionId: string;
@@ -122,6 +128,15 @@ export interface IConnectionSearchCriteria {
   sortBy: string;
   searchByText: string;
   user: IUserRequestInterface
+}
+
+export interface AgentConnectionSearchCriteria {
+  outOfBandId: string;
+  alias: string;
+  state: string;
+  myDid: string;
+  theirDid: string;
+  theirLabel: string;
 }
 
 export interface IReceiveInvitationByUrlOrg {
@@ -235,4 +250,17 @@ interface ConnectionRecord {
 export interface IReceiveInvitationResponse {
   outOfBandRecord: OutOfBandRecord;
   connectionRecord: ConnectionRecord;
+}
+
+export interface ConnectionResponseDetail {
+  id: string;
+  orgId: string;
+  agentId: string;
+  connectionInvitation: string;
+  multiUse: boolean;
+  createDateTime: Date;
+  createdBy: number;
+  lastChangedDateTime: Date;
+  lastChangedBy: number;
+  recordId: string;
 }

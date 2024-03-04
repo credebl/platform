@@ -2,6 +2,7 @@ import { Controller } from '@nestjs/common'; // Import the common service in the
 import { ConnectionService } from './connection.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
 import {
+  GetAllConnections,
   IConnection,
   ICreateConnection,
   IFetchConnectionById,
@@ -52,6 +53,14 @@ export class ConnectionController {
   async getConnections(payload: IFetchConnections): Promise<IConnectionList> {
     const { user, orgId, connectionSearchCriteria } = payload;
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
+  }
+
+  @MessagePattern({ cmd: 'get-all-agent-connection-list' })
+  async getConnectionListFromAgent(payload: GetAllConnections): Promise<{
+    response: string;
+  }> {
+    const { user, orgId, connectionSearchCriteria } = payload;
+    return this.connectionService.getAllConnectionListFromAgent(user, orgId, connectionSearchCriteria);
   }
 
   /**

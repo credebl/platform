@@ -8,12 +8,14 @@ export class CreateDidDto {
     @ApiProperty({ example: '000000000000000000000000000Seed1' })
     @MaxLength(32, { message: 'seed must be at most 32 characters.' })
     @Transform(({ value }) => trim(value))
-    @IsNotEmpty({ message: 'seed is required' })
+    @IsOptional()
+    @ApiPropertyOptional()
+    // @IsNotEmpty({ message: 'seed is required' })
     @IsString({ message: 'seed must be in string format.' })
     @Matches(/^\S*$/, {
         message: 'Spaces are not allowed in seed'
     })
-    seed: string;
+    seed?: string;
 
     @ApiProperty({ example: 'ed25519'})
     @IsNotEmpty({ message: 'key type is required' })
@@ -28,7 +30,7 @@ export class CreateDidDto {
     @ApiProperty({example: 'bcovrin:testnet'})
     @IsOptional()
     @ApiPropertyOptional()
-    @IsString({ message: 'domain must be in string format.' })
+    @IsString({ message: 'network must be in string format.' })
     network?: string;
 
     @ApiProperty({example: 'www.github.com'})
@@ -42,6 +44,18 @@ export class CreateDidDto {
     @ApiPropertyOptional()
     @IsString({ message: 'role must be in string format.' })
     role?: string;
+
+    @ApiProperty({example: ''})
+    @IsOptional()
+    @ApiPropertyOptional()
+    @IsString({ message: 'private key must be in string format.' })
+    privatekey?: string;
+
+    @ApiProperty({example: 'http://localhost:6006/docs'})
+    @IsOptional()
+    @ApiPropertyOptional()
+    @IsString({ message: 'endpoint must be in string format.' })
+    endPoint?: string;
 
     @ApiProperty({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
     @IsOptional()

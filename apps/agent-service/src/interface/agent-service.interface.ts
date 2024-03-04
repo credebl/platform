@@ -33,10 +33,12 @@ export interface IOutOfBandCredentialOffer {
 
 export interface ITenantDto {
     label: string;
-    seed: string;
+    seed?: string;
     keyType: string;
     ledgerId: string[];
     domain?: string;
+    privatekey?: string;
+    endpoint?: string;
     role?: string;
     network?: string
     endorserDid?: string
@@ -60,6 +62,8 @@ export interface IDidCreate {
     seed: string;
     domain?: string;
     network?: string;
+    privatekey?: string;
+    endpoint?: string;
     method: string;
     did?: string;
     role?: string;

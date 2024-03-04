@@ -23,7 +23,8 @@ export declare enum KeyType {
 export enum DidMethod {
     INDY = 'indy',
     KEY = 'key',
-    WEB = 'web'
+    WEB = 'web',
+    POLYGON = 'polygon'
 }
 
 export enum Ledgers {

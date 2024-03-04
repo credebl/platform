@@ -390,7 +390,6 @@ export class AgentServiceService {
        * Store organization agent details 
        */
       const storeAgentDetails = await this._storeOrgAgentDetails(agentPayload);
-
       if (storeAgentDetails) {
 
         const filePath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgData.id}_${orgData.name.split(' ').join('_')}.json`;
@@ -412,7 +411,6 @@ export class AgentServiceService {
         const getOrganization = await this.agentServiceRepository.getOrgDetails(orgData?.id);
 
         await this._createLegacyConnectionInvitation(orgData?.id, user, getOrganization.name);
-
         if (agentSpinupDto.clientSocketId) {
           socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
         }
@@ -448,22 +446,18 @@ export class AgentServiceService {
         this._getAgentDid(payload),
         this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED)
       ]);
-
       /**
        * Get DID method by agent
        */
       const getDidMethod = await this._getDidMethod(payload, agentDid);
-
       /**
        * Organization storage data
        */
       const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, getDidMethod, orgAgentTypeId);
-
       /**
        * Store org agent details
        */
       const storeAgentDid = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
-
       return storeAgentDid;
     } catch (error) {
       await this._handleError(payload, error);
@@ -535,6 +529,7 @@ export class AgentServiceService {
     }
 
     if (payload && payload?.id) {
+      
       this.agentServiceRepository.removeOrgAgent(payload?.id);
     }
 
@@ -704,7 +699,6 @@ export class AgentServiceService {
 
       const { network } = payload;
       const ledger = await ledgerName(network);
-
       const ledgerList = await this._getALlLedgerDetails() as unknown as LedgerListResponse;
       const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
       if (!isLedgerExist) {
@@ -740,7 +734,7 @@ export class AgentServiceService {
         // Get agent type details
         const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
 
-        const storeOrgAgentData: IStoreOrgAgent = {
+        const storeOrgAgentData: IStoreOrgAgentDetails = {
           did: tenantDetails.DIDCreationOption.did,
           isDidPublic: true,
           agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
@@ -750,7 +744,8 @@ export class AgentServiceService {
           orgAgentTypeId,
           tenantId: tenantDetails.walletResponseDetails['id'],
           walletName: payload.label,
-          ledgerId: ledgerIdData[0].id,
+          // ledgerId: ledgerIdData[0],
+          ledgerId: ledgerIdData.map(item => item.id),
           id: agentProcess?.id
         };
        
@@ -765,6 +760,7 @@ export class AgentServiceService {
 
         // Create the legacy connection invitation
         const connectionInvitation = await this._createLegacyConnectionInvitation(payload.orgId, user, getOrganization.name);
+        
         this.notifyClientSocket('invitation-url-creation-success', payload.clientSocketId);
       
     } catch (error) {
@@ -943,7 +939,6 @@ export class AgentServiceService {
    * @returns Get tanant status
    */
  private async _createDID(didCreateOption): Promise<ICreateTenant> {
-
   
   const {didPayload, agentEndpoint, apiKey, tenantId} = didCreateOption;
   

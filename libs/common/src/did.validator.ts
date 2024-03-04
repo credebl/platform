@@ -15,6 +15,10 @@ export function validateDid(createDid: IDidCreate): string[] {
         errors.push('Only ed25519 and bls12381g2 key type is supported');
     } else if (!createDid.role) {
         errors.push('role or endorserDid is required');
+    } else if (DidMethod.POLYGON && !createDid.privatekey) {
+        errors.push('privateKey is required for polygon method');
+    } else if (DidMethod.POLYGON && !createDid.endpoint) {
+        errors.push('endpoint is required for polygon method');
     }
 
     return errors;

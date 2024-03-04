@@ -22,6 +22,12 @@ export class CreateTenantDto extends CreateDidDto {
     @IsString({ message: 'did must be in string format.' })
     clientSocketId?: string;
 
+    @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
+    @IsOptional()
+    @ApiPropertyOptional()
+    @IsString({ message: 'did must be in string format.' })
+    did?: string;
+
     orgId: string;
     
 }

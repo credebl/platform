@@ -129,6 +129,26 @@
       "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
       "registerDIDPayload": "",
       "indyNamespace": "indicio:mainnet"
+    },
+    {
+      "name": "Polygon Testnet",
+      "networkType": "testnet",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "testnet",
+      "registerDIDEndpoint": "",
+      "registerDIDPayload": "",
+      "indyNamespace": "polygon:testnet"
+    },
+    {
+      "name": "Polygon Mainnet",
+      "networkType": "mainnet",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "mainnet",
+      "registerDIDEndpoint": "",
+      "registerDIDPayload": "",
+      "indyNamespace": "polygon:mainnet"
     }
   ],
   "endorseData": [
@@ -204,8 +224,8 @@
     {
       "name": "polygon",
       "details": {
-        "mainnet": "did:polygon:testnet",
-        "testnet": "did:polygon:mainnet"
+        "mainnet": "did:polygon:mainnet",
+        "testnet": "did:polygon:testnet"
     }
     }
   ]

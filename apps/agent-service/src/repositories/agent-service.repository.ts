@@ -2,7 +2,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgent } from '../interface/agent-service.interface';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -116,32 +116,33 @@ export class AgentServiceRepository {
 
     }
 
-    /**
+     /**
      * Store agent details
      * @param storeAgentDetails
      * @returns
      */
     // eslint-disable-next-line camelcase
-    async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgent): Promise<IStoreAgent> {
+    async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
         try {
-        const {did, isDidPublic, agentSpinUpStatus, walletName, agentsTypeId, orgId, agentEndPoint, agentId, orgAgentTypeId, tenantId, ledgerId, apiKey} = storeOrgAgentDetails;
-            return this.prisma.org_agents.update({
+
+            return await this.prisma.org_agents.update({
                 where: {
                     id: storeOrgAgentDetails.id
                 },
                 data: {
-                    orgDid:did,
-                    isDidPublic,
-                    agentSpinUpStatus,
-                    walletName,
-                    agentsTypeId,
-                    orgId,
-                    agentEndPoint,
-                    agentId: agentId ? agentId : null,
-                    orgAgentTypeId: orgAgentTypeId ? orgAgentTypeId : null,
-                    tenantId: tenantId ? tenantId : null,
-                    ledgerId, // remove the unknown and check the `storeOrgAgentDetails` impact
-                    apiKey
+                    orgDid: storeOrgAgentDetails.did,
+                    verkey: storeOrgAgentDetails.verkey,
+                    isDidPublic: storeOrgAgentDetails.isDidPublic,
+                    agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
+                    walletName: storeOrgAgentDetails.walletName,
+                    agentsTypeId: storeOrgAgentDetails.agentsTypeId,
+                    orgId: storeOrgAgentDetails.orgId,
+                    agentEndPoint: storeOrgAgentDetails.agentEndPoint,
+                    agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
+                    orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
+                    tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
+                    ledgerId: storeOrgAgentDetails.ledgerId[0],
+                    apiKey: storeOrgAgentDetails.apiKey
                 },
                 select: {
                     id: true

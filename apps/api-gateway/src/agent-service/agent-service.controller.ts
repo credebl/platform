@@ -180,13 +180,13 @@ export class AgentController {
 
     createTenantDto.orgId = orgId;
 
-    if (seedLength !== createTenantDto.seed.length) {
-      this.logger.error(`seed must be at most 32 characters`);
-      throw new BadRequestException(
-        ResponseMessages.agent.error.seedCharCount,
-        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-      );
-    }
+    // if (seedLength !== createTenantDto.seed.length) {
+    //   this.logger.error(`seed must be at most 32 characters`);
+    //   throw new BadRequestException(
+    //     ResponseMessages.agent.error.seedCharCount,
+    //     { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+    //   );
+    // }
 
     const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
 

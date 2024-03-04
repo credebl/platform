@@ -1,3 +1,4 @@
+/* eslint-disable default-param-last */
 /* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable camelcase */
@@ -15,7 +16,9 @@ import {
   Header,
   UploadedFile,
   UseInterceptors,
-  Logger
+  Logger,
+  BadRequestException,
+  NotFoundException
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -52,7 +55,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { FileExportResponse, IIssuedCredentialSearchParams, RequestPayload } from './interfaces';
+import { FileExportResponse, IIssuedCredentialSearchParams, IssueCredentialType, RequestPayload } from './interfaces';
 import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
@@ -220,7 +223,6 @@ export class IssuanceController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
-    try {
 
       if (file) {
         const fileKey: string = uuidv4();
@@ -244,9 +246,7 @@ export class IssuanceController {
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
       }
-    } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
-    }
+
   }
 
   @Get('/orgs/:orgId/:requestId/preview')
@@ -539,14 +539,30 @@ export class IssuanceController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiQuery({
+    name:'credentialType',
+    enum: IssueCredentialType
+  })
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
+    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
+    outOfBandCredentialDto.credentialType = credentialType;
+    const credOffer = outOfBandCredentialDto?.credentialOffer || [];
+    if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType) {
+      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
+}
+    if (outOfBandCredentialDto.credentialType === IssueCredentialType.JSONLD   && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
+    }
 
+    if (outOfBandCredentialDto.credentialType   ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
+    }
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(
       user,
       outOfBandCredentialDto
@@ -571,15 +587,21 @@ export class IssuanceController {
       summary: `Create out-of-band credential offer`,
       description: `Creates an out-of-band credential offer`
     })
+    @ApiQuery({
+      name:'credentialType',
+      enum: IssueCredentialType
+    })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     async createOOBCredentialOffer(
+      @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
       @Param('orgId') orgId: string,
       @Body() issueCredentialDto: OOBIssueCredentialDto,
       @Res() res: Response
     ): Promise<Response> {
       issueCredentialDto.orgId = orgId;
+      issueCredentialDto.credentialType = credentialType;
       const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,
@@ -606,7 +628,6 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
 issueCredentialDto.type = 'Issuance';
-    this.logger.debug(`issueCredentialDto ::: ${JSON.stringify(issueCredentialDto)}`);
      
       const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
         this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);

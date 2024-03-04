@@ -1,7 +1,7 @@
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { MaxLength, IsString, MinLength, Matches, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
+import { MaxLength, IsString, MinLength, Matches, IsNotEmpty, IsOptional, IsArray, IsUUID } from 'class-validator';
 const labelRegex = /^[a-zA-Z0-9 ]*$/;
 export class CreateTenantDto {
     @ApiProperty()
@@ -25,11 +25,14 @@ export class CreateTenantDto {
     })
     seed: string;
 
-    @ApiProperty({ example: [1] })
+    @ApiProperty({ example: ["b942473d-6fdd-4a38-b76e-a3314fca66b6"] })
     @ApiPropertyOptional()
     @IsOptional()
+    @IsUUID(4, {each:true, message: "Please provide valid ledgerId"})
     @IsArray({ message: 'ledgerId must be an array' })
     @IsNotEmpty({ message: 'please provide valid ledgerId' })
+    @IsString({ each: true, message: 'Each ledgerId must be a string' })
+    @MaxLength(36, { each: true, message: 'ledgerId must be at most 36 characters.' })
     ledgerId?: string[];
 
     @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })

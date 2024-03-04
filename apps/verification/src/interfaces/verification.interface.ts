@@ -88,18 +88,79 @@ interface IRequestedRestriction {
     issuer_did?: string;
     schema_version?: string;
 }
+export interface ISchema {
+    uri:string;
+}
+export interface IFields {
+    path: string[];
+  }
+export interface IConstraints {
+    fields: IFields[];
+  }
+
+export interface IInputDescriptors {
+  
+    id:string;
+    name?:string;
+    purpose?:string;
+    schema:ISchema[];
+    constraints?:IConstraints;
+  
+}
+
+export interface IProofRequestPresentationDefinition {
+    id:string;
+    input_descriptors:IInputDescriptors[];
+}
+
+export interface IPresentationExchange {
+    presentationDefinition:IProofRequestPresentationDefinition;
+   
+}
+export interface IPresentationExchangeProofFormats {
+    presentationExchange : IPresentationExchange;
+}
+export interface ISendPresentationExchangeProofRequestPayload {
+    protocolVersion: string;
+    comment: string;
+    proofFormats: IPresentationExchangeProofFormats;
+    autoAcceptProof: string;
+    label?: string;
+}
+export interface IPresentationExchangeProofRequestPayload {
+    url: string;
+    apiKey: string;
+    proofRequestPayload: ISendPresentationExchangeProofRequestPayload;
+}
 
 export interface ISendProofRequestPayload {
     protocolVersion?: string;
     comment?: string;
     connectionId?: string;
-    proofFormats: IProofFormats;
+    proofFormats?: IProofFormats;
     autoAcceptProof?: string;
     label?: string;
     goalCode?: string;
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
+     type?:string;
+     presentationDefinition?:IProofRequestPresentationDefinition;
+}
+
+export interface IWSendProofRequestPayload {
+    protocolVersion?: string;
+    comment?: string;
+    connectionId?: string;
+    proofFormats?: IProofFormats;
+    autoAcceptProof?: string;
+    label?: string;
+    goalCode?: string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
+    imageUrl?: string;
+    type?:string;
+    presentationDefinition?:IProofRequestPresentationDefinition;
 }
 
 export interface IProofRequestPayload {

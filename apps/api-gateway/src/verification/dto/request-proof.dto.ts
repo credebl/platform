@@ -156,6 +156,81 @@ export class OutOfBandRequestProof extends ProofPayload {
     autoAcceptProof: string;
 }
 
+export class Fields {
+    @ApiProperty()
+    @IsArray()
+    @IsNotEmpty({ message: 'path is required.' })
+    path: string[];
+  }
+
+export class Constraints {
+    @ApiProperty({type: () => [Fields]})
+    @IsOptional()
+    @IsNotEmpty({ message: 'Fields are required.' })
+    @ValidateNested()
+    @Type(() => Fields)
+    fields: Fields[];
+  }
+
+
+export class Schema {
+    @ApiProperty()
+    @IsNotEmpty({ message: 'uri is required.' })
+    @IsString()
+    uri:string;
+
+}
+export class InputDescriptors {
+    @ApiProperty()
+    @IsNotEmpty({ message: 'id is required.' })
+    @IsString()
+    id:string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'name is required.' })
+    name:string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'purpose is required.' })
+    purpose:string;
+
+
+    @ApiProperty({type: () => [Schema]})
+    @IsNotEmpty({ message: 'schema is required.' })
+    @ValidateNested()
+    @Type(() => Schema)
+    schema:Schema[];
+
+    
+    @ApiProperty({type: () => Constraints})
+    @IsOptional()
+    @IsNotEmpty({ message: 'Constraints are required.' })
+    @ValidateNested()
+    @Type(() => Constraints)
+    constraints:Constraints;
+  
+}
+
+export class ProofRequestPresentationDefinition {
+
+    @IsString()
+    @IsNotEmpty({ message: 'id is required.' })
+    id: string;
+    @ApiProperty({type: () =>  [InputDescriptors]})
+    @IsNotEmpty({ message: 'inputDescriptors is required.' })
+    @IsArray({ message: 'inputDescriptors must be an array' })
+    @IsObject({ each: true })
+    @Type(() => InputDescriptors)
+    @ValidateNested()
+    
+    // eslint-disable-next-line camelcase
+    input_descriptors:InputDescriptors[];
+}
+
 export class SendProofRequestPayload {
 
     @ApiPropertyOptional()
@@ -194,7 +269,43 @@ export class SendProofRequestPayload {
     })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid proofFormat' })
-    proofFormats: IProofFormats;
+    @IsOptional()
+    proofFormats?: IProofFormats;
+
+    @ApiProperty({
+        'example': 
+            {
+                id: '32f54163-7166-48f1-93d8-ff217bdb0653',
+                inputDescriptors: [
+                    {
+                      'id': 'banking_input_1',
+                      'name': 'Bank Account Information',
+                      'schema': [
+                        {
+                          'uri': 'https://bank-schemas.org/1.0.0/accounts.json'
+                        }
+                        
+                      ],
+                      'constraints': {
+                        'fields': [
+                          {
+                            'path': ['$.issuer']
+                          }
+                        ]
+                      }
+                    }
+                  ]
+            },
+       type: () => [ProofRequestPresentationDefinition]
+    })
+    @IsOptional()
+    @ValidateNested()
+    @IsObject({ message: 'presentationDefinition must be an object' })
+    @IsNotEmpty({ message: 'presentationDefinition must not be empty' })
+    @Type(() => ProofRequestPresentationDefinition)
+    presentationDefinition?:ProofRequestPresentationDefinition;
+
+    type:string;
 
     @ApiPropertyOptional()
     @IsString({ message: 'auto accept proof must be in string' })

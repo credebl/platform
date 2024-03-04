@@ -4,3 +4,8 @@ export enum SortFields {
     CONNECTION_ID = 'connectionId',
     PRESENTATION_ID = 'presentationId'
 }
+
+export enum ProofRequestType {
+    INDY = 'indy',
+    PRESENTATIONEXCHANGE = 'presentationExchange'
+}

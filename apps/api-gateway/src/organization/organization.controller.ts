@@ -389,7 +389,7 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Post('/resiter-org-map-users')
+  @Post('/register-org-map-users')
   @ApiOperation({
     summary: 'Register client and map users',
     description: 'Register client and map users'

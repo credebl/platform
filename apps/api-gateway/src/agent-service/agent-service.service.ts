@@ -65,4 +65,10 @@ export class AgentService extends BaseService {
         return this.sendNatsMessage(this.agentServiceProxy, 'get-ledger-config', payload);
     }
 
+    async createSecp256k1KeyPair(orgId:string): Promise<object> {
+        const payload = {orgId};
+        // NATS call
+        return this.sendNatsMessage(this.agentServiceProxy, 'polygon-create-keys', payload);
+    }
+
 }

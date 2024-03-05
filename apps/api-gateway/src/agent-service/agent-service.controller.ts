@@ -264,4 +264,29 @@ export class AgentController {
  
      return res.status(HttpStatus.CREATED).json(finalResponse);
    }
+
+    /**
+   * Create Secp256k1 key pair for polygon DID
+   * @param orgId 
+   * @returns Secp256k1 key pair for polygon DID
+   */
+    @Post('/orgs/:orgId/agents/polygon/create-keys')
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.PLATFORM_ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    async createSecp256k1KeyPair(
+      @Param('orgId') orgId: string,
+      @Res() res: Response
+    ): Promise<Response> {
+   
+      const didDetails = await this.agentService.createSecp256k1KeyPair(orgId);
+  
+      const finalResponse: IResponse = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.agent.success.createKeys,
+        data: didDetails
+      };
+  
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
 }

@@ -127,6 +127,10 @@ export enum CommonConstants {
   URL_AGENT_GET_DIDS = '/dids',
   URL_AGENT_GET_ENDPOINT = '/agent',
 
+  // CREATE KEYS
+  CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
+ 
+
   // ENTITY NAMES
   ENTITY_NAME_TEMPLATE = 'templates',
   ENTITY_NAME_CRED_DEF = 'credential_definition',

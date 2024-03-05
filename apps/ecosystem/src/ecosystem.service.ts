@@ -593,7 +593,7 @@ export class EcosystemService {
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `Invitation to join an Ecosystem “${ecosystemName}” on CREDEBL`;
+    emailData.emailSubject = `Invitation to join an Ecosystem “${ecosystemName}” on ${process.env.PLATFORM_NAME}`;
 
     emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(
       email,

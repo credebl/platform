@@ -42,6 +42,20 @@ export class OrganizationRepository {
     }
   }
 
+  
+  async checkOrganizationSlugExist(orgSlug: string): Promise<organisation> {
+    try {
+      return this.prisma.organisation.findUnique({
+        where: {
+          orgSlug
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error in checkOrganizationSlugExist: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   /**
    *
    * @Body createOrgDtp

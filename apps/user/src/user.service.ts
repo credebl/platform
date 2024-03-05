@@ -611,7 +611,7 @@ export class UserService {
           tokenResponse.isRegisteredToSupabase = false;
           return tokenResponse;
         } catch (error) {
-          throw new UnauthorizedException(error?.message);
+          throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
         }
        
       } else {

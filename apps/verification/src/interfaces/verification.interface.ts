@@ -100,6 +100,7 @@ export interface ISendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
+    emailId?: string[]
 }
 
 export interface IProofRequestPayload {

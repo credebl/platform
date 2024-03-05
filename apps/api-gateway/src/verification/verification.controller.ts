@@ -256,6 +256,8 @@ export class VerificationController {
         @Body() outOfBandRequestProof: SendProofRequestPayload,
         @Param('orgId') orgId: string
     ): Promise<Response> {
+        // eslint-disable-next-line no-console
+        console.log('Received email in API-gateway-controller -> ', outOfBandRequestProof.emailId);
         user.orgId = orgId;
         const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {

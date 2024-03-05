@@ -696,7 +696,6 @@ export class AgentServiceService {
     let agentProcess;
 
     try {
-
       const { network } = payload;
       const ledger = await ledgerName(network);
       const ledgerList = await this._getALlLedgerDetails() as unknown as LedgerListResponse;
@@ -713,7 +712,7 @@ export class AgentServiceService {
 
       // Create and stored agent details  
       agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user?.id);
-  
+
       // Get platform admin details
       const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
 
@@ -727,10 +726,8 @@ export class AgentServiceService {
           );
         }
 
-
         // Get shared agent type
         const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-    
         // Get agent type details
         const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
 
@@ -744,7 +741,6 @@ export class AgentServiceService {
           orgAgentTypeId,
           tenantId: tenantDetails.walletResponseDetails['id'],
           walletName: payload.label,
-          // ledgerId: ledgerIdData[0],
           ledgerId: ledgerIdData.map(item => item.id),
           id: agentProcess?.id
         };
@@ -811,25 +807,21 @@ export class AgentServiceService {
     async createDid(payload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
       try {      
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this.getOrgAgentApiKey(orgId);
       }
-
       const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       let url;
 
       if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
         url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;  
-      } else if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
-        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}`.replace('#', agentDetails.tenantId);  
+      } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
+        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;  
       }
-
       const didDetails = await this.commonService.httpPost(url, payload, 
         { headers: { 'authorization': apiKey } }
         );
-
       return didDetails;
 
     } catch (error) {
@@ -889,6 +881,7 @@ export class AgentServiceService {
 
  
    const walletResponseDetails = await this._createTenantWallet(walletLabel, platformAdminSpinnedUp.org_agents[0].agentEndPoint, platformAdminSpinnedUp.org_agents[0].apiKey);
+
    if (!walletResponseDetails && !walletResponseDetails.id) {
     throw new InternalServerErrorException('Error while creating the wallet');
    }
@@ -902,10 +895,7 @@ export class AgentServiceService {
     if (!DIDCreationOption) {
       throw new InternalServerErrorException('Error while creating the wallet');
      }
-  //  const walletSetupResponse = {
-  //   walletResponse: walletResponseDetails,
-  //   didResponse: DIDCreationOption
-  //  };
+ 
     return {walletResponseDetails, DIDCreationOption};
   }
 //
@@ -929,7 +919,6 @@ export class AgentServiceService {
     createTenantOptions,
     { headers: { authorization: agentApiKey } }
   );
-
   return tenantDetails;
 }
 
@@ -948,7 +937,6 @@ export class AgentServiceService {
     didPayload,
     { headers: { authorization: apiKey } }
   );
-
   return didDetails;
 }
   private async createSocketInstance(): Promise<Socket> {

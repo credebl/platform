@@ -3,6 +3,7 @@ import { AutoAccept } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
+import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 
 export interface IAttributes {
   attributeName: string;
@@ -128,12 +129,22 @@ export interface ICredentialAttributesInterface {
   value: string;
 }
 
+export interface ICredential{
+  '@context':[];
+  type: string[];
+}
+export interface IOptions{
+  proofType:string;
+  proofPurpose:string;
+}
 export interface CredentialOffer {
   emailId: string;
   attributes: IAttributes[];
+  credential?:ICredential;
+  options?:IOptions
 }
 export interface OutOfBandCredentialOfferPayload {
-  credentialDefinitionId: string;
+  credentialDefinitionId?: string;
   orgId: string;
   comment?: string;
   credentialOffer?: CredentialOffer[];
@@ -146,6 +157,7 @@ export interface OutOfBandCredentialOfferPayload {
   label?: string,
   imageUrl?: string,
   autoAcceptCredential?: string;
+  credentialType?:IssueCredentialType;
 }
 
 export interface OutOfBandCredentialOffer {
@@ -227,4 +239,21 @@ export interface OrgAgent {
   ledgerId: string;
   orgAgentTypeId: string;
   tenantId: string;
+}
+
+export interface SendEmailCredentialOffer {
+  iterator: CredentialOffer;
+  emailId: string;
+  index: number;
+  credentialType: IssueCredentialType; 
+  protocolVersion: string;
+  attributes: IAttributes[]; 
+  credentialDefinitionId: string; 
+  outOfBandCredential: OutOfBandCredentialOfferPayload;
+  comment: string;
+  organisation: organisation; 
+  errors;
+  url: string;
+  apiKey: string; 
+  organizationDetails: organisation;
 }

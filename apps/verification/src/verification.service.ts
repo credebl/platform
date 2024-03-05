@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IPresentationExchangeProofRequestPayload} from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { org_agents, organisation, presentations } from '@prisma/client';
@@ -16,6 +16,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
 
 @Injectable()
 export class VerificationService {
@@ -222,7 +223,6 @@ export class VerificationService {
       const verificationMethodLabel = 'request-proof';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(requestProof.orgId);
       }
@@ -336,12 +336,11 @@ export class VerificationService {
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean|object> {
     try {
 
-      this.logger.log(`-------outOfBandRequestProof------${JSON.stringify(outOfBandRequestProof)}`);
       outOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
       // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
-
+     
       const [getAgentDetails, getOrganization] = await Promise.all([
         this.verificationRepository.getAgentEndPoint(user.orgId),
         this.verificationRepository.getOrganization(user.orgId)
@@ -352,24 +351,52 @@ export class VerificationService {
 
       outOfBandRequestProof['imageUrl'] = imageUrl;
       outOfBandRequestProof['label'] = label;
-
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       const verificationMethodLabel = 'create-request-out-of-band';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-      this.logger.log(`cachedApiKey----${apiKey}`);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(user.orgId);
       }
-      const payload: IProofRequestPayload
-        = {
+
+
+      let payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload;
+
+      if (ProofRequestType.INDY === outOfBandRequestProof.type) {
+        const outOfBandIndyRequestPayload = { ...outOfBandRequestProof };
+        delete outOfBandIndyRequestPayload.type;
+
+        payload   = {
         apiKey,
         url,
-        proofRequestPayload: outOfBandRequestProof
+        proofRequestPayload: outOfBandIndyRequestPayload
       };
+      }
       
+      if (ProofRequestType.PRESENTATIONEXCHANGE === outOfBandRequestProof.type) {
+       
+         payload = {
+          apiKey,
+          url,
+          proofRequestPayload: {
+            protocolVersion:outOfBandRequestProof.protocolVersion || 'v1',
+            comment:outOfBandRequestProof.comment,
+            label,
+            proofFormats: {
+              presentationExchange: {
+                presentationDefinition: {
+                  id: outOfBandRequestProof.presentationDefinition.id,
+                  input_descriptors: [...outOfBandRequestProof.presentationDefinition.input_descriptors]
+                }
+              }
+            },
+            autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always'
+          }
+        };
+      }
+     
+
       const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
-      this.logger.log(`-----getProofPresentation---${JSON.stringify(getProofPresentation)}`);
       if (!getProofPresentation) {
         throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
       }
@@ -393,14 +420,12 @@ export class VerificationService {
 
   private async generateOOBProofReq(payload: IProofRequestPayload, getAgentDetails: org_agents): Promise<object> {
     let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    this.logger.log(`cachedApiKey----${agentApiKey}`);
     if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
       agentApiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
     }
     payload.apiKey = agentApiKey;
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
 
-    this.logger.log(`-----getProofPresentation---${JSON.stringify(getProofPresentation)}`);
 
     if (!getProofPresentation) {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
@@ -439,7 +464,6 @@ export class VerificationService {
 
   async sendOutOfBandProofRequest(payload: IProofRequestPayload, email: string, getAgentDetails: org_agents, organizationDetails: organisation): Promise<boolean> {
     let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    this.logger.log(`cachedApiKey----${agentApiKey}`);
     if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
       agentApiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
     }
@@ -496,11 +520,11 @@ export class VerificationService {
    * @param payload 
    * @returns Get requested proof presentation details
    */
-  async _sendOutOfBandProofRequest(payload: IProofRequestPayload): Promise<{
+  async _sendOutOfBandProofRequest(payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload): Promise<{
     response;
   }> {
     try {
-
+      
       const pattern = {
         cmd: 'agent-send-out-of-band-proof-request'
       };
@@ -674,7 +698,7 @@ export class VerificationService {
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', proofId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      this.logger.log(`cachedApiKey----${apiKey}`);
+    
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }

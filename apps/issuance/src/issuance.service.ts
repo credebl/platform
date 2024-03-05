@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
+import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -29,9 +29,10 @@ import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
-import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
+import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
+import { organisation } from '@prisma/client';
 
 
 @Injectable()
@@ -148,33 +149,35 @@ export class IssuanceService {
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
-
-      const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
-
-      if (schemadetailsResponse?.attributes) {
-        const schemadetailsResponseError = [];
-        const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
-
-        attributesArray.forEach((attribute) => {
-          if (attribute.attributeName && attribute.isRequired) {
-            
-            payload.attributes.map((attr) => { 
-              if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                schemadetailsResponseError.push(
-                  `Attribute '${attribute.attributeName}' is required but has an empty value.`
-                );
-              }
-              return true;
-             });
+    
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType} = payload;
+      if (credentialType === IssueCredentialType.INDY) {
+        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
+  
+        if (schemadetailsResponse?.attributes) {
+          const schemadetailsResponseError = [];
+          const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
+  
+          attributesArray.forEach((attribute) => {
+            if (attribute.attributeName && attribute.isRequired) {
+              
+              payload.attributes.map((attr) => { 
+                if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+                  schemadetailsResponseError.push(
+                    `Attribute '${attribute.attributeName}' is required but has an empty value.`
+                  );
+                }
+                return true;
+               });
+            }
+          });
+          if (0 < schemadetailsResponseError.length) {
+            throw new BadRequestException(schemadetailsResponseError);
           }
-        });
-        if (0 < schemadetailsResponseError.length) {
-          throw new BadRequestException(schemadetailsResponseError);
+  
         }
-
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -196,8 +199,10 @@ export class IssuanceService {
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
+   let issueData;
+      if (credentialType === IssueCredentialType.INDY) {
 
-      const issueData = {
+       issueData = {
         protocolVersion: protocolVersion || 'v1',
         credentialFormats: {
           indy: {
@@ -214,6 +219,28 @@ export class IssuanceService {
         label: organisation?.name,
         comment: comment || ''
       };
+
+    }
+
+    if (credentialType === IssueCredentialType.JSONLD) {
+      issueData = {
+        protocolVersion: protocolVersion || 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential,
+            options
+          }
+        },
+        autoAcceptCredential: payload.autoAcceptCredential || 'always',
+        goalCode: payload.goalCode || undefined,
+        parentThreadId: payload.parentThreadId || undefined,
+        willConfirm: payload.willConfirm || undefined,
+        imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
+        label: organisation?.name,
+        comment: comment || ''
+      };
+    }
+
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
 
       return credentialCreateOfferDetails;
@@ -399,232 +426,305 @@ export class IssuanceService {
     }
   }
 
+async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
+  try {
+    const {
+      credentialOffer,
+      comment,
+      credentialDefinitionId,
+      orgId,
+      protocolVersion,
+      attributes,
+      emailId,
+      credentialType
+    } = outOfBandCredential;
 
-  async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
-    try {
-      const {
-        credentialOffer,
-        comment,
-        credentialDefinitionId,
-        orgId,
-        protocolVersion, 
-        attributes,
-        emailId
-      } = outOfBandCredential;
+    if (IssueCredentialType.INDY === credentialType) {
+      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+        credentialDefinitionId
+      );
 
-        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
+      let attributesArray: IAttributes[] = [];
+      if (schemaResponse?.attributes) {
+        attributesArray = JSON.parse(schemaResponse.attributes);
+      }
 
-        let attributesArray:IAttributes[] = [];
-        if (schemaResponse?.attributes) {
-
-           attributesArray = JSON.parse(schemaResponse.attributes);
-        }
-
-        if (0 < attributes?.length) {
-const attrError = [];
-            attributesArray.forEach((schemaAttribute, i) => {
-              if (schemaAttribute.isRequired) {
-
-                const attribute = attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
-                if (!attribute?.value) {
-                  attrError.push(
-                    `attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
-                  );
-                }
-                
-              }
-              
-            });
-            if (0 < attrError.length) {
-              throw new BadRequestException(attrError);
+      if (0 < attributes?.length) {
+        const attrError = [];
+        attributesArray.forEach((schemaAttribute, i) => {
+          if (schemaAttribute.isRequired) {
+            const attribute = attributes.find((attribute) => attribute.name === schemaAttribute.attributeName);
+            if (!attribute?.value) {
+              attrError.push(`attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`);
             }
-        }
-        if (0 < credentialOffer?.length) {
-const credefError = [];
-          credentialOffer.forEach((credentialAttribute, index) => {
-            
-            attributesArray.forEach((schemaAttribute, i) => {
-
-                const attribute = credentialAttribute.attributes.find(attribute => attribute.name === schemaAttribute.attributeName);
-
-                if (schemaAttribute.isRequired && !attribute?.value) {
-                  credefError.push(
-                    `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
-                  );
-                }
-                
-              });
-            });
-            if (0 < credefError.length) {
-              throw new BadRequestException(credefError);
-            }
-        }
-      
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-
-      const { organisation } = agentDetails;
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-      }
-
-      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
-      const issuanceMethodLabel = 'create-offer-oob';
-      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentDetails.agentEndPoint, agentDetails.tenantId);
-      const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
-
-      if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
-      }
-
-
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-
-      const errors = [];
-      const emailPromises = [];
-
-      const sendEmailForCredentialOffer = async (iterator, emailId, index): Promise<boolean> => {
-        const iterationNo = index + 1;
-        try {
-          const outOfBandIssuancePayload = {
-            protocolVersion: protocolVersion || 'v1',
-            credentialFormats: {
-              indy: {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                attributes: (iterator.attributes || attributes).map(({ isRequired, ...rest }) => rest),
-                credentialDefinitionId
-              }
-            },
-            autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
-            comment,
-            goalCode: outOfBandCredential.goalCode || undefined,
-            parentThreadId: outOfBandCredential.parentThreadId || undefined,
-            willConfirm: outOfBandCredential.willConfirm || undefined,
-            label: organisation?.name,
-            imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
-          };
-
-          this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
-
-          const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
-
-          if (!credentialCreateOfferDetails) {
-            errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
-            return false;
           }
-
-          const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
-
-          if (!invitationId) {
-            errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
-            return false;
-          }
-
-          const agentEndPoint = agentDetails.tenantId
-            ? `${agentDetails.agentEndPoint}/multi-tenancy/url/${agentDetails.tenantId}/${invitationId}`
-            : `${agentDetails.agentEndPoint}/url/${invitationId}`;
-
-          const qrCodeOptions = { type: 'image/png' };
-          const outOfBandIssuanceQrCode = await QRCode.toDataURL(agentEndPoint, qrCodeOptions);
-          const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
-
-          if (!platformConfigData) {
-            errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
-            return false;
-          }
-
-          this.emailData.emailFrom = platformConfigData.emailFrom;
-          this.emailData.emailTo = emailId;
-          this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-          this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, agentEndPoint);
-          this.emailData.emailAttachments = [
-            {
-              filename: 'qrcode.png',
-              content: outOfBandIssuanceQrCode.split(';base64,')[1],
-              contentType: 'image/png',
-              disposition: 'attachment'
-            }
-          ];
-
-          const isEmailSent = await sendEmail(this.emailData);
-          this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
-
-          if (!isEmailSent) {
-            errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
-            return false;
-          }
-
-          return isEmailSent;
-        } catch (error) {
-          this.logger.error('[OUT-OF-BAND CREATE OFFER - SEND EMAIL]::', JSON.stringify(error));
-          const errorStack = error?.status?.message;
-          if (errorStack) {
-            errors.push(
-              new RpcException({
-                error: `${errorStack?.error?.message} at position ${iterationNo}`,
-                statusCode: errorStack?.statusCode,
-                message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`
-              }));
-          } else {
-            errors.push(new InternalServerErrorException(`${error.message} at position ${iterationNo}`));
-          }
-          return false;
-        }
-      };
-
-      if (credentialOffer) {
-        for (let i = 0; i < credentialOffer.length; i += Number(process.env.OOB_BATCH_SIZE)) {
-          const batch = credentialOffer.slice(i, i + Number(process.env.OOB_BATCH_SIZE));
-
-          // Process each batch in parallel
-          const batchPromises = batch.map((iterator, index) => sendEmailForCredentialOffer(iterator, iterator.emailId, index));
-          emailPromises.push(Promise.all(batchPromises));
-        }
-      }  else {
-        emailPromises.push(sendEmailForCredentialOffer({}, emailId, 1));
-      }
-
-      const results = await Promise.all(emailPromises);
-
-      // Flatten the results array
-      const flattenedResults = [].concat(...results);
-
-      // Check if all emails were successfully sent
-      const allSuccessful = flattenedResults.every((result) => true === result);
-
-      if (0 < errors.length) {
-        throw errors;
-      }
-
-      return allSuccessful;
-    } catch (error) {
-      this.logger.error(`[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`);
-      if (0 < error?.length) {
-        const errorStack = error?.map(item => {
-          const { message, statusCode, error } = item?.error || item?.response || {};
-          return {
-            message,
-            statusCode,
-            error
-          };
         });
-        throw new RpcException({
-          error: errorStack,
-          statusCode: error?.status?.code,
-          message: ResponseMessages.issuance.error.unableToCreateOOBOffer
+        if (0 < attrError.length) {
+          throw new BadRequestException(attrError);
+        }
+      }
+      if (0 < credentialOffer?.length) {
+        const credefError = [];
+        credentialOffer.forEach((credentialAttribute, index) => {
+          attributesArray.forEach((schemaAttribute, i) => {
+            const attribute = credentialAttribute.attributes.find(
+              (attribute) => attribute.name === schemaAttribute.attributeName
+            );
+
+            if (schemaAttribute.isRequired && !attribute?.value) {
+              credefError.push(
+                `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
+              );
+            }
+          });
         });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
+        if (0 < credefError.length) {
+          throw new BadRequestException(credefError);
+        }
       }
     }
-  }
 
-  
+    const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+
+    const { organisation } = agentDetails;
+    if (!agentDetails) {
+      throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+    }
+
+    const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
+    const issuanceMethodLabel = 'create-offer-oob';
+    const url = await this.getAgentUrl(
+      issuanceMethodLabel,
+      orgAgentType,
+      agentDetails.agentEndPoint,
+      agentDetails.tenantId
+    );
+    const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
+
+    if (!organizationDetails) {
+      throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
+    }
+
+    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    if (!apiKey || null === apiKey || undefined === apiKey) {
+      apiKey = await this._getOrgAgentApiKey(orgId);
+    }
+
+    const errors = [];
+    const emailPromises = [];
+    const sendEmailCredentialOffer: {
+      iterator: CredentialOffer;
+      emailId: string;
+      index: number;
+      credentialType: IssueCredentialType;
+      protocolVersion: string;
+      attributes: IAttributes[];
+      credentialDefinitionId: string;
+      outOfBandCredential: OutOfBandCredentialOfferPayload;
+      comment: string;
+      organisation: organisation;
+      errors: string[];
+      url: string;
+      apiKey: string;
+      organizationDetails: organisation;
+    } = {
+      credentialType,
+      protocolVersion,
+      attributes,
+      credentialDefinitionId,
+      outOfBandCredential,
+      comment,
+      organisation,
+      errors,
+      url,
+      apiKey,
+      organizationDetails,
+      iterator: undefined,
+      emailId: emailId || '',
+      index: 0
+    };
+
+    if (credentialOffer) {
+      for (let i = 0; i < credentialOffer.length; i += Number(process.env.OOB_BATCH_SIZE)) {
+        const batch = credentialOffer.slice(i, i + Number(process.env.OOB_BATCH_SIZE));
+        // Process each batch in parallel
+        const batchPromises = batch.map(async (iterator, index) => {
+          
+          sendEmailCredentialOffer['iterator'] = iterator;
+          sendEmailCredentialOffer['emailId'] = iterator.emailId;
+          sendEmailCredentialOffer['index'] = index;
+
+          return this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
+        });
+        emailPromises.push(batchPromises);
+      }
+    } else {
+      emailPromises.push(this.sendEmailForCredentialOffer(sendEmailCredentialOffer));
+    }
+
+    const results = await Promise.all(emailPromises);
+
+    // Flatten the results array
+    const flattenedResults = [].concat(...results);
+
+    // Check if all emails were successfully sent
+    const allSuccessful = flattenedResults.every((result) => true === result);
+
+    if (0 < errors.length) {
+      throw errors;
+    }
+
+    return allSuccessful;
+  } catch (error) {
+    this.logger.error(
+      `[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`
+    );
+    if (0 < error?.length) {
+      const errorStack = error?.map((item) => {
+        const { message, statusCode, error } = item?.error || item?.response || {};
+        return {
+          message,
+          statusCode,
+          error
+        };
+      });
+      throw new RpcException({
+        error: errorStack,
+        statusCode: error?.status?.code,
+        message: ResponseMessages.issuance.error.unableToCreateOOBOffer
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+}
+
+async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialOffer): Promise<boolean> {
+  const {
+    iterator,
+    emailId,
+    index,
+    credentialType,
+    protocolVersion,
+    attributes,
+    credentialDefinitionId,
+    outOfBandCredential,
+    comment,
+    organisation,
+    errors,
+    url,
+    apiKey,
+    organizationDetails
+  } = sendEmailCredentialOffer;
+
+  const iterationNo = index + 1;
+  try {
+    let outOfBandIssuancePayload;
+    if (IssueCredentialType.INDY === credentialType) {
+    
+      outOfBandIssuancePayload = {
+        protocolVersion: protocolVersion || 'v1',
+        credentialFormats: {
+          indy: {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            attributes: attributes ? attributes : iterator.attributes.map(({ isRequired, ...rest }) => rest),
+            credentialDefinitionId
+          }
+        },
+        autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+        comment,
+        goalCode: outOfBandCredential.goalCode || undefined,
+        parentThreadId: outOfBandCredential.parentThreadId || undefined,
+        willConfirm: outOfBandCredential.willConfirm || undefined,
+        label: outOfBandCredential.label || undefined,
+        imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
+      };
+    }
+
+    if (IssueCredentialType.JSONLD === credentialType) {
+      outOfBandIssuancePayload = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: iterator.credential,
+            options: iterator.options
+          }
+        },
+        autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+        comment,
+        goalCode: outOfBandCredential.goalCode || undefined,
+        parentThreadId: outOfBandCredential.parentThreadId || undefined,
+        willConfirm: outOfBandCredential.willConfirm || undefined,
+        label: outOfBandCredential.label || undefined,
+        imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
+      };
+    }
+
+    const agentDetails = await this.issuanceRepository.getAgentEndPoint(organisation.id);
+
+    this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
+
+    const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
+
+    if (!credentialCreateOfferDetails) {
+      errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
+      return false;
+    }
+
+    const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
+        if (!invitationId) {
+          errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
+          return false;
+        }
+        const agentEndPoint = agentDetails.tenantId
+          ? `${agentDetails.agentEndPoint}/multi-tenancy/url/${agentDetails.tenantId}/${invitationId}`
+          : `${agentDetails.agentEndPoint}/url/${invitationId}`;
+        const qrCodeOptions = { type: 'image/png' };
+        const outOfBandIssuanceQrCode = await QRCode.toDataURL(agentEndPoint, qrCodeOptions);
+        const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
+        if (!platformConfigData) {
+          errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
+          return false;
+        }
+        this.emailData.emailFrom = platformConfigData.emailFrom;
+        this.emailData.emailTo = emailId;
+        this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, agentEndPoint);
+        this.emailData.emailAttachments = [
+          {
+            filename: 'qrcode.png',
+            content: outOfBandIssuanceQrCode.split(';base64,')[1],
+            contentType: 'image/png',
+            disposition: 'attachment'
+          }
+        ];
+        const isEmailSent = await sendEmail(this.emailData);
+        this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
+        if (!isEmailSent) {
+          errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
+          return false;
+        }
+        return isEmailSent;
+
+  } catch (error) {
+    this.logger.error('[OUT-OF-BAND CREATE OFFER - SEND EMAIL]::', JSON.stringify(error));
+    const errorStack = error?.status?.message;
+    if (errorStack) {
+      errors.push(
+        new RpcException({
+          error: `${errorStack?.error?.message} at position ${iterationNo}`,
+          statusCode: errorStack?.statusCode,
+          message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`
+        })
+      );
+    } else {
+      errors.push(new InternalServerErrorException(`${error.message} at position ${iterationNo}`));
+    }
+    return false;
+  }
+}
+
   async _outOfBandCredentialOffer(outOfBandIssuancePayload: object, url: string, apiKey: string): Promise<{
     response;
   }> {
@@ -1108,7 +1208,8 @@ const credefError = [];
         orgId: jobDetails.orgId,
         label: organisation?.name,
         attributes: [],
-        emailId: jobDetails.data.email
+        emailId: jobDetails.data.email,
+        credentialType: IssueCredentialType.INDY
       };
 
       for (const key in jobDetails.data) {

@@ -32,7 +32,7 @@ import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
-import { SortFields } from './enum/verification.enum';
+import { ProofRequestType, SortFields } from './enum/verification.enum';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -247,6 +247,10 @@ export class VerificationController {
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBody({ type: SendProofRequestPayload })
+    @ApiQuery({
+        name: 'requestType',
+        enum: ProofRequestType
+      })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -254,9 +258,11 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Body() outOfBandRequestProof: SendProofRequestPayload,
-        @Param('orgId') orgId: string
+        @Param('orgId') orgId: string,
+        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
         user.orgId = orgId;
+        outOfBandRequestProof.type = requestType;
         const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
@@ -286,7 +292,6 @@ export class VerificationController {
         @Res() res: Response
     ): Promise<Response> {
         proofPresentationPayload.type = 'Verification';
-        this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
        
             const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
                 this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);

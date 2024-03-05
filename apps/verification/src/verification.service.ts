@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IPresentationExchangeProofRequestPayload} from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { org_agents, organisation, presentations } from '@prisma/client';
@@ -16,6 +16,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
 
 @Injectable()
 export class VerificationService {
@@ -341,7 +342,7 @@ export class VerificationService {
       // eslint-disable-next-line no-console
       console.log('Received outOfBandRequestProof in "sendOutOfBandPresentationRequest:::::"', JSON.stringify(outOfBandRequestProof));
       // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
-      // outOfBandRequestProof.proofFormats.indy.requested_attributes = requestedAttributes;
+           // outOfBandRequestProof.proofFormats.indy.requested_attributes = requestedAttributes;
       // outOfBandRequestProof.proofFormats.indy.requested_predicates = requestedPredicates;
 
       const [getAgentDetails, getOrganization] = await Promise.all([
@@ -368,8 +369,15 @@ export class VerificationService {
       const {emailId, ...proofRequestPayload} = outOfBandRequestProof;
       // eslint-disable-next-line no-console
       console.log('This is the email in Verification-microservice->service::::::', emailId);
-      const payload: IProofRequestPayload
-        = {
+
+
+      let payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload;
+
+      if (ProofRequestType.INDY === outOfBandRequestProof.type) {
+        // const outOfBandIndyRequestPayload = { ...outOfBandRequestProof };
+        // delete outOfBandIndyRequestPayload.type;
+
+        payload   = {
         apiKey,
         url,
         proofRequestPayload
@@ -380,27 +388,59 @@ export class VerificationService {
       //   throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
       // }
       // return getProofPresentation.response; 
+      //   proofRequestPayload: outOfBandIndyRequestPayload
+      // };
+      }
+      
+      if (ProofRequestType.PRESENTATIONEXCHANGE === outOfBandRequestProof.type) {
+       
+         payload = {
+          apiKey,
+          url,
+          proofRequestPayload: {
+            protocolVersion:outOfBandRequestProof.protocolVersion || 'v1',
+            comment:outOfBandRequestProof.comment,
+            label,
+            proofFormats: {
+              presentationExchange: {
+                presentationDefinition: {
+                  id: outOfBandRequestProof.presentationDefinition.id,
+                  input_descriptors: [...outOfBandRequestProof.presentationDefinition.input_descriptors]
+                }
+              }
+            },
+            autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always'
+          }
+        };
+      }
+     
+
+      const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
+      if (!getProofPresentation) {
+        throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
+      }
+      return getProofPresentation.response;
+
       // Unused code : to be segregated
       // eslint-disable-next-line no-console
       console.log('This is "outOfBandRequestProof.emailId":::::', outOfBandRequestProof.emailId);
-      if (outOfBandRequestProof.emailId) {
-        const batchSize = 100; // Define the batch size according to your needs
-        const { emailId } = outOfBandRequestProof; // Assuming it's an array
-        const sentData = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization, batchSize);
-        // eslint-disable-next-line no-console
-        console.log('Sent data is:::::::', sentData);
-      return true;
-      } else {
-      return this.generateOOBProofReq(payload, getAgentDetails);
-      // await this._sendOutOfBandProofRequest(payload);
-      } 
+      // if (outOfBandRequestProof.emailId) {
+      //   const batchSize = 100; // Define the batch size according to your needs
+      //   const { emailId } = outOfBandRequestProof; // Assuming it's an array
+      //   const sentData = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization, batchSize);
+      //   // eslint-disable-next-line no-console
+      //   console.log('Sent data is:::::::', sentData);
+      // return true;
+      // } else {
+      // return this.generateOOBProofReq(payload, getAgentDetails);
+      // // await this._sendOutOfBandProofRequest(payload);
+      // } 
       // return getProofPresentation.response;     
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
       this.verificationErrorHandling(error);
     }
   }
-
 
   private async generateOOBProofReq(payload: IProofRequestPayload, getAgentDetails: org_agents): Promise<object> {
     let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
@@ -511,7 +551,7 @@ export class VerificationService {
     response;
   }> {
     try {
-
+      
       const pattern = {
         cmd: 'agent-send-out-of-band-proof-request'
       };

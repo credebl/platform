@@ -553,8 +553,8 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     }
 
     const errors = [];
-    let emailPromises;
-    const arrayEmailPromises = [];
+    let credentialOfferResponse;
+    const arraycredentialOfferResponse = [];
     const sendEmailCredentialOffer: {
       iterator: CredentialOffer;
       emailId: string;
@@ -597,16 +597,16 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
           await this.delay(500); // Wait for 0.5 seconds
           const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
           
-          arrayEmailPromises.push(sendOobOffer);
+          arraycredentialOfferResponse.push(sendOobOffer);
       }  
       if (0 < errors.length) {
         throw errors;
       }
   
-      return arrayEmailPromises.every((result) => true === result);    
+      return arraycredentialOfferResponse.every((result) => true === result);    
     } else {
-      emailPromises = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
-      return emailPromises;    
+      credentialOfferResponse = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
+      return credentialOfferResponse;    
     }
   
   } catch (error) {

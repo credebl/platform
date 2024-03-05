@@ -512,7 +512,8 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     }
 
     const errors = [];
-    const emailPromises = [];
+    let emailPromises;
+    const arrayEmailPromises = [];
     const sendEmailCredentialOffer: {
       iterator: CredentialOffer;
       emailId: string;
@@ -546,36 +547,27 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     };
 
     if (credentialOffer) {
-      for (let i = 0; i < credentialOffer.length; i += Number(process.env.OOB_BATCH_SIZE)) {
-        const batch = credentialOffer.slice(i, i + Number(process.env.OOB_BATCH_SIZE));
-        // Process each batch in parallel
-        const batchPromises = batch.map(async (iterator, index) => {
-          
+
+        for (const [index, iterator] of credentialOffer.entries()) {
           sendEmailCredentialOffer['iterator'] = iterator;
           sendEmailCredentialOffer['emailId'] = iterator.emailId;
           sendEmailCredentialOffer['index'] = index;
-
-          return this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
-        });
-        emailPromises.push(batchPromises);
+      
+          await this.delay(500); // Wait for 0.5 seconds
+          const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
+          
+          arrayEmailPromises.push(sendOobOffer);
+      }  
+      if (0 < errors.length) {
+        throw errors;
       }
+  
+      return arrayEmailPromises.every((result) => true === result);    
     } else {
-      emailPromises.push(this.sendEmailForCredentialOffer(sendEmailCredentialOffer));
+      emailPromises = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
+      return emailPromises;    
     }
-
-    const results = await Promise.all(emailPromises);
-
-    // Flatten the results array
-    const flattenedResults = [].concat(...results);
-
-    // Check if all emails were successfully sent
-    const allSuccessful = flattenedResults.every((result) => true === result);
-
-    if (0 < errors.length) {
-      throw errors;
-    }
-
-    return allSuccessful;
+  
   } catch (error) {
     this.logger.error(
       `[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`
@@ -705,6 +697,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
           return false;
         }
+
         return isEmailSent;
 
   } catch (error) {

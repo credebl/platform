@@ -19,6 +19,8 @@ export function validateDid(createDid: IDidCreate): string[] {
         errors.push('privateKey is required for polygon method');
     } else if (DidMethod.POLYGON && !createDid.endpoint) {
         errors.push('endpoint is required for polygon method');
+    } else if ((DidMethod.INDY || DidMethod.KEY || DidMethod.WEB) && (!createDid.seed)) {
+        errors.push('seed is required');
     }
 
     return errors;

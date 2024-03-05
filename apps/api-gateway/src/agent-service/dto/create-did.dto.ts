@@ -10,7 +10,6 @@ export class CreateDidDto {
     @Transform(({ value }) => trim(value))
     @IsOptional()
     @ApiPropertyOptional()
-    // @IsNotEmpty({ message: 'seed is required' })
     @IsString({ message: 'seed must be in string format.' })
     @Matches(/^\S*$/, {
         message: 'Spaces are not allowed in seed'
@@ -55,7 +54,7 @@ export class CreateDidDto {
     @IsOptional()
     @ApiPropertyOptional()
     @IsString({ message: 'endpoint must be in string format.' })
-    endPoint?: string;
+    endpoint?: string;
 
     @ApiProperty({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
     @IsOptional()

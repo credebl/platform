@@ -108,7 +108,8 @@ export const ResponseMessages = {
             invalidInvitationId:'Invalid format for invitation id',
             ecosystemIdIsRequired:'ecosystemId is required',
             roleNotMatch: 'User does not have access',
-            orgDoesNotMatch: 'Organization does not match'
+            orgDoesNotMatch: 'Organization does not match',
+            invalidClient: 'Invalid client credentials'
         }
     },
 

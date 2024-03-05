@@ -334,8 +334,15 @@ export class VerificationService {
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean | object> {
     try {
 
+      outOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
+
+      // eslint-disable-next-line no-console
+      console.log('Received outOfBandRequestProof in "sendOutOfBandPresentationRequest:::::"', JSON.stringify(outOfBandRequestProof));
       // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
-     
+      // outOfBandRequestProof.proofFormats.indy.requested_attributes = requestedAttributes;
+      // outOfBandRequestProof.proofFormats.indy.requested_predicates = requestedPredicates;
+
       const [getAgentDetails, getOrganization] = await Promise.all([
         this.verificationRepository.getAgentEndPoint(user.orgId),
         this.verificationRepository.getOrganization(user.orgId)
@@ -419,14 +426,20 @@ export class VerificationService {
       return getProofPresentation.response;
 
       // Unused code : to be segregated
-      // if (outOfBandRequestProof.emailId) {
-      //   const batchSize = 100; // Define the batch size according to your needs
-      //   const { emailId } = outOfBandRequestProof; // Assuming it's an array
-      //   await this.sendEmailInBatches(payload, emailId, getAgentDetails, organizationDetails, batchSize);
-      // return true;
-      // } else {
-      // return this.generateOOBProofReq(payload, getAgentDetails);
-      // }      
+      // eslint-disable-next-line no-console
+      console.log('This is "outOfBandRequestProof.emailId":::::', outOfBandRequestProof.emailId);
+      if (outOfBandRequestProof.emailId) {
+        const batchSize = 100; // Define the batch size according to your needs
+        const { emailId } = outOfBandRequestProof; // Assuming it's an array
+        const sentData = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization, batchSize);
+        // eslint-disable-next-line no-console
+        console.log('Sent data is:::::::', sentData);
+      return true;
+      } else {
+      return this.generateOOBProofReq(payload, getAgentDetails);
+      // await this._sendOutOfBandProofRequest(payload);
+      } 
+      // return getProofPresentation.response;     
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
       this.verificationErrorHandling(error);
@@ -467,6 +480,9 @@ export class VerificationService {
         const batch = emailIds.slice(i, i + batchSize);
         const emailPromises = batch.map(async email => {
           try {
+            await this.delay(5000);
+            // eslint-disable-next-line no-console
+            console.log(`Trying to send email to after 500 ms::::::::: ${email}`);
             await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
           } catch (error) {
             accumulatedErrors.push(error);

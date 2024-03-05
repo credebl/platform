@@ -86,7 +86,7 @@ export class WinnerTemplate {
               <p style="font-size: 14px; margin: 0;">exceptional memory skills demonstrated during the competition.</p>
           </p>
           <div style="font-family: Inter; font-weight: bold; font-size: 12px;">Date: 24, 25, 26 November 2023 | Place: Cidco Exhibition Centre, Navi Mumbai, India</div>
-          <div style="font-family: Inter;font-weight: bold;font-size: 12px;position: absolute;bottom: 6px;left: 50%;transform: translateX(-50%);width: 100%;">Blockchain-based certificate issued using credebl.id, by Blockster Labs Pvt. Ltd.</div>
+          <div style="font-family: Inter;font-weight: bold;font-size: 12px;position: absolute;bottom: 6px;left: 50%;transform: translateX(-50%);width: 100%;">Blockchain-based certificate issued using ${process.env.PLATFORM_WEB_URL}, by ${process.env.POWERED_BY}</div>
         </div>
       </div>
       

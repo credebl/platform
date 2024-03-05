@@ -162,8 +162,7 @@ export interface IWSendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
-    type?:string;
-    presentationDefinition?:IProofRequestPresentationDefinition;
+    emailId?: string[]
 }
 
 export interface IProofRequestPayload {

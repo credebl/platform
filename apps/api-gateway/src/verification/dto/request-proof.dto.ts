@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
@@ -325,19 +325,18 @@ export class SendProofRequestPayload {
     @IsOptional()
     @IsUUID()
     @IsNotEmpty({ message: 'please provide valid parentThreadId' })
-    parentThreadId: string;
+    parentThreadId: string;  
 
-    @ApiProperty({ example: true })
-    @IsBoolean()
+    // @ApiProperty()
+    @ApiPropertyOptional()
+    @IsEmail({}, { each: true, message: 'Please provide a valid email' })
+    @ArrayNotEmpty({ message: 'Email array must not be empty' })
+    // @Transform(({ value }) => trim(value))
+    // @Transform(({ value }) => value.map((email: string) => email.trim()))
+    @ArrayUnique({ message: 'Duplicate emails are not allowed' })
+    @IsArray()
+    @IsString({ each: true, message: 'Each emailId in the array should be a string' })
     @IsOptional()
-    @IsNotEmpty({message:'Please provide the flag for shorten url.'})
-    isShortenUrl?: boolean;
-
-    @ApiPropertyOptional({ default: true })
-    @IsOptional()
-    @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
-    @IsBoolean({ message: 'reuseConnection must be a boolean' })
-    reuseConnection?: boolean;
-
+    emailId: string[];
 }
 

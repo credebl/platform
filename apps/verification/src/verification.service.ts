@@ -334,8 +334,15 @@ export class VerificationService {
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean | object> {
     try {
 
+      outOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
+
+      // eslint-disable-next-line no-console
+      console.log('Received outOfBandRequestProof in "sendOutOfBandPresentationRequest:::::"', JSON.stringify(outOfBandRequestProof));
       // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
-     
+      // outOfBandRequestProof.proofFormats.indy.requested_attributes = requestedAttributes;
+      // outOfBandRequestProof.proofFormats.indy.requested_predicates = requestedPredicates;
+
       const [getAgentDetails, getOrganization] = await Promise.all([
         this.verificationRepository.getAgentEndPoint(user.orgId),
         this.verificationRepository.getOrganization(user.orgId)
@@ -356,77 +363,39 @@ export class VerificationService {
         apiKey = await this._getOrgAgentApiKey(user.orgId);
       }
 
-      const { isShortenUrl, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
-      let recipientKey: string | undefined;
-      if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
-         if (data && 0 < data.length) {
-          const [firstElement] = data;
-          recipientKey = firstElement?.recipientKey ?? undefined;
-      }
-      }
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
-
-      let payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload;
-
-      if (ProofRequestType.INDY === type) {
-        updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
-        updateOutOfBandRequestProof.recipientKey = recipientKey || undefined;
-        payload   = {
+      // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const {emailId, ...proofRequestPayload} = outOfBandRequestProof;
+      // eslint-disable-next-line no-console
+      console.log('This is the email in Verification-microservice->service::::::', emailId);
+      const payload: IProofRequestPayload
+        = {
         apiKey,
         url,
-        proofRequestPayload: updateOutOfBandRequestProof
+        proofRequestPayload
       };
       }
       
-      if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
-       
-         payload = {
-          apiKey,
-          url,
-          proofRequestPayload: {
-            protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
-            comment:outOfBandRequestProof.comment,
-            label,
-            proofFormats: {
-              presentationExchange: {
-                presentationDefinition: {
-                  id: outOfBandRequestProof.presentationDefinition.id,
-                  input_descriptors: [...outOfBandRequestProof.presentationDefinition.input_descriptors]
-                }
-              }
-            },
-            autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always',
-            recipientKey:recipientKey || undefined
-          }
-        };
-      }
-     
-
-      const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
-      //apply presentation shorting URL
-      if (isShortenUrl) {
-        const proofRequestInvitationUrl: string = getProofPresentation?.response?.invitationUrl;
-        const shortenedUrl: string = await this.storeVerificationObjectAndReturnUrl(proofRequestInvitationUrl, false);
-        this.logger.log('shortenedUrl', shortenedUrl);
-        if (shortenedUrl) {
-          getProofPresentation.response.invitationUrl = shortenedUrl;
-        }
-      }
-      if (!getProofPresentation) {
-        throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
-      }
-      return getProofPresentation.response;
-
+      // const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
+      // if (!getProofPresentation) {
+      //   throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
+      // }
+      // return getProofPresentation.response; 
       // Unused code : to be segregated
-      // if (outOfBandRequestProof.emailId) {
-      //   const batchSize = 100; // Define the batch size according to your needs
-      //   const { emailId } = outOfBandRequestProof; // Assuming it's an array
-      //   await this.sendEmailInBatches(payload, emailId, getAgentDetails, organizationDetails, batchSize);
-      // return true;
-      // } else {
-      // return this.generateOOBProofReq(payload, getAgentDetails);
-      // }      
+      // eslint-disable-next-line no-console
+      console.log('This is "outOfBandRequestProof.emailId":::::', outOfBandRequestProof.emailId);
+      if (outOfBandRequestProof.emailId) {
+        const batchSize = 100; // Define the batch size according to your needs
+        const { emailId } = outOfBandRequestProof; // Assuming it's an array
+        const sentData = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization, batchSize);
+        // eslint-disable-next-line no-console
+        console.log('Sent data is:::::::', sentData);
+      return true;
+      } else {
+      return this.generateOOBProofReq(payload, getAgentDetails);
+      // await this._sendOutOfBandProofRequest(payload);
+      } 
+      // return getProofPresentation.response;     
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
       this.verificationErrorHandling(error);
@@ -467,6 +436,9 @@ export class VerificationService {
         const batch = emailIds.slice(i, i + batchSize);
         const emailPromises = batch.map(async email => {
           try {
+            await this.delay(5000);
+            // eslint-disable-next-line no-console
+            console.log(`Trying to send email to after 500 ms::::::::: ${email}`);
             await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
           } catch (error) {
             accumulatedErrors.push(error);
@@ -942,23 +914,26 @@ export class VerificationService {
   async natsCall(pattern: object, payload: object): Promise<{
     response: string;
   }> {
-    return this.verificationServiceProxy
-      .send<string>(pattern, payload)
-      .pipe(
-        map((response) => (
-          {
-            response
-          }))
-      )
-      .toPromise()
-      .catch(error => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException({
-          status: error.statusCode,
-          error: error.error,
-          message: error.message
-        }, error.error);
-      });
+      return this.verificationServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        )
+        .toPromise()
+        .catch(error => {
+            this.logger.error(`catch: ${JSON.stringify(error)}`);
+            throw new HttpException({         
+                status: error.statusCode, 
+                error: error.error,
+                message: error.message
+              }, error.error);
+        });
+    }
+  
+  async delay(ms: number): Promise<unknown> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
-
 }          

@@ -64,6 +64,8 @@ export class VerificationController {
 
   @MessagePattern({ cmd: 'send-out-of-band-proof-request' })
   async sendOutOfBandPresentationRequest(payload: { outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest }): Promise<boolean|object> {
+    // eslint-disable-next-line no-console
+    console.log('Stringify Received email in "Verification Controller"', JSON.stringify(payload.outOfBandRequestProof.emailId));
     return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof, payload.user);
   }
 

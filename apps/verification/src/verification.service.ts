@@ -344,11 +344,10 @@ export class VerificationService {
         this.verificationRepository.getOrganization(user.orgId)
       ]);
 
-      const imageUrl = getOrganization?.logoUrl;
       const label = getOrganization?.name;
 
-      if (imageUrl) {
-        outOfBandRequestProof['imageUrl'] = imageUrl;
+      if (getOrganization?.logoUrl) {
+        outOfBandRequestProof['imageUrl'] = getOrganization?.logoUrl;
       }
       
       outOfBandRequestProof['label'] = label;

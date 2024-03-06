@@ -327,12 +327,9 @@ export class SendProofRequestPayload {
     @IsNotEmpty({ message: 'please provide valid parentThreadId' })
     parentThreadId: string;  
 
-    // @ApiProperty()
     @ApiPropertyOptional()
     @IsEmail({}, { each: true, message: 'Please provide a valid email' })
     @ArrayNotEmpty({ message: 'Email array must not be empty' })
-    // @Transform(({ value }) => trim(value))
-    // @Transform(({ value }) => value.map((email: string) => email.trim()))
     @ArrayUnique({ message: 'Duplicate emails are not allowed' })
     @IsArray()
     @IsString({ each: true, message: 'Each emailId in the array should be a string' })

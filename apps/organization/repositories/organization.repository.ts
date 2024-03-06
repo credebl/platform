@@ -492,6 +492,38 @@ export class OrganizationRepository {
     }
   }
 
+  async getUnregisteredClientOrgs(): Promise<organisation[]> {
+    try {
+      const recordsWithNullIdpId = await this.prisma.organisation.findMany({
+        where: {
+          idpId: null
+        },
+        include: {
+          userOrgRoles: {
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  username: true,
+                  id: true,
+                  keycloakUserId: true,
+                  isEmailVerified: true
+                }
+              },
+              orgRole: true
+            }
+          }
+        }
+      });
+
+      return recordsWithNullIdpId;
+      
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   /**
    *
    * @param queryObject

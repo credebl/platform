@@ -294,6 +294,7 @@ export const ResponseMessages = {
             proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
+            batchEmailSend: 'Unable to send email in batches',
             emailSend: 'Unable to send email to the user'
         }
     },

@@ -23,7 +23,7 @@ export class UpdatePlatformSettingsDto {
     @IsString({ message: 'emailFrom should be string' })
     emailFrom: string;
 
-    @ApiProperty({ example: 'dev.credebl.id' })
+    @ApiProperty({ example: `${process.env.UPLOAD_LOGO_HOST}` })
     @IsOptional()
     @IsString({ message: 'API endpoint should be string' })
     apiEndPoint: string;

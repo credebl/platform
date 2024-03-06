@@ -577,7 +577,6 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       credentialOfferResponse = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
       return credentialOfferResponse;    
     }
-  
   } catch (error) {
     this.logger.error(
       `[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`

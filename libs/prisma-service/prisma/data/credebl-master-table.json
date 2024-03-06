@@ -227,6 +227,12 @@
         "mainnet": "did:polygon:mainnet",
         "testnet": "did:polygon:testnet"
     }
+    },
+    {
+      "key": "did:key"
+    },
+    {
+      "key": "did:web"
     }
   ]
 }

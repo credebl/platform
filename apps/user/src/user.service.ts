@@ -470,11 +470,21 @@ export class UserService {
       }
 
       const decryptedPassword = await this.commonService.decryptPassword(password);
-      try {        
+      try {    
+        
         const authToken = await this.clientRegistrationService.getManagementToken();  
         userData.password = decryptedPassword;
-        await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
+        if (userData.keycloakUserId) {
+          await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
+        } else {          
+          const keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, authToken);
+          await this.userRepository.updateUserDetails(userData.id,
+            keycloakDetails.keycloakUserId.toString()
+          );
+        }
+
         await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, password);
+
       } catch (error) {
         this.logger.error(`Error reseting the password`, error);
         throw new InternalServerErrorException('Error while reseting user password');
@@ -562,7 +572,7 @@ export class UserService {
           tokenResponse.isRegisteredToSupabase = false;
           return tokenResponse;
         } catch (error) {
-          throw new UnauthorizedException(error?.message);
+          throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
         }
        
       } else {

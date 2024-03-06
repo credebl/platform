@@ -68,7 +68,7 @@ export class EcosystemInviteTemplate {
 
                   </div>
                   <p style="margin-top: 6px;">
-                     © ${process.env.POWERED_BY}.
+                     © ${process.env.POWERED_BY}
                   </p>
               </footer>
           </div>

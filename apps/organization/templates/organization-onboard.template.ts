@@ -25,7 +25,7 @@ export class OnBoardVerificationRequest {
                   <div style="display: block; text-align: center">
                     <img
                       src="${process.env.BRAND_LOGO}"
-                      alt="Credebl Logo"
+                      alt="${process.env.PLATFORM_NAME} Logo"
                       style="max-width:100px"
                       width="100%"
                       class="CToWUd"

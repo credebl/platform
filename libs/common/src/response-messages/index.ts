@@ -192,7 +192,8 @@ export const ResponseMessages = {
             health: 'Agent health details retrieved successfully.',
             ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
-            getWebhookUrl:'Webhook Url fetched successfully'
+            getWebhookUrl:'Webhook Url fetched successfully',
+            createKeys:'Key-pair created successfully'
         },
         error: {
             exists: 'An agent name is already exist',

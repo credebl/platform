@@ -842,7 +842,40 @@ export class AgentServiceService {
     }
 
   }
-} 
+}
+
+ /**
+   * @returns Secp256k1 key pair for polygon DID
+   */
+ async createSecp256k1KeyPair(orgId:string): Promise<object> {
+  try {     
+    const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+    if (!agentDetails) {
+
+      throw new NotFoundException(
+        ResponseMessages.agent.error.orgNotFound,
+        { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+      );
+    }
+
+  let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+  if (!apiKey || null === apiKey || undefined === apiKey) {
+    apiKey = await this.getOrgAgentApiKey(orgId);
+  }
+  const url = `${agentDetails.agentEndPoint}${CommonConstants.CREATE_POLYGON_SECP256k1_KEY}`;
+  
+  const createKeyPairResponse = await this.commonService.httpPost(url, {},
+    { headers: { 'authorization': apiKey } }
+    );
+   
+  return createKeyPairResponse;
+
+} catch (error) {
+this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`);
+
+}
+}
+
   private async getPlatformAdminAndNotify(clientSocketId: string | undefined): Promise<IOrgAgentsResponse> {
     const socket = await this.createSocketInstance();
     if (clientSocketId) {
@@ -913,7 +946,7 @@ export class AgentServiceService {
    */
 
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
- private async _createTenantWallet(label, endpoint, agentApiKey): Promise<any> {
+ private async _createTenantWallet(label, endpoint, agentApiKey): Promise<any> { //remove any
   
   
   const createTenantOptions = {

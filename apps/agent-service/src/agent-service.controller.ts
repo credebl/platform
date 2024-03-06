@@ -239,4 +239,9 @@ export class AgentServiceController {
     return this.agentServiceService.getQuestionAnswersRecord(payload.url, payload.apiKey);
   }
 
+  @MessagePattern({ cmd: 'polygon-create-keys' })
+  async createSecp256k1KeyPair(payload: {orgId: string}): Promise<object> {
+    return this.agentServiceService.createSecp256k1KeyPair(payload.orgId);
+  }
+
 }

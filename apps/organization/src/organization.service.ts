@@ -8,7 +8,8 @@ import {
   InternalServerErrorException,
   HttpException,
   BadRequestException,
-  ForbiddenException
+  ForbiddenException,
+  UnauthorizedException
 } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
@@ -80,6 +81,13 @@ export class OrganizationService {
       }
 
       const orgSlug = this.createOrgSlug(createOrgDto.name);
+
+      const isOrgSlugExist = await this.organizationRepository.checkOrganizationSlugExist(orgSlug);
+
+      if (isOrgSlugExist) {
+        throw new ConflictException(ResponseMessages.organisation.error.exists);
+      }   
+
       createOrgDto.orgSlug = orgSlug;
       createOrgDto.createdBy = userId;
       createOrgDto.lastChangedBy = userId;
@@ -478,21 +486,27 @@ export class OrganizationService {
   }
 
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
-    const { clientId, clientSecret } = clientCredentials;
-    return this.authenticateClientKeycloak(clientId, clientSecret);
-  }
+      const {clientId, clientSecret} = clientCredentials;
+      return this.authenticateClientKeycloak(clientId, clientSecret);
+}
 
   async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
+    
     try {
-      const payload = new ClientCredentialTokenPayloadDto();
-      // eslint-disable-next-line camelcase
-      payload.client_id = clientId;
-      // eslint-disable-next-line camelcase
-      payload.client_secret = clientSecret;
-      payload.scope = 'email profile';
+    const payload = new ClientCredentialTokenPayloadDto();
+    // eslint-disable-next-line camelcase
+    payload.client_id = clientId;
+    // eslint-disable-next-line camelcase
+    payload.client_secret = clientSecret;
+    payload.scope = 'email profile';
 
+    try {
       const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload);
       return mgmtTokenResponse;
+    } catch (error) {
+      throw new UnauthorizedException(ResponseMessages.organisation.error.invalidClient);
+    }
+
     } catch (error) {
       this.logger.error(`Error in authenticateClientKeycloak : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

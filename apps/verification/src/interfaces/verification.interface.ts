@@ -169,7 +169,7 @@ export interface IWSendProofRequestPayload {
 export interface IProofRequestPayload {
     url: string;
     apiKey: string;
-    proofRequestPayload: ISendProofRequestPayload;
+    proofRequestPayload: ISendProofRequestPayload | ISendPresentationExchangeProofRequestPayload;
 }
 
 interface IWebhookPresentationProof {

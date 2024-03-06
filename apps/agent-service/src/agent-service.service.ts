@@ -723,6 +723,14 @@ export class AgentServiceService {
         // Create tenant wallet and DID
         const tenantDetails = await this.createTenantAndNotify(payload, platformAdminSpinnedUp);
 
+        if (!tenantDetails?.walletResponseDetails?.id || !tenantDetails?.DIDCreationOption?.didState?.did) {
+          this.logger.error(`Error in getting wallet id and wallet did`);
+          throw new NotFoundException(
+            ResponseMessages.agent.error.notAbleToSpinUpAgent,
+            { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+          );
+        }
+
           if (AgentSpinUpStatus.COMPLETED !== platformAdminSpinnedUp.org_agents[0].agentSpinUpStatus) {
             this.logger.error(`Platform-admin agent is not spun-up`);
             throw new NotFoundException(
@@ -848,33 +856,22 @@ export class AgentServiceService {
    * @returns Secp256k1 key pair for polygon DID
    */
  async createSecp256k1KeyPair(orgId:string): Promise<object> {
-  try {     
-    const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-    if (!agentDetails) {
+   try {
+     const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
+       CommonConstants.PLATFORM_ADMIN_ORG
+     );
 
-      throw new NotFoundException(
-        ResponseMessages.agent.error.orgNotFound,
-        { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
-      );
-    }
+     const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
 
-  let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-  if (!apiKey || null === apiKey || undefined === apiKey) {
-    apiKey = await this.getOrgAgentApiKey(orgId);
-  }
-  const url = `${agentDetails.agentEndPoint}${CommonConstants.CREATE_POLYGON_SECP256k1_KEY}`;
-  
-  const createKeyPairResponse = await this.commonService.httpPost(url, {},
-    { headers: { 'authorization': apiKey } }
-    );
-   
-  return createKeyPairResponse;
+     const url = `${getPlatformAgentEndPoint}${CommonConstants.CREATE_POLYGON_SECP256k1_KEY}`;
 
-} catch (error) {
-this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`);
-
-}
-}
+     const createKeyPairResponse = await this.commonService.httpPost(url, {}, { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } });
+     return createKeyPairResponse;
+   } catch (error) {
+     this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`);
+     throw new RpcException(error.response ? error.response : error);
+   }
+ }
 
   private async getPlatformAdminAndNotify(clientSocketId: string | undefined): Promise<IOrgAgentsResponse> {
     const socket = await this.createSocketInstance();

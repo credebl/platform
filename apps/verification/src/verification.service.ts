@@ -425,7 +425,7 @@ export class VerificationService {
   }
 
 
-  // Notes: Only accept array of string for emailIds
+  // Only accept array of string for emailIds
   async sendEmailInBatches(payload: IProofRequestPayload, emailIds: string[], getAgentDetails: org_agents, organizationDetails: organisation, batchSize: number): Promise<void> {
     try {
     const accumulatedErrors = [];

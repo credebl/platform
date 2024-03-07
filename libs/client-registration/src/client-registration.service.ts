@@ -675,9 +675,6 @@ export class ClientRegistrationService {
         qs.stringify(payload)
         , config);
 
-      this.logger.debug(
-        `ClientRegistrationService token ${JSON.stringify(tokenResponse)}`
-      );
       return tokenResponse;
     } catch (error) {
       throw error;
@@ -817,9 +814,6 @@ export class ClientRegistrationService {
         qs.stringify(payload)
         , config);
 
-      this.logger.debug(
-        `ClientRegistrationService token ${JSON.stringify(tokenResponse)}`
-      );
       return tokenResponse;
 
     } catch (error) {

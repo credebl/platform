@@ -1326,7 +1326,6 @@ export class EcosystemService {
         endorsementTransactionStatus.SIGNED
       );
 
-
       if (!endorsementTransactionPayload) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
       }
@@ -1355,18 +1354,20 @@ export class EcosystemService {
         ecosystemLeadAgentDetails
       );
      
-      const isSchemaExists = await this.ecosystemRepository.schemaExist(
-       payload.schema.name,
-        payload.schema.version
-        );
-
-        if (0 !== isSchemaExists.length) {
-          this.logger.error(ResponseMessages.ecosystem.error.schemaAlreadyExist);
-          throw new ConflictException(
-            ResponseMessages.ecosystem.error.schemaAlreadyExist,
-            { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+      if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
+        const isSchemaExists = await this.ecosystemRepository.schemaExist(
+         payload.schema.name,
+          payload.schema.version
           );
-        }
+  
+          if (0 !== isSchemaExists.length) {
+            this.logger.error(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+            throw new ConflictException(
+              ResponseMessages.ecosystem.error.schemaAlreadyExist,
+              { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+            );
+          }
+      }
 
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {

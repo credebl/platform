@@ -251,40 +251,50 @@ export class ConnectionService {
   }
 
   async getAllConnectionListFromAgent(
-    user: IUserRequest,
     orgId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     connectionSearchCriteria: AgentConnectionSearchCriteria
-  ): Promise<{
-    response: string;
-  }> {
+  ): Promise<string> {
     try {
-      // const { alias, myDid, outOfBandId, state, theirDid, theirLabel } = connectionSearchCriteria;
+      const { alias, myDid, outOfBandId, state, theirDid, theirLabel } = connectionSearchCriteria;
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-     //Need to think about the dynamic URL creation for { alias, myDid, outOfBandId, state, theirDid, theirLabel } 
-      let url;
-      if (orgAgentType === OrgAgentType.DEDICATED) {
-        url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
-      } else if (orgAgentType === OrgAgentType.SHARED) {
-        url =
-          `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace(
-            '#',
-            agentDetails.tenantId
-          );
-      } else {
-        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-      }
+
+     let url: string;
+     if (orgAgentType === OrgAgentType.DEDICATED) {
+      url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
+     } else if (orgAgentType === OrgAgentType.SHARED) {
+      url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace(
+         '#',
+         agentDetails.tenantId
+       );
+     } else {
+       throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+     }
+
+     //Create the dynamic URL for Search Criteria
+     const criteriaParams = [];
+     if (alias) { criteriaParams.push(`alias=${alias}`); }
+     if (myDid) { criteriaParams.push(`myDid=${myDid}`); }
+     if (outOfBandId) { criteriaParams.push(`outOfBandId=${outOfBandId}`); }
+     if (state) { criteriaParams.push(`state=${state}`); }
+     if (theirDid) { criteriaParams.push(`theirDid=${theirDid}`); }
+     if (theirLabel) { criteriaParams.push(`theirLabel=${theirLabel}`); }
+     
+     if (0 < criteriaParams.length) {
+       url += `?${criteriaParams.join('&')}`;
+     }
 
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
-      return this._getAllConnections(url, apiKey);
+
+      const connectionResponse = await this._getAllConnections(url, apiKey);
+      return connectionResponse.response;
     } catch (error) {
       this.logger.error(`[getConnectionsFromAgent] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`);
 

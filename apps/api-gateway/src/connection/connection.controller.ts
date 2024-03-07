@@ -124,14 +124,12 @@ export class ConnectionController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getConnectionListFromAgent(
     @Query() getAllConnectionsDto: GetAllAgentConnectionsDto,
-    @User() user: IUserRequest,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
 
     const connectionDetails = await this.connectionService.getConnectionListFromAgent(
       getAllConnectionsDto,
-      user,
       orgId
     );
 

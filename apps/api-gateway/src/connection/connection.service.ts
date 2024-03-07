@@ -79,10 +79,9 @@ export class ConnectionService extends BaseService {
 
   getConnectionListFromAgent(
     connectionSearchCriteria: AgentConnectionSearchCriteria,
-    user: IUserRequest,
     orgId: string
   ): Promise<IConnectionList> {
-    const payload = { connectionSearchCriteria, user, orgId };
+    const payload = { connectionSearchCriteria, orgId };
     return this.sendNatsMessage(this.connectionServiceProxy, 'get-all-agent-connection-list', payload);
   }
 

@@ -56,11 +56,9 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'get-all-agent-connection-list' })
-  async getConnectionListFromAgent(payload: GetAllConnections): Promise<{
-    response: string;
-  }> {
-    const { user, orgId, connectionSearchCriteria } = payload;
-    return this.connectionService.getAllConnectionListFromAgent(user, orgId, connectionSearchCriteria);
+  async getConnectionListFromAgent(payload: GetAllConnections): Promise<string> {
+    const {orgId, connectionSearchCriteria } = payload;
+    return this.connectionService.getAllConnectionListFromAgent(orgId, connectionSearchCriteria);
   }
 
   /**

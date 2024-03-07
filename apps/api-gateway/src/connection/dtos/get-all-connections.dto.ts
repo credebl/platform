@@ -47,11 +47,11 @@ export class GetAllAgentConnectionsDto {
   @IsOptional()
   alias: string = '';
 
-  @ApiProperty({ required: false, example: 'did:example:123456789abcdefghi' })
+  @ApiProperty({ required: false, example: 'did:example:e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
   @IsOptional()
   myDid: string = '';
 
-  @ApiProperty({ required: false, example: 'did:example:123456789abcdefghi' })
+  @ApiProperty({ required: false, example: 'did:example:e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
   @IsOptional()
   theirDid: string = '';
 

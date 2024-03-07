@@ -737,7 +737,7 @@ export class AgentServiceService {
               { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
             );
           }
-
+          payload.endpoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
           // Get shared agent type
           const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
           // Get agent type details

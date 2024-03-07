@@ -428,37 +428,40 @@ export class VerificationService {
     const pattern = { cmd: 'store-object-return-url' };
     const payload = { persistent, storeObj };
 
-    try {
-      const message = await this.verificationServiceProxy
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .send<any>(pattern, payload)
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(
-            `[storeVerificationObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
-              error
-            )}`
-          );
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.error?.message?.error ? error.error?.message?.error : error.error,
-              message: error.message
-            },
-            error.error
-          );
-        });
-      return message;
-    } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException(
-        {
-          status: error.status,
-          error: error.message
-        },
-        error.status
-      );
-    }
+    // try {
+    //   const message = await this.verificationServiceProxy
+    //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    //     .send<any>(pattern, payload)
+    //     .toPromise()
+    //     .catch((error) => {
+    //       this.logger.error(
+    //         `[storeVerificationObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+    //           error
+    //         )}`
+    //       );
+    //       throw new HttpException(
+    //         {
+    //           status: error.statusCode,
+    //           error: error.error?.message?.error ? error.error?.message?.error : error.error,
+    //           message: error.message
+    //         },
+    //         error.error
+    //       );
+    //     });
+    //   return message;
+    // } catch (error) {
+    //   this.logger.error(`catch: ${JSON.stringify(error)}`);
+    //   throw new HttpException(
+    //     {
+    //       status: error.status,
+    //       error: error.message
+    //     },
+    //     error.status
+    //   );
+    // }
+
+    const message = await this.natsCall(pattern, payload);
+    return message.response;
   }
 
 

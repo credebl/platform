@@ -722,8 +722,7 @@ export class AgentServiceService {
 
         // Create tenant wallet and DID
         const tenantDetails = await this.createTenantAndNotify(payload, platformAdminSpinnedUp);
-
-        if (!tenantDetails?.walletResponseDetails?.id || !tenantDetails?.DIDCreationOption?.didState?.did) {
+        if (!tenantDetails?.walletResponseDetails?.id || !tenantDetails?.DIDCreationOption?.did) {
           this.logger.error(`Error in getting wallet id and wallet did`);
           throw new NotFoundException(
             ResponseMessages.agent.error.notAbleToSpinUpAgent,

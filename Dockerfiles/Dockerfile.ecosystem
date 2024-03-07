@@ -13,7 +13,7 @@ RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+# RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
 
 # Build the issuance service
 RUN pnpm run build ecosystem

@@ -359,25 +359,17 @@ export class VerificationService {
         apiKey = await this._getOrgAgentApiKey(user.orgId);
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { isShortenUrl, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
-      // const payload: IProofRequestPayload
-      //   = {
-      //   apiKey,
-      //   url,
-      //   proofRequestPayload: updateOutOfBandRequestProof
-      // };
+      const { isShortenUrl, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
 
 
       let payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload;
 
       if (ProofRequestType.INDY === outOfBandRequestProof.type) {
-        const outOfBandIndyRequestPayload = { ...outOfBandRequestProof };
-        delete outOfBandIndyRequestPayload.type;
 
         payload   = {
         apiKey,
         url,
-        proofRequestPayload: outOfBandIndyRequestPayload
+        proofRequestPayload: updateOutOfBandRequestProof
       };
       }
       

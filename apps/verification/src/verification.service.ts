@@ -379,7 +379,7 @@ export class VerificationService {
           apiKey,
           url,
           proofRequestPayload: {
-            protocolVersion:outOfBandRequestProof.protocolVersion || 'v1',
+            protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
             comment:outOfBandRequestProof.comment,
             label,
             proofFormats: {

@@ -334,8 +334,6 @@ export class VerificationService {
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean | object> {
     try {
 
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
-
       // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
      
       const [getAgentDetails, getOrganization] = await Promise.all([
@@ -357,14 +355,14 @@ export class VerificationService {
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(user.orgId);
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { isShortenUrl, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
 
+      const { isShortenUrl, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
       let payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload;
 
-      if (ProofRequestType.INDY === outOfBandRequestProof.type) {
-        updateOutOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
+      if (ProofRequestType.INDY === type) {
+        updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
         payload   = {
         apiKey,
         url,
@@ -372,7 +370,7 @@ export class VerificationService {
       };
       }
       
-      if (ProofRequestType.PRESENTATIONEXCHANGE === outOfBandRequestProof.type) {
+      if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
        
          payload = {
           apiKey,

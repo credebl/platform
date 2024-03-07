@@ -42,7 +42,7 @@ export class SchemaService extends BaseService {
     if (!apiKey || null === apiKey || undefined === apiKey) {
       apiKey = await this._getOrgAgentApiKey(orgId);
     }
-    const { userId } = user.selectedOrg;
+    const userId = user.id;
     try {
 
       const schemaExists = await this.schemaRepository.schemaExists(

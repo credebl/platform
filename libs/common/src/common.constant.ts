@@ -265,14 +265,6 @@ export enum CommonConstants {
   ACTIVE_NON_ADMIN_USER = 1,
   ALL_NON_ADMIN_USER = 3,
 
-  //passwordLess-login
-  PASSWORDLESS_LOGIN_SCHEMA_ORG = 1,
-  PASSWORDLESS_LOGIN_SCHEMA_NAME = 'CREDEBL-PLA',
-  PLATFORM_ADMIN_CRED_DEF_NAME = 'CREDEBL-PLA',
-  PLATFORM_ADMIN_SCHEMA_VERSION = '1.0',
-
-  LOGIN_PASSWORDLESS = 'passwordless',
-  LOGIN_PASSWORD = 'password',
 
   // Platform admin Details
   PLATFORM_ADMIN_EMAIL='platform.admin@yopmail.com',

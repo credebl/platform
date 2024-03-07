@@ -354,18 +354,18 @@ export class VerificationService {
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(user.orgId);
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { isShortenUrl, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
 
 
       let payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload;
 
       if (ProofRequestType.INDY === outOfBandRequestProof.type) {
-        const outOfBandIndyRequestPayload = { ...outOfBandRequestProof };
-        delete outOfBandIndyRequestPayload.type;
 
         payload   = {
         apiKey,
         url,
-        proofRequestPayload: outOfBandIndyRequestPayload
+        proofRequestPayload: updateOutOfBandRequestProof
       };
       }
       

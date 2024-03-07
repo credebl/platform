@@ -694,8 +694,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       };
     }
 
-    const agentDetails = await this.issuanceRepository.getAgentEndPoint(organisation.id);
-
     this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
 
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
@@ -705,16 +703,15 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       return false;
     }
 
-    const invitationId = credentialCreateOfferDetails.response.invitation['@id'];
-        if (!invitationId) {
-          errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
-          return false;
-        }
-        const agentEndPoint = agentDetails.tenantId
-          ? `${agentDetails.agentEndPoint}/multi-tenancy/url/${agentDetails.tenantId}/${invitationId}`
-          : `${agentDetails.agentEndPoint}/url/${invitationId}`;
+    const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+    const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
+
+    if (!invitationUrl) {
+      errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
+      return false;
+    }
         const qrCodeOptions = { type: 'image/png' };
-        const outOfBandIssuanceQrCode = await QRCode.toDataURL(agentEndPoint, qrCodeOptions);
+        const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenUrl, qrCodeOptions);
         const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
         if (!platformConfigData) {
           errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
@@ -723,7 +720,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         this.emailData.emailFrom = platformConfigData.emailFrom;
         this.emailData.emailTo = emailId;
         this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, agentEndPoint);
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, shortenUrl);
         this.emailData.emailAttachments = [
           {
             filename: 'qrcode.png',

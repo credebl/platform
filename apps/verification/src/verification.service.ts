@@ -346,10 +346,12 @@ export class VerificationService {
         this.verificationRepository.getOrganization(user.orgId)
       ]);
 
-      const imageUrl = getOrganization?.logoUrl;
       const label = getOrganization?.name;
 
-      outOfBandRequestProof['imageUrl'] = imageUrl;
+      if (getOrganization?.logoUrl) {
+        outOfBandRequestProof['imageUrl'] = getOrganization?.logoUrl;
+      }
+      
       outOfBandRequestProof['label'] = label;
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);

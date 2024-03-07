@@ -719,7 +719,8 @@ export class AgentServiceService {
 
         // Get platform admin details
         const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
-
+        
+        payload.endpoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
         // Create tenant wallet and DID
         const tenantDetails = await this.createTenantAndNotify(payload, platformAdminSpinnedUp);
         if (!tenantDetails?.walletResponseDetails?.id || !tenantDetails?.DIDCreationOption?.did) {
@@ -737,7 +738,6 @@ export class AgentServiceService {
               { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
             );
           }
-          payload.endpoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
           // Get shared agent type
           const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
           // Get agent type details

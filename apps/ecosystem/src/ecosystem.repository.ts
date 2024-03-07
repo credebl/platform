@@ -910,7 +910,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async getEndorsementTransactionById(endorsementId: string, status: endorsementTransactionStatus): Promise<endorsement_transaction> {
     try {
-      const ecosystemLeadDetails = await this.prisma.endorsement_transaction.findFirst({
+      const ecosystemLeadDetails = await this.prisma.endorsement_transaction.findUnique({
         where: {
           id: endorsementId,
           status

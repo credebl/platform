@@ -27,7 +27,7 @@ export class URLOrganizationEmailTemplate {
             <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
                 <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
                     <div style="display: block; text-align:center;">
-                        <img src="${process.env.BRAND_LOGO} alt="Credebl Logo" style="max-width:100px" width="100%" class="CToWUd" data-bit="iit">
+                        <img src="${process.env.BRAND_LOGO} alt="${process.env.PLATFORM_NAME} Logo" style="max-width:100px" width="100%" class="CToWUd" data-bit="iit">
                     </div>
                     <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
                     font-size: 15px; line-height: 24px;color: #5E5873;">

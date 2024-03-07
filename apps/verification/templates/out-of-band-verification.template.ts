@@ -14,7 +14,7 @@ export class OutOfBandVerification {
       <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
           <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
               <div style="display: block; text-align:center; background-color: white; padding-bottom: 20px;">
-              <img src="${process.env.BRAND_LOGO}" alt="CREDEBL logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+              <img src="${process.env.BRAND_LOGO}" alt="${process.env.PLATFORM_NAME} logo" style="max-width:100px" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
               </div>
               <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
           font-size: 15px; line-height: 24px;color: #00000;">
@@ -50,11 +50,11 @@ export class OutOfBandVerification {
                   <footer style="padding-top: 20px;">
                      
                       <div style="font-style: italic; color: #777777">
-                      For any assistance or questions while accessing your account, please do not hesitate to contact the support team at support@blockster.global. Our team will ensure a seamless onboarding experience for you.
+                      For any assistance or questions while accessing your account, please do not hesitate to contact the support team at ${process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL}. Our team will ensure a seamless onboarding experience for you.
 
                   </div>
                   <p style="margin-top: 6px;">
-                     © Blockster Labs Pvt. Ltd.
+                     © ${process.env.POWERED_BY}
                   </p>
                   </footer>
               </div>

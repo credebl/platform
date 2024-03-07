@@ -336,7 +336,6 @@ export class VerificationService {
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean | object> {
     try {
 
-      outOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
       // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
@@ -367,7 +366,7 @@ export class VerificationService {
       let payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload;
 
       if (ProofRequestType.INDY === outOfBandRequestProof.type) {
-
+        updateOutOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
         payload   = {
         apiKey,
         url,

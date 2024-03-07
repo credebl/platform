@@ -640,7 +640,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         goalCode: outOfBandCredential.goalCode || undefined,
         parentThreadId: outOfBandCredential.parentThreadId || undefined,
         willConfirm: outOfBandCredential.willConfirm || undefined,
-        label: outOfBandCredential.label || undefined,
+        label: organisation?.name,
         imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
       };
     }
@@ -659,7 +659,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         goalCode: outOfBandCredential.goalCode || undefined,
         parentThreadId: outOfBandCredential.parentThreadId || undefined,
         willConfirm: outOfBandCredential.willConfirm || undefined,
-        label: outOfBandCredential.label || undefined,
+        label: organisation?.name,
         imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
       };
     }

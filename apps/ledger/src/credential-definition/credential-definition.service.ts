@@ -41,7 +41,7 @@ export class CredentialDefinitionService extends BaseService {
            if (!apiKey || null === apiKey  ||  undefined === apiKey) {
              apiKey = await this._getOrgAgentApiKey(credDef.orgId);
             }
-            const { userId } = user.selectedOrg;
+            const userId = user.id;
             credDef.tag = credDef.tag.trim();
             const dbResult: credential_definition = await this.credentialDefinitionRepository.getByAttribute(
                 credDef.schemaLedgerId,

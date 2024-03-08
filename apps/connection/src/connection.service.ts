@@ -82,9 +82,9 @@ export class ConnectionService {
       const apiKey = await this._getOrgAgentApiKey(orgId);
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-      const connectionInvitaionUrl: string = createConnectionInvitation?.message?.invitationUrl;
+      const connectionInvitationUrl: string = createConnectionInvitation?.message?.invitationUrl;
       const shortenedUrl: string = await this.storeConnectionObjectAndReturnUrl(
-        connectionInvitaionUrl,
+        connectionInvitationUrl,
         connectionPayload.multiUseInvitation
       );
 

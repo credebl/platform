@@ -64,8 +64,8 @@ export class ConnectionService {
 
       this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
       const connectionPayload = {
-        multiUseInvitation: multiUseInvitation || true,
-        autoAcceptConnection: autoAcceptConnection || true,
+        multiUseInvitation: multiUseInvitation ?? true,
+        autoAcceptConnection: autoAcceptConnection ?? true,
         alias: alias || undefined,
         imageUrl: organisation.logoUrl || imageUrl || undefined,
         label: organisation.name,
@@ -83,13 +83,11 @@ export class ConnectionService {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-      const invitationObject = createConnectionInvitation?.message?.invitation['@id'];
-      let shortenedUrl;
-      if (agentDetails?.tenantId) {
-        shortenedUrl = `${agentEndPoint}/multi-tenancy/url/${agentDetails?.tenantId}/${invitationObject}`;
-      } else {
-        shortenedUrl = `${agentEndPoint}/url/${invitationObject}`;
-      }
+      const connectionInvitationUrl: string = createConnectionInvitation?.message?.invitationUrl;
+      const shortenedUrl: string = await this.storeConnectionObjectAndReturnUrl(
+        connectionInvitationUrl,
+        connectionPayload.multiUseInvitation
+      );
 
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
         shortenedUrl,
@@ -457,6 +455,7 @@ export class ConnectionService {
       });
   }
 
+
   /**
    * Description: Fetch agent url
    * @param referenceId
@@ -750,6 +749,45 @@ export class ConnectionService {
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
+    }
+  }
+
+  async storeConnectionObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
+    const storeObj = connectionInvitationUrl;
+    //nats call in agent-service to create an invitation url
+    const pattern = { cmd: 'store-object-return-url' };
+    const payload = { persistent, storeObj };
+
+    try {
+      const message = await this.connectionServiceProxy
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .send<any>(pattern, payload)
+        .toPromise()
+        .catch((error) => {
+          this.logger.error(
+            `[storeConnectionObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+              error
+            )}`
+          );
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.error?.message?.error ? error.error?.message?.error : error.error,
+              message: error.message
+            },
+            error.error
+          );
+        });
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
     }
   }
 }

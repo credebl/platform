@@ -103,8 +103,9 @@ export interface IConnectionInvitation {
 }
 interface IInvitation {
   invitation: string;
-
+  invitationUrl: string;
 }
+
 export interface OrgAgent {
   organisation: organisation;
   id: string;

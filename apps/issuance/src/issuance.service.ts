@@ -264,6 +264,7 @@ export class IssuanceService {
   }
 
   async storeIssuanceObjectReturnUrl(storeObj: string): Promise<string> {
+    try {
     // Set default to false, since currently our invitation are not multi-use
     const persistent: boolean = false;
     //nats call in agent-service to create an invitation url
@@ -271,6 +272,10 @@ export class IssuanceService {
     const payload = { persistent, storeObj };
     const message = await this.natsCall(pattern, payload);
     return message.response;
+  } catch (error) {
+    this.logger.error(`[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(error)}`);
+    throw error;
+  }
   }
 
   // Created this function to avoid the impact of actual "natsCall" function for other operations

@@ -38,10 +38,11 @@ export class OrgRolesGuard implements CanActivate {
       throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
     }    
       
-        const orgDetails = user.resource_access[orgId];
 
-        if (orgDetails) {
-          const orgRoles: string[] = orgDetails.roles;
+        const orgData = user.hasOwnProperty('resource_access') ? user.resource_access[orgId] : null;
+
+        if (orgData) {
+          const orgRoles: string[] = orgData.roles;
           const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
     
           if (!roleAccess) {

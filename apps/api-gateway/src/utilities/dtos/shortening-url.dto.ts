@@ -39,3 +39,9 @@ interface Attribute {
     name: string;
     value: string;
   }
+
+  export class GenericDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  data: string | object;
+}

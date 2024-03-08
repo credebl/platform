@@ -31,12 +31,12 @@ export class IssuanceService extends BaseService {
     }> {
         let payload;
         if (IssueCredentialType.INDY === issueCredentialDto.credentialType) {
-             payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType };
-      }
-      if (IssueCredentialType.JSONLD === issueCredentialDto.credentialType) {
-            payload = { credential: issueCredentialDto.credential, options:issueCredentialDto.options,  comment: issueCredentialDto.comment, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType };
-      }
-        
+            payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType, isShortenUrl: issueCredentialDto.isShortenUrl };
+        }
+        if (IssueCredentialType.JSONLD === issueCredentialDto.credentialType) {
+            payload = { credential: issueCredentialDto.credential, options: issueCredentialDto.options, comment: issueCredentialDto.comment, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType, isShortenUrl: issueCredentialDto.isShortenUrl };
+        }
+
         return this.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
     }
 

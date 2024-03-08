@@ -39,10 +39,8 @@ export class OrgRolesGuard implements CanActivate {
     }    
       
 
-        const orgData = user.hasOwnProperty('resource_access') ? user.resource_access[orgId] : null;
-
-        if (orgData) {
-          const orgRoles: string[] = orgData.roles;
+        if (user.hasOwnProperty('resource_access') && user.resource_access[orgId]) {
+          const orgRoles: string[] = user.resource_access[orgId].roles;
           const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
     
           if (!roleAccess) {

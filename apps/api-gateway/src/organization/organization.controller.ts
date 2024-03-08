@@ -22,6 +22,9 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { ImageServiceService } from '@credebl/image-service';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { validate as isValidUUID } from 'uuid';
+import { UserAccessGuard } from '../authz/guards/user-access-guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -208,7 +211,7 @@ export class OrganizationController {
   @Get('/')
   @ApiOperation({ summary: 'Get all organizations', description: 'Get all organizations' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   @ApiQuery({
     name: 'pageNumber',
@@ -321,7 +324,7 @@ export class OrganizationController {
   @Post('/')
   @ApiOperation({ summary: 'Create a new Organization', description: 'Create an organization' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
     

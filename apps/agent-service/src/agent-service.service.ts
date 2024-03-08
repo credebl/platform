@@ -34,9 +34,9 @@ import * as retry from 'async-retry';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
-import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { ledgerName } from '@credebl/common/cast.helper';
+import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
 interface IPayload {
   seed: string;
@@ -45,7 +45,6 @@ interface IPayload {
   network: string;
   role: string;
 }
-import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
 @Injectable()
 @WebSocketGateway()
@@ -916,7 +915,6 @@ export class AgentServiceService {
 
  
    const walletResponseDetails = await this._createTenantWallet(walletLabel, platformAdminSpinnedUp.org_agents[0].agentEndPoint, platformAdminSpinnedUp.org_agents[0].apiKey);
-
    if (!walletResponseDetails && !walletResponseDetails.id) {
     throw new InternalServerErrorException('Error while creating the wallet');
    }
@@ -926,7 +924,6 @@ export class AgentServiceService {
       apiKey: platformAdminSpinnedUp.org_agents[0].apiKey,
       tenantId: walletResponseDetails.id
     };
-
     const DIDCreationOption = await this._createDID(didCreateOption);
     if (!DIDCreationOption) {
       throw new InternalServerErrorException('Error while creating the wallet');

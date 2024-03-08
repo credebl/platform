@@ -36,6 +36,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
 @Injectable()
 @WebSocketGateway()
@@ -945,7 +946,7 @@ export class AgentServiceService {
     }
   }
 
-  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<ICreateConnectionUrl> {
+  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<InvitationMessage> {
     try {
 
 

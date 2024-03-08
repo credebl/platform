@@ -45,6 +45,7 @@ interface IPayload {
   network: string;
   role: string;
 }
+import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
 @Injectable()
 @WebSocketGateway()
@@ -1139,7 +1140,7 @@ export class AgentServiceService {
     }
   }
 
-  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<ICreateConnectionUrl> {
+  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<InvitationMessage> {
     try {
 
 

@@ -16,8 +16,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
-import { IConnectionSearchinterface } from '../interfaces/ISchemaSearch.interface';
+import { GetAllAgentConnectionsDto, GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
@@ -108,7 +107,40 @@ export class ConnectionController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-    
+    /**
+   * Description: Get all connections from agent
+   * @param user
+   * @param orgId
+   *
+   */
+  @Get('/orgs/:orgId/agent/connections')
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @ApiOperation({
+    summary: `Fetch all connections from agent by orgId`,
+    description: `Fetch all connections from agent by orgId`
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getConnectionListFromAgent(
+    @Query() getAllConnectionsDto: GetAllAgentConnectionsDto,
+    @Param('orgId') orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+
+    const connectionDetails = await this.connectionService.getConnectionListFromAgent(
+      getAllConnectionsDto,
+      orgId
+    );
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.connection.success.fetch,
+      data: connectionDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+
     @Get('orgs/:orgId/question-answer/question')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)

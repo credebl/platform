@@ -669,8 +669,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       };
     }
 
-    this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
-
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
 
     if (!credentialCreateOfferDetails) {

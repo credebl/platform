@@ -5,8 +5,9 @@ import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@n
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
+  ConnectionResponseDetail,
+  AgentConnectionSearchCriteria,
   IConnection,
-  IConnectionInvitation,
   IConnectionSearchCriteria,
   ICreateConnection,
   IReceiveInvitation,
@@ -22,6 +23,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
+import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
 @Injectable()
 export class ConnectionService {
@@ -92,7 +94,20 @@ export class ConnectionService {
         agentId,
         orgId
       );
-      return saveConnectionDetails;
+
+      const connectionDetailRecords: ConnectionResponseDetail = {
+        id: saveConnectionDetails.id,
+        orgId: saveConnectionDetails.orgId,
+        agentId: saveConnectionDetails.agentId,
+        connectionInvitation: saveConnectionDetails.connectionInvitation,
+        multiUse: saveConnectionDetails.multiUse,
+        createDateTime: saveConnectionDetails.createDateTime,
+        createdBy: saveConnectionDetails.createdBy,
+        lastChangedDateTime: saveConnectionDetails.lastChangedDateTime,
+        lastChangedBy: saveConnectionDetails.lastChangedBy,
+        recordId: createConnectionInvitation.message.outOfBandRecord.id
+      };
+      return connectionDetailRecords;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
@@ -132,7 +147,7 @@ export class ConnectionService {
     connectionPayload: object,
     url: string,
     apiKey: string
-  ): Promise<IConnectionInvitation> {
+  ): Promise<InvitationMessage> {
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
     const payload = { connectionPayload, url, apiKey };
@@ -233,6 +248,58 @@ export class ConnectionService {
     }
   }
 
+  async getAllConnectionListFromAgent(
+    orgId: string,
+    connectionSearchCriteria: AgentConnectionSearchCriteria
+  ): Promise<string> {
+    try {
+      const { alias, myDid, outOfBandId, state, theirDid, theirLabel } = connectionSearchCriteria;
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const { agentEndPoint } = agentDetails;
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+
+     let url: string;
+     if (orgAgentType === OrgAgentType.DEDICATED) {
+      url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
+     } else if (orgAgentType === OrgAgentType.SHARED) {
+      url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace(
+         '#',
+         agentDetails.tenantId
+       );
+     } else {
+       throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+     }
+
+     //Create the dynamic URL for Search Criteria
+     const criteriaParams = [];
+     if (alias) { criteriaParams.push(`alias=${alias}`); }
+     if (myDid) { criteriaParams.push(`myDid=${myDid}`); }
+     if (outOfBandId) { criteriaParams.push(`outOfBandId=${outOfBandId}`); }
+     if (state) { criteriaParams.push(`state=${state}`); }
+     if (theirDid) { criteriaParams.push(`theirDid=${theirDid}`); }
+     if (theirLabel) { criteriaParams.push(`theirLabel=${theirLabel}`); }
+     
+     if (0 < criteriaParams.length) {
+       url += `?${criteriaParams.join('&')}`;
+     }
+
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+
+      const connectionResponse = await this._getAllConnections(url, apiKey);
+      return connectionResponse.response;
+    } catch (error) {
+      this.logger.error(`[getConnectionsFromAgent] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`);
+
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async _getAllConnections(
     url: string,
     apiKey: string
@@ -323,15 +390,13 @@ export class ConnectionService {
 
       const label = 'get-question-answer-record';
       const url = await this.getQuestionAnswerAgentUrl(label, orgAgentType, agentEndPoint, agentDetails?.tenantId);
-      
+
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
       const record = await this._getQuestionAnswersRecord(url, apiKey);
       return record;
-
-
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in get question answer record: ${error}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
@@ -369,17 +434,13 @@ export class ConnectionService {
       });
   }
 
-  async _getQuestionAnswersRecord(
-    url: string,
-    apiKey: string
-  ): Promise<object> {
-
+  async _getQuestionAnswersRecord(url: string, apiKey: string): Promise<object> {
     const pattern = { cmd: 'agent-get-question-answer-record' };
     const payload = { url, apiKey };
     return this.connectionServiceProxy
       .send<IConnectionDetailsById>(pattern, payload)
       .toPromise()
-      .catch(error => {
+      .catch((error) => {
         this.logger.error(
           `[_getQuestionAnswersRecord] [NATS call]- error in fetch connections : ${JSON.stringify(error)}`
         );
@@ -388,7 +449,9 @@ export class ConnectionService {
             status: error.statusCode,
             error: error.error?.message?.error ? error.error?.message?.error : error.error,
             message: error.message
-          }, error.error);
+          },
+          error.error
+        );
       });
   }
 
@@ -423,20 +486,23 @@ export class ConnectionService {
     connectionId?: string
   ): Promise<string> {
     try {
-
       let url;
       switch (label) {
         case 'send-question': {
-          url = orgAgentType === OrgAgentType.DEDICATED
+          url =
+            orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_SEND_QUESTION}`.replace('#', connectionId)
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`.replace('#', connectionId).replace('@', tenantId)
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`
+                  .replace('#', connectionId)
+                  .replace('@', tenantId)
               : null;
           break;
         }
 
         case 'get-question-answer-record': {
-          url = orgAgentType === OrgAgentType.DEDICATED
+          url =
+            orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_QUESTION_ANSWER_RECORD}`
               : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_QUESTION_ANSWER_RECORD}`.replace('#', tenantId)
@@ -619,42 +685,33 @@ export class ConnectionService {
       });
   }
 
-  async _sendQuestion(
-    questionPayload: IQuestionPayload,
-    url: string,
-    apiKey: string
-  ): Promise<object> {
-
+  async _sendQuestion(questionPayload: IQuestionPayload, url: string, apiKey: string): Promise<object> {
     const pattern = { cmd: 'agent-send-question' };
     const payload = { questionPayload, url, apiKey };
 
     return this.connectionServiceProxy
       .send<object>(pattern, payload)
       .toPromise()
-      .catch(error => {
-        this.logger.error(
-          `[_sendQuestion] [NATS call]- error in send question : ${JSON.stringify(error)}`
-        );
+      .catch((error) => {
+        this.logger.error(`[_sendQuestion] [NATS call]- error in send question : ${JSON.stringify(error)}`);
         throw new HttpException(
           {
             status: error.statusCode,
             error: error.error?.message?.error ? error.error?.message?.error : error.error,
             message: error.message
-          }, error.error);
+          },
+          error.error
+        );
       });
-
-    
   }
 
   async sendQuestion(payload: IQuestionPayload): Promise<object> {
-
-    const { detail, validResponses, question, orgId, connectionId} = payload;
+    const { detail, validResponses, question, orgId, connectionId } = payload;
     try {
-
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
 
-      const { agentEndPoint} = agentDetails;
-     
+      const { agentEndPoint } = agentDetails;
+
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
@@ -667,14 +724,19 @@ export class ConnectionService {
 
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const label = 'send-question';
-      const url = await this.getQuestionAnswerAgentUrl(label, orgAgentType, agentEndPoint, agentDetails?.tenantId, connectionId);
+      const url = await this.getQuestionAnswerAgentUrl(
+        label,
+        orgAgentType,
+        agentEndPoint,
+        agentDetails?.tenantId,
+        connectionId
+      );
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
       }
       const createQuestion = await this._sendQuestion(questionPayload, url, apiKey);
       return createQuestion;
-     
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in sending question: ${error}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {

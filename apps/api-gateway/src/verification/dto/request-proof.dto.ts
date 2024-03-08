@@ -1,10 +1,10 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID } from 'class-validator';
-import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { toLowerCase, trim } from '@credebl/common/cast.helper';
+
 import { AutoAccept } from '@credebl/enum/enum';
 import { IProofFormats } from '../interfaces/verification.interface';
-
 
 export class ProofRequestAttribute {
 
@@ -16,7 +16,7 @@ export class ProofRequestAttribute {
     @ValidateIf((obj) => obj.attributeName === undefined)
     @IsArray({ message: 'attributeNames must be an array.' })
     @ArrayNotEmpty({ message: 'array can not be empty' })
-    @IsString({ each: true})
+    @IsString({ each: true })
     @IsNotEmpty({ each: true, message: 'each element cannot be empty' })
     attributeNames?: string[];
 
@@ -127,7 +127,7 @@ export class OutOfBandRequestProof extends ProofPayload {
         type: () => [ProofRequestAttribute]
     })
     @IsArray({ message: 'attributes must be in array' })
-    @ValidateNested({each: true})
+    @ValidateNested({ each: true })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
     @Type(() => ProofRequestAttribute)
@@ -254,11 +254,11 @@ export class SendProofRequestPayload {
                     requested_attributes: {
                         verifynameAddress: {
                             names: ['name', 'address'],
-                            restrictions: [{'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:National ID:1.0.0'}]
+                            restrictions: [{ 'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:National ID:1.0.0' }]
                         },
                         verifyBirthPlace: {
                             name: 'Place',
-                            restrictions: [{'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:Birth Certificate:1.0.0'}]
+                            restrictions: [{ 'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:Birth Certificate:1.0.0' }]
                         }
                     },
                     // eslint-disable-next-line camelcase
@@ -325,6 +325,12 @@ export class SendProofRequestPayload {
     @IsOptional()
     @IsUUID()
     @IsNotEmpty({ message: 'please provide valid parentThreadId' })
-    parentThreadId: string;  
+    parentThreadId: string;
+
+    @ApiProperty({ example: true })
+    @IsBoolean()
+    @IsOptional()
+    @IsNotEmpty({message:'Please provide the flag for shorten url.'})
+    isShortenUrl?: boolean;
 }
 

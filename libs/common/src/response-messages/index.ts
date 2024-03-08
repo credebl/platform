@@ -40,7 +40,7 @@ export const ResponseMessages = {
             verifyMail: 'Please verify your email',
             invalidCredentials: 'Invalid Credentials',
             registerFido: 'Please complete your fido registration',
-            invitationNotFound: 'Invitation not found',
+            invitationNotFound: 'Invitation not found for this user',
             invitationAlreadyAccepted:'Organization invitation already accepted',
             invitationAlreadyRejected:'Organization invitation already rejected',
             invalidInvitationStatus: 'Invalid invitation status',
@@ -91,7 +91,7 @@ export const ResponseMessages = {
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
-            orgRoleIdNotFound:'Provided roles not exists in the platform',
+            orgRoleIdNotFound:'Provided roles not exists for this organization',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
             deleteOrgInvitation: 'Organization does not have access to delete this invitation',
@@ -411,5 +411,10 @@ export const ResponseMessages = {
             notFound: 'Notification record not found.',
             invalidUrl: 'Invalid URL'
         }
-    }
+    },
+    storeObject: {
+        success: {
+            storeObject: 'Data stored successfully'
+        }
+    } 
 };

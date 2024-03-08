@@ -1,6 +1,7 @@
 import { UserRoleOrgPermsDto } from '../../schema/dtos/user-role-org-perms.dto';
 
 export interface IUserRequestInterface {
+  id: string;
   userId: string;
   email: string;
   orgId: string;

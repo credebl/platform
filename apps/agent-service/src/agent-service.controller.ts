@@ -28,6 +28,9 @@ export class AgentServiceController {
     return this.agentServiceService.createTenant(payload.createTenantDto, payload.user);
   }
 
+  /**
+   * @returns did
+   */
   @MessagePattern({ cmd: 'create-did' })
   async createDid(payload: { createDidDto: IDidCreate, orgId: string, user: IUserRequestInterface }): Promise<object> {
     return this.agentServiceService.createDid(payload.createDidDto, payload.orgId, payload.user);

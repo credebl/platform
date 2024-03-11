@@ -38,13 +38,6 @@ import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnect
 import { ledgerName } from '@credebl/common/cast.helper';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
-interface IPayload {
-  seed: string;
-  keyType: string;
-  method: string;
-  network: string;
-  role: string;
-}
 
 @Injectable()
 @WebSocketGateway()
@@ -537,7 +530,7 @@ export class AgentServiceService {
   }
 
   // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {  //initial change to up platform agent
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPayload): Promise<object> {  //current change as per latest change in afj-controller to up platform agent
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPlatformAgent): Promise<object> {  //current change as per latest change in afj-controller to up platform agent
 
     const { seed, keyType, method, network, role} = payload;
     const retryOptions = {

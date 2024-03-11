@@ -56,6 +56,12 @@ export class CreateDidDto {
     @IsString({ message: 'endpoint must be in string format.' })
     endpoint?: string;
 
+    @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
+    @IsOptional()
+    @ApiPropertyOptional()
+    @IsString({ message: 'did must be in string format.' })
+    did?: string;
+
     @ApiProperty({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
     @IsOptional()
     @ApiPropertyOptional()

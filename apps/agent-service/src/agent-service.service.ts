@@ -34,17 +34,10 @@ import * as retry from 'async-retry';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
-import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { ledgerName } from '@credebl/common/cast.helper';
+import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
-interface IPayload {
-  seed: string;
-  keyType: string;
-  method: string;
-  network: string;
-  role: string;
-}
 
 @Injectable()
 @WebSocketGateway()
@@ -537,7 +530,7 @@ export class AgentServiceService {
   }
 
   // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {  //initial change to up platform agent
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPayload): Promise<object> {  //current change as per latest change in afj-controller to up platform agent
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPlatformAgent): Promise<object> {  //current change as per latest change in afj-controller to up platform agent
 
     const { seed, keyType, method, network, role} = payload;
     const retryOptions = {
@@ -719,7 +712,8 @@ export class AgentServiceService {
 
         // Get platform admin details
         const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
-
+        
+        payload.endpoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
         // Create tenant wallet and DID
         const tenantDetails = await this.createTenantAndNotify(payload, platformAdminSpinnedUp);
         if (!tenantDetails?.walletResponseDetails?.id || !tenantDetails?.DIDCreationOption?.did) {
@@ -737,7 +731,6 @@ export class AgentServiceService {
               { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
             );
           }
-          payload.endpoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
           // Get shared agent type
           const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
           // Get agent type details
@@ -915,7 +908,6 @@ export class AgentServiceService {
 
  
    const walletResponseDetails = await this._createTenantWallet(walletLabel, platformAdminSpinnedUp.org_agents[0].agentEndPoint, platformAdminSpinnedUp.org_agents[0].apiKey);
-
    if (!walletResponseDetails && !walletResponseDetails.id) {
     throw new InternalServerErrorException('Error while creating the wallet');
    }
@@ -925,7 +917,6 @@ export class AgentServiceService {
       apiKey: platformAdminSpinnedUp.org_agents[0].apiKey,
       tenantId: walletResponseDetails.id
     };
-
     const DIDCreationOption = await this._createDID(didCreateOption);
     if (!DIDCreationOption) {
       throw new InternalServerErrorException('Error while creating the wallet');
@@ -1139,7 +1130,7 @@ export class AgentServiceService {
     }
   }
 
-  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<ICreateConnectionUrl> {
+  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<InvitationMessage> {
     try {
 
 

@@ -177,7 +177,6 @@ export class ClientRegistrationService {
       const payload = new ClientCredentialTokenPayloadDto();
       payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
       payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
-      payload.scope = 'email profile';
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
     } catch (error) {

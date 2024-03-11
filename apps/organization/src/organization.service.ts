@@ -498,7 +498,6 @@ export class OrganizationService {
     payload.client_id = clientId;
     // eslint-disable-next-line camelcase
     payload.client_secret = clientSecret;
-    payload.scope = 'email profile';
 
     try {
       const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload);

@@ -1,7 +1,7 @@
 /* eslint-disable no-useless-catch */
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -1282,22 +1282,22 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   ): Promise<void> {
     try {
       const fileSchemaHeader: string[] = fileHeader.slice();
-      if ('email' === fileHeader[0]) {
-        fileSchemaHeader.splice(0, 1);
+            if ('email' === fileHeader[0]) {
+                fileSchemaHeader.splice(0, 1);
       } else {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emailColumn
         );
       }
 
       if (schemaAttributes.length !== fileSchemaHeader.length) {
-        throw new BadRequestException(ResponseMessages.bulkIssuance.error.attributeNumber
+        throw new ConflictException(ResponseMessages.bulkIssuance.error.attributeNumber
         );
       }
 
       const mismatchedAttributes = fileSchemaHeader.filter(value => !schemaAttributes.includes(value));
 
       if (0 < mismatchedAttributes.length) {
-        throw new BadRequestException(ResponseMessages.bulkIssuance.error.mismatchedAttributes);
+        throw new ConflictException(ResponseMessages.bulkIssuance.error.mismatchedAttributes);
       }
     } catch (error) {
       throw error;

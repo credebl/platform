@@ -129,6 +129,26 @@
       "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
       "registerDIDPayload": "",
       "indyNamespace": "indicio:mainnet"
+    },
+    {
+      "name": "Polygon Testnet",
+      "networkType": "testnet",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "testnet",
+      "registerDIDEndpoint": "",
+      "registerDIDPayload": "",
+      "indyNamespace": "polygon:testnet"
+    },
+    {
+      "name": "Polygon Mainnet",
+      "networkType": "mainnet",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "mainnet",
+      "registerDIDEndpoint": "",
+      "registerDIDPayload": "",
+      "indyNamespace": "polygon:mainnet"
     }
   ],
   "endorseData": [
@@ -185,6 +205,34 @@
     {
       "key": "multiEcosystemSupport",
       "value": "false"
+    }
+  ],
+  "ledgerConfig": [
+    {
+      "name": "indy",
+      "details":  {
+        "bcovrin": {
+            "testnet":"did:indy:bcovrin:testnet"
+        },
+        "indicio": {
+            "testnet":"did:indy:indicio:testnet",
+            "demonet":"did:indy:indicio:demonet",
+            "mainnet":"did:indy:indicio:mainnet"
+        }
+    }
+    },
+    {
+      "name": "polygon",
+      "details": {
+        "mainnet": "did:polygon:mainnet",
+        "testnet": "did:polygon:testnet"
+    }
+    },
+    {
+      "key": "did:key"
+    },
+    {
+      "key": "did:web"
     }
   ]
 }

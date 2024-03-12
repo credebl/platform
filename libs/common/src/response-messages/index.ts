@@ -187,9 +187,13 @@ export const ResponseMessages = {
     agent: {
         success: {
             create: 'Agent process initiated successfully. Please wait',
+            createWallet: 'Wallet created successfully',
+            createDid: 'Did created successfully',
             health: 'Agent health details retrieved successfully.',
+            ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
-            getWebhookUrl:'Webhook Url fetched successfully'
+            getWebhookUrl:'Webhook Url fetched successfully',
+            createKeys:'Key-pair created successfully'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -214,6 +218,7 @@ export const ResponseMessages = {
             walletAlreadyProcessing: 'Your wallet is already processing',
             notAbleToSpinp: 'Agent not able to spun up',
             platformAdminNotAbleToSpinp: 'Platform admin agent is not spun up',
+            invalidLedger: 'Invalid ledger name',
             seedCharCount: 'seed must be at most 32 characters',
             nullTenantId:'TenantId must not be null',
             tenantIdNotFound:'TenantId not found',

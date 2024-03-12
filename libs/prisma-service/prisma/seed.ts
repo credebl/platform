@@ -13,7 +13,7 @@ const createPlatformConfig = async (): Promise<void> => {
     try {
         const existPlatformAdmin = await prisma.platform_config.findMany();
 
-        if (existPlatformAdmin.length === 0) {
+        if (0 === existPlatformAdmin.length) {
             const { platformConfigData } = JSON.parse(configData);
             const platformConfig = await prisma.platform_config.create({
                 data: platformConfigData
@@ -38,9 +38,9 @@ const createOrgRoles = async (): Promise<void> => {
                     in: roleNames
                 }
             }
-        })
+        });
 
-        if (existOrgRole.length === 0) {
+        if (0 === existOrgRole.length) {
             const orgRoles = await prisma.org_roles.createMany({
                 data: orgRoleData
             });
@@ -66,9 +66,9 @@ const createAgentTypes = async (): Promise<void> => {
                     in: agentType
                 }
             }
-        })
+        });
 
-        if (existAgentType.length === 0) {
+        if (0 === existAgentType.length) {
             const agentTypes = await prisma.agents_type.createMany({
                 data: agentTypeData
             });
@@ -94,9 +94,9 @@ const createOrgAgentTypes = async (): Promise<void> => {
                     in: orgAgentType
                 }
             }
-        })
+        });
 
-        if (existAgentType.length === 0) {
+        if (0 === existAgentType.length) {
             const orgAgentTypes = await prisma.org_agents_type.createMany({
                 data: orgAgentTypeData
             });
@@ -122,9 +122,9 @@ const createPlatformUser = async (): Promise<void> => {
             where: {
                 email: platformAdminData.email
             }
-        })
+        });
 
-        if (existPlatformAdminUser.length === 0) {
+        if (0 === existPlatformAdminUser.length) {
             const platformUser = await prisma.user.create({
                 data: platformAdminData
             });
@@ -152,9 +152,9 @@ const createPlatformOrganization = async (): Promise<void> => {
             where: {
                 name: platformAdminOrganizationData.name
             }
-        })
+        });
 
-        if (existPlatformAdminUser.length === 0) {
+        if (0 === existPlatformAdminUser.length) {
             const platformOrganization = await prisma.organisation.create({
                 data: platformAdminOrganizationData
             });
@@ -220,9 +220,9 @@ const createLedger = async (): Promise<void> => {
                     in: ledgerIndyNamespace
                 }
             }
-        })
+        });
 
-        if (existLedgerIndyNameSpace.length === 0) {
+        if (0 === existLedgerIndyNameSpace.length) {
 
             const createLedger = await prisma.ledgers.createMany({
                 data: ledgerData
@@ -250,9 +250,9 @@ const createEcosystemRoles = async (): Promise<void> => {
                     in: ecosystemRoleDetails
                 }
             }
-        })
+        });
 
-        if (existEcosystemRole.length === 0) {
+        if (0 === existEcosystemRole.length) {
             const ecosystemRoles = await prisma.ecosystem_roles.createMany({
                 data: ecosystemRoleData
             });
@@ -279,10 +279,10 @@ const createEcosystemConfig = async (): Promise<void> => {
                     in: ecosystemConfigKey
                 }
             }
-        })
+        });
 
 
-        if (existEcosystemConfig.length === 0) {
+        if (0 === existEcosystemConfig.length) {
             const configDetails = await prisma.ecosystem_config.createMany({
                 data: ecosystemConfigData
             });
@@ -298,6 +298,30 @@ const createEcosystemConfig = async (): Promise<void> => {
     }
 };
 
+const createLedgerConfig = async (): Promise<void> => {
+    try {
+        const { ledgerConfig } = JSON.parse(configData);
+
+        const ledgerConfigList = await prisma.ledgerConfig.findMany();
+
+
+        if (0 === ledgerConfigList.length && ledgerConfig) {
+            const configDetails = await prisma.ledgerConfig.createMany({
+                data: ledgerConfig
+            });
+
+            logger.log(configDetails);
+        } else {
+            logger.log('Already seeding in ledger config');
+        }
+
+
+    } catch (e) {
+        logger.error('An error occurred ecosystem config:', e);
+    }
+};
+
+
 async function main(): Promise<void> {
 
     await createPlatformConfig();
@@ -310,7 +334,7 @@ async function main(): Promise<void> {
     await createLedger();
     await createEcosystemRoles();
     await createEcosystemConfig();
-
+    await createLedgerConfig();
 }
 
 

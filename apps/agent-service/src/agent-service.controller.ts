@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation, IAgentProofRequest, IPresentation  } from './interface/agent-service.interface';
+import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation, IAgentProofRequest, IPresentation, IDidCreate, IWallet, ITenantRecord  } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
@@ -28,6 +28,19 @@ export class AgentServiceController {
     agentSpinupStatus: number;
   }> {
     return this.agentServiceService.createTenant(payload.createTenantDto, payload.user);
+  }
+
+  /**
+   * @returns did
+   */
+  @MessagePattern({ cmd: 'create-did' })
+  async createDid(payload: { createDidDto: IDidCreate, orgId: string, user: IUserRequestInterface }): Promise<object> {
+    return this.agentServiceService.createDid(payload.createDidDto, payload.orgId, payload.user);
+  }
+
+  @MessagePattern({ cmd: 'create-wallet' })
+  async createWallet(payload: { createWalletDto: IWallet, user: IUserRequestInterface}): Promise<ITenantRecord> {
+    return this.agentServiceService.createWallet(payload.createWalletDto);
   }
 
   //DONE
@@ -124,6 +137,11 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'agent-health' })
   async getAgentHealth(payload: { user: user; orgId: string, apiKey: string; }): Promise<object> {
     return this.agentServiceService.getAgentHealthDetails(payload.orgId, payload.apiKey);
+  }
+
+  @MessagePattern({ cmd: 'get-ledger-config' })
+  async getLedgerConfig(payload: { user: IUserRequestInterface }): Promise<object> {
+    return this.agentServiceService.getLedgerConfigDetails(payload.user);
   }
 
   //DONE
@@ -233,4 +251,10 @@ export class AgentServiceController {
     return this.agentServiceService.getQuestionAnswersRecord(payload.url, payload.apiKey);
   }
 
+  @MessagePattern({ cmd: 'polygon-create-keys' })
+  async createSecp256k1KeyPair(payload: {orgId: string}): Promise<object> {
+    return this.agentServiceService.createSecp256k1KeyPair(payload.orgId);
+  }
+
 }
+

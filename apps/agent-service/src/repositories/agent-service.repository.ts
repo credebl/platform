@@ -1,8 +1,8 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
-import { IStoreOrgAgentDetails } from '../interface/agent-service.interface';
+import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -26,18 +26,34 @@ export class AgentServiceRepository {
     }
   }
 
-  /**
-   * Get genesis url
-   * @param id
-   * @returns
-   */
-  async getGenesisUrl(ledgerId: string[]): Promise<ledgers[]> {
-    try {
-      const genesisData = await this.prisma.ledgers.findMany({
-        where: {
-          id: {
-            in: ledgerId
-          }
+    async getLedgerConfigByOrgId(): Promise<ledgerConfig[]> {
+        try {
+            const ledgerConfigData = await this.prisma.ledgerConfig.findMany();
+            return ledgerConfigData;
+        } catch (error) {
+            this.logger.error(`[getGenesisUrl] - get genesis URL: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+    /**
+     * Get genesis url
+     * @param id
+     * @returns
+     */
+    async getGenesisUrl(ledgerId: string[]): Promise<ledgers[]> {
+        try {
+            const genesisData = await this.prisma.ledgers.findMany({
+                where: {
+                    id: {
+                        in: ledgerId
+                    }
+                }
+            });
+
+            return genesisData;
+        } catch (error) {
+            this.logger.error(`[getGenesisUrl] - get genesis URL: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
 
@@ -97,7 +113,7 @@ export class AgentServiceRepository {
     }
   }
 
-    /**
+     /**
      * Store agent details
      * @param storeAgentDetails
      * @returns
@@ -106,7 +122,7 @@ export class AgentServiceRepository {
     async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
         try {
 
-            return this.prisma.org_agents.update({
+            return await this.prisma.org_agents.update({
                 where: {
                     id: storeOrgAgentDetails.id
                 },
@@ -307,11 +323,34 @@ export class AgentServiceRepository {
     }
   }
 
-  async getAgentTypeId(agentType: string): Promise<string> {
-    try {
-      const { id } = await this.prisma.agents_type.findFirst({
-        where: {
-          agent: agentType
+    // eslint-disable-next-line camelcase
+    async getOrgAgentType(orgAgentId: string): Promise<org_agents_type> {
+        try {
+          const orgAgent = await this.prisma.org_agents_type.findUnique({
+            where: {
+              id: orgAgentId
+            }
+          });
+         
+          return orgAgent;
+
+        } catch (error) {
+          this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+          throw error;
+        }
+      }
+    
+    async getPlatfomAdminUser(platformAdminUserEmail: string): Promise<user> {
+        try {
+            const platformAdminUser = await this.prisma.user.findUnique({
+                where: {
+                    email: platformAdminUserEmail
+                }
+            });
+            return platformAdminUser;
+        } catch (error) {
+            this.logger.error(`[getPlatfomAdminUser] - get platform admin user: ${JSON.stringify(error)}`);
+            throw error;
         }
       });
       return id;
@@ -338,23 +377,4 @@ export class AgentServiceRepository {
       throw error;
     }
   }
-
-  // async storeAgentApikey(
-  //     apiKey:string
-  //   ): Promise<object> {
-  //     try {
-
-  //       return await this.prisma.org_agents.update({
-  //         data: {
-  //             apiKey
-  //         },
-  //         where: {
-
-  //         }
-  //       });
-  //     } catch (error) {
-  //       this.logger.error(`error: ${JSON.stringify(error)}`);
-  //       throw error;
-  //     }
-  //   }
 }

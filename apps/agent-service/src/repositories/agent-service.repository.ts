@@ -1,8 +1,8 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
-import { IStoreOrgAgentDetails } from '../interface/agent-service.interface';
+import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -329,23 +329,4 @@ export class AgentServiceRepository {
       throw error;
     }
   }
-
-  // async storeAgentApikey(
-  //     apiKey:string
-  //   ): Promise<object> {
-  //     try {
-
-  //       return await this.prisma.org_agents.update({
-  //         data: {
-  //             apiKey
-  //         },
-  //         where: {
-
-  //         }
-  //       });
-  //     } catch (error) {
-  //       this.logger.error(`error: ${JSON.stringify(error)}`);
-  //       throw error;
-  //     }
-  //   }
 }

@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
@@ -336,6 +336,7 @@ export class SendProofRequestPayload {
     @IsEmail({}, { each: true, message: 'Please provide a valid email' })
     @ArrayNotEmpty({ message: 'Email array must not be empty' })
     @ArrayUnique({ message: 'Duplicate emails are not allowed' })
+    @ArrayMaxSize(10, { message: 'Max 10 emails can be sent' })
     @IsArray()
     @IsString({ each: true, message: 'Each emailId in the array should be a string' })
     @IsOptional()

@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData} from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation} from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { org_agents, organisation, presentations } from '@prisma/client';
@@ -360,7 +360,6 @@ export class VerificationService {
       }
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { isShortenUrl, emailId, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
@@ -393,33 +392,28 @@ export class VerificationService {
                 }
               }
             },
-            autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always'
+            autoAcceptProof:outOfBandRequestProof.autoAcceptProof
           }
         };  
       }
-     
 
-      const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
-      //apply presentation shorting URL
-      if (isShortenUrl) {
-        const proofRequestInvitationUrl: string = getProofPresentation?.response?.invitationUrl;
-        const shortenedUrl: string = await this.storeVerificationObjectAndReturnUrl(proofRequestInvitationUrl, false);
-        this.logger.log('shortenedUrl', shortenedUrl);
-        if (shortenedUrl) {
-          getProofPresentation.response.invitationUrl = shortenedUrl;
-        }
-      }
-      if (!getProofPresentation) {
-        throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
-      }
-
-      if (outOfBandRequestProof.emailId) {
-        const batchSize = parseInt(process.env.OOB_BATCH_SIZE); // Batch size taken from env. It is same for issuance and verification
-        const { emailId } = outOfBandRequestProof; // Assuming it's an array
-        await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization, batchSize);
+      if (emailId) {
+        await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);
         return true;
       } else {
-      return await this.generateOOBProofReq(payload, getAgentDetails);
+        const presentationProof: IInvitation = await this.generateOOBProofReq(payload, getAgentDetails);
+        const proofRequestInvitationUrl: string = presentationProof.invitationUrl;
+        if (isShortenUrl) {
+          const shortenedUrl: string = await this.storeVerificationObjectAndReturnUrl(proofRequestInvitationUrl, false);
+          this.logger.log('shortenedUrl', shortenedUrl);
+          if (shortenedUrl) {
+            presentationProof.invitationUrl = shortenedUrl;
+          }
+        }
+        if (!presentationProof) {
+          throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
+        }
+        return presentationProof;
       }      
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
@@ -452,14 +446,12 @@ export class VerificationService {
   }
 
 
-  // Only accept array of string for emailIds
-  async sendEmailInBatches(payload: IProofRequestPayload, emailIds: string[], getAgentDetails: org_agents, organizationDetails: organisation, batchSize: number): Promise<void> {
+  // Currently batch size is not used, as length of emails sent is restricted to '10'
+  async sendEmailInBatches(payload: IProofRequestPayload, emailIds: string[], getAgentDetails: org_agents, organizationDetails: organisation): Promise<void> {
     try {
     const accumulatedErrors = [];
 
-      for (let i = 0; i < emailIds.length; i += batchSize) {
-        const batch = emailIds.slice(i, i + batchSize);
-        for (const email of batch) {
+        for (const email of emailIds) {
           try {
                 await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
                 await this.delay(500);
@@ -468,7 +460,6 @@ export class VerificationService {
                 accumulatedErrors.push(error);
               }
         }
-      }
 
     if (0 < accumulatedErrors.length) {
       this.logger.error(accumulatedErrors);
@@ -495,16 +486,10 @@ export class VerificationService {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
     }
 
-    const invitationId = getProofPresentation?.response?.invitation['@id'];
-
-    if (!invitationId) {
-      throw new Error(ResponseMessages.verification.error.invitationNotFound);
-    }
-
-    const shortenedUrl = getAgentDetails?.tenantId
-      ? `${getAgentDetails?.agentEndPoint}/multi-tenancy/url/${getAgentDetails?.tenantId}/${invitationId}`
-      : `${getAgentDetails?.agentEndPoint}/url/${invitationId}`;
-
+    const invitationUrl = getProofPresentation?.response?.invitationUrl;
+    // Currently have shortenedUrl to store only for 30 days
+    const persist: boolean = false;
+    const shortenedUrl = await this.storeVerificationObjectAndReturnUrl(invitationUrl, persist);
     const qrCodeOptions: QRCode.QRCodeToDataURLOptions = { type: 'image/png' };
     const outOfBandVerificationQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
 

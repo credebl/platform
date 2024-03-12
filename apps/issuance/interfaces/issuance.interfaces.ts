@@ -85,7 +85,8 @@ export interface IPattern {
 export interface ISendOfferNatsPayload {
   issueData: IIssueData,
   url: string,
-  apiKey: string;
+  apiKey?: string;
+  orgId?: string;
 }
 
 export interface IIssueCredentialsDefinitions {
@@ -254,6 +255,6 @@ export interface SendEmailCredentialOffer {
   organisation: organisation; 
   errors;
   url: string;
-  apiKey: string; 
+  orgId: string; 
   organizationDetails: organisation;
 }

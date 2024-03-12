@@ -8,6 +8,7 @@ export interface CreateCredDefAgentRedirection {
     agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
+    orgId?: string;
 }
 
 export interface ITenantCredDef {
@@ -24,6 +25,7 @@ export interface GetCredDefAgentRedirection {
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
+    orgId?: string;
 }
 
 export interface GetCredDefFromTenantPayload {

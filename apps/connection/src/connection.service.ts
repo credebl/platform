@@ -78,11 +78,7 @@ export class ConnectionService {
 
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
-
-      const apiKey = await this._getOrgAgentApiKey(orgId);
-
-      const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
-      
+      const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, orgId);
       const connectionInvitationUrl: string = createConnectionInvitation?.message?.invitationUrl;
       const shortenedUrl: string = await this.storeConnectionObjectAndReturnUrl(
         connectionInvitationUrl,
@@ -147,11 +143,11 @@ export class ConnectionService {
   async _createConnectionInvitation(
     connectionPayload: object,
     url: string,
-    apiKey: string
+    orgId: string
   ): Promise<InvitationMessage> {
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
-    const payload = { connectionPayload, url, apiKey };
+    const payload = { connectionPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -268,12 +264,7 @@ export class ConnectionService {
        url += `?${criteriaParams.join('&')}`;
      }
 
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-
-      const connectionResponse = await this._getAllConnections(url, apiKey);
+      const connectionResponse = await this._getAllConnections(url, orgId);
       return connectionResponse.response;
     } catch (error) {
       this.logger.error(`[getConnectionsFromAgent] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`);
@@ -284,13 +275,13 @@ export class ConnectionService {
 
   async _getAllConnections(
     url: string,
-    apiKey: string
+    orgId: string
   ): Promise<{
     response: string;
   }> {
     try {
       const pattern = { cmd: 'agent-get-all-connections' };
-      const payload = { url, apiKey };
+      const payload = { url, orgId };
       return this.connectionServiceProxy
         .send<string>(pattern, payload)
         .pipe(
@@ -339,12 +330,7 @@ export class ConnectionService {
         throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
       }
 
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const createConnectionInvitation = await this._getConnectionsByConnectionId(url, apiKey);
+      const createConnectionInvitation = await this._getConnectionsByConnectionId(url, orgId);
       return createConnectionInvitation;
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
@@ -373,11 +359,7 @@ export class ConnectionService {
       const label = 'get-question-answer-record';
       const url = await this.getQuestionAnswerAgentUrl(label, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const record = await this._getQuestionAnswersRecord(url, apiKey);
+      const record = await this._getQuestionAnswersRecord(url, orgId);
       return record;
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in get question answer record: ${error}`);
@@ -394,10 +376,10 @@ export class ConnectionService {
     }
   }
 
-  async _getConnectionsByConnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
+  async _getConnectionsByConnectionId(url: string, orgId: string): Promise<IConnectionDetailsById> {
     //nats call in agent service for fetch connection details
     const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
-    const payload = { url, apiKey };
+    const payload = { url, orgId };
     return this.connectionServiceProxy
       .send<IConnectionDetailsById>(pattern, payload)
       .toPromise()
@@ -416,9 +398,9 @@ export class ConnectionService {
       });
   }
 
-  async _getQuestionAnswersRecord(url: string, apiKey: string): Promise<object> {
+  async _getQuestionAnswersRecord(url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-get-question-answer-record' };
-    const payload = { url, apiKey };
+    const payload = { url, orgId };
     return this.connectionServiceProxy
       .send<IConnectionDetailsById>(pattern, payload)
       .toPromise()
@@ -553,11 +535,7 @@ export class ConnectionService {
         throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
       }
 
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const createConnectionInvitation = await this._receiveInvitationUrl(url, apiKey, receiveInvitationUrl);
+      const createConnectionInvitation = await this._receiveInvitationUrl(url, orgId, receiveInvitationUrl);
       return createConnectionInvitation;
     } catch (error) {
       this.logger.error(`[receiveInvitationUrl] - error in receive invitation url : ${JSON.stringify(error)}`);
@@ -576,11 +554,11 @@ export class ConnectionService {
 
   async _receiveInvitationUrl(
     url: string,
-    apiKey: string,
+    orgId: string,
     receiveInvitationUrl: IReceiveInvitationUrl
   ): Promise<IReceiveInvitationResponse> {
     const pattern = { cmd: 'agent-receive-invitation-url' };
-    const payload = { url, apiKey, receiveInvitationUrl };
+    const payload = { url, orgId, receiveInvitationUrl };
     return this.connectionServiceProxy
       .send<IReceiveInvitationResponse>(pattern, payload)
       .toPromise()
@@ -622,11 +600,7 @@ export class ConnectionService {
         throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
       }
 
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const createConnectionInvitation = await this._receiveInvitation(url, apiKey, receiveInvitation);
+      const createConnectionInvitation = await this._receiveInvitation(url, orgId, receiveInvitation);
       return createConnectionInvitation;
     } catch (error) {
       this.logger.error(`[receiveInvitation] - error in receive invitation : ${JSON.stringify(error)}`);
@@ -645,11 +619,11 @@ export class ConnectionService {
 
   async _receiveInvitation(
     url: string,
-    apiKey: string,
+    orgId: string,
     receiveInvitation: IReceiveInvitation
   ): Promise<IReceiveInvitationResponse> {
     const pattern = { cmd: 'agent-receive-invitation' };
-    const payload = { url, apiKey, receiveInvitation };
+    const payload = { url, orgId, receiveInvitation };
     return this.connectionServiceProxy
       .send<IReceiveInvitationResponse>(pattern, payload)
       .toPromise()
@@ -712,9 +686,9 @@ export class ConnectionService {
     }
   }
 
-  async _sendQuestion(questionPayload: IQuestionPayload, url: string, apiKey: string): Promise<object> {
+  async _sendQuestion(questionPayload: IQuestionPayload, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-send-question' };
-    const payload = { questionPayload, url, apiKey };
+    const payload = { questionPayload, url, orgId };
 
     return this.connectionServiceProxy
       .send<object>(pattern, payload)
@@ -758,11 +732,8 @@ export class ConnectionService {
         agentDetails?.tenantId,
         connectionId
       );
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const createQuestion = await this._sendQuestion(questionPayload, url, apiKey);
+      
+      const createQuestion = await this._sendQuestion(questionPayload, url, orgId);
       return createQuestion;
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in sending question: ${error}`);

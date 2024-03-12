@@ -24,6 +24,7 @@ import { ImageServiceService } from '@credebl/image-service';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { validate as isValidUUID } from 'uuid';
+import { UserAccessGuard } from '../authz/guards/user-access-guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -95,7 +96,7 @@ export class OrganizationController {
  * @returns get organization roles
  */
 
-  @Get('/roles')
+  @Get('/:orgId/roles')
   @ApiOperation({
     summary: 'Fetch org-roles details',
     description: 'Fetch org-roles details'
@@ -103,9 +104,9 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getOrgRoles(@Res() res: Response): Promise<Response> {
+  async getOrgRoles(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response): Promise<Response> {
 
-    const orgRoles = await this.organizationService.getOrgRoles();
+    const orgRoles = await this.organizationService.getOrgRoles(orgId.trim());
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -211,7 +212,7 @@ export class OrganizationController {
   @Get('/')
   @ApiOperation({ summary: 'Get all organizations', description: 'Get all organizations' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   @ApiQuery({
     name: 'pageNumber',
@@ -324,10 +325,14 @@ export class OrganizationController {
   @Post('/')
   @ApiOperation({ summary: 'Create a new Organization', description: 'Create an organization' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-    const orgData = await this.organizationService.createOrganization(createOrgDto, reqUser.id);
+    
+    // eslint-disable-next-line prefer-destructuring
+    const keycloakUserId = reqUser.keycloakUserId;
+
+    const orgData = await this.organizationService.createOrganization(createOrgDto, reqUser.id, keycloakUserId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.create,
@@ -350,7 +355,11 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async createOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
-    const orgCredentials = await this.organizationService.createOrgCredentials(orgId, reqUser.id);
+
+    // eslint-disable-next-line prefer-destructuring
+    const keycloakUserId = reqUser.keycloakUserId;
+    
+    const orgCredentials = await this.organizationService.createOrgCredentials(orgId, reqUser.id, keycloakUserId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.orgCredentials,
@@ -379,6 +388,28 @@ export class OrganizationController {
       data: orgCredentials
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/register-org-map-users')
+  @ApiOperation({
+    summary: 'Register client and map users',
+    description: 'Register client and map users'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiBearerAuth()
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async registerOrgsMapUsers(@Res() res: Response): Promise<Response> {
+
+    await this.organizationService.registerOrgsMapUsers();
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: 'Organization client created and users mapped to client'
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+
   }
 
   @Post('/:orgId/invitations')
@@ -482,6 +513,7 @@ export class OrganizationController {
   @ApiOperation({ summary: 'Delete Organization Client Credentials', description: 'Delete Organization Client Credentials' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
+  @ApiExcludeEndpoint()
   @UseGuards(AuthGuard('jwt'))
   async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
 

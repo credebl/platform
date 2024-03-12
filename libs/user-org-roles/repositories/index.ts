@@ -18,13 +18,14 @@ export class UserOrgRolesRepository {
    * @returns user details
    */
   // eslint-disable-next-line camelcase
-  async createUserOrgRole(userId: string, roleId: string, orgId?: string): Promise<user_org_roles> {
+  async createUserOrgRole(userId: string, roleId: string, orgId?: string, idpRoleId?: string): Promise<user_org_roles> {
     
     try {
       const data: {
         orgRole: { connect: { id: string } };
         user: { connect: { id: string } };
         organisation?: { connect: { id: string } };
+        idpRoleId?: string
       } = {
         orgRole: { connect: { id: roleId } },
         user: { connect: { id: userId } }
@@ -32,6 +33,10 @@ export class UserOrgRolesRepository {
 
       if (orgId) {
         data.organisation = { connect: { id: orgId } };
+      }
+
+      if (idpRoleId) {
+        data.idpRoleId = idpRoleId;
       }
 
       const saveResponse = await this.prisma.user_org_roles.create({

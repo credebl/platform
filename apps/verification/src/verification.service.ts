@@ -82,15 +82,15 @@ export class VerificationService {
         data: getProofRequestsList.proofRequestsList
       };
 
-        return proofPresentationsResponse;
-     } catch (error) {
+      return proofPresentationsResponse;
+    } catch (error) {
 
-        this.logger.error(
-       `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
-    );
-      throw new RpcException(error.response ? error.response : error);      
-  } 
-}
+      this.logger.error(
+        `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 
   /**
    * Consume agent API for get all proof presentations
@@ -140,9 +140,9 @@ export class VerificationService {
           statusCode: error?.response?.status,
           error: errorStack
         });
-    } else {
-      throw new RpcException(error.response ? error.response : error);      
-    } 
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -233,7 +233,7 @@ export class VerificationService {
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
       this.verificationErrorHandling(error);
-    
+
     }
   }
 
@@ -258,20 +258,20 @@ export class VerificationService {
     }
   }
 
-    /**
-     * Verify proof presentation
-     * @param proofId 
-     * @param orgId 
-     * @returns Verified proof presentation details
-     */
-    async verifyPresentation(proofId: string, orgId: string): Promise<string> {
+  /**
+   * Verify proof presentation
+   * @param proofId 
+   * @param orgId 
+   * @returns Verified proof presentation details
+   */
+  async verifyPresentation(proofId: string, orgId: string): Promise<string> {
     try {
       const getAgentData = await this.verificationRepository.getAgentEndPoint(orgId);
       const orgAgentTypeData = await this.verificationRepository.getOrgAgentType(getAgentData?.orgAgentTypeId);
       let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
 
       const verificationMethod = 'accept-presentation';
-      
+
       const url = await this.getAgentUrl(verificationMethod, orgAgentTypeData, getAgentData?.agentEndPoint, getAgentData?.tenantId, '', proofId);
       if (!apiKey || null === apiKey || undefined === apiKey) {
         apiKey = await this._getOrgAgentApiKey(orgId);
@@ -290,8 +290,8 @@ export class VerificationService {
           error: errorStack
         });
       } else {
-        throw new RpcException(error.response ? error.response : error);      
-      } 
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
@@ -333,21 +333,22 @@ export class VerificationService {
  * @param outOfBandRequestProof 
  * @returns Get requested proof presentation details
  */
-  async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean|object> {
+  async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean | object> {
     try {
 
-      outOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
-
+      // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
+     
       const [getAgentDetails, getOrganization] = await Promise.all([
         this.verificationRepository.getAgentEndPoint(user.orgId),
         this.verificationRepository.getOrganization(user.orgId)
       ]);
 
-      const imageUrl = getOrganization?.logoUrl;
       const label = getOrganization?.name;
 
-      outOfBandRequestProof['imageUrl'] = imageUrl;
+      if (getOrganization?.logoUrl) {
+        outOfBandRequestProof['imageUrl'] = getOrganization?.logoUrl;
+      }
+      
       outOfBandRequestProof['label'] = label;
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
@@ -360,25 +361,28 @@ export class VerificationService {
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const {emailId, type, ...proofRequestPayload} = outOfBandRequestProof;
+      const { isShortenUrl, emailId, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
       
       let payload: IProofRequestPayload;
 
-      if (ProofRequestType.INDY === outOfBandRequestProof.type) {
+      if (ProofRequestType.INDY === type) {
+        updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
         payload   = {
         apiKey,
         url,
-        proofRequestPayload
+        proofRequestPayload: updateOutOfBandRequestProof
       };
       }
       
-      if (ProofRequestType.PRESENTATIONEXCHANGE === outOfBandRequestProof.type) {
+      if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
+       
          payload = {
           apiKey,
           url,
           proofRequestPayload: {
-            protocolVersion:outOfBandRequestProof.protocolVersion || 'v1',
+            protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
             comment:outOfBandRequestProof.comment,
             label,
             proofFormats: {
@@ -391,9 +395,24 @@ export class VerificationService {
             },
             autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always'
           }
-        };
-        };
-  
+        };  
+      }
+     
+
+      const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
+      //apply presentation shorting URL
+      if (isShortenUrl) {
+        const proofRequestInvitationUrl: string = getProofPresentation?.response?.invitationUrl;
+        const shortenedUrl: string = await this.storeVerificationObjectAndReturnUrl(proofRequestInvitationUrl, false);
+        this.logger.log('shortenedUrl', shortenedUrl);
+        if (shortenedUrl) {
+          getProofPresentation.response.invitationUrl = shortenedUrl;
+        }
+      }
+      if (!getProofPresentation) {
+        throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
+      }
+
       if (outOfBandRequestProof.emailId) {
         const batchSize = parseInt(process.env.OOB_BATCH_SIZE); // Batch size taken from env. It is same for issuance and verification
         const { emailId } = outOfBandRequestProof; // Assuming it's an array
@@ -401,11 +420,19 @@ export class VerificationService {
         return true;
       } else {
       return await this.generateOOBProofReq(payload, getAgentDetails);
-      }   
+      }      
     } catch (error) {
       this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
       this.verificationErrorHandling(error);
     }
+  }
+
+  async storeVerificationObjectAndReturnUrl(storeObj: string, persistent: boolean): Promise<string> {
+    //nats call in agent-service to create an invitation url
+    const pattern = { cmd: 'store-object-return-url' };
+    const payload = { persistent, storeObj };
+    const message = await this.natsCall(pattern, payload);
+    return message.response;
   }
 
 
@@ -538,7 +565,7 @@ export class VerificationService {
     try {
       let requestedAttributes = {}; 
       const requestedPredicates = {};
-      const {attributes} = proofRequestpayload;
+      const { attributes } = proofRequestpayload;
       if (attributes) {
         requestedAttributes = Object.fromEntries(attributes.map((attribute, index) => {
           const attributeElement = attribute.attributeName || attribute.attributeNames;
@@ -546,7 +573,7 @@ export class VerificationService {
           const attributeKey = attribute.attributeName ? 'name' : 'names';
           
           if (!attribute.condition && !attribute.value) {
-  
+
             return [
               attributeReferent,
               {
@@ -572,10 +599,10 @@ export class VerificationService {
               ]
             };
           }
-  
+
           return [attributeReferent];
         }));
-  
+
         return {
           requestedAttributes,
           requestedPredicates
@@ -585,10 +612,10 @@ export class VerificationService {
       }
     } catch (error) {
       this.logger.error(`[proofRequestPayload] - error in proof request payload : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);      
-     
-    } 
-  }  
+      throw new RpcException(error.response ? error.response : error);
+
+    }
+  }
 
   /**
   * Description: Fetch agent url 
@@ -699,13 +726,13 @@ export class VerificationService {
       const payload = { apiKey, url };
 
       const getProofPresentationById = await this._getVerifiedProofDetails(payload);
-     
+
       if (!getProofPresentationById?.response?.presentation) {
         throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound, {
-        cause: new Error(),
-        description: ResponseMessages.errorMessages.notFound
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
         });
-        }
+      }
 
       const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;
       const requestedPredicates = getProofPresentationById?.response?.request?.indy?.requested_predicates;
@@ -720,7 +747,7 @@ export class VerificationService {
           if (requestedAttributes.hasOwnProperty(key)) {
             const requestedAttributeKey = requestedAttributes[key];
             const attributeName = requestedAttributeKey.name;
-            
+
             if (requestedAttributeKey?.restrictions) {
 
               credDefId = requestedAttributeKey?.restrictions[0]?.cred_def_id;
@@ -773,7 +800,7 @@ export class VerificationService {
             const attribute = requestedAttributes[key];
             const attributeName = attribute.name;
 
-           
+
             [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
 
 
@@ -794,7 +821,7 @@ export class VerificationService {
           if (requestedPredicates.hasOwnProperty(key)) {
             const attribute = requestedPredicates[key];
             const attributeName = attribute?.name;
-        
+
             [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
             const extractedData: IProofPresentationDetails = {
               [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,
@@ -806,25 +833,25 @@ export class VerificationService {
         }
       } else {
         throw new InternalServerErrorException(ResponseMessages.errorMessages.serverError, {
-        cause: new Error(),
-        description: ResponseMessages.errorMessages.serverError
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.serverError
         });
       }
       return extractedDataArray;
     } catch (error) {
-        this.logger.error(`[getVerifiedProofDetails] - error in get verified proof details : ${JSON.stringify(error)}`);
-        const errorStack = error?.response?.error?.reason;
+      this.logger.error(`[getVerifiedProofDetails] - error in get verified proof details : ${JSON.stringify(error)}`);
+      const errorStack = error?.response?.error?.reason;
 
-        if (errorStack) {
-          throw new RpcException({
-              message: ResponseMessages.verification.error.verifiedProofNotFound,
-              statusCode: error?.response?.status,
-              error: errorStack
-          });
+      if (errorStack) {
+        throw new RpcException({
+          message: ResponseMessages.verification.error.verifiedProofNotFound,
+          statusCode: error?.response?.status,
+          error: errorStack
+        });
       } else {
-        throw new RpcException(error.response ? error.response : error);      
-      } 
+        throw new RpcException(error.response ? error.response : error);
       }
+    }
   }
 
   async _schemaCredDefRestriction(attribute, getProofPresentationById): Promise<string[]> {
@@ -832,7 +859,7 @@ export class VerificationService {
     let schemaId;
 
     if (attribute?.restrictions) {
-              
+
       credDefId = attribute?.restrictions[0]?.cred_def_id;
       schemaId = attribute?.restrictions[0]?.schema_id;
     } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
@@ -881,7 +908,7 @@ export class VerificationService {
 
   verificationErrorHandling(error): void {
     if (!error && !error?.status && !error?.status?.message && !error?.status?.message?.error) {
-      
+
       throw new RpcException(error.response ? error.response : error);
     } else {
       throw new RpcException({

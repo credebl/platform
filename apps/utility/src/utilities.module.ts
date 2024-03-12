@@ -7,6 +7,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { UtilitiesController } from './utilities.controller';
 import { UtilitiesService } from './utilities.service';
 import { UtilitiesRepository } from './utilities.repository';
+import { AwsService } from '@credebl/aws';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { UtilitiesRepository } from './utilities.repository';
     CacheModule.register()
   ],
   controllers: [UtilitiesController],
-  providers: [UtilitiesService, Logger, PrismaService, UtilitiesRepository]
+  providers: [UtilitiesService, Logger, PrismaService, UtilitiesRepository, AwsService]
 })
 export class UtilitiesModule { }

@@ -3,9 +3,9 @@ import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
 import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation, IAgentProofRequest, IPresentation  } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
-import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
+import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
 @Controller()
 export class AgentServiceController {
@@ -54,7 +54,7 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-create-connection-legacy-invitation' })
-  async createLegacyConnectionInvitation(payload: { connectionPayload: IConnectionDetails, url: string, apiKey: string }): Promise<ICreateConnectionUrl> {
+  async createLegacyConnectionInvitation(payload: { connectionPayload: IConnectionDetails, url: string, apiKey: string }): Promise<InvitationMessage> {
     return this.agentServiceService.createLegacyConnectionInvitation(payload.connectionPayload, payload.url, payload.apiKey);
   }
 

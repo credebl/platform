@@ -162,6 +162,7 @@ export interface IWSendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
+    emailId?: string[];
     type?:string;
     presentationDefinition?:IProofRequestPresentationDefinition;
 }
@@ -213,3 +214,6 @@ export interface IProofRequestSearchCriteria {
     searchByText: string;
 }
 
+export interface IInvitation{
+    invitationUrl?: string;
+}

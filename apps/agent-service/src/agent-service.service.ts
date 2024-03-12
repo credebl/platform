@@ -37,6 +37,7 @@ import { IProofPresentationDetails } from '@credebl/common/interfaces/verificati
 import { ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
+import * as CryptoJS from 'crypto-js';
 
 @Injectable()
 @WebSocketGateway()
@@ -167,7 +168,6 @@ export class AgentServiceService {
 
       // Create payload for the wallet create and store payload
       const walletProvisionPayload = await this.prepareWalletProvisionPayload(agentSpinupDto, externalIp, apiEndpoint, inboundEndpoint, ledgerDetails, orgData);
-
 
       // Socket connection
       const socket: Socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
@@ -365,10 +365,12 @@ export class AgentServiceService {
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
 
+      const encryptedToken = await this.tokenEncryption(agentDetails?.agentToken);
+
       const agentPayload: IStoreOrgAgentDetails = {
         agentEndPoint,
         seed: agentSpinupDto.seed,
-        apiKey: agentDetails.agentToken,
+        apiKey: encryptedToken,
         agentsTypeId: agentSpinupDto?.agentType,
         orgId: orgData.id,
         walletName: agentSpinupDto.walletName,
@@ -514,8 +516,9 @@ export class AgentServiceService {
 
     this.logger.error(`[_storeOrgAgentDetails] - Error in store agent details : ${JSON.stringify(error)}`);
   }
-
+  
   async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {
+    const getDcryptedToken = await this.commonService.decryptPassword(apiKey);
     const retryOptions = {
       retries: 10
     };
@@ -523,9 +526,9 @@ export class AgentServiceService {
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
-          return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });
+          return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': getDcryptedToken } });
         } else if (agentApiState === 'get-did-doc') {
-          return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
+          return this.commonService.httpGet(agentUrl, { headers: { 'authorization': getDcryptedToken } });
         }
       }, retryOptions);
     } catch (error) {
@@ -776,12 +779,12 @@ export class AgentServiceService {
       method: ledgerIds.indyNamespace
     };
 
-
+    const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
     // Invoke an API request from the agent to create multi-tenant agent
     const tenantDetails = await this.commonService.httpPost(
       `${platformAdminSpinnedUp.org_agents[0].agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
       createTenantOptions,
-      { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
+      { headers: { 'authorization': getDcryptedToken } }
     );
 
     return tenantDetails;
@@ -815,6 +818,7 @@ export class AgentServiceService {
 
   async createSchema(payload: ITenantSchema): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(payload.orgId);
       let schemaResponse;
 
       if (OrgAgentType.DEDICATED === payload.agentType) {
@@ -826,7 +830,7 @@ export class AgentServiceService {
           name: payload.name,
           issuerId: payload.issuerId
         };
-        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
+        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': getApiKey } })
           .then(async (schema) => {
             return schema;
           })
@@ -846,7 +850,7 @@ export class AgentServiceService {
           name: payload.payload.name,
           issuerId: payload.payload.issuerId
         };
-        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': payload.apiKey } })
+        schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': getApiKey } })
           .then(async (schema) => {
             return schema;
           })
@@ -868,6 +872,7 @@ export class AgentServiceService {
     try {
       let schemaResponse;
 
+      const getApiKey = await this.getOrgAgentApiKey(payload.orgId);
       if (OrgAgentType.DEDICATED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace('#', `${payload.schemaId}`)}`;
         schemaResponse = await this.commonService.httpGet(url, payload.schemaId)
@@ -878,7 +883,7 @@ export class AgentServiceService {
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`.replace('@', `${payload.payload.schemaId}`).replace('#', `${payload.tenantId}`);
 
-        schemaResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
+        schemaResponse = await this.commonService.httpGet(url, { headers: { 'authorization': getApiKey } })
           .then(async (schema) => {
             return schema;
           });
@@ -894,6 +899,7 @@ export class AgentServiceService {
     try {
       let credDefResponse;
 
+      const getApiKey = await this.getOrgAgentApiKey(payload.orgId);
       if (OrgAgentType.DEDICATED === String(payload.agentType)) {
 
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_CREATE_CRED_DEF}`;
@@ -903,7 +909,7 @@ export class AgentServiceService {
           issuerId: payload.issuerId
         };
 
-        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
+        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': getApiKey } })
           .then(async (credDef) => {
             return credDef;
           });
@@ -915,7 +921,7 @@ export class AgentServiceService {
           schemaId: payload.payload.schemaId,
           issuerId: payload.payload.issuerId
         };
-        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': payload.apiKey } })
+        credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': getApiKey } })
           .then(async (credDef) => {
             return credDef;
           });
@@ -932,16 +938,17 @@ export class AgentServiceService {
     try {
       let credDefResponse;
 
+      const getApiKey = await this.getOrgAgentApiKey(payload.orgId);
       if (OrgAgentType.DEDICATED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID.replace('#', `${payload.credentialDefinitionId}`)}`;
-        credDefResponse = await this.commonService.httpGet(url, payload.credentialDefinitionId)
+        credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': getApiKey } })
           .then(async (credDef) => {
             return credDef;
           });
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
-        credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': payload.apiKey } })
+        credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': getApiKey } })
           .then(async (credDef) => {
             return credDef;
           });
@@ -953,12 +960,12 @@ export class AgentServiceService {
     }
   }
 
-  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, apiKey: string): Promise<InvitationMessage> {
+  async createLegacyConnectionInvitation(connectionPayload: IConnectionDetails, url: string, orgId: string): Promise<InvitationMessage> {
     try {
 
-
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const data = await this.commonService
-        .httpPost(url, connectionPayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, connectionPayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
 
       return data;
@@ -968,10 +975,11 @@ export class AgentServiceService {
     }
   }
 
-  async sendCredentialCreateOffer(issueData: IIssuanceCreateOffer, url: string, apiKey: string): Promise<object> {
+  async sendCredentialCreateOffer(issueData: IIssuanceCreateOffer, url: string, orgId: string): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const data = await this.commonService
-        .httpPost(url, issueData, { headers: { 'authorization': apiKey } })
+        .httpPost(url, issueData, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return data;
     } catch (error) {
@@ -1004,10 +1012,11 @@ export class AgentServiceService {
     }
   }
 
-  async getProofPresentationById(url: string, apiKey: string): Promise<IProofPresentation> {
+  async getProofPresentationById(url: string, orgId: string): Promise<IProofPresentation> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const getProofPresentationById = await this.commonService
-        .httpGet(url, { headers: { 'authorization': apiKey } })
+        .httpGet(url, { headers: { 'authorization': getApiKey } })
         .then(async response => response)
         .catch(error => this.handleAgentSpinupStatusErrors(error));
 
@@ -1018,10 +1027,11 @@ export class AgentServiceService {
     }
   }
 
-  async getIssueCredentialsbyCredentialRecordId(url: string, apiKey: string): Promise<object> {
+  async getIssueCredentialsbyCredentialRecordId(url: string, orgId: string): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const data = await this.commonService
-        .httpGet(url, { headers: { 'authorization': apiKey } })
+        .httpGet(url, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return data;
     } catch (error) {
@@ -1030,10 +1040,11 @@ export class AgentServiceService {
     }
   }
 
-  async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<IAgentProofRequest> {
+  async sendProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, orgId: string): Promise<IAgentProofRequest> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendProofRequest = await this.commonService
-        .httpPost(url, proofRequestPayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, proofRequestPayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return sendProofRequest;
     } catch (error) {
@@ -1042,10 +1053,11 @@ export class AgentServiceService {
     }
   }
 
-  async verifyPresentation(url: string, apiKey: string): Promise<IPresentation> {
+  async verifyPresentation(url: string, orgId: string): Promise<IPresentation> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const verifyPresentation = await this.commonService
-        .httpPost(url, '', { headers: { 'authorization': apiKey } })
+        .httpPost(url, '', { headers: { 'authorization': getApiKey } })
         .then(async response => response)
         .catch(error => this.handleAgentSpinupStatusErrors(error));
       return verifyPresentation;
@@ -1055,10 +1067,11 @@ export class AgentServiceService {
     }
   }
 
-  async getConnections(url: string, apiKey: string): Promise<object> {
+  async getConnections(url: string, orgId: string): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const data = await this.commonService
-        .httpGet(url, { headers: { 'authorization': apiKey } })
+        .httpGet(url, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return data;
     } catch (error) {
@@ -1067,11 +1080,12 @@ export class AgentServiceService {
     }
   }
 
-  async getConnectionsByconnectionId(url: string, apiKey: string): Promise<IConnectionDetailsById> {
+  async getConnectionsByconnectionId(url: string, orgId: string): Promise<IConnectionDetailsById> {
 
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const data = await this.commonService
-        .httpGet(url, { headers: { 'authorization': apiKey } })
+        .httpGet(url, { headers: { 'authorization': getApiKey } })
         .then(async response => response)
         .catch(error => this.handleAgentSpinupStatusErrors(error));
 
@@ -1096,15 +1110,7 @@ export class AgentServiceService {
 
       let agentApiKey;
       if (orgAgentDetails) {
-
-        agentApiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-        if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
           agentApiKey = await this.getOrgAgentApiKey(orgId);
-        }
-
-        if (agentApiKey === undefined || null) {
-          agentApiKey = await this.getOrgAgentApiKey(orgId);
-        }
       }
 
       if (!orgAgentDetails) {
@@ -1134,10 +1140,11 @@ export class AgentServiceService {
     }
   }
 
-  async sendOutOfBandProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, apiKey: string): Promise<object> {
+  async sendOutOfBandProofRequest(proofRequestPayload: ISendProofRequestPayload, url: string, orgId: string): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendProofRequest = await this.commonService
-        .httpPost(url, proofRequestPayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, proofRequestPayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return sendProofRequest;
     } catch (error) {
@@ -1146,10 +1153,11 @@ export class AgentServiceService {
     }
   }
 
-  async getVerifiedProofDetails(url: string, apiKey: string): Promise<IProofPresentationDetails[]> {
+  async getVerifiedProofDetails(url: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const getVerifiedProofData = await this.commonService
-        .httpGet(url, { headers: { 'authorization': apiKey } })
+        .httpGet(url, { headers: { 'authorization': getApiKey } })
         .then(async response => response)
         .catch(error => this.handleAgentSpinupStatusErrors(error));
 
@@ -1160,10 +1168,11 @@ export class AgentServiceService {
     }
   }
 
-  async schemaEndorsementRequest(url: string, apiKey: string, requestSchemaPayload: object): Promise<object> {
+  async schemaEndorsementRequest(url: string, orgId: string, requestSchemaPayload: object): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const schemaRequest = await this.commonService
-        .httpPost(url, requestSchemaPayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, requestSchemaPayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return schemaRequest;
     } catch (error) {
@@ -1172,10 +1181,11 @@ export class AgentServiceService {
     }
   }
 
-  async credDefEndorsementRequest(url: string, apiKey: string, requestSchemaPayload: object): Promise<object> {
+  async credDefEndorsementRequest(url: string, orgId: string, requestSchemaPayload: object): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const credDefRequest = await this.commonService
-        .httpPost(url, requestSchemaPayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, requestSchemaPayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return credDefRequest;
     } catch (error) {
@@ -1184,10 +1194,11 @@ export class AgentServiceService {
     }
   }
 
-  async signTransaction(url: string, apiKey: string, signEndorsementPayload: object): Promise<object> {
+  async signTransaction(url: string, orgId: string, signEndorsementPayload: object): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const signEndorsementTransaction = await this.commonService
-        .httpPost(url, signEndorsementPayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, signEndorsementPayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
 
       return signEndorsementTransaction;
@@ -1197,11 +1208,11 @@ export class AgentServiceService {
     }
   }
 
-  async sumbitTransaction(url: string, apiKey: string, submitEndorsementPayload: object): Promise<object> {
+  async sumbitTransaction(url: string, orgId: string, submitEndorsementPayload: object): Promise<object> {
     try {
-
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const signEndorsementTransaction = await this.commonService
-        .httpPost(url, submitEndorsementPayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, submitEndorsementPayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
 
       return signEndorsementTransaction;
@@ -1211,10 +1222,11 @@ export class AgentServiceService {
     }
   }
 
-  async outOfBandCredentialOffer(outOfBandIssuancePayload: IOutOfBandCredentialOffer, url: string, apiKey: string): Promise<object> {
+  async outOfBandCredentialOffer(outOfBandIssuancePayload: IOutOfBandCredentialOffer, url: string, orgId: string): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendOutOfbandCredentialOffer = await this.commonService
-        .httpPost(url, outOfBandIssuancePayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, outOfBandIssuancePayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return sendOutOfbandCredentialOffer;
     } catch (error) {
@@ -1238,10 +1250,11 @@ export class AgentServiceService {
     }
   }
 
-  async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, apiKey: string): Promise<string> {
+  async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, orgId: string): Promise<string> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const receiveInvitationUrlRes = await this.commonService
-        .httpPost(url, receiveInvitationUrl, { headers: { 'authorization': apiKey } })
+        .httpPost(url, receiveInvitationUrl, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return receiveInvitationUrlRes;
     } catch (error) {
@@ -1250,10 +1263,11 @@ export class AgentServiceService {
     }
   }
 
-  async receiveInvitation(receiveInvitation: IReceiveInvitation, url: string, apiKey: string): Promise<string> {
+  async receiveInvitation(receiveInvitation: IReceiveInvitation, url: string, orgId: string): Promise<string> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const receiveInvitationRes = await this.commonService
-        .httpPost(url, receiveInvitation, { headers: { 'authorization': apiKey } })
+        .httpPost(url, receiveInvitation, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return receiveInvitationRes;
     } catch (error) {
@@ -1262,16 +1276,22 @@ export class AgentServiceService {
     }
   }
 
-  async getOrgAgentApiKey(orgId: string): Promise<string> {
+  private async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
       let agentApiKey;
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
 
+      const apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+
+      if (apiKey) {
+        const getDcryptedToken = await this.commonService.decryptPassword(apiKey);
+        return getDcryptedToken;
+      }
 
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
       if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
-        
+
         const [orgAgentData] = platformAdminSpinnedUp.org_agents;
         const { apiKey } = orgAgentData;
         if (!platformAdminSpinnedUp) {
@@ -1287,8 +1307,11 @@ export class AgentServiceService {
       if (!agentApiKey) {
         throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }
+
       await this.cacheService.set(CommonConstants.CACHE_APIKEY_KEY, agentApiKey, CommonConstants.CACHE_TTL_SECONDS);
-      return agentApiKey;
+      const getDcryptedToken = await this.commonService.decryptPassword(agentApiKey);
+
+      return getDcryptedToken;
 
     } catch (error) {
       this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
@@ -1307,10 +1330,11 @@ export class AgentServiceService {
     }
   }  
 
-  async sendQuestion(questionPayload: IQuestionPayload, url: string, apiKey: string): Promise<object> {
+  async sendQuestion(questionPayload: IQuestionPayload, url: string, orgId: string): Promise<object> {
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendQuestionRes = await this.commonService
-        .httpPost(url, questionPayload, { headers: { 'authorization': apiKey } })
+        .httpPost(url, questionPayload, { headers: { 'authorization': getApiKey } })
         .then(async response => response);
       return sendQuestionRes;
     } catch (error) {
@@ -1319,11 +1343,13 @@ export class AgentServiceService {
     }
   }
 
-  async getQuestionAnswersRecord(url: string, apiKey: string): Promise<object> {
+  async getQuestionAnswersRecord(url: string, orgId: string): Promise<object> {
 
     try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+
       const data = await this.commonService
-        .httpGet(url, { headers: { 'authorization': apiKey } })
+        .httpGet(url, { headers: { 'authorization': getApiKey } })
         .then(async response => response)
         .catch(error => this.handleAgentSpinupStatusErrors(error));
 
@@ -1333,6 +1359,20 @@ export class AgentServiceService {
       throw new RpcException(error.response ? error.response : error);
     }
 
+  }
+
+  private async tokenEncryption(token: string): Promise<string> {
+    try {
+      const encryptedToken = CryptoJS.AES.encrypt(
+        JSON.stringify(token),
+        process.env.CRYPTO_PRIVATE_KEY
+      ).toString();
+
+      return encryptedToken;
+
+    } catch (error) {
+      throw error;
+    }
   }
 
 }

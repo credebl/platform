@@ -53,6 +53,7 @@ export interface ITenantSchema {
     agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
+    orgId?: string;
 }
 
 export interface ITenantSchemaDto {
@@ -70,6 +71,7 @@ export interface IGetSchemaAgentRedirection {
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
+    orgId?: string;
 }
 
 export interface IGetSchemaFromTenantPayload {
@@ -86,6 +88,7 @@ export interface ITenantCredDef {
     agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
+    orgId?: string;
 }
 
 export interface IWalletProvision {
@@ -202,6 +205,7 @@ export interface IGetCredDefAgentRedirection {
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
+    orgId?: string;
 }
 
 export interface IGetCredDefFromTenantPayload {

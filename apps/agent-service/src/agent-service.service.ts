@@ -473,8 +473,7 @@ export class AgentServiceService {
     const writeDid = 'write-did';
     const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(ledgerId);
     const agentDidWriteUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-    // return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);  //initial change to up platform agent
-    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, platformAgent);  //current change as per latest change in afj-controller to up platform agent
+    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, platformAgent);
   }
 
   private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {

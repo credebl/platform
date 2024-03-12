@@ -529,8 +529,8 @@ export class AgentServiceService {
     this.logger.error(`[_storeOrgAgentDetails] - Error in store agent details : ${JSON.stringify(error)}`);
   }
 
-  // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {  //initial change to up platform agent
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPlatformAgent): Promise<object> {  //current change as per latest change in afj-controller to up platform agent
+
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPlatformAgent): Promise<object> { 
 
     const { seed, keyType, method, network, role} = payload;
     const retryOptions = {
@@ -539,8 +539,7 @@ export class AgentServiceService {
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
-          // return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });   //initial change to up platform agent
-          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role}, { headers: { 'authorization': apiKey } });  //current change as per latest change in afj-controller to up platform agent
+          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role}, { headers: { 'authorization': apiKey } }); 
         } else if (agentApiState === 'get-did-doc') {
           return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
         }

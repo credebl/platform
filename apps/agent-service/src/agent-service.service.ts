@@ -460,8 +460,7 @@ export class AgentServiceService {
 
 
   private async _getAgentDid(payload: IStoreOrgAgentDetails): Promise<object> {
-    // const { agentEndPoint, apiKey, seed, ledgerId, did } = payload;   //initial change to up platform agent
-    const { agentEndPoint, apiKey, ledgerId } = payload;   //current change as per latest change in afj-controller to up platform agent
+    const { agentEndPoint, apiKey, ledgerId } = payload; 
 
     //we take this values as static because of latest changes in afj controller to up agent of platform
     const platformAgent: IPlatformAgent = {

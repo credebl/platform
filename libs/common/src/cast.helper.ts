@@ -45,3 +45,14 @@ export function toNumber(value: string, opts: ToNumberOptions = {}): number {
 
     return newValue;
 }
+
+export function ledgerName(value: string): string {
+   let network;
+    network = value.replace(":", " ");
+    network = network.charAt(0).toUpperCase() + network.slice(1);
+    const words = network.split(" ");
+    network = `${words[0]} ${words[1].charAt(0).toUpperCase()}${words[1].slice(1)}`;
+
+    return network;
+
+}

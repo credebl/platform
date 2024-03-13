@@ -487,3 +487,13 @@ model notification {
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
 }
+model ledgerConfig {
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String
+  details             Json
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @default("1")
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @default("1")
+  deletedAt           DateTime? @db.Timestamp(6)
+}

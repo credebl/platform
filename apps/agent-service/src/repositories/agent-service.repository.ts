@@ -1,8 +1,8 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IStoreOrgAgentDetails, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent } from '../interface/agent-service.interface';
+import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -26,6 +26,15 @@ export class AgentServiceRepository {
         }
     }
 
+    async getLedgerConfigByOrgId(): Promise<ledgerConfig[]> {
+        try {
+            const ledgerConfigData = await this.prisma.ledgerConfig.findMany();
+            return ledgerConfigData;
+        } catch (error) {
+            this.logger.error(`[getGenesisUrl] - get genesis URL: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
     /**
      * Get genesis url
      * @param id
@@ -107,7 +116,7 @@ export class AgentServiceRepository {
 
     }
 
-    /**
+     /**
      * Store agent details
      * @param storeAgentDetails
      * @returns
@@ -116,7 +125,7 @@ export class AgentServiceRepository {
     async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
         try {
 
-            return this.prisma.org_agents.update({
+            return await this.prisma.org_agents.update({
                 where: {
                     id: storeOrgAgentDetails.id
                 },
@@ -313,6 +322,23 @@ export class AgentServiceRepository {
         }
     }
 
+    // eslint-disable-next-line camelcase
+    async getOrgAgentType(orgAgentId: string): Promise<org_agents_type> {
+        try {
+          const orgAgent = await this.prisma.org_agents_type.findUnique({
+            where: {
+              id: orgAgentId
+            }
+          });
+         
+          return orgAgent;
+
+        } catch (error) {
+          this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+          throw error;
+        }
+      }
+    
     async getPlatfomAdminUser(platformAdminUserEmail: string): Promise<user> {
         try {
             const platformAdminUser = await this.prisma.user.findUnique({

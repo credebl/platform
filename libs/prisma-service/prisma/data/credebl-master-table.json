@@ -227,7 +227,7 @@
     {
       "name": "web",
       "details": {
-      "key": "did:web"
+      "web": "did:web"
       }
     }
   ]

@@ -60,6 +60,12 @@ export class CreateConnectionDto {
     handshakeProtocols: string[];
 
     orgId: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide recipientKey' })
+    recipientKey: string;
 }
 
 export class ConnectionDto {

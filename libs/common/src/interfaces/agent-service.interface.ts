@@ -10,6 +10,7 @@ export interface InvitationMessage {
         routingKeys: string[];
       };
       outOfBandRecord: OutOfBandRecord;
+      recipientKey?:string
     };
   }
   

@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IPresentationExchangeProofRequestPayload} from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { org_agents, organisation, presentations } from '@prisma/client';
+import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
@@ -356,13 +356,22 @@ export class VerificationService {
         apiKey = await this._getOrgAgentApiKey(user.orgId);
       }
 
-      const { isShortenUrl, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      const { isShortenUrl, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      let recipientKey: string | undefined;
+      if (true === reuseConnection) {
+        const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
+         if (data && 0 < data.length) {
+          const [firstElement] = data;
+          recipientKey = firstElement?.recipientKey ?? undefined;
+      }
+      }
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
       let payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload;
 
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
+        updateOutOfBandRequestProof.recipientKey = recipientKey || undefined;
         payload   = {
         apiKey,
         url,
@@ -387,7 +396,8 @@ export class VerificationService {
                 }
               }
             },
-            autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always'
+            autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always',
+            recipientKey:recipientKey || undefined
           }
         };
       }

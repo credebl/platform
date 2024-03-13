@@ -50,7 +50,8 @@ export class ConnectionService {
       goal,
       goalCode,
       handshake,
-      handshakeProtocols
+      handshakeProtocols,
+      recipientKey
     } = payload;
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
@@ -71,7 +72,8 @@ export class ConnectionService {
         goal: goal || undefined,
         goalCode: goalCode || undefined,
         handshake: handshake || undefined,
-        handshakeProtocols: handshakeProtocols || undefined
+        handshakeProtocols: handshakeProtocols || undefined,
+        recipientKey:recipientKey || undefined
       };
 
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
@@ -80,18 +82,19 @@ export class ConnectionService {
       const apiKey = await this._getOrgAgentApiKey(orgId);
 
       const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
+      
       const connectionInvitationUrl: string = createConnectionInvitation?.message?.invitationUrl;
       const shortenedUrl: string = await this.storeConnectionObjectAndReturnUrl(
         connectionInvitationUrl,
         connectionPayload.multiUseInvitation
       );
-
+      const  recipientsKey = createConnectionInvitation?.message?.recipientKey || recipientKey;
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
         shortenedUrl,
         agentId,
-        orgId
+        orgId,
+        recipientsKey
       );
-
       const connectionDetailRecords: ConnectionResponseDetail = {
         id: saveConnectionDetails.id,
         orgId: saveConnectionDetails.orgId,
@@ -102,7 +105,8 @@ export class ConnectionService {
         createdBy: saveConnectionDetails.createdBy,
         lastChangedDateTime: saveConnectionDetails.lastChangedDateTime,
         lastChangedBy: saveConnectionDetails.lastChangedBy,
-        recordId: createConnectionInvitation.message.outOfBandRecord.id
+        recordId: createConnectionInvitation.message.outOfBandRecord.id,
+        recipientKey:saveConnectionDetails.recipientKey
       };
       return connectionDetailRecords;
     } catch (error) {

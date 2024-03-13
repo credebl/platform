@@ -144,8 +144,11 @@ export interface ISendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
-     type?:string;
-     presentationDefinition?:IProofRequestPresentationDefinition;
+    isShortenUrl?: boolean;
+    type?:string;
+    presentationDefinition?:IProofRequestPresentationDefinition;
+    reuseConnection?: boolean;
+    recipientKey?:string;
 }
 
 export interface IWSendProofRequestPayload {

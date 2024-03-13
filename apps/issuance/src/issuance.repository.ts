@@ -3,6 +3,7 @@ import { Injectable, InternalServerErrorException, Logger, NotFoundException } f
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import {
+  agent_invitations,
   credentials,
   file_data,
   file_upload,
@@ -66,6 +67,23 @@ export class IssuanceRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getOrganization in issuance repository: ${error.message} `);
+      throw error;
+    }
+  }
+
+
+  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
+    try {
+      return this.prisma.agent_invitations.findMany({
+        where: {
+          orgId
+        },
+        orderBy: {
+          createDateTime: 'asc' 
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getRecipientKey in issuance repository: ${error.message}`);
       throw error;
     }
   }

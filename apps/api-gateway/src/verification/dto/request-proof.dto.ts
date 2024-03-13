@@ -332,5 +332,12 @@ export class SendProofRequestPayload {
     @IsOptional()
     @IsNotEmpty({message:'Please provide the flag for shorten url.'})
     isShortenUrl?: boolean;
+
+    @ApiPropertyOptional({ default: true })
+    @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid reuseConnection' })
+    @IsBoolean({ message: 'reuseConnection must be a string' })
+    reuseConnection?: boolean;
+
 }
 

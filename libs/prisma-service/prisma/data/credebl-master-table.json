@@ -229,10 +229,16 @@
     }
     },
     {
+      "name": "key",
+      "details": {
       "key": "did:key"
+      }
     },
     {
-      "key": "did:web"
-    }
+      "name": "web",
+      "details": {
+        "key": "did:web"
+        }
+      }
   ]
 }

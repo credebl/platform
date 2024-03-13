@@ -335,8 +335,8 @@ export class SendProofRequestPayload {
 
     @ApiPropertyOptional({ default: true })
     @IsOptional()
-    @IsNotEmpty({ message: 'please provide valid reuseConnection' })
-    @IsBoolean({ message: 'reuseConnection must be a string' })
+    @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
+    @IsBoolean({ message: 'reuseConnection must be a boolean' })
     reuseConnection?: boolean;
 
 }

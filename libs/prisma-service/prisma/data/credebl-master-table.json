@@ -139,16 +139,6 @@
       "registerDIDEndpoint": "",
       "registerDIDPayload": "",
       "indyNamespace": "polygon:testnet"
-    },
-    {
-      "name": "Polygon Mainnet",
-      "networkType": "mainnet",
-      "poolConfig": "",
-      "isActive": true,
-      "networkString": "mainnet",
-      "registerDIDEndpoint": "",
-      "registerDIDPayload": "",
-      "indyNamespace": "polygon:mainnet"
     }
   ],
   "endorseData": [
@@ -229,10 +219,16 @@
     }
     },
     {
+      "name": "key",
+      "details": {
       "key": "did:key"
+      }
     },
     {
+      "name": "web",
+      "details": {
       "key": "did:web"
+      }
     }
   ]
 }

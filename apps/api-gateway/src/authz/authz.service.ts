@@ -58,6 +58,10 @@ export class AuthzService extends BaseService {
     return this.sendNatsMessage(this.authServiceProxy, 'user-set-token-password', resetTokenPasswordDto);
   }
 
+  async refreshToken(refreshToken: string): Promise<ISignInUser> {
+    return this.sendNatsMessage(this.authServiceProxy, 'refresh-token-details', refreshToken);
+  }
+
   async addUserDetails(userInfo: AddUserDetailsDto): Promise<string> {
     const payload = { userInfo };
     return this.sendNatsMessage(this.authServiceProxy, 'add-user', payload);

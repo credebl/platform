@@ -27,6 +27,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
+import { RefreshTokenDto } from './dtos/refresh-token.dto';
 
 
 @Controller('auth')
@@ -176,5 +177,24 @@ export class AuthzController {
    
   }
 
+  @Post('/refresh-token')
+  @ApiOperation({
+    summary: 'Token from refresh token',
+    description: 'Get a new token from a refresh token'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async refreshToken(
+    @Body() refreshTokenDto: RefreshTokenDto,
+    @Res() res: Response): Promise<Response> {      
+      const tokenData = await this.authzService.refreshToken(refreshTokenDto.refreshToken);
+      const finalResponse: IResponseType = {
+        statusCode: HttpStatus.OK,
+        message: ResponseMessages.user.success.refreshToken,
+        data: tokenData
+      };
+
+      return res.status(HttpStatus.OK).json(finalResponse);
+   
+  }
 
 }

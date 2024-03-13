@@ -44,6 +44,11 @@ export class UserController {
    return loginRes;
   }
 
+  @MessagePattern({ cmd: 'refresh-token-details' })
+  async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
+   return this.userService.refreshTokenDetails(refreshToken);   
+  }
+
   @MessagePattern({ cmd: 'user-reset-password' })
   async resetPassword(payload: IUserResetPassword): Promise<IResetPasswordResponse> {
    return this.userService.resetPassword(payload);

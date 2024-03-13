@@ -23,7 +23,8 @@ export const ResponseMessages = {
             updateUserProfile:'User profile updated successfully',
             resetPassword: 'Password reset successfully',
             degreeCertificate: 'Degree Certificate shared successfully',
-            resetPasswordLink: 'Reset password link has been sent to your mail'
+            resetPasswordLink: 'Reset password link has been sent to your mail',
+            refreshToken: 'Token details fetched successfully'
         },
         error: {
             exists: 'User already exists',
@@ -60,7 +61,8 @@ export const ResponseMessages = {
             resetSamePassword: 'New password should not be the current password',
             resetPasswordLink: 'Unable to create reset password token',
             invalidResetLink: 'Invalid or expired reset password link',
-            invalidAccessToken: 'Authentication failed'
+            invalidAccessToken: 'Authentication failed',
+            invalidRefreshToken: 'Invalid refreshToken provided'
         }
     },
     organisation: {

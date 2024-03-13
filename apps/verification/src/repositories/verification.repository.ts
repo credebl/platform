@@ -2,7 +2,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { org_agents, organisation, platform_config, presentations } from '@prisma/client';
+import { agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client';
 import { IProofPresentation } from '../interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationsListCount } from '@credebl/common/interfaces/verification.interface';
@@ -181,6 +181,23 @@ export class VerificationRepository {
       return agent;
     } catch (error) {
       this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+  
+  // eslint-disable-next-line camelcase
+  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
+    try {
+      return this.prisma.agent_invitations.findMany({
+        where: {
+          orgId
+        },
+        orderBy: {
+          createDateTime: 'asc' // or 'desc' for descending order
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getRecipientKey in verification repository: ${error.message}`);
       throw error;
     }
   }

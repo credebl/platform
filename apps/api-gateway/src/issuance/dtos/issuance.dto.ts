@@ -188,6 +188,12 @@ class CredentialsIssuanceDto {
     @IsOptional()
     credentialType:IssueCredentialType;
 
+    @ApiPropertyOptional({ default: true })
+    @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid reuseConnection' })
+    @IsBoolean({ message: 'reuseConnection must be a boolean' })
+    reuseConnection?: boolean;
+
     orgId: string;
 }
 

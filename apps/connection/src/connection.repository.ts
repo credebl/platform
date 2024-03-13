@@ -48,7 +48,8 @@ export class ConnectionRepository {
   async saveAgentConnectionInvitations(
     connectionInvitation: string,
     agentId: string,
-    orgId: string
+    orgId: string,
+    recipientKey: string
     // eslint-disable-next-line camelcase
   ): Promise<agent_invitations> {
     try {
@@ -57,7 +58,8 @@ export class ConnectionRepository {
           orgId: String(orgId),
           agentId,
           connectionInvitation,
-          multiUse: true
+          multiUse: true,
+          recipientKey
         }
       });
       return agentDetails;

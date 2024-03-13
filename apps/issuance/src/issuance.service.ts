@@ -32,7 +32,7 @@ import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { organisation } from '@prisma/client';
+import { agent_invitations, organisation } from '@prisma/client';
 
 @Injectable()
 export class IssuanceService {
@@ -149,9 +149,11 @@ export class IssuanceService {
     try {
       const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
 
-      const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType, isShortenUrl, reuseConnection } = payload;
+      if (credentialType === IssueCredentialType.INDY) {
+        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
 
       if (schemadetailsResponse?.attributes) {
         const schemadetailsResponseError = [];
@@ -178,8 +180,14 @@ export class IssuanceService {
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      // eslint-disable-next-line camelcase
-
+      let recipientKey: string | undefined;
+      if (true === reuseConnection) {
+        const data: agent_invitations[] = await this.issuanceRepository.getRecipientKeyByOrgId(orgId);
+         if (data && 0 < data.length) {
+          const [firstElement] = data;
+          recipientKey = firstElement?.recipientKey ?? undefined;
+      }
+      }
       const { agentEndPoint, organisation } = agentDetails;
 
       if (!agentDetails) {
@@ -199,24 +207,24 @@ export class IssuanceService {
    let issueData;
       if (credentialType === IssueCredentialType.INDY) {
 
-       issueData = {
-        protocolVersion: protocolVersion || 'v1',
-        credentialFormats: {
-          indy: {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
-            credentialDefinitionId
-          }
-        },
-        autoAcceptCredential: payload.autoAcceptCredential || 'always',
-        comment,
-        goalCode: payload.goalCode || undefined,
-        parentThreadId: payload.parentThreadId || undefined,
-        willConfirm: payload.willConfirm || undefined,
-        imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
-        label: organisation?.name,
-        comment: comment || ''
-      };
+        issueData = {
+          protocolVersion: protocolVersion || 'v1',
+          credentialFormats: {
+            indy: {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              attributes: (attributes).map(({ isRequired, ...rest }) => rest),
+              credentialDefinitionId
+            }
+          },
+          autoAcceptCredential: payload.autoAcceptCredential || 'always',
+          goalCode: payload.goalCode || undefined,
+          parentThreadId: payload.parentThreadId || undefined,
+          willConfirm: payload.willConfirm || undefined,
+          imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
+          label: organisation?.name,
+          comment: comment || '',
+          recipientKey:recipientKey || undefined
+        };
 
     }
 
@@ -235,7 +243,8 @@ export class IssuanceService {
           willConfirm: payload.willConfirm || undefined,
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
-          comment: comment || ''
+          comment: comment || '',
+          recipientKey:recipientKey || undefined
         };
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);

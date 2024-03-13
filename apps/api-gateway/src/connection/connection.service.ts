@@ -40,7 +40,8 @@ export class ConnectionService extends BaseService {
         goal: connectionDto.goal,
         handshake: connectionDto.handshake,
         handshakeProtocols: connectionDto.handshakeProtocols,
-        user
+        user,
+        recipientKey:connectionDto.recipientKey
       };
 
       return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection', connectionDetails);

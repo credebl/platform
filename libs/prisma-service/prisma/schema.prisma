@@ -293,6 +293,7 @@ model agent_invitations {
   lastChangedBy        Int          @default(1)
   org_agents           org_agents   @relation(fields: [agentId], references: [id])
   organisation         organisation @relation(fields: [orgId], references: [id])
+  recipientKey         String? 
 }
 
 model connections {

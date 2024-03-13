@@ -460,8 +460,7 @@ export class AgentServiceService {
 
 
   private async _getAgentDid(payload: IStoreOrgAgentDetails): Promise<object> {
-    // const { agentEndPoint, apiKey, seed, ledgerId, did } = payload;   //initial change to up platform agent
-    const { agentEndPoint, apiKey, ledgerId } = payload;   //current change as per latest change in afj-controller to up platform agent
+    const { agentEndPoint, apiKey, ledgerId } = payload; 
 
     //we take this values as static because of latest changes in afj controller to up agent of platform
     const platformAgent: IPlatformAgent = {
@@ -474,8 +473,7 @@ export class AgentServiceService {
     const writeDid = 'write-did';
     const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(ledgerId);
     const agentDidWriteUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-    // return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, ledgerDetails[0].indyNamespace, did);  //initial change to up platform agent
-    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, platformAgent);  //current change as per latest change in afj-controller to up platform agent
+    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, platformAgent);
   }
 
   private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {
@@ -529,8 +527,8 @@ export class AgentServiceService {
     this.logger.error(`[_storeOrgAgentDetails] - Error in store agent details : ${JSON.stringify(error)}`);
   }
 
-  // async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed?: string, indyNamespace?: string, did?: string): Promise<object> {  //initial change to up platform agent
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPlatformAgent): Promise<object> {  //current change as per latest change in afj-controller to up platform agent
+
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPlatformAgent): Promise<object> { 
 
     const { seed, keyType, method, network, role} = payload;
     const retryOptions = {
@@ -539,8 +537,7 @@ export class AgentServiceService {
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
-          // return this.commonService.httpPost(agentUrl, { seed, method: indyNamespace, did }, { headers: { 'authorization': apiKey } });   //initial change to up platform agent
-          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role}, { headers: { 'authorization': apiKey } });  //current change as per latest change in afj-controller to up platform agent
+          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role}, { headers: { 'authorization': apiKey } }); 
         } else if (agentApiState === 'get-did-doc') {
           return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
         }
@@ -1524,4 +1521,3 @@ export class AgentServiceService {
   }
 
 }
-

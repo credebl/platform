@@ -374,6 +374,23 @@ export class UserService {
     }
   }
 
+  async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
+
+    try {
+        try {
+          const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken);
+          return tokenResponse;
+        } catch (error) {
+          throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
+        }
+   
+    } catch (error) {
+      this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+
+    }
+  }
+
   async updateFidoVerifiedUser(email: string, isFidoVerified: boolean, password: string): Promise<boolean> {
     if (isFidoVerified) {
       await this.userRepository.addUserPassword(email.toLowerCase(), password);

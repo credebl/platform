@@ -784,6 +784,7 @@ export class AgentServiceService {
     const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
 
     const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
+    const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
 
     const { label } = payload;
     const createTenantOptions = {
@@ -793,7 +794,7 @@ export class AgentServiceService {
     const tenantDetails = await this.commonService.httpPost(
       `${getPlatformAgentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
       createTenantOptions,
-      { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } }
+      { headers: { 'authorization': getDcryptedToken } }
     );
 
     return tenantDetails;
@@ -812,20 +813,17 @@ export class AgentServiceService {
     async createDid(payload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
       try {      
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this.getOrgAgentApiKey(orgId);
-      }
+      
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       let url;
-
       if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
         url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;  
       } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
         url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;  
       }
       const didDetails = await this.commonService.httpPost(url, payload, 
-        { headers: { 'authorization': apiKey } }
+        { headers: { 'authorization': getApiKey } }
         );
       return didDetails;
 
@@ -854,10 +852,11 @@ export class AgentServiceService {
      );
 
      const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
+     const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
 
      const url = `${getPlatformAgentEndPoint}${CommonConstants.CREATE_POLYGON_SECP256k1_KEY}`;
 
-     const createKeyPairResponse = await this.commonService.httpPost(url, {}, { headers: { 'authorization': platformAdminSpinnedUp.org_agents[0].apiKey } });
+     const createKeyPairResponse = await this.commonService.httpPost(url, {}, { headers: { 'authorization': getDcryptedToken } });
      return createKeyPairResponse;
    } catch (error) {
      this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`);
@@ -907,8 +906,8 @@ export class AgentServiceService {
     delete WalletSetupPayload.ledgerId;
 
  
-   const walletResponseDetails = await this._createTenantWallet(walletLabel, platformAdminSpinnedUp.org_agents[0].agentEndPoint, platformAdminSpinnedUp.org_agents[0].apiKey);
-   const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
+    const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
+   const walletResponseDetails = await this._createTenantWallet(walletLabel, platformAdminSpinnedUp.org_agents[0].agentEndPoint, getDcryptedToken);
    if (!walletResponseDetails && !walletResponseDetails.id) {
     throw new InternalServerErrorException('Error while creating the wallet');
    }
@@ -1006,9 +1005,7 @@ export class AgentServiceService {
           issuerId: payload.issuerId
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': getApiKey } })
-          .then(async (schema) => {
-            return schema;
-          })
+          .then(async (schema) => schema)
           .catch(error => {
             throw new InternalServerErrorException(
               ResponseMessages.agent.error.agentDown,
@@ -1026,9 +1023,7 @@ export class AgentServiceService {
           issuerId: payload.payload.issuerId
         };
         schemaResponse = await this.commonService.httpPost(url, schemaPayload, { headers: { 'authorization': getApiKey } })
-          .then(async (schema) => {
-            return schema;
-          })
+          .then(async (schema) => schema)
           .catch(error => {
             throw new InternalServerErrorException(
               ResponseMessages.agent.error.agentDown,
@@ -1051,17 +1046,13 @@ export class AgentServiceService {
       if (OrgAgentType.DEDICATED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace('#', `${payload.schemaId}`)}`;
         schemaResponse = await this.commonService.httpGet(url, payload.schemaId)
-        .then(async (schema) => {
-          return schema;
-        });
+        .then(async (schema) => schema);
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`.replace('@', `${payload.payload.schemaId}`).replace('#', `${payload.tenantId}`);
 
         schemaResponse = await this.commonService.httpGet(url, { headers: { 'authorization': getApiKey } })
-          .then(async (schema) => {
-            return schema;
-          });
+          .then(async (schema) => schema);
       }
       return schemaResponse;
     } catch (error) {
@@ -1085,9 +1076,7 @@ export class AgentServiceService {
         };
 
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': getApiKey } })
-          .then(async (credDef) => {
-            return credDef;
-          });
+          .then(async (credDef) => credDef);
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CRED_DEF}`.replace('#', `${payload.tenantId}`);
@@ -1097,9 +1086,7 @@ export class AgentServiceService {
           issuerId: payload.payload.issuerId
         };
         credDefResponse = await this.commonService.httpPost(url, credDefPayload, { headers: { 'authorization': getApiKey } })
-          .then(async (credDef) => {
-            return credDef;
-          });
+          .then(async (credDef) => credDef);
       }
 
       return credDefResponse;
@@ -1117,16 +1104,12 @@ export class AgentServiceService {
       if (OrgAgentType.DEDICATED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID.replace('#', `${payload.credentialDefinitionId}`)}`;
         credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': getApiKey } })
-          .then(async (credDef) => {
-            return credDef;
-          });
+          .then(async (credDef) => credDef);
 
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`.replace('@', `${payload.payload.credentialDefinitionId}`).replace('#', `${payload.tenantId}`);
         credDefResponse = await this.commonService.httpGet(url, { headers: { 'authorization': getApiKey } })
-          .then(async (credDef) => {
-            return credDef;
-          });
+          .then(async (credDef) => credDef);
       }
       return credDefResponse;
     } catch (error) {
@@ -1462,13 +1445,12 @@ export class AgentServiceService {
     }
   }
 
-  private async getOrgAgentApiKey(orgId: string): Promise<string> {
+  async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
       let agentApiKey;
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
 
       const apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-
       if (apiKey) {
         const getDcryptedToken = await this.commonService.decryptPassword(apiKey);
         return getDcryptedToken;
@@ -1494,7 +1476,7 @@ export class AgentServiceService {
         throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }
 
-      await this.cacheService.set(CommonConstants.CACHE_APIKEY_KEY, agentApiKey, CommonConstants.CACHE_TTL_SECONDS);
+      await this.cacheService.set(CommonConstants.CACHE_APIKEY_KEY, agentApiKey, 0);
       const getDcryptedToken = await this.commonService.decryptPassword(agentApiKey);
 
       return getDcryptedToken;

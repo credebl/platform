@@ -32,7 +32,7 @@ import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { organisation } from '@prisma/client';
+import { agent_invitations, organisation } from '@prisma/client';
 
 
 @Injectable()
@@ -145,7 +145,7 @@ export class IssuanceService {
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
 
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType, isShortenUrl } = payload;
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType, isShortenUrl, reuseConnection } = payload;
       if (credentialType === IssueCredentialType.INDY) {
         const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
           credentialDefinitionId
@@ -176,8 +176,14 @@ export class IssuanceService {
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      // eslint-disable-next-line camelcase
-
+      let recipientKey: string | undefined;
+      if (true === reuseConnection) {
+        const data: agent_invitations[] = await this.issuanceRepository.getRecipientKeyByOrgId(orgId);
+         if (data && 0 < data.length) {
+          const [firstElement] = data;
+          recipientKey = firstElement?.recipientKey ?? undefined;
+      }
+      }
       const { agentEndPoint, organisation } = agentDetails;
 
       if (!agentDetails) {
@@ -208,7 +214,8 @@ export class IssuanceService {
           willConfirm: payload.willConfirm || undefined,
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
-          comment: comment || ''
+          comment: comment || '',
+          recipientKey:recipientKey || undefined
         };
 
       }
@@ -228,7 +235,8 @@ export class IssuanceService {
           willConfirm: payload.willConfirm || undefined,
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
-          comment: comment || ''
+          comment: comment || '',
+          recipientKey:recipientKey || undefined
         };
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);

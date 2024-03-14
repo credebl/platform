@@ -138,9 +138,9 @@ export class AgentServiceService {
       }
 
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        throw new BadRequestException(
+        throw new ConflictException(
           ResponseMessages.agent.error.walletAlreadyCreated,
-          { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+          { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
         );
       }
 

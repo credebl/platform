@@ -96,7 +96,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet])
       ]);
-
+      
       let orgData;
       if (!user?.userId && agentSpinupDto?.platformAdminEmail) {
 
@@ -157,7 +157,6 @@ export class AgentServiceService {
       agentSpinupDto.agentType = agentSpinupDto.agentType || getAgentType;
       agentSpinupDto.tenant = agentSpinupDto.tenant || false;
       agentSpinupDto.ledgerName = agentSpinupDto.ledgerName?.length ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet];
-
 
       // Invoke function for validate platform configuration
       this.validatePlatformConfig(platformConfig);
@@ -338,13 +337,28 @@ export class AgentServiceService {
   }
 
   async _agentSpinup(walletProvisionPayload: IWalletProvision, agentSpinupDto: IAgentSpinupDto, orgApiKey: string, orgData: organisation, user: IUserRequestInterface, socket: Socket, ledgerId: string[], agentProcess: ICreateOrgAgent): Promise<void> {
-    try {
+    let ledgerIdData = [];
 
+    try {
+      if (agentSpinupDto.method !== DidMethod.KEY && agentSpinupDto.method !== DidMethod.WEB) {
+
+      const { network } = agentSpinupDto;
+      const ledger = await ledgerName(network);
+      const ledgerList = await this._getALlLedgerDetails() as unknown as LedgerListResponse;
+      const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
+      if (!isLedgerExist) {
+          throw new BadRequestException(
+            ResponseMessages.agent.error.invalidLedger,
+            { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+          );
+      }
+      
+      ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
+    }
       /**
        * Invoke wallet create and provision with agent 
        */
       const walletProvision = await this._walletProvision(walletProvisionPayload);
-
       if (!walletProvision?.response) {
         this.logger.error(`Agent not able to spin-up`);
         throw new BadRequestException(
@@ -354,7 +368,6 @@ export class AgentServiceService {
       }
       const agentDetails = walletProvision.response;
       const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.agentEndPoint}`;
-
       /**
        * Socket connection
        */
@@ -374,11 +387,14 @@ export class AgentServiceService {
         orgId: orgData.id,
         walletName: agentSpinupDto.walletName,
         clientSocketId: agentSpinupDto.clientSocketId,
-        ledgerId,
+        method: agentSpinupDto.method,
+        role: agentSpinupDto.role,
+        network: agentSpinupDto.network,
+        keyType: agentSpinupDto.keyType,
+        ledgerId: ledgerIdData ? ledgerIdData.map(item => item.id) : null,
         did: agentSpinupDto.did,
         id: agentProcess?.id
       };
-
       /**
        * Store organization agent details 
        */
@@ -446,7 +462,7 @@ export class AgentServiceService {
       /**
        * Organization storage data
        */
-      const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, getDidMethod, orgAgentTypeId);
+      const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, getDidMethod, `${orgAgentTypeId}`);
       /**
        * Store org agent details
        */
@@ -460,33 +476,19 @@ export class AgentServiceService {
 
 
   private async _getAgentDid(payload: IStoreOrgAgentDetails): Promise<object> {
-    const { agentEndPoint, apiKey, ledgerId } = payload; 
-
-    //we take this values as static because of latest changes in afj controller to up agent of platform
-    const platformAgent: IPlatformAgent = {
-      seed: `${CommonConstants.SEED}`,
-      keyType: `${CommonConstants.KEYTYPE}`,
-      method: `${CommonConstants.METHOD}`,
-      network: `${CommonConstants.NETWORK}`,
-      role: `${CommonConstants.ROLE}`
-    };
+    const { agentEndPoint, apiKey, ledgerId, seed, keyType, method, network, role, did } = payload; 
     const writeDid = 'write-did';
     const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(ledgerId);
     const agentDidWriteUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, platformAgent);
+    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, keyType, method, network, role, did);
+
   }
 
   private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {
-    const getDidDic = 'get-did-doc';
-    const platformAgent: IPlatformAgent = {
-      seed: `${CommonConstants.SEED}`,
-      keyType: `${CommonConstants.KEYTYPE}`,
-      method: `${CommonConstants.METHOD}`,
-      network: `${CommonConstants.NETWORK}`,
-      role: `${CommonConstants.ROLE}`
-    };
-    const getDidMethodUrl = `${payload.agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}`.replace('#', agentDid['did']);
-    return this._retryAgentSpinup(getDidMethodUrl, payload.apiKey, getDidDic, platformAgent);
+    const { agentEndPoint, apiKey, seed, keyType, method, network, role } = payload; 
+    const getDidDoc = 'get-did-doc';
+    const getDidMethodUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}/${agentDid['did']}`;
+    return this._retryAgentSpinup(getDidMethodUrl, apiKey, getDidDoc, seed, keyType, method, network, role, `${agentDid['did']}`);
   }
 
   private _buildStoreOrgAgentData(payload: IStoreOrgAgentDetails, getDidMethod: object, orgAgentTypeId: string): IStoreOrgAgentDetails {
@@ -528,20 +530,19 @@ export class AgentServiceService {
   }
 
 
-  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, payload: IPlatformAgent): Promise<object> { 
-
-    const { seed, keyType, method, network, role} = payload;
+  async _retryAgentSpinup(agentUrl: string, apiKey: string, agentApiState: string, seed: string, keyType: string, method: string, network: string, role: string, did: string): Promise<object> { 
     const retryOptions = {
       retries: 10
     };
     try {
       return retry(async () => {
         if (agentApiState === 'write-did') {
-          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role}, { headers: { 'authorization': apiKey } }); 
+          return this.commonService.httpPost(agentUrl, { seed, keyType, method, network, role, did}, { headers: { 'authorization': apiKey } }); 
         } else if (agentApiState === 'get-did-doc') {
           return this.commonService.httpGet(agentUrl, { headers: { 'authorization': apiKey } });
         }
       }, retryOptions);
+    
     } catch (error) {
       throw error;
     }

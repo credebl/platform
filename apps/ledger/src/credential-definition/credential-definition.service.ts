@@ -148,7 +148,7 @@ export class CredentialDefinitionService extends BaseService {
     }
 
     validateSchemaId(schemaLedgerId: string): string {
-        const pattern = /^[\w\d]+:\d+:[\w\d\s]+:\d+\.\d+\.\d+$/;
+        const pattern = /^[\w\d]+:\d+:[\w\d\s]+:\d+(\.\d+(\.\d+)?)?$/;
         if (!pattern.test(schemaLedgerId)) {
           throw new BadRequestException('Invalid schema id format');
         }

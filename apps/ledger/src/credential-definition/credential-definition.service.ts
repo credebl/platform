@@ -49,8 +49,6 @@ export class CredentialDefinitionService extends BaseService {
                 credDef.tag
             );
 
-            credDef.schemaLedgerId = await this.validateSchemaId(credDef.schemaLedgerId);
-
             if (dbResult) {
                 throw new ConflictException(ResponseMessages.credentialDefinition.error.Conflict);
             }
@@ -146,15 +144,6 @@ export class CredentialDefinitionService extends BaseService {
             }
         }
     }
-
-    validateSchemaId(schemaLedgerId: string): string {
-        const pattern = /^[\w\d]+:\d+:[\w\d\s]+:\d+\.\d+\.\d+$/;
-        if (!pattern.test(schemaLedgerId)) {
-          throw new BadRequestException('Invalid schema id format');
-        }
-        return schemaLedgerId;
-      }
-
 
     async _createCredentialDefinition(payload: CreateCredDefAgentRedirection): Promise<{
         response: string;

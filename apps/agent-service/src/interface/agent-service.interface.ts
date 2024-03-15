@@ -1,13 +1,20 @@
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
-
     walletName: string;
     walletPassword: string;
     seed: string;
     orgId?: string;
     orgName?: string;
     ledgerId?: string[];
+    keyType: string;
+    domain?: string;
+    privatekey?: string;
+    endpoint?: string;
+    role?: string;
+    network?: string
+    endorserDid?: string
+    method: string;
     did?: string;
     agentType?: string;
     transactionApproval?: boolean;
@@ -148,23 +155,27 @@ export interface IPlatformConfigDto {
 }
 
 export interface IStoreOrgAgentDetails {
-    id?: string;
-    clientSocketId?: string;
-    agentEndPoint?: string;
-    apiKey?: string;
-    seed?: string;
-    did?: string;
-    verkey?: string;
-    isDidPublic?: boolean;
-    agentSpinUpStatus?: number;
-    walletName?: string;
-    agentsTypeId?: string;
-    orgId?: string;
-    agentId?: string;
-    orgAgentTypeId?: string;
-    tenantId?: string;
-    ledgerId?: string[];
-    agentType?: string;
+  id?: string;
+  clientSocketId?: string;
+  agentEndPoint?: string;
+  apiKey?: string;
+  seed?: string;
+  keyType?: string;
+  method?: string;
+  network?: string;
+  role?: string;
+  did?: string;
+  verkey?: string;
+  isDidPublic?: boolean;
+  agentSpinUpStatus?: number;
+  walletName?: string;
+  agentsTypeId?: string;
+  orgId?: string;
+  agentId?: string;
+  orgAgentTypeId?: string;
+  tenantId?: string;
+  ledgerId?: string[];
+  agentType?: string;
 }
 
 export interface IStoreOrgAgent {

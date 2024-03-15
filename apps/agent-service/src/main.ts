@@ -31,8 +31,12 @@ async function bootstrap(): Promise<void> {
     orgName: `${CommonConstants.PLATFORM_ADMIN_ORG}`,
     platformAdminEmail: process.env.PLATFORM_ADMIN_EMAIL,
     tenant: true,
-    ledgerName: [Ledgers.Bcovrin_Testnet, Ledgers.Indicio_Demonet, Ledgers.Indicio_Mainnet, Ledgers.Indicio_Testnet]
-  };
+    ledgerName: [Ledgers.Bcovrin_Testnet, Ledgers.Indicio_Demonet, Ledgers.Indicio_Mainnet, Ledgers.Indicio_Testnet],
+    keyType: `${CommonConstants.KEYTYPE}`,
+    method: `${CommonConstants.METHOD}`,
+    network: `${CommonConstants.NETWORK}`,
+    role: `${CommonConstants.ROLE}`
+};
 
   const agentService = app.get(AgentServiceService);
   await agentService.walletProvision(agentSpinupPayload, user);

@@ -37,6 +37,7 @@ import { validateDid } from '@credebl/common/did.validator';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 
 const seedLength = 32;
+
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('agents')
@@ -121,14 +122,6 @@ export class AgentController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-
-    if (seedLength !== agentSpinupDto.seed.length) {
-      this.logger.error(`seed must be at most 32 characters.`);
-      throw new BadRequestException(
-        ResponseMessages.agent.error.seedChar,
-        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-      );
-    }
 
     const regex = new RegExp('^[a-zA-Z0-9]+$');
 
@@ -245,6 +238,14 @@ export class AgentController {
    ): Promise<Response> {
   
     validateDid(createDidDto);
+
+    if (seedLength !== createDidDto.seed.length) {
+      this.logger.error(`seed must be at most 32 characters.`);
+      throw new BadRequestException(
+        ResponseMessages.agent.error.seedChar,
+        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
+      );
+    }
 
      const didDetails = await this.agentService.createDid(createDidDto, orgId, user);
  

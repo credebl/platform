@@ -123,8 +123,7 @@ export enum CommonConstants {
   // server or agent
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',
-  URL_AGENT_GET_DID = '/dids/#',
-  URL_AGENT_GET_DIDS = '/dids',
+  URL_AGENT_GET_DID = '/dids',
   URL_AGENT_GET_ENDPOINT = '/agent',
 
   // CREATE KEYS

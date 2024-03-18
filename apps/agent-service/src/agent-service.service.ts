@@ -736,6 +736,7 @@ export class AgentServiceService {
 
           const storeOrgAgentData: IStoreOrgAgentDetails = {
             did: tenantDetails.DIDCreationOption.did,
+            didDoc: tenantDetails.DIDCreationOption.didDocument,
             isDidPublic: true,
             agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
             agentsTypeId: agentTypeId,
@@ -1268,7 +1269,6 @@ export class AgentServiceService {
 
       // Get organization agent details
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-
       let agentApiKey;
       if (orgAgentDetails) {
 

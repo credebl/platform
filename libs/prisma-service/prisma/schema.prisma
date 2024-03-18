@@ -186,6 +186,7 @@ model org_agents {
   orgId               String?             @unique @db.Uuid
   orgAgentTypeId      String?             @db.Uuid
   ledgerId            String?             @db.Uuid
+  didDocument         Json?
   agent_invitations   agent_invitations[]
   agents              agents?             @relation(fields: [agentId], references: [id])
   agents_type         agents_type?        @relation(fields: [agentsTypeId], references: [id])

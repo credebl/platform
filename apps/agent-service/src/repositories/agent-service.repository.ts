@@ -131,6 +131,7 @@ export class AgentServiceRepository {
                 },
                 data: {
                     orgDid: storeOrgAgentDetails.did,
+                    didDocument: storeOrgAgentDetails.didDoc,
                     verkey: storeOrgAgentDetails.verkey,
                     isDidPublic: storeOrgAgentDetails.isDidPublic,
                     agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,

@@ -1267,7 +1267,6 @@ export class AgentServiceService {
       let agentApiKey;
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
 
-
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
       if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
@@ -1333,6 +1332,18 @@ export class AgentServiceService {
       throw new RpcException(error.response ? error.response : error);
     }
 
+  }
+
+  async createWC3Schema(url: string, apiKey: string, schemaRequestPayload): Promise<object> {
+    try {
+      const schemaRequest = await this.commonService
+        .httpPost(url, schemaRequestPayload, { headers: { 'authorization': apiKey } })
+        .then(async response => response);
+      return schemaRequest;
+    } catch (error) {
+      this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
   }
 
 }

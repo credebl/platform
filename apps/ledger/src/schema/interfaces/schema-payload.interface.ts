@@ -72,3 +72,10 @@ export interface ISchemaExist {
    version: string;
 }
 
+export interface SchemaPayload {
+    schema: object;
+    schemaName: string;
+    did: string;
+    orgId: string;
+ }
+ 

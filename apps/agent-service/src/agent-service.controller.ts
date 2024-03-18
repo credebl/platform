@@ -35,6 +35,13 @@ export class AgentServiceController {
   }
 
   //DONE
+  @MessagePattern({ cmd: 'agent-create-w3c-schema' })
+  async createWC3Schema(payload: {url, apiKey, schemaRequestPayload}): Promise<object> {
+
+    return this.agentServiceService.createWC3Schema(payload.url, payload.apiKey, payload.schemaRequestPayload);
+  }
+
+  //DONE
   @MessagePattern({ cmd: 'agent-get-schema' })
   async getSchemaById(payload: IGetSchemaAgentRedirection): Promise<object> {
     return this.agentServiceService.getSchemaById(payload);

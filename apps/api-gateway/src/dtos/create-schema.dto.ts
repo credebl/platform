@@ -70,3 +70,22 @@ export class CreateSchemaDto {
     @IsString({ message: 'orgDid must be a string' })
     orgDid: string;
 }
+
+export class CreateW3CSchemaDto {
+    @ApiProperty()
+    @IsNotEmpty({ message: 'schemaObject is required' })
+    schema: object;
+
+    @ApiProperty()
+    @IsString({ message: 'schemaName must be a string' })
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'schemaName is required' })
+    schemaName: string;
+
+    @ApiProperty()
+    @IsString({ message: 'schemaName must be a string' })
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'schemaName is required' })
+    did: string;
+ 
+}

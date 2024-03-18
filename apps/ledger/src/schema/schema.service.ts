@@ -11,7 +11,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { schema } from '@prisma/client';
-import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria } from './interfaces/schema-payload.interface';
+import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria, SchemaPayload } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
@@ -246,6 +246,64 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async createW3CSchema(
+    schemaRequestPayload: SchemaPayload
+   ): Promise<object> {
+    
+    const { orgId } = schemaRequestPayload;
+    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    if (!apiKey || null === apiKey || undefined === apiKey) {
+      apiKey = await this._getOrgAgentApiKey(orgId);
+    }
+  
+    try {
+      const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(
+          ResponseMessages.schema.error.agentDetailsNotFound,
+          { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+        );
+      }
+      const { agentEndPoint } = agentDetails;
+
+      const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
+
+      let url;
+      const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
+      if (OrgAgentType.DEDICATED === orgAgentType) {
+         url = `${agentEndPoint}${CommonConstants.DEDICATED_CREATE_POLYGON_W3C_SCHEMA}`; 
+        const schemaPayload = {
+          url,
+          apiKey,
+          schemaRequestPayload
+        };
+        
+        return  this._createW3CSchema(schemaPayload);
+      }
+      if (OrgAgentType.SHARED === orgAgentType) {
+        const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+
+        url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`; 
+        const schemaPayload = {
+          url,
+          apiKey,
+          schemaRequestPayload
+        };
+        
+        return  this._createW3CSchema(schemaPayload);
+       
+      }
+
+      
+    } catch (error) {
+      this.logger.error(
+        `[createSchema] - outer Error: ${JSON.stringify(error)}`
+      );
+
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {
@@ -262,6 +320,32 @@ export class SchemaService extends BaseService {
         ).toPromise()
         .catch(error => {
           this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,  
+              error: error.error,
+              message: error.message
+            }, error.error);
+        });
+      return schemaResponse;  
+  }
+
+  async _createW3CSchema(payload: object): Promise<{
+    response: string;
+  }> {
+      const pattern = {
+        cmd: 'agent-create-w3c-schema'
+      };
+      const schemaResponse = await this.schemaServiceProxy
+        .send(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`Error in creating WC3 schema : ${JSON.stringify(error)}`);
           throw new HttpException(
             {
               status: error.statusCode,  
@@ -467,7 +551,7 @@ export class SchemaService extends BaseService {
   async _getOrgAgentApiKey(orgId: string): Promise<string> {
     const pattern = { cmd: 'get-org-agent-api-key' };
     const payload = { orgId };
-
+   
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.schemaServiceProxy.send<any>(pattern, payload).toPromise();

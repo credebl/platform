@@ -11,7 +11,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { schema } from '@prisma/client';
-import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria, SchemaPayload } from './interfaces/schema-payload.interface';
+import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria, W3CCreateSchema, W3CSchemaPayload } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
@@ -247,16 +247,10 @@ export class SchemaService extends BaseService {
   }
 
   async createW3CSchema(
-    schemaRequestPayload: SchemaPayload
-   ): Promise<object> {
-    
-    const { orgId } = schemaRequestPayload;
-    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    if (!apiKey || null === apiKey || undefined === apiKey) {
-      apiKey = await this._getOrgAgentApiKey(orgId);
-    }
-  
+    schemaRequestPayload: W3CSchemaPayload
+  ): Promise<object> {
     try {
+      const { orgId } = schemaRequestPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {
         throw new NotFoundException(
@@ -265,44 +259,31 @@ export class SchemaService extends BaseService {
         );
       }
       const { agentEndPoint } = agentDetails;
-
+      const apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY) || await this._getOrgAgentApiKey(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
-
-      let url;
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
+      let url;
       if (OrgAgentType.DEDICATED === orgAgentType) {
-         url = `${agentEndPoint}${CommonConstants.DEDICATED_CREATE_POLYGON_W3C_SCHEMA}`; 
-        const schemaPayload = {
-          url,
-          apiKey,
-          schemaRequestPayload
-        };
-        
-        return  this._createW3CSchema(schemaPayload);
-      }
-      if (OrgAgentType.SHARED === orgAgentType) {
+        url = `${agentEndPoint}${CommonConstants.DEDICATED_CREATE_POLYGON_W3C_SCHEMA}`;
+      } else if (OrgAgentType.SHARED === orgAgentType) {
         const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-
-        url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`; 
-        const schemaPayload = {
-          url,
-          apiKey,
-          schemaRequestPayload
-        };
-        
-        return  this._createW3CSchema(schemaPayload);
-       
+        url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
       }
-
-      
+      const schemaPayload = {
+        url,
+        apiKey,
+        schemaRequestPayload: schemaRequestPayload.schemaPayload
+      };
+      return this._createW3CSchema(schemaPayload);
     } catch (error) {
       this.logger.error(
         `[createSchema] - outer Error: ${JSON.stringify(error)}`
       );
-
-      throw new RpcException(error.response ? error.response : error);
+      //need to discuss the multiple error message
+      throw new RpcException(error.error ? error.error.message : error.message);
     }
   }
+  
 
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
@@ -330,7 +311,7 @@ export class SchemaService extends BaseService {
       return schemaResponse;  
   }
 
-  async _createW3CSchema(payload: object): Promise<{
+  async _createW3CSchema(payload: W3CCreateSchema): Promise<{
     response: string;
   }> {
       const pattern = {

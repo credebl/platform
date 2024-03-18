@@ -6,7 +6,7 @@ import {
   ISchemaCredDeffSearchInterface,
   ISchemaExist,
   ISchemaSearchPayload,
-  SchemaPayload
+  W3CSchemaPayload
 } from './interfaces/schema-payload.interface';
 import { schema } from '@prisma/client';
 import {
@@ -26,7 +26,7 @@ export class SchemaController {
   }
 
   @MessagePattern({ cmd: 'create-w3c-schema' })
-  async createW3CSchema(payload: SchemaPayload): Promise<object> {
+  async createW3CSchema(payload: W3CSchemaPayload): Promise<object> {
     return this.schemaService.createW3CSchema(payload);
   }
 

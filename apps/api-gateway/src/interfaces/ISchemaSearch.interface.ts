@@ -12,28 +12,7 @@ export interface ISchemaSearchPayload {
   
 
 export interface W3CSchemaPayload {
-    schemaAttributes: W3CSchemaAttributes [];
+    schema: object;
     schemaName: string;
     did: string;
  }
-
- interface W3CSchemaAttributes {
-    type: string,
-    title: string
- }
-
- export interface ILedgers {
-    id: string;
-    createDateTime: string;
-    lastChangedDateTime: string;
-    name: string;
-    networkType: string;
-    poolConfig: string;
-    isActive: boolean;
-    networkString: string;
-    registeredDIDEndpoint: string;
-    registeredDIDPayload: string;
-    indyNamespace: string;
-    networkUrl: string | null;
-  }
-  

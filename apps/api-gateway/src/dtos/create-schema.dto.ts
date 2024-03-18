@@ -83,9 +83,9 @@ export class CreateW3CSchemaDto {
     schemaName: string;
 
     @ApiProperty()
-    @IsString({ message: 'schemaName must be a string' })
+    @IsString({ message: 'did must be a string' })
     @Transform(({ value }) => trim(value))
-    @IsNotEmpty({ message: 'schemaName is required' })
+    @IsNotEmpty({ message: 'did is required' })
     did: string;
  
 }

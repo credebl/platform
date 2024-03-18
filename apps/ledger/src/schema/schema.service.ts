@@ -267,12 +267,12 @@ export class SchemaService extends BaseService {
         const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
         url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
       }
-      const schemaPayload = {
+      const W3cSchemaPayload = {
         url,
         apiKey,
         schemaRequestPayload: schemaRequestPayload.schemaPayload
       };
-      return this._createW3CSchema(schemaPayload);
+      return this._createW3CSchema(W3cSchemaPayload);
     } catch (error) {
       this.logger.error(
         `[createSchema] - outer Error: ${JSON.stringify(error)}`
@@ -312,11 +312,11 @@ export class SchemaService extends BaseService {
   async _createW3CSchema(payload: W3CCreateSchema): Promise<{
     response: string;
   }> {
-      const pattern = {
+      const natsPattern = {
         cmd: 'agent-create-w3c-schema'
       };
-      const schemaResponse = await this.schemaServiceProxy
-        .send(pattern, payload)
+      const W3CSchemaResponse = await this.schemaServiceProxy
+        .send(natsPattern, payload)
         .pipe(
           map((response) => (
             {
@@ -332,7 +332,7 @@ export class SchemaService extends BaseService {
               message: error.message
             }, error.error);
         });
-      return schemaResponse;  
+      return W3CSchemaResponse;  
   }
 
 

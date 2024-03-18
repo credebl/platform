@@ -30,5 +30,6 @@ export interface IConnectionsListCount {
     createdBy: number;
     lastChangedDateTime: Date;
     lastChangedBy: number;
+    recipientKey?:string;
 }
   

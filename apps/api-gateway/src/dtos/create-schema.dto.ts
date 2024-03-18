@@ -73,35 +73,19 @@ export class CreateSchemaDto {
 
 export class CreateW3CSchemaDto {
     @ApiProperty()
-    @IsNotEmpty({ message: 'Schema attributes are required' })
-    schemaAttributes: SchemaAttributes [];
+    @IsNotEmpty({ message: 'schemaObject is required' })
+    schema: object;
 
     @ApiProperty()
     @IsString({ message: 'schemaName must be a string' })
-    @Transform(({ value }) => value.trim())
+    @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'schemaName is required' })
     schemaName: string;
 
     @ApiProperty()
-    @IsString({ message: 'did must be a string' })
-    @Transform(({ value }) => value.trim())
-    @IsNotEmpty({ message: 'did is required' })
+    @IsString({ message: 'schemaName must be a string' })
+    @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'schemaName is required' })
     did: string;
-
-    @ApiProperty()
-    @IsString({ message: 'description must be a string' })
-    @IsOptional()
-    description?: string;
-}
-
-export class SchemaAttributes {
-    @ApiProperty()
-    @IsNotEmpty({ message: 'type is required' })
-    @IsString({ message: 'type must be a string' })
-    type: string;
-
-    @ApiProperty()
-    @IsNotEmpty({ message: 'title is required' })
-    @IsString({ message: 'title must be a string' })
-    title: string;
+ 
 }

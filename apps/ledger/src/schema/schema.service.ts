@@ -11,7 +11,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { schema } from '@prisma/client';
-import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria, SchemaPayload, W3CCreateSchema } from './interfaces/schema-payload.interface';
+import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria, SchemaPayload } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
@@ -244,237 +244,64 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async createW3CSchema(orgId:string, schemaPayload: SchemaPayload): Promise<object> {
+  async createW3CSchema(
+    schemaRequestPayload: SchemaPayload
+   ): Promise<object> {
+    
+    const { orgId } = schemaRequestPayload;
+    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+    if (!apiKey || null === apiKey || undefined === apiKey) {
+      apiKey = await this._getOrgAgentApiKey(orgId);
+    }
+  
     try {
-      const { description, did, schemaAttributes, schemaName} = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.notFound
-        });
+        throw new NotFoundException(
+          ResponseMessages.schema.error.agentDetailsNotFound,
+          { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+        );
       }
       const { agentEndPoint } = agentDetails;
+
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
-      const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
+
       let url;
+      const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
       if (OrgAgentType.DEDICATED === orgAgentType) {
-        url = `${agentEndPoint}${CommonConstants.DEDICATED_CREATE_POLYGON_W3C_SCHEMA}`;
-      } else if (OrgAgentType.SHARED === orgAgentType) {
+         url = `${agentEndPoint}${CommonConstants.DEDICATED_CREATE_POLYGON_W3C_SCHEMA}`; 
+        const schemaPayload = {
+          url,
+          apiKey,
+          schemaRequestPayload
+        };
+        
+        return  this._createW3CSchema(schemaPayload);
+      }
+      if (OrgAgentType.SHARED === orgAgentType) {
         const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-        url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
+
+        url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`; 
+        const schemaPayload = {
+          url,
+          apiKey,
+          schemaRequestPayload
+        };
+        
+        return  this._createW3CSchema(schemaPayload);
+       
       }
 
-      const schemaObject = await this.w3cSchemaBuilder(schemaAttributes, schemaName, description);
       
-      if (!schemaObject) {
-        throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.badRequest
-        });
-      }
-      const agentSchemaPayload = {
-        schema:schemaObject,
-        did,
-        schemaName
-      };
-
-      const W3cSchemaPayload = {
-        url,
-        orgId,
-        schemaRequestPayload: agentSchemaPayload
-      };
-      return this._createW3CSchema(W3cSchemaPayload);
     } catch (error) {
-      this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.error ? error.error.message : error.message);
+      this.logger.error(
+        `[createSchema] - outer Error: ${JSON.stringify(error)}`
+      );
+
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private async w3cSchemaBuilder(schemaAttributes, schemaName: string, description: string) {
-    const schemaAttributeJson = schemaAttributes.map((attribute, index) => ({
-      [attribute.title]: {
-        type: attribute.type.toLowerCase(),
-        order: index,
-        title: attribute.title
-      }
-    }));
-
-    // Add the format property to the id key
-    schemaAttributeJson.unshift({
-      id: {
-        type: 'string',
-        format: 'uri'
-      }
-    });
-
-    const nestedObject = {};
-    schemaAttributeJson.forEach((obj) => {
-      // eslint-disable-next-line prefer-destructuring
-      const key = Object.keys(obj)[0];
-      nestedObject[key] = obj[key];
-    });
-   
-     const schemaNameObject = {}; 
-     schemaNameObject[schemaName] = {
-     "const": schemaName
-     };
-     const date = new Date().toISOString();
-     
-    const W3CSchema = {
-      $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: `${date}-${schemaName}`,
-      type: 'object',
-      required: ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
-      properties: {
-        '@context': {
-          $ref: '#/definitions/context'
-        },
-        type: {
-          type: 'array',
-          items: {
-            anyOf: [
-              {
-                $ref: '#/definitions/VerifiableCredential'
-              },
-              {
-                const: `#/definitions/$${schemaName}`
-              }
-            ]
-          }
-        },
-        credentialSubject: {
-          $ref: '#/definitions/credentialSubject'
-        },
-        id: {
-          type: 'string',
-          format: 'uri'
-        },
-        issuer: {
-          $ref: '#/definitions/uriOrId'
-        },
-        issuanceDate: {
-          type: 'string',
-          format: 'date-time'
-        },
-        expirationDate: {
-          type: 'string',
-          format: 'date-time'
-        },
-        credentialStatus: {
-          $ref: '#/definitions/credentialStatus'
-        },
-        credentialSchema: {
-          $ref: '#/definitions/credentialSchema'
-        }
-      },
-      definitions: {
-        context: {
-          type: 'array',
-          items: [
-            {
-              const: 'https://www.w3.org/2018/credentials/v1'
-            }
-          ],
-          additionalItems: {
-            oneOf: [
-              {
-                type: 'string',
-                format: 'uri'
-              },
-              {
-                type: 'object'
-              },
-              {
-                type: 'array',
-                items: {
-                  $ref: '#/definitions/context'
-                }
-              }
-            ]
-          },
-          minItems: 1,
-          uniqueItems: true
-        },
-        credentialSubject: {
-          type: 'object',
-          required: ['id'],
-          additionalProperties: false,
-          properties: nestedObject
-        },
-        VerifiableCredential: {
-          const: 'VerifiableCredential'
-        },
-        credentialSchema: {
-          oneOf: [
-            {
-              $ref: '#/definitions/idAndType'
-            },
-            {
-              type: 'array',
-              items: {
-                $ref: '#/definitions/idAndType'
-              },
-              minItems: 1,
-              uniqueItems: true
-            }
-          ]
-        },
-        credentialStatus: {
-          oneOf: [
-            {
-              $ref: '#/definitions/idAndType'
-            },
-            {
-              type: 'array',
-              items: {
-                $ref: '#/definitions/idAndType'
-              },
-              minItems: 1,
-              uniqueItems: true
-            }
-          ]
-        },
-        idAndType: {
-          type: 'object',
-          required: ['id', 'type'],
-          properties: {
-            id: {
-              type: 'string',
-              format: 'uri'
-            },
-            type: {
-              type: 'string'
-            }
-          }
-        },
-        uriOrId: {
-          oneOf: [
-            {
-              type: 'string',
-              format: 'uri'
-            },
-            {
-              type: 'object',
-              required: ['id'],
-              properties: {
-                id: {
-                  type: 'string',
-                  format: 'uri'
-                }
-              }
-            }
-          ]
-        },
-        ...schemaNameObject
-      },
-      title: schemaName,
-      description: `${description}`
-    };
-    return W3CSchema;
-  }
-  
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {
@@ -501,14 +328,14 @@ export class SchemaService extends BaseService {
       return schemaResponse;  
   }
 
-  async _createW3CSchema(payload: W3CCreateSchema): Promise<{
+  async _createW3CSchema(payload: object): Promise<{
     response: string;
   }> {
-      const natsPattern = {
+      const pattern = {
         cmd: 'agent-create-w3c-schema'
       };
-      const W3CSchemaResponse = await this.schemaServiceProxy
-        .send(natsPattern, payload)
+      const schemaResponse = await this.schemaServiceProxy
+        .send(pattern, payload)
         .pipe(
           map((response) => (
             {
@@ -516,10 +343,15 @@ export class SchemaService extends BaseService {
             }))
         ).toPromise()
         .catch(error => {
-          this.logger.error(`Error in creating W3C schema : ${JSON.stringify(error)}`);
-          throw new RpcException(error.error ? error.error.message : error.message);
+          this.logger.error(`Error in creating WC3 schema : ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,  
+              error: error.error,
+              message: error.message
+            }, error.error);
         });
-      return W3CSchemaResponse;  
+      return schemaResponse;  
   }
 
 

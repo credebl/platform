@@ -73,30 +73,9 @@ export interface ISchemaExist {
 }
 
 export interface SchemaPayload {
-    schemaAttributes: W3CSchemaAttributes [],
-    schemaName: string,
-    did: string,
-    description: string
-  }
-
-  export interface W3CSchemaAttributes {
-    type: string,
-    title: string,
+    schema: object;
+    schemaName: string;
+    did: string;
+    orgId: string;
  }
-  
-export interface W3CSchemaPayload {
-    schemaPayload: SchemaPayload,
-    orgId: string
-  }
-
-export interface W3CCreateSchema {
-    url: string,
-    orgId: string,
-    schemaRequestPayload: object
-}  
-
-export interface IdAttribute extends W3CSchemaAttributes {
-    format: string;
-    order?: string
-}   
-
+ 

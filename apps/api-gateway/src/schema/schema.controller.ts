@@ -135,8 +135,8 @@ export class SchemaController {
 
   @Post('/:orgId/polygon-w3c/schemas')
   @ApiOperation({
-    summary: 'Create and sends a schema to the ledger.',
-    description: 'Create and sends a schema to the ledger.'
+    summary: 'Create and sends a W3C-schema to the ledger.',
+    description: 'Create and sends a W3C-schema to the ledger.'
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

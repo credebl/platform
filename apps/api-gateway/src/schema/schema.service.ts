@@ -19,7 +19,7 @@ export class SchemaService extends BaseService {
     return this.sendNatsMessage(this.schemaServiceProxy, 'create-schema', payload);
   }
 
-  createW3CSchema(schemaPayload: W3CSchemaPayload, orgId: string): Promise<ISchemaData> {
+  createW3CSchema(schemaPayload: W3CSchemaPayload, orgId: string): Promise<object> {
     const payload = { schemaPayload, orgId };
     return this.sendNatsMessage(this.schemaServiceProxy, 'create-w3c-schema', payload);
   }

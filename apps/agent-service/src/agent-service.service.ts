@@ -1488,25 +1488,17 @@ export class AgentServiceService {
 
   async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
-        const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
-        const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-        const cacheKey = orgAgentApiKey?.orgAgentTypeId === orgAgentId ? CommonConstants.CACHE_SHARED_APIKEY_KEY : CommonConstants.CACHE_APIKEY_KEY;
-      
-        let apiKey = await this.cacheService.get(cacheKey);
-        if (!apiKey) {
-            if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
-                const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
-                if (!platformAdminSpinnedUp) {
-                    throw new InternalServerErrorException('Agent not able to spin-up');
-                }
-                apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
-            } else {
-                apiKey = orgAgentApiKey?.apiKey;
-            }
-            if (!apiKey) {
-                throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
-            }
-            await this.cacheService.set(cacheKey, apiKey, 0);
+      let agentApiKey;
+      const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
+
+      const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
+      if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
+        
+        const [orgAgentData] = platformAdminSpinnedUp.org_agents;
+        const { apiKey } = orgAgentData;
+        if (!platformAdminSpinnedUp) {
+          throw new InternalServerErrorException('Agent not able to spin-up');
         }
 
         const decryptedToken = await this.commonService.decryptPassword(apiKey);
@@ -1563,61 +1555,19 @@ export class AgentServiceService {
       return data; 
   }
 
-  async createW3CSchema(url: string, orgId: string, schemaRequestPayload): Promise<object> {
+  async createWC3Schema(url: string, apiKey: string, schemaRequestPayload): Promise<object> {
     try {
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
       const schemaRequest = await this.commonService
-        .httpPost(url, schemaRequestPayload, { headers: { 'authorization': getApiKey } })
+        .httpPost(url, schemaRequestPayload, { headers: { 'authorization': apiKey } })
         .then(async response => response);
       return schemaRequest;
     } catch (error) {
-      this.logger.error(`Error in createW3CSchema request in agent service : ${JSON.stringify(error)}`);
-    }
-  }
-
-  async createConnectionInvitation(url: string, orgId: string, connectionPayload: ICreateConnectionInvitation): Promise<object> {
-    try {
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
-
-      const createConnectionInvitation = await this.commonService
-        .httpPost(url, connectionPayload, { headers: { authorization: getApiKey } })
-        .then(async (response) => response);
-      return createConnectionInvitation;
-    } catch (error) {
-      this.logger.error(`Error in create connection invitation in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }
 
-  async natsCall(pattern: object, payload: object): Promise<{
-    response: string;
-  }> {
-    try {
-      return this.agentServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            }, error.error);
-        });
-    } catch (error) {
-      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  private async tokenEncryption(token: string): Promise<string> {
-    try {
-      const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(token), process.env.CRYPTO_PRIVATE_KEY).toString();
+}
 
       return encryptedToken;
     } catch (error) {

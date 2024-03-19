@@ -277,7 +277,6 @@ export class SchemaService extends BaseService {
       this.logger.error(
         `[createSchema] - outer Error: ${JSON.stringify(error)}`
       );
-      //need to discuss the multiple error message
       throw new RpcException(error.error ? error.error.message : error.message);
     }
   }
@@ -325,12 +324,7 @@ export class SchemaService extends BaseService {
         ).toPromise()
         .catch(error => {
           this.logger.error(`Error in creating WC3 schema : ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,  
-              error: error.error,
-              message: error.message
-            }, error.error);
+          throw new RpcException(error.error ? error.error.message : error.message);
         });
       return W3CSchemaResponse;  
   }

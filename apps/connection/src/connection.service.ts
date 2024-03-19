@@ -108,16 +108,7 @@ export class ConnectionService {
       return connectionDetailRecords;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.handleError(error);
     }
   }
 
@@ -383,16 +374,7 @@ export class ConnectionService {
       return record;
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in get question answer record: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.handleError(error);
     }
   }
 
@@ -761,6 +743,19 @@ export class ConnectionService {
         },
         error.status
       );
+    }
+  }
+
+  handleError(error): Promise<void> {
+    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      throw new RpcException({
+        message: error?.status?.message?.error?.reason
+          ? error?.status?.message?.error?.reason
+          : error?.status?.message?.error,
+        statusCode: error?.status?.code
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

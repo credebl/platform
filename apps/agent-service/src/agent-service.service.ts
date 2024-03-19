@@ -634,24 +634,7 @@ export class AgentServiceService {
         cmd: 'create-connection'
       };
       const payload = { orgId, user, label };
-      return this.agentServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
-        });
+      return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`error in create-connection in wallet provision : ${JSON.stringify(error)}`);
     }
@@ -665,24 +648,7 @@ export class AgentServiceService {
         cmd: 'get-all-ledgers'
       };
       const payload = {};
-      return this.agentServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
-        });
+      return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`error in while fetching all the ledger details : ${JSON.stringify(error)}`);
     }
@@ -695,24 +661,7 @@ export class AgentServiceService {
       const pattern = {
         cmd: 'wallet-provisioning'
       };
-      return this.agentServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
-        });
+      return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`error in wallet provision : ${JSON.stringify(error)}`);
       throw error;
@@ -1622,6 +1571,32 @@ export class AgentServiceService {
     } catch (error) {
       this.logger.error(`Error in getQuestionAnswersRecord in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async natsCall(pattern: object, payload: object): Promise<{
+    response: string;
+  }> {
+    try {
+      return this.agentServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.message
+            }, error.error);
+        });
+    } catch (error) {
+      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

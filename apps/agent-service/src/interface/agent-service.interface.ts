@@ -2,42 +2,28 @@ import { AgentSpinUpStatus } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
-  walletName: string;
-  walletPassword: string;
-  seed: string;
-  orgId?: string;
-  orgName?: string;
-  ledgerId?: string[];
-  keyType: string;
-  domain?: string;
-  privatekey?: string;
-  endpoint?: string;
-  role?: string;
-  network?: string;
-  endorserDid?: string;
-  method: string;
-  did?: string;
-  agentType?: string;
-  transactionApproval?: boolean;
-  clientSocketId?: string;
-  tenant?: boolean;
-  ledgerName?: string[];
-  platformAdminEmail?: string;
-  isOnPremises?: boolean;
-  agentEndpoint?: string;
-  apiKey?: string;
-  orgAgentType?: string;
-  userId?: string;
-}
-
-export interface IAgentConfigure {
-  walletName: string;
-  did: string;
-  agentEndpoint: string;
-  apiKey: string;
-  orgId: string;
-  network?: string;
-  tenant?: boolean;
+    walletName: string;
+    walletPassword: string;
+    seed: string;
+    orgId?: string;
+    orgName?: string;
+    ledgerId?: string[];
+    keyType: string;
+    domain?: string;
+    privatekey?: string;
+    endpoint?: string;
+    role?: string;
+    network?: string
+    endorserDid?: string
+    method: string;
+    did?: string;
+    agentType?: string;
+    transactionApproval?: boolean;
+    clientSocketId?: string
+    tenant?: boolean;
+    ledgerName?: string[];
+    platformAdminEmail?: string;
+    apiKey?: string;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -54,43 +40,42 @@ export interface IOutOfBandCredentialOffer {
 }
 
 export interface ITenantDto {
-  label: string;
-  seed?: string;
-  keyType: string;
-  ledgerId: string[];
-  domain?: string;
-  privatekey?: string;
-  endpoint?: string;
-  role?: string;
-  network?: string;
-  endorserDid?: string;
-  method: string;
-  orgId: string;
-  did?: string;
-  tenantId?: string;
-  didDocument?: string;
-  clientSocketId?: string;
+    label: string;
+    seed?: string;
+    keyType: string;
+    ledgerId: string[];
+    domain?: string;
+    privatekey?: string;
+    endpoint?: string;
+    role?: string;
+    network?: string
+    endorserDid?: string
+    method: string;
+    orgId: string;
+    did?: string;
+    tenantId?: string;
+    didDocument?: string;
+    clientSocketId?: string;
 }
 
 export interface IWallet {
-  label: string;
-  orgId: string;
-  did?: string;
-  clientSocketId?: string;
+    label: string;
+    orgId: string;
+    did?: string;
+    clientSocketId?: string;
 }
 
 export interface IDidCreate {
-  keyType: KeyType;
-  seed: string;
-  domain?: string;
-  network?: string;
-  privatekey?: string;
-  endpoint?: string;
-  method: string;
-  did?: string;
-  role?: string;
-  endorserDid?: string;
-  isPrimaryDid?: boolean;
+    keyType: KeyType;
+    seed: string;
+    domain?: string;
+    network?: string;
+    privatekey?: string;
+    endpoint?: string;
+    method: string;
+    did?: string;
+    role?: string;
+    endorserDid?: string;
 }
 export interface ITenantSchema {
   tenantId?: string;
@@ -185,7 +170,6 @@ export interface IStoreOrgAgentDetails {
   network?: string;
   role?: string;
   did?: string;
-  didDoc?: string;
   verkey?: string;
   isDidPublic?: boolean;
   agentSpinUpStatus?: number;
@@ -197,36 +181,26 @@ export interface IStoreOrgAgentDetails {
   tenantId?: string;
   ledgerId?: string[];
   agentType?: string;
-  userId?: string;
-}
-
-export interface IStoreDidDetails {
-  orgId: string;
-  isPrimaryDid?: boolean;
-  did: string;
-  didDocument?: string;
-  userId: string;
-  orgAgentId: string;
 }
 
 export interface IStoreOrgAgent {
-  id?: string;
-  clientSocketId?: string;
-  agentEndPoint?: string;
-  apiKey?: string;
-  seed?: string;
-  did?: string;
-  verkey?: string;
-  isDidPublic?: boolean;
-  agentSpinUpStatus?: number;
-  walletName?: string;
-  agentsTypeId?: string;
-  orgId?: string;
-  agentId?: string;
-  orgAgentTypeId?: string;
-  tenantId?: string;
-  ledgerId?: unknown;
-  agentType?: string;
+    id?: string;
+    clientSocketId?: string;
+    agentEndPoint?: string;
+    apiKey?: string;
+    seed?: string;
+    did?: string;
+    verkey?: string;
+    isDidPublic?: boolean;
+    agentSpinUpStatus?: number;
+    walletName?: string;
+    agentsTypeId?: string;
+    orgId?: string;
+    agentId?: string;
+    orgAgentTypeId?: string;
+    tenantId?: string;
+    ledgerId?: unknown;
+    agentType?: string;
 }
 
 export interface IConnectionDetails {
@@ -272,6 +246,14 @@ export interface IPlatformAgent {
   role: string;
 }
 
+export interface IPlatformAgent {
+    seed: string;
+    keyType: string;
+    method: string;
+    network: string;
+    role: string;
+  }
+  
 export interface IOrgAgentInterface {
   orgDid: string;
   verkey: string;
@@ -421,12 +403,12 @@ interface IConfig {
   walletConfig: IWalletConfig;
 }
 export interface ITenantRecord {
-  _tags: string;
-  metadata: string;
-  id: string;
-  createdAt: string;
-  config: IConfig;
-  updatedAt: string;
+    _tags: string;
+    metadata: string;
+    id: string;
+    createdAt: string;
+    config: IConfig;
+    updatedAt: string;
 }
 
 export interface ICreateTenant {
@@ -434,6 +416,7 @@ export interface ICreateTenant {
   did: string;
   verkey: string;
 }
+
 
 export interface IOrgAgent {
   agentSpinUpStatus: number;
@@ -540,73 +523,31 @@ interface ITags {
 }
 
 export interface IValidResponses {
-  text: string;
-}
-export interface IQuestionPayload {
-  detail: string;
-  validResponses: IValidResponses[];
-  question: string;
-  orgId?: string;
-  connectionId: string;
-  tenantId: string;
-}
+    text: string;
+  }
+  export interface IQuestionPayload {
+    detail: string;
+    validResponses: IValidResponses[];
+    question: string;
+    orgId?: string;
+    connectionId: string;
+    tenantId: string;
+  }
 interface Ledger {
-  id: string;
-  createDateTime: string;
-  lastChangedDateTime: string;
-  name: string;
-  networkType: string;
-  poolConfig: string;
-  isActive: boolean;
-  networkString: string;
-  nymTxnEndpoint: string;
-  indyNamespace: string;
-  networkUrl: string | null;
-}
-
-export interface LedgerListResponse {
-  response: Ledger[];
-}
-
-export interface ICreateConnectionInvitation {
-  label?: string;
-  alias?: string;
-  imageUrl?: string;
-  goalCode?: string;
-  goal?: string;
-  handshake?: boolean;
-  handshakeProtocols?: object[];
-  messages?: object[];
-  multiUseInvitation?: boolean;
-  autoAcceptConnection?: boolean;
-  routing?: object;
-  appendedAttachments?: object[];
-  orgId?: string;
-}
-
-export interface AgentHealthData {
-  label: string;
-  endpoints: string[];
-  isInitialized: boolean;
-}
-
-export interface IAgentStore {
-  did?: string;
-  verkey?: string;
-  isDidPublic?: boolean;
-  agentSpinUpStatus?: AgentSpinUpStatus;
-  walletName?: string;
-  agentsTypeId?: string;
-  orgId?: string;
-  agentEndPoint?: string;
-  agentId?: string;
-  orgAgentTypeId?: string;
-  ledgerId?: string[];
-  id?: string;
-  apiKey?: string;
-  userId?: string;
-  createdBy?: string;
-  lastChangedBy?: string;
-  didDoc?: string;
-  tenantId?: string;
-}
+    id: string;
+    createDateTime: string;
+    lastChangedDateTime: string;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    registerDIDEndpoint: string;
+    registerDIDPayload: string;
+    indyNamespace: string;
+    networkUrl: string | null;
+  }
+  
+  export interface LedgerListResponse {
+    response: Ledger[];
+  }

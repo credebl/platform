@@ -24,6 +24,32 @@ export class ConnectionService extends BaseService {
     }
   }
 
+  createLegacyConnectionInvitation(
+    connectionDto: CreateConnectionDto,
+    user: IUserRequestInterface
+  ): Promise<ICreateConnectionUrl> {
+    try {
+      const connectionDetails = {
+        orgId: connectionDto.orgId,
+        alias: connectionDto.alias,
+        label: connectionDto.label,
+        imageUrl: connectionDto.imageUrl,
+        multiUseInvitation: connectionDto.multiUseInvitation,
+        autoAcceptConnection: connectionDto.autoAcceptConnection,
+        goalCode: connectionDto.goalCode,
+        goal: connectionDto.goal,
+        handshake: connectionDto.handshake,
+        handshakeProtocols: connectionDto.handshakeProtocols,
+        user,
+        recipientKey:connectionDto.recipientKey
+      };
+
+      return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection', connectionDetails);
+    } catch (error) {
+      throw new RpcException(error.response);
+    }
+  }
+
   getConnectionWebhook(
     connectionDto: ConnectionDto,
     orgId: string

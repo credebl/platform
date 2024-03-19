@@ -31,6 +31,5 @@ export interface IConnectionsListCount {
     lastChangedDateTime: Date;
     lastChangedBy: number;
     recipientKey?:string;
-    invitationDid?: string
 }
   

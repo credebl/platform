@@ -429,6 +429,14 @@ export class SendProofRequestPayload {
     @IsArray()
     @IsString({ each: true, message: 'Each emailId in the array should be a string' })
     @IsOptional()
-    emailId: string[];
+    @IsNotEmpty({message:'Please provide the flag for shorten url.'})
+    isShortenUrl?: boolean;
+
+    @ApiPropertyOptional({ default: true })
+    @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
+    @IsBoolean({ message: 'reuseConnection must be a boolean' })
+    reuseConnection?: boolean;
+
 }
 

@@ -6,7 +6,7 @@ import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresen
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
-import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
+import { OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -344,24 +344,23 @@ export class VerificationService {
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
       
 
-      // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
-      const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
-      let invitationDid: string | undefined;
+      const { isShortenUrl, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      let recipientKey: string | undefined;
       if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.verificationRepository.getInvitationDidByOrgId(user.orgId);
+        const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
          if (data && 0 < data.length) {
           const [firstElement] = data;
-          invitationDid = firstElement?.invitationDid ?? undefined;
+          recipientKey = firstElement?.recipientKey ?? undefined;
       }
       }
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
       
       let payload: IProofRequestPayload;
 
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
-        updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
+        updateOutOfBandRequestProof.recipientKey = recipientKey || undefined;
         payload   = {
         orgId: user.orgId,
         url,
@@ -388,8 +387,8 @@ export class VerificationService {
                 }
               }
             },
-            autoAcceptProof:outOfBandRequestProof.autoAcceptProof,
-            invitationDid:invitationDid || undefined
+            autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always',
+            recipientKey:recipientKey || undefined
           }
         };
       }

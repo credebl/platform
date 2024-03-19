@@ -309,8 +309,7 @@ model agent_invitations {
   lastChangedBy        Int          @default(1)
   org_agents           org_agents   @relation(fields: [agentId], references: [id])
   organisation         organisation @relation(fields: [orgId], references: [id])
-  recipientKey         String?
-  invitationDid        String?
+  recipientKey         String? 
 }
 
 model connections {
@@ -504,7 +503,6 @@ model notification {
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
 }
-
 model ledgerConfig {
   id                  String    @id @default(uuid()) @db.Uuid
   name                String

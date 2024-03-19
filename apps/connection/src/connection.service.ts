@@ -37,6 +37,98 @@ export class ConnectionService {
   ) {}
 
   /**
+   * Create connection legacy invitation URL
+   * @param orgId
+   * @param user
+   * @returns Connection legacy invitation URL
+   */
+  async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
+    const {
+      orgId,
+      multiUseInvitation,
+      autoAcceptConnection,
+      alias,
+      imageUrl,
+      goal,
+      goalCode,
+      handshake,
+      handshakeProtocols,
+      recipientKey
+    } = payload;
+    try {
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+
+      const { agentEndPoint, id, organisation } = agentDetails;
+      const agentId = id;
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
+      }
+
+      this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
+      const connectionPayload = {
+        multiUseInvitation: multiUseInvitation ?? true,
+        autoAcceptConnection: autoAcceptConnection ?? true,
+        alias: alias || undefined,
+        imageUrl: organisation.logoUrl || imageUrl || undefined,
+        label: organisation.name,
+        goal: goal || undefined,
+        goalCode: goalCode || undefined,
+        handshake: handshake || undefined,
+        handshakeProtocols: handshakeProtocols || undefined,
+        recipientKey:recipientKey || undefined
+      };
+
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const url = await this.getAgentUrl(orgAgentType, agentEndPoint, agentDetails?.tenantId);
+
+      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
+      if (!apiKey || null === apiKey || undefined === apiKey) {
+        apiKey = await this._getOrgAgentApiKey(orgId);
+      }
+      const createConnectionInvitation = await this._createConnectionInvitation(connectionPayload, url, apiKey);
+      
+      const connectionInvitationUrl: string = createConnectionInvitation?.message?.invitationUrl;
+      const shortenedUrl: string = await this.storeConnectionObjectAndReturnUrl(
+        connectionInvitationUrl,
+        connectionPayload.multiUseInvitation
+      );
+      const  recipientsKey = createConnectionInvitation?.message?.recipientKey || recipientKey;
+      const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
+        shortenedUrl,
+        agentId,
+        orgId,
+        recipientsKey
+      );
+      const connectionDetailRecords: ConnectionResponseDetail = {
+        id: saveConnectionDetails.id,
+        orgId: saveConnectionDetails.orgId,
+        agentId: saveConnectionDetails.agentId,
+        connectionInvitation: saveConnectionDetails.connectionInvitation,
+        multiUse: saveConnectionDetails.multiUse,
+        createDateTime: saveConnectionDetails.createDateTime,
+        createdBy: saveConnectionDetails.createdBy,
+        lastChangedDateTime: saveConnectionDetails.lastChangedDateTime,
+        lastChangedBy: saveConnectionDetails.lastChangedBy,
+        recordId: createConnectionInvitation.message.outOfBandRecord.id,
+        recipientKey:saveConnectionDetails.recipientKey
+      };
+      return connectionDetailRecords;
+    } catch (error) {
+      this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
+  /**
    * Description: Catch connection webhook responses and save details in connection table
    * @param orgId
    * @returns Callback URL for connection and created connections details

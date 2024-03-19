@@ -159,11 +159,9 @@ export interface ISendProofRequestPayload {
     imageUrl?: string;
     isShortenUrl?: boolean;
     type?:string;
-    orgId?: string;
     presentationDefinition?:IProofRequestPresentationDefinition;
     reuseConnection?: boolean;
     recipientKey?:string;
-    invitationDid?: string
 }
 
 export interface IWSendProofRequestPayload {

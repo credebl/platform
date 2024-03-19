@@ -71,18 +71,19 @@ export class IssuanceRepository {
     }
   }
 
-  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
+
+  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({
         where: {
           orgId
         },
         orderBy: {
-          createDateTime: 'asc'
+          createDateTime: 'asc' 
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getInvitationDid in issuance repository: ${error.message}`);
+      this.logger.error(`Error in getRecipientKey in issuance repository: ${error.message}`);
       throw error;
     }
   }

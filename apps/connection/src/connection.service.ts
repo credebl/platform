@@ -109,16 +109,7 @@ export class ConnectionService {
       return connectionDetailRecords;
     } catch (error) {
       this.logger.error(`[createLegacyConnectionInvitation] - error in connection invitation: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.handleError(error);
     }
   }
 
@@ -365,16 +356,7 @@ export class ConnectionService {
       return record;
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in get question answer record: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.handleError(error);
     }
   }
 
@@ -704,6 +686,58 @@ export class ConnectionService {
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
+    }
+  }
+
+  async storeConnectionObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
+    const storeObj = connectionInvitationUrl;
+    //nats call in agent-service to create an invitation url
+    const pattern = { cmd: 'store-object-return-url' };
+    const payload = { persistent, storeObj };
+
+    try {
+      const message = await this.connectionServiceProxy
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .send<any>(pattern, payload)
+        .toPromise()
+        .catch((error) => {
+          this.logger.error(
+            `[storeConnectionObjectAndReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+              error
+            )}`
+          );
+          throw new HttpException(
+            {
+              status: error.statusCode,
+              error: error.error?.message?.error ? error.error?.message?.error : error.error,
+              message: error.message
+            },
+            error.error
+          );
+        });
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
+    }
+  }
+
+  handleError(error): Promise<void> {
+    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      throw new RpcException({
+        message: error?.status?.message?.error?.reason
+          ? error?.status?.message?.error?.reason
+          : error?.status?.message?.error,
+        statusCode: error?.status?.code
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

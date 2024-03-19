@@ -336,7 +336,7 @@ export class SendProofRequestPayload {
     @IsEmail({}, { each: true, message: 'Please provide a valid email' })
     @ArrayNotEmpty({ message: 'Email array must not be empty' })
     @ArrayUnique({ message: 'Duplicate emails are not allowed' })
-    @ArrayMaxSize(10, { message: 'Max 10 emails can be sent' })
+    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} proof request max).` })
     @IsArray()
     @IsString({ each: true, message: 'Each emailId in the array should be a string' })
     @IsOptional()

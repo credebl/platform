@@ -46,10 +46,7 @@ import {
   IDidCreate,
   IWallet,
   ITenantRecord,
-  IPlatformAgent,
-  LedgerListResponse,
-  IOrgLedgers,
-  IStoreOrgAgent
+  LedgerListResponse
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';

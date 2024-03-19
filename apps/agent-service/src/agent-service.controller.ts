@@ -1,10 +1,8 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation, IAgentProofRequest, IPresentation, IDidCreate, IWallet, ITenantRecord  } from './interface/agent-service.interface';
+import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IAgentProofRequest, IDidCreate, IWallet, ITenantRecord  } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
-import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
 @Controller()
@@ -99,7 +97,7 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-get-proof-presentation-by-id' })
-  async getProofPresentationById(payload: { url: string; orgId: string }): Promise<IProofPresentation> {
+  async getProofPresentationById(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getProofPresentationById(payload.url, payload.orgId);
   }
 
@@ -114,7 +112,7 @@ export class AgentServiceController {
   }
   //DONE
   @MessagePattern({ cmd: 'agent-verify-presentation' })
-  async verifyPresentation(payload: { url: string; orgId: string }): Promise<IPresentation> {
+  async verifyPresentation(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.verifyPresentation(payload.url, payload.orgId);
   }
 
@@ -125,7 +123,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-get-connection-details-by-connectionId' })
-  async getConnectionsByconnectionId(payload: { url: string, orgId: string }): Promise<IConnectionDetailsById> {
+  async getConnectionsByconnectionId(payload: { url: string, orgId: string }): Promise<object> {
     return this.agentServiceService.getConnectionsByconnectionId(payload.url, payload.orgId);
   }
 
@@ -156,7 +154,7 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'get-agent-verified-proof-details' })
-  async getVerifiedProofDetails(payload: { url: string; orgId: string }): Promise<IProofPresentationDetails[]> {
+  async getVerifiedProofDetails(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getVerifiedProofDetails(payload.url, payload.orgId);
   }
 

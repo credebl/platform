@@ -1216,14 +1216,9 @@ export class AgentServiceService {
     }
   }
 
-  async getProofPresentationById(url: string, orgId: string): Promise<IProofPresentation> {
+  async getProofPresentationById(url: string, orgId: string): Promise<object> {
     try {
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const getProofPresentationById = await this.commonService
-        .httpGet(url, { headers: { authorization: getApiKey } })
-        .then(async (response) => response)
-        .catch((error) => this.handleAgentSpinupStatusErrors(error));
-
+      const getProofPresentationById = await this.agentCall(url, orgId);
       return getProofPresentationById;
     } catch (error) {
       this.logger.error(`Error in proof presentation by id in agent service : ${JSON.stringify(error)}`);
@@ -1261,7 +1256,7 @@ export class AgentServiceService {
     }
   }
 
-  async verifyPresentation(url: string, orgId: string): Promise<IPresentation> {
+  async verifyPresentation(url: string, orgId: string): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const verifyPresentation = await this.commonService
@@ -1288,15 +1283,10 @@ export class AgentServiceService {
     }
   }
 
-  async getConnectionsByconnectionId(url: string, orgId: string): Promise<IConnectionDetailsById> {
+  async getConnectionsByconnectionId(url: string, orgId: string): Promise<object> {
     try {
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const data = await this.commonService
-        .httpGet(url, { headers: { authorization: getApiKey } })
-        .then(async (response) => response)
-        .catch((error) => this.handleAgentSpinupStatusErrors(error));
-
-      return data;
+      const getConnectionsByconnectionId = await this.agentCall(url, orgId);
+      return getConnectionsByconnectionId;
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -1373,15 +1363,10 @@ export class AgentServiceService {
     }
   }
 
-  async getVerifiedProofDetails(url: string, orgId: string): Promise<IProofPresentationDetails[]> {
+  async getVerifiedProofDetails(url: string, orgId: string): Promise<object> {
     try {
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const getVerifiedProofData = await this.commonService
-        .httpGet(url, { headers: { authorization: getApiKey } })
-        .then(async (response) => response)
-        .catch((error) => this.handleAgentSpinupStatusErrors(error));
-
-      return getVerifiedProofData;
+      const getVerifiedProofDetails = await this.agentCall(url, orgId);
+      return getVerifiedProofDetails;
     } catch (error) {
       this.logger.error(`Error in get verified proof details in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -1557,18 +1542,23 @@ export class AgentServiceService {
 
   async getQuestionAnswersRecord(url: string, orgId: string): Promise<object> {
     try {
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
-
-      const data = await this.commonService
-        .httpGet(url, { headers: { authorization: getApiKey } })
-        .then(async (response) => response)
-        .catch((error) => this.handleAgentSpinupStatusErrors(error));
-
-      return data;
+      const getQuestionAnswersRecord = await this.agentCall(url, orgId);
+      return getQuestionAnswersRecord;
     } catch (error) {
       this.logger.error(`Error in getQuestionAnswersRecord in agent service : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  async agentCall(url: string, orgId: string): Promise<object> {
+    const getApiKey = await this.getOrgAgentApiKey(orgId);
+
+    const data = await this.commonService
+        .httpGet(url, { headers: { authorization: getApiKey } })
+        .then(async (response) => response)
+        .catch((error) => this.handleAgentSpinupStatusErrors(error));
+
+      return data; 
   }
 
   async natsCall(pattern: object, payload: object): Promise<{

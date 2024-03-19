@@ -391,6 +391,7 @@ export class OrganizationRepository {
             select: {
               id: true,
               orgDid: true,
+              didDocument: true,
               walletName: true,
               agentEndPoint: true,
               agentSpinUpStatus: true,

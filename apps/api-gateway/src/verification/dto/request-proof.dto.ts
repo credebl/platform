@@ -341,5 +341,12 @@ export class SendProofRequestPayload {
     @IsString({ each: true, message: 'Each emailId in the array should be a string' })
     @IsOptional()
     emailId: string[];
+    
+    @ApiPropertyOptional({ default: true })
+    @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
+    @IsBoolean({ message: 'reuseConnection must be a boolean' })
+    reuseConnection?: boolean;
+
 }
 

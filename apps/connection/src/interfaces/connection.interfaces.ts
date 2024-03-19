@@ -15,6 +15,7 @@ export interface IConnection {
   handshake: string;
   handshakeProtocols: string[];
   orgId: string;
+  recipientKey?: string;
 }
 export interface IUserRequestInterface {
   userId: string;
@@ -264,4 +265,5 @@ export interface ConnectionResponseDetail {
   lastChangedDateTime: Date;
   lastChangedBy: number;
   recordId: string;
+  recipientKey:string;
 }

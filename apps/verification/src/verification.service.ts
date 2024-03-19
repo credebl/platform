@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation} from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { org_agents, organisation, presentations } from '@prisma/client';
+import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
@@ -360,7 +360,15 @@ export class VerificationService {
       }
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
-      const { isShortenUrl, emailId, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      let recipientKey: string | undefined;
+      if (true === reuseConnection) {
+        const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
+         if (data && 0 < data.length) {
+          const [firstElement] = data;
+          recipientKey = firstElement?.recipientKey ?? undefined;
+      }
+      }
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
       
@@ -368,6 +376,7 @@ export class VerificationService {
 
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
+        updateOutOfBandRequestProof.recipientKey = recipientKey || undefined;
         payload   = {
         apiKey,
         url,
@@ -392,7 +401,8 @@ export class VerificationService {
                 }
               }
             },
-            autoAcceptProof:outOfBandRequestProof.autoAcceptProof
+            autoAcceptProof:outOfBandRequestProof.autoAcceptProof,
+            recipientKey:recipientKey || undefined
           }
         };  
       }

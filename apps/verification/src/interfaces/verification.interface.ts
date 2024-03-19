@@ -146,8 +146,10 @@ export interface ISendProofRequestPayload {
     imageUrl?: string;
     emailId?: string[]
     isShortenUrl?: boolean;
-     type?:string;
-     presentationDefinition?:IProofRequestPresentationDefinition;
+    type?:string;
+    presentationDefinition?:IProofRequestPresentationDefinition;
+    reuseConnection?: boolean;
+    recipientKey?:string;
 }
 
 export interface IWSendProofRequestPayload {

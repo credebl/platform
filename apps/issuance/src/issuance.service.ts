@@ -179,15 +179,13 @@ export class IssuanceService {
         }
       }
 
-      }
-
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      let invitationDid: string | undefined;
+      let recipientKey: string | undefined;
       if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
+        const data: agent_invitations[] = await this.issuanceRepository.getRecipientKeyByOrgId(orgId);
          if (data && 0 < data.length) {
           const [firstElement] = data;
-          invitationDid = firstElement?.invitationDid ?? undefined;
+          recipientKey = firstElement?.recipientKey ?? undefined;
       }
       }
       const { agentEndPoint, organisation } = agentDetails;
@@ -221,7 +219,7 @@ export class IssuanceService {
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
           comment: comment || '',
-          invitationDid:invitationDid || undefined
+          recipientKey:recipientKey || undefined
         };
 
     }
@@ -242,7 +240,7 @@ export class IssuanceService {
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
           comment: comment || '',
-          invitationDid:invitationDid || undefined
+          recipientKey:recipientKey || undefined
         };
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);

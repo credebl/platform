@@ -1,28 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import {
-  IAgentStatus,
-  IConnectionDetails,
-  IUserRequestInterface,
-  ISendProofRequestPayload,
-  IAgentSpinUpSatus,
-  IGetCredDefAgentRedirection,
-  IGetSchemaAgentRedirection,
-  IAgentSpinupDto,
-  IIssuanceCreateOffer,
-  ITenantCredDef,
-  ITenantDto,
-  ITenantSchema,
-  IOutOfBandCredentialOffer,
-  IAgentProofRequest,
-  IDidCreate,
-  IWallet,
-  ITenantRecord,
-  ICreateConnectionInvitation,
-  IStoreAgent,
-  IAgentConfigure
-} from './interface/agent-service.interface';
+import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation, IAgentProofRequest, IPresentation, IDidCreate, IWallet, ITenantRecord  } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
@@ -61,7 +40,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'create-wallet' })
-  async createWallet(payload: { createWalletDto: IWallet, user: IUserRequestInterface }): Promise<ITenantRecord> {
+  async createWallet(payload: { createWalletDto: IWallet, user: IUserRequestInterface}): Promise<ITenantRecord> {
     return this.agentServiceService.createWallet(payload.createWalletDto);
   }
 
@@ -269,29 +248,9 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'polygon-create-keys' })
-  async createSecp256k1KeyPair(payload: { orgId: string }): Promise<object> {
+  async createSecp256k1KeyPair(payload: {orgId: string}): Promise<object> {
     return this.agentServiceService.createSecp256k1KeyPair(payload.orgId);
   }
 
-  @MessagePattern({ cmd: 'agent-create-connection-invitation' })
-  async createConnectionInvitation(payload: {
-    url: string,
-    orgId: string,
-    connectionPayload: ICreateConnectionInvitation,
-  }): Promise<object> {
-    return this.agentServiceService.createConnectionInvitation(payload.url, payload.orgId, payload.connectionPayload);
-  }
-
-  /**
-   * Configure the agent by organization
-   * @param payload
-   * @returns Get agent status
-   */
-  @MessagePattern({ cmd: 'agent-configure' })
-  async agentConfigure(payload: {
-    agentConfigureDto: IAgentConfigure,
-    user: IUserRequestInterface,
-  }): Promise<IStoreAgent> {
-    return this.agentServiceService.agentConfigure(payload.agentConfigureDto, payload.user);
-  }
 }
+

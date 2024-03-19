@@ -18,54 +18,53 @@ export class CreateDidDto {
 
     @ApiProperty({ example: 'ed25519'})
     @IsNotEmpty({ message: 'key type is required' })
-    @Transform(({ value }) => trim(value))
     @IsString({ message: 'key type be in string format.' })
     keyType: string;
 
     @ApiProperty({ example: 'indy'})
-    @IsNotEmpty({ message: 'method is required' })
-    @Transform(({ value }) => trim(value))
-    @IsString({ message: 'method must be in string format.' })
+    @IsNotEmpty({ message: 'seed is required' })
+    @IsString({ message: 'did must be in string format.' })
     method: string;
 
-    @ApiPropertyOptional({example: 'bcovrin:testnet'})
+    @ApiProperty({example: 'bcovrin:testnet'})
     @IsOptional()
-    @Transform(({ value }) => trim(value))
+    @ApiPropertyOptional()
     @IsString({ message: 'network must be in string format.' })
     network?: string;
 
-    @ApiPropertyOptional({example: 'www.github.com'})
+    @ApiProperty({example: 'www.github.com'})
     @IsOptional()
-    @Transform(({ value }) => trim(value))
+    @ApiPropertyOptional()
     @IsString({ message: 'domain must be in string format.' })
     domain?: string;
 
-    @ApiPropertyOptional({example: 'endorser'})
+    @ApiProperty({example: 'endorser'})
     @IsOptional()
-    @Transform(({ value }) => trim(value))
+    @ApiPropertyOptional()
     @IsString({ message: 'role must be in string format.' })
     role?: string;
 
-    @ApiPropertyOptional({example: ''})
+    @ApiProperty({example: ''})
     @IsOptional()
+    @ApiPropertyOptional()
     @IsString({ message: 'private key must be in string format.' })
-    @Transform(({ value }) => trim(value))
     privatekey?: string;
 
-    @ApiPropertyOptional({example: 'http://localhost:6006/docs'})
+    @ApiProperty({example: 'http://localhost:6006/docs'})
     @IsOptional()
+    @ApiPropertyOptional()
     @IsString({ message: 'endpoint must be in string format.' })
     endpoint?: string;
 
-    @ApiPropertyOptional({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
+    @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
     @IsOptional()
-    @Transform(({ value }) => trim(value))
+    @ApiPropertyOptional()
     @IsString({ message: 'did must be in string format.' })
     did?: string;
 
-    @ApiPropertyOptional({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
+    @ApiProperty({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
     @IsOptional()
-    @Transform(({ value }) => trim(value))
+    @ApiPropertyOptional()
     @IsString({ message: 'endorser did must be in string format.' })
     endorserDid?: string;
 }

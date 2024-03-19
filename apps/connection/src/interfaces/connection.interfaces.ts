@@ -16,7 +16,6 @@ export interface IConnection {
   handshakeProtocols: string[];
   orgId: string;
   recipientKey?: string;
-  invitationDid?: string
 }
 export interface IUserRequestInterface {
   userId: string;
@@ -266,7 +265,7 @@ export interface ConnectionResponseDetail {
   lastChangedDateTime: Date;
   lastChangedBy: number;
   recordId: string;
-  invitationDid?: string
+  recipientKey:string;
 }
 
 export interface ICreateConnectionInvitation {

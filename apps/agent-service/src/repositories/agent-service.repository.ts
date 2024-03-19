@@ -1,8 +1,8 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
+import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -25,6 +25,16 @@ export class AgentServiceRepository {
       throw error;
     }
   }
+
+    async getLedgerConfigByOrgId(): Promise<ledgerConfig[]> {
+        try {
+            const ledgerConfigData = await this.prisma.ledgerConfig.findMany();
+            return ledgerConfigData;
+        } catch (error) {
+            this.logger.error(`[getGenesisUrl] - get genesis URL: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
 
     async getLedgerConfigByOrgId(): Promise<ledgerConfig[]> {
         try {
@@ -179,18 +189,19 @@ export class AgentServiceRepository {
     }
 
 
-    /**
-     * Set primary DID
-     * @param did
-     * @returns did details
+     /**
+     * Store agent details
+     * @param storeAgentDetails
+     * @returns
      */
     // eslint-disable-next-line camelcase
     async setPrimaryDid(isPrimaryDid:string, orgId:string): Promise<org_agents> {
         try {
-          return await this.prisma.org_agents.update({
-                 where: {
-                    orgId
-                 },
+
+            return await this.prisma.org_agents.update({
+                where: {
+                    id: storeOrgAgentDetails.id
+                },
                 data: {
                     orgDid: isPrimaryDid
                 }
@@ -382,6 +393,23 @@ export class AgentServiceRepository {
       throw error;
     }
   }
+
+    // eslint-disable-next-line camelcase
+    async getOrgAgentType(orgAgentId: string): Promise<org_agents_type> {
+        try {
+          const orgAgent = await this.prisma.org_agents_type.findUnique({
+            where: {
+              id: orgAgentId
+            }
+          });
+         
+          return orgAgent;
+
+        } catch (error) {
+          this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+          throw error;
+        }
+    }
 
     // eslint-disable-next-line camelcase
     async getOrgAgentType(orgAgentId: string): Promise<org_agents_type> {

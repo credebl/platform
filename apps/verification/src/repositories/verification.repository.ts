@@ -200,9 +200,9 @@ export class VerificationRepository {
       throw error;
     }
   }
-
+  
   // eslint-disable-next-line camelcase
-  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
+  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({
         where: {
@@ -213,7 +213,7 @@ export class VerificationRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getInvitationDid in verification repository: ${error.message}`);
+      this.logger.error(`Error in getRecipientKey in verification repository: ${error.message}`);
       throw error;
     }
   }

@@ -123,41 +123,16 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
     // eslint-disable-next-line prefer-destructuring
     const base64Data = parts[1];
 
-    // Validate MIME type
-    if (!isMimeType(mimeType)) {
-      throw new BadRequestException('Please provide valid MIME type');
-    }
-    // Validate base64 data
-    if (!isBase64(base64Data) || '' == base64Data || null == base64Data) {
-      throw new BadRequestException('Invalid base64 string');
-    }
-    return true;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
-  defaultMessage(_args: ValidationArguments) {
-    return 'Default message received from [ImageBase64Validator]';
-  }
+    return newValue;
 }
 
-export class AgentSpinupValidator {
-  private static validateField(value: string, errorMessage: string): void {
-    if (!value) {
-      throw new BadRequestException(errorMessage);
-    }
-  }
+export function ledgerName(value: string): string {
+   let network;
+    network = value.replace(":", " ");
+    network = network.charAt(0).toUpperCase() + network.slice(1);
+    const words = network.split(" ");
+    network = `${words[0]} ${words[1].charAt(0).toUpperCase()}${words[1].slice(1)}`;
 
-  private static validateWalletName(walletName: string): void {
-    const regex = /^[a-zA-Z0-9]+$/;
-    if (!regex.test(walletName)) {
-      throw new BadRequestException(ResponseMessages.agent.error.seedChar, {
-        cause: new Error(),
-        description: 'Please enter a valid wallet name. Only alphanumeric characters are allowed.'
-      });
-    }
-  }
+    return network;
 
-  public static validate(agentSpinupDto): void {
-    this.validateWalletName(agentSpinupDto.walletName);
-  }
 }

@@ -503,7 +503,6 @@ model notification {
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
 }
-
 model ledgerConfig {
   id                  String    @id @default(uuid()) @db.Uuid
   name                String

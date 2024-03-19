@@ -8,7 +8,6 @@ import { AgentSpinUpSatus, IWalletRecord } from './interface/agent-service.inter
 import { AgentStatus } from './interface/agent-service.interface';
 import { CreateDidDto } from './dto/create-did.dto';
 import { CreateWalletDto } from './dto/create-wallet.dto';
-import { AgentConfigureDto } from './dto/agent-configure.dto';
 
 @Injectable()
 export class AgentService extends BaseService {
@@ -71,13 +70,6 @@ export class AgentService extends BaseService {
         // NATS call
         
         return this.sendNatsMessage(this.agentServiceProxy, 'polygon-create-keys', payload);
-    }
-
-    async agentConfigure(agentConfigureDto: AgentConfigureDto, user: user): Promise<object> {
-        const payload = { agentConfigureDto, user };
-        // NATS call
-        
-        return this.sendNatsMessage(this.agentServiceProxy, 'agent-configure', payload);
     }
 
 }

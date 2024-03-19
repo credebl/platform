@@ -132,7 +132,8 @@
       "poolConfig": "",
       "isActive": true,
       "networkString": "testnet",
-      "nymTxnEndpoint": "",
+      "registerDIDEndpoint": "",
+      "registerDIDPayload": "",
       "indyNamespace": "polygon:testnet"
     }
   ],

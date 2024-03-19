@@ -689,7 +689,7 @@ export class ConnectionService {
           );
         });
     } catch (error) {
-      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
+      this.logger.error(`[ConnectionService natsCall] - error in nats call : ${JSON.stringify(error)}`);
       throw error;
     }
   }

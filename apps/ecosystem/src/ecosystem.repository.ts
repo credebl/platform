@@ -868,6 +868,18 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async deleteInvitations(invitationId: string): Promise<ecosystem_invitations> {
     try {
+
+      const findInvitation = await this.prisma.ecosystem_invitations.findUnique({
+        where: {
+          id: invitationId,
+          status: EcosystemInvitationStatus.PENDING
+        }
+      });
+      
+      if (!findInvitation) {
+        throw new NotFoundException('Ecosystem Invitation not found');
+      }
+
       const deletedInvitation = await this.prisma.ecosystem_invitations.delete({
         where: {
           id: invitationId,

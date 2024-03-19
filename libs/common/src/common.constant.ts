@@ -86,6 +86,7 @@ export enum CommonConstants {
 
   // SHARED AGENT
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',
+  URL_SHAGENT_CREATE_DID = '/multi-tenancy/create-did/',
   URL_SHAGENT_WITH_TENANT_AGENT = '/multi-tenancy/with-tenant-agent',
   URL_SHAGENT_CREATE_SCHEMA = '/multi-tenancy/schema/#',
   URL_SHAGENT_GET_SCHEMA = '/multi-tenancy/schema/@/#',
@@ -122,9 +123,12 @@ export enum CommonConstants {
   // server or agent
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',
-  URL_AGENT_GET_DID = '/dids/#',
-  URL_AGENT_GET_DIDS = '/dids',
+  URL_AGENT_GET_DID = '/dids',
   URL_AGENT_GET_ENDPOINT = '/agent',
+
+  // CREATE KEYS
+  CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
+ 
 
   // ENTITY NAMES
   ENTITY_NAME_TEMPLATE = 'templates',
@@ -301,6 +305,12 @@ export enum CommonConstants {
   TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
   TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#',
 
+  // Static values to up platform Agent
+  SEED = '101111110111101100111100000Seed1',
+  KEYTYPE = 'ed25519',
+  METHOD = 'indy',
+  NETWORK = 'bcovrin:testnet',
+  ROLE = 'endorser', 
 
  //CacheInfo
 CACHE_APIKEY_KEY = "apiKey",

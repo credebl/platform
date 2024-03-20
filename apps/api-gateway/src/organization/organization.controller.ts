@@ -415,7 +415,7 @@ export class OrganizationController {
   @Post('/:orgId/invitations')
   @ApiOperation({
     summary: 'Create organization invitation',
-    description: 'Create send invitation'
+    description: 'Create organization invitation'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)

@@ -631,7 +631,7 @@ export class AgentServiceService {
         cmd: 'create-connection'
       };
       const payload = { orgId, user, label };
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`error in create-connection in wallet provision : ${JSON.stringify(error)}`);
     }
@@ -645,7 +645,7 @@ export class AgentServiceService {
         cmd: 'get-all-ledgers'
       };
       const payload = {};
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`error in while fetching all the ledger details : ${JSON.stringify(error)}`);
     }
@@ -658,7 +658,7 @@ export class AgentServiceService {
       const pattern = {
         cmd: 'wallet-provisioning'
       };
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`error in wallet provision : ${JSON.stringify(error)}`);
       throw error;

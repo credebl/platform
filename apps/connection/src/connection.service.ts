@@ -144,7 +144,7 @@ export class ConnectionService {
 
     try {
       
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(
@@ -307,7 +307,7 @@ export class ConnectionService {
     try {
       const pattern = { cmd: 'agent-get-all-connections' };
       const payload = { url, orgId };
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(
         `[_getAllConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
@@ -469,7 +469,7 @@ export class ConnectionService {
     const payload = { orgId };
 
     try {
-      return this.natsCall(pattern, payload);
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(
@@ -671,7 +671,7 @@ export class ConnectionService {
   }> {
     try {
       return this.connectionServiceProxy
-        .send<string>(pattern, payload)
+        .send(pattern, payload)
         .pipe(
           map((response) => ({
             response

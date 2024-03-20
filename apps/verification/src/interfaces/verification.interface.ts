@@ -176,7 +176,7 @@ export interface IProofRequestPayload {
     url: string;
     apiKey?: string;
     orgId?: string
-    proofRequestPayload: ISendProofRequestPayload;
+    proofRequestPayload: ISendProofRequestPayload | ISendPresentationExchangeProofRequestPayload;
 }
 
 interface IWebhookPresentationProof {

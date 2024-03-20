@@ -13,7 +13,7 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { IPagination } from './interfaces/ecosystem.interface';
+import { IPagination } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Injectable()
 export class EcosystemService extends BaseService {

@@ -1302,7 +1302,6 @@ export class AgentServiceService {
     try {
       // Get organization agent details
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-
       let agentApiKey;
       if (orgAgentDetails) {
         agentApiKey = await this.getOrgAgentApiKey(orgId);

@@ -47,8 +47,7 @@ import {
   IEcosystemInvitations,
   IEditEcosystem,
   IEndorsementTransaction,
-  IEcosystemList,
-  IPagination
+  IEcosystemList
 } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -68,6 +67,7 @@ import {
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
+import { IPagination } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Injectable()
 export class EcosystemService {

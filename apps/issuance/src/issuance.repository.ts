@@ -108,11 +108,12 @@ export class IssuanceRepository {
         where: {
           orgId,
           OR: [
-            { schemaId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { connectionId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
           ]
         },
         select: {
+          credentialExchangeId: true,
           createDateTime: true,
           createdBy: true,
           orgId: true,
@@ -132,8 +133,8 @@ export class IssuanceRepository {
         where: {
           orgId,
           OR: [
-            { schemaId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { connectionId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
           ]
         }
       });

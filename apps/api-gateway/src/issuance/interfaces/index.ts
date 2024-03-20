@@ -75,7 +75,7 @@ export interface IIssuedCredentialSearchParams {
     pageSize: number;
     sortField: string;
     sortBy: string;
-    searchByText: string;
+    search: string;
 }
 
 export enum IssueCredentialType {

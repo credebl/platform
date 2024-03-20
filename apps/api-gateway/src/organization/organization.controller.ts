@@ -352,7 +352,7 @@ export class OrganizationController {
   @Roles(OrgRoles.OWNER)
   @ApiOperation({ summary: 'Create credentials for an organization', description: 'Create client id and secret for an organization' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @ApiBearerAuth()
   async createOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
@@ -472,7 +472,7 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     updateOrgDto.orgId = orgId;

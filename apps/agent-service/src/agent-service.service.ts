@@ -736,6 +736,7 @@ export class AgentServiceService {
 
           const storeOrgAgentData: IStoreOrgAgentDetails = {
             did: tenantDetails.DIDCreationOption.did,
+            didDoc: tenantDetails.DIDCreationOption.didDocument || tenantDetails.DIDCreationOption.didDoc,  //changed the didDoc into didDocument
             isDidPublic: true,
             agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
             agentsTypeId: agentTypeId,
@@ -906,7 +907,7 @@ export class AgentServiceService {
 
  
    const walletResponseDetails = await this._createTenantWallet(walletLabel, platformAdminSpinnedUp.org_agents[0].agentEndPoint, platformAdminSpinnedUp.org_agents[0].apiKey);
-   if (!walletResponseDetails && !walletResponseDetails.id) {
+   if (!walletResponseDetails && !walletResponseDetails.id) {   
     throw new InternalServerErrorException('Error while creating the wallet');
    }
     const didCreateOption = {
@@ -1268,7 +1269,6 @@ export class AgentServiceService {
 
       // Get organization agent details
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-
       let agentApiKey;
       if (orgAgentDetails) {
 

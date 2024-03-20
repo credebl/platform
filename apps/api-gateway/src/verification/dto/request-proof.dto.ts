@@ -1,8 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
-
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
 import { IProofFormats } from '../interfaces/verification.interface';
 
@@ -333,6 +332,16 @@ export class SendProofRequestPayload {
     @IsNotEmpty({message:'Please provide the flag for shorten url.'})
     isShortenUrl?: boolean;
 
+    @ApiPropertyOptional()
+    @IsEmail({}, { each: true, message: 'Please provide a valid email' })
+    @ArrayNotEmpty({ message: 'Email array must not be empty' })
+    @ArrayUnique({ message: 'Duplicate emails are not allowed' })
+    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} proof request max).` })
+    @IsArray()
+    @IsString({ each: true, message: 'Each emailId in the array should be a string' })
+    @IsOptional()
+    emailId: string[];
+    
     @ApiPropertyOptional({ default: true })
     @IsOptional()
     @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })

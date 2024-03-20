@@ -89,6 +89,21 @@ export class IssuanceController {
     summary: `Get all issued credentials for a specific organization`,
     description: `Get all issued credentials for a specific organization`
   })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -99,10 +114,10 @@ export class IssuanceController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
-    const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllIssuedCredentials;
+    const { pageSize, search, pageNumber, sortField, sortBy } = getAllIssuedCredentials;
     const issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams = {
       pageNumber,
-      searchByText,
+      search,
       pageSize,
       sortField,
       sortBy

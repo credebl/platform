@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import {
-    BadRequestException,
     ConflictException,
     HttpException,
     Inject,

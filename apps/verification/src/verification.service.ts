@@ -388,7 +388,7 @@ export class VerificationService {
         await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);
         return true;
       } else {
-        const presentationProof: IInvitation = await this.generateOOBProofReq(payload, getAgentDetails);
+        const presentationProof: IInvitation = await this.generateOOBProofReq(payload);
         const proofRequestInvitationUrl: string = presentationProof.invitationUrl;
         if (isShortenUrl) {
           const shortenedUrl: string = await this.storeVerificationObjectAndReturnUrl(proofRequestInvitationUrl, false);
@@ -417,14 +417,8 @@ export class VerificationService {
   }
 
 
-  private async generateOOBProofReq(payload: IProofRequestPayload, getAgentDetails: org_agents): Promise<object> {
-    let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
-      agentApiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
-    }
-    payload.apiKey = agentApiKey;
+  private async generateOOBProofReq(payload: IProofRequestPayload): Promise<object> {
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
-
 
     if (!getProofPresentation) {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
@@ -462,11 +456,6 @@ export class VerificationService {
 
   // This function is specifically for OOB verification using email
   async sendOutOfBandProofRequest(payload: IProofRequestPayload, email: string, getAgentDetails: org_agents, organizationDetails: organisation): Promise<boolean> {
-    let agentApiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    if (!agentApiKey || null === agentApiKey || undefined === agentApiKey) {
-      agentApiKey = await this._getOrgAgentApiKey(getAgentDetails.orgId);
-    }
-    payload.apiKey = agentApiKey;
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
 
     if (!getProofPresentation) {

@@ -373,10 +373,7 @@ export class CommonService {
         process.env.CRYPTO_PRIVATE_KEY
       );
 
-      this.logger.debug(`encryptedPassword ::: ${encryptedPassword}`);
-      this.logger.debug(`process.env.CRYPTO_PRIVATE_KEY ::: ${process.env.CRYPTO_PRIVATE_KEY}`);
       const decryptedPassword = JSON.parse(password.toString(CryptoJS.enc.Utf8));
-      this.logger.debug(`decryptedPassword ::: ${decryptedPassword}`);
       return decryptedPassword;
     } catch (error) {
       throw new BadRequestException('Invalid Credentials');

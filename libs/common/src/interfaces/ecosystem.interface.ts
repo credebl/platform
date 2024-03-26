@@ -30,7 +30,7 @@ interface Ecosystem {
     ecosystemRole: EcosystemRole;
   }
   
-  export interface IPagination {
+  export interface IEcosystemDetails {
     totalItems: number;
     hasNextPage: boolean;
     hasPreviousPage: boolean;

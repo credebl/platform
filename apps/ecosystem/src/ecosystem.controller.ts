@@ -9,7 +9,7 @@ import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList } from '../interfaces/ecosystem.interfaces';
-import { IPagination } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Controller()
 export class EcosystemController {
@@ -43,7 +43,7 @@ export class EcosystemController {
    * @returns Get all ecosystem details
    */
   @MessagePattern({ cmd: 'get-all-ecosystem' })
-  async getAllEcosystems(@Body() payload: IEcosystemList): Promise<IPagination> {
+  async getAllEcosystems(@Body() payload: IEcosystemList): Promise<IEcosystemDetails> {
     return this.ecosystemService.getAllEcosystem(payload);
   }
 

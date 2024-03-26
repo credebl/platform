@@ -13,7 +13,7 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { IPagination } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -46,7 +46,7 @@ export class EcosystemService extends BaseService {
    *
    * @returns Get all ecosystems
    */
-  async getAllEcosystem(orgId: string, payload: PaginationDto): Promise<IPagination> {
+  async getAllEcosystem(orgId: string, payload: PaginationDto): Promise<IEcosystemDetails> {
     payload['orgId'] = orgId;
     return this.sendNatsMessage(this.serviceProxy, 'get-all-ecosystem', payload);
   }

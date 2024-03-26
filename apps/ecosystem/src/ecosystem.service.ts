@@ -69,7 +69,7 @@ import {
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { IPagination } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -223,11 +223,11 @@ export class EcosystemService {
    * @returns all ecosystem details
    */
 
-  async getAllEcosystem(payload: IEcosystemList): Promise<IPagination> {
+  async getAllEcosystem(payload: IEcosystemList): Promise<IEcosystemDetails> {
     try {
       const { orgId, pageNumber, pageSize, search } = payload;
 
-      const getOrgs = await this.ecosystemRepository.getAllEcosystemDetails(
+      const getEcosystemOrgs = await this.ecosystemRepository.getAllEcosystemDetails(
         orgId,
         pageNumber,
         pageSize,
@@ -235,13 +235,13 @@ export class EcosystemService {
       );
 
       const ecosystemListDetails = {
-        totalItems: getOrgs[1],
-        hasNextPage: payload.pageSize * payload.pageNumber < getOrgs[1],
+        totalItems: getEcosystemOrgs[1],
+        hasNextPage: payload.pageSize * payload.pageNumber < getEcosystemOrgs[1],
         hasPreviousPage: 1 < payload.pageNumber,
         nextPage: Number(payload.pageNumber) + 1,
         previousPage: payload.pageNumber - 1,
-        lastPage: Math.ceil(getOrgs[1] / payload.pageSize),
-        ecosystemList: getOrgs[0]
+        lastPage: Math.ceil(getEcosystemOrgs[1] / payload.pageSize),
+        ecosystemList: getEcosystemOrgs[0]
       };
 
       return ecosystemListDetails;

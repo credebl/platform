@@ -31,17 +31,20 @@ export interface IGetAllProofPresentations {
 
 export interface IGetProofPresentationById {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string;
 }
 
 export interface IVerifyPresentation {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string;
 }
 
 export interface IVerifiedProofData {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string
 }
 
 export interface IProofPresentationData {
@@ -129,8 +132,9 @@ export interface ISendPresentationExchangeProofRequestPayload {
 }
 export interface IPresentationExchangeProofRequestPayload {
     url: string;
-    apiKey: string;
+    apiKey?: string;
     proofRequestPayload: ISendPresentationExchangeProofRequestPayload;
+    orgId?: string;
 }
 
 export interface ISendProofRequestPayload {
@@ -170,7 +174,8 @@ export interface IWSendProofRequestPayload {
 
 export interface IProofRequestPayload {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string
     proofRequestPayload: ISendProofRequestPayload | ISendPresentationExchangeProofRequestPayload;
 }
 

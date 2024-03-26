@@ -772,7 +772,6 @@ export class EcosystemService {
         endorsementTransactionType.SCHEMA,
         ecosystemMemberDetails.tenantId
       );
-      const apiKey = await this._getOrgAgentApiKey(orgId);
       const attributeArray = requestSchemaPayload.attributes.map((item) => item.attributeName);
 
       const schemaTransactionPayload = {
@@ -787,7 +786,7 @@ export class EcosystemService {
       const schemaTransactionRequest: SchemaMessage = await this._requestSchemaEndorsement(
         schemaTransactionPayload,
         url,
-        apiKey
+        orgId
       );
 
       const schemaTransactionResponse = {
@@ -934,7 +933,6 @@ export class EcosystemService {
           endorsementTransactionType.CREDENTIAL_DEFINITION,
           ecosystemMemberDetails.tenantId
         );
-        const apiKey = await this._getOrgAgentApiKey(orgId);
         const credDefTransactionPayload = {
           endorserDid: ecosystemLeadAgentDetails.orgDid,
           endorse: requestCredDefPayload.endorse,
@@ -946,7 +944,7 @@ export class EcosystemService {
         const credDefTransactionRequest: CredDefMessage = await this._requestCredDeffEndorsement(
           credDefTransactionPayload,
           url,
-          apiKey
+          orgId
         );
 
         if ('failed' === credDefTransactionRequest.message.credentialDefinitionState.state) {
@@ -1010,9 +1008,9 @@ export class EcosystemService {
     }
   }
 
-  async _requestSchemaEndorsement(requestSchemaPayload: object, url: string, apiKey: string): Promise<object> {
+  async _requestSchemaEndorsement(requestSchemaPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-schema-endorsement-request' };
-    const payload = { requestSchemaPayload, url, apiKey };
+    const payload = { requestSchemaPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1030,9 +1028,9 @@ export class EcosystemService {
     }
   }
 
-  async _requestCredDeffEndorsement(requestSchemaPayload: object, url: string, apiKey: string): Promise<object> {
+  async _requestCredDeffEndorsement(requestSchemaPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-credDef-endorsement-request' };
-    const payload = { requestSchemaPayload, url, apiKey };
+    const payload = { requestSchemaPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1083,17 +1081,14 @@ export class EcosystemService {
         endorsementTransactionType.SIGN,
         ecosystemLeadAgentDetails?.tenantId
       );
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(ecosystemLeadDetails.orgId);
-      }
+
       const jsonString = endorsementTransactionPayload.requestPayload.toString();
       const payload = {
         transaction: jsonString,
         endorserDid: endorsementTransactionPayload.endorserDid
       };
 
-      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, apiKey);
+      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, ecosystemLeadDetails.orgId);
 
       if (!schemaTransactionRequest) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
@@ -1198,9 +1193,9 @@ export class EcosystemService {
    * @param url
    * @returns sign message
    */
-  async _signTransaction(signEndorsementPayload: object, url: string, apiKey: string): Promise<object> {
+  async _signTransaction(signEndorsementPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-sign-transaction' };
-    const payload = { signEndorsementPayload, url, apiKey };
+    const payload = { signEndorsementPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1387,12 +1382,7 @@ export class EcosystemService {
           }
       }
 
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-
-      const submitTransactionRequest = await this._submitTransaction(payload, url, apiKey);
+      const submitTransactionRequest = await this._submitTransaction(payload, url, orgId);
 
       if ('failed' === submitTransactionRequest['message'].state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
@@ -1466,9 +1456,9 @@ export class EcosystemService {
    * @param url
    * @returns sign message
    */
-  async _submitTransaction(submitEndorsementPayload: object, url: string, apiKey: string): Promise<object> {
+  async _submitTransaction(submitEndorsementPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-submit-transaction' };
-    const payload = { submitEndorsementPayload, url, apiKey };
+    const payload = { submitEndorsementPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

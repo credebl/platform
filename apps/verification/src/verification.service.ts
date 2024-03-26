@@ -121,12 +121,9 @@ export class VerificationService {
 
       const verificationMethodLabel = 'get-proof-presentation-by-id';
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', proofId);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const payload = { apiKey, url };
+      
+      const payload = { orgId, url };
 
       const getProofPresentationById = await this._getProofPresentationById(payload);
       return getProofPresentationById?.response;
@@ -222,11 +219,8 @@ export class VerificationService {
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'request-proof';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(requestProof.orgId);
-      }
-      const payload = { apiKey, url, proofRequestPayload };
+      
+      const payload = { orgId: requestProof.orgId, url, proofRequestPayload };
 
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;
@@ -268,15 +262,12 @@ export class VerificationService {
     try {
       const getAgentData = await this.verificationRepository.getAgentEndPoint(orgId);
       const orgAgentTypeData = await this.verificationRepository.getOrgAgentType(getAgentData?.orgAgentTypeId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-
+      
       const verificationMethod = 'accept-presentation';
-
+      
       const url = await this.getAgentUrl(verificationMethod, orgAgentTypeData, getAgentData?.agentEndPoint, getAgentData?.tenantId, '', proofId);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const payload = { apiKey, url };
+      
+      const payload = { orgId, url };
       const getProofPresentationById = await this._verifyPresentation(payload);
       return getProofPresentationById?.response;
     } catch (error) {
@@ -352,12 +343,9 @@ export class VerificationService {
       outOfBandRequestProof['label'] = label;
 
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
       const verificationMethodLabel = 'create-request-out-of-band';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(user.orgId);
-      }
+      
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
       const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
@@ -378,7 +366,7 @@ export class VerificationService {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
         updateOutOfBandRequestProof.recipientKey = recipientKey || undefined;
         payload   = {
-        apiKey,
+        orgId: user.orgId,
         url,
         proofRequestPayload: updateOutOfBandRequestProof
       };
@@ -387,7 +375,7 @@ export class VerificationService {
       if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
        
          payload = {
-          apiKey,
+          orgId: user.orgId,
           url,
           proofRequestPayload: {
             protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
@@ -713,12 +701,8 @@ export class VerificationService {
       let schemaId;
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', proofId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const payload = { apiKey, url };
+      
+      const payload = { orgId, url };
 
       const getProofPresentationById = await this._getVerifiedProofDetails(payload);
 

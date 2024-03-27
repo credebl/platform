@@ -22,8 +22,8 @@ export class CreateDidDto {
     keyType: string;
 
     @ApiProperty({ example: 'indy'})
-    @IsNotEmpty({ message: 'seed is required' })
-    @IsString({ message: 'did must be in string format.' })
+    @IsNotEmpty({ message: 'method is required' })
+    @IsString({ message: 'method must be in string format.' })
     method: string;
 
     @ApiProperty({example: 'bcovrin:testnet'})

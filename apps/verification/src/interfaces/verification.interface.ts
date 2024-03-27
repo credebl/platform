@@ -1,5 +1,5 @@
-import { AutoAccept } from "@credebl/enum/enum";
-import { IUserRequest } from "@credebl/user-request/user-request.interface";
+import { AutoAccept } from '@credebl/enum/enum';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 interface IProofRequestAttribute {
     attributeName?: string;
@@ -157,6 +157,7 @@ export interface ISendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
+    emailId?: string[]
     isShortenUrl?: boolean;
     type?:string;
     presentationDefinition?:IProofRequestPresentationDefinition;
@@ -183,7 +184,7 @@ export interface IWSendProofRequestPayload {
 export interface IProofRequestPayload {
     url: string;
     apiKey?: string;
-    orgId?: string;
+    orgId?: string
     proofRequestPayload: ISendProofRequestPayload | ISendPresentationExchangeProofRequestPayload;
 }
 

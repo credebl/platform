@@ -170,6 +170,7 @@ export interface IStoreOrgAgentDetails {
   network?: string;
   role?: string;
   did?: string;
+  didDoc?: string;
   verkey?: string;
   isDidPublic?: boolean;
   agentSpinUpStatus?: number;

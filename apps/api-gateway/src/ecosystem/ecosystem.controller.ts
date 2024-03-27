@@ -140,7 +140,7 @@ export class EcosystemController {
   })
   async getEcosystem(
     @Query() paginationDto: PaginationDto,
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
+    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     const ecosystemList = await this.ecosystemService.getAllEcosystem(orgId, paginationDto);

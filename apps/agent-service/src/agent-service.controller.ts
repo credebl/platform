@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IProofPresentation, IAgentProofRequest, IPresentation, IDidCreate, IWallet, ITenantRecord  } from './interface/agent-service.interface';
+import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IAgentProofRequest, IDidCreate, IWallet, ITenantRecord  } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
@@ -76,24 +76,16 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-create-connection-legacy-invitation' })
-  async createLegacyConnectionInvitation(payload: {
-    connectionPayload: IConnectionDetails;
-    url: string,
-    orgId: string,
-  }): Promise<InvitationMessage> {
-    return this.agentServiceService.createLegacyConnectionInvitation(
-      payload.connectionPayload,
-      payload.url,
-      payload.orgId
-    );
+  async createLegacyConnectionInvitation(payload: { connectionPayload: IConnectionDetails, url: string, orgId: string }): Promise<InvitationMessage> {
+    return this.agentServiceService.createLegacyConnectionInvitation(payload.connectionPayload, payload.url, payload.orgId);
   }
 
 //DONE
   @MessagePattern({ cmd: 'agent-send-credential-create-offer' })
   async sendCredentialCreateOffer(payload: {
     issueData: IIssuanceCreateOffer;
-    url: string,
-    orgId: string,
+    url: string;
+    orgId: string;
   }): Promise<object> {
     return this.agentServiceService.sendCredentialCreateOffer(payload.issueData, payload.url, payload.orgId);
   }
@@ -106,7 +98,7 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-get-issued-credentials-by-credentialDefinitionId' })
-  async getIssueCredentialsbyCredentialRecordId(payload: { url: string, orgId: string }): Promise<object> {
+  async getIssueCredentialsbyCredentialRecordId(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getIssueCredentialsbyCredentialRecordId(payload.url, payload.orgId);
   }
   //DONE
@@ -117,28 +109,28 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-get-proof-presentation-by-id' })
-  async getProofPresentationById(payload: { url: string, orgId: string }): Promise<object> {
+  async getProofPresentationById(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getProofPresentationById(payload.url, payload.orgId);
   }
 
   //DONE
   @MessagePattern({ cmd: 'agent-send-proof-request' })
   async sendProofRequest(payload: {
-    proofRequestPayload: ISendProofRequestPayload,
-    url: string,
-    orgId: string,
+    proofRequestPayload: ISendProofRequestPayload;
+    url: string;
+    orgId: string;
   }): Promise<IAgentProofRequest> {
     return this.agentServiceService.sendProofRequest(payload.proofRequestPayload, payload.url, payload.orgId);
   }
   //DONE
   @MessagePattern({ cmd: 'agent-verify-presentation' })
-  async verifyPresentation(payload: { url: string, orgId: string }): Promise<object> {
+  async verifyPresentation(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.verifyPresentation(payload.url, payload.orgId);
   }
 
   //DONE
   @MessagePattern({ cmd: 'agent-get-all-connections' })
-  async getConnections(payload: { url: string, orgId: string }): Promise<object> {
+  async getConnections(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getConnections(payload.url, payload.orgId);
   }
 
@@ -165,24 +157,24 @@ export class AgentServiceController {
   //DONE
   @MessagePattern({ cmd: 'agent-send-out-of-band-proof-request' })
   async sendOutOfBandProofRequest(payload: {
-    proofRequestPayload: ISendProofRequestPayload,
-    url: string,
-    orgId: string,
+    proofRequestPayload: ISendProofRequestPayload;
+    url: string;
+    orgId: string;
   }): Promise<object> {
     return this.agentServiceService.sendOutOfBandProofRequest(payload.proofRequestPayload, payload.url, payload.orgId);
   }
 
   //DONE
   @MessagePattern({ cmd: 'get-agent-verified-proof-details' })
-  async getVerifiedProofDetails(payload: { url: string, orgId: string }): Promise<object> {
+  async getVerifiedProofDetails(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getVerifiedProofDetails(payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-schema-endorsement-request' })
   async schemaEndorsementRequest(payload: {
-    url: string,
-    orgId: string,
-    requestSchemaPayload: object,
+    url: string;
+    orgId: string;
+    requestSchemaPayload: object;
   }): Promise<object> {
     return this.agentServiceService.schemaEndorsementRequest(payload.url, payload.orgId, payload.requestSchemaPayload);
   }
@@ -192,33 +184,29 @@ export class AgentServiceController {
     orgId: string;
     requestSchemaPayload: object;
   }): Promise<object> {
-    return this.agentServiceService.credDefEndorsementRequest(payload.url, payload.orgId, payload.requestSchemaPayload);
+    return this.agentServiceService.credDefEndorsementRequest(
+      payload.url,
+      payload.orgId,
+      payload.requestSchemaPayload
+    );
   }
 
   //DONE
   @MessagePattern({ cmd: 'agent-sign-transaction' })
-  async signTransaction(payload: { url: string, orgId: string, signEndorsementPayload: object }): Promise<object> {
+  async signTransaction(payload: { url: string; orgId: string; signEndorsementPayload: object }): Promise<object> {
     return this.agentServiceService.signTransaction(payload.url, payload.orgId, payload.signEndorsementPayload);
   }
 
   //DONE
   @MessagePattern({ cmd: 'agent-submit-transaction' })
-  async submitTransaction(payload: { url: string; orgId: string, submitEndorsementPayload: object }): Promise<object> {
+  async submitTransaction(payload: { url: string; orgId: string; submitEndorsementPayload: object }): Promise<object> {
     return this.agentServiceService.sumbitTransaction(payload.url, payload.orgId, payload.submitEndorsementPayload);
   }
 
   //DONE
   @MessagePattern({ cmd: 'agent-out-of-band-credential-offer' })
-  async outOfBandCredentialOffer(payload: {
-    outOfBandIssuancePayload: IOutOfBandCredentialOffer,
-    url: string,
-    orgId: string,
-  }): Promise<object> {
-    return this.agentServiceService.outOfBandCredentialOffer(
-      payload.outOfBandIssuancePayload,
-      payload.url,
-      payload.orgId
-    );
+  async outOfBandCredentialOffer(payload: { outOfBandIssuancePayload: IOutOfBandCredentialOffer, url: string, orgId: string }): Promise<object> {
+    return this.agentServiceService.outOfBandCredentialOffer(payload.outOfBandIssuancePayload, payload.url, payload.orgId);
   }
 
   //DONE
@@ -228,17 +216,30 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-receive-invitation-url' })
-  async receiveInvitationUrl(payload: { url, orgId, receiveInvitationUrl }): Promise<string> {
+  async receiveInvitationUrl(payload: {
+    url,
+    orgId,
+    receiveInvitationUrl
+  }): Promise<string> {
     return this.agentServiceService.receiveInvitationUrl(payload.receiveInvitationUrl, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-receive-invitation' })
-  async receiveInvitation(payload: { url, orgId, receiveInvitation }): Promise<string> {
+  async receiveInvitation(payload: {
+    url,
+    orgId,
+    receiveInvitation
+  }): Promise<string> {
     return this.agentServiceService.receiveInvitation(payload.receiveInvitation, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-send-question' })
-  async sendQuestion(payload: { url, orgId, questionPayload }): Promise<object> {
+  async sendQuestion(payload: {
+    url,
+    orgId,
+    questionPayload
+  }): Promise<object> {
+    
     return this.agentServiceService.sendQuestion(payload.questionPayload, payload.url, payload.orgId);
   }
 
@@ -253,4 +254,3 @@ export class AgentServiceController {
   }
 
 }
-

@@ -254,9 +254,9 @@ export class AgentController {
      @Res() res: Response
    ): Promise<Response> {
   
-    validateDid(createDidDto);
+    await validateDid(createDidDto);
 
-    if (seedLength !== createDidDto.seed.length) {
+    if (createDidDto.seed && seedLength !== createDidDto.seed.length) {
       this.logger.error(`seed must be at most 32 characters.`);
       throw new BadRequestException(
         ResponseMessages.agent.error.seedChar,

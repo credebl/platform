@@ -20,6 +20,7 @@ import { OrgAgentType } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -254,7 +255,6 @@ export class SchemaService extends BaseService {
         );
       }
       const { agentEndPoint } = agentDetails;
-      const apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY) || await this._getOrgAgentApiKey(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
       let url;
@@ -266,7 +266,7 @@ export class SchemaService extends BaseService {
       }
       const W3cSchemaPayload = {
         url,
-        apiKey,
+        orgId,
         schemaRequestPayload: schemaRequestPayload.schemaPayload
       };
       return this._createW3CSchema(W3cSchemaPayload);

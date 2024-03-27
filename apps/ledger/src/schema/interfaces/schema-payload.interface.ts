@@ -85,6 +85,6 @@ export interface W3CSchemaPayload {
 
 export interface W3CCreateSchema {
     url: string,
-    apiKey: string,
+    orgId: string,
     schemaRequestPayload: SchemaPayload
 }  

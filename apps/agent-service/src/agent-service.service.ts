@@ -761,6 +761,7 @@ export class AgentServiceService {
       const storeOrgAgentData: IStoreOrgAgentDetails = {
         did: tenantDetails.DIDCreationOption.did,
         isDidPublic: true,
+        didDoc: tenantDetails.DIDCreationOption.didDocument || tenantDetails.DIDCreationOption.didDoc, //changed the didDoc into didDocument
         agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
         agentsTypeId: agentTypeId,
         orgId: payload.orgId,

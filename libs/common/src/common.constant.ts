@@ -86,6 +86,7 @@ export enum CommonConstants {
 
   // SHARED AGENT
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',
+  URL_SHAGENT_CREATE_DID = '/multi-tenancy/create-did/',
   URL_SHAGENT_WITH_TENANT_AGENT = '/multi-tenancy/with-tenant-agent',
   URL_SHAGENT_CREATE_SCHEMA = '/multi-tenancy/schema/#',
   URL_SHAGENT_GET_SCHEMA = '/multi-tenancy/schema/@/#',
@@ -122,9 +123,12 @@ export enum CommonConstants {
   // server or agent
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',
-  URL_AGENT_GET_DID = '/dids/#',
-  URL_AGENT_GET_DIDS = '/dids',
+  URL_AGENT_GET_DID = '/dids',
   URL_AGENT_GET_ENDPOINT = '/agent',
+
+  // CREATE KEYS
+  CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
+ 
 
   // ENTITY NAMES
   ENTITY_NAME_TEMPLATE = 'templates',
@@ -260,14 +264,6 @@ export enum CommonConstants {
   ACTIVE_NON_ADMIN_USER = 1,
   ALL_NON_ADMIN_USER = 3,
 
-  //passwordLess-login
-  PASSWORDLESS_LOGIN_SCHEMA_ORG = 1,
-  PASSWORDLESS_LOGIN_SCHEMA_NAME = 'CREDEBL-PLA',
-  PLATFORM_ADMIN_CRED_DEF_NAME = 'CREDEBL-PLA',
-  PLATFORM_ADMIN_SCHEMA_VERSION = '1.0',
-
-  LOGIN_PASSWORDLESS = 'passwordless',
-  LOGIN_PASSWORD = 'password',
 
   // Platform admin Details
   PLATFORM_ADMIN_EMAIL='platform.admin@yopmail.com',
@@ -309,9 +305,16 @@ export enum CommonConstants {
   TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
   TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#',
 
+  // Static values to up platform Agent
+  SEED = '101111110111101100111100000Seed1',
+  KEYTYPE = 'ed25519',
+  METHOD = 'indy',
+  NETWORK = 'bcovrin:testnet',
+  ROLE = 'endorser', 
 
  //CacheInfo
-CACHE_APIKEY_KEY = "apiKey",
+CACHE_SHARED_APIKEY_KEY = "dedicatedApiKey",
+CACHE_APIKEY_KEY = "sharedApiKey",
 CACHE_TTL_SECONDS = 604800
 }
 

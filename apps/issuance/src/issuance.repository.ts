@@ -3,6 +3,7 @@ import { Injectable, InternalServerErrorException, Logger, NotFoundException } f
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import {
+  agent_invitations,
   credentials,
   file_data,
   file_upload,
@@ -70,6 +71,23 @@ export class IssuanceRepository {
     }
   }
 
+
+  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
+    try {
+      return this.prisma.agent_invitations.findMany({
+        where: {
+          orgId
+        },
+        orderBy: {
+          createDateTime: 'asc' 
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getRecipientKey in issuance repository: ${error.message}`);
+      throw error;
+    }
+  }
+
   async getAllIssuedCredentials(
     user: IUserRequest,
     orgId: string,
@@ -90,11 +108,12 @@ export class IssuanceRepository {
         where: {
           orgId,
           OR: [
-            { schemaId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { connectionId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
           ]
         },
         select: {
+          credentialExchangeId: true,
           createDateTime: true,
           createdBy: true,
           orgId: true,
@@ -114,8 +133,8 @@ export class IssuanceRepository {
         where: {
           orgId,
           OR: [
-            { schemaId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { connectionId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
           ]
         }
       });

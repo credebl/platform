@@ -220,41 +220,6 @@ export interface LedgerDetails {
   networkUrl: string;
 }
 
-interface EcosystemRole {
-  id: string;
-  name: string;
-  description: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  deletedAt: Date;
-}
-
-interface EcosystemDetail {
-  id: string;
-  name: string;
-  description: string;
-  logoUrl: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  createdBy: string;
-  autoEndorsement: boolean;
-  ecosystemOrgs: {
-    id: string;
-    orgId: string;
-    status: string;
-    createDateTime: Date;
-    lastChangedDateTime: Date;
-    ecosystemId: string;
-    ecosystemRoleId: string;
-    ecosystemRole: EcosystemRole;
-  }[];
-}
-
-export interface EcosystemDetailsResult {
-  totalCount: number;
-  ecosystemDetails: EcosystemDetail[];
-}
-
 export interface EcosystemInvitationDetails {
   name: string;
   id: string;
@@ -363,4 +328,44 @@ export interface IEcosystemInvitations {
   ecosystem: EcosystemInvitationDetails;
   createDateTime: Date;
   createdBy: string;
+}
+
+interface IAttributes {
+  isRequired: boolean;
+  displayName: string;
+  attributeName: string;
+  schemaDataType: string;
+}
+
+interface ISChemaItems {
+  id: string;
+  createDateTime: string;
+  createdBy: string;
+  lastChangedDateTime: string;
+  lastChangedBy: string;
+  name: string;
+  version: string;
+  attributes: IAttributes[];
+  schemaLedgerId: string;
+  publisherDid: string;
+  issuerId: string;
+  orgId: string;
+  ledgerId: string;
+}
+
+export interface ISchemaResponse {
+  totalItems: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  nextPage: number;
+  previousPage: number;
+  lastPage: number;
+  data: ISChemaItems[];
+}
+
+export interface IEcosystemList { 
+  orgId: string,
+  pageNumber: number;
+  pageSize: number;
+  search: string;
 }

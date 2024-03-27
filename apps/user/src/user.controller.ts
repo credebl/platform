@@ -44,6 +44,11 @@ export class UserController {
    return loginRes;
   }
 
+  @MessagePattern({ cmd: 'refresh-token-details' })
+  async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
+   return this.userService.refreshTokenDetails(refreshToken);   
+  }
+
   @MessagePattern({ cmd: 'user-reset-password' })
   async resetPassword(payload: IUserResetPassword): Promise<IResetPasswordResponse> {
    return this.userService.resetPassword(payload);
@@ -90,6 +95,12 @@ export class UserController {
   async findUserByEmail(payload: { email }): Promise<object> {
     return this.userService.findUserByEmail(payload);
   }
+
+  @MessagePattern({ cmd: 'get-user-by-user-id' })
+  async findUserByUserId(id: string): Promise<object> {
+    return this.userService.findUserByUserId(id);
+  }
+
   /**
    * @param credentialId
    * @returns User credentials

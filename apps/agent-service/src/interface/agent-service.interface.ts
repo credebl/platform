@@ -1,13 +1,20 @@
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
-
     walletName: string;
     walletPassword: string;
     seed: string;
     orgId?: string;
     orgName?: string;
     ledgerId?: string[];
+    keyType: string;
+    domain?: string;
+    privatekey?: string;
+    endpoint?: string;
+    role?: string;
+    network?: string
+    endorserDid?: string
+    method: string;
     did?: string;
     agentType?: string;
     transactionApproval?: boolean;
@@ -33,15 +40,42 @@ export interface IOutOfBandCredentialOffer {
 
 export interface ITenantDto {
     label: string;
-    seed: string;
-    ledgerId?: string[];
+    seed?: string;
+    keyType: string;
+    ledgerId: string[];
+    domain?: string;
+    privatekey?: string;
+    endpoint?: string;
+    role?: string;
+    network?: string
+    endorserDid?: string
     method: string;
     orgId: string;
     did?: string;
     tenantId?: string;
+    didDocument?: string;
     clientSocketId?: string;
 }
 
+export interface IWallet {
+    label: string;
+    orgId: string;
+    did?: string;
+    clientSocketId?: string;
+}
+
+export interface IDidCreate {
+    keyType: KeyType;
+    seed: string;
+    domain?: string;
+    network?: string;
+    privatekey?: string;
+    endpoint?: string;
+    method: string;
+    did?: string;
+    role?: string;
+    endorserDid?: string;
+}
 export interface ITenantSchema {
     tenantId?: string;
     attributes: string[];
@@ -53,6 +87,7 @@ export interface ITenantSchema {
     agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
+    orgId?: string;
 }
 
 export interface ITenantSchemaDto {
@@ -70,6 +105,7 @@ export interface IGetSchemaAgentRedirection {
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
+    orgId?: string;
 }
 
 export interface IGetSchemaFromTenantPayload {
@@ -86,6 +122,7 @@ export interface ITenantCredDef {
     agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
+    orgId?: string;
 }
 
 export interface IWalletProvision {
@@ -122,6 +159,31 @@ export interface IPlatformConfigDto {
 }
 
 export interface IStoreOrgAgentDetails {
+  id?: string;
+  clientSocketId?: string;
+  agentEndPoint?: string;
+  apiKey?: string;
+  seed?: string;
+  keyType?: string;
+  method?: string;
+  network?: string;
+  role?: string;
+  did?: string;
+  didDoc?: string;
+  verkey?: string;
+  isDidPublic?: boolean;
+  agentSpinUpStatus?: number;
+  walletName?: string;
+  agentsTypeId?: string;
+  orgId?: string;
+  agentId?: string;
+  orgAgentTypeId?: string;
+  tenantId?: string;
+  ledgerId?: string[];
+  agentType?: string;
+}
+
+export interface IStoreOrgAgent {
     id?: string;
     clientSocketId?: string;
     agentEndPoint?: string;
@@ -137,7 +199,7 @@ export interface IStoreOrgAgentDetails {
     agentId?: string;
     orgAgentTypeId?: string;
     tenantId?: string;
-    ledgerId?: string[];
+    ledgerId?: unknown;
     agentType?: string;
 }
 
@@ -178,6 +240,14 @@ export interface IOrganizationAgentInterface {
 
 }
 
+export interface IPlatformAgent {
+    seed: string;
+    keyType: string;
+    method: string;
+    network: string;
+    role: string;
+  }
+  
 export interface IOrgAgentInterface {
     orgDid: string;
     verkey: string;
@@ -202,6 +272,7 @@ export interface IGetCredDefAgentRedirection {
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
+    orgId?: string;
 }
 
 export interface IGetCredDefFromTenantPayload {
@@ -296,8 +367,7 @@ interface IConfig {
     label: string;
     walletConfig: IWalletConfig;
 }
-
-interface ITenantRecord {
+export interface ITenantRecord {
     _tags: string;
     metadata: string;
     id: string;
@@ -311,6 +381,7 @@ export interface ICreateTenant {
     did: string;
     verkey: string;
 }
+
 
 export interface IOrgAgent {
     agentSpinUpStatus: number;
@@ -426,4 +497,22 @@ export interface IValidResponses {
     orgId?: string;
     connectionId: string;
     tenantId: string;
+  }
+interface Ledger {
+    id: string;
+    createDateTime: string;
+    lastChangedDateTime: string;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    registerDIDEndpoint: string;
+    registerDIDPayload: string;
+    indyNamespace: string;
+    networkUrl: string | null;
+  }
+  
+  export interface LedgerListResponse {
+    response: Ledger[];
   }

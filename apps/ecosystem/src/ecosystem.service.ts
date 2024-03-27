@@ -45,13 +45,13 @@ import {
   saveCredDef,
   submitTransactionPayload,
   IEcosystem,
-  EcosystemDetailsResult,
   IEcosystemInvitation,
   IEcosystemInvitations,
   IEditEcosystem,
-  IEndorsementTransaction
+  IEndorsementTransaction,
+  IEcosystemList
 } from '../interfaces/ecosystem.interfaces';
-import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
+import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import {
@@ -69,6 +69,7 @@ import {
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
+import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -222,15 +223,32 @@ export class EcosystemService {
    * @returns all ecosystem details
    */
 
-  // eslint-disable-next-line camelcase
-  async getAllEcosystem(payload: { orgId: string }): Promise<EcosystemDetailsResult> {
-    const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails(payload.orgId);
+  async getAllEcosystem(payload: IEcosystemList): Promise<IEcosystemDetails> {
+    try {
+      const { orgId, pageNumber, pageSize, search } = payload;
 
-    if (!getAllEcosystemDetails) {
-      throw new NotFoundException(ResponseMessages.ecosystem.error.update);
+      const getEcosystemOrgs = await this.ecosystemRepository.getAllEcosystemDetails(
+        orgId,
+        pageNumber,
+        pageSize,
+        search
+      );
+
+      const ecosystemListDetails = {
+        totalItems: getEcosystemOrgs[1],
+        hasNextPage: payload.pageSize * payload.pageNumber < getEcosystemOrgs[1],
+        hasPreviousPage: 1 < payload.pageNumber,
+        nextPage: Number(payload.pageNumber) + 1,
+        previousPage: payload.pageNumber - 1,
+        lastPage: Math.ceil(getEcosystemOrgs[1] / payload.pageSize),
+        ecosystemList: getEcosystemOrgs[0]
+      };
+
+      return ecosystemListDetails;
+    } catch (error) {
+      this.logger.error(`In fetch ecosystem list : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
-
-    return getAllEcosystemDetails;
   }
 
   /**
@@ -593,7 +611,7 @@ export class EcosystemService {
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `Invitation to join an Ecosystem “${ecosystemName}” on CREDEBL`;
+    emailData.emailSubject = `Invitation to join an Ecosystem “${ecosystemName}” on ${process.env.PLATFORM_NAME}`;
 
     emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(
       email,
@@ -754,7 +772,6 @@ export class EcosystemService {
         endorsementTransactionType.SCHEMA,
         ecosystemMemberDetails.tenantId
       );
-      const apiKey = await this._getOrgAgentApiKey(orgId);
       const attributeArray = requestSchemaPayload.attributes.map((item) => item.attributeName);
 
       const schemaTransactionPayload = {
@@ -769,7 +786,7 @@ export class EcosystemService {
       const schemaTransactionRequest: SchemaMessage = await this._requestSchemaEndorsement(
         schemaTransactionPayload,
         url,
-        apiKey
+        orgId
       );
 
       const schemaTransactionResponse = {
@@ -916,7 +933,6 @@ export class EcosystemService {
           endorsementTransactionType.CREDENTIAL_DEFINITION,
           ecosystemMemberDetails.tenantId
         );
-        const apiKey = await this._getOrgAgentApiKey(orgId);
         const credDefTransactionPayload = {
           endorserDid: ecosystemLeadAgentDetails.orgDid,
           endorse: requestCredDefPayload.endorse,
@@ -928,7 +944,7 @@ export class EcosystemService {
         const credDefTransactionRequest: CredDefMessage = await this._requestCredDeffEndorsement(
           credDefTransactionPayload,
           url,
-          apiKey
+          orgId
         );
 
         if ('failed' === credDefTransactionRequest.message.credentialDefinitionState.state) {
@@ -992,9 +1008,9 @@ export class EcosystemService {
     }
   }
 
-  async _requestSchemaEndorsement(requestSchemaPayload: object, url: string, apiKey: string): Promise<object> {
+  async _requestSchemaEndorsement(requestSchemaPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-schema-endorsement-request' };
-    const payload = { requestSchemaPayload, url, apiKey };
+    const payload = { requestSchemaPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1012,9 +1028,9 @@ export class EcosystemService {
     }
   }
 
-  async _requestCredDeffEndorsement(requestSchemaPayload: object, url: string, apiKey: string): Promise<object> {
+  async _requestCredDeffEndorsement(requestSchemaPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-credDef-endorsement-request' };
-    const payload = { requestSchemaPayload, url, apiKey };
+    const payload = { requestSchemaPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1065,17 +1081,14 @@ export class EcosystemService {
         endorsementTransactionType.SIGN,
         ecosystemLeadAgentDetails?.tenantId
       );
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(ecosystemLeadDetails.orgId);
-      }
+
       const jsonString = endorsementTransactionPayload.requestPayload.toString();
       const payload = {
         transaction: jsonString,
         endorserDid: endorsementTransactionPayload.endorserDid
       };
 
-      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, apiKey);
+      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, ecosystemLeadDetails.orgId);
 
       if (!schemaTransactionRequest) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
@@ -1180,9 +1193,9 @@ export class EcosystemService {
    * @param url
    * @returns sign message
    */
-  async _signTransaction(signEndorsementPayload: object, url: string, apiKey: string): Promise<object> {
+  async _signTransaction(signEndorsementPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-sign-transaction' };
-    const payload = { signEndorsementPayload, url, apiKey };
+    const payload = { signEndorsementPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1326,7 +1339,6 @@ export class EcosystemService {
         endorsementTransactionStatus.SIGNED
       );
 
-
       if (!endorsementTransactionPayload) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
       }
@@ -1355,25 +1367,22 @@ export class EcosystemService {
         ecosystemLeadAgentDetails
       );
      
-      const isSchemaExists = await this.ecosystemRepository.schemaExist(
-       payload.schema.name,
-        payload.schema.version
-        );
-
-        if (0 !== isSchemaExists.length) {
-          this.logger.error(ResponseMessages.ecosystem.error.schemaAlreadyExist);
-          throw new ConflictException(
-            ResponseMessages.ecosystem.error.schemaAlreadyExist,
-            { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+      if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
+        const isSchemaExists = await this.ecosystemRepository.schemaExist(
+         payload.schema.name,
+          payload.schema.version
           );
-        }
-
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
+  
+          if (0 !== isSchemaExists.length) {
+            this.logger.error(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+            throw new ConflictException(
+              ResponseMessages.ecosystem.error.schemaAlreadyExist,
+              { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
+            );
+          }
       }
 
-      const submitTransactionRequest = await this._submitTransaction(payload, url, apiKey);
+      const submitTransactionRequest = await this._submitTransaction(payload, url, orgId);
 
       if ('failed' === submitTransactionRequest['message'].state) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
@@ -1447,9 +1456,9 @@ export class EcosystemService {
    * @param url
    * @returns sign message
    */
-  async _submitTransaction(submitEndorsementPayload: object, url: string, apiKey: string): Promise<object> {
+  async _submitTransaction(submitEndorsementPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-submit-transaction' };
-    const payload = { submitEndorsementPayload, url, apiKey };
+    const payload = { submitEndorsementPayload, url, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1602,7 +1611,7 @@ export class EcosystemService {
     }
   }
 
-  async getAllEcosystemSchemas(ecosystemSchemas: GetAllSchemaList): Promise<object> {
+  async getAllEcosystemSchemas(ecosystemSchemas: GetAllSchemaList): Promise<ISchemasResponse> {
     try {
       const response = await this.ecosystemRepository.getAllEcosystemSchemasDetails(ecosystemSchemas);
       const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
@@ -1610,15 +1619,11 @@ export class EcosystemService {
         return { ...schemaAttributeItem, attributes };
       });
 
-      const schemasResponse = {
-        totalItems: response.schemasCount,
-        hasNextPage: ecosystemSchemas.pageSize * ecosystemSchemas.pageNumber < response.schemasCount,
-        hasPreviousPage: 1 < ecosystemSchemas.pageNumber,
-        nextPage: ecosystemSchemas.pageNumber + 1,
-        previousPage: ecosystemSchemas.pageNumber - 1,
-        lastPage: Math.ceil(response.schemasCount / ecosystemSchemas.pageSize),
-        data: schemasDetails
+      const schemasResponse: ISchemasResponse = {
+        schemasCount: response.schemasCount,
+        schemasResult: schemasDetails
       };
+
       return schemasResponse;
     } catch (error) {
       this.logger.error(`In error fetching all ecosystem schemas: ${JSON.stringify(error)}`);

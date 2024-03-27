@@ -13,8 +13,8 @@ export class UserOrgRolesService {
    * @returns user details
    */
   // eslint-disable-next-line camelcase
-  async createUserOrgRole(userId: string, roleId: string, orgId?: string): Promise<user_org_roles> {
-    return this.userOrgRoleRepository.createUserOrgRole(userId, roleId, orgId);
+  async createUserOrgRole(userId: string, roleId: string, orgId?: string, idpRoleId?: string): Promise<user_org_roles> {
+    return this.userOrgRoleRepository.createUserOrgRole(userId, roleId, orgId, idpRoleId);
   }
 
 
@@ -46,10 +46,14 @@ export class UserOrgRolesService {
    * @param roleIds 
    * @returns 
    */
-  async updateUserOrgRole(userId: string, orgId: string, roleIds: string[]): Promise<boolean> {
+  async updateUserOrgRole(
+    userId: string,
+    orgId: string,
+    roleIdList: {roleId: string, idpRoleId: string}[]
+     ): Promise<boolean> {
   
-    for (const role of roleIds) {
-      this.userOrgRoleRepository.createUserOrgRole(userId, role, orgId);
+    for (const roleData of roleIdList) {
+      this.userOrgRoleRepository.createUserOrgRole(userId, roleData.roleId, orgId, roleData.idpRoleId);
     }
 
     return true;

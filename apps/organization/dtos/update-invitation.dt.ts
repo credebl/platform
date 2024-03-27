@@ -5,5 +5,6 @@ export class UpdateInvitationDto {
     orgId: string;
     status: Invitation;
     userId: string;
+    keycloakUserId: string;
     email: string;
 }

@@ -1,5 +1,5 @@
-import { AutoAccept } from "@credebl/enum/enum";
-import { IUserRequest } from "@credebl/user-request/user-request.interface";
+import { AutoAccept } from '@credebl/enum/enum';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 interface IProofRequestAttribute {
     attributeName?: string;
@@ -31,17 +31,20 @@ export interface IGetAllProofPresentations {
 
 export interface IGetProofPresentationById {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string;
 }
 
 export interface IVerifyPresentation {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string;
 }
 
 export interface IVerifiedProofData {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string
 }
 
 export interface IProofPresentationData {
@@ -129,8 +132,9 @@ export interface ISendPresentationExchangeProofRequestPayload {
 }
 export interface IPresentationExchangeProofRequestPayload {
     url: string;
-    apiKey: string;
+    apiKey?: string;
     proofRequestPayload: ISendPresentationExchangeProofRequestPayload;
+    orgId?: string;
 }
 
 export interface ISendProofRequestPayload {
@@ -144,6 +148,7 @@ export interface ISendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
+    emailId?: string[]
     isShortenUrl?: boolean;
     type?:string;
     presentationDefinition?:IProofRequestPresentationDefinition;
@@ -162,14 +167,16 @@ export interface IWSendProofRequestPayload {
     parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
+    emailId?: string[];
     type?:string;
     presentationDefinition?:IProofRequestPresentationDefinition;
 }
 
 export interface IProofRequestPayload {
     url: string;
-    apiKey: string;
-    proofRequestPayload: ISendProofRequestPayload;
+    apiKey?: string;
+    orgId?: string
+    proofRequestPayload: ISendProofRequestPayload | ISendPresentationExchangeProofRequestPayload;
 }
 
 interface IWebhookPresentationProof {
@@ -213,3 +220,6 @@ export interface IProofRequestSearchCriteria {
     searchByText: string;
 }
 
+export interface IInvitation{
+    invitationUrl?: string;
+}

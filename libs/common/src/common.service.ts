@@ -17,6 +17,8 @@ import {
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
 export class CommonService {
@@ -370,6 +372,7 @@ export class CommonService {
         encryptedPassword,
         process.env.CRYPTO_PRIVATE_KEY
       );
+
       const decryptedPassword = JSON.parse(password.toString(CryptoJS.enc.Utf8));
       return decryptedPassword;
     } catch (error) {

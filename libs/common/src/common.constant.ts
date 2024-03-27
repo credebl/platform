@@ -317,7 +317,8 @@ export enum CommonConstants {
   ROLE = 'endorser', 
 
  //CacheInfo
-CACHE_APIKEY_KEY = "apiKey",
+CACHE_SHARED_APIKEY_KEY = "dedicatedApiKey",
+CACHE_APIKEY_KEY = "sharedApiKey",
 CACHE_TTL_SECONDS = 604800
 }
 

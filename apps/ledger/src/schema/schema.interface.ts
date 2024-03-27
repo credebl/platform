@@ -23,6 +23,7 @@ export interface CreateSchemaAgentRedirection {
     agentType?: string;
     apiKey?: string;
     agentEndPoint?: string;
+    orgId?: string;
 }
 
 export interface ITenantSchemaDto {
@@ -40,6 +41,7 @@ export interface GetSchemaAgentRedirection {
     agentEndPoint?: string;
     agentType?: string;
     method?: string;
+    orgId?: string;
 }
 
 export interface GetSchemaFromTenantPayload {

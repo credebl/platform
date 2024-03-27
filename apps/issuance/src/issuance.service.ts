@@ -101,11 +101,6 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      let apiKey;
-      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
       const issueData: IIssueData = {
         protocolVersion: 'v1',
         connectionId,
@@ -121,7 +116,7 @@ export class IssuanceService {
         comment
       };
 
-      const credentialCreateOfferDetails: ICreateOfferResponse = await this._sendCredentialCreateOffer(issueData, url, apiKey);
+      const credentialCreateOfferDetails: ICreateOfferResponse = await this._sendCredentialCreateOffer(issueData, url, orgId);
 
       if (credentialCreateOfferDetails && 0 < Object.keys(credentialCreateOfferDetails).length) {
         delete credentialCreateOfferDetails._tags;
@@ -200,11 +195,7 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer-oob';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      let apiKey;
-      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
+
       let issueData;
       if (credentialType === IssueCredentialType.INDY) {
 
@@ -248,7 +239,7 @@ export class IssuanceService {
           recipientKey:recipientKey || undefined
         };
       }
-      const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, apiKey);
+      const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
       if (isShortenUrl) {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
@@ -334,10 +325,10 @@ export class IssuanceService {
     }
   }
 
-  async _sendCredentialCreateOffer(issueData: IIssueData, url: string, apiKey: string): Promise<ICreateOfferResponse> {
+  async _sendCredentialCreateOffer(issueData: IIssueData, url: string, orgId: string): Promise<ICreateOfferResponse> {
     try {
       const pattern = { cmd: 'agent-send-credential-create-offer' };
-      const payload: ISendOfferNatsPayload = { issueData, url, apiKey };
+      const payload: ISendOfferNatsPayload = { issueData, url, orgId };
       return await this.natsCallAgent(pattern, payload);
     } catch (error) {
       this.logger.error(`[_sendCredentialCreateOffer] [NATS call]- error in create credentials : ${JSON.stringify(error)}`);
@@ -406,13 +397,8 @@ export class IssuanceService {
       const issuanceMethodLabel = 'get-issue-credential-by-credential-id';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId, credentialRecordId);
 
-      // const apiKey = platformConfig?.sgApiKey;
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, apiKey);
+
+      const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, orgId);
       return createConnectionInvitation?.response;
     } catch (error) {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
@@ -438,12 +424,12 @@ export class IssuanceService {
     }
   }
 
-  async _getIssueCredentialsbyCredentialRecordId(url: string, apiKey: string): Promise<{
+  async _getIssueCredentialsbyCredentialRecordId(url: string, orgId: string): Promise<{
     response: string;
   }> {
     try {
       const pattern = { cmd: 'agent-get-issued-credentials-by-credentialDefinitionId' };
-      const payload = { url, apiKey };
+      const payload = { url, orgId };
       return await this.natsCall(pattern, payload);
 
     } catch (error) {
@@ -532,11 +518,6 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
     }
 
-    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    if (!apiKey || null === apiKey || undefined === apiKey) {
-      apiKey = await this._getOrgAgentApiKey(orgId);
-    }
-
     const errors = [];
     let credentialOfferResponse;
     const arraycredentialOfferResponse = [];
@@ -553,7 +534,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       organisation: organisation;
       errors: string[];
       url: string;
-      apiKey: string;
+      orgId: string;
       organizationDetails: organisation;
     } = {
       credentialType,
@@ -565,7 +546,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       organisation,
       errors,
       url,
-      apiKey,
+      orgId,
       organizationDetails,
       iterator: undefined,
       emailId: emailId || '',
@@ -632,7 +613,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     organisation,
     errors,
     url,
-    apiKey,
+    orgId,
     organizationDetails
   } = sendEmailCredentialOffer;
 
@@ -679,7 +660,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       };
     }
 
-    const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, apiKey);
+    const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
 
     if (!credentialCreateOfferDetails) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
@@ -739,12 +720,12 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   }
 }
 
-  async _outOfBandCredentialOffer(outOfBandIssuancePayload: object, url: string, apiKey: string): Promise<{
+  async _outOfBandCredentialOffer(outOfBandIssuancePayload: object, url: string, orgId: string): Promise<{
     response;
   }> {
     try {
       const pattern = { cmd: 'agent-out-of-band-credential-offer' };
-      const payload = { outOfBandIssuancePayload, url, apiKey };
+      const payload = { outOfBandIssuancePayload, url, orgId };
       return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);

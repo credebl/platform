@@ -25,7 +25,7 @@ export class OutOfBandVerification {
                   <b>${orgName}</b>  has requested verification of your digital credential. To share requested credential kindly follow below steps:
                       <ul>
                           <li>Download the <b>${process.env.MOBILE_APP_NAME}</b> from  
-                            <a href="${process.env.APP_STORE_DOWNLOAD_LINK}" target="_blank">Android Play Store</a> or
+                            <a href="${process.env.PLAY_STORE_DOWNLOAD_LINK}" target="_blank">Android Play Store</a> or
 <a href="${process.env.IOS_DOWNLOAD_LINK}" target="_blank">iOS App Store.</a> (Skip, if already downloaded)
 </li>
                           <li>Complete the onboarding process in ${process.env.MOBILE_APP}.</li>

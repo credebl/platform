@@ -45,13 +45,13 @@ import {
   saveCredDef,
   submitTransactionPayload,
   IEcosystem,
-  EcosystemDetailsResult,
   IEcosystemInvitation,
   IEcosystemInvitations,
   IEditEcosystem,
-  IEndorsementTransaction
+  IEndorsementTransaction,
+  IEcosystemList
 } from '../interfaces/ecosystem.interfaces';
-import { GetAllSchemaList, GetEndorsementsPayload } from '../interfaces/endorsements.interface';
+import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import {
@@ -69,6 +69,7 @@ import {
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
+import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -222,15 +223,32 @@ export class EcosystemService {
    * @returns all ecosystem details
    */
 
-  // eslint-disable-next-line camelcase
-  async getAllEcosystem(payload: { orgId: string }): Promise<EcosystemDetailsResult> {
-    const getAllEcosystemDetails = await this.ecosystemRepository.getAllEcosystemDetails(payload.orgId);
+  async getAllEcosystem(payload: IEcosystemList): Promise<IEcosystemDetails> {
+    try {
+      const { orgId, pageNumber, pageSize, search } = payload;
 
-    if (!getAllEcosystemDetails) {
-      throw new NotFoundException(ResponseMessages.ecosystem.error.update);
+      const getEcosystemOrgs = await this.ecosystemRepository.getAllEcosystemDetails(
+        orgId,
+        pageNumber,
+        pageSize,
+        search
+      );
+
+      const ecosystemListDetails = {
+        totalItems: getEcosystemOrgs[1],
+        hasNextPage: payload.pageSize * payload.pageNumber < getEcosystemOrgs[1],
+        hasPreviousPage: 1 < payload.pageNumber,
+        nextPage: Number(payload.pageNumber) + 1,
+        previousPage: payload.pageNumber - 1,
+        lastPage: Math.ceil(getEcosystemOrgs[1] / payload.pageSize),
+        ecosystemList: getEcosystemOrgs[0]
+      };
+
+      return ecosystemListDetails;
+    } catch (error) {
+      this.logger.error(`In fetch ecosystem list : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
-
-    return getAllEcosystemDetails;
   }
 
   /**
@@ -1593,7 +1611,7 @@ export class EcosystemService {
     }
   }
 
-  async getAllEcosystemSchemas(ecosystemSchemas: GetAllSchemaList): Promise<object> {
+  async getAllEcosystemSchemas(ecosystemSchemas: GetAllSchemaList): Promise<ISchemasResponse> {
     try {
       const response = await this.ecosystemRepository.getAllEcosystemSchemasDetails(ecosystemSchemas);
       const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
@@ -1601,15 +1619,11 @@ export class EcosystemService {
         return { ...schemaAttributeItem, attributes };
       });
 
-      const schemasResponse = {
-        totalItems: response.schemasCount,
-        hasNextPage: ecosystemSchemas.pageSize * ecosystemSchemas.pageNumber < response.schemasCount,
-        hasPreviousPage: 1 < ecosystemSchemas.pageNumber,
-        nextPage: ecosystemSchemas.pageNumber + 1,
-        previousPage: ecosystemSchemas.pageNumber - 1,
-        lastPage: Math.ceil(response.schemasCount / ecosystemSchemas.pageSize),
-        data: schemasDetails
+      const schemasResponse: ISchemasResponse = {
+        schemasCount: response.schemasCount,
+        schemasResult: schemasDetails
       };
+
       return schemasResponse;
     } catch (error) {
       this.logger.error(`In error fetching all ecosystem schemas: ${JSON.stringify(error)}`);

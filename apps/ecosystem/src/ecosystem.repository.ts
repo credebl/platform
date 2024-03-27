@@ -4,11 +4,11 @@ import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, IEcosystemInvitation, EcosystemDetailsResult, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, IEcosystemInvitation, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { GetAllSchemaList } from '../interfaces/endorsements.interface';
+import { GetAllSchemaList, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { SortValue } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 
@@ -113,63 +113,75 @@ export class EcosystemRepository {
    *
    * @returns Get all ecosystem details
    */
-  // eslint-disable-next-line camelcase
-  async getAllEcosystemDetails(orgId: string): Promise<EcosystemDetailsResult> {
-    try {
-      const [ecosystemDetails, ecosystemCount] = await Promise.all([
-        this.prisma.ecosystem.findMany({
-          where: {
-            ecosystemOrgs: {
-              some: {
-                orgId
-              }
-            }
-          },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            logoUrl: true,
-            createDateTime: true,
-            lastChangedDateTime: true,
-            createdBy: true,
-            autoEndorsement: true,
-            ecosystemOrgs: {
-              where: {
-                orgId
-              },
-              select: {
-                id: true,
-                orgId: true,
-                status: true,
-                createDateTime: true,
-                lastChangedDateTime: true,
-                ecosystemId: true,
-                ecosystemRoleId: true,
-                ecosystemRole: true
-              }
-            }
-          }
-        }),
-        this.prisma.ecosystem.count({
-          where: {
-            ecosystemOrgs: {
-              some: {
-                orgId
-              }
-            }
-          }
-        })
-      ]);
+  async getAllEcosystemDetails(  
+    orgId: string,
+    pageNumber: number,
+    pageSize: number,
+    search: string
+  ): Promise<object> {
+      try {
+        const sortByName = SortValue.DESC;
 
-      return {
-        ecosystemDetails,
-        totalCount: ecosystemCount
-      };
-    } catch (error) {
-      this.logger.error(`Error in get all ecosystem transaction: ${error.message}`);
-      throw error;
-    }
+        const result = await Promise.all([
+          this.prisma.ecosystem.findMany({
+            where: {
+              ecosystemOrgs: {
+                some: {
+                  orgId
+                }
+              },
+              OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } }      
+              ]
+            },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              logoUrl: true,
+              createDateTime: true,
+              lastChangedDateTime: true,
+              createdBy: true,
+              autoEndorsement: true,
+              ecosystemOrgs: {
+                where: {
+                  orgId
+                },
+                select: {
+                  id: true,
+                  orgId: true,
+                  status: true,
+                  createDateTime: true,
+                  lastChangedDateTime: true,
+                  ecosystemId: true,
+                  ecosystemRoleId: true,
+                  ecosystemRole: true
+                }
+              }
+            },
+            take: Number(pageSize),
+            skip: (pageNumber - 1) * pageSize,
+            orderBy: {
+              name: sortByName            
+            }
+          }),
+          this.prisma.ecosystem.count({
+            where: {
+              ecosystemOrgs: {
+                some: {
+                  orgId
+                }
+              }
+            }
+          })
+        ]);
+
+      return result;
+      } catch (error) {
+        this.logger.error(`Error in get all ecosystem transaction: ${error.message}`);
+        throw error;
+      }
   }
 
 
@@ -667,20 +679,7 @@ export class EcosystemRepository {
   }
 
 
-  async getAllEcosystemSchemasDetails(payload: GetAllSchemaList): Promise<{
-    schemasCount: number;
-    schemasResult: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      version: string;
-      attributes: string;
-      schemaLedgerId: string;
-      publisherDid: string;
-      issuerId: string;
-      orgId: string;
-    }[];
-  }> {
+  async getAllEcosystemSchemasDetails(payload: GetAllSchemaList): Promise<ISchemasResponse> {
     try {
       const { ecosystemId, search, pageNumber, pageSize } = payload;
 

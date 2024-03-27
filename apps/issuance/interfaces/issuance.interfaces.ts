@@ -221,7 +221,7 @@ export interface IIssuedCredentialsSearchCriteria {
   pageSize: number;
   sortField: string;
   sortBy: string;
-  searchByText: string;
+  search: string;
   user?: IUserRequestInterface;
 }
 

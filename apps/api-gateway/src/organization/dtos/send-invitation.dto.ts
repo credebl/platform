@@ -37,8 +37,5 @@ export class BulkSendInvitationDto {
     @Type(() => SendInvitationDto)
     invitations: SendInvitationDto[];
 
-    @ApiProperty()
-    @IsString({ message: 'orgId should be a string' })
-    @IsNotEmpty({ message: 'orgId is required' })
     orgId: string;
 }

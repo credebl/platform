@@ -349,4 +349,3 @@ export class SendProofRequestPayload {
     reuseConnection?: boolean;
 
 }
-

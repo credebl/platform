@@ -339,12 +339,14 @@ export class VerificationService {
       }
       
       outOfBandRequestProof['label'] = label;
+
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const verificationMethodLabel = 'create-request-out-of-band';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
       
 
-      const { isShortenUrl, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
+      const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
       let recipientKey: string | undefined;
       if (true === reuseConnection) {
         const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
@@ -386,7 +388,7 @@ export class VerificationService {
                 }
               }
             },
-            autoAcceptProof:outOfBandRequestProof.autoAcceptProof || 'always',
+            autoAcceptProof:outOfBandRequestProof.autoAcceptProof,
             recipientKey:recipientKey || undefined
           }
         };  
@@ -502,7 +504,7 @@ export class VerificationService {
    * @param payload 
    * @returns Get requested proof presentation details
    */
-  async _sendOutOfBandProofRequest(payload: IProofRequestPayload | IPresentationExchangeProofRequestPayload): Promise<{
+  async _sendOutOfBandProofRequest(payload: IProofRequestPayload): Promise<{
     response;
   }> {
     try {
@@ -919,4 +921,4 @@ export class VerificationService {
   async delay(ms: number): Promise<unknown> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-}          
+}             

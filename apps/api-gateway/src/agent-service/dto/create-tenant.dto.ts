@@ -1,9 +1,8 @@
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { MaxLength, IsString, MinLength, Matches, IsOptional } from 'class-validator';
+import { MaxLength, IsString, MinLength, IsOptional } from 'class-validator';
 import { CreateDidDto } from './create-did.dto';
-const labelRegex = /^[a-zA-Z0-9 ]*$/;
 export class CreateTenantDto extends CreateDidDto {
     @ApiProperty()
     @MaxLength(25, { message: 'Maximum length for label must be 25 characters.' })

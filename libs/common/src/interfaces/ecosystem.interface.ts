@@ -6,7 +6,7 @@ interface EcosystemRole {
     lastChangedDateTime: Date;
     deletedAt: Date;
   }
-   
+  
 interface Ecosystem {
     id: string;
     name: string;

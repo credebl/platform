@@ -78,17 +78,17 @@ export interface IDidCreate {
     endorserDid?: string;
 }
 export interface ITenantSchema {
-  tenantId?: string;
-  attributes: string[];
-  version: string;
-  name: string;
-  issuerId?: string;
-  payload?: ITenantSchemaDto;
-  method?: string;
-  agentType?: string;
-  apiKey?: string;
-  agentEndPoint?: string;
-  orgId?: string;
+    tenantId?: string;
+    attributes: string[];
+    version: string;
+    name: string;
+    issuerId?: string;
+    payload?: ITenantSchemaDto;
+    method?: string;
+    agentType?: string;
+    apiKey?: string;
+    agentEndPoint?: string;
+    orgId?: string;
 }
 
 export interface ITenantSchemaDto {
@@ -99,14 +99,14 @@ export interface ITenantSchemaDto {
 }
 
 export interface IGetSchemaAgentRedirection {
-  schemaId?: string;
-  tenantId?: string;
-  payload?: IGetSchemaFromTenantPayload;
-  apiKey?: string;
-  agentEndPoint?: string;
-  agentType?: string;
-  method?: string;
-  orgId?: string;
+    schemaId?: string;
+    tenantId?: string;
+    payload?: IGetSchemaFromTenantPayload;
+    apiKey?: string;
+    agentEndPoint?: string;
+    agentType?: string;
+    method?: string;
+    orgId?: string;
 }
 
 export interface IGetSchemaFromTenantPayload {
@@ -114,16 +114,16 @@ export interface IGetSchemaFromTenantPayload {
 }
 
 export interface ITenantCredDef {
-  tenantId?: string;
-  tag?: string;
-  schemaId?: string;
-  issuerId?: string;
-  payload?: ITenantCredDef;
-  method?: string;
-  agentType?: string;
-  apiKey?: string;
-  agentEndPoint?: string;
-  orgId?: string;
+    tenantId?: string;
+    tag?: string;
+    schemaId?: string;
+    issuerId?: string;
+    payload?: ITenantCredDef;
+    method?: string;
+    agentType?: string;
+    apiKey?: string;
+    agentEndPoint?: string;
+    orgId?: string;
 }
 
 export interface IWalletProvision {
@@ -170,6 +170,7 @@ export interface IStoreOrgAgentDetails {
   network?: string;
   role?: string;
   did?: string;
+  didDoc?: string;
   verkey?: string;
   isDidPublic?: boolean;
   agentSpinUpStatus?: number;
@@ -271,14 +272,14 @@ export interface ITenantCredDefDto {
 }
 
 export interface IGetCredDefAgentRedirection {
-  credentialDefinitionId?: string;
-  tenantId?: string;
-  payload?: IGetCredDefFromTenantPayload;
-  apiKey?: string;
-  agentEndPoint?: string;
-  agentType?: string;
-  method?: string;
-  orgId?: string;
+    credentialDefinitionId?: string;
+    tenantId?: string;
+    payload?: IGetCredDefFromTenantPayload;
+    apiKey?: string;
+    agentEndPoint?: string;
+    agentType?: string;
+    method?: string;
+    orgId?: string;
 }
 
 export interface IGetCredDefFromTenantPayload {

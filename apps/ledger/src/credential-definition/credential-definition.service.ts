@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import {
-    BadRequestException,
     ConflictException,
     HttpException,
     Inject,
@@ -18,7 +17,6 @@ import { map } from 'rxjs/operators';
 import { OrgAgentType, SortValue } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
     constructor(

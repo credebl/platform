@@ -203,7 +203,23 @@ export class AgentServiceRepository {
                     id: storeOrgAgentDetails.id
                 },
                 data: {
-                    orgDid: isPrimaryDid
+                    orgDid: storeOrgAgentDetails.did,
+                    didDocument: storeOrgAgentDetails.didDoc,
+                    verkey: storeOrgAgentDetails.verkey,
+                    isDidPublic: storeOrgAgentDetails.isDidPublic,
+                    agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
+                    walletName: storeOrgAgentDetails.walletName,
+                    agentsTypeId: storeOrgAgentDetails.agentsTypeId,
+                    orgId: storeOrgAgentDetails.orgId,
+                    agentEndPoint: storeOrgAgentDetails.agentEndPoint,
+                    agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
+                    orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
+                    tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
+                    ledgerId: storeOrgAgentDetails.ledgerId[0],
+                    apiKey: storeOrgAgentDetails.apiKey
+                },
+                select: {
+                    id: true
                 }
             });
            

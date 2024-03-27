@@ -49,8 +49,7 @@ import {
   IEcosystemInvitations,
   IEditEcosystem,
   IEndorsementTransaction,
-  IEcosystemList,
-  IEcosystemLeadOrgs
+  IEcosystemList
 } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -1201,11 +1200,7 @@ export class EcosystemService {
         endorserDid: endorsementTransactionPayload.endorserDid
       };
 
-      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(
-        payload,
-        url,
-        ecosystemLeadDetails.orgId
-      );
+      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, ecosystemLeadDetails.orgId);
 
       if (!schemaTransactionRequest) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
@@ -1489,18 +1484,6 @@ export class EcosystemService {
         ecosystemMemberDetails,
         ecosystemLeadAgentDetails
       );
-
-      if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
-        const isSchemaExists = await this.ecosystemRepository.schemaExist(payload.schema.name, payload.schema.version);
-
-        if (0 !== isSchemaExists.length) {
-          this.logger.error(ResponseMessages.ecosystem.error.schemaAlreadyExist);
-          throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist, {
-            cause: new Error(),
-            description: ResponseMessages.errorMessages.conflict
-          });
-        }
-      }
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, orgId);
 

@@ -92,38 +92,22 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const issuancePromises = credentialData.map(async (credentials) => {
-        const { connectionId, attributes, credential, options } = credentials;
-        let issueData;
+      const issueData: IIssueData = {
+        protocolVersion: 'v1',
+        connectionId,
+        credentialFormats: {
+          indy: {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
+            credentialDefinitionId
 
-        if (payload.credentialType === IssueCredentialType.INDY) {
-          issueData = {
-            protocolVersion: payload.protocolVersion || 'v1',
-            connectionId,
-            credentialFormats: {
-              indy: {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                attributes: attributes.map(({ isRequired, ...rest }) => rest),
-                credentialDefinitionId
-              }
-            },
-            autoAcceptCredential: payload.autoAcceptCredential || 'always',
-            comment
-          };
-        } else if (payload.credentialType === IssueCredentialType.JSONLD) {
-          issueData = {
-            protocolVersion: payload.protocolVersion || 'v2',
-            connectionId,
-            credentialFormats: {
-              jsonld: {
-                credential,
-                options
-              }
-            },
-            autoAcceptCredential: payload.autoAcceptCredential || 'always',
-            comment: comment || ''
-          };
-        }
+          }
+        },
+        autoAcceptCredential: payload.autoAcceptCredential || 'always',
+        comment
+      };
+
+      const credentialCreateOfferDetails: ICreateOfferResponse = await this._sendCredentialCreateOffer(issueData, url, orgId);
 
         await this.delay(500);
         return this._sendCredentialCreateOffer(issueData, url, orgId);

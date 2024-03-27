@@ -7,8 +7,9 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
-import { GetEndorsementsPayload } from '../interfaces/endorsements.interface';
-import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from '../interfaces/ecosystem.interfaces';
+import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
+import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList } from '../interfaces/ecosystem.interfaces';
+import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Controller()
 export class EcosystemController {
@@ -42,7 +43,7 @@ export class EcosystemController {
    * @returns Get all ecosystem details
    */
   @MessagePattern({ cmd: 'get-all-ecosystem' })
-  async getAllEcosystems(@Body() payload: { orgId: string }): Promise<EcosystemDetailsResult> {
+  async getAllEcosystems(@Body() payload: IEcosystemList): Promise<IEcosystemDetails> {
     return this.ecosystemService.getAllEcosystem(payload);
   }
 
@@ -121,7 +122,7 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'get-all-ecosystem-schemas' })
-  async getAllEcosystemSchemas(@Body() payload: GetEndorsementsPayload): Promise<object> {
+  async getAllEcosystemSchemas(@Body() payload: GetEndorsementsPayload): Promise<ISchemasResponse> {
     return this.ecosystemService.getAllEcosystemSchemas(payload);
   }
 

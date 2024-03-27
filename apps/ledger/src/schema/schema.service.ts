@@ -20,7 +20,6 @@ import { OrgAgentType } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { CommonConstants } from '@credebl/common/common.constant';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -38,10 +37,6 @@ export class SchemaService extends BaseService {
     orgId: string
    ): Promise<ISchemaData> {
 
-    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    if (!apiKey || null === apiKey || undefined === apiKey) {
-      apiKey = await this._getOrgAgentApiKey(orgId);
-    }
     const userId = user.id;
     try {
 
@@ -144,7 +139,7 @@ export class SchemaService extends BaseService {
               name: schema.schemaName,
               issuerId,
               agentEndPoint,
-              apiKey,
+              orgId,
               agentType: OrgAgentType.DEDICATED
             };
             schemaResponseFromAgentService = await this._createSchema(schemaPayload);
@@ -162,7 +157,7 @@ export class SchemaService extends BaseService {
                 issuerId: did
               },
               agentEndPoint,
-              apiKey,
+              orgId,
               agentType: OrgAgentType.SHARED
             };
             schemaResponseFromAgentService = await this._createSchema(schemaPayload);
@@ -278,20 +273,13 @@ export class SchemaService extends BaseService {
       const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-      // const apiKey = '';
 
-      let apiKey;
-      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-
-      }
 
       let schemaResponse;
       if (OrgAgentType.DEDICATED === orgAgentType) {
         const getSchemaPayload = {
           schemaId,
-          apiKey,
+          orgId,
           agentEndPoint,
           agentType: OrgAgentType.DEDICATED
         };
@@ -304,7 +292,7 @@ export class SchemaService extends BaseService {
           payload: { schemaId },
           agentType: OrgAgentType.SHARED,
           agentEndPoint,
-          apiKey
+          orgId
         };
         schemaResponse = await this._getSchemaById(getSchemaPayload);
       }

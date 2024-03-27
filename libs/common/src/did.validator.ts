@@ -1,27 +1,24 @@
-import { DidMethod, KeyType } from "@credebl/enum/enum";
-import { IDidCreate } from "./interfaces/did.interface";
+import { DidMethod } from '@credebl/enum/enum';
+import { IDidCreate } from './interfaces/did.interface';
+import { BadRequestException } from '@nestjs/common';
 
-export function validateDid(createDid: IDidCreate): string[] {
-    const errors: string[] = [];
+export function validateDid(createDid: IDidCreate): void {
 
-    if (DidMethod.WEB && !createDid.domain) {
-        errors.push('domain is required for Web method'); 
-    } else if (DidMethod.INDY && !createDid.network) {
-        errors.push('network is required for Indy method'); 
-    } else if (DidMethod.INDY && createDid.keyType !== KeyType.Ed25519) {
-        errors.push('Only ed25519 key type is supported for Indy method'); 
-    } else if ((createDid.method === DidMethod.WEB || createDid.method === DidMethod.KEY) && 
-    (createDid.keyType !== KeyType.Ed25519 && createDid.keyType !== KeyType.Bls12381g2)) {
-        errors.push('Only ed25519 and bls12381g2 key type is supported');
-    } else if (!createDid.role) {
-        errors.push('role or endorserDid is required');
-    } else if (DidMethod.POLYGON && !createDid.privatekey) {
-        errors.push('privateKey is required for polygon method');
-    } else if (DidMethod.POLYGON && !createDid.endpoint) {
-        errors.push('endpoint is required for polygon method');
-    } else if ((DidMethod.INDY || DidMethod.KEY || DidMethod.WEB) && (!createDid.seed)) {
-        errors.push('seed is required');
+    if (DidMethod.WEB === createDid.method && !createDid.domain) {
+        throw new BadRequestException('domain is required for Web method'); 
+    } else if ((createDid.method === DidMethod.INDY || createDid.method === DidMethod.POLYGON) && !createDid.network) {
+        throw new BadRequestException('network is required'); 
+    } else if ((createDid.method === DidMethod.INDY || createDid.method === DidMethod.POLYGON) && 'ed25519' !== createDid.keyType) {
+        throw new BadRequestException('Only ed25519 key type is supported'); 
+    } else if ((createDid.method === DidMethod.WEB || createDid.method === DidMethod.KEY) &&  ('ed25519' !== createDid.keyType && 'bls12381g2' !== createDid.keyType)) {
+        throw new BadRequestException('Only ed25519 and bls12381g2 key type is supported');
+    } else if (DidMethod.INDY === createDid.method && (!createDid.role && !createDid.endorserDid)) {
+        throw new BadRequestException('role or endorserDid is required');
+    } else if (DidMethod.POLYGON === createDid.method && !createDid.privatekey) {
+        throw new BadRequestException('privatekey is required for polygon method');
+    } else if (DidMethod.POLYGON === createDid.method && !createDid.endpoint) {
+        throw new BadRequestException('endpoint is required for polygon method');
+    } else if ((DidMethod.INDY === createDid.method || DidMethod.KEY === createDid.method || DidMethod.WEB === createDid.method) && (!createDid.seed)) {
+        throw new BadRequestException('seed is required');
     }
-
-    return errors;
 }

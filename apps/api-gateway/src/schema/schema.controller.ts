@@ -138,7 +138,7 @@ export class SchemaController {
     summary: 'Create and sends a W3C-schema to the ledger.',
     description: 'Create and sends a W3C-schema to the ledger.'
   })
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {

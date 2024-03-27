@@ -392,5 +392,4 @@ export class CommonService {
       throw new BadRequestException('Invalid Credentials');
     }
   }
-
 }

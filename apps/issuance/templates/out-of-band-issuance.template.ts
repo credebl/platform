@@ -25,14 +25,14 @@ export class OutOfBandIssuance {
                   
                   To acknowledge and access your credential, kindly proceed with following steps:
                       <ul>
-                          <li>Download the <b>ADEYA SSI App</b> from  
-                            <a href="https://play.google.com/store/apps/details?id=id.credebl.adeya&pli=1" target="_blank">Android Play Store</a> or
-<a href="https://apps.apple.com/in/app/adeya-ssi-wallet/id6463845498" target="_blank">iOS App Store.</a> (Skip, if already downloaded)
+                          <li>Download the <b>${process.env.MOBILE_APP_NAME}</b> from  
+                            <a href="${process.env.PLAY_STORE_DOWNLOAD_LINK}" target="_blank">Android Play Store</a> or
+<a href="${process.env.IOS_DOWNLOAD_LINK}" target="_blank">iOS App Store.</a> (Skip, if already downloaded)
 </li>
-                          <li>Complete the onboarding process in ADEYA.</li>
-                          <li>Open the “Accept Credential” link below in this email <i>(This will open the link in the ADEYA App)</i></li>
-                          <li><b>Accept</b> the Credential in ADEYA.</li>
-                          <li>Check <b>"Credentials"</b> tab in ADEYA to view the issued credential.</li>
+                          <li>Complete the onboarding process in ${process.env.MOBILE_APP}.</li>
+                          <li>Open the “Accept Credential” link below in this email <i>(This will open the link in the ${process.env.MOBILE_APP} App)</i></li>
+                          <li><b>Accept</b> the Credential in ${process.env.MOBILE_APP}.</li>
+                          <li>Check <b>"Credentials"</b> tab in ${process.env.MOBILE_APP} to view the issued credential.</li>
                       </ul>
                       <div style="text-align: center; padding-bottom: 20px;">
                       <a clicktracking=off href="${agentEndPoint}"
@@ -43,7 +43,7 @@ export class OutOfBandIssuance {
                   
                    </p>
                    <p>
-                     <b>Note:</b> If the above steps do not work for you, please open the <b>attached QR Code image</b> in this email on another device, and scan the QR code using the ADEYA SSI App on your mobile device. 
+                     <b>Note:</b> If the above steps do not work for you, please open the <b>attached QR Code image</b> in this email on another device, and scan the QR code using the ${process.env.MOBILE_APP_NAME} on your mobile device. 
                     <u> The QR Code is single-use.</u>
                    </p>
                   

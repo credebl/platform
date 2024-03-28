@@ -322,7 +322,7 @@ export class SchemaService extends BaseService {
             }))
         ).toPromise()
         .catch(error => {
-          this.logger.error(`Error in creating WC3 schema : ${JSON.stringify(error)}`);
+          this.logger.error(`Error in creating W3C schema : ${JSON.stringify(error)}`);
           throw new RpcException(error.error ? error.error.message : error.message);
         });
       return W3CSchemaResponse;  

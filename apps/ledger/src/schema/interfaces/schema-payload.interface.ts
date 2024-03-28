@@ -72,3 +72,19 @@ export interface ISchemaExist {
    version: string;
 }
 
+interface SchemaPayload {
+    schema: object,
+    schemaName: string,
+    did: string
+  }
+  
+export interface W3CSchemaPayload {
+    schemaPayload: SchemaPayload,
+    orgId: string
+  }
+
+export interface W3CCreateSchema {
+    url: string,
+    orgId: string,
+    schemaRequestPayload: SchemaPayload
+}  

@@ -48,6 +48,7 @@ export class CreateDidDto {
     @IsOptional()
     @ApiPropertyOptional()
     @IsString({ message: 'private key must be in string format.' })
+    @Transform(({ value }) => trim(value))
     privatekey?: string;
 
     @ApiProperty({example: 'http://localhost:6006/docs'})

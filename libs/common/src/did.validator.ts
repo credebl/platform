@@ -16,6 +16,8 @@ export function validateDid(createDid: IDidCreate): void {
         throw new BadRequestException('role or endorserDid is required');
     } else if (DidMethod.POLYGON === createDid.method && !createDid.privatekey) {
         throw new BadRequestException('privatekey is required for polygon method');
+    } else if (DidMethod.POLYGON === createDid.method && createDid.privatekey && 64 !== createDid.privatekey.length) {
+        throw new BadRequestException('Private key must be exactly 64 characters long');
     } else if (DidMethod.POLYGON === createDid.method && !createDid.endpoint) {
         throw new BadRequestException('endpoint is required for polygon method');
     } else if ((DidMethod.INDY === createDid.method || DidMethod.KEY === createDid.method || DidMethod.WEB === createDid.method) && (!createDid.seed)) {

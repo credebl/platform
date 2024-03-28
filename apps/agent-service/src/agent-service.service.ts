@@ -1559,6 +1559,17 @@ export class AgentServiceService {
       return data; 
   }
 
+  async createW3CSchema(url: string, orgId: string, schemaRequestPayload): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const schemaRequest = await this.commonService
+        .httpPost(url, schemaRequestPayload, { headers: { 'authorization': getApiKey } })
+        .then(async response => response);
+      return schemaRequest;
+    } catch (error) {
+      this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
+    }
+  }
   async natsCall(pattern: object, payload: object): Promise<{
     response: string;
   }> {

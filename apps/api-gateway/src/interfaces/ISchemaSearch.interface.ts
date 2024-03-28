@@ -10,3 +10,9 @@ export interface ISchemaSearchPayload {
     user?: IUserRequestInterface
 }
   
+
+export interface W3CSchemaPayload {
+    schema: object;
+    schemaName: string;
+    did: string;
+ }

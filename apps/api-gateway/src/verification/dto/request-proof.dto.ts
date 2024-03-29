@@ -233,6 +233,12 @@ export class ProofRequestPresentationDefinition {
 export class SendProofRequestPayload {
 
     @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid goal code' })
+    @IsString({ message: 'goal code should be string' })
+    goalCode?: string;
+    
+    @ApiPropertyOptional()
     @IsString({ message: 'protocolVersion must be in string' })
     @IsNotEmpty({ message: 'please provide valid protocol version' })
     @IsOptional()

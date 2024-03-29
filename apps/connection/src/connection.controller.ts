@@ -5,6 +5,7 @@ import {
   GetAllConnections,
   IConnection,
   ICreateConnection,
+  ICreateOutOfbandConnectionInvitation,
   IFetchConnectionById,
   IFetchConnections,
   IReceiveInvitationByOrg,
@@ -93,5 +94,10 @@ export class ConnectionController {
   @MessagePattern({ cmd: 'get-question-answer-record' })
   async getQuestionAnswersRecord(orgId: string): Promise<object> {
     return this.connectionService.getQuestionAnswersRecord(orgId);
+  }
+
+  @MessagePattern({ cmd: 'create-connection-invitation' })
+  async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<object> {
+    return this.connectionService.createConnectionInvitation(payload);
   }
 }

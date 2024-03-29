@@ -267,3 +267,24 @@ export interface ConnectionResponseDetail {
   recordId: string;
   recipientKey:string;
 }
+
+export interface ICreateConnectionInvitation {
+  label?: string;
+  alias?: string;
+  imageUrl?: string;
+  goalCode?: string;
+  goal?: string;
+  handshake?: boolean;
+  handshakeProtocols?: object[];
+  messages?: object[];
+  multiUseInvitation?: boolean;
+  autoAcceptConnection?: boolean;
+  routing?: object;
+  appendedAttachments?: object[];
+  orgId?: string;
+}
+
+export interface ICreateOutOfbandConnectionInvitation {
+  user: IUserRequestInterface,
+  createOutOfBandConnectionInvitation: ICreateConnectionInvitation,
+}

@@ -12,7 +12,9 @@ import {
   ICreateConnection,
   IReceiveInvitation,
   IReceiveInvitationResponse,
-  IReceiveInvitationUrl
+  IReceiveInvitationUrl,
+  ICreateOutOfbandConnectionInvitation,
+  ICreateConnectionInvitation
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -144,7 +146,6 @@ export class ConnectionService {
     const payload = { connectionPayload, url, orgId };
 
     try {
-      
       return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -379,15 +380,30 @@ export class ConnectionService {
    * @param referenceId
    * @returns agent URL
    */
-  async getAgentUrl(orgAgentType: string, agentEndPoint: string, tenantId?: string): Promise<string> {
+  async getAgentUrl(
+    orgAgentType: string,
+    agentEndPoint: string,
+    tenantId?: string,
+    connectionInvitationFlag?: string
+  ): Promise<string> {
     try {
       let url;
-      if (orgAgentType === OrgAgentType.DEDICATED) {
-        url = `${agentEndPoint}${CommonConstants.URL_CONN_LEGACY_INVITE}`;
-      } else if (orgAgentType === OrgAgentType.SHARED) {
-        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_INVITATION}`.replace('#', tenantId);
+      if ('connection-invitation' === connectionInvitationFlag) {
+        if (orgAgentType === OrgAgentType.DEDICATED) {
+          url = `${agentEndPoint}${CommonConstants.URL_CONN_INVITE}`;
+        } else if (orgAgentType === OrgAgentType.SHARED) {
+          url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CONNECTION_INVITATION}`.replace('#', tenantId);
+        } else {
+          throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+        }
       } else {
-        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+        if (orgAgentType === OrgAgentType.DEDICATED) {
+          url = `${agentEndPoint}${CommonConstants.URL_CONN_LEGACY_INVITE}`;
+        } else if (orgAgentType === OrgAgentType.SHARED) {
+          url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_INVITATION}`.replace('#', tenantId);
+        } else {
+          throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
+        }
       }
       return url;
     } catch (error) {
@@ -621,10 +637,7 @@ export class ConnectionService {
     }
   }
 
-  async storeConnectionObjectAndReturnUrl(
-    connectionInvitationUrl: string,
-    persistent: boolean
-  ): Promise<string> {
+  async storeConnectionObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
     const storeObj = connectionInvitationUrl;
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };
@@ -633,6 +646,122 @@ export class ConnectionService {
     try {
       const message = await this.natsCall(pattern, payload);
       return message.response;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
+    }
+  }
+
+  /**
+   * Create connection invitation URL
+   * @param orgId
+   * @param user
+   * @returns Connection invitation URL
+   */
+  async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<ICreateConnectionUrl> {
+    try {
+      const {
+        alias,
+        appendedAttachments,
+        autoAcceptConnection,
+        goal,
+        goalCode,
+        handshake,
+        handshakeProtocols,
+        imageUrl,
+        messages,
+        multiUseInvitation,
+        orgId,
+        routing
+      } = payload?.createOutOfBandConnectionInvitation;
+
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(payload?.createOutOfBandConnectionInvitation?.orgId);
+
+      const { agentEndPoint, id, organisation } = agentDetails;
+      const agentId = id;
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
+      }
+      
+      const connectionPayload = {
+        multiUseInvitation: multiUseInvitation ?? true,
+        autoAcceptConnection: autoAcceptConnection ?? true,
+        alias: alias || undefined,
+        imageUrl: organisation.logoUrl || imageUrl || undefined,
+        label: organisation.name,
+        goal: goal || undefined,
+        goalCode: goalCode || undefined,
+        handshake: handshake || undefined,
+        handshakeProtocols: handshakeProtocols || undefined,
+        appendedAttachments: appendedAttachments || undefined,
+        routing: routing || undefined,
+        messages: messages || undefined
+      };
+      
+      const createConnectionInvitationFlag = 'connection-invitation';
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const url = await this.getAgentUrl(
+        orgAgentType,
+        agentEndPoint,
+        agentDetails?.tenantId,
+        createConnectionInvitationFlag
+      );
+      const createConnectionInvitation = await this._createOutOfBandConnectionInvitation(connectionPayload, url, orgId);
+      const connectionInvitationUrl = createConnectionInvitation?.response?.invitationUrl;
+      const shortenedUrl = await this.storeConnectionObjectAndReturnUrl(
+        connectionInvitationUrl,
+        connectionPayload.multiUseInvitation
+      );
+      const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
+        shortenedUrl,
+        agentId,
+        orgId,
+        null
+      );
+      const connectionDetailRecords: ConnectionResponseDetail = {
+        id: saveConnectionDetails.id,
+        orgId: saveConnectionDetails.orgId,
+        agentId: saveConnectionDetails.agentId,
+        connectionInvitation: saveConnectionDetails.connectionInvitation,
+        multiUse: saveConnectionDetails.multiUse,
+        createDateTime: saveConnectionDetails.createDateTime,
+        createdBy: saveConnectionDetails.createdBy,
+        lastChangedDateTime: saveConnectionDetails.lastChangedDateTime,
+        lastChangedBy: saveConnectionDetails.lastChangedBy,
+        recordId: createConnectionInvitation.response.outOfBandRecord.id,
+        recipientKey: saveConnectionDetails.recipientKey
+      };
+      return connectionDetailRecords;
+    } catch (error) {
+      this.logger.error(`[createConnectionInvitation] - error in connection oob invitation: ${error}`);
+      this.handleError(error);
+    }
+  }
+
+  /**
+   * Store shortening URL
+   * @param orgId
+   * @returns connection invitation URL
+   */
+  async _createOutOfBandConnectionInvitation(
+    connectionPayload: ICreateConnectionInvitation,
+    url: string,
+    orgId: string
+  ): Promise<{
+    response;
+  }> {
+    //nats call in agent-service to create an invitation url
+    const pattern = { cmd: 'agent-create-connection-invitation' };
+    const payload = { connectionPayload, url, orgId };
+
+    try {
+      return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(

@@ -11,12 +11,16 @@ export interface IAttributes {
   value: string;
   isRequired?: boolean;
 }
+
+interface ICredentialsAttributes {
+  connectionId: string;
+  attributes: IAttributes[];
+}
 export interface IIssuance {
   user?: IUserRequest;
   credentialDefinitionId: string;
   comment?: string;
-  connectionId: string;
-  attributes: IAttributes[];
+  credentialData: ICredentialsAttributes[];
   orgId: string;
   autoAcceptCredential?: AutoAccept,
   protocolVersion?: string;
@@ -24,7 +28,6 @@ export interface IIssuance {
   parentThreadId?: string,
   willConfirm?: boolean,
   label?: string
-
 }
 
 interface IIndy {

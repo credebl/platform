@@ -6,7 +6,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
 import { FileExportResponse, IIssuedCredentialSearchParams, IssueCredentialType, RequestPayload } from './interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
-import { IssueCredentialDto } from './dtos/multiConnection.dto';
+import { IssueCredentialDto } from './dtos/multi-connection.dto';
 
 @Injectable()
 export class IssuanceService extends BaseService {

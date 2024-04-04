@@ -21,8 +21,6 @@ import { ICredDefWithPagination, ISchemaData, ISchemaDetails, ISchemasWithPagina
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { CommonService } from '@credebl/common';
-import { W3CSchemaVersion } from './enum/schema.enum';
 
 @Injectable()
 export class SchemaService extends BaseService {

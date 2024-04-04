@@ -98,6 +98,7 @@ export class IssuanceService {
       }
 
       const issuanceMethodLabel = 'create-offer';
+      
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const issuancePromises: Promise<ICreateOfferResponse>[] = [];

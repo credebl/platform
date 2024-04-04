@@ -655,10 +655,7 @@ export class ConnectionService {
     }
   }
 
-  async storeConnectionObjectAndReturnUrl(
-    connectionInvitationUrl: string,
-    persistent: boolean
-  ): Promise<string> {
+  async storeConnectionObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
     const storeObj = connectionInvitationUrl;
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };
@@ -687,6 +684,7 @@ export class ConnectionService {
    */
   async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<ICreateConnectionUrl> {
     try {
+      const { createOutOfBandConnectionInvitation } = payload;
       const {
         alias,
         appendedAttachments,
@@ -700,16 +698,18 @@ export class ConnectionService {
         multiUseInvitation,
         orgId,
         routing
-      } = payload?.createOutOfBandConnectionInvitation;
+      } = createOutOfBandConnectionInvitation;
 
-      const agentDetails = await this.connectionRepository.getAgentEndPoint(payload?.createOutOfBandConnectionInvitation?.orgId);
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(
+        payload?.createOutOfBandConnectionInvitation?.orgId
+      );
 
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
-      
+
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation ?? true,
         autoAcceptConnection: autoAcceptConnection ?? true,
@@ -724,7 +724,7 @@ export class ConnectionService {
         routing: routing || undefined,
         messages: messages || undefined
       };
-      
+
       const createConnectionInvitationFlag = 'connection-invitation';
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(
@@ -745,7 +745,7 @@ export class ConnectionService {
         orgId,
         null
       );
-      const connectionDetailRecords: ConnectionResponseDetail = {
+      const connectionStorePayload: ConnectionResponseDetail = {
         id: saveConnectionDetails.id,
         orgId: saveConnectionDetails.orgId,
         agentId: saveConnectionDetails.agentId,
@@ -758,7 +758,7 @@ export class ConnectionService {
         recordId: createConnectionInvitation.response.outOfBandRecord.id,
         recipientKey: saveConnectionDetails.recipientKey
       };
-      return connectionDetailRecords;
+      return connectionStorePayload;
     } catch (error) {
       this.logger.error(`[createConnectionInvitation] - error in connection oob invitation: ${error}`);
       this.handleError(error);

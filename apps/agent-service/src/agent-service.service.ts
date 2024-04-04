@@ -46,7 +46,8 @@ import {
   IDidCreate,
   IWallet,
   ITenantRecord,
-  LedgerListResponse
+  LedgerListResponse,
+  ICreateConnectionInvitation
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -1559,6 +1560,32 @@ export class AgentServiceService {
         .catch((error) => this.handleAgentSpinupStatusErrors(error));
 
       return data; 
+  }
+
+  async createW3CSchema(url: string, orgId: string, schemaRequestPayload): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const schemaRequest = await this.commonService
+        .httpPost(url, schemaRequestPayload, { headers: { 'authorization': getApiKey } })
+        .then(async response => response);
+      return schemaRequest;
+    } catch (error) {
+      this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async createConnectionInvitation(url: string, orgId: string, connectionPayload: ICreateConnectionInvitation): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+
+      const createConnectionInvitation = await this.commonService
+        .httpPost(url, connectionPayload, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return createConnectionInvitation;
+    } catch (error) {
+      this.logger.error(`Error in create connection invitation in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
   }
 
   async natsCall(pattern: object, payload: object): Promise<{

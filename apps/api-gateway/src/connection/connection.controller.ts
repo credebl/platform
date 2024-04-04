@@ -7,7 +7,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ConnectionService } from './connection.service';
-import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
+import { ConnectionDto, CreateConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -191,6 +191,35 @@ export class ConnectionController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
     }
+
+     /**
+        * Create out-of-band connection invitation
+        * @param connectionDto 
+        * @param res 
+        * @returns Created out-of-band connection invitation url
+    */
+     @Post('/orgs/:orgId/connection-invitation')
+     @ApiOperation({ summary: 'Create outbound out-of-band connection invitation', description: 'Create outbound out-of-band connection invitation' })
+     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+     async createConnectionInvitation(
+         @Param('orgId') orgId: string,
+         @Body() createOutOfBandConnectionInvitation: CreateOutOfBandConnectionInvitation,
+         @User() reqUser: IUserRequestInterface,
+         @Res() res: Response
+     ): Promise<Response> {
+ 
+        createOutOfBandConnectionInvitation.orgId = orgId;
+         const connectionData = await this.connectionService.createConnectionInvitation(createOutOfBandConnectionInvitation, reqUser);
+         const finalResponse: IResponse = {
+             statusCode: HttpStatus.CREATED,
+             message: ResponseMessages.connection.success.create,
+             data: connectionData
+         };
+         return res.status(HttpStatus.CREATED).json(finalResponse);
+ 
+     }
 
     @Post('/orgs/:orgId/question-answer/question/:connectionId')
     @ApiOperation({ summary: '', description: 'send question' })

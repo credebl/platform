@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IAgentProofRequest, IDidCreate, IWallet, ITenantRecord  } from './interface/agent-service.interface';
+import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IAgentProofRequest, IDidCreate, IWallet, ITenantRecord, ICreateConnectionInvitation  } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 
@@ -43,6 +43,12 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'agent-create-schema' })
   async createSchema(payload: ITenantSchema): Promise<object> {
     return this.agentServiceService.createSchema(payload);
+  }
+
+  //DONE
+  @MessagePattern({ cmd: 'agent-create-w3c-schema' })
+  async createW3CSchema(payload: { url, orgId, schemaRequestPayload }): Promise<object> {
+    return this.agentServiceService.createW3CSchema(payload.url, payload.orgId, payload.schemaRequestPayload);
   }
 
   //DONE
@@ -240,4 +246,8 @@ export class AgentServiceController {
     return this.agentServiceService.createSecp256k1KeyPair(payload.orgId);
   }
 
+    @MessagePattern({ cmd: 'agent-create-connection-invitation' })
+    async createConnectionInvitation(payload: { url: string; orgId: string; connectionPayload: ICreateConnectionInvitation }): Promise<object> {
+      return this.agentServiceService.createConnectionInvitation(payload.url, payload.orgId, payload.connectionPayload);
+    }
 }

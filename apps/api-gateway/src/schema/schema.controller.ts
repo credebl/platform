@@ -17,7 +17,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CreateSchemaDto } from '../dtos/create-schema.dto';
+import { CreateSchemaDto, CreateW3CSchemaDto } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
@@ -131,6 +131,26 @@ export class SchemaController {
       data: schemasResponse
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/:orgId/polygon-w3c/schemas')
+  @ApiOperation({
+    summary: 'Create and sends a W3C-schema to the ledger.',
+    description: 'Create and sends a W3C-schema to the ledger.'
+  })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+
+    const schemaDetails = await this.appService.createW3CSchema(schemaPayload, orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.schema.success.create,
+      data: schemaDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Post('/:orgId/schemas')

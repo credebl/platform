@@ -655,7 +655,10 @@ export class ConnectionService {
     }
   }
 
-  async storeConnectionObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
+  async storeConnectionObjectAndReturnUrl(
+    connectionInvitationUrl: string,
+    persistent: boolean
+  ): Promise<string> {
     const storeObj = connectionInvitationUrl;
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };

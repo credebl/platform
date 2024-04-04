@@ -20,6 +20,7 @@ import { OrgAgentType, SchemaType } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemaDetails, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Injectable()
 export class SchemaService extends BaseService {

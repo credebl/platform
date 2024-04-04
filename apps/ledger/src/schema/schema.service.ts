@@ -11,7 +11,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { schema } from '@prisma/client';
-import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria, W3CCreateSchema, W3CSchemaPayload } from './interfaces/schema-payload.interface';
+import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria, SchemaPayload, W3CCreateSchema } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
@@ -244,17 +244,15 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async createW3CSchema(
-    schemaRequestPayload: W3CSchemaPayload
-  ): Promise<object> {
+  async createW3CSchema(orgId:string, schemaPayload: SchemaPayload): Promise<object> {
     try {
-      const { orgId } = schemaRequestPayload;
+      const { description, did, schemaAttributes, schemaName} = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {
-        throw new NotFoundException(
-          ResponseMessages.schema.error.agentDetailsNotFound,
-          { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
-        );
+        throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
       }
       const { agentEndPoint } = agentDetails;
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
@@ -266,21 +264,210 @@ export class SchemaService extends BaseService {
         const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
         url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
       }
+
+      const schemaObject = await this.w3cSchemaBuilder(schemaAttributes, schemaName, description);
+      const agentSchemaPayload = {
+        schema:schemaObject,
+        did,
+        schemaName
+      };
+
       const W3cSchemaPayload = {
         url,
         orgId,
-        schemaRequestPayload: schemaRequestPayload.schemaPayload
+        schemaRequestPayload: agentSchemaPayload
       };
       return this._createW3CSchema(W3cSchemaPayload);
     } catch (error) {
-      this.logger.error(
-        `[createSchema] - outer Error: ${JSON.stringify(error)}`
-      );
+      this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
       throw new RpcException(error.error ? error.error.message : error.message);
     }
   }
-  
 
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  private async w3cSchemaBuilder(schemaAttributes, schemaName: string, description: string) {
+    const schemaAttributeJson = schemaAttributes.map((attribute, index) => ({
+      [attribute.title]: {
+        type: attribute.type.toLowerCase(),
+        order: index,
+        title: attribute.title
+      }
+    }));
+
+    // Add the format property to the id key
+    schemaAttributeJson.unshift({
+      id: {
+        type: 'string',
+        format: 'uri'
+      }
+    });
+
+    const nestedObject = {};
+    schemaAttributeJson.forEach((obj) => {
+      // eslint-disable-next-line prefer-destructuring
+      const key = Object.keys(obj)[0];
+      nestedObject[key] = obj[key];
+    });
+   
+     const schemaNameObject = {}; 
+     schemaNameObject[schemaName] = {
+     "const": schemaName
+     };
+     const date = new Date().toISOString();
+     
+    const W3CSchema = {
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: `${date}-${schemaName}`,
+      type: 'object',
+      required: ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
+      properties: {
+        '@context': {
+          $ref: '#/definitions/context'
+        },
+        type: {
+          type: 'array',
+          items: {
+            anyOf: [
+              {
+                $ref: '#/definitions/VerifiableCredential'
+              },
+              {
+                const: '#/definitions/$AAdharCard'
+              }
+            ]
+          }
+        },
+        credentialSubject: {
+          $ref: '#/definitions/credentialSubject'
+        },
+        id: {
+          type: 'string',
+          format: 'uri'
+        },
+        issuer: {
+          $ref: '#/definitions/uriOrId'
+        },
+        issuanceDate: {
+          type: 'string',
+          format: 'date-time'
+        },
+        expirationDate: {
+          type: 'string',
+          format: 'date-time'
+        },
+        credentialStatus: {
+          $ref: '#/definitions/credentialStatus'
+        },
+        credentialSchema: {
+          $ref: '#/definitions/credentialSchema'
+        }
+      },
+      definitions: {
+        context: {
+          type: 'array',
+          items: [
+            {
+              const: 'https://www.w3.org/2018/credentials/v1'
+            }
+          ],
+          additionalItems: {
+            oneOf: [
+              {
+                type: 'string',
+                format: 'uri'
+              },
+              {
+                type: 'object'
+              },
+              {
+                type: 'array',
+                items: {
+                  $ref: '#/definitions/context'
+                }
+              }
+            ]
+          },
+          minItems: 1,
+          uniqueItems: true
+        },
+        credentialSubject: {
+          type: 'object',
+          required: ['id'],
+          additionalProperties: false,
+          properties: nestedObject
+        },
+        VerifiableCredential: {
+          const: 'VerifiableCredential'
+        },
+        credentialSchema: {
+          oneOf: [
+            {
+              $ref: '#/definitions/idAndType'
+            },
+            {
+              type: 'array',
+              items: {
+                $ref: '#/definitions/idAndType'
+              },
+              minItems: 1,
+              uniqueItems: true
+            }
+          ]
+        },
+        credentialStatus: {
+          oneOf: [
+            {
+              $ref: '#/definitions/idAndType'
+            },
+            {
+              type: 'array',
+              items: {
+                $ref: '#/definitions/idAndType'
+              },
+              minItems: 1,
+              uniqueItems: true
+            }
+          ]
+        },
+        idAndType: {
+          type: 'object',
+          required: ['id', 'type'],
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uri'
+            },
+            type: {
+              type: 'string'
+            }
+          }
+        },
+        uriOrId: {
+          oneOf: [
+            {
+              type: 'string',
+              format: 'uri'
+            },
+            {
+              type: 'object',
+              required: ['id'],
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uri'
+                }
+              }
+            }
+          ]
+        },
+        ...schemaNameObject
+      },
+      title: schemaName,
+      description: `${description}`
+    };
+    return W3CSchema;
+  }
+  
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {

@@ -1559,7 +1559,20 @@ export class AgentServiceService {
         .then(async response => response);
       return schemaRequest;
     } catch (error) {
-      this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(`Error in createW3CSchema request in agent service : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async createConnectionInvitation(url: string, orgId: string, connectionPayload: ICreateConnectionInvitation): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+
+      const createConnectionInvitation = await this.commonService
+        .httpPost(url, connectionPayload, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return createConnectionInvitation;
+    } catch (error) {
+      this.logger.error(`Error in create connection invitation in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

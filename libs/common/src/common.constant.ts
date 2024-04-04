@@ -23,6 +23,7 @@ export enum CommonConstants {
   URL_CONN_REMOVE_CONNECTION_BY_ID = '/connections/#/remove',
   URL_CONN_METADATA = '/connections/#/metadata',
   URL_CONN_LEGACY_INVITE = '/oob/create-legacy-invitation',
+  URL_CONN_INVITE = '/oob/create-invitation',
   URL_RECEIVE_INVITATION_URL = '/oob/receive-invitation-url',
   URL_RECEIVE_INVITATION = '/oob/receive-invitation',
   URL_CONN_INVITATION = '/url',
@@ -84,6 +85,10 @@ export enum CommonConstants {
   URL_SCHM_GET_CRED_DEF_BY_ID = '/credential-definitions/#',
   URL_SCHM_GET_CRED_DEF_BY_ATTRB = '/credential-definitions/created',
 
+  // POLYGON BASED W3C SCHEMAS
+  DEDICATED_CREATE_POLYGON_W3C_SCHEMA = '/polygon/create-schema',
+  SHARED_CREATE_POLYGON_W3C_SCHEMA = '/multi-tenancy/polygon-wc3/schema/',
+
   // SHARED AGENT
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',
   URL_SHAGENT_CREATE_DID = '/multi-tenancy/create-did/',
@@ -93,6 +98,7 @@ export enum CommonConstants {
   URL_SHAGENT_CREATE_CRED_DEF = '/multi-tenancy/credential-definition/#',
   URL_SHAGENT_GET_CRED_DEF = '/multi-tenancy/credential-definition/@/#',
   URL_SHAGENT_CREATE_INVITATION = '/multi-tenancy/create-legacy-invitation/#',
+  URL_SHAGENT_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation/#',
   URL_SHAGENT_GET_CREATEED_INVITATIONS = '/multi-tenancy/connections/#',
   URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID = '/multi-tenancy/connections/#/@',
   URL_SHAGENT_CREATE_OFFER = '/multi-tenancy/credentials/create-offer/#',

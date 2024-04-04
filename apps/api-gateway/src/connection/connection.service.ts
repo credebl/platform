@@ -2,7 +2,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { Inject, Injectable} from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
+import { ConnectionDto, CreateConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
@@ -149,4 +149,11 @@ export class ConnectionService extends BaseService {
     }
   }
 
+  createConnectionInvitation(
+    createOutOfBandConnectionInvitation: CreateOutOfBandConnectionInvitation,
+    user: IUserRequestInterface
+  ): Promise<IReceiveInvitationRes> {
+    const payload = { user, createOutOfBandConnectionInvitation };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);
+  }
 }

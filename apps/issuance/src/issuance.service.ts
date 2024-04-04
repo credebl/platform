@@ -50,7 +50,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
-    async sendCredentialCreateOffer(payload: IIssuance): Promise<object> {
+    async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
 
     try {
       const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
@@ -98,7 +98,7 @@ export class IssuanceService {
       }
 
       const issuanceMethodLabel = 'create-offer';
-      
+
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const issuancePromises: Promise<ICreateOfferResponse>[] = [];

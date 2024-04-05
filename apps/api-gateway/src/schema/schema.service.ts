@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
-import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
+import { ISchemaSearchPayload, W3CSchemaPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from './interfaces';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
@@ -17,6 +17,11 @@ export class SchemaService extends BaseService {
   createSchema(schema: CreateSchemaDto, user: IUserRequestInterface, orgId: string): Promise<ISchemaData> {
     const payload = { schema, user, orgId };
     return this.sendNatsMessage(this.schemaServiceProxy, 'create-schema', payload);
+  }
+
+  createW3CSchema(schemaPayload: W3CSchemaPayload, orgId: string): Promise<object> {
+    const payload = { schemaPayload, orgId };
+    return this.sendNatsMessage(this.schemaServiceProxy, 'create-w3c-schema', payload);
   }
 
   getSchemaById(schemaId: string, orgId: string): Promise<{

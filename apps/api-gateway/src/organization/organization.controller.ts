@@ -24,6 +24,7 @@ import { ImageServiceService } from '@credebl/image-service';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { validate as isValidUUID } from 'uuid';
+import { UserAccessGuard } from '../authz/guards/user-access-guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -211,7 +212,7 @@ export class OrganizationController {
   @Get('/')
   @ApiOperation({ summary: 'Get all organizations', description: 'Get all organizations' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   @ApiQuery({
     name: 'pageNumber',
@@ -324,7 +325,7 @@ export class OrganizationController {
   @Post('/')
   @ApiOperation({ summary: 'Create a new Organization', description: 'Create an organization' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   async createOrganization(@Body() createOrgDto: CreateOrganizationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
     
@@ -351,7 +352,7 @@ export class OrganizationController {
   @Roles(OrgRoles.OWNER)
   @ApiOperation({ summary: 'Create credentials for an organization', description: 'Create client id and secret for an organization' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @ApiBearerAuth()
   async createOrgCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
@@ -414,7 +415,7 @@ export class OrganizationController {
   @Post('/:orgId/invitations')
   @ApiOperation({
     summary: 'Create organization invitation',
-    description: 'Create send invitation'
+    description: 'Create organization invitation'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
@@ -471,7 +472,7 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     updateOrgDto.orgId = orgId;

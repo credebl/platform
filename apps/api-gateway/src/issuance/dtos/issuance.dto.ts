@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/array-type */
 
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum, IsObject} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
-import { SortValue } from '../../enum';
-import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { AutoAccept } from '@credebl/enum/enum';
-import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
+import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
+import { Transform, Type } from 'class-transformer';
+
+import { AutoAccept } from '@credebl/enum/enum';
+import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { SortValue } from '../../enum';
+import { trim } from '@credebl/common/cast.helper';
 
 class Issuer {
   @ApiProperty()
@@ -190,6 +191,12 @@ class CredentialsIssuanceDto {
     @IsOptional()
     credentialType:IssueCredentialType;
 
+    @ApiPropertyOptional({ default: true })
+    @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
+    @IsBoolean({ message: 'reuseConnection must be a boolean' })
+    reuseConnection?: boolean;
+
     orgId: string;
 }
 
@@ -209,6 +216,14 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   @IsNotEmpty({ message: 'Please provide valid attributes' })
   @Type(() => Attribute)
   attributes?: Attribute[];
+
+  @ApiProperty({
+    example: false
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsBoolean({message: 'isShortenUrl must be boolean'})
+  isShortenUrl?: boolean;
   
 
   @ApiProperty()

@@ -110,7 +110,7 @@ export class EcosystemController {
     const finalResponse: IResponse = {
       statusCode: 200,
       message: ResponseMessages.ecosystem.success.allschema,
-      data: schemaList.response
+      data: schemaList
     };
     return res.status(200).json(finalResponse);
   }
@@ -124,11 +124,27 @@ export class EcosystemController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiBearerAuth()
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
   async getEcosystem(
+    @Query() paginationDto: PaginationDto,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
-    const ecosystemList = await this.ecosystemService.getAllEcosystem(orgId);
+    const ecosystemList = await this.ecosystemService.getAllEcosystem(orgId, paginationDto);
     const finalResponse: IResponse = {
       statusCode: 200,
       message: ResponseMessages.ecosystem.success.fetch,

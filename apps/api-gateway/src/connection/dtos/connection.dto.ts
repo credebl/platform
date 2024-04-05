@@ -2,6 +2,59 @@ import { ArrayNotEmpty, IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, Is
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { HandshakeProtocol } from '../enums/connections.enum';
+
+export class CreateOutOfBandConnectionInvitation {
+        @ApiPropertyOptional()
+        @IsOptional()
+        label?: string;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        alias?: string;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        imageUrl?: string;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        goalCode?: string;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        goal?: string;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        handshake?: boolean;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        handshakeProtocols?: HandshakeProtocol[];
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        messages?: object[];
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        multiUseInvitation?: boolean;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        autoAcceptConnection?: boolean;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        routing?: object;
+    
+        @ApiPropertyOptional()
+        @IsOptional()
+        appendedAttachments?: object[];
+
+        orgId;
+}
 
 export class CreateConnectionDto {
     @ApiPropertyOptional()
@@ -60,6 +113,12 @@ export class CreateConnectionDto {
     handshakeProtocols: string[];
 
     orgId: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide recipientKey' })
+    recipientKey: string;
 }
 
 export class ConnectionDto {

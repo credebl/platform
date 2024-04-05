@@ -2,8 +2,10 @@ import { Controller } from '@nestjs/common'; // Import the common service in the
 import { ConnectionService } from './connection.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
 import {
+  GetAllConnections,
   IConnection,
   ICreateConnection,
+  ICreateOutOfbandConnectionInvitation,
   IFetchConnectionById,
   IFetchConnections,
   IReceiveInvitationByOrg,
@@ -54,6 +56,12 @@ export class ConnectionController {
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
   }
 
+  @MessagePattern({ cmd: 'get-all-agent-connection-list' })
+  async getConnectionListFromAgent(payload: GetAllConnections): Promise<string> {
+    const {orgId, connectionSearchCriteria } = payload;
+    return this.connectionService.getAllConnectionListFromAgent(orgId, connectionSearchCriteria);
+  }
+
   /**
    * 
    * @param connectionId
@@ -86,5 +94,10 @@ export class ConnectionController {
   @MessagePattern({ cmd: 'get-question-answer-record' })
   async getQuestionAnswersRecord(orgId: string): Promise<object> {
     return this.connectionService.getQuestionAnswersRecord(orgId);
+  }
+
+  @MessagePattern({ cmd: 'create-connection-invitation' })
+  async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<object> {
+    return this.connectionService.createConnectionInvitation(payload);
   }
 }

@@ -7,7 +7,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ConnectionService } from './connection.service';
-import { ConnectionDto, CreateConnectionDto, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
+import { ConnectionDto, CreateConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -15,7 +15,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { GetAllConnectionsDto } from './dtos/get-all-connections.dto';
+import { GetAllAgentConnectionsDto, GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
@@ -108,7 +108,40 @@ export class ConnectionController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-    
+    /**
+   * Description: Get all connections from agent
+   * @param user
+   * @param orgId
+   *
+   */
+  @Get('/orgs/:orgId/agent/connections')
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @ApiOperation({
+    summary: `Fetch all connections from agent by orgId`,
+    description: `Fetch all connections from agent by orgId`
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getConnectionListFromAgent(
+    @Query() getAllConnectionsDto: GetAllAgentConnectionsDto,
+    @Param('orgId') orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+
+    const connectionDetails = await this.connectionService.getConnectionListFromAgent(
+      getAllConnectionsDto,
+      orgId
+    );
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.connection.success.fetch,
+      data: connectionDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+
     @Get('orgs/:orgId/question-answer/question')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
@@ -158,6 +191,35 @@ export class ConnectionController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
     }
+
+     /**
+        * Create out-of-band connection invitation
+        * @param connectionDto 
+        * @param res 
+        * @returns Created out-of-band connection invitation url
+    */
+     @Post('/orgs/:orgId/connection-invitation')
+     @ApiOperation({ summary: 'Create outbound out-of-band connection invitation', description: 'Create outbound out-of-band connection invitation' })
+     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+     async createConnectionInvitation(
+         @Param('orgId') orgId: string,
+         @Body() createOutOfBandConnectionInvitation: CreateOutOfBandConnectionInvitation,
+         @User() reqUser: IUserRequestInterface,
+         @Res() res: Response
+     ): Promise<Response> {
+ 
+        createOutOfBandConnectionInvitation.orgId = orgId;
+         const connectionData = await this.connectionService.createConnectionInvitation(createOutOfBandConnectionInvitation, reqUser);
+         const finalResponse: IResponse = {
+             statusCode: HttpStatus.CREATED,
+             message: ResponseMessages.connection.success.create,
+             data: connectionData
+         };
+         return res.status(HttpStatus.CREATED).json(finalResponse);
+ 
+     }
 
     @Post('/orgs/:orgId/question-answer/question/:connectionId')
     @ApiOperation({ summary: '', description: 'send question' })

@@ -8,7 +8,7 @@ import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
-import { Invitation } from '@credebl/enum/enum';
+import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
@@ -391,6 +391,7 @@ export class OrganizationRepository {
             select: {
               id: true,
               orgDid: true,
+              didDocument: true,
               walletName: true,
               agentEndPoint: true,
               agentSpinUpStatus: true,
@@ -553,7 +554,7 @@ export class OrganizationRepository {
     pageSize: number
   ): Promise<IGetOrganization> {
     try {
-      const sortByName = 'asc';
+      const sortByName = SortValue.DESC;
       const result = await this.prisma.$transaction([
         this.prisma.organisation.findMany({
           where: {

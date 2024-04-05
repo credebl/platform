@@ -177,7 +177,6 @@ export class ClientRegistrationService {
       const payload = new ClientCredentialTokenPayloadDto();
       payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
       payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
-      payload.scope = 'email profile';
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
     } catch (error) {
@@ -675,9 +674,6 @@ export class ClientRegistrationService {
         qs.stringify(payload)
         , config);
 
-      this.logger.debug(
-        `ClientRegistrationService token ${JSON.stringify(tokenResponse)}`
-      );
       return tokenResponse;
     } catch (error) {
       throw error;
@@ -790,10 +786,6 @@ export class ClientRegistrationService {
       payload.refresh_token = refreshToken;
       payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
 
-
-      this.logger.log(`access Token for platform Payload: ${JSON.stringify(payload)}`);
-
-
       if (
         'refresh_token' !== payload.grant_type ||
         !payload.client_id ||
@@ -804,8 +796,6 @@ export class ClientRegistrationService {
         throw new Error('Invalid inputs while getting token.');
       }
 
-      const strURL = await this.keycloakUrlService.GetSATURL('credebl-platform');
-      this.logger.log(`getToken URL: ${strURL}`);
       const config = {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -813,17 +803,16 @@ export class ClientRegistrationService {
       };
       
       const tokenResponse = await this.commonService.httpPost(
-        await this.keycloakUrlService.GetSATURL('credebl-platform'),
+        await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM),
         qs.stringify(payload)
         , config);
 
-      this.logger.debug(
-        `ClientRegistrationService token ${JSON.stringify(tokenResponse)}`
-      );
       return tokenResponse;
 
     } catch (error) {
-
+      this.logger.error(
+        `Error in getAccessToken ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }

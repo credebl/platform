@@ -23,7 +23,8 @@ export const ResponseMessages = {
             updateUserProfile:'User profile updated successfully',
             resetPassword: 'Password reset successfully',
             degreeCertificate: 'Degree Certificate shared successfully',
-            resetPasswordLink: 'Reset password link has been sent to your mail'
+            resetPasswordLink: 'Reset password link has been sent to your mail',
+            refreshToken: 'Token details fetched successfully'
         },
         error: {
             exists: 'User already exists',
@@ -60,7 +61,8 @@ export const ResponseMessages = {
             resetSamePassword: 'New password should not be the current password',
             resetPasswordLink: 'Unable to create reset password token',
             invalidResetLink: 'Invalid or expired reset password link',
-            invalidAccessToken: 'Authentication failed'
+            invalidAccessToken: 'Authentication failed',
+            invalidRefreshToken: 'Invalid refreshToken provided'
         }
     },
     organisation: {
@@ -187,9 +189,13 @@ export const ResponseMessages = {
     agent: {
         success: {
             create: 'Agent process initiated successfully. Please wait',
+            createWallet: 'Wallet created successfully',
+            createDid: 'Did created successfully',
             health: 'Agent health details retrieved successfully.',
+            ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
-            getWebhookUrl:'Webhook Url fetched successfully'
+            getWebhookUrl:'Webhook Url fetched successfully',
+            createKeys:'Key-pair created successfully'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -214,6 +220,7 @@ export const ResponseMessages = {
             walletAlreadyProcessing: 'Your wallet is already processing',
             notAbleToSpinp: 'Agent not able to spun up',
             platformAdminNotAbleToSpinp: 'Platform admin agent is not spun up',
+            invalidLedger: 'Invalid ledger name',
             seedCharCount: 'seed must be at most 32 characters',
             nullTenantId:'TenantId must not be null',
             tenantIdNotFound:'TenantId not found',
@@ -295,6 +302,7 @@ export const ResponseMessages = {
             proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
+            batchEmailSend: 'Unable to send email in batches',
             emailSend: 'Unable to send email to the user'
         }
     },
@@ -411,5 +419,10 @@ export const ResponseMessages = {
             notFound: 'Notification record not found.',
             invalidUrl: 'Invalid URL'
         }
-    }
+    },
+    storeObject: {
+        success: {
+            storeObject: 'Data stored successfully'
+        }
+    } 
 };

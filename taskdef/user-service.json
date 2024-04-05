@@ -3,7 +3,7 @@
     "containerDefinitions": [
         {
             "name": "user",
-            "image": "${{ env.REPOSITORY_URI }}:USER_v_${{ env.BUILD_NUMBER }}",
+            "image": "%REPOSITORY_URI%:CONNECTION_v_%BUILD_NUMBER%",
             "cpu": 1024,
             "memory": 2048,
             "portMappings": [],

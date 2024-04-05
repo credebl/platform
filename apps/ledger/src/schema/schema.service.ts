@@ -339,7 +339,7 @@ export class SchemaService extends BaseService {
                 $ref: '#/definitions/VerifiableCredential'
               },
               {
-                const: '#/definitions/$AAdharCard'
+                const: `#/definitions/$${schemaName}`
               }
             ]
           }

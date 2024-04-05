@@ -42,7 +42,7 @@ jobs:
           ECR_REPOSITORY: github
           IMAGE_TAG: "CONNECTION_v_${{ github.run_number }}"
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfiles/Dockerfile.user .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker image list
           

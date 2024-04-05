@@ -49,8 +49,8 @@ jobs:
       - name: Set environment variables
         run: |
           echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY=github" >> $GITHUB_ENV
-          echo "IMAGE_TAG=TEST_v_${{ github.run_number }}" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY=dev-services" >> $GITHUB_ENV
+          echo "IMAGE_TAG=USER_v_${{ github.run_number }}" >> $GITHUB_ENV
    
       - name: Print environment variables
         run: |

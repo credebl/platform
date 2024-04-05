@@ -264,6 +264,13 @@ export class SchemaService extends BaseService {
       }
 
       const schemaObject = await this.w3cSchemaBuilder(schemaAttributes, schemaName, description);
+      
+      if (!schemaObject) {
+        throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.badRequest
+        });
+      }
       const agentSchemaPayload = {
         schema:schemaObject,
         did,

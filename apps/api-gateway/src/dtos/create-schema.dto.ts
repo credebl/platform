@@ -73,7 +73,7 @@ export class CreateSchemaDto {
 
 export class CreateW3CSchemaDto {
     @ApiProperty()
-    @IsNotEmpty({ message: 'schemaAttribute is required' })
+    @IsNotEmpty({ message: 'Schema attributes are required' })
     schemaAttributes: SchemaAttributes [];
 
     @ApiProperty()

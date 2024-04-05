@@ -73,13 +73,11 @@ jobs:
           NAME=$(sed -n 's/.*"name": "\(.*\)",/\1/p' taskdef/user-service.json)
           SERVICE_NAME="${NAME}-service"
     
-         # Replace placeholders in the JSON file
-           sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" taskdef/user-service.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+          # Replace placeholders in the JSON file
+          sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" taskdef/user-service.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
  
-        # Debug: Print the content of the modified JSON file
-         cat ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+          # Debug: Print the content of the modified JSON file
+          cat ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
 
-        # Register the task definition using the modified JSON file
-        aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}
-
-      
+          # Register the task definition using the modified JSON file
+          aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}

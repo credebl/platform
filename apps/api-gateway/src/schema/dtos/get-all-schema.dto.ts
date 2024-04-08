@@ -8,20 +8,24 @@ import { toNumber, trim } from '@credebl/common/cast.helper';
 import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
 export class GetAllSchemaDto {
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, default: 1 })
     @IsOptional()
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page number must be greater than 0' })
     pageNumber: number = 1;
+
+    @ApiProperty({ required: false, default: 10 })
+    @IsOptional()
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page size must be greater than 0' })
+    pageSize: number = 10;
 
     @ApiProperty({ required: false })
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @Type(() => String)
     searchByText: string = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    pageSize: number = 10;
-
+    
     @ApiProperty({
         required: false
     })
@@ -41,15 +45,23 @@ export class GetAllSchemaDto {
 }
 
 export class GetCredentialDefinitionBySchemaIdDto {
-    @ApiProperty({ required: false })
+
+    @ApiProperty({ required: false, default: 1 })
     @IsOptional()
-    @Type(() => Number)
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page number must be greater than 0' })
     pageNumber: number = 1;
+
+    @ApiProperty({ required: false, default: 10 })
+    @IsOptional()
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page size must be greater than 0' })
+    pageSize: number = 10;
 
     @ApiProperty({ required: false })
     @IsOptional()
-    @Type(() => Number)
-    pageSize: number = 10;
+    @Type(() => String)
+    searchByText: string = '';
 
     @ApiProperty({
         required: false

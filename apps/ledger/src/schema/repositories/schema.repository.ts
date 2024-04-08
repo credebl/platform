@@ -92,7 +92,7 @@ export class SchemaRepository {
           issuerId: true
         },
         orderBy: {
-          [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc'
+          [payload.sortField]: SortValue.ASC === payload.sortBy ? SortValue.ASC : SortValue.DESC
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
@@ -166,7 +166,12 @@ export class SchemaRepository {
     try {
       const credDefResult = await this.prisma.credential_definition.findMany({
         where: {
-          AND: [{ orgId }, { schemaLedgerId: schemaId }]
+          AND: [{ orgId }, { schemaLedgerId: schemaId }],
+          OR: [
+            { tag: { contains: payload.searchByText, mode: 'insensitive' } },
+            { credentialDefinitionId: { contains: payload.searchByText, mode: 'insensitive' } },
+            { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } }
+          ]
         },
         select: {
           tag: true,
@@ -176,7 +181,7 @@ export class SchemaRepository {
           createDateTime: true
         },
         orderBy: {
-          [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc'
+          [payload.sortField]: SortValue.ASC === payload.sortBy ? SortValue.ASC : SortValue.DESC
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
@@ -188,7 +193,7 @@ export class SchemaRepository {
       });
       return { credDefResult, credDefCount };
     } catch (error) {
-      this.logger.error(`Error in getting agent DID: ${error}`);
+      this.logger.error(`Error in getting cred def list by schema id: ${error}`);
       throw error;
     }
   }

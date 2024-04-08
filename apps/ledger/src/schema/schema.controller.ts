@@ -44,9 +44,9 @@ export class SchemaController {
     return this.schemaService.getSchemas(schemaSearchCriteria, orgId);
   }
 
-  @MessagePattern({ cmd: 'get-cred-deff-list-by-schemas-id' })
-  async getcredDeffListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<ICredDefWithPagination> {
-    return this.schemaService.getcredDeffListBySchemaId(payload);
+  @MessagePattern({ cmd: 'get-cred-def-list-by-schemas-id' })
+  async getcredDefListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<ICredDefWithPagination> {
+    return this.schemaService.getcredDefListBySchemaId(payload);
   }
 
   @MessagePattern({ cmd: 'get-all-schemas' })

@@ -13,18 +13,31 @@ export interface ISchemasWithPagination extends IPaginationDetails{
     data: ISchemaData[];
   }
 
-  export interface ISchemaData {
-    createDateTime: Date;
-    createdBy: string;
-    name: string;
-    version: string;
-    attributes: string;
-    schemaLedgerId: string;
-    publisherDid: string;
-    issuerId: string;
+  export interface ISchemaData extends ISchema {
     orgId: string;
   }
 
+  export interface ISchemaDetails extends IPaginationDetails{
+    data: ISchema[];
+  }
+  
+  interface ISchema {
+    createDateTime: Date;
+    createdBy: string;
+    name: string;
+    schemaLedgerId: string;
+    version: string;
+    attributes: string;
+    publisherDid: string;
+    issuerId: string;
+  }
+  
+
+  export interface IPlatformSchemas {
+    schemasCount: number;
+    schemasResult: ISchemaData[];
+  }
+  
   export interface ICredDefData {
     tag: string;
     credentialDefinitionId: string;
@@ -41,4 +54,7 @@ export interface ISchemasWithPagination extends IPaginationDetails{
     credDefCount: number;
     credDefResult: ICredDefData[];
   }  
-  
+
+  export interface INetworkUrl {
+    networkUrl: string;
+  }

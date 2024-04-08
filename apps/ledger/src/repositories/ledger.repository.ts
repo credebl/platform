@@ -1,7 +1,8 @@
-import { PrismaService } from "@credebl/prisma-service";
-import { Injectable, Logger } from "@nestjs/common";
-import { ledgers } from "@prisma/client";
-import { LedgerDetails } from "../interfaces/ledgers.interface";
+import { PrismaService } from '@credebl/prisma-service';
+import { Injectable, Logger } from '@nestjs/common';
+import { ledgers } from '@prisma/client';
+import { LedgerDetails } from '../interfaces/ledgers.interface';
+import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
 
 
 @Injectable()
@@ -21,18 +22,16 @@ export class LedgerRepository {
         }
     }
 
-    async getNetworkUrl(payload: object): Promise<{
-        networkUrl: string;
-    }> {
+    async getNetworkUrl(indyNamespace: string): Promise<INetworkUrl> {
 
         try {
             return this.prisma.ledgers.findFirst({
-                where: {
-                    indyNamespace: payload["indyNamespace"]
-                },
-                select: {
-                    networkUrl: true
-                }
+              where: {
+                indyNamespace                
+              },
+              select: {
+                networkUrl: true
+              }
             });
         } catch (error) {
             this.logger.error(`Error in getNetworkUrl: ${error}`);

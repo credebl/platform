@@ -12,6 +12,7 @@ import { schema } from '@prisma/client';
 import {
   ICredDefWithPagination,
   ISchemaData,
+  ISchemaDetails,
   ISchemasWithPagination
 } from '@credebl/common/interfaces/schema.interface';
 
@@ -49,24 +50,7 @@ export class SchemaController {
   }
 
   @MessagePattern({ cmd: 'get-all-schemas' })
-  async getAllSchema(schemaSearch: ISchemaSearchPayload): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      schemaLedgerId: string;
-      version: string;
-      attributes: string;
-      publisherDid: string;
-      issuerId: string;
-    }[];
-  }> {
+  async getAllSchema(schemaSearch: ISchemaSearchPayload): Promise<ISchemaDetails> {
     const { schemaSearchCriteria } = schemaSearch;
     return this.schemaService.getAllSchema(schemaSearchCriteria);
   }

@@ -5,6 +5,7 @@ import { RpcException } from '@nestjs/microservices';
 import { ledgers } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { LedgerDetails } from './interfaces/ledgers.interface';
+import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class LedgerService extends BaseService {
@@ -30,11 +31,9 @@ export class LedgerService extends BaseService {
         }
     }
 
-    async getNetworkUrl(payload: object): Promise<{
-        networkUrl: string;
-    }> {
+    async getNetworkUrl(indyNamespace: string): Promise<INetworkUrl> {
         try {
-            const getNetworkUrl = await this.ledgerRepository.getNetworkUrl(payload);
+            const getNetworkUrl = await this.ledgerRepository.getNetworkUrl(indyNamespace);
 
             if (!getNetworkUrl) {
                 throw new NotFoundException(ResponseMessages.ledger.error.NotFound);

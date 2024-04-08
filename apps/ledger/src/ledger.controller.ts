@@ -3,6 +3,7 @@ import { LedgerService } from './ledger.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { ledgers } from '@prisma/client';
 import { LedgerDetails } from './interfaces/ledgers.interface';
+import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
 
 @Controller()
 export class LedgerController {
@@ -14,10 +15,8 @@ export class LedgerController {
   }
 
   @MessagePattern({ cmd: 'get-network-url' })
-  async getNetworkUrl(payload: object): Promise<{
-    networkUrl: string;
-  }> {
-    return this.ledgerService.getNetworkUrl(payload);
+  async getNetworkUrl(indyNamespace: string): Promise<INetworkUrl> {
+    return this.ledgerService.getNetworkUrl(indyNamespace);
   }
 
   @MessagePattern({ cmd: 'get-network-details-by-id' })

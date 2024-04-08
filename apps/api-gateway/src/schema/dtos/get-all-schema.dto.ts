@@ -8,6 +8,12 @@ import { toNumber, trim } from '@credebl/common/cast.helper';
 import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
 export class GetAllSchemaDto {
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @Transform(({ value }) => trim(value))
+    @Type(() => String)
+    searchByText: string = '';
+
     @ApiProperty({ required: false, default: 1 })
     @IsOptional()
     @Transform(({ value }) => toNumber(value))
@@ -19,12 +25,6 @@ export class GetAllSchemaDto {
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: 'Page size must be greater than 0' })
     pageSize: number = 10;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Transform(({ value }) => trim(value))
-    @Type(() => String)
-    searchByText: string = '';
     
     @ApiProperty({
         required: false

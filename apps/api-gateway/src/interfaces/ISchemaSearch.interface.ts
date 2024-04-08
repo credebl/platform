@@ -21,3 +21,19 @@ export interface W3CSchemaPayload {
     type: string,
     title: string
  }
+
+ export interface ILedgers {
+    id: string;
+    createDateTime: string;
+    lastChangedDateTime: string;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    registerDIDEndpoint: string;
+    registerDIDPayload: string;
+    indyNamespace: string;
+    networkUrl: string | null;
+  }
+  

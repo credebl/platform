@@ -179,16 +179,24 @@ export class VerificationController {
         @Body() requestProof: RequestProofDto
     ): Promise<Response> {
 
-        const attributeArray = [];
-        for (const attrData of requestProof.attributes) {
-          if (0 === attributeArray.length) {
-            attributeArray.push(Object.values(attrData)[0]);
-          } else if (!attributeArray.includes(Object.values(attrData)[0])) {
-            attributeArray.push(Object.values(attrData)[0]);
-          } else {
-            throw new BadRequestException('Please provide unique attribute names');
-          }           
+        let attributeArray = [];
+        const attributeError = [];
 
+        requestProof.presentationData.forEach((presentation, position) => {
+            presentation.attributes.forEach((attrData, index) => {
+                
+                if (0 === attributeArray.length) {
+                    attributeArray.push(Object.values(attrData)[0]);
+                } else if (!attributeArray.includes(Object.values(attrData)[0])) {
+                    attributeArray.push(Object.values(attrData)[0]);
+                } else {
+                    attributeError.push(`Duplicate attribute(s) found in presentationData at position [${position}] in attributes at position [${index}]`);
+                }
+            });
+            attributeArray = [];
+        });
+        if (0 < attributeError.length) {
+            throw new BadRequestException(attributeError);
         }
 
         requestProof.orgId = orgId;

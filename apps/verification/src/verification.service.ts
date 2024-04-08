@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
-import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation} from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation, IPresentationPayload} from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
@@ -169,10 +169,16 @@ export class VerificationService {
    * @param orgId 
    * @returns Requested proof presentation details
    */
-  async sendProofRequest(requestProof: IRequestProof): Promise<string> {
+  async sendProofRequest(requestProof: IRequestProof): Promise<string[]> {
     try {
       const comment = requestProof.comment ? requestProof.comment : '';
 
+      const { presentationData } = requestProof;
+
+      const presentationResponse = [];
+
+      for (const presentation of presentationData) {
+      
       let proofRequestPayload: ISendProofRequestPayload = {
         protocolVersion: '',
         comment: '',
@@ -191,24 +197,22 @@ export class VerificationService {
         parentThreadId: '',
         willConfirm: false
       };
-
-      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
+      const { connectionId } = presentation;
+      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(presentation);
 
       proofRequestPayload = {
         protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
         comment,
-        connectionId: requestProof.connectionId,
+        connectionId,
         proofFormats: {
           indy: {
             name: 'Proof Request',
             version: '1.0',
-            // eslint-disable-next-line camelcase
             requested_attributes: requestedAttributes,
-            // eslint-disable-next-line camelcase
             requested_predicates: requestedPredicates
           }
         },
-        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : 'never',
+        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : 'always',
         goalCode: requestProof.goalCode || undefined,
         parentThreadId: requestProof.parentThreadId || undefined,
         willConfirm: requestProof.willConfirm || undefined
@@ -223,8 +227,11 @@ export class VerificationService {
       const payload = { orgId: requestProof.orgId, url, proofRequestPayload };
 
       const getProofPresentationById = await this._sendProofRequest(payload);
-      return getProofPresentationById?.response;
-    } catch (error) {
+      presentationResponse.push(getProofPresentationById?.response);
+    } 
+
+    return presentationResponse;
+  } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
       this.verificationErrorHandling(error);
 
@@ -530,58 +537,56 @@ export class VerificationService {
     }
   }
 
-  async _proofRequestPayload(proofRequestpayload: IRequestProof): Promise<{
+  async _proofRequestPayload(proofRequestpayload: IPresentationPayload): Promise<{
     requestedAttributes;
     requestedPredicates;
   }> {
     try {
       let requestedAttributes = {}; 
       const requestedPredicates = {};
-      const { attributes } = proofRequestpayload;
-      if (attributes) {
-        requestedAttributes = Object.fromEntries(attributes.map((attribute, index) => {
-          const attributeElement = attribute.attributeName || attribute.attributeNames;
-          const attributeReferent = `additionalProp${index + 1}`;
-          const attributeKey = attribute.attributeName ? 'name' : 'names';
-          
-          if (!attribute.condition && !attribute.value) {
-
-            return [
-              attributeReferent,
-              {
-                [attributeKey]: attributeElement,
+     
+          requestedAttributes = Object.fromEntries(proofRequestpayload?.attributes?.map((attribute, attrIndex) => {
+              
+              const attributeElement = attribute.attributeName || attribute.attributeNames;
+              const attributeReferent = `additionalProp${attrIndex + 1}`;
+              const attributeKey = attribute.attributeName ? 'name' : 'names';
+              
+              if (!attribute.condition && !attribute.value) {
+              
+              return [
+                attributeReferent,
+                {
+                  [attributeKey]: attributeElement,
+                  restrictions: [
+                    {
+                      cred_def_id: attribute?.credDefId ? attribute?.credDefId : undefined,
+                      schema_id: attribute?.schemaId
+                    }
+                  ]
+                }
+              ];
+              
+            } else {
+              requestedPredicates[attributeReferent] = {
+                p_type: attribute.condition,
+                name: attributeElement,
+                p_value: parseInt(attribute.value),
                 restrictions: [
                   {
-                    cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                    schema_id: proofRequestpayload.attributes[index].schemaId
+                    cred_def_id: attribute?.credDefId ? attribute?.credDefId : undefined,
+                    schema_id: attribute?.schemaId
                   }
                 ]
-              }
-            ];
-          } else {
-            requestedPredicates[attributeReferent] = {
-              p_type: attribute.condition,
-              name: attributeElement,
-              p_value: parseInt(attribute.value),
-              restrictions: [
-                {
-                  cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                  schema_id: proofRequestpayload.attributes[index].schemaId
-                }
-              ]
-            };
-          }
+              };
+            }
+            
+            return [attributeReferent];
+          }));  
 
-          return [attributeReferent];
-        }));
-
-        return {
-          requestedAttributes,
-          requestedPredicates
-        };
-      } else {
-        throw new BadRequestException(ResponseMessages.verification.error.proofNotSend);
-      }
+      return {
+        requestedAttributes,
+        requestedPredicates
+      };
     } catch (error) {
       this.logger.error(`[proofRequestPayload] - error in proof request payload : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

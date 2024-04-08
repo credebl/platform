@@ -38,7 +38,7 @@ export class VerificationController {
    * @returns Requested proof presentation details
    */
   @MessagePattern({ cmd: 'send-proof-request' })
-  async sendProofRequest(payload: { requestProof: IRequestProof, user: IUserRequest }): Promise<string> {
+  async sendProofRequest(payload: { requestProof: IRequestProof, user: IUserRequest }): Promise<string[]> {
     return this.verificationService.sendProofRequest(payload.requestProof);
   }
 

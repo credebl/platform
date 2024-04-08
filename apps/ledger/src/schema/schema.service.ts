@@ -522,7 +522,8 @@ export class SchemaService extends BaseService {
 
 
   async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
-    try {
+    
+    try {  
       const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
@@ -626,7 +627,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getcredDeffListBySchemaId(
+  async getcredDefListBySchemaId(
     payload: ISchemaCredDeffSearchInterface
     ): Promise<ICredDefWithPagination> {
     const { schemaSearchCriteria } = payload;

@@ -96,8 +96,8 @@
       "poolConfig": "http://test.bcovrin.vonx.io/genesis",
       "isActive": true,
       "networkString": "testnet",
-      "registerDIDEndpoint": "http://test.bcovrin.vonx.io/register",
-      "registerDIDPayload": "",
+      "registeredDIDEndpoint": "http://test.bcovrin.vonx.io/register",
+      "registeredDIDPayload": "",
       "indyNamespace": "bcovrin:testnet"
     },
     {
@@ -106,8 +106,8 @@
       "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_testnet_genesis",
       "isActive": true,
       "networkString": "testnet",
-      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
-      "registerDIDPayload": "",
+      "registeredDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registeredDIDPayload": "",
       "indyNamespace": "indicio:testnet"
     },
     {
@@ -116,8 +116,8 @@
       "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_demonet_genesis",
       "isActive": true,
       "networkString": "demonet",
-      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
-      "registerDIDPayload": "",
+      "registeredDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registeredDIDPayload": "",
       "indyNamespace": "indicio:demonet"
     },
     {
@@ -126,8 +126,8 @@
       "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_mainnet_genesis",
       "isActive": true,
       "networkString": "mainnet",
-      "registerDIDEndpoint": "https://selfserve.indiciotech.io/nym",
-      "registerDIDPayload": "",
+      "registeredDIDEndpoint": "https://selfserve.indiciotech.io/nym",
+      "registeredDIDPayload": "",
       "indyNamespace": "indicio:mainnet"
     },
     {
@@ -136,8 +136,8 @@
       "poolConfig": "",
       "isActive": true,
       "networkString": "testnet",
-      "registerDIDEndpoint": "",
-      "registerDIDPayload": "",
+      "registeredDIDEndpoint": "",
+      "registeredDIDPayload": "",
       "indyNamespace": "polygon:testnet"
     }
   ],

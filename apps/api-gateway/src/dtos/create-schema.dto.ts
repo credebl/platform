@@ -72,7 +72,15 @@ export class CreateSchemaDto {
 }
 
 export class CreateW3CSchemaDto {
-    @ApiProperty()
+    @ApiProperty({
+        type: [],
+        'example': [
+            {
+                title: 'name',
+                type: 'string'
+            }
+        ]
+    })
     @IsNotEmpty({ message: 'Schema attributes are required' })
     schemaAttributes: SchemaAttributes [];
 
@@ -90,8 +98,8 @@ export class CreateW3CSchemaDto {
 
     @ApiProperty()
     @IsString({ message: 'description must be a string' })
-    @IsOptional()
-    description?: string;
+    @IsNotEmpty({ message: 'description is required' })
+    description: string;
 }
 
 export class SchemaAttributes {

@@ -1570,7 +1570,7 @@ export class AgentServiceService {
         .then(async response => response);
       return schemaRequest;
     } catch (error) {
-      this.logger.error(`Error in schema endorsement request in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(`Error in createW3CSchema request in agent service : ${JSON.stringify(error)}`);
     }
   }
 

@@ -12,7 +12,12 @@ export interface ISchemaSearchPayload {
   
 
 export interface W3CSchemaPayload {
-    schema: object;
+    schemaAttributes: W3CSchemaAttributes [];
     schemaName: string;
     did: string;
+ }
+
+ interface W3CSchemaAttributes {
+    type: string,
+    title: string
  }

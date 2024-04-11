@@ -19,7 +19,8 @@ import {
   UseInterceptors,
   Logger,
   BadRequestException,
-  NotFoundException
+  NotFoundException,
+  ParseUUIDPipe
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -536,7 +537,7 @@ export class IssuanceController {
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
     @Body() issueCredentialDto: IssueCredentialDto,
     @Res() res: Response
   ): Promise<Response> {

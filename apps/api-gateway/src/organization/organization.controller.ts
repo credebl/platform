@@ -25,6 +25,7 @@ import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
+import { PrimaryDid } from './dtos/set-primary-did.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -318,6 +319,29 @@ export class OrganizationController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
+   /**
+  * @returns DID list of organization
+  */
+
+   @Get('/:orgId/dids')
+   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+   @ApiBearerAuth()
+   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+   @ApiOperation({ summary: 'Fetch organization dids', description: 'Get all dids from organization' })
+  
+   async getAllDidByOrgId(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+     const users = await this.organizationService.getDidList(orgId);
+     const finalResponse: IResponse = {
+       statusCode: HttpStatus.OK,
+       message: ResponseMessages.organisation.success.orgDids,
+       data: users
+     };
+ 
+     return res.status(HttpStatus.OK).json(finalResponse);
+   }
+
 /**
  * @returns organization details
  */
@@ -341,6 +365,26 @@ export class OrganizationController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+
+  /**
+ * @returns organization details
+ */
+
+  @Post('/primary-did')
+  @ApiOperation({ summary: 'Set primary DID', description: 'Set primary DID for an organization' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
+  @ApiBearerAuth()
+  async setPrimaryDid(@Body() primaryDidPayload: PrimaryDid, @Res() res: Response): Promise<Response> {
+    
+    const orgData = await this.organizationService.setPrimaryDid(primaryDidPayload);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.organisation.success.primaryDid,
+      data: orgData
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
   /**
    * 
    * @param orgId 

@@ -142,3 +142,16 @@ export interface Payload {
   pageSize: number;
   search: string;
 }
+
+export interface DidList {
+  id: string;
+  createDateTime: Date;
+  did: string;
+  lastChangedDateTime: Date;
+  primaryDid: boolean;
+}
+
+export interface PrimaryDid {
+  orgId: string,
+  did: string
+}

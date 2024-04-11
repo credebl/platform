@@ -8,12 +8,13 @@ import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { organisation } from '@prisma/client';
 import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
-import { IOrgUsers } from 'apps/user/interfaces/user.interface';
+import { DidList, IOrgUsers } from 'apps/user/interfaces/user.interface';
 import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { PrimaryDid } from './dtos/set-primary-did.dto';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -29,6 +30,17 @@ export class OrganizationService extends BaseService {
   async createOrganization(createOrgDto: CreateOrganizationDto, userId: string, keycloakUserId: string): Promise<organisation> {
     const payload = { createOrgDto, userId, keycloakUserId };
     return this.sendNatsMessage(this.serviceProxy, 'create-organization', payload);
+  }
+
+  /**
+   *
+   * @param primaryDidPayload
+   * @returns Set Primary Did for organization
+   */
+  async setPrimaryDid(primaryDidPayload: PrimaryDid): Promise<organisation> {
+    const {did, orgId, id} = primaryDidPayload;
+    const payload = { did, orgId, id};
+    return this.sendNatsMessage(this.serviceProxy, 'set-primary-did', payload);
   }
 
   /**
@@ -172,6 +184,13 @@ export class OrganizationService extends BaseService {
     const payload = { orgId, pageNumber, pageSize, search };
 
     return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-user', payload);
+  }
+
+  async getDidList(
+    orgId: string
+  ): Promise<DidList[]> {
+    const payload = { orgId };
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-dids', payload);
   }
 
   async getOrgPofile(

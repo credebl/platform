@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
+import { DidList, IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -672,7 +672,7 @@ export class OrganizationRepository {
   async getAgentEndPoint(orgId: string): Promise<org_agents> {
     try {
 
-      const agentDetails = await this.prisma.org_agents.findFirst({
+      const agentDetails = await this.prisma.org_agents.findFirstOrThrow({
         where: {
           orgId
         }
@@ -733,5 +733,56 @@ export class OrganizationRepository {
       throw error;
     }
   }
+
+  // eslint-disable-next-line camelcase
+  async getAllOrganizationDid(orgId: string): Promise<DidList[]> {
+    try {
+      return this.prisma.org_dids.findMany({
+        where:{
+          orgId
+        },
+        select:{
+          id: true,
+          createDateTime: true,
+          did: true,
+          lastChangedDateTime: true,
+          primaryDid: true  
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error in getAllOrganizationDid: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async setOrgsPrimaryDid(primaryDid:string, orgId:string, id:string): Promise<[]> {
+    try {
+      const result = await this.prisma.$transaction([
+          this.prisma.org_agents.update({
+            where: {
+               orgId
+            },
+           data: {
+               orgDid: primaryDid
+           }
+       }),
+
+       this.prisma.org_dids.update({
+        where: {
+          id
+        },
+       data: {
+           primaryDid: true
+       }
+         })
+          
+        ]);
+       return result;
+    } catch (error) {
+        this.logger.error(`[setOrgsPrimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+        throw error;
+    }
+}
+
 
 }

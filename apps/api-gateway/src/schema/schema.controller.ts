@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param } from '@nestjs/common';
+import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param, ParseUUIDPipe } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
@@ -161,7 +161,7 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
 
     schema.orgId = orgId;
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);

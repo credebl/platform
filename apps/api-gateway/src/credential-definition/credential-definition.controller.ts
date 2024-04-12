@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, Body, UseGuards, Get, Query, HttpStatus, Res, Param, UseFilters } from '@nestjs/common';
+import { Controller, Logger, Post, Body, UseGuards, Get, Query, HttpStatus, Res, Param, UseFilters, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { CredentialDefinitionService } from './credential-definition.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery } from '@nestjs/swagger';
 import { ApiResponseDto } from 'apps/api-gateway/src/dtos/apiResponse.dto';
@@ -127,7 +127,7 @@ export class CredentialDefinitionController {
   async createCredentialDefinition(
     @User() user: IUserRequestInterface,
     @Body() credDef: CreateCredentialDefinitionDto,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
     @Res() res: Response
   ): Promise<Response> {
 

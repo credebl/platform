@@ -1,10 +1,12 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
 # RUN npm install -g pnpm
-# Install AWS CLI
-# RUN apk update
-# RUN apk add openssh-client
-# RUN apk update
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
+
+USER nonroot
+
+
 # RUN apk add aws-cli
 RUN set -eux \
     && apk --no-cache add \
@@ -31,7 +33,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN pnpm i
+RUN pnpm i --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -45,10 +47,10 @@ RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
 FROM node:18-alpine as prod
-# Install AWS CLI
-# RUN apk update
-# RUN apk add openssh-client
-# RUN apk update
+RUN addgroup -S nonroot \
+    && adduser -S nonroot -G nonroot
+
+USER nonroot
 # RUN apk add aws-cli
 RUN set -eux \
     && apk --no-cache add \

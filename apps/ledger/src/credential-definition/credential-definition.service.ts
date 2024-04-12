@@ -189,6 +189,7 @@ export class CredentialDefinitionService extends BaseService {
             } else if (OrgAgentType.SHARED === orgAgentType) {
                 const { tenantId } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(String(orgId));
                 const getSchemaPayload = {
+                    orgId, 
                     tenantId,
                     method: 'getCredentialDefinitionById',
                     payload: { credentialDefinitionId },

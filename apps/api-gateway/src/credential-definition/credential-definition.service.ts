@@ -4,6 +4,7 @@ import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { BaseService } from '../../../../libs/service/base.service';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { GetAllCredDefsDto } from '../dtos/get-cred-defs.dto';
+import { ICredDefs } from './interfaces';
 
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
@@ -30,9 +31,9 @@ export class CredentialDefinitionService extends BaseService {
     return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions', payload);
   }
 
-  getCredentialDefinitionBySchemaId(schemaId: string): Promise<{ response: object }> {
+  getCredentialDefinitionBySchemaId(schemaId: string): Promise<ICredDefs> {
     const payload = { schemaId };
-    return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions-by-schema-id', payload);
+    return this.sendNatsMessage(this.credDefServiceProxy, 'get-all-credential-definitions-by-schema-id', payload);
   }
 
   getAllCredDefAndSchemaForBulkOperation(orgId:string): Promise<{ response: object }> {

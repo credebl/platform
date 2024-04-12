@@ -61,12 +61,13 @@ export class CredentialDefinitionController {
   async getCredentialDefinitionBySchemaId(
     @Param('schemaId') schemaId: string,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
+    
     const credentialsDefinitions = await this.credentialDefinitionService.getCredentialDefinitionBySchemaId(schemaId);
-    const credDefResponse: IResponseType = {
+    const credDefResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.credentialDefinition.success.fetch,
-      data: credentialsDefinitions.response
+      data: credentialsDefinitions
     };
     return res.status(HttpStatus.OK).json(credDefResponse);
   }

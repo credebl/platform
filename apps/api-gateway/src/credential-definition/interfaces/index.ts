@@ -39,3 +39,17 @@ export interface IOrgAgentInterface {
   agentsTypeId: string;
   orgId: string;
 }
+
+export interface ICredDefs {
+  id: string;
+  createDateTime: string;
+  createdBy: string;
+  lastChangedDateTime: string;
+  lastChangedBy: string;
+  credentialDefinitionId: string;
+  tag: string;
+  schemaLedgerId: string;
+  schemaId: string;
+  revocable: boolean;
+  orgId: string;
+}

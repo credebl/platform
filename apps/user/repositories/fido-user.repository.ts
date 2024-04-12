@@ -53,7 +53,7 @@ export class FidoUserRepository {
   // eslint-disable-next-line camelcase
   async checkFidoUserExist(email: string): Promise<user> {
     try {
-      return this.prisma.user.findFirst({
+      return this.prisma.user.findFirstOrThrow({
         where: {
           email
         }

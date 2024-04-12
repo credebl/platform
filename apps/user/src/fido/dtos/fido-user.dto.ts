@@ -66,6 +66,10 @@ class ResponseDto {
     email: string;
   }
 
+  export class GenerateAuthentication {
+    userName: string;
+  }
+
    
 class VerifyAuthenticationResponseDto {
     @ApiProperty()

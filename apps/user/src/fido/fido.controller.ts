@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { GenerateRegistrationDto, VerifyRegistrationPayloadDto, VerifyAuthenticationPayloadDto, UpdateFidoUserDetailsDto, UserNameDto, credentialDto, updateDeviceDto } from './dtos/fido-user.dto';
+import { GenerateRegistrationDto, VerifyRegistrationPayloadDto, VerifyAuthenticationPayloadDto, UpdateFidoUserDetailsDto, UserNameDto, credentialDto, updateDeviceDto, GenerateAuthentication } from './dtos/fido-user.dto';
 import { FidoService } from './fido.service';
 
 @Controller('fido')
@@ -33,8 +33,9 @@ export class FidoController {
    * @returns Get authentication response
    */
     @MessagePattern({ cmd: 'generate-authentication-options' })
-    generateAuthenticationOption(payload: GenerateRegistrationDto): Promise<object> {
-        return this.fidoService.generateAuthenticationOption(payload.email);
+    generateAuthenticationOption(payload: GenerateAuthentication): Promise<object> {
+        const { userName } = payload;
+        return this.fidoService.generateAuthenticationOption(userName);
     }
     /**
    * Description: FIDO User Verification

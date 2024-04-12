@@ -3,12 +3,12 @@
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { org_agents, org_invitations, user_org_roles } from '@prisma/client';
+import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
-import { Invitation } from '@credebl/enum/enum';
+import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
@@ -38,7 +38,21 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
+    }
+  }
+
+  
+  async checkOrganizationSlugExist(orgSlug: string): Promise<organisation> {
+    try {
+      return this.prisma.organisation.findUnique({
+        where: {
+          orgSlug
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error in checkOrganizationSlugExist: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -97,6 +111,35 @@ export class OrganizationRepository {
     }
   }
 
+  async getAgentInvitationDetails(orgId: string): Promise<agent_invitations> {
+    try {
+      const response = await this.prisma.agent_invitations.findUnique({
+        where: {
+          id: orgId
+        }        
+      });
+      return response;
+    } catch (error) {
+      this.logger.error(`error in getting agent invitation details: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateConnectionInvitationDetails(orgId: string, connectionInvitation: string): Promise<Prisma.BatchPayload> {
+    try {
+        const temp = await this.prisma.agent_invitations.updateMany({
+          where: {orgId},
+          data: {
+            connectionInvitation
+          }
+        });
+        return temp;
+
+    } catch (error) {
+        this.logger.error(`Error in updating connection invitation details: ${JSON.stringify(error)}`);
+        throw error;
+    }
+  }
 
   /**
    *
@@ -348,6 +391,7 @@ export class OrganizationRepository {
             select: {
               id: true,
               orgDid: true,
+              didDocument: true,
               walletName: true,
               agentEndPoint: true,
               agentSpinUpStatus: true,
@@ -449,6 +493,38 @@ export class OrganizationRepository {
     }
   }
 
+  async getUnregisteredClientOrgs(): Promise<organisation[]> {
+    try {
+      const recordsWithNullIdpId = await this.prisma.organisation.findMany({
+        where: {
+          idpId: null
+        },
+        include: {
+          userOrgRoles: {
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  username: true,
+                  id: true,
+                  keycloakUserId: true,
+                  isEmailVerified: true
+                }
+              },
+              orgRole: true
+            }
+          }
+        }
+      });
+
+      return recordsWithNullIdpId;
+      
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   /**
    *
    * @param queryObject
@@ -478,7 +554,7 @@ export class OrganizationRepository {
     pageSize: number
   ): Promise<IGetOrganization> {
     try {
-      const sortByName = 'asc';
+      const sortByName = SortValue.DESC;
       const result = await this.prisma.$transaction([
         this.prisma.organisation.findMany({
           where: {
@@ -538,9 +614,9 @@ export class OrganizationRepository {
   * @returns Organization exist details
   */
 
-  async checkOrganizationExist(name: string, orgId: string): Promise<organisation[]> {
+  async checkOrganizationExist(name: string, orgId: string): Promise<organisation> {
     try {
-      return this.prisma.organisation.findMany({
+      return this.prisma.organisation.findUnique({
         where: {
           id: orgId,
           name
@@ -548,7 +624,7 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 

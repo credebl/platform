@@ -17,6 +17,8 @@ import {
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
 export class CommonService {
@@ -27,16 +29,10 @@ export class CommonService {
 
   async httpPost(url: string, payload?: any, apiKey?: any) {
     try {
-      this.logger.debug(
-        `httpPost service: URL : ${url} \nAPI KEY : ${JSON.stringify(
-          apiKey
-        )} \nPAYLOAD : ${JSON.stringify(payload)}`
-      );
       return await this.httpService
         .post(url, payload, apiKey)
         .toPromise()
         .then((response: any) => {
-          this.logger.error(response.data);
           return response.data;
         });
     } catch (error) {
@@ -99,7 +95,6 @@ export class CommonService {
 
   async httpGet(url: string, config?: any) {
     try {
-      this.logger.debug(`httpGet service URL: ${url}`);
       return await this.httpService
         .get(url, config)
         .toPromise()
@@ -163,11 +158,6 @@ export class CommonService {
 
   async httpPatch(url: string, payload?: any, apiKey?: any) {
     try {
-      this.logger.debug(
-        `httpPatch service: URL : ${url} \nAPI KEY : ${JSON.stringify(
-          apiKey
-        )} \nPAYLOAD : ${JSON.stringify(payload)}`
-      );
       return await this.httpService
         .patch(url, payload, apiKey)
         .toPromise()
@@ -231,7 +221,6 @@ export class CommonService {
 
   async httpDelete(url: string, config?: unknown): Promise<object> {
     try {
-      this.logger.debug(`httpDelete service URL: ${url}`);
       return await this.httpService
         .delete(url, config)
         .toPromise()
@@ -299,11 +288,6 @@ export class CommonService {
     config?: any
   ): Promise<ResponseService> {
     try {
-      this.logger.debug(
-        `httpPut service: URL : ${url} \nCONFIG : ${JSON.stringify(
-          config
-        )} \nPAYLOAD : ${JSON.stringify(payload)}`
-      );
       const response = await this.httpService
         .put(url, payload, config)
         .toPromise();
@@ -388,11 +372,11 @@ export class CommonService {
         encryptedPassword,
         process.env.CRYPTO_PRIVATE_KEY
       );
+
       const decryptedPassword = JSON.parse(password.toString(CryptoJS.enc.Utf8));
       return decryptedPassword;
     } catch (error) {
       throw new BadRequestException('Invalid Credentials');
     }
   }
-
 }

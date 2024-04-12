@@ -1,8 +1,9 @@
-import { AutoAccept } from "@credebl/enum/enum";
-import { IUserRequest } from "@credebl/user-request/user-request.interface";
+import { AutoAccept } from '@credebl/enum/enum';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 interface IProofRequestAttribute {
-    attributeName: string;
+    attributeName?: string;
+    attributeNames?:string[];
     condition?: string;
     value?: string;
     credDefId?: string;
@@ -30,22 +31,25 @@ export interface IGetAllProofPresentations {
 
 export interface IGetProofPresentationById {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string;
 }
 
 export interface IVerifyPresentation {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string;
 }
 
 export interface IVerifiedProofData {
     url: string;
-    apiKey: string;
+    apiKey?: string;
+    orgId?: string
 }
 
 export interface IProofPresentationData {
     proofId: string;
-    orgId: string; 
+    orgId: string;
     user: IUserRequest;
 }
 
@@ -65,7 +69,8 @@ interface IRequestedAttributes {
 }
 
 interface IRequestedAttributesName {
-    name: string;
+    name?: string;
+    names?: string;
     restrictions: IRequestedRestriction[]
 }
 
@@ -81,24 +86,97 @@ interface IRequestedPredicatesName {
 interface IRequestedRestriction {
     cred_def_id?: string;
     schema_id?: string;
+    schema_issuer_did?: string;
+    schema_name?: string;
+    issuer_did?: string;
+    schema_version?: string;
+}
+export interface ISchema {
+    uri:string;
+}
+export interface IFields {
+    path: string[];
+  }
+export interface IConstraints {
+    fields: IFields[];
+  }
+
+export interface IInputDescriptors {
+  
+    id:string;
+    name?:string;
+    purpose?:string;
+    schema:ISchema[];
+    constraints?:IConstraints;
+  
+}
+
+export interface IProofRequestPresentationDefinition {
+    id:string;
+    input_descriptors:IInputDescriptors[];
+}
+
+export interface IPresentationExchange {
+    presentationDefinition:IProofRequestPresentationDefinition;
+   
+}
+export interface IPresentationExchangeProofFormats {
+    presentationExchange : IPresentationExchange;
+}
+export interface ISendPresentationExchangeProofRequestPayload {
+    protocolVersion: string;
+    comment: string;
+    proofFormats: IPresentationExchangeProofFormats;
+    autoAcceptProof: string;
+    label?: string;
+}
+export interface IPresentationExchangeProofRequestPayload {
+    url: string;
+    apiKey?: string;
+    proofRequestPayload: ISendPresentationExchangeProofRequestPayload;
+    orgId?: string;
 }
 
 export interface ISendProofRequestPayload {
-    protocolVersion: string;
-    comment: string;
+    protocolVersion?: string;
+    comment?: string;
     connectionId?: string;
-    proofFormats: IProofFormats;
-    autoAcceptProof: string;
+    proofFormats?: IProofFormats;
+    autoAcceptProof?: string;
     label?: string;
     goalCode?: string;
     parentThreadId?: string;
     willConfirm?: boolean;
+    imageUrl?: string;
+    emailId?: string[]
+    isShortenUrl?: boolean;
+    type?:string;
+    presentationDefinition?:IProofRequestPresentationDefinition;
+    reuseConnection?: boolean;
+    recipientKey?:string;
+}
+
+export interface IWSendProofRequestPayload {
+    protocolVersion?: string;
+    comment?: string;
+    connectionId?: string;
+    proofFormats?: IProofFormats;
+    autoAcceptProof?: string;
+    label?: string;
+    goalCode?: string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
+    imageUrl?: string;
+    emailId?: string[];
+    type?:string;
+    presentationDefinition?:IProofRequestPresentationDefinition;
 }
 
 export interface IProofRequestPayload {
     url: string;
-    apiKey: string;
-    proofRequestPayload: ISendProofRequestPayload;
+    apiKey?: string;
+    orgId?: string
+    proofRequestPayload: ISendProofRequestPayload | ISendPresentationExchangeProofRequestPayload;
 }
 
 interface IWebhookPresentationProof {
@@ -132,7 +210,7 @@ export interface IProofRequests {
     proofRequestsSearchCriteria: IProofRequestSearchCriteria;
     user: IUserRequest;
     orgId: string;
-  }
+}
 
 export interface IProofRequestSearchCriteria {
     pageNumber: number;
@@ -140,5 +218,8 @@ export interface IProofRequestSearchCriteria {
     sortField: string;
     sortBy: string;
     searchByText: string;
-  }   
-  
+}
+
+export interface IInvitation{
+    invitationUrl?: string;
+}

@@ -17,7 +17,6 @@ import { map } from 'rxjs/operators';
 import { OrgAgentType } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { CommonConstants } from '@credebl/common/common.constant';
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
     constructor(
@@ -36,13 +35,8 @@ export class CredentialDefinitionService extends BaseService {
             // eslint-disable-next-line yoda
             const did = credDef.orgDid?.split(':').length >= 4 ? credDef.orgDid : orgDid;
             const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(credDef.orgId);
-            // const apiKey = await this._getOrgAgentApiKey(credDef.orgId);
-            let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-            this.logger.log(`cachedApiKey----${apiKey}`);
-           if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-             apiKey = await this._getOrgAgentApiKey(credDef.orgId);
-            }
-            const { userId } = user.selectedOrg;
+            
+            const userId = user.id;
             credDef.tag = credDef.tag.trim();
             const dbResult: credential_definition = await this.credentialDefinitionRepository.getByAttribute(
                 credDef.schemaLedgerId,
@@ -61,7 +55,7 @@ export class CredentialDefinitionService extends BaseService {
                     schemaId: credDef.schemaLedgerId,
                     issuerId: did,
                     agentEndPoint,
-                    apiKey,
+                    orgId: credDef.orgId,
                     agentType: OrgAgentType.DEDICATED
                 };
 
@@ -79,7 +73,7 @@ export class CredentialDefinitionService extends BaseService {
                         issuerId: did
                     },
                     agentEndPoint,
-                    apiKey,
+                    orgId: credDef.orgId,
                     agentType: OrgAgentType.SHARED
                 };
                 credDefResponseFromAgentService = await this._createCredentialDefinition(CredDefPayload);
@@ -182,17 +176,12 @@ export class CredentialDefinitionService extends BaseService {
             const { agentEndPoint } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(String(orgId));
             const getAgentDetails = await this.credentialDefinitionRepository.getAgentType(String(orgId));
             const orgAgentType = await this.credentialDefinitionRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-            // const apiKey = await this._getOrgAgentApiKey(String(orgId));
-            let apiKey:string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-            this.logger.log(`cachedApiKey----${apiKey}`);
-           if (!apiKey || null === apiKey  ||  undefined === apiKey) {
-             apiKey = await this._getOrgAgentApiKey(String(orgId));
-            }
+            
             let  credDefResponse;
             if (OrgAgentType.DEDICATED === orgAgentType) {
                 const getSchemaPayload = {
                     credentialDefinitionId,
-                    apiKey,
+                    orgId,
                     agentEndPoint,
                     agentType: OrgAgentType.DEDICATED
                 };

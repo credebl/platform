@@ -18,6 +18,7 @@ import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
 import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ResponseService } from '@credebl/response';
+import { IClientRoles } from './interfaces/client.interface';
 
 @Injectable()
 export class ClientRegistrationService {
@@ -164,7 +165,6 @@ export class ClientRegistrationService {
         `${process.env.KEYCLOAK_DOMAIN}admin/realms/${process.env.KEYCLOAK_REALM}/users/${payload['sub']}`,
         this.getAuthHeader(token)
       );
-      this.logger.debug(`keycloak user ${JSON.stringify(userInfoResponse)}`);
       return userInfoResponse.data;
     } catch (error) {
       this.logger.error(`[getUserInfo]: ${JSON.stringify(error)}`);
@@ -177,15 +177,14 @@ export class ClientRegistrationService {
       const payload = new ClientCredentialTokenPayloadDto();
       payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
       payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
-      payload.scope = 'email profile';
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
     } catch (error) {
+      this.logger.error(`Error in getManagementToken: ${JSON.stringify(error)}`);
 
       throw error;
     }
   }
-
 
   async getManagementTokenForMobile() {
     try {
@@ -235,7 +234,6 @@ export class ClientRegistrationService {
         this.getAuthHeader(token)
       );
 
-      this.logger.debug(`Existing apps response ${JSON.stringify(response)}`);
 
       return {
         clientId: client_id,
@@ -275,6 +273,205 @@ export class ClientRegistrationService {
 
     return getClientDeleteResponse;
 
+  }
+
+  async createUserClientRole(
+    idpId: string,
+    token: string,
+    userId: string,
+    payload: object[]
+  ): Promise<string> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientRolesResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId, idpId),
+      payload,
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `createUserClientRolesResponse ${JSON.stringify(
+        createClientRolesResponse
+      )}`
+    );
+
+    return 'User client role is assigned';  
+  }
+
+  async deleteUserClientRoles(
+    idpId: string,
+    token: string,
+    userId: string
+  ): Promise<string> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientRolesResponse = await this.commonService.httpDelete(
+      await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId, idpId),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `deleteUserClientRoles ${JSON.stringify(
+        createClientRolesResponse
+      )}`
+    );
+
+    return 'User client role is deleted';  
+  }
+
+  async createUserHolderRole(
+    token: string,
+    userId: string,
+    payload: object[]
+  ): Promise<string> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientRolesResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId),
+      payload,
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `createUserHolderRole ${JSON.stringify(
+        createClientRolesResponse
+      )}`
+    );
+
+    return 'User holder role is assigned';  
+  }
+
+  async getAllClientRoles(
+    idpId: string,
+    token: string
+  ): Promise<IClientRoles[]> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const clientRolesResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetClientRoleURL(realmName, idpId),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `getAllClientRoles ${JSON.stringify(
+        clientRolesResponse
+      )}`
+    );
+
+    return clientRolesResponse;  
+  }
+
+  async getClientSpecificRoles(
+    idpId: string,
+    token: string,
+    roleName: string
+  ): Promise<IClientRoles> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const clientRolesResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetClientRoleURL(realmName, idpId, roleName),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `getClientSpecificRoles ${JSON.stringify(
+        clientRolesResponse
+      )}`
+    );
+
+    return clientRolesResponse;  
+  }
+
+  async getAllRealmRoles(
+    token: string
+  ): Promise<IClientRoles[]> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const realmRolesResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetRealmRoleURL(realmName),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `getAllRealmRoles ${JSON.stringify(
+        realmRolesResponse
+      )}`
+    );
+
+    return realmRolesResponse;  
+  }
+
+
+  async createClientRole(
+    idpId: string,
+    token: string,
+    name: string,
+    description: string
+  ): Promise<string> {
+
+    const payload = {
+      clientRole: true,
+      name,
+      description 
+    };
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientRolesResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetClientRoleURL(realmName, idpId),
+      payload,
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `createClientRolesResponse ${JSON.stringify(
+        createClientRolesResponse
+      )}`
+    );
+
+    return 'Client role is created';
+  
+  }
+
+  async generateClientSecret(
+    idpId: string,
+    token: string
+  ): Promise<string> {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const createClientSercretResponse = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetClientSecretURL(realmName, idpId),
+      {},
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `ClientRegistrationService create realm client secret ${JSON.stringify(
+        createClientSercretResponse
+      )}`
+    );
+
+    const getClientSercretResponse = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetClientSecretURL(realmName, idpId),
+      this.getAuthHeader(token)
+    );
+    this.logger.debug(
+      `ClientRegistrationService get client secret ${JSON.stringify(
+        getClientSercretResponse
+      )}`
+    );
+    this.logger.log(`${getClientSercretResponse.value}`);
+    const clientSecret = getClientSercretResponse.value;
+
+    return clientSecret;
+  
   }
 
   async createClient(
@@ -324,20 +521,7 @@ export class ClientRegistrationService {
       publicClient: false,
       frontchannelLogout: false,
       fullScopeAllowed: false,
-      nodeReRegistrationTimeout: 0,
-      defaultClientScopes: [
-        'web-origins',
-        'role_list',
-        'profile',
-        'roles',
-        'email'
-      ],
-      optionalClientScopes: [
-        'address',
-        'phone',
-        'offline_access',
-        'microprofile-jwt'
-      ]
+      nodeReRegistrationTimeout: 0
     };
 
     const createClientResponse = await this.commonService.httpPost(
@@ -471,7 +655,6 @@ export class ClientRegistrationService {
 
   async getToken(payload: ClientCredentialTokenPayloadDto) {
     try {
-      this.logger.log(`getting token : ${JSON.stringify(payload)}`);
       if (
         'client_credentials' !== payload.grant_type ||
         !payload.client_id ||
@@ -491,9 +674,6 @@ export class ClientRegistrationService {
         qs.stringify(payload)
         , config);
 
-      this.logger.debug(
-        `ClientRegistrationService token ${JSON.stringify(tokenResponse)}`
-      );
       return tokenResponse;
     } catch (error) {
       throw error;
@@ -566,9 +746,6 @@ export class ClientRegistrationService {
       payload.username = email;
       payload.password = password;
 
-      this.logger.log(`User Token Payload: ${JSON.stringify(payload)}`);
-
-
       if (
         'password' !== payload.grant_type ||
         !payload.client_id ||
@@ -593,9 +770,6 @@ export class ClientRegistrationService {
         qs.stringify(payload)
         , config);
 
-      this.logger.debug(
-        `ClientRegistrationService token ${JSON.stringify(tokenResponse)}`
-      );
       return tokenResponse;
 
     } catch (error) {
@@ -612,10 +786,6 @@ export class ClientRegistrationService {
       payload.refresh_token = refreshToken;
       payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
 
-
-      this.logger.log(`access Token for platform Payload: ${JSON.stringify(payload)}`);
-
-
       if (
         'refresh_token' !== payload.grant_type ||
         !payload.client_id ||
@@ -626,8 +796,6 @@ export class ClientRegistrationService {
         throw new Error('Invalid inputs while getting token.');
       }
 
-      const strURL = await this.keycloakUrlService.GetSATURL('credebl-platform');
-      this.logger.log(`getToken URL: ${strURL}`);
       const config = {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -635,17 +803,16 @@ export class ClientRegistrationService {
       };
       
       const tokenResponse = await this.commonService.httpPost(
-        await this.keycloakUrlService.GetSATURL('credebl-platform'),
+        await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM),
         qs.stringify(payload)
         , config);
 
-      this.logger.debug(
-        `ClientRegistrationService token ${JSON.stringify(tokenResponse)}`
-      );
       return tokenResponse;
 
     } catch (error) {
-
+      this.logger.error(
+        `Error in getAccessToken ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }

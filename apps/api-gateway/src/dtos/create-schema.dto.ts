@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
@@ -23,6 +23,11 @@ class AttributeValue {
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'displayName is required' })
     displayName: string;
+
+    @ApiProperty()
+    @IsBoolean()
+    @IsNotEmpty({ message: 'isRequired property is required' })
+    isRequired: boolean;
 }
 
 export class CreateSchemaDto {
@@ -44,12 +49,14 @@ export class CreateSchemaDto {
             {
                 attributeName: 'name',
                 schemaDataType: 'string',
-                displayName: 'Name'
+                displayName: 'Name',
+                isRequired: true
             }
         ]
     })
     @IsArray({ message: 'attributes must be an array' })
     @IsNotEmpty({ message: 'attributes are required' })
+    @ArrayMinSize(1)
     @ValidateNested({ each: true })
     @Type(() => AttributeValue)
     attributes: AttributeValue[];
@@ -62,4 +69,47 @@ export class CreateSchemaDto {
     @IsNotEmpty({ message: 'orgDid should not be empty' })
     @IsString({ message: 'orgDid must be a string' })
     orgDid: string;
+}
+
+export class CreateW3CSchemaDto {
+    @ApiProperty({
+        type: [],
+        'example': [
+            {
+                title: 'name',
+                type: 'string'
+            }
+        ]
+    })
+    @IsNotEmpty({ message: 'Schema attributes are required' })
+    schemaAttributes: SchemaAttributes [];
+
+    @ApiProperty()
+    @IsString({ message: 'schemaName must be a string' })
+    @Transform(({ value }) => value.trim())
+    @IsNotEmpty({ message: 'schemaName is required' })
+    schemaName: string;
+
+    @ApiProperty()
+    @IsString({ message: 'did must be a string' })
+    @Transform(({ value }) => value.trim())
+    @IsNotEmpty({ message: 'did is required' })
+    did: string;
+
+    @ApiProperty()
+    @IsString({ message: 'description must be a string' })
+    @IsNotEmpty({ message: 'description is required' })
+    description: string;
+}
+
+export class SchemaAttributes {
+    @ApiProperty()
+    @IsNotEmpty({ message: 'type is required' })
+    @IsString({ message: 'type must be a string' })
+    type: string;
+
+    @ApiProperty()
+    @IsNotEmpty({ message: 'title is required' })
+    @IsString({ message: 'title must be a string' })
+    title: string;
 }

@@ -20,9 +20,11 @@ export interface ISchema {
 }
 
 export interface IAttributeValue {
+    isRequired: boolean;    
     attributeName: string;
     schemaDataType: string;
-    displayName: string
+    displayName: string;
+
 }
 
 export interface ISchemaPayload {
@@ -64,4 +66,37 @@ export interface ISchemaCredDeffSearchInterface {
     schemaSearchCriteria?: ISchemaSearchCriteria,
     user: IUserRequestInterface,
 }
+
+export interface ISchemaExist {
+   schemaName: string;
+   version: string;
+}
+
+export interface SchemaPayload {
+    schemaAttributes: W3CSchemaAttributes [],
+    schemaName: string,
+    did: string,
+    description: string
+  }
+
+  export interface W3CSchemaAttributes {
+    type: string,
+    title: string,
+ }
+  
+export interface W3CSchemaPayload {
+    schemaPayload: SchemaPayload,
+    orgId: string
+  }
+
+export interface W3CCreateSchema {
+    url: string,
+    orgId: string,
+    schemaRequestPayload: object
+}  
+
+export interface IdAttribute extends W3CSchemaAttributes {
+    format: string;
+    order?: string
+}   
 

@@ -23,7 +23,8 @@ export const ResponseMessages = {
             updateUserProfile:'User profile updated successfully',
             resetPassword: 'Password reset successfully',
             degreeCertificate: 'Degree Certificate shared successfully',
-            resetPasswordLink: 'Reset password link has been sent to your mail'
+            resetPasswordLink: 'Reset password link has been sent to your mail',
+            refreshToken: 'Token details fetched successfully'
         },
         error: {
             exists: 'User already exists',
@@ -40,7 +41,7 @@ export const ResponseMessages = {
             verifyMail: 'Please verify your email',
             invalidCredentials: 'Invalid Credentials',
             registerFido: 'Please complete your fido registration',
-            invitationNotFound: 'Invitation not found',
+            invitationNotFound: 'Invitation not found for this user',
             invitationAlreadyAccepted:'Organization invitation already accepted',
             invitationAlreadyRejected:'Organization invitation already rejected',
             invalidInvitationStatus: 'Invalid invitation status',
@@ -60,7 +61,8 @@ export const ResponseMessages = {
             resetSamePassword: 'New password should not be the current password',
             resetPasswordLink: 'Unable to create reset password token',
             invalidResetLink: 'Invalid or expired reset password link',
-            invalidAccessToken: 'Authentication failed'
+            invalidAccessToken: 'Authentication failed',
+            invalidRefreshToken: 'Invalid refreshToken provided'
         }
     },
     organisation: {
@@ -91,7 +93,7 @@ export const ResponseMessages = {
             rolesNotExist: 'Provided roles not exists in the platform',
             orgProfile: 'Organization profile not found',
             userNotFound: 'User not found for the given organization',
-            orgRoleIdNotFound:'Provided roles not exists in the platform',
+            orgRoleIdNotFound:'Provided roles not exists for this organization',
             updateUserRoles: 'Unable to update user roles',
             deleteOrg: 'Organization not found',
             deleteOrgInvitation: 'Organization does not have access to delete this invitation',
@@ -107,7 +109,9 @@ export const ResponseMessages = {
             invalidUserId:'Invalid format of userId',
             invalidInvitationId:'Invalid format for invitation id',
             ecosystemIdIsRequired:'ecosystemId is required',
-            roleNotMatch: 'User does not have access'
+            roleNotMatch: 'User does not have access',
+            orgDoesNotMatch: 'Organization does not match',
+            invalidClient: 'Invalid client credentials'
         }
     },
 
@@ -156,7 +160,9 @@ export const ResponseMessages = {
             credentialDefinitionNotFound: 'No credential definition exist',
             notStoredCredential: 'User credential not stored',
             agentDetailsNotFound: 'Agent details not found',
-            failedFetchSchema: 'Failed to fetch schema data'
+            failedFetchSchema: 'Failed to fetch schema data',
+            atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
+            schemaBuilder: 'Error while creating schema JSON`'
         }
     },
     credentialDefinition: {
@@ -184,9 +190,13 @@ export const ResponseMessages = {
     agent: {
         success: {
             create: 'Agent process initiated successfully. Please wait',
+            createWallet: 'Wallet created successfully',
+            createDid: 'Did created successfully',
             health: 'Agent health details retrieved successfully.',
+            ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
-            getWebhookUrl:'Webhook Url fetched successfully'
+            getWebhookUrl:'Webhook Url fetched successfully',
+            createKeys:'Key-pair created successfully'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -211,6 +221,7 @@ export const ResponseMessages = {
             walletAlreadyProcessing: 'Your wallet is already processing',
             notAbleToSpinp: 'Agent not able to spun up',
             platformAdminNotAbleToSpinp: 'Platform admin agent is not spun up',
+            invalidLedger: 'Invalid ledger name',
             seedCharCount: 'seed must be at most 32 characters',
             nullTenantId:'TenantId must not be null',
             tenantIdNotFound:'TenantId not found',
@@ -223,7 +234,9 @@ export const ResponseMessages = {
             create: 'Connection created successfully',
             receivenvitation: 'Invitation received successfully',
             fetchConnection: 'Connection details fetched successfully',
-            fetch: 'Connections details fetched successfully'
+            fetch: 'Connections details fetched successfully',
+            questionAnswerRecord: 'Question Answer record fetched successfully',
+            questionSend:'Question sent successfully'
         },
         error: {
             exists: 'Connection is already exist',
@@ -265,7 +278,10 @@ export const ResponseMessages = {
             emailIdNotPresent: 'EmailId is empty or not present',
             attributesNotPresent: 'Attributes are not present or not empty',
             unableToCreateOffer: 'Unable to create offer',
-            orgAgentTypeNotFound: 'Organization agent type not found'
+            orgAgentTypeNotFound: 'Organization agent type not found',
+            credentialNotPresent: 'credential is required',
+            optionsNotPresent:'options are required',
+            invalidCredentialType:'invalid credential type'
         }
     },
     verification: {
@@ -287,6 +303,7 @@ export const ResponseMessages = {
             proofNotFound: 'Proof presentation not found',
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
+            batchEmailSend: 'Unable to send email in batches',
             emailSend: 'Unable to send email to the user'
         }
     },
@@ -352,7 +369,9 @@ export const ResponseMessages = {
             updateSchemaId: 'Error while updating the schema id',
             updateCredDefId: 'Error while updating the credential-definition',
             invalidMessage: 'Invalid transaction details. Missing "message" property.',
-            invalidTransactionMessage: 'Invalid transaction details'
+            invalidTransactionMessage: 'Invalid transaction details',
+            ecosystemRoleNotMatch: 'Ecosystem role not match',
+            orgEcoIdRequired: 'OrgId & EcosystemId is required'
         }
     },
     bulkIssuance: {
@@ -391,5 +410,20 @@ export const ResponseMessages = {
             getshorteningUrl:'Shortening Url fetched successfully',
             createShorteningUrl: 'Shortening Url created successfully'
         }
-    }
+    },
+    notification: {
+        success: {
+            register: 'Notification webhook registration process completed successfully',
+            sendNotification: 'Notification sent successfully'
+        },
+        error: {
+            notFound: 'Notification record not found.',
+            invalidUrl: 'Invalid URL'
+        }
+    },
+    storeObject: {
+        success: {
+            storeObject: 'Data stored successfully'
+        }
+    } 
 };

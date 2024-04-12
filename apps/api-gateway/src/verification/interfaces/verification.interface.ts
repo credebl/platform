@@ -51,3 +51,42 @@ interface ITags {
     state: string;
     threadId: string;
 }  
+
+export interface IProofFormats {
+    indy: IndyProof
+}
+
+interface IndyProof {
+    name: string;
+    version: string;
+    requested_attributes: IRequestedAttributes;
+    requested_predicates: IRequestedPredicates;
+}
+
+interface IRequestedAttributes {
+    [key: string]: IRequestedAttributesName;
+}
+
+interface IRequestedAttributesName {
+    name?: string;
+    names?: string;
+    restrictions: IRequestedRestriction[]
+}
+
+interface IRequestedPredicates {
+    [key: string]: IRequestedPredicatesName;
+}
+
+interface IRequestedPredicatesName {
+    name: string;
+    restrictions: IRequestedRestriction[]
+}
+
+interface IRequestedRestriction {
+    cred_def_id?: string;
+    schema_id?: string;
+    schema_issuer_did?: string;
+    schema_name?: string;
+    issuer_did?: string;
+    schema_version?: string;
+}

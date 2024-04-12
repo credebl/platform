@@ -1,11 +1,15 @@
 // eslint-disable-next-line camelcase
 import { AutoAccept } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
+import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 
 export interface IAttributes {
+  attributeName: string;
   name: string;
   value: string;
+  isRequired?: boolean;
 }
 export interface IIssuance {
   user?: IUserRequest;
@@ -81,7 +85,8 @@ export interface IPattern {
 export interface ISendOfferNatsPayload {
   issueData: IIssueData,
   url: string,
-  apiKey: string;
+  apiKey?: string;
+  orgId?: string;
 }
 
 export interface IIssueCredentialsDefinitions {
@@ -125,12 +130,22 @@ export interface ICredentialAttributesInterface {
   value: string;
 }
 
+export interface ICredential{
+  '@context':[];
+  type: string[];
+}
+export interface IOptions{
+  proofType:string;
+  proofPurpose:string;
+}
 export interface CredentialOffer {
   emailId: string;
   attributes: IAttributes[];
+  credential?:ICredential;
+  options?:IOptions
 }
 export interface OutOfBandCredentialOfferPayload {
-  credentialDefinitionId: string;
+  credentialDefinitionId?: string;
   orgId: string;
   comment?: string;
   credentialOffer?: CredentialOffer[];
@@ -140,8 +155,10 @@ export interface OutOfBandCredentialOfferPayload {
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
-  label?: string
+  label?: string,
+  imageUrl?: string,
   autoAcceptCredential?: string;
+  credentialType?:IssueCredentialType;
 }
 
 export interface OutOfBandCredentialOffer {
@@ -188,10 +205,11 @@ export interface FileUploadData {
   jobId: string;
 }
 
-export interface ClientDetails {
+export interface IClientDetails {
   clientId: string;
-
   userId?: string;
+  isSelectiveIssuance?: boolean;
+  fileName?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
@@ -203,6 +221,40 @@ export interface IIssuedCredentialsSearchCriteria {
   pageSize: number;
   sortField: string;
   sortBy: string;
-  searchByText: string;
+  search: string;
   user?: IUserRequestInterface;
+}
+
+export interface OrgAgent {
+  organisation: organisation;
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  orgDid: string;
+  verkey: string;
+  agentEndPoint: string;
+  agentId: string;
+  isDidPublic: boolean;
+  ledgerId: string;
+  orgAgentTypeId: string;
+  tenantId: string;
+}
+
+export interface SendEmailCredentialOffer {
+  iterator: CredentialOffer;
+  emailId: string;
+  index: number;
+  credentialType: IssueCredentialType; 
+  protocolVersion: string;
+  attributes: IAttributes[]; 
+  credentialDefinitionId: string; 
+  outOfBandCredential: OutOfBandCredentialOfferPayload;
+  comment: string;
+  organisation: organisation; 
+  errors;
+  url: string;
+  orgId: string; 
+  organizationDetails: organisation;
 }

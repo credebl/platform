@@ -15,6 +15,7 @@ export interface IConnection {
   handshake: string;
   handshakeProtocols: string[];
   orgId: string;
+  recipientKey?: string;
 }
 export interface IUserRequestInterface {
   userId: string;
@@ -80,6 +81,12 @@ export interface IFetchConnections {
   orgId: string;
 }
 
+export interface GetAllConnections {
+  connectionSearchCriteria: AgentConnectionSearchCriteria;
+  user: IUserRequest;
+  orgId: string;
+}
+
 export interface IFetchConnectionById {
   user: IUserRequest;
   connectionId: string;
@@ -97,8 +104,9 @@ export interface IConnectionInvitation {
 }
 interface IInvitation {
   invitation: string;
-
+  invitationUrl: string;
 }
+
 export interface OrgAgent {
   organisation: organisation;
   id: string;
@@ -122,6 +130,15 @@ export interface IConnectionSearchCriteria {
   sortBy: string;
   searchByText: string;
   user: IUserRequestInterface
+}
+
+export interface AgentConnectionSearchCriteria {
+  outOfBandId: string;
+  alias: string;
+  state: string;
+  myDid: string;
+  theirDid: string;
+  theirLabel: string;
 }
 
 export interface IReceiveInvitationByUrlOrg {
@@ -235,4 +252,39 @@ interface ConnectionRecord {
 export interface IReceiveInvitationResponse {
   outOfBandRecord: OutOfBandRecord;
   connectionRecord: ConnectionRecord;
+}
+
+export interface ConnectionResponseDetail {
+  id: string;
+  orgId: string;
+  agentId: string;
+  connectionInvitation: string;
+  multiUse: boolean;
+  createDateTime: Date;
+  createdBy: number;
+  lastChangedDateTime: Date;
+  lastChangedBy: number;
+  recordId: string;
+  recipientKey:string;
+}
+
+export interface ICreateConnectionInvitation {
+  label?: string;
+  alias?: string;
+  imageUrl?: string;
+  goalCode?: string;
+  goal?: string;
+  handshake?: boolean;
+  handshakeProtocols?: object[];
+  messages?: object[];
+  multiUseInvitation?: boolean;
+  autoAcceptConnection?: boolean;
+  routing?: object;
+  appendedAttachments?: object[];
+  orgId?: string;
+}
+
+export interface ICreateOutOfbandConnectionInvitation {
+  user: IUserRequestInterface,
+  createOutOfBandConnectionInvitation: ICreateConnectionInvitation,
 }

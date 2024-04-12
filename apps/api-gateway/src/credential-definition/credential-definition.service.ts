@@ -4,7 +4,8 @@ import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { BaseService } from '../../../../libs/service/base.service';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { GetAllCredDefsDto } from '../dtos/get-cred-defs.dto';
-import { ICredDefs } from './interfaces';
+import { ICredDef, ICredDefs, ICredentialDefinition } from './interfaces';
+import { ICredDefData } from '@credebl/common/interfaces/cred-def.interface';
 
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
@@ -15,20 +16,19 @@ export class CredentialDefinitionService extends BaseService {
     super('CredentialDefinitionService');
   }
 
-  createCredentialDefinition(credDef: CreateCredentialDefinitionDto, user: IUserRequestInterface): Promise<object> {
-    const payload = { credDef, user };
-    
+  createCredentialDefinition(credDef: CreateCredentialDefinitionDto, user: IUserRequestInterface): Promise<ICredDef> {
+    const payload = { credDef, user };   
     return this.sendNatsMessage(this.credDefServiceProxy, 'create-credential-definition', payload);
   }
 
-  getCredentialDefinitionById(credentialDefinitionId: string, orgId: string): Promise<{ response: object }> {
+  getCredentialDefinitionById(credentialDefinitionId: string, orgId: string): Promise<object> {
     const payload = { credentialDefinitionId, orgId };
-    return this.sendNats(this.credDefServiceProxy, 'get-credential-definition-by-id', payload);
+    return this.sendNatsMessage(this.credDefServiceProxy, 'get-credential-definition-by-id', payload);
   }
 
-  getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, user: IUserRequestInterface, orgId: string): Promise<{ response: object }> {
+  getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, user: IUserRequestInterface, orgId: string): Promise<ICredDefData> {
     const payload = { credDefSearchCriteria, user, orgId };
-    return this.sendNats(this.credDefServiceProxy, 'get-all-credential-definitions', payload);
+    return this.sendNatsMessage(this.credDefServiceProxy, 'get-all-credential-definitions', payload);
   }
 
   getCredentialDefinitionBySchemaId(schemaId: string): Promise<ICredDefs> {
@@ -36,8 +36,8 @@ export class CredentialDefinitionService extends BaseService {
     return this.sendNatsMessage(this.credDefServiceProxy, 'get-all-credential-definitions-by-schema-id', payload);
   }
 
-  getAllCredDefAndSchemaForBulkOperation(orgId:string): Promise<{ response: object }> {
+  getAllCredDefAndSchemaForBulkOperation(orgId:string): Promise<ICredentialDefinition> {
     const payload = { orgId };
-    return this.sendNats(this.credDefServiceProxy, 'get-all-schema-cred-defs-for-bulk-operation', payload);
+    return this.sendNatsMessage(this.credDefServiceProxy, 'get-all-schema-cred-defs-for-bulk-operation', payload);
   }
 }

@@ -16,7 +16,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN pnpm i --ignore-scripts
+RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .

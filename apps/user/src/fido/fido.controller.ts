@@ -33,8 +33,9 @@ export class FidoController {
    * @returns Get authentication response
    */
     @MessagePattern({ cmd: 'generate-authentication-options' })
-    generateAuthenticationOption(payload: GenerateRegistrationDto): Promise<object> {
-        return this.fidoService.generateAuthenticationOption(payload.email);
+    generateAuthenticationOption(payload): Promise<object> {
+        const { generateAuthentication } = payload;
+        return this.fidoService.generateAuthenticationOption(generateAuthentication.userName);
     }
     /**
    * Description: FIDO User Verification

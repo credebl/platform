@@ -50,7 +50,7 @@ async function bootstrap(): Promise<void> {
   if (ENABLE_CORS_IP_LIST && '' !== ENABLE_CORS_IP_LIST) {
     app.enableCors({
       origin: ENABLE_CORS_IP_LIST.split(','),
-      methods: 'GET,HEAD,PUT,PATCH,POST',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       credentials: true
     });
   }

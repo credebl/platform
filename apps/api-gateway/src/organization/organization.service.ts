@@ -37,8 +37,8 @@ export class OrganizationService extends BaseService {
    * @param primaryDidPayload
    * @returns Set Primary Did for organization
    */
-  async setPrimaryDid(primaryDidPayload: PrimaryDid): Promise<organisation> {
-    const {did, orgId, id} = primaryDidPayload;
+  async setPrimaryDid(primaryDidPayload: PrimaryDid, orgId:string): Promise<organisation> {
+    const {did, id} = primaryDidPayload;
     const payload = { did, orgId, id};
     return this.sendNatsMessage(this.serviceProxy, 'set-primary-did', payload);
   }

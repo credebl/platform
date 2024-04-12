@@ -755,7 +755,7 @@ export class OrganizationRepository {
     }
   }
 
-  async setOrgsPrimaryDid(primaryDid:string, orgId:string, id:string): Promise<[]> {
+  async setOrgsPrimaryDid(primaryDid:string, orgId:string, id:string): Promise<unknown> {
     try {
       const result = await this.prisma.$transaction([
           this.prisma.org_agents.update({

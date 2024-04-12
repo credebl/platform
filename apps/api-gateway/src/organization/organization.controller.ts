@@ -370,14 +370,14 @@ export class OrganizationController {
  * @returns organization details
  */
 
-  @Post('/primary-did')
+  @Post('/:orgId/primary-did')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiOperation({ summary: 'Set primary DID', description: 'Set primary DID for an organization' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  async setPrimaryDid(@Body() primaryDidPayload: PrimaryDid, @Res() res: Response): Promise<Response> {
-    
-    const orgData = await this.organizationService.setPrimaryDid(primaryDidPayload);
+  async setPrimaryDid(@Param('orgId') orgId: string, @Body() primaryDidPayload: PrimaryDid, @Res() res: Response): Promise<Response> {
+    const orgData = await this.organizationService.setPrimaryDid(primaryDidPayload, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.primaryDid,

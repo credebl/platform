@@ -29,9 +29,9 @@ export class OrganizationController {
   }
 
   /**
-   * Description: create new organization
-   * @param payload Registration Details
-   * @returns Get created organization details
+   * Description: Set primary did
+   * @param payload did and organization details
+   * @returns Sucess message and required details
    */
 
   @MessagePattern({ cmd: 'set-primary-did' })

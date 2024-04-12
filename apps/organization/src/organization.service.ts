@@ -165,7 +165,7 @@ export class OrganizationService {
     orgId:string,
     did:string,
     id:string
-  ): Promise<object> {
+  ): Promise<unknown> {
     try {
       const organizationExist = await this.organizationRepository.getOrgProfile(orgId);
       if (!organizationExist) {
@@ -175,6 +175,14 @@ export class OrganizationService {
       if (orgAgentDetails.orgDid === did) {
         throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
       }
+
+      const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
+      const isDidMatch = organizationDidList.some(item => item.did === did);
+
+      if (!isDidMatch) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+      // Add logic for multi update for false the pervious primary did
 
       return this.organizationRepository.setOrgsPrimaryDid(did, orgId, id);
     } catch (error) {

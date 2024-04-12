@@ -1,6 +1,6 @@
 import IResponseType, {IResponse} from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Post, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query } from '@nestjs/common';
+import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
@@ -85,7 +85,7 @@ export class ConnectionController {
     async getConnections(
         @Query() getAllConnectionsDto: GetAllConnectionsDto,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string,
+        @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
         @Res() res: Response
     ): Promise<Response> {
 

@@ -1,6 +1,5 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
-
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \
@@ -18,7 +17,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN pnpm i --ignore-scripts
+RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .
@@ -33,7 +32,6 @@ RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
 FROM node:18-alpine as prod
-
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \

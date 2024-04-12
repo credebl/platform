@@ -1,5 +1,6 @@
 # Stage 1: Build the application
 FROM node:18-slim as build
+RUN npm install -g pnpm
 
 RUN addgroup -S nonroot \
     && adduser -S nonroot -G nonroot
@@ -16,7 +17,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN pnpm i --ignore-scripts
+RUN pnpm install
 
 # Copy the rest of the application code
 COPY . .
@@ -28,15 +29,12 @@ RUN pnpm run build utility
 
 # Stage 2: Create the final image
 FROM node:18-slim
-RUN addgroup -S nonroot \
-    && adduser -S nonroot -G nonroot
-
-USER nonroot
 
 RUN apt-get update -y
 RUN apt-get --no-install-recommends install -y openssl
 # Set the working directory
 WORKDIR /app
+RUN npm install -g pnpm
 
 # Copy the compiled code from the build stage
 COPY --from=build /app/dist/apps/utility/ ./dist/apps/utility/

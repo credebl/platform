@@ -71,11 +71,13 @@ export enum AgentSpinUpStatus {
     COMPLETED = 2
 }
 
+
 export enum UserCertificateId {
-    WINNER = 'Winner',
-    PARTICIPANT = 'Participant',
-    ARBITER = 'Arbiter',
-    WORLD_RECORD = 'WorldRecord'
+  WINNER = 'Winner',
+  PARTICIPANT = 'Participant',
+  ARBITER = 'Arbiter',
+  WORLD_RECORD = 'WorldRecord',
+  AYANWORKS_EVENT ='Appreciation Certificate'
 }
 
 export enum NodeEnvironment {
@@ -101,5 +103,9 @@ const transitionMap: { [key in Invitation]: Invitation[] } = {
     [Invitation.ACCEPTED]: [],
     [Invitation.REJECTED]: []
 };
+
+export enum CertificateDetails {
+    PINNACLE_CRED_DEF = 'PKDMuYSzJE22Jkh4B1EMiX:3:CL:826:Pinnacle Certificate'
+}
 
 export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));

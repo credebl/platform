@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 /* eslint-disable camelcase */
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { SortValue } from '../../enum';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsUUID, Min } from 'class-validator';
 import { toNumber, trim } from '@credebl/common/cast.helper';
 import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
+import { SortValue } from '@credebl/enum/enum';
 
 export class GetAllSchemaDto {
     @ApiProperty({ required: false })

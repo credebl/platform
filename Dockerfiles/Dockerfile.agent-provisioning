@@ -35,6 +35,7 @@ COPY . .
 
 # Generate Prisma client
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
 RUN ls -R /app/apps/agent-provisioning/AFJ/
 
 # Build the user service
@@ -83,7 +84,7 @@ RUN chmod 777 /app/agent-provisioning/AFJ/token
 COPY libs/ ./libs/
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js $ROOT_PATH"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/agent-provisioning/main.js $ROOT_PATH"]
 
 # docker build -t agent-provisioning-service -f Dockerfiles/Dockerfile.agent-provisioning .
 # docker run -d --env-file .env --name agent-provisioning-service docker.io/library/agent-provisioning-service

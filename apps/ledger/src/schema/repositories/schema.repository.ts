@@ -7,7 +7,6 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
 import { SortValue } from '@credebl/enum/enum';
 import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
-import { sortValue } from 'apps/api-gateway/src/enum';
 
 @Injectable()
 export class SchemaRepository {
@@ -222,7 +221,7 @@ export class SchemaRepository {
           issuerId: true
         },
         orderBy: {
-          [payload.sortField]: sortValue.DESC === payload.sortBy ? sortValue.DESC : sortValue.ASC
+          [payload.sortField]: SortValue.DESC === payload.sortBy ? SortValue.DESC : SortValue.ASC
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize

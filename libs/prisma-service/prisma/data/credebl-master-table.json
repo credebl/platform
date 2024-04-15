@@ -96,8 +96,7 @@
       "poolConfig": "http://test.bcovrin.vonx.io/genesis",
       "isActive": true,
       "networkString": "testnet",
-      "registeredDIDEndpoint": "http://test.bcovrin.vonx.io/register",
-      "registeredDIDPayload": "",
+      "nymTxnEndpoint": "http://test.bcovrin.vonx.io/register",
       "indyNamespace": "bcovrin:testnet"
     },
     {
@@ -106,8 +105,7 @@
       "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_testnet_genesis",
       "isActive": true,
       "networkString": "testnet",
-      "registeredDIDEndpoint": "https://selfserve.indiciotech.io/nym",
-      "registeredDIDPayload": "",
+      "nymTxnEndpoint": "https://selfserve.indiciotech.io/nym",
       "indyNamespace": "indicio:testnet"
     },
     {
@@ -116,8 +114,7 @@
       "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_demonet_genesis",
       "isActive": true,
       "networkString": "demonet",
-      "registeredDIDEndpoint": "https://selfserve.indiciotech.io/nym",
-      "registeredDIDPayload": "",
+      "nymTxnEndpoint": "https://selfserve.indiciotech.io/nym",
       "indyNamespace": "indicio:demonet"
     },
     {
@@ -126,8 +123,7 @@
       "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_mainnet_genesis",
       "isActive": true,
       "networkString": "mainnet",
-      "registeredDIDEndpoint": "https://selfserve.indiciotech.io/nym",
-      "registeredDIDPayload": "",
+      "nymTxnEndpoint": "https://selfserve.indiciotech.io/nym",
       "indyNamespace": "indicio:mainnet"
     },
     {
@@ -136,8 +132,7 @@
       "poolConfig": "",
       "isActive": true,
       "networkString": "testnet",
-      "registeredDIDEndpoint": "",
-      "registeredDIDPayload": "",
+      "nymTxnEndpoint": "",
       "indyNamespace": "polygon:testnet"
     }
   ],

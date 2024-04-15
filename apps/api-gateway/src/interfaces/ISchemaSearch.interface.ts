@@ -31,8 +31,7 @@ export interface W3CSchemaPayload {
     poolConfig: string;
     isActive: boolean;
     networkString: string;
-    registeredDIDEndpoint: string;
-    registeredDIDPayload: string;
+    nymTxnEndpoint: string;
     indyNamespace: string;
     networkUrl: string | null;
   }

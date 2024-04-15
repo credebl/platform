@@ -49,7 +49,8 @@ import {
   IEcosystemInvitations,
   IEditEcosystem,
   IEndorsementTransaction,
-  IEcosystemList
+  IEcosystemList,
+  IEcosystemLeadOrgs
 } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -419,7 +420,28 @@ export class EcosystemService {
     }
   }
 
-  async checkLedgerMatches(orgDetails: OrganizationData, ecosystemId: string): Promise<boolean> {
+
+  async addOrgs(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<object> {
+    try {
+      const { organizationIds } = ecosystemLeadOrgs;
+    
+      for (const orgId of organizationIds) {
+        const orgAgentDetails = await this.ecosystemRepository.getAgentDetails(orgId);
+  
+        if (orgAgentDetails.orgDid) {
+          return this.ecosystemRepository.addOrgs(ecosystemLeadOrgs);
+        } else {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.agentNotSpunUp);
+        }
+      }
+    } catch (error) {
+      this.logger.error(`In add organizations : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  
+async checkLedgerMatches(orgDetails: OrganizationData, ecosystemId: string): Promise<boolean> {
     const orgLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
 
     const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);

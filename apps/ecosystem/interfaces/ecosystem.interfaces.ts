@@ -369,3 +369,10 @@ export interface IEcosystemList {
   pageSize: number;
   search: string;
 }
+
+export interface IEcosystemLeadOrgs {
+  organizationIds: string[];
+  ecosystemId: string;
+  orgId: string;
+  userId: string;
+}

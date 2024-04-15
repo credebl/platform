@@ -27,6 +27,7 @@ import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { AddOrganizationsDto } from './dtos/add-organizations.dto';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -447,6 +448,45 @@ export class EcosystemController {
 
   }
 
+
+  /**
+   *
+   * @param orgId
+   * @param ecosystemId
+   */
+    @Post('/:ecosystemId/:orgId/orgs')
+    @ApiOperation({
+      summary: 'Add multiple organizations of ecosystem owner in ecosystem',
+      description: 'Add multiple organizations of ecosystem owner under the same ecosystem'
+    })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
+    @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+    async addOrgs(
+      @Body() addOrganizationsDto: AddOrganizationsDto,
+      @Param('ecosystemId') ecosystemId: string,
+      @Param('orgId') orgId: string,
+      @User() user: user,
+      @Res() res: Response
+    ): Promise<Response> {
+  
+      addOrganizationsDto.ecosystemId = ecosystemId;
+      addOrganizationsDto.orgId = orgId;
+
+      const addOrganizations = await this.ecosystemService.addOrgs(addOrganizationsDto, user.id);
+  
+      const finalResponse: IResponse = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.ecosystem.success.add,
+        data: addOrganizations
+      };
+  
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+    
   /**
    * 
    * @param res 

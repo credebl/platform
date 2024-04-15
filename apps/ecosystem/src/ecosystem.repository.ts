@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, IEcosystemInvitation, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, IEcosystemInvitation, IEcosystemLeadOrgs, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -81,6 +81,35 @@ export class EcosystemRepository {
       delete transaction.deletedAt;
 
       return transaction;
+    } catch (error) {
+      this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async addOrgs(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<ecosystem_orgs> {
+    try {
+
+      const ecosystemRoleDetails = await this.prisma.ecosystem_roles.findFirst({
+        where: {
+          name: EcosystemRoles.ECOSYSTEM_MEMBER
+        }
+      });
+
+      const ecosystemUsers = await this.prisma.ecosystem_orgs.create({
+        data: {
+          orgId: ecosystemLeadOrgs.organizationIds[0],
+          status: EcosystemOrgStatus.ACTIVE,
+          ecosystemId: ecosystemLeadOrgs.ecosystemId,
+          ecosystemRoleId: ecosystemRoleDetails.id,
+          deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
+          createdBy: ecosystemLeadOrgs.userId,
+          lastChangedBy: ecosystemLeadOrgs.userId
+        }
+      });
+    
+      return ecosystemUsers;
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
       throw error;

@@ -14,11 +14,10 @@ import { credential_definition } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CreateCredDefAgentRedirection, CredDefSchema, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { OrgAgentType, SortValue } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICredDefDetails } from '@credebl/common/interfaces/cred-def.interface';
-import { sortValue } from 'apps/api-gateway/src/enum';
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
     constructor(
@@ -290,7 +289,7 @@ export class CredentialDefinitionService extends BaseService {
         try {
             const payload = {
                 orgId,
-                sortValue: sortValue.ASC,
+                sortValue: SortValue.ASC,
                 credDefSortBy: 'id'
             };
 

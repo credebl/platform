@@ -6,7 +6,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
 import { ICredDefData } from '@credebl/common/interfaces/cred-def.interface';
-import { SortValue, sortValue } from 'apps/api-gateway/src/enum';
+import { SortValue } from '@credebl/enum/enum';
 
 @Injectable()
 export class CredentialDefinitionRepository {
@@ -88,7 +88,7 @@ export class CredentialDefinitionRepository {
                     revocable: true
                 },
                 orderBy: {
-                    [credDefSearchCriteria.sorting]: sortValue.DESC === credDefSearchCriteria.sortByValue ? sortValue.DESC : sortValue.ASC
+                    [credDefSearchCriteria.sorting]: SortValue.DESC === credDefSearchCriteria.sortByValue ? SortValue.DESC : SortValue.ASC
                 },
                 take: credDefSearchCriteria.pageSize,
                 skip: (credDefSearchCriteria.pageNumber - 1) * credDefSearchCriteria.pageSize

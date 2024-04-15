@@ -8,7 +8,7 @@ import {  GetAllCredDefsPayload, GetCredDefBySchemaId } from './interfaces/creat
 import { CreateCredDefPayload, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
 import { CredDefSchema } from './interfaces/credential-definition.interface';
-
+import { ICredDefDetails } from '@credebl/common/interfaces/cred-def.interface';
 @Controller('credential-definitions')
 export class CredentialDefinitionController {
     private logger = new Logger();
@@ -26,24 +26,7 @@ export class CredentialDefinitionController {
     }
 
     @MessagePattern({ cmd: 'get-all-credential-definitions' })
-    async getAllCredDefs(payload: GetAllCredDefsPayload): Promise<{
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-        nextPage: number;
-        previousPage: number;
-        lastPage: number;
-        data: {
-            createDateTime: Date;
-            createdBy: string;
-            credentialDefinitionId: string;
-            tag: string;
-            schemaLedgerId: string;
-            schemaId: string;
-            orgId: string;
-            revocable: boolean;
-        }[]
-    }> {
+    async getAllCredDefs(payload: GetAllCredDefsPayload): Promise<ICredDefDetails> {
         return this.credDefService.getAllCredDefs(payload);
     }
 

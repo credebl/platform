@@ -227,7 +227,7 @@ export interface IProofRequestSearchCriteria {
     pageSize: number;
     sortField: string;
     sortBy: string;
-    searchByText: string;
+    search: string;
 }
 
 export interface IInvitation{

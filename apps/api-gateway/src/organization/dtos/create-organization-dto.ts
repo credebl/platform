@@ -2,7 +2,7 @@ import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagge
 import { IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
+import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 
 @ApiExtraModels()
 export class CreateOrganizationDto {
@@ -13,6 +13,7 @@ export class CreateOrganizationDto {
     @MinLength(2, { message: 'Organization name must be at least 2 characters.' })
     @MaxLength(50, { message: 'Organization name must be at most 50 characters.' })
     @IsString({ message: 'Organization name must be in string format.' })
+    @IsNotSQLInjection({ message: 'Organization name is required.' })
     name: string;
 
     @ApiPropertyOptional()

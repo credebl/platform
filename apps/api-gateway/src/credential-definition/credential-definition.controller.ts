@@ -31,14 +31,14 @@ export class CredentialDefinitionController {
 
   @Get('/orgs/:orgId/cred-defs/:credDefId')
   @ApiOperation({
-    summary: 'Get an existing credential definition by Id',
-    description: 'Get an existing credential definition by Id'
+    summary: 'Get credential definition by credential definition Id',
+    description: 'Get credential definition details by credential definition Id'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getCredentialDefinitionById(
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
     @Param('credDefId') credentialDefinitionId: string,
     @Res() res: Response
   ): Promise<Response> {
@@ -53,8 +53,8 @@ export class CredentialDefinitionController {
 
   @Get('/verifiation/cred-defs/:schemaId')
   @ApiOperation({
-    summary: 'Get an existing credential definitions by schema Id',
-    description: 'Get an existing credential definitions by schema Id'
+    summary: 'Get all credential definitions by schema Id',
+    description: 'Get all credential definitions by schema Id for verification'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
@@ -74,13 +74,13 @@ export class CredentialDefinitionController {
 
   @Get('/orgs/:orgId/cred-defs')
   @ApiOperation({
-    summary: 'Fetch all credential definitions of provided organization id with pagination',
-    description: 'Fetch all credential definitions from metadata saved in database of provided organization id.'
+    summary: 'Fetch all credential definitions by organization Id',
+    description: 'Fetch all credential definitions of provided organization Id with pagination'
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getAllCredDefs(
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
     @Query() getAllCredDefs: GetAllCredDefsDto,
     @User() user: IUserRequestInterface,
     @Res() res: Response
@@ -100,14 +100,14 @@ export class CredentialDefinitionController {
 
   @Get('/orgs/:orgId/bulk/cred-defs')
   @ApiOperation({
-    summary: 'Fetch all credential definition for bulk opeartion',
-    description: 'Fetch all credential definition from metadata saved in database for bulk opeartion.'
+    summary: 'Fetch all credential definitions for bulk opeartion',
+    description: 'Retrieve all credential definitions for bulk operation'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getAllCredDefAndSchemaForBulkOperation(
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefAndSchemaForBulkOperation(orgId);
@@ -130,7 +130,7 @@ export class CredentialDefinitionController {
   async createCredentialDefinition(
     @User() user: IUserRequestInterface,
     @Body() credDef: CreateCredentialDefinitionDto,
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
     @Res() res: Response
   ): Promise<Response> {
 

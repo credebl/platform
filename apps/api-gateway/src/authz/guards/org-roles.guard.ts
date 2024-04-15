@@ -84,7 +84,7 @@ export class OrgRolesGuard implements CanActivate {
       return false;
 
     } else {
-      throw new BadRequestException('organization is required');
+      throw new BadRequestException('Please provide valid orgId');
     }
 
     // Sending user friendly message if a user attempts to access an API that is inaccessible to their role

@@ -12,7 +12,7 @@ import {
     ApiQuery,
     ApiExcludeEndpoint
 } from '@nestjs/swagger';
-import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException } from '@nestjs/common';
+import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
@@ -135,8 +135,8 @@ export class VerificationController {
         @Query() getAllProofRequests: GetAllProofRequestsDto,
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string
-    ): Promise<Response> {
+        @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string
+        ): Promise<Response> {
         const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllProofRequests;
         const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
             pageNumber,
@@ -175,7 +175,7 @@ export class VerificationController {
     async sendPresentationRequest(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string,
+        @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
         @Body() requestProof: RequestProofDto
     ): Promise<Response> {
 

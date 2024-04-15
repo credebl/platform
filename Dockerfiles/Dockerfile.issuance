@@ -14,6 +14,8 @@ RUN pnpm i
 # Copy the rest of the application code
 COPY . .
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
+
 
 # Build the issuance service
 RUN pnpm run build issuance
@@ -35,7 +37,7 @@ COPY --from=build /app/node_modules  ./node_modules
 
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/issuance/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/issuance/main.js"]
 
 # docker build -t issuance -f Dockerfiles/Dockerfile.issuance .
 # docker run -d --env-file .env --name issuance docker.io/library/issuance

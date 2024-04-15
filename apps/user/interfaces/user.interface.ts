@@ -49,75 +49,71 @@ export interface OrgInvitations {
 }
 
 export interface ISendVerificationEmail {
-  email: string;
-  username?: string;
-  clientId?: string;
-  clientSecret?: string;
-}
+    email: string;
+    username?: string;
+  }
+  
+  export interface IUserInformation {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    isPasskey: boolean;
+  }
+  
+  export interface AddPasskeyDetails {
+    password: string;
+  }
 
-export interface IUserInformation {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  isPasskey: boolean;
-  isHolder?: boolean;
-}
+  export interface UpdateUserProfile {
+    id: string;
+    profileImg?: string;
+    firstName: string;
+    lastName: string;
+    isPublic: boolean;
+  }
+  export interface PlatformSettings {
+    externalIp: string;
+    inboundEndpoint: string;
+    sgApiKey: string;
+    emailFrom: string;
+    apiEndPoint: string;
+    enableEcosystem: boolean;
+    multiEcosystemSupport: boolean;
+  }
+  
+  export interface IShareUserCertificate {
+    schemaId: string;
+    credentialId: string;
+    attributes: Attribute[];
+    invitationUrl?: string;
+  }
 
-export interface AddPasskeyDetails {
-  password: string;
-}
+  export interface IShareDegreeCertificateRes {
+    cretificate: string;
+    invitationUrl?: string;
+  }
 
-export interface UpdateUserProfile {
-  id: string;
-  profileImg?: string;
-  firstName: string;
-  lastName: string;
-  isPublic: boolean;
-}
-export interface PlatformSettings {
-  externalIp: string;
-  inboundEndpoint: string;
-  sgApiKey: string;
-  emailFrom: string;
-  apiEndPoint: string;
-  enableEcosystem: boolean;
-  multiEcosystemSupport: boolean;
-}
+  export interface Attribute {
+    [key: string]: string;
+    label: string;
+  }
+  
+  export interface ICheckUserDetails {
+    isEmailVerified?: boolean;
+    isFidoVerified?: boolean;
+    isRegistrationCompleted?: boolean;
+  }
+  export interface IUserCredentials {
+    id: string;
+    imageUrl?: string;
+    credentialId?: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    deletedAt: Date;
+  }
 
-export interface IShareUserCertificate {
-  schemaId: string;
-  credDefId: string;
-  credentialId: string;
-  attributes: Attribute[];
-  invitationUrl?: string;
-}
-
-export interface IShareDegreeCertificateRes {
-  cretificate: string;
-  invitationUrl?: string;
-}
-
-export interface Attribute {
-  [key: string]: string;
-  label: string;
-}
-
-export interface ICheckUserDetails {
-  isEmailVerified?: boolean;
-  isFidoVerified?: boolean;
-  isRegistrationCompleted?: boolean;
-}
-export interface IUserCredentials {
-  id: string;
-  imageUrl?: string;
-  credentialId?: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  deletedAt: Date;
-}
-
-export interface IOrgUsers {
+  export interface IOrgUsers {
     totalPages: number,
     users: OrgUser[]
 }

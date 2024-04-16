@@ -3,6 +3,7 @@ import { ArrayNotEmpty, IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, Is
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { HandshakeProtocol } from '../enums/connections.enum';
+import { IsNotSQLInjection } from '@credebl/common/cast.helper';
 
 export class CreateOutOfBandConnectionInvitation {
         @ApiPropertyOptional()
@@ -73,12 +74,14 @@ export class CreateConnectionDto {
     @IsOptional()
     @IsString({ message: 'alias must be a string' })
     @IsNotEmpty({ message: 'please provide valid alias' })
+    @IsNotSQLInjection({ message: 'alias is required.' })
     alias: string;
 
     @ApiPropertyOptional()
     @IsOptional()
     @IsString({ message: 'label must be a string' })
     @IsNotEmpty({ message: 'please provide valid label' })
+    @IsNotSQLInjection({ message: 'label is required.' })
     label: string;
 
     @ApiPropertyOptional()

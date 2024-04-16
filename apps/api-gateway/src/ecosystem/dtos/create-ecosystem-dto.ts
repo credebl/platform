@@ -2,7 +2,7 @@ import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagge
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { Transform, Type } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
+import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 
 @ApiExtraModels()
 export class CreateEcosystemDto {
@@ -13,6 +13,7 @@ export class CreateEcosystemDto {
     @MinLength(2, { message: 'Ecosystem name must be at least 2 characters.' })
     @MaxLength(50, { message: 'Ecosystem name must be at most 50 characters.' })
     @IsString({ message: 'Ecosystem name must be in string format.' })
+    @IsNotSQLInjection({ message: 'Ecosystem name is required.' })
     name: string;
   
     @ApiProperty()

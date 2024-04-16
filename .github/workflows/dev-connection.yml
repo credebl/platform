@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - pipeline-implementation
-  #   paths:
-  #     - 'apps/connection/**'
-  # workflow_dispatch:
+    paths:
+      - 'apps/connection/**'
+  workflow_dispatch:
     
 env:
   ECR_IMAGE_TAG: "CONNECTION_V_${{ github.run_number }}"

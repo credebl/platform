@@ -83,3 +83,17 @@ jobs:
 
           # Register the task definition using the modified JSON file
           aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}
+
+       - name: Create or Update Service
+        run: |
+          SERVICES=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ${{ env.AWS_REGION }} | jq -r '.failures[]')
+          REVISION=$(aws ecs describe-task-definition --task-definition ${FAMILY} --region ${{ env.AWS_REGION }} | jq -r '.taskDefinition.revision')
+          if [ -z "$SERVICES" ]; then
+            echo "Entered existing service"
+            DESIRED_COUNT=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ${{ env.AWS_REGION }} | jq -r '.services[].desiredCount')
+            if [ "$DESIRED_COUNT" = "0" ]; then
+              DESIRED_COUNT="1"
+            fi
+            aws ecs update-service --cluster ${CLUSTER} --region ${{ env.AWS_REGION }} --service ${SERVICE_NAME} --task-definition ${FAMILY}:${REVISION} --desired-count ${DESIRED_COUNT}
+          fi
+      

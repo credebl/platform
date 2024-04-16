@@ -165,7 +165,7 @@ export class OrganizationService {
     orgId:string,
     did:string,
     id:string
-  ): Promise<unknown> {
+  ): Promise<string> {
     try {
       const organizationExist = await this.organizationRepository.getOrgProfile(orgId);
       if (!organizationExist) {
@@ -182,11 +182,26 @@ export class OrganizationService {
       if (!isDidMatch) {
         throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
       }
-      // Add logic for multi update for false the pervious primary did
 
-      return this.organizationRepository.setOrgsPrimaryDid(did, orgId, id);
+      const getExistingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
+
+      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(did, orgId, id);
+
+
+     if (!getExistingPrimaryDid) {
+       throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+     }
+
+      const setPriviousDidFalse = await this.organizationRepository.setPreviousDidFlase(getExistingPrimaryDid.id);
+      
+
+      await Promise.all([setPrimaryDid, getExistingPrimaryDid, setPriviousDidFalse]);
+
+
+      return 'Primary DID updated sucessfully';
+      
     } catch (error) {
-      this.logger.error(`In create organization : ${JSON.stringify(error)}`);
+      this.logger.error(`In setPrimaryDid method: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

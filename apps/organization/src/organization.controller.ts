@@ -35,7 +35,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'set-primary-did' })
-  async setPrimaryDid(@Body() payload: { orgId:string, did:string, id:string}): Promise<object> {
+  async setPrimaryDid(@Body() payload: { orgId:string, did:string, id:string}): Promise<string> {
     return this.organizationService.setPrimaryDid(payload.orgId, payload.did, payload.id);
   }
 

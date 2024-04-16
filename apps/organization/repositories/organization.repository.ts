@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { DidList, IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
+import { DidDetails, DidList, IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -755,9 +755,18 @@ export class OrganizationRepository {
     }
   }
 
-  async setOrgsPrimaryDid(primaryDid:string, orgId:string, id:string): Promise<unknown> {
+  async setOrgsPrimaryDid(primaryDid:string, orgId:string, id:string): Promise<string> {
     try {
-      const result = await this.prisma.$transaction([
+      await this.prisma.$transaction([
+        this.prisma.org_dids.update({
+          where: {
+            id
+          },
+         data: {
+             primaryDid: true
+         }
+         }),
+
           this.prisma.org_agents.update({
             where: {
                orgId
@@ -765,24 +774,44 @@ export class OrganizationRepository {
            data: {
                orgDid: primaryDid
            }
-       }),
-
-       this.prisma.org_dids.update({
-        where: {
-          id
-        },
-       data: {
-           primaryDid: true
-       }
-         })
-          
+       })   
         ]);
-       return result;
+       return 'Did Details updated sucessfully';
     } catch (error) {
         this.logger.error(`[setOrgsPrimaryDid] - Update DID details: ${JSON.stringify(error)}`);
         throw error;
     }
 }
+
+ async getPerviousPrimaryDid(orgId:string): Promise<DidDetails> {
+  try {
+    return this.prisma.org_dids.findFirstOrThrow({
+      where: {
+        orgId,
+        primaryDid: true
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getPerviousPrimaryDid] - get DID details: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
+
+ async setPreviousDidFlase(id:string): Promise<DidDetails> {
+  try {
+    return this.prisma.org_dids.update({
+      where: {
+        id
+      },
+      data: {
+        primaryDid: false
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[setPreviousDidFlase] - Update DID details: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
 
 
 }

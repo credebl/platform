@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - pipeline-implementation
-   paths:
+    paths:
       - 'apps/agent-service/**'
   workflow_dispatch:
 

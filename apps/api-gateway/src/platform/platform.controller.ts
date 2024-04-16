@@ -12,7 +12,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AuthGuard } from '@nestjs/passport';
 import * as QRCode from 'qrcode';
-import { SortFields } from '../schema/enum/schema.enum';
+import { SortFields } from '@credebl/enum/enum';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)

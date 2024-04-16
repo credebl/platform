@@ -586,8 +586,7 @@ export class OrganizationRepository {
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
           orderBy: {
-            name: sortByName
-            
+            createDateTime: sortByName
           }
         }),
         this.prisma.organisation.count({

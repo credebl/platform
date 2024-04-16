@@ -500,7 +500,7 @@ export class OrganizationController {
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
-  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     updateOrgDto.orgId = orgId;
     await this.organizationService.updateOrganization(updateOrgDto, reqUser.id, orgId);

@@ -94,6 +94,8 @@ jobs:
           echo "Entered existing service"
             # Extract desired count from the stored service info
            DESIRED_COUNT=$(echo "$SERVICE_INFO" | jq -r '.services[].desiredCount')
+           echo "DESIRED_COUNT: $DESIRED_COUNT"
+
            if [ "$DESIRED_COUNT" = "0" ]; then
             DESIRED_COUNT="1"
             fi

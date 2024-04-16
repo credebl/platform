@@ -34,7 +34,3 @@ COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/verification/main.js"]
-
-# docker build -t verification -f Dockerfiles/Dockerfile.verification .
-# docker run -d --env-file .env --name verification docker.io/library/verification
-# docker logs -f verification

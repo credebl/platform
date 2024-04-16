@@ -38,7 +38,3 @@ COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/connection/main.js"]
-
-# docker build -t connection -f Dockerfiles/Dockerfile.connection .
-# docker run -d --env-file .env --name connection docker.io/library/connection
-# docker logs -f connection

@@ -2,7 +2,7 @@
     "family": "DEV_ECOSYSTEM_SERVICE_TASKDEFINITION",
     "containerDefinitions": [
         {
-            "name": "ECOSYSTEM",
+            "name": "ecosystem",
             "image": "%REPOSITORY_URI%:ECOSYSTEM_V_%BUILD_NUMBER%",
             "cpu": 1024,
             "memory": 2048,

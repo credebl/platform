@@ -2,7 +2,7 @@
     "family": "DEV_AGENT-PROVISIONING_SERVICE_TASKDEFINITION",
     "containerDefinitions": [
         {
-            "name": "AGEAGENT-PROVISIONINGNT",
+            "name": "agent-provisioning",
             "image": "%REPOSITORY_URI%:AGENT-PROVISIONING_V_%BUILD_NUMBER%",
             "cpu": 1024,
             "memory": 2048,

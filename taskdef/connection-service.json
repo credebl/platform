@@ -2,7 +2,7 @@
     "family": "DEV_CONNECTION_SERVICE_TASKDEFINITION",
     "containerDefinitions": [
         {
-            "name": "CONNECTION",
+            "name": "connection",
             "image": "%REPOSITORY_URI%:CONNECTION_V_%BUILD_NUMBER%",
             "cpu": 1024,
             "memory": 2048,

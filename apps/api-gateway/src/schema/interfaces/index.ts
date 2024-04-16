@@ -44,7 +44,6 @@ export interface IOrgAgentInterface {
 export interface ISchemaInfo {
   schema: Ischema;
   schemaId: string;
-  resolutionMetadata: object;
   schemaMetadata: ISchemaMetadata;
 }
 interface Ischema {

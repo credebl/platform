@@ -6,7 +6,15 @@
             "image": "%REPOSITORY_URI%:CONNECTION_V_%BUILD_NUMBER%",
             "cpu": 1024,
             "memory": 2048,
-            "portMappings": [],
+            "portMappings": [
+                {
+                    "name": "api_gateway-5000-tcp",
+                    "containerPort": 5000,
+                    "hostPort": 5000,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
             "essential": true,
             "environment": [],
             "environmentFiles": [

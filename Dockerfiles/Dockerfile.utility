@@ -1,11 +1,7 @@
 # Stage 1: Build the application
 FROM node:18-slim as build
+RUN npm install -g pnpm
 
-RUN addgroup -S nonroot \
-    && adduser -S nonroot -G nonroot
-
-USER nonroot
-RUN npm install --ignore-scripts -g pnpm
 # We don't need the standalone Chromium
 # ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 
@@ -26,7 +22,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN pnpm i --ignore-scripts
+RUN pnpm install
 
 # Copy the rest of the application code
 COPY . .
@@ -38,26 +34,22 @@ RUN pnpm run build utility
 
 # Stage 2: Create the final image
 FROM node:18-slim
-RUN addgroup -S nonroot \
-    && adduser -S nonroot -G nonroot
 
-USER nonroot
-
-RUN npm install --ignore-scripts -g pnpm
 # We don't need the standalone Chromium
 # ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 
 # Install Google Chrome Stable and fonts
 # Note: this installs the necessary libs to make the browser work with Puppeteer.
-RUN apt-get update && apt-get install gnupg wget -y && \
-    wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
-    sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
-    apt-get update && \
-    apt-get install google-chrome-stable -y --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install gnupg wget -y && \
+#     wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
+#     sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
+#     apt-get update && \
+#     apt-get install google-chrome-stable -y --no-install-recommends && \
+#     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
+RUN npm install -g pnpm
 
 # Copy the compiled code from the build stage
 COPY --from=build /app/dist/apps/utility/ ./dist/apps/utility/

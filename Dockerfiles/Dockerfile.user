@@ -21,7 +21,7 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json ./
-RUN rm -rf node_modules
+
 # Install dependencies
 RUN pnpm install
 

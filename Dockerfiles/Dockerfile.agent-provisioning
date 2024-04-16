@@ -8,10 +8,23 @@ USER nonroot
 
 
 # RUN apk add aws-cli
-RUN npm install --ignore-scripts -g pnpm \
-    && apk update \
-    && apk add openssh-client \
-    && apk add aws-cli
+RUN set -eux \
+    && apk --no-cache add \
+        openssh-client \
+        aws-cli \
+        docker \
+        docker-compose \
+    && npm install -g pnpm --ignore-scripts \
+    && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
+    && rm -rf /var/cache/apk/*
+
+RUN docker --version && \
+    docker-compose --version
+
+ARG ROOT_PATH
+ENV ROOT_PATH ${ROOT_PATH}
+
+RUN echo "ROOT_PATH is set to: $ROOT_PATH"
 
 # Set the working directory
 WORKDIR /app
@@ -26,7 +39,8 @@ RUN pnpm i --ignore-scripts
 COPY . .
 
 # Generate Prisma client
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+# RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
 RUN ls -R /app/apps/agent-provisioning/AFJ/
 
 # Build the user service
@@ -39,10 +53,15 @@ RUN addgroup -S nonroot \
 
 USER nonroot
 # RUN apk add aws-cli
-RUN npm install --ignore-scripts -g pnpm  \
-    && apk update \
-    && apk add openssh-client \
-    && apk add aws-cli
+RUN set -eux \
+    && apk --no-cache add \
+        openssh-client \
+        aws-cli \
+        docker \
+        docker-compose \
+    && npm install -g pnpm --ignore-scripts \
+    && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
@@ -50,6 +69,7 @@ RUN mkdir -p ./agent-provisioning/AFJ/endpoints
 RUN mkdir -p ./agent-provisioning/AFJ/agent-config
 RUN mkdir -p ./agent-provisioning/AFJ/port-file
 RUN mkdir -p ./agent-provisioning/AFJ/token
+
 
 # Copy the compiled code
 COPY --from=build /app/dist/apps/agent-provisioning/ ./dist/apps/agent-provisioning/
@@ -60,15 +80,16 @@ COPY --from=build /app/apps/agent-provisioning/AFJ/port-file ./agent-provisionin
 # Set permissions
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent.sh
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent_ecs.sh
+RUN chmod +x /app/agent-provisioning/AFJ/scripts/docker_start_agent.sh
 RUN chmod 777 /app/agent-provisioning/AFJ/endpoints
 RUN chmod 777 /app/agent-provisioning/AFJ/agent-config
 RUN chmod 777 /app/agent-provisioning/AFJ/token
+
 # Copy the libs folder
 COPY libs/ ./libs/
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js"]
-
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/agent-provisioning/main.js $ROOT_PATH"]
 
 # docker build -t agent-provisioning-service -f Dockerfiles/Dockerfile.agent-provisioning .
 # docker run -d --env-file .env --name agent-provisioning-service docker.io/library/agent-provisioning-service

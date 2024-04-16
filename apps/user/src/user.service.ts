@@ -221,7 +221,7 @@ export class UserService {
       if (!checkUserDetails) {
         throw new NotFoundException(ResponseMessages.user.error.emailIsNotVerified);
       }
-      if (checkUserDetails.keycloakUserId) {
+      if (checkUserDetails.keycloakUserId || (!checkUserDetails.keycloakUserId && checkUserDetails.supabaseUserId)) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       }
       if (false === checkUserDetails.isEmailVerified) {
@@ -271,8 +271,21 @@ export class UserService {
         keycloakDetails.keycloakUserId.toString()
       );
 
-      const holderRoleData = await this.orgRoleService.getRole(OrgRoles.HOLDER);
-      await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderRoleData.id);
+      const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token);
+      
+      const holderRole = realmRoles.filter(role => role.name === OrgRoles.HOLDER);
+      const holderRoleData =  0 < holderRole.length && holderRole[0];
+
+      const payload = [
+        {
+          id: holderRoleData.id,
+          name: holderRoleData.name
+        }
+      ];
+
+      await this.clientRegistrationService.createUserHolderRole(token,  keycloakDetails.keycloakUserId.toString(), payload);
+      const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
+      await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
 
       return ResponseMessages.user.success.signUpUser;
     } catch (error) {
@@ -358,6 +371,23 @@ export class UserService {
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
+
+    try {
+        try {
+          const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken);
+          return tokenResponse;
+        } catch (error) {
+          throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
+        }
+   
+    } catch (error) {
+      this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+
     }
   }
 
@@ -470,11 +500,21 @@ export class UserService {
       }
 
       const decryptedPassword = await this.commonService.decryptPassword(password);
-      try {        
+      try {    
+        
         const authToken = await this.clientRegistrationService.getManagementToken();  
         userData.password = decryptedPassword;
-        await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
+        if (userData.keycloakUserId) {
+          await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
+        } else {          
+          const keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, authToken);
+          await this.userRepository.updateUserDetails(userData.id,
+            keycloakDetails.keycloakUserId.toString()
+          );
+        }
+
         await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, password);
+
       } catch (error) {
         this.logger.error(`Error reseting the password`, error);
         throw new InternalServerErrorException('Error while reseting user password');
@@ -491,6 +531,11 @@ export class UserService {
       this.logger.error(`Error In resetTokenPassword : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  findUserByUserId(id: string): Promise<IUsersProfile> {
+    return this.userRepository.getUserById(id);
+
   }
 
   async resetPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
@@ -562,7 +607,7 @@ export class UserService {
           tokenResponse.isRegisteredToSupabase = false;
           return tokenResponse;
         } catch (error) {
-          throw new UnauthorizedException(error?.message);
+          throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
         }
        
       } else {
@@ -778,7 +823,7 @@ export class UserService {
   async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(userId);
-      return this.fetchInvitationsStatus(acceptRejectInvitation, userId, userData.email);
+      return this.fetchInvitationsStatus(acceptRejectInvitation, userData.keycloakUserId, userData.email, userId);
     } catch (error) {
       this.logger.error(`acceptRejectInvitations: ${error}`);
       throw new RpcException(error.response ? error.response : error);
@@ -883,15 +928,16 @@ export class UserService {
    */
   async fetchInvitationsStatus(
     acceptRejectInvitation: AcceptRejectInvitationDto,
-    userId: string,
-    email: string
+    keycloakUserId: string,
+    email: string,
+    userId: string
   ): Promise<IUserInvitations> {
     try {
       const pattern = { cmd: 'update-invitation-status' };
 
       const { orgId, invitationId, status } = acceptRejectInvitation;
 
-      const payload = { userId, orgId, invitationId, status, email };
+      const payload = { userId, keycloakUserId, orgId, invitationId, status, email };
 
       const invitationsData = await this.userServiceProxy
         .send(pattern, payload)
@@ -973,6 +1019,8 @@ export class UserService {
       if (userDetails && !userDetails.isEmailVerified) {
         throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
       } else if (userDetails && userDetails.keycloakUserId) {
+        throw new ConflictException(ResponseMessages.user.error.exists);
+      } else if (userDetails && !userDetails.keycloakUserId && userDetails.supabaseUserId) {
         throw new ConflictException(ResponseMessages.user.error.exists);
       } else if (null === userDetails) {
         return {

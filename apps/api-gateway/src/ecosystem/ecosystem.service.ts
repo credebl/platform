@@ -11,8 +11,9 @@ import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
-import { IEcosystemDashboard, EcosystemDetailsResult, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -45,8 +46,8 @@ export class EcosystemService extends BaseService {
    *
    * @returns Get all ecosystems
    */
-  async getAllEcosystem(orgId: string): Promise<EcosystemDetailsResult> {
-    const payload = { orgId };
+  async getAllEcosystem(orgId: string, payload: PaginationDto): Promise<IEcosystemDetails> {
+    payload['orgId'] = orgId;
     return this.sendNatsMessage(this.serviceProxy, 'get-all-ecosystem', payload);
   }
 
@@ -93,11 +94,10 @@ export class EcosystemService extends BaseService {
    */
   async getEcosystemMembers(
     ecosystemId: string,
-    getEcosystemMembers: GetAllEcosystemMembersDto
+    payload: GetAllEcosystemMembersDto
   ): Promise<{ response: object }> {
-    const { pageNumber, pageSize, search, sortBy } = getEcosystemMembers;
-    const payload = { ecosystemId, pageNumber, pageSize, search, sortBy };
-    return this.sendNats(this.serviceProxy, 'fetch-ecosystem-members', payload);
+    payload['ecosystemId'] = ecosystemId;
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-ecosystem-members', payload);
   }
 
   /**
@@ -126,9 +126,9 @@ export class EcosystemService extends BaseService {
     return this.sendNats(this.serviceProxy, 'accept-reject-ecosystem-invitations', payload);
   }
 
-  async fetchEcosystemOrg(ecosystemId: string, orgId: string): Promise<{ response: object }> {
+  async fetchEcosystemOrg(ecosystemId: string, orgId: string): Promise<object> {
     const payload = { ecosystemId, orgId };
-    return this.sendNats(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-ecosystem-org-data', payload);
   }
 
   async getEndorsementTranasactions(
@@ -145,7 +145,7 @@ export class EcosystemService extends BaseService {
     ecosystemId: string,
     orgId: string,
     paginationDto: PaginationDto
-  ): Promise<{ response: object }> {
+  ): Promise<ISchemaResponse> {
     const { pageNumber, pageSize, search } = paginationDto;
     const payload = { ecosystemId, orgId, pageNumber, pageSize, search };
     return this.sendNatsMessage(this.serviceProxy, 'get-all-ecosystem-schemas', payload);

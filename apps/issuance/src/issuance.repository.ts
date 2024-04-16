@@ -15,6 +15,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   FileUploadData,
   IssueCredentialWebhookPayload,
+  OrgAgent,
   PreviewRequest,
   SchemaDetails
 } from '../interfaces/issuance.interfaces';
@@ -35,11 +36,14 @@ export class IssuanceRepository {
    * @returns Get getAgentEndPoint details
    */
   // eslint-disable-next-line camelcase
-  async getAgentEndPoint(orgId: string): Promise<org_agents> {
+  async getAgentEndPoint(orgId: string): Promise<OrgAgent> {
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
           orgId
+        },
+        include: {
+          organisation: true
         }
       });
 
@@ -67,6 +71,23 @@ export class IssuanceRepository {
     }
   }
 
+
+  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
+    try {
+      return this.prisma.agent_invitations.findMany({
+        where: {
+          orgId
+        },
+        orderBy: {
+          createDateTime: 'asc' 
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getRecipientKey in issuance repository: ${error.message}`);
+      throw error;
+    }
+  }
+
   async getAllIssuedCredentials(
     user: IUserRequest,
     orgId: string,
@@ -87,11 +108,12 @@ export class IssuanceRepository {
         where: {
           orgId,
           OR: [
-            { schemaId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { connectionId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
           ]
         },
         select: {
+          credentialExchangeId: true,
           createDateTime: true,
           createdBy: true,
           orgId: true,
@@ -111,8 +133,8 @@ export class IssuanceRepository {
         where: {
           orgId,
           OR: [
-            { schemaId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { connectionId: { contains: issuedCredentialsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
           ]
         }
       });
@@ -180,35 +202,6 @@ export class IssuanceRepository {
       return credentialDetails;
     } catch (error) {
       this.logger.error(`Error in get saveIssuedCredentialDetails: ${error.message} `);
-      throw error;
-    }
-  }
-
-  /**
-   * Description: Save connection details
-   * @param connectionInvitation
-   * @param agentId
-   * @param orgId
-   * @returns Get connection details
-   */
-  // eslint-disable-next-line camelcase
-  async saveAgentConnectionInvitations(
-    connectionInvitation: string,
-    agentId: string,
-    orgId: string
-  ): Promise<agent_invitations> {
-    try {
-      const agentInvitationData = await this.prisma.agent_invitations.create({
-        data: {
-          orgId,
-          agentId,
-          connectionInvitation,
-          multiUse: true
-        }
-      });
-      return agentInvitationData;
-    } catch (error) {
-      this.logger.error(`Error in saveAgentConnectionInvitations: ${error.message} `);
       throw error;
     }
   }

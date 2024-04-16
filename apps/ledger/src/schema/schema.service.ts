@@ -11,7 +11,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { schema } from '@prisma/client';
-import { ISchema, ISchemaCredDeffSearchInterface, ISchemaPayload, ISchemaSearchCriteria } from './interfaces/schema-payload.interface';
+import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaPayload, ISchemaSearchCriteria, SchemaPayload, W3CCreateSchema } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
@@ -36,13 +36,9 @@ export class SchemaService extends BaseService {
     schema: ISchemaPayload,
     user: IUserRequestInterface,
     orgId: string
-  ): Promise<ISchemaData> {
+   ): Promise<ISchemaData> {
 
-    let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-    if (!apiKey || null === apiKey || undefined === apiKey) {
-      apiKey = await this._getOrgAgentApiKey(orgId);
-    }
-    const { userId } = user.selectedOrg;
+    const userId = user.id;
     try {
 
       const schemaExists = await this.schemaRepository.schemaExists(
@@ -82,7 +78,8 @@ export class SchemaService extends BaseService {
             const trimmedAttributes = schema.attributes.map(attribute => ({
               attributeName: attribute.attributeName.trim(),
               schemaDataType: attribute.schemaDataType,
-              displayName: attribute.displayName.trim()
+              displayName: attribute.displayName.trim(),
+              isRequired: attribute.isRequired
             }));
 
 
@@ -122,7 +119,17 @@ export class SchemaService extends BaseService {
           const did = schema.orgDid?.split(':').length >= 4 ? schema.orgDid : orgDid;
 
           const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
+          
           const attributeArray = trimmedAttributes.map(item => item.attributeName);
+
+          const isRequiredAttributeExists = trimmedAttributes.some(attribute => attribute.isRequired);
+
+           if (!isRequiredAttributeExists) {
+             throw new BadRequestException(
+               ResponseMessages.schema.error.atLeastOneRequired
+             );
+           }
+
           let schemaResponseFromAgentService;
           if (OrgAgentType.DEDICATED === orgAgentType) {
             const issuerId = did;
@@ -133,7 +140,7 @@ export class SchemaService extends BaseService {
               name: schema.schemaName,
               issuerId,
               agentEndPoint,
-              apiKey,
+              orgId,
               agentType: OrgAgentType.DEDICATED
             };
             schemaResponseFromAgentService = await this._createSchema(schemaPayload);
@@ -151,7 +158,7 @@ export class SchemaService extends BaseService {
                 issuerId: did
               },
               agentEndPoint,
-              apiKey,
+              orgId,
               agentType: OrgAgentType.SHARED
             };
             schemaResponseFromAgentService = await this._createSchema(schemaPayload);
@@ -235,6 +242,237 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async createW3CSchema(orgId:string, schemaPayload: SchemaPayload): Promise<object> {
+    try {
+      const { description, did, schemaAttributes, schemaName} = schemaPayload;
+      const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
+      const { agentEndPoint } = agentDetails;
+      const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
+      const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
+      let url;
+      if (OrgAgentType.DEDICATED === orgAgentType) {
+        url = `${agentEndPoint}${CommonConstants.DEDICATED_CREATE_POLYGON_W3C_SCHEMA}`;
+      } else if (OrgAgentType.SHARED === orgAgentType) {
+        const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+        url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
+      }
+
+      const schemaObject = await this.w3cSchemaBuilder(schemaAttributes, schemaName, description);
+      
+      if (!schemaObject) {
+        throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.badRequest
+        });
+      }
+      const agentSchemaPayload = {
+        schema:schemaObject,
+        did,
+        schemaName
+      };
+
+      const W3cSchemaPayload = {
+        url,
+        orgId,
+        schemaRequestPayload: agentSchemaPayload
+      };
+      return this._createW3CSchema(W3cSchemaPayload);
+    } catch (error) {
+      this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.error ? error.error.message : error.message);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  private async w3cSchemaBuilder(schemaAttributes, schemaName: string, description: string) {
+    const schemaAttributeJson = schemaAttributes.map((attribute, index) => ({
+      [attribute.title]: {
+        type: attribute.type.toLowerCase(),
+        order: index,
+        title: attribute.title
+      }
+    }));
+
+    // Add the format property to the id key
+    schemaAttributeJson.unshift({
+      id: {
+        type: 'string',
+        format: 'uri'
+      }
+    });
+
+    const nestedObject = {};
+    schemaAttributeJson.forEach((obj) => {
+      // eslint-disable-next-line prefer-destructuring
+      const key = Object.keys(obj)[0];
+      nestedObject[key] = obj[key];
+    });
+   
+     const schemaNameObject = {}; 
+     schemaNameObject[schemaName] = {
+     "const": schemaName
+     };
+     const date = new Date().toISOString();
+     
+    const W3CSchema = {
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: `${date}-${schemaName}`,
+      type: 'object',
+      required: ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
+      properties: {
+        '@context': {
+          $ref: '#/definitions/context'
+        },
+        type: {
+          type: 'array',
+          items: {
+            anyOf: [
+              {
+                $ref: '#/definitions/VerifiableCredential'
+              },
+              {
+                const: `#/definitions/$${schemaName}`
+              }
+            ]
+          }
+        },
+        credentialSubject: {
+          $ref: '#/definitions/credentialSubject'
+        },
+        id: {
+          type: 'string',
+          format: 'uri'
+        },
+        issuer: {
+          $ref: '#/definitions/uriOrId'
+        },
+        issuanceDate: {
+          type: 'string',
+          format: 'date-time'
+        },
+        expirationDate: {
+          type: 'string',
+          format: 'date-time'
+        },
+        credentialStatus: {
+          $ref: '#/definitions/credentialStatus'
+        },
+        credentialSchema: {
+          $ref: '#/definitions/credentialSchema'
+        }
+      },
+      definitions: {
+        context: {
+          type: 'array',
+          items: [
+            {
+              const: 'https://www.w3.org/2018/credentials/v1'
+            }
+          ],
+          additionalItems: {
+            oneOf: [
+              {
+                type: 'string',
+                format: 'uri'
+              },
+              {
+                type: 'object'
+              },
+              {
+                type: 'array',
+                items: {
+                  $ref: '#/definitions/context'
+                }
+              }
+            ]
+          },
+          minItems: 1,
+          uniqueItems: true
+        },
+        credentialSubject: {
+          type: 'object',
+          required: ['id'],
+          additionalProperties: false,
+          properties: nestedObject
+        },
+        VerifiableCredential: {
+          const: 'VerifiableCredential'
+        },
+        credentialSchema: {
+          oneOf: [
+            {
+              $ref: '#/definitions/idAndType'
+            },
+            {
+              type: 'array',
+              items: {
+                $ref: '#/definitions/idAndType'
+              },
+              minItems: 1,
+              uniqueItems: true
+            }
+          ]
+        },
+        credentialStatus: {
+          oneOf: [
+            {
+              $ref: '#/definitions/idAndType'
+            },
+            {
+              type: 'array',
+              items: {
+                $ref: '#/definitions/idAndType'
+              },
+              minItems: 1,
+              uniqueItems: true
+            }
+          ]
+        },
+        idAndType: {
+          type: 'object',
+          required: ['id', 'type'],
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uri'
+            },
+            type: {
+              type: 'string'
+            }
+          }
+        },
+        uriOrId: {
+          oneOf: [
+            {
+              type: 'string',
+              format: 'uri'
+            },
+            {
+              type: 'object',
+              required: ['id'],
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uri'
+                }
+              }
+            }
+          ]
+        },
+        ...schemaNameObject
+      },
+      title: schemaName,
+      description: `${description}`
+    };
+    return W3CSchema;
+  }
+  
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {
@@ -261,26 +499,40 @@ export class SchemaService extends BaseService {
       return schemaResponse;  
   }
 
+  async _createW3CSchema(payload: W3CCreateSchema): Promise<{
+    response: string;
+  }> {
+      const natsPattern = {
+        cmd: 'agent-create-w3c-schema'
+      };
+      const W3CSchemaResponse = await this.schemaServiceProxy
+        .send(natsPattern, payload)
+        .pipe(
+          map((response) => (
+            {
+              response
+            }))
+        ).toPromise()
+        .catch(error => {
+          this.logger.error(`Error in creating W3C schema : ${JSON.stringify(error)}`);
+          throw new RpcException(error.error ? error.error.message : error.message);
+        });
+      return W3CSchemaResponse;  
+  }
+
 
   async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
     try {
       const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-      // const apiKey = '';
 
-      let apiKey;
-      apiKey = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-
-      }
 
       let schemaResponse;
       if (OrgAgentType.DEDICATED === orgAgentType) {
         const getSchemaPayload = {
           schemaId,
-          apiKey,
+          orgId,
           agentEndPoint,
           agentType: OrgAgentType.DEDICATED
         };
@@ -293,7 +545,7 @@ export class SchemaService extends BaseService {
           payload: { schemaId },
           agentType: OrgAgentType.SHARED,
           agentEndPoint,
-          apiKey
+          orgId
         };
         schemaResponse = await this._getSchemaById(getSchemaPayload);
       }
@@ -456,7 +708,7 @@ export class SchemaService extends BaseService {
   async _getOrgAgentApiKey(orgId: string): Promise<string> {
     const pattern = { cmd: 'get-org-agent-api-key' };
     const payload = { orgId };
-
+   
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.schemaServiceProxy.send<any>(pattern, payload).toPromise();
@@ -470,5 +722,29 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async schemaExist(payload: ISchemaExist): Promise<{
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    name: string;
+    version: string;
+    attributes: string;
+    schemaLedgerId: string;
+    publisherDid: string;
+    issuerId: string;
+    orgId: string;
+    ledgerId: string;
+  }[]> {
+    try {
+      const schemaExist = await this.schemaRepository.schemaExist(payload);
+      return schemaExist;
+    
+    } catch (error) {
+      this.logger.error(`Error in schema exist: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 
 }

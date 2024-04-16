@@ -1,7 +1,7 @@
 import { Injectable, Inject} from '@nestjs/common';
 import { ClientProxy} from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
+import { SendProofRequestPayload, RequestProofDto } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
@@ -70,7 +70,7 @@ export class VerificationService extends BaseService {
      * @param outOfBandRequestProof 
      * @returns Get out-of-band requested proof presentation details
      */
-    sendOutOfBandPresentationRequest(outOfBandRequestProof: OutOfBandRequestProof, user: IUserRequest): Promise<object> {
+    sendOutOfBandPresentationRequest(outOfBandRequestProof: SendProofRequestPayload, user: IUserRequest): Promise<object> {
         const payload = { outOfBandRequestProof, user };
         return this.sendNatsMessage(this.verificationServiceProxy, 'send-out-of-band-proof-request', payload);
     }

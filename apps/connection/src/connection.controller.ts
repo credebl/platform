@@ -2,8 +2,10 @@ import { Controller } from '@nestjs/common'; // Import the common service in the
 import { ConnectionService } from './connection.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
 import {
+  GetAllConnections,
   IConnection,
   ICreateConnection,
+  ICreateOutOfbandConnectionInvitation,
   IFetchConnectionById,
   IFetchConnections,
   IReceiveInvitationByOrg,
@@ -12,6 +14,7 @@ import {
 } from './interfaces/connection.interfaces';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 
 @Controller()
 export class ConnectionController {
@@ -53,6 +56,12 @@ export class ConnectionController {
     return this.connectionService.getConnections(user, orgId, connectionSearchCriteria);
   }
 
+  @MessagePattern({ cmd: 'get-all-agent-connection-list' })
+  async getConnectionListFromAgent(payload: GetAllConnections): Promise<string> {
+    const {orgId, connectionSearchCriteria } = payload;
+    return this.connectionService.getAllConnectionListFromAgent(orgId, connectionSearchCriteria);
+  }
+
   /**
    * 
    * @param connectionId
@@ -75,5 +84,20 @@ export class ConnectionController {
   async receiveInvitation(payload: IReceiveInvitationByOrg): Promise<IReceiveInvitationResponse> {
     const { user, receiveInvitation, orgId } = payload;
     return this.connectionService.receiveInvitation(user, receiveInvitation, orgId);
+  }
+  
+  @MessagePattern({ cmd: 'send-question' })
+  async sendQuestion(payload: IQuestionPayload): Promise<object> {
+    return this.connectionService.sendQuestion(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-question-answer-record' })
+  async getQuestionAnswersRecord(orgId: string): Promise<object> {
+    return this.connectionService.getQuestionAnswersRecord(orgId);
+  }
+
+  @MessagePattern({ cmd: 'create-connection-invitation' })
+  async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<object> {
+    return this.connectionService.createConnectionInvitation(payload);
   }
 }

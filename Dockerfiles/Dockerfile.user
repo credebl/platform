@@ -63,7 +63,7 @@ COPY --from=build /app/node_modules  ./node_modules
 
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma generate && cd ../.. && node dist/apps/user/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy  && cd ../.. && node dist/apps/user/main.js"]
 
 # docker build -t user -f Dockerfiles/Dockerfile.user .
 # docker run -d --env-file .env --name user docker.io/library/user

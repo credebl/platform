@@ -12,11 +12,11 @@ import {
     ApiQuery,
     ApiExcludeEndpoint
 } from '@nestjs/swagger';
-import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException } from '@nestjs/common';
+import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { OutOfBandRequestProof, RequestProofDto } from './dto/request-proof.dto';
+import { SendProofRequestPayload, RequestProofDto } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -32,7 +32,7 @@ import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
-import { SortFields } from './enum/verification.enum';
+import { ProofRequestType, SortFields } from './enum/verification.enum';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -135,8 +135,8 @@ export class VerificationController {
         @Query() getAllProofRequests: GetAllProofRequestsDto,
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string
-    ): Promise<Response> {
+        @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string
+        ): Promise<Response> {
         const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllProofRequests;
         const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
             pageNumber,
@@ -175,7 +175,7 @@ export class VerificationController {
     async sendPresentationRequest(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string,
+        @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
         @Body() requestProof: RequestProofDto
     ): Promise<Response> {
 
@@ -188,8 +188,7 @@ export class VerificationController {
           } else {
             throw new BadRequestException('Please provide unique attribute names');
           }           
-          
-          await this.validateAttribute(attrData);
+
         }
 
         requestProof.orgId = orgId;
@@ -247,22 +246,23 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: OutOfBandRequestProof })
+    @ApiBody({ type: SendProofRequestPayload })
+    @ApiQuery({
+        name: 'requestType',
+        enum: ProofRequestType
+      })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     async sendOutOfBandPresentationRequest(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Body() outOfBandRequestProof: OutOfBandRequestProof,
-        @Param('orgId') orgId: string
+        @Body() outOfBandRequestProof: SendProofRequestPayload,
+        @Param('orgId') orgId: string,
+        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
-
-        for (const attrData of outOfBandRequestProof.attributes) {
-            await this.validateAttribute(attrData);
-        }
-
-        outOfBandRequestProof.orgId = orgId;
+        user.orgId = orgId;
+        outOfBandRequestProof.type = requestType;
         const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,
@@ -292,7 +292,6 @@ export class VerificationController {
         @Res() res: Response
     ): Promise<Response> {
         proofPresentationPayload.type = 'Verification';
-        this.logger.debug(`proofPresentationPayload ::: ${JSON.stringify(proofPresentationPayload)}`);
        
             const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
                 this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
@@ -318,27 +317,4 @@ export class VerificationController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
 }
-
-    async validateAttribute(
-        attrData: object
-    ): Promise<void> {
-
-        if (!attrData['attributeName']) {
-            throw new BadRequestException('attributeName must be required');
-        } 
-
-        if (undefined !== attrData['condition'] && '' === attrData['condition'].trim()) {
-            throw new BadRequestException('condition cannot be empty');
-        }
-
-        if (undefined !== attrData['value'] && '' === attrData['value'].trim()) {
-            throw new BadRequestException('value cannot be empty');
-        }
-
-        if (attrData['condition']) {
-            if (isNaN(attrData['value'])) {
-                throw new BadRequestException('value must be an integer');
-            }
-        }
-    }
 }

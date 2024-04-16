@@ -29,18 +29,18 @@ async function bootstrap(): Promise<void> {
   expressApp.set('x-powered-by', false);
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb' }));
-  
-  
+
+
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)
     .setVersion('1.0')
     .addBearerAuth()
-    .addServer('http://localhost:5000')
-    .addServer('https://devapi.credebl.id')
-    .addServer('https://qa-api.credebl.id')
-    .addServer('https://api.credebl.id')
-    .addServer('https://sandboxapi.credebl.id')
+    .addServer(`${process.env.PUBLIC_DEV_API_URL}`)
+    .addServer(`${process.env.PUBLIC_LOCALHOST_URL}`)
+    .addServer(`${process.env.PUBLIC_QA_API_URL}`)
+    .addServer(`${process.env.PUBLIC_PRODUCTION_API_URL}`)
+    .addServer(`${process.env.PUBLIC_SANDBOX_API_URL}`)
     .addServer(`${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}`)
     .addServer(`${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_GATEWAY_HOST}`)
     .build();
@@ -49,7 +49,14 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup('api', app, document);
   const httpAdapter = app.get(HttpAdapterHost);
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
-  app.enableCors();
+  const { ENABLE_CORS_IP_LIST } = process.env || {};
+  if (ENABLE_CORS_IP_LIST && '' !== ENABLE_CORS_IP_LIST) {
+    app.enableCors({
+      origin: ENABLE_CORS_IP_LIST.split(','),
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      credentials: true
+    });
+  }
 
   app.use(express.static('uploadedFiles/holder-profile'));
   app.use(express.static('uploadedFiles/org-logo'));
@@ -62,7 +69,7 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('uploadedFiles/import'));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.use(helmet({
-    xssFilter:true
+    xssFilter: true
   }));
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);

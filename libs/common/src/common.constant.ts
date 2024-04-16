@@ -23,6 +23,7 @@ export enum CommonConstants {
   URL_CONN_REMOVE_CONNECTION_BY_ID = '/connections/#/remove',
   URL_CONN_METADATA = '/connections/#/metadata',
   URL_CONN_LEGACY_INVITE = '/oob/create-legacy-invitation',
+  URL_CONN_INVITE = '/oob/create-invitation',
   URL_RECEIVE_INVITATION_URL = '/oob/receive-invitation-url',
   URL_RECEIVE_INVITATION = '/oob/receive-invitation',
   URL_CONN_INVITATION = '/url',
@@ -73,7 +74,8 @@ export enum CommonConstants {
   URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
   URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
-  
+  URL_SEND_QUESTION = '/question-answer/question/#',
+  URL_QUESTION_ANSWER_RECORD = '/question-answer',
 
   // SCHEMA & CRED DEF SERVICES
   URL_SCHM_CREATE_SCHEMA = '/schemas',
@@ -83,14 +85,20 @@ export enum CommonConstants {
   URL_SCHM_GET_CRED_DEF_BY_ID = '/credential-definitions/#',
   URL_SCHM_GET_CRED_DEF_BY_ATTRB = '/credential-definitions/created',
 
+  // POLYGON BASED W3C SCHEMAS
+  DEDICATED_CREATE_POLYGON_W3C_SCHEMA = '/polygon/create-schema',
+  SHARED_CREATE_POLYGON_W3C_SCHEMA = '/multi-tenancy/polygon-wc3/schema/',
+
   // SHARED AGENT
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',
+  URL_SHAGENT_CREATE_DID = '/multi-tenancy/create-did/',
   URL_SHAGENT_WITH_TENANT_AGENT = '/multi-tenancy/with-tenant-agent',
   URL_SHAGENT_CREATE_SCHEMA = '/multi-tenancy/schema/#',
   URL_SHAGENT_GET_SCHEMA = '/multi-tenancy/schema/@/#',
   URL_SHAGENT_CREATE_CRED_DEF = '/multi-tenancy/credential-definition/#',
   URL_SHAGENT_GET_CRED_DEF = '/multi-tenancy/credential-definition/@/#',
   URL_SHAGENT_CREATE_INVITATION = '/multi-tenancy/create-legacy-invitation/#',
+  URL_SHAGENT_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation/#',
   URL_SHAGENT_GET_CREATEED_INVITATIONS = '/multi-tenancy/connections/#',
   URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID = '/multi-tenancy/connections/#/@',
   URL_SHAGENT_CREATE_OFFER = '/multi-tenancy/credentials/create-offer/#',
@@ -106,8 +114,10 @@ export enum CommonConstants {
   URL_SHAGENT_ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/#',
   URL_SHAGENT_RECEIVE_INVITATION_URL = '/multi-tenancy/receive-invitation-url/#',
   URL_SHAGENT_RECEIVE_INVITATION = '/multi-tenancy/receive-invitation/#',
-
-
+  URL_SHAGENT_SEND_QUESTION = '/multi-tenancy/question-answer/question/#/@',
+  URL_SHAGENT_SEND_ANSWER = '/multi-tenancy/question-answer/answer/#/@',
+  URL_SHAGENT_QUESTION_ANSWER_RECORD = '/multi-tenancy/question-answer/#',
+  
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',
   URL_GET_PROOF_PRESENTATIONS = '/proofs',
@@ -119,9 +129,12 @@ export enum CommonConstants {
   // server or agent
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',
-  URL_AGENT_GET_DID = '/dids/#',
-  URL_AGENT_GET_DIDS = '/dids',
+  URL_AGENT_GET_DID = '/dids',
   URL_AGENT_GET_ENDPOINT = '/agent',
+
+  // CREATE KEYS
+  CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
+ 
 
   // ENTITY NAMES
   ENTITY_NAME_TEMPLATE = 'templates',
@@ -257,14 +270,6 @@ export enum CommonConstants {
   ACTIVE_NON_ADMIN_USER = 1,
   ALL_NON_ADMIN_USER = 3,
 
-  //passwordLess-login
-  PASSWORDLESS_LOGIN_SCHEMA_ORG = 1,
-  PASSWORDLESS_LOGIN_SCHEMA_NAME = 'CREDEBL-PLA',
-  PLATFORM_ADMIN_CRED_DEF_NAME = 'CREDEBL-PLA',
-  PLATFORM_ADMIN_SCHEMA_VERSION = '1.0',
-
-  LOGIN_PASSWORDLESS = 'passwordless',
-  LOGIN_PASSWORD = 'password',
 
   // Platform admin Details
   PLATFORM_ADMIN_EMAIL='platform.admin@yopmail.com',
@@ -306,9 +311,16 @@ export enum CommonConstants {
   TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
   TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#',
 
+  // Static values to up platform Agent
+  SEED = '101111110111101100111100000Seed1',
+  KEYTYPE = 'ed25519',
+  METHOD = 'indy',
+  NETWORK = 'bcovrin:testnet',
+  ROLE = 'endorser', 
 
  //CacheInfo
-CACHE_APIKEY_KEY = "apiKey",
+CACHE_SHARED_APIKEY_KEY = "dedicatedApiKey",
+CACHE_APIKEY_KEY = "sharedApiKey",
 CACHE_TTL_SECONDS = 604800
 }
 

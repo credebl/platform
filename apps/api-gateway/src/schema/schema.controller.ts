@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param } from '@nestjs/common';
+import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param, ParseUUIDPipe } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
@@ -17,7 +17,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CreateSchemaDto } from '../dtos/create-schema.dto';
+import { CreateSchemaDto, CreateW3CSchemaDto } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
@@ -133,6 +133,26 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  @Post('/:orgId/polygon-w3c/schemas')
+  @ApiOperation({
+    summary: 'Create and sends a W3C-schema to the ledger.',
+    description: 'Create and sends a W3C-schema to the ledger.'
+  })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+
+    const schemaDetails = await this.appService.createW3CSchema(schemaPayload, orgId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.schema.success.create,
+      data: schemaDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
   @Post('/:orgId/schemas')
   @ApiOperation({
     summary: 'Create and sends a schema to the ledger.',
@@ -141,7 +161,7 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
 
     schema.orgId = orgId;
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);

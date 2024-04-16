@@ -9,10 +9,10 @@ export class CreateEcosystemDto {
 
     @ApiProperty()
     @Transform(({ value }) => trim(value))
-    @IsNotEmpty({ message: 'ecosystem name is required.' })
-    @MinLength(2, { message: 'ecosystem name must be at least 2 characters.' })
-    @MaxLength(50, { message: 'ecosystem name must be at most 50 characters.' })
-    @IsString({ message: 'ecosystem name must be in string format.' })
+    @IsNotEmpty({ message: 'Ecosystem name is required.' })
+    @MinLength(2, { message: 'Ecosystem name must be at least 2 characters.' })
+    @MaxLength(50, { message: 'Ecosystem name must be at most 50 characters.' })
+    @IsString({ message: 'Ecosystem name must be in string format.' })
     name: string;
   
     @ApiProperty()

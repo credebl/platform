@@ -84,6 +84,7 @@ model user_org_roles {
   userId       String        @db.Uuid
   orgRoleId    String        @db.Uuid
   orgId        String?       @db.Uuid
+  idpRoleId    String?       @db.Uuid
   organisation organisation? @relation(fields: [orgId], references: [id])
   orgRole      org_roles     @relation(fields: [orgRoleId], references: [id])
   user         user          @relation(fields: [userId], references: [id])
@@ -185,6 +186,7 @@ model org_agents {
   orgId               String?             @unique @db.Uuid
   orgAgentTypeId      String?             @db.Uuid
   ledgerId            String?             @db.Uuid
+  didDocument         Json?
   agent_invitations   agent_invitations[]
   agents              agents?             @relation(fields: [agentId], references: [id])
   agents_type         agents_type?        @relation(fields: [agentsTypeId], references: [id])
@@ -292,6 +294,7 @@ model agent_invitations {
   lastChangedBy        Int          @default(1)
   org_agents           org_agents   @relation(fields: [agentId], references: [id])
   organisation         organisation @relation(fields: [orgId], references: [id])
+  recipientKey         String? 
 }
 
 model connections {
@@ -473,4 +476,25 @@ model file_data {
   credDefId           String?
   status              Boolean     @default(false)
   credential_data     Json?
+}
+
+model notification {
+  id                  String    @id @default(uuid()) @db.Uuid
+  orgId               String?   @unique @db.Uuid
+  notificationWebhook String?
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @default("1")
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @default("1")
+  deletedAt           DateTime? @db.Timestamp(6)
+}
+model ledgerConfig {
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String
+  details             Json
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @default("1")
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @default("1")
+  deletedAt           DateTime? @db.Timestamp(6)
 }

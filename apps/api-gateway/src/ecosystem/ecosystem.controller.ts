@@ -1,6 +1,6 @@
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { EcosystemService } from './ecosystem.service';
-import { Controller, UseFilters, Put, Post, Get, Body, Param, UseGuards, Query, BadRequestException, Delete, HttpStatus, Res } from '@nestjs/common';
+import { Controller, UseFilters, Put, Post, Get, Body, Param, UseGuards, Query, BadRequestException, Delete, HttpStatus, Res, ParseUUIDPipe } from '@nestjs/common';
 import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema.dto';
 import IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -110,7 +110,7 @@ export class EcosystemController {
     const finalResponse: IResponse = {
       statusCode: 200,
       message: ResponseMessages.ecosystem.success.allschema,
-      data: schemaList.response
+      data: schemaList
     };
     return res.status(200).json(finalResponse);
   }
@@ -124,11 +124,27 @@ export class EcosystemController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiBearerAuth()
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
   async getEcosystem(
-    @Param('orgId') orgId: string,
+    @Query() paginationDto: PaginationDto,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
     @Res() res: Response
   ): Promise<Response> {
-    const ecosystemList = await this.ecosystemService.getAllEcosystem(orgId);
+    const ecosystemList = await this.ecosystemService.getAllEcosystem(orgId, paginationDto);
     const finalResponse: IResponse = {
       statusCode: 200,
       message: ResponseMessages.ecosystem.success.fetch,
@@ -256,7 +272,7 @@ export class EcosystemController {
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_MEMBER)
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
-  @ApiResponse({ status: 200, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiOperation({ summary: 'Get ecosystem members list', description: 'Get ecosystem members list.' })
   @ApiQuery({
     name: 'pageNumber',
@@ -274,18 +290,19 @@ export class EcosystemController {
     required: false
   })
   async getEcosystemMembers(
-    @Param('ecosystemId') ecosystemId: string,
+    @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for ecosystemId`); }})) ecosystemId: string,
     @Param('orgId') orgId: string,
     @Query() getEcosystemMembers: GetAllEcosystemMembersDto,
     @Res() res: Response): Promise<Response> {
+
     const members = await this.ecosystemService.getEcosystemMembers(ecosystemId, getEcosystemMembers);
     const finalResponse: IResponse = {
-      statusCode: 200,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.fetchMembers,
-      data: members?.response
+      data: members
     };
 
-    return res.status(200).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Post('/:ecosystemId/:orgId/transaction/schema')

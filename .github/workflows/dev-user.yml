@@ -3,7 +3,10 @@ name: Build and deploy Node.js app to ECSsdc
 on:
   push:
     branches:
-      - pipeline-implementation
+      - develop
+    paths:
+      - 'apps/user/**'
+  workflow_dispatch:
     
 env:
   ECR_IMAGE_TAG: "USER_v_${{ github.run_number }}"

@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - pipeline-implementation
-  #   paths:
-  #     - 'apps/api-gateway/**'
-  # workflow_dispatch:
+    paths:
+      - 'apps/api-gateway/**'
+  workflow_dispatch:
     
 env:
   ECR_IMAGE_TAG: "AGENT_V_${{ github.run_number }}"

@@ -3,7 +3,7 @@ name: Build and deploy Node.js app to ECSsdc
 on:
   push:
     branches:
-      - main
+      - pipeline-implementation
     paths:
       - 'apps/ledger/**'
   workflow_dispatch:

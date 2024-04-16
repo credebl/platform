@@ -1,5 +1,5 @@
 import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize } from 'class-validator';
-import { toLowerCase, trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
@@ -71,8 +71,7 @@ class ProofPayload {
 export class RequestProofDto extends ProofPayload {
     @ApiProperty()
     @IsString()
-    @Transform(({ value }) => trim(value))
-    @Transform(({ value }) => toLowerCase(value))
+    @IsUUID()
     @IsNotEmpty({ message: 'connectionId is required.' })
     connectionId: string;
 

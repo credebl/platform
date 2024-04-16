@@ -59,6 +59,8 @@ import {
   // eslint-disable-next-line camelcase
   credential_definition,
   // eslint-disable-next-line camelcase
+  ecosystem_orgs,
+  // eslint-disable-next-line camelcase
   endorsement_transaction,
   // eslint-disable-next-line camelcase
   org_agents,
@@ -421,19 +423,34 @@ export class EcosystemService {
   }
 
 
-  async addOrgs(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<object> {
+  // eslint-disable-next-line camelcase
+  async addOrgs(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<ecosystem_orgs[]> {
     try {
+
+      const ecosystemRoleDetails = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
+
       const { organizationIds } = ecosystemLeadOrgs;
-    
+      // eslint-disable-next-line camelcase
+      const addedOrgs: ecosystem_orgs[] = []; 
+        
       for (const orgId of organizationIds) {
         const orgAgentDetails = await this.ecosystemRepository.getAgentDetails(orgId);
   
-        if (orgAgentDetails.orgDid) {
-          return this.ecosystemRepository.addOrgs(ecosystemLeadOrgs);
+        if (orgAgentDetails?.orgDid) {
+          const existingOrg = await this.ecosystemRepository.checkOrgExistsInEcosystem(orgId, ecosystemLeadOrgs.ecosystemId);
+          if (existingOrg) {
+              throw new ConflictException(ResponseMessages.ecosystem.error.orgExists);
+          } else {
+
+            const orgs = await this.ecosystemRepository.addOrgs(orgId, ecosystemLeadOrgs.ecosystemId, ecosystemLeadOrgs.userId, ecosystemRoleDetails.id);
+            addedOrgs.push(orgs); 
+          }
+
         } else {
           throw new BadRequestException(ResponseMessages.ecosystem.error.agentNotSpunUp);
         }
       }
+      return addedOrgs;
     } catch (error) {
       this.logger.error(`In add organizations : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

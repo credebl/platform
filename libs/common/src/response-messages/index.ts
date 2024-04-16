@@ -333,6 +333,7 @@ export const ResponseMessages = {
         error: {
             notCreated: 'Error while creating ecosystem',
             agentNotSpunUp: 'Agent is not spun up for this organization',
+            orgExists: 'Organization is already exists in ecosystem',
             orgNotExist: 'Organization does not exist',
             orgDidNotExist: 'Organization did does not exist',
             exists: 'An ecosystem name is already exist',

@@ -10,6 +10,8 @@ import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interfac
 import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs } from '../interfaces/ecosystem.interfaces';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+// eslint-disable-next-line camelcase
+import { ecosystem_orgs } from '@prisma/client';
 
 @Controller()
 export class EcosystemController {
@@ -107,10 +109,11 @@ export class EcosystemController {
     @MessagePattern({ cmd: 'add-ecosystem-lead-orgs' })
     async addOrgs(
       ecosystemLeadOrgs: IEcosystemLeadOrgs
-    ): Promise<object> {
+    // eslint-disable-next-line camelcase
+    ): Promise<ecosystem_orgs[]> {
       return this.ecosystemService.addOrgs(ecosystemLeadOrgs);
     }
-  
+   
   /**
    *
    * @param payload

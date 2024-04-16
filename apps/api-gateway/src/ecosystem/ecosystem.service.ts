@@ -13,7 +13,7 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDetails, IEcosystemOrgs } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
 
 @Injectable()
@@ -84,7 +84,7 @@ export class EcosystemService extends BaseService {
    * @param orgId
    * @param ecosystemId
    */
-  async addOrgs(addOrganizationsDto: AddOrganizationsDto, userId: string): Promise<object> {
+  async addOrgs(addOrganizationsDto: AddOrganizationsDto, userId: string): Promise<IEcosystemOrgs> {
     const payload = { ...addOrganizationsDto, userId };
     return this.sendNatsMessage(this.serviceProxy, 'add-ecosystem-lead-orgs', payload);
   }

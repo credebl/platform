@@ -467,7 +467,7 @@ export class EcosystemController {
     async addOrgs(
       @Body() addOrganizationsDto: AddOrganizationsDto,
       @Param('ecosystemId') ecosystemId: string,
-      @Param('orgId') orgId: string,
+      @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
       @User() user: user,
       @Res() res: Response
     ): Promise<Response> {

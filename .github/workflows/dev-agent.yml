@@ -68,6 +68,10 @@ jobs:
       - name: Replace executionRoleArn in task definition
         run: |
           sed -i "s#\"executionRoleArn\": \"arn:aws:iam::.*:role/ecsTaskExecutionRole\"#\"executionRoleArn\": \"arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole\"#" taskdef/agent-service.json
+    
+      - name: Print file contents after replacement
+        run: cat taskdef/agent-service.json 
+
 
       - name: Update Task Definition and service
         run: |

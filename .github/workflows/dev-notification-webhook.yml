@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-     paths:
+    paths:
       - 'apps/ledger/**'
   workflow_dispatch:
 

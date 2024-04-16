@@ -25,7 +25,7 @@ export class LedgerRepository {
     async getNetworkUrl(indyNamespace: string): Promise<INetworkUrl> {
 
         try {
-            return this.prisma.ledgers.findFirst({
+            return this.prisma.ledgers.findFirstOrThrow({
               where: {
                 indyNamespace                
               },

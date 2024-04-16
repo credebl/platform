@@ -181,7 +181,7 @@ export const ResponseMessages = {
     },
     ledger: {
         success: {
-            fetch: 'Ledgers retrieved successfully.',
+            fetch: 'Ledger details retrieved successfully.',
             fetchNetworkUrl: 'Network url retrieved successfully'
         },
         error: {

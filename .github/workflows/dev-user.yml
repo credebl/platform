@@ -21,7 +21,7 @@ jobs:
       id-token: write
       contents: read
 
-    steps:
+   steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
@@ -84,8 +84,8 @@ jobs:
           # Register the task definition using the modified JSON file
           aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}
       
-       - name: Create or Update Service
-         run: |
+      - name: Create or Update Service
+        run: |
            echo "SERVICE_NAME: ${SERVICE_NAME}"
            # Describe the service once and store the result
             SERVICE_INFO=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ${{ env.AWS_REGION }})

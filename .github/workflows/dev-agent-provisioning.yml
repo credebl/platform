@@ -96,4 +96,3 @@ jobs:
             fi
             aws ecs update-service --cluster ${CLUSTER} --region ${{ env.AWS_REGION }} --service ${SERVICE_NAME} --task-definition ${FAMILY}:${REVISION} --desired-count ${DESIRED_COUNT}
           fi
-      

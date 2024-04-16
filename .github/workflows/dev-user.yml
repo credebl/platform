@@ -74,22 +74,22 @@ jobs:
          SERVICE_NAME="${NAME}-service"
          echo "SERVICE_NAME: ${SERVICE_NAME}"
 
-        # Replace placeholders in the JSON file
-         sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" taskdef/agent-provisioning.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+         # Replace placeholders in the JSON file
+          sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" taskdef/agent-provisioning.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
 
-       # Debug: Print the content of the modified JSON file
-         cat ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+         # Debug: Print the content of the modified JSON file
+          cat ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
 
-        # Register the task definition using the modified JSON file
-         aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}
+          # Register the task definition using the modified JSON file
+            aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}
 
       - name: Create or Update Service
         run: |
          echo "SERVICE_NAME: ${SERVICE_NAME}"
-        # Describe the service once and store the result
-         SERVICE_INFO=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ${{ env.AWS_REGION }})
+         # Describe the service once and store the result
+          SERVICE_INFO=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ${{ env.AWS_REGION }})
 
-        # Check if the service exists
+          # Check if the service exists
           if [ -z "$SERVICE_INFO" ]; then
            echo "Service does not exist, creating new service..."
           # Your logic to create a new service goes here

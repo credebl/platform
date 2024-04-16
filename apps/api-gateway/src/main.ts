@@ -16,7 +16,10 @@ dotenv.config();
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
-    logger: NodeEnvironment.DEVELOPMENT === process.env.NODE_ENV ? ['log', 'debug', 'error', 'verbose', 'warn'] : ['error', 'warn']
+    logger:
+      NodeEnvironment.PRODUCTION !== process.env.PLATFORM_PROFILE_MODE
+        ? ['log', 'debug', 'error', 'verbose', 'warn']
+        : ['error', 'warn']
   });
 
   app.connectMicroservice<MicroserviceOptions>({
@@ -27,6 +30,19 @@ async function bootstrap(): Promise<void> {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb' }));
 
+  app.use(function (req, res, next) {
+    let err = null;
+    try {
+      decodeURIComponent(req.path);
+    } catch (e) {
+      err = e;
+    }
+    if (err) {
+      return res.status(500).json({ message: err });
+      // return res.redirect(['https://', req.get('Host'), '/404'].join(''));
+    }
+    next();
+  });
 
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
@@ -63,11 +79,12 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('invoice-pdf'));
   app.use(express.static('uploadedFiles/bulk-verification-templates'));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  app.use(helmet({
-    xssFilter: true
-  }));
+  app.use(
+    helmet({
+      xssFilter: true
+    })
+  );
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);
 }
 bootstrap();
-

@@ -17,7 +17,7 @@ import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
 import { OrgAgentType } from '@credebl/enum/enum';
-import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import { ICredDefWithPagination, ISchemaData, ISchemaDetails, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -522,7 +522,8 @@ export class SchemaService extends BaseService {
 
 
   async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
-    try {
+    
+    try {  
       const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
@@ -626,7 +627,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getcredDeffListBySchemaId(
+  async getcredDefListBySchemaId(
     payload: ISchemaCredDeffSearchInterface
     ): Promise<ICredDefWithPagination> {
     const { schemaSearchCriteria } = payload;
@@ -656,24 +657,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getAllSchema(schemaSearchCriteria: ISchemaSearchCriteria): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      schemaLedgerId: string;
-      version: string;
-      attributes: string;
-      publisherDid: string;
-      issuerId: string;
-    }[];
-  }> {
+  async getAllSchema(schemaSearchCriteria: ISchemaSearchCriteria): Promise<ISchemaDetails> {
     try {
       const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
 

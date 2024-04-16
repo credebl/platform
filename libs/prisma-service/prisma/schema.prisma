@@ -221,8 +221,7 @@ model ledgers {
   poolConfig          String       @db.VarChar
   isActive            Boolean
   networkString       String       @db.VarChar
-  registerDIDEndpoint String       @db.VarChar
-  registerDIDPayload  Json?
+  nymTxnEndpoint      String       @db.VarChar
   indyNamespace       String?      @db.VarChar
   networkUrl          String?      @db.VarChar
   org_agents          org_agents[]

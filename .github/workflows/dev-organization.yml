@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'apps/ledger/**'
+      - 'apps/organization/**'
   workflow_dispatch:
 
 env:

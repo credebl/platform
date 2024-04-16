@@ -5,7 +5,7 @@ on:
     branches:
       - pipeline-implementation
     paths:
-      - 'apps/ledger/**'
+      - 'apps/user/**'
   workflow_dispatch:
 
 env:

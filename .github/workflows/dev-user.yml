@@ -21,7 +21,7 @@ jobs:
       id-token: write
       contents: read
 
-   steps:
+    steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
@@ -86,22 +86,22 @@ jobs:
       
       - name: Create or Update Service
         run: |
-           echo "SERVICE_NAME: ${SERVICE_NAME}"
-           # Describe the service once and store the result
-           SERVICE_INFO=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ${{ env.AWS_REGION }})
+          echo "SERVICE_NAME: ${SERVICE_NAME}"
+          # Describe the service once and store the result
+          SERVICE_INFO=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ${{ env.AWS_REGION }})
 
-           # Check if the service exists
-           if [ -z "$SERVICE_INFO" ]; then
-           echo "Service does not exist, creating new service..."
-           # Your logic to create a new service goes here
-           else
-           echo "Entered existing service"
+          # Check if the service exists
+          if [ -z "$SERVICE_INFO" ]; then
+            echo "Service does not exist, creating new service..."
+            # Your logic to create a new service goes here
+          else
+            echo "Entered existing service"
             # Extract desired count from the stored service info
             DESIRED_COUNT=$(echo "$SERVICE_INFO" | jq -r '.services[].desiredCount')
             if [ "$DESIRED_COUNT" = "0" ]; then
-               DESIRED_COUNT="1"
+              DESIRED_COUNT="1"
             fi
-             # Update the existing service
-              REVISION=$(aws ecs describe-task-definition --task-definition ${FAMILY} --region ${{ env.AWS_REGION }} | jq -r '.taskDefinition.revision')
-              aws ecs update-service --cluster ${CLUSTER} --region ${{ env.AWS_REGION }} --service ${SERVICE_NAME} --task-definition ${FAMILY}:${REVISION} --desired-count ${DESIRED_COUNT}
-             fi
+            # Update the existing service
+            REVISION=$(aws ecs describe-task-definition --task-definition ${FAMILY} --region ${{ env.AWS_REGION }} | jq -r '.taskDefinition.revision')
+            aws ecs update-service --cluster ${CLUSTER} --region ${{ env.AWS_REGION }} --service ${SERVICE_NAME} --task-definition ${FAMILY}:${REVISION} --desired-count ${DESIRED_COUNT}
+          fi

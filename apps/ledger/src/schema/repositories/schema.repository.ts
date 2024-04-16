@@ -160,16 +160,16 @@ export class SchemaRepository {
   }
 
   async getSchemasCredDeffList(payload: ISchemaSearchCriteria): Promise<ICredDefWithCount> {
-    const { orgId, schemaId } = payload;
+    const { orgId, schemaId, searchByText, sortField, sortBy, pageNumber, pageSize } = payload;
 
     try {
       const credDefResult = await this.prisma.credential_definition.findMany({
         where: {
           AND: [{ orgId }, { schemaLedgerId: schemaId }],
           OR: [
-            { tag: { contains: payload.searchByText, mode: 'insensitive' } },
-            { credentialDefinitionId: { contains: payload.searchByText, mode: 'insensitive' } },
-            { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } }
+            { tag: { contains: searchByText, mode: 'insensitive' } },
+            { credentialDefinitionId: { contains: searchByText, mode: 'insensitive' } },
+            { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } }
           ]
         },
         select: {
@@ -180,10 +180,10 @@ export class SchemaRepository {
           createDateTime: true
         },
         orderBy: {
-          [payload.sortField]: SortValue.ASC === payload.sortBy ? SortValue.ASC : SortValue.DESC
+          [sortField]: SortValue.ASC === sortBy ? SortValue.ASC : SortValue.DESC
         },
-        take: Number(payload.pageSize),
-        skip: (payload.pageNumber - 1) * payload.pageSize
+        take: Number(pageSize),
+        skip: (pageNumber - 1) * pageSize
       });
       const credDefCount = await this.prisma.credential_definition.count({
         where: {

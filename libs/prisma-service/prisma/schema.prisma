@@ -204,9 +204,9 @@ model org_dids {
   lastChangedDateTime DateTime    @default(now()) @db.Timestamptz(6)
   lastChangedBy       String      @db.Uuid
   orgId               String      @db.Uuid
-  primaryDid          Boolean
-  did                 String      @db.VarChar
-  didDocument         Json?
+  isPrimaryDid          Boolean
+  did                 String      @db.VarChar(500)
+  didDocument         Json
   orgAgentId          String      @db.Uuid
   org_agents          org_agents  @relation(fields: [orgAgentId], references: [id])
 }

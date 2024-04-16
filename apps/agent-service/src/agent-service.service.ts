@@ -864,7 +864,7 @@ export class AgentServiceService {
         orgId,
         did: didDetails.did,
         didDocument: didDetails.didDocument,
-        primaryDid: isPrimaryDid,
+        isPrimaryDid,
         orgAgentId: agentDetails.id,
         userId: user.id
       };

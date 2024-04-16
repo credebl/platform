@@ -120,7 +120,7 @@ export interface ISendVerificationEmail {
     createDateTime: Date;
     did: string;
     lastChangedDateTime: Date;
-    primaryDid: boolean;
+    isPrimaryDid: boolean;
   }
 
   interface OrgUser {

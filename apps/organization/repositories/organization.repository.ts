@@ -746,7 +746,7 @@ export class OrganizationRepository {
           createDateTime: true,
           did: true,
           lastChangedDateTime: true,
-          primaryDid: true  
+          isPrimaryDid: true  
         }
       });
     } catch (error) {
@@ -763,7 +763,7 @@ export class OrganizationRepository {
             id
           },
          data: {
-             primaryDid: true
+             isPrimaryDid: true
          }
          }),
 
@@ -788,7 +788,7 @@ export class OrganizationRepository {
     return this.prisma.org_dids.findFirstOrThrow({
       where: {
         orgId,
-        primaryDid: true
+        isPrimaryDid: true
       }
     });
   } catch (error) {
@@ -804,7 +804,7 @@ export class OrganizationRepository {
         id
       },
       data: {
-        primaryDid: false
+        isPrimaryDid: false
       }
     });
   } catch (error) {

@@ -1499,7 +1499,7 @@ export class OrganizationService {
    */
   async getOrgDidList(orgId: string): Promise<DidList[]> {
     try {
-      return this.organizationRepository.getAllOrganizationDid(orgId);
+      return await this.organizationRepository.getAllOrganizationDid(orgId);
     } catch (error) {
       this.logger.error(`get Org dids: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

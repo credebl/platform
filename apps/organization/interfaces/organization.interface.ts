@@ -150,7 +150,7 @@ export interface DidList {
   createDateTime: Date;
   did: string;
   lastChangedDateTime: Date;
-  primaryDid: boolean;
+  isPrimaryDid: boolean;
 }
 
 export interface PrimaryDid {
@@ -165,7 +165,7 @@ export interface DidDetails {
   lastChangedDateTime: Date; 
   lastChangedBy: string;
   orgId: string;
-  primaryDid: boolean;
+  isPrimaryDid: boolean;
   did: string;
   didDocument: Prisma.JsonValue;
   orgAgentId: string;

@@ -186,7 +186,7 @@ export interface IStoreOrgAgentDetails {
 
 export interface StoreDidDetails {
   orgId: string;
-  primaryDid?: boolean;
+  isPrimaryDid?: boolean;
   did: string;
   didDocument?: string;
   userId: string;

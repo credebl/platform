@@ -163,14 +163,14 @@ export class AgentServiceRepository {
     // eslint-disable-next-line camelcase
     async storeDidDetails(storeDidDetails: StoreDidDetails): Promise<org_dids> {
         try {
-          const {orgId, did, didDocument, primaryDid, userId, orgAgentId} = storeDidDetails;
+          const {orgId, did, didDocument, isPrimaryDid, userId, orgAgentId} = storeDidDetails;
 
           return this.prisma.org_dids.create({
                 data: {
                     orgId,
                     did,
                     didDocument,
-                    primaryDid,
+                    isPrimaryDid,
                     createdBy: userId,
                     lastChangedBy: userId,
                     orgAgentId
@@ -189,14 +189,14 @@ export class AgentServiceRepository {
      * @returns did details
      */
     // eslint-disable-next-line camelcase
-    async setPrimaryDid(primaryDid:string, orgId:string): Promise<org_agents> {
+    async setPrimaryDid(isPrimaryDid:string, orgId:string): Promise<org_agents> {
         try {
-          return this.prisma.org_agents.update({
+          return await this.prisma.org_agents.update({
                  where: {
                     orgId
                  },
                 data: {
-                    orgDid: primaryDid
+                    orgDid: isPrimaryDid
                 }
             });
            

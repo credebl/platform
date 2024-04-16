@@ -367,7 +367,7 @@ export class OrganizationController {
 
 
   /**
- * @returns organization details
+ * @returns success message
  */
 
   @Post('/:orgId/primary-did')

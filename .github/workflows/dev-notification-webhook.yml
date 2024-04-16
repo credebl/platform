@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'apps/ledger/**'
+      - 'apps/notification-webhook/**'
   workflow_dispatch:
 
 env:

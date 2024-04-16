@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - pipeline-implementation
-  #   paths:
-  #     - 'apps/user/**'
-  # workflow_dispatch:
+    paths:
+      - 'apps/user/**'
+  workflow_dispatch:
     
 env:
   ECR_IMAGE_TAG: "ORGANIZATION_V_${{ github.run_number }}"

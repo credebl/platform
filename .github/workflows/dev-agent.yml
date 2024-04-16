@@ -7,9 +7,9 @@ on:
   #   paths:
   #     - 'apps/agent-service/**'
   # workflow_dispatch:
-
+    
 env:
-  ECR_IMAGE_TAG: "AGENT_V_${{ github.run_number }}"
+  ECR_IMAGE_TAG: "USER_v_${{ github.run_number }}"
   ECR_REPOSITORY: "dev-services"
   AWS_REGION: "ap-southeast-1"
   CLUSTER: "DEV-NGOTAG-CLUSTER"
@@ -42,7 +42,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev-services
-          IMAGE_TAG: "AGENT_V_${{ github.run_number }}"
+          IMAGE_TAG: "USER_V_${{ github.run_number }}"
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfiles/Dockerfile.agent-service .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY=dev-services" >> $GITHUB_ENV
-          echo "IMAGE_TAG=AGENT_V_${{ github.run_number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=USER_V_${{ github.run_number }}" >> $GITHUB_ENV
    
       - name: Print environment variables
         run: |
@@ -68,10 +68,6 @@ jobs:
       - name: Replace executionRoleArn in task definition
         run: |
           sed -i "s#\"executionRoleArn\": \"arn:aws:iam::.*:role/ecsTaskExecutionRole\"#\"executionRoleArn\": \"arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole\"#" taskdef/agent-service.json
-    
-      - name: Print file contents after replacement
-        run: cat taskdef/agent-service.json 
-
 
       - name: Update Task Definition and service
         run: |
@@ -80,7 +76,7 @@ jobs:
           SERVICE_NAME="${NAME}-service"
           
           # Replace placeholders in the JSON file
-          sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" taskdef/user-service.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+          sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" taskdef/agent-service.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
  
           # Debug: Print the content of the modified JSON file
           cat ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json

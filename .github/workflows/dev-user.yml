@@ -101,4 +101,3 @@ jobs:
              REVISION=$(aws ecs describe-task-definition --task-definition ${FAMILY} --region ap-southeast-1 | jq -r '.taskDefinition.revision')
             aws ecs update-service --cluster ${CLUSTER} --region ap-southeast-1 --service ${SERVICE_NAME} --task-definition ${FAMILY}:${REVISION} --desired-count ${DESIRED_COUNT}
             fi
-

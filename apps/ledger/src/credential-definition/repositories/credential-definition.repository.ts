@@ -5,6 +5,8 @@ import { credential_definition, org_agents, org_agents_type, organisation, schem
 import { Injectable, Logger } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
+import { ICredDefData } from '@credebl/common/interfaces/cred-def.interface';
+import { SortValue } from '@credebl/enum/enum';
 
 @Injectable()
 export class CredentialDefinitionRepository {
@@ -64,16 +66,7 @@ export class CredentialDefinitionRepository {
         }
     }
 
-    async getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, orgId: string): Promise<{
-        createDateTime: Date;
-        createdBy: string;
-        credentialDefinitionId: string;
-        tag: string;
-        schemaLedgerId: string;
-        schemaId: string;
-        orgId: string;
-        revocable: boolean;
-    }[]> {
+    async getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, orgId: string): Promise<ICredDefData[]> {
         try {
             const credDefResult = await this.prisma.credential_definition.findMany({
                 where: {
@@ -95,7 +88,7 @@ export class CredentialDefinitionRepository {
                     revocable: true
                 },
                 orderBy: {
-                    [credDefSearchCriteria.sorting]: 'desc' === credDefSearchCriteria.sortByValue ? 'desc' : 'asc'
+                    [credDefSearchCriteria.sorting]: SortValue.DESC === credDefSearchCriteria.sortByValue ? SortValue.DESC : SortValue.ASC
                 },
                 take: credDefSearchCriteria.pageSize,
                 skip: (credDefSearchCriteria.pageNumber - 1) * credDefSearchCriteria.pageSize
@@ -186,7 +179,7 @@ export class CredentialDefinitionRepository {
                     schemaLedgerId: true
                 },
                 orderBy: {
-                    [credDefSortBy]: 'desc' === sortValue ? 'desc' : 'asc'
+                    [credDefSortBy]: SortValue.DESC === sortValue ? SortValue.DESC : SortValue.ASC
                 }
             });
 
@@ -206,7 +199,6 @@ export class CredentialDefinitionRepository {
                     attributes: true
                 }
             });
-
 
             // Match Credential Definitions with Schemas and map to CredDefSchema
             const matchingSchemas = credentialDefinitions.map((credDef) => {

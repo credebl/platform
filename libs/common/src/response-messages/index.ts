@@ -165,7 +165,8 @@ export const ResponseMessages = {
             notStoredCredential: 'User credential not stored',
             agentDetailsNotFound: 'Agent details not found',
             failedFetchSchema: 'Failed to fetch schema data',
-            atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`'
+            atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
+            schemaBuilder: 'Error while creating schema JSON`'
         }
     },
     credentialDefinition: {

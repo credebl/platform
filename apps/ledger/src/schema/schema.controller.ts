@@ -27,7 +27,8 @@ export class SchemaController {
 
   @MessagePattern({ cmd: 'create-w3c-schema' })
   async createW3CSchema(payload: W3CSchemaPayload): Promise<object> {
-    return this.schemaService.createW3CSchema(payload);
+    const {orgId, schemaPayload} = payload;
+    return this.schemaService.createW3CSchema(orgId, schemaPayload);
   }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })

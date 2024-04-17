@@ -3,7 +3,7 @@
     "containerDefinitions": [
         {
             "name": "webhook",
-            "image": "%REPOSITORY_URI%:WEBHOOK_v_%BUILD_NUMBER%",
+            "image": "%REPOSITORY_URI%:WEBHOOK_V_%BUILD_NUMBER%",
             "cpu": 1024,
             "memory": 2048,
             "portMappings": [],

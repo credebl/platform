@@ -1,0 +1,106 @@
+name: Build and deploy Node.js app to ECSsdc
+
+on:
+  push:
+    branches:
+      - pipeline-implementation
+    paths:
+      - 'apps/agent-service/**'
+  workflow_dispatch:
+    
+env:
+  ECR_IMAGE_TAG: "USER_v_${{ github.run_number }}"
+  ECR_REPOSITORY: "stage-services"
+  AWS_REGION: "ap-southeast-1"
+  CLUSTER: "STAGE-NGOTAG-CLUSTER"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: ap-southeast-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: stage-services
+          IMAGE_TAG: "USER_V_${{ github.run_number }}"
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfiles/Dockerfile.agent-service .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker image list
+          
+      - name: Set environment variables
+        run: |
+          echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY=stage-services" >> $GITHUB_ENV
+          echo "IMAGE_TAG=USER_V_${{ github.run_number }}" >> $GITHUB_ENV
+   
+      - name: Print environment variables
+        run: |
+          echo "ECR_REGISTRY: $ECR_REGISTRY"
+          echo "ECR_REPOSITORY: $ECR_REPOSITORY"
+          echo "IMAGE_TAG: $IMAGE_TAG"
+     
+      - name: Retrieve Repository URI
+        run: |
+          REPOSITORY_URI=$(aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} | jq -r '.repositories[].repositoryUri')
+          echo "REPOSITORY_URI=${REPOSITORY_URI}" >> $GITHUB_ENV
+      
+      - name: Replace executionRoleArn in task definition
+        run: |
+          sed -i "s#\"executionRoleArn\": \"arn:aws:iam::.*:role/ecsTaskExecutionRole\"#\"executionRoleArn\": \"arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole\"#" stage-taskdef/agent-service.json
+
+      - name: Update Task Definition and service
+        run: |
+          FAMILY=$(sed -n 's/.*"family": "\(.*\)",/\1/p' stage-taskdef/agent-service.json)
+          NAME=$(sed -n 's/.*"name": "\(.*\)",/\1/p' stage-taskdef/agent-service.json)
+          SERVICE_NAME="${NAME}-service"
+          echo "SERVICE_NAME: $SERVICE_NAME"
+
+          # Replace placeholders in the JSON file
+          sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" stage-taskdef/agent-service.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+ 
+          # Debug: Print the content of the modified JSON file
+          cat ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+
+          # Register the task definition using the modified JSON file
+          aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}
+      
+          SERVICE_INFO=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ap-southeast-1)
+
+          # Check if the service exists
+           if [ -z "$SERVICE_INFO" ]; then
+            echo "Service does not exist, creating new service..."
+            # Your logic to create a new service goes here
+          else
+          echo "Entered existing service"
+            # Extract desired count from the stored service info
+           DESIRED_COUNT=$(echo "$SERVICE_INFO" | jq -r '.services[].desiredCount')
+           echo "DESIRED_COUNT: $DESIRED_COUNT"
+
+           if [ "$DESIRED_COUNT" = "0" ]; then
+            DESIRED_COUNT="1"
+            fi
+            # Update the existing service
+             REVISION=$(aws ecs describe-task-definition --task-definition ${FAMILY} --region ap-southeast-1 | jq -r '.stage-taskdefinition.revision')
+            aws ecs update-service --cluster ${CLUSTER} --region ap-southeast-1 --service ${SERVICE_NAME} --task-definition ${FAMILY}:${REVISION} --desired-count ${DESIRED_COUNT}
+            fi

@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - develop
- 
+    paths:
+      - 'apps/issuance/**'
+  workflow_dispatch:
+    
 env:
   ECR_IMAGE_TAG: "ISSUANCE_V_${{ github.run_number }}"
   ECR_REPOSITORY: "dev-services"

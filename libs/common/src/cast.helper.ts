@@ -97,7 +97,10 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
   validate(value: string, args: ValidationArguments) {
     // Implement your custom validation logic here
-    // return text === 'hello';
+    // Validation to allow option param logo
+    if ('' == value) {
+      return true;
+    }
     if (!value || 'string' !== typeof value) {
       throw new BadRequestException('Invalid base64 string');
     }

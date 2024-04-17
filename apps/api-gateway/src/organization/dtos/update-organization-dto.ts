@@ -30,6 +30,7 @@ export class UpdateOrganizationDto {
 
     @ApiPropertyOptional()
     @IsOptional()
+    @Transform(({ value }) => trim(value))
     @Validate(ImageBase64Validator)
     logo?: string = '';
 

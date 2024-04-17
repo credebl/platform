@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - 'apps/webhook/**'
-  workflow_dispatch:
+
     
 env:
   ECR_IMAGE_TAG: "WEBHOOK_V_${{ github.run_number }}"

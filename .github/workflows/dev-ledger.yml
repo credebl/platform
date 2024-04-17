@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - 'apps/ledger/**'
-  workflow_dispatch:
+ 
     
 env:
   ECR_IMAGE_TAG: "LEDGER_V_${{ github.run_number }}"

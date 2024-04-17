@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - 'apps/agent-service/**'
-  workflow_dispatch:
+   
     
 env:
-  ECR_IMAGE_TAG: "USER_v_${{ github.run_number }}"
+  ECR_IMAGE_TAG: "AGENT_V_${{ github.run_number }}"
   ECR_REPOSITORY: "dev-services"
   AWS_REGION: "ap-southeast-1"
   CLUSTER: "DEV-NGOTAG-CLUSTER"
@@ -42,7 +40,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dev-services
-          IMAGE_TAG: "USER_V_${{ github.run_number }}"
+          IMAGE_TAG: "AGENT_V_${{ github.run_number }}"
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfiles/Dockerfile.agent-service .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -52,7 +50,7 @@ jobs:
         run: |
           echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY=dev-services" >> $GITHUB_ENV
-          echo "IMAGE_TAG=USER_V_${{ github.run_number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=AGENT_V_${{ github.run_number }}" >> $GITHUB_ENV
    
       - name: Print environment variables
         run: |

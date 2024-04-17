@@ -141,4 +141,5 @@ export interface Payload {
   pageNumber: number;
   pageSize: number;
   search: string;
+  role?: string;
 }

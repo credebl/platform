@@ -84,7 +84,7 @@ export class EcosystemService extends BaseService {
    * @param orgId
    * @param ecosystemId
    */
-  async addOrgs(addOrganizationsDto: AddOrganizationsDto, userId: string): Promise<IEcosystemOrgs> {
+  async addOrganizationInEcosystem(addOrganizationsDto: AddOrganizationsDto, userId: string): Promise<IEcosystemOrgs> {
     const payload = { ...addOrganizationsDto, userId };
     return this.sendNatsMessage(this.serviceProxy, 'add-ecosystem-lead-orgs', payload);
   }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, ArrayUnique, IsArray, IsString } from 'class-validator';
+import { ArrayNotEmpty, ArrayUnique, IsArray, IsString, IsUUID } from 'class-validator';
 
 export class AddOrganizationsDto {
     @ApiProperty({
@@ -8,6 +8,7 @@ export class AddOrganizationsDto {
     @ArrayNotEmpty({ message: 'Organization Ids array must not be empty' })
     @ArrayUnique({ message: 'Duplicate Organization Ids are not allowed' })
     @IsArray()
+    @IsUUID('4', { each: true, message: 'Invalid format of organization Id' })
     @IsString({ each: true, message: 'Each organization Id in the array should be a string' })
     organizationIds: string[];   
     
@@ -15,4 +16,3 @@ export class AddOrganizationsDto {
 
     orgId: string;
 }
-

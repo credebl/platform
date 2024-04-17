@@ -424,7 +424,7 @@ export class EcosystemService {
 
 
   // eslint-disable-next-line camelcase
-  async addOrgs(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<ecosystem_orgs[]> {
+  async addOrganizationInEcosystem(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<ecosystem_orgs[]> {
     try {
 
       const ecosystemRoleDetails = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);

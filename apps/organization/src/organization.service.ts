@@ -460,14 +460,15 @@ export class OrganizationService {
     userId: string,
     pageNumber: number,
     pageSize: number,
-    search: string
+    search: string,
+    role: string
   ): Promise<IGetOrganization> {
     try {
       const query = {
         userOrgRoles: {
           some: { userId }
         },
-        OR: [
+          OR: [
           { name: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } }
         ]
@@ -477,7 +478,7 @@ export class OrganizationService {
         userId
       };
 
-      const getOrgs = await this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize);
+      const getOrgs = await this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize, role, userId);
       return getOrgs;
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);

@@ -306,6 +306,7 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  
   @Post('/:ecosystemId/:orgId/transaction/schema')
   @ApiOperation({ summary: 'Request new schema', description: 'Create request for new schema' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
@@ -448,7 +449,6 @@ export class EcosystemController {
 
   }
 
-
   /**
    *
    * @param orgId
@@ -464,7 +464,7 @@ export class EcosystemController {
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
     @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-    async addOrgs(
+    async addOrganizationInEcosystem(
       @Body() addOrganizationsDto: AddOrganizationsDto,
       @Param('ecosystemId') ecosystemId: string,
       @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
@@ -475,7 +475,7 @@ export class EcosystemController {
       addOrganizationsDto.ecosystemId = ecosystemId;
       addOrganizationsDto.orgId = orgId;
 
-      const addOrganizations = await this.ecosystemService.addOrgs(addOrganizationsDto, user.id);
+      const addOrganizations = await this.ecosystemService.addOrganizationInEcosystem(addOrganizationsDto, user.id);
   
       const finalResponse: IResponse = {
         statusCode: HttpStatus.CREATED,

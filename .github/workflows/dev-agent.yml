@@ -9,7 +9,9 @@ on:
   workflow_dispatch:
     
 env:
+
   ECR_IMAGE_TAG: "AGENT_V_${{ github.run_number }}"
+
   ECR_REPOSITORY: "dev-services"
   AWS_REGION: "ap-southeast-1"
   CLUSTER: "DEV-NGOTAG-CLUSTER"

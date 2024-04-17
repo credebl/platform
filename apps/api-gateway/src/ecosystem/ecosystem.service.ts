@@ -106,7 +106,7 @@ export class EcosystemService extends BaseService {
   async getEcosystemMembers(
     ecosystemId: string,
     payload: GetAllEcosystemMembersDto
-  ): Promise<{ response: object }> {  
+  ): Promise<{ response: object }> {
     payload['ecosystemId'] = ecosystemId;
     return this.sendNatsMessage(this.serviceProxy, 'fetch-ecosystem-members', payload);
   }

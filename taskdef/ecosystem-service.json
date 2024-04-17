@@ -16,7 +16,7 @@
                 }
             ],
             "mountPoints": [],
-            "volumes": [],
+            "volumesFrom": [],
             "ulimits": [],
             "logConfiguration": {
                 "logDriver": "awslogs",

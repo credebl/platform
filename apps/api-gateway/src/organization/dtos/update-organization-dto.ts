@@ -1,8 +1,8 @@
 import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsBoolean, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsBoolean, MaxLength, MinLength, Validate } from 'class-validator';
 
 import { Transform } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
+import { ImageBase64Validator, trim } from '@credebl/common/cast.helper';
 
 @ApiExtraModels()
 export class UpdateOrganizationDto {
@@ -30,8 +30,7 @@ export class UpdateOrganizationDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    @Transform(({ value }) => trim(value))
-    @IsString({ message: 'logo must be in string format.' })
+    @Validate(ImageBase64Validator)
     logo?: string = '';
 
     @ApiPropertyOptional()

@@ -68,6 +68,7 @@ jobs:
       - name: Replace executionRoleArn in task definition
         run: |
           sed -i "s#\"executionRoleArn\": \"arn:aws:iam::.*:role/ecsTaskExecutionRole\"#\"executionRoleArn\": \"arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole\"#" taskdef/api-gateway-service.json
+          cat taskdef/api-gateway-service.json
 
       - name: Update Task Definition and service
         run: |

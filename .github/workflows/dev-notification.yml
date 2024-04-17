@@ -3,9 +3,9 @@ name: Build and deploy Node.js app to ECSsdc
 on:
   push:
     branches:
-      - pipeline-implementation
+      - develop
     paths:
-      - 'apps/user/**'
+      - 'apps/notification/**'
   workflow_dispatch:
     
 env:

@@ -3,10 +3,10 @@ name: Build and deploy Node.js app to ECSsdc
 on:
   push:
     branches:
-      - pipeline-implementation
-  #   paths:
-  #     - 'apps/issuance/**'
-  # workflow_dispatch:
+      - develop
+    paths:
+      - 'apps/issuance/**'
+  workflow_dispatch:
     
 env:
   ECR_IMAGE_TAG: "ISSUANCE_V_${{ github.run_number }}"

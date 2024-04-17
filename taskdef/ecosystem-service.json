@@ -16,32 +16,7 @@
                 }
             ],
             "mountPoints": [],
-            "volumes": [
-                {
-                    "name": "AGNET-CONFIG",
-                    "efsVolumeConfiguration": {
-                        "fileSystemId": "fs-0f406534d277ce362",
-                        "rootDirectory": "/",
-                        "transitEncryption": "ENABLED",
-                        "authorizationConfig": {
-                            "accessPointId": "fsap-08e845bf6b2e91d54",
-                            "iam": "DISABLED"
-                        }
-                    }
-                },
-                {
-                    "name": "port-file",
-                    "efsVolumeConfiguration": {
-                        "fileSystemId": "fs-0f406534d277ce362",
-                        "rootDirectory": "/",
-                        "transitEncryption": "ENABLED",
-                        "authorizationConfig": {
-                            "accessPointId": "fsap-03a488e6480df19a2",
-                            "iam": "DISABLED"
-                        }
-                    }
-                }
-            ],
+            "volumes": [],
             "ulimits": [],
             "logConfiguration": {
                 "logDriver": "awslogs",

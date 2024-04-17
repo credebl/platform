@@ -40,8 +40,7 @@ async function bootstrap(): Promise<void> {
       err = e;
     }
     if (err) {
-      return res.status(500).json({ message: err });
-      // return res.redirect(['https://', req.get('Host'), '/404'].join(''));
+      return res.status(500).json({ message: 'Invalid URL' });
     }
     next();
   });

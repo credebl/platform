@@ -88,7 +88,7 @@ export class EcosystemRepository {
   }
 
   //eslint-disable-next-line camelcase
-  async addOrgs(orgId: string, ecosystemId: string, userId: string, roleId: string): Promise<ecosystem_orgs> {
+  async addOrganizationInEcosystem(orgId: string, ecosystemId: string, userId: string, roleId: string): Promise<ecosystem_orgs> {
     try {
       const ecosystemUsers = await this.prisma.ecosystem_orgs.create({
         data: {

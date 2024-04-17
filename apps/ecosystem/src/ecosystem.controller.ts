@@ -106,7 +106,7 @@ export class EcosystemController {
    * @param orgId
    * @param ecosystemId
    */
-    @MessagePattern({ cmd: 'add-ecosystem-lead-orgs' })
+    @MessagePattern({ cmd: 'add-organization-in-ecosystem' })
     async addOrganizationInEcosystem(
       ecosystemLeadOrgs: IEcosystemLeadOrgs
     // eslint-disable-next-line camelcase

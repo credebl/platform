@@ -439,7 +439,7 @@ export class EcosystemService {
         if (orgAgentDetails?.orgDid) {
           const existingOrg = await this.ecosystemRepository.checkOrgExistsInEcosystem(orgId, ecosystemLeadOrgs.ecosystemId);
           if (!existingOrg) {
-            const orgs = await this.ecosystemRepository.addOrgs(orgId, ecosystemLeadOrgs.ecosystemId, ecosystemLeadOrgs.userId, ecosystemRoleDetails.id);
+            const orgs = await this.ecosystemRepository.addOrganizationInEcosystem(orgId, ecosystemLeadOrgs.ecosystemId, ecosystemLeadOrgs.userId, ecosystemRoleDetails.id);
             addedOrgs.push(orgs); 
           }
 

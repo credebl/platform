@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - develop
-  #   paths:
-  #     - 'apps/api-gateway/**'
-  # workflow_dispatch:
+    paths:
+      - 'apps/api-gateway/**'
+  workflow_dispatch:
     
 env:
   ECR_IMAGE_TAG: "API-GATEWAY_V_${{ github.run_number }}"

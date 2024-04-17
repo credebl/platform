@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, isBase64, isMimeType, registerDecorator } from 'class-validator';
+import { ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, isBase64, isMimeType, isUUID, registerDecorator } from 'class-validator';
 
 interface ToNumberOptions {
     default?: number;
@@ -129,3 +129,17 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
     return 'Default message received from [ImageBase64Validator]';
   }
 }
+
+export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
+  registerDecorator({
+    name: 'isNotUUID',
+    target: object.constructor,
+    propertyName,
+    options: validationOptions,
+    validator: {
+      validate(value) {
+        return !isUUID(value);
+      }
+    }
+  });
+};

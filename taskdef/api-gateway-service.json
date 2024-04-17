@@ -8,11 +8,9 @@
             "memory": 2048,
             "portMappings": [
                 {
-                    "name": "api_gateway-5000-tcp",
                     "containerPort": 5000,
                     "hostPort": 5000,
-                    "protocol": "tcp",
-                    "appProtocol": "http"
+                    "protocol": "tcp"
                 }
             ],
             "essential": true,

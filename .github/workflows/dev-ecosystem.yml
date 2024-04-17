@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - 'apps/ecosystem/**'
-  workflow_dispatch:
+ 
     
 env:
   ECR_IMAGE_TAG: "ECOSYSTEM_V_${{ github.run_number }}"

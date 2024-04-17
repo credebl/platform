@@ -4,10 +4,7 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - 'apps/organization/**'
-  workflow_dispatch:
-    
+ 
 env:
   ECR_IMAGE_TAG: "ORGANIZATION_V_${{ github.run_number }}"
   ECR_REPOSITORY: "dev-services"

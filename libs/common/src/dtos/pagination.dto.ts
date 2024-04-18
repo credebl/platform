@@ -21,6 +21,6 @@ export class PaginationDto {
     @IsNumber()
     @Min(1, { message: 'Page size must be greater than 0' })
     @Max(100, { message: 'Page size must be less than 100' })
-    pageSize: number = 10;
+    pageSize = 10;
 
 }

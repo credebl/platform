@@ -86,7 +86,7 @@ export class VerificationRepository {
             { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
             { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
             { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
-          ]
+        ]
         },
         select: {
           createDateTime: true,

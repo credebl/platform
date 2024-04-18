@@ -7,7 +7,6 @@ import { SortFields } from '../enum/verification.enum';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 export class GetAllProofRequestsDto extends PaginationDto {
-    
     @ApiProperty({
         enum: [SortValue.DESC, SortValue.ASC],
         required: false

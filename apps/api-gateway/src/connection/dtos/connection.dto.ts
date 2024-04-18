@@ -8,10 +8,12 @@ import { IsNotSQLInjection } from '@credebl/common/cast.helper';
 export class CreateOutOfBandConnectionInvitation {
         @ApiPropertyOptional()
         @IsOptional()
+        @IsNotSQLInjection({ message: 'label is required.' })
         label?: string;
     
         @ApiPropertyOptional()
         @IsOptional()
+        @IsNotSQLInjection({ message: 'alias is required.' })
         alias?: string;
     
         @ApiPropertyOptional()

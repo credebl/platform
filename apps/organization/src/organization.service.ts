@@ -461,7 +461,7 @@ export class OrganizationService {
     pageNumber: number,
     pageSize: number,
     search: string,
-    role: string
+    role?: string
   ): Promise<IGetOrganization> {
     try {
       const query = {

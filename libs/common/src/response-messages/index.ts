@@ -335,7 +335,7 @@ export const ResponseMessages = {
             notCreated: 'Error while creating ecosystem',
             agentNotSpunUp: 'Agent is not spun up for this organization',
             orgAlreadyExists: 'Organization is already exists in ecosystem',
-            unableToAdd: 'Unable to add organization(s)',
+            unableToAdd: 'Unable to add organization',
             partiallyAdded: 'Organization(s) are partially added',
             orgNotExist: 'Organization does not exist',
             orgDidNotExist: 'Organization did does not exist',

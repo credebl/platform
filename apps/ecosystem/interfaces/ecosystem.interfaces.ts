@@ -376,3 +376,24 @@ export interface IEcosystemLeadOrgs {
   orgId: string;
   userId: string;
 }
+
+export interface IEcosystemOrgs {
+  orgId: string,
+  ecosystemId: string,
+  ecosystemRoleId: string,
+  status: string,
+  deploymentMode: string,
+  createdBy: string,
+  lastChangedBy: string
+}
+export interface IEcosystemOrgsData extends IEcosystemOrgs {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+}
+
+export interface IEcosystemOrgDetails {
+  count: Prisma.BatchPayload;
+  ecosystemOrgs: IEcosystemOrgsData[];
+}

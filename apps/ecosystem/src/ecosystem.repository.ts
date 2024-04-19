@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, organisation, platform_config, schema } from '@prisma/client';
+import { Prisma, credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, organisation, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, IEcosystemInvitation, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, IEcosystemInvitation, IEcosystemOrgs, IEcosystemOrgsData, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -87,24 +87,28 @@ export class EcosystemRepository {
     }
   }
 
-  //eslint-disable-next-line camelcase
-  async addOrganizationInEcosystem(orgId: string, ecosystemId: string, userId: string, roleId: string): Promise<number> {
+   //eslint-disable-next-line camelcase
+    async addOrganizationInEcosystem(orgs: IEcosystemOrgs[], orgIds: string[], ecosystemId: string): Promise<[Prisma.BatchPayload, IEcosystemOrgsData[]]> {
     try {
-      const ecosystemUsers = await this.prisma.ecosystem_orgs.createMany({
-        data: {
-          orgId,
-          status: EcosystemOrgStatus.ACTIVE,
-          ecosystemId,
-          ecosystemRoleId: roleId,
-          deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
-          createdBy: userId,
-          lastChangedBy: userId
-        }
-      });
+      const result = await this.prisma.$transaction([
 
-      return ecosystemUsers.count;
+      this.prisma.ecosystem_orgs.createMany({
+        data: orgs
+      }),
+
+      this.prisma.ecosystem_orgs.findMany({
+         where: {
+            orgId: {
+              in: orgIds
+            },
+            ecosystemId
+         }
+      })
+    ]);
+    return result;
+
     } catch (error) {
-      this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
+      this.logger.error(`Error in add organization ecosystem: ${error.message}`);
       throw error;
     }
   }

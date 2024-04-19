@@ -6,20 +6,6 @@ interface EcosystemRole {
     lastChangedDateTime: Date;
     deletedAt: Date;
   }
-
-  export interface IEcosystemOrgs {
-    id: string;
-    orgId: string;
-    status: string;
-    deploymentMode: string;
-    ecosystemId: string;
-    ecosystemRoleId: string;
-    createDateTime: string;
-    createdBy: string;
-    lastChangedDateTime: string;
-    lastChangedBy: string;
-    deletedAt: string;
-  }
    
 interface Ecosystem {
     id: string;

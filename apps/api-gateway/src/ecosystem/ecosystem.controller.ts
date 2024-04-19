@@ -464,7 +464,7 @@ export class EcosystemController {
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
     @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-    async addOrganizationInEcosystem(
+    async addOrganizationsInEcosystem(
       @Body() addOrganizationsDto: AddOrganizationsDto,
       @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }})) ecosystemId: string,
       @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
@@ -475,7 +475,7 @@ export class EcosystemController {
       addOrganizationsDto.ecosystemId = ecosystemId;
       addOrganizationsDto.orgId = orgId;
 
-      const addOrganizations = await this.ecosystemService.addOrganizationInEcosystem(addOrganizationsDto, user.id);
+      const addOrganizations = await this.ecosystemService.addOrganizationsInEcosystem(addOrganizationsDto, user.id);
       const { results, statusCode, message } = addOrganizations;
 
       const finalResponse: IResponse = {

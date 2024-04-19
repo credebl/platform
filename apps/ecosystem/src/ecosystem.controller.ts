@@ -106,11 +106,10 @@ export class EcosystemController {
    * @param ecosystemId
    */
     @MessagePattern({ cmd: 'add-organization-in-ecosystem' })
-    async addOrganizationInEcosystem(
+    async addOrganizationsInEcosystem(
       ecosystemLeadOrgs: IEcosystemLeadOrgs
-    // eslint-disable-next-line camelcase
     ): Promise<{ results: { statusCode: number, message: string, error?: string, data?: { orgId: string } }[], statusCode: number, message: string }> {
-      return this.ecosystemService.addOrganizationInEcosystem(ecosystemLeadOrgs);
+      return this.ecosystemService.addOrganizationsInEcosystem(ecosystemLeadOrgs);
     }
    
   /**

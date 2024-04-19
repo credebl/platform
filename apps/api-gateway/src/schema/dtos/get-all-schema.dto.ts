@@ -3,7 +3,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SortValue } from '../../enum';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { trim } from '@credebl/common/cast.helper';
 import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
 
@@ -100,4 +100,20 @@ export class GetAllSchemaByPlatformDto {
     @ApiProperty({ required: false })
     @IsOptional()
     sortByValue: string = SortValue.DESC;
+}
+
+export class GetSchema {
+
+    @ApiProperty()
+    @IsUUID()
+    @IsString({ message: 'orgId must be a string' })  
+    @IsNotEmpty({ message: 'please provide valid orgId' })
+    @Transform(({ value }) => trim(value))
+    orgId: string;
+
+    @ApiProperty()
+    @IsString({ message: 'schemaId must be a string' })  
+    @IsNotEmpty({ message: 'please provide valid schemaId' })
+    @Transform(({ value }) => trim(value))
+    schemaId: string;
 }

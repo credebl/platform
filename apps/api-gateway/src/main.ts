@@ -30,6 +30,18 @@ async function bootstrap(): Promise<void> {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb' }));
   
+  app.use(function (req, res, next) {
+    let err = null;
+    try {
+      decodeURIComponent(req.path);
+    } catch (e) {
+      err = e;
+    }
+    if (err) {
+      return res.status(500).json({ message: 'Invalid URL' });
+    }
+    next();
+  });
   
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)

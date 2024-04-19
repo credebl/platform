@@ -137,10 +137,10 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Param('orgId') orgId: string
     ): Promise<Response> {
-        const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllProofRequests;
+        const { pageSize, search, pageNumber, sortField, sortBy } = getAllProofRequests;
         const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
             pageNumber,
-            searchByText,
+            search,
             pageSize,
             sortField,
             sortBy

@@ -2,7 +2,7 @@ import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, Val
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
+import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 
 class AttributeValue {
 
@@ -41,6 +41,7 @@ export class CreateSchemaDto {
     @IsString({ message: 'schemaName must be a string' })
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'schemaName is required' })
+    @IsNotSQLInjection({ message: 'SchemaName is required.' })
     schemaName: string;
 
     @ApiProperty({

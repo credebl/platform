@@ -476,14 +476,15 @@ export class EcosystemController {
       addOrganizationsDto.orgId = orgId;
 
       const addOrganizations = await this.ecosystemService.addOrganizationInEcosystem(addOrganizationsDto, user.id);
-  
+      const { results, statusCode, message } = addOrganizations;
+
       const finalResponse: IResponse = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.ecosystem.success.add,
-        data: addOrganizations
+        statusCode,
+        message,
+        data: results
       };
   
-      return res.status(HttpStatus.CREATED).json(finalResponse);
+      return res.status(statusCode).json(finalResponse);
     }
 
     

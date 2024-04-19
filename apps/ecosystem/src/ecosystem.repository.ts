@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
+import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, organisation, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { CreateEcosystem, IEcosystemInvitation, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
@@ -88,9 +88,9 @@ export class EcosystemRepository {
   }
 
   //eslint-disable-next-line camelcase
-  async addOrganizationInEcosystem(orgId: string, ecosystemId: string, userId: string, roleId: string): Promise<ecosystem_orgs> {
+  async addOrganizationInEcosystem(orgId: string, ecosystemId: string, userId: string, roleId: string): Promise<number> {
     try {
-      const ecosystemUsers = await this.prisma.ecosystem_orgs.create({
+      const ecosystemUsers = await this.prisma.ecosystem_orgs.createMany({
         data: {
           orgId,
           status: EcosystemOrgStatus.ACTIVE,
@@ -102,14 +102,30 @@ export class EcosystemRepository {
         }
       });
 
-      return ecosystemUsers;
+      return ecosystemUsers.count;
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
       throw error;
     }
   }
 
-  async checkOrgExistsInEcosystem(orgId: string, ecosystemId: string): Promise<object> {
+  async checkOrgExists(orgId: string): Promise<organisation> {
+    try {
+      const isOrgExists = await this.prisma.organisation.findUnique({
+        where: {
+          id: orgId
+        }
+      });
+      return isOrgExists;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  // eslint-disable-next-line camelcase
+  async checkOrgExistsInEcosystem(orgId: string, ecosystemId: string): Promise<ecosystem_orgs> {
     try {
       const existingOrgs = await this.prisma.ecosystem_orgs.findFirst({
         where: {

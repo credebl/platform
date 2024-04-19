@@ -5,10 +5,10 @@ export class AddOrganizationsDto {
     @ApiProperty({
         example: ['32f54163-7166-48f1-93d8-ff217bdb0653']
     })
-    @ArrayNotEmpty({ message: 'Organization Ids array must not be empty' })
-    @ArrayUnique({ message: 'Duplicate Organization Ids are not allowed' })
     @IsArray()
-    @IsUUID('4', { each: true, message: 'Invalid format of organization Id' })
+    @ArrayNotEmpty({ message: 'Organization Ids array must not be empty' })
+    @IsUUID('4', { each: true })
+    @ArrayUnique({ message: 'Duplicate Organization Ids are not allowed' })
     @IsString({ each: true, message: 'Each organization Id in the array should be a string' })
     organizationIds: string[];   
     

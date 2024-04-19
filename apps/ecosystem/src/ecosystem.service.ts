@@ -5,6 +5,7 @@ import {
   ConflictException,
   ForbiddenException,
   HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -58,8 +59,6 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import {
   // eslint-disable-next-line camelcase
   credential_definition,
-  // eslint-disable-next-line camelcase
-  ecosystem_orgs,
   // eslint-disable-next-line camelcase
   endorsement_transaction,
   // eslint-disable-next-line camelcase
@@ -423,38 +422,74 @@ export class EcosystemService {
   }
 
 
-  // eslint-disable-next-line camelcase
-  async addOrganizationInEcosystem(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<ecosystem_orgs[]> {
-    try {
+async addOrganizationInEcosystem(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<{ results: { statusCode: number, message: string, error?: string, data?: { orgId: string } }[], statusCode: number, message: string }> {
+  try {
+    const ecosystemRoleDetails = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
+    const { organizationIds } = ecosystemLeadOrgs;
+    const results: { statusCode: number, message: string, error?: string, data?: { orgId: string } }[] = [];
+    const addedOrgs: string[] = [];
+    let successCount: number = 0;
+    let errorCount: number = 0;
 
-      const ecosystemRoleDetails = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
+    for (const orgId of organizationIds) {
+      const checkOrgExists = await this.ecosystemRepository.checkOrgExists(orgId);
+      const result: { statusCode: number, message: string, error?: string, data?: { orgId: string } } = {
+        statusCode: 0,
+        message: ''
+      };
 
-      const { organizationIds } = ecosystemLeadOrgs;
-      // eslint-disable-next-line camelcase
-      const addedOrgs: ecosystem_orgs[] = []; 
-        
-      for (const orgId of organizationIds) {
+      if (checkOrgExists) {
         const orgAgentDetails = await this.ecosystemRepository.getAgentDetails(orgId);
-  
+
         if (orgAgentDetails?.orgDid) {
           const existingOrg = await this.ecosystemRepository.checkOrgExistsInEcosystem(orgId, ecosystemLeadOrgs.ecosystemId);
           if (!existingOrg) {
-            const orgs = await this.ecosystemRepository.addOrganizationInEcosystem(orgId, ecosystemLeadOrgs.ecosystemId, ecosystemLeadOrgs.userId, ecosystemRoleDetails.id);
-            addedOrgs.push(orgs); 
+            await this.ecosystemRepository.addOrganizationInEcosystem(orgId, ecosystemLeadOrgs.ecosystemId, ecosystemLeadOrgs.userId, ecosystemRoleDetails.id);
+            result.statusCode = HttpStatus.CREATED;
+            result.message = `${ResponseMessages.ecosystem.success.add}`;
+            result.data = { orgId };
+            addedOrgs.push(orgId);
+            successCount++;
+          } else {
+            result.statusCode = HttpStatus.CONFLICT;
+            result.message = `${ResponseMessages.ecosystem.error.orgAlreadyExists}: ${orgId}`;
+            result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+            errorCount++;
           }
-
         } else {
-          throw new BadRequestException(ResponseMessages.ecosystem.error.agentNotSpunUp);
+          result.statusCode = HttpStatus.BAD_REQUEST;
+          result.message = `${ResponseMessages.ecosystem.error.agentNotSpunUp}: ${orgId}`;
+          result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+          errorCount++;
         }
+      } else {
+        result.statusCode = HttpStatus.NOT_FOUND;
+        result.message = `${ResponseMessages.ecosystem.error.orgNotExist}: ${orgId}`;
+        result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+        errorCount++;
       }
-      return addedOrgs;
-    } catch (error) {
-      this.logger.error(`In add organizations : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
 
-  
+      results.push(result);
+    }
+
+    let statusCode = HttpStatus.CREATED;
+    let message = ResponseMessages.ecosystem.success.add;
+    if (0 === successCount) {
+      statusCode = HttpStatus.BAD_REQUEST;
+      message = ResponseMessages.ecosystem.error.unableToAdd;
+    } else if (0 < errorCount && 0 < successCount) {
+      statusCode = HttpStatus.PARTIAL_CONTENT;
+      message = ResponseMessages.ecosystem.error.partiallyAdded;
+    }
+
+    return { results, statusCode, message };
+  } catch (error) {
+    this.logger.error(`In add organizations: ${JSON.stringify(error)}`);
+    throw new RpcException(error.response ? error.response : error);
+  }
+}
+
+
 async checkLedgerMatches(orgDetails: OrganizationData, ecosystemId: string): Promise<boolean> {
     const orgLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
 

@@ -576,6 +576,12 @@ export class OrganizationRepository {
             description: true,
             logoUrl: true,
             orgSlug: true,
+            createDateTime: true,
+            ecosystemOrgs: {
+              select: {
+                ecosystemId: true
+              }
+            },
             userOrgRoles: {
               where: {
                 orgRole: {

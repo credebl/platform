@@ -1,7 +1,7 @@
-import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param } from '@nestjs/common';
+import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param, UsePipes, ValidationPipe } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
-import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { SchemaService } from './schema.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -12,7 +12,7 @@ import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
+import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto, GetSchema } from './dtos/get-all-schema.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
@@ -33,6 +33,7 @@ export class SchemaController {
   private readonly logger = new Logger('SchemaController');
 
   @Get('/:orgId/schemas/:schemaId')
+  @UsePipes(new ValidationPipe())
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
@@ -40,16 +41,23 @@ export class SchemaController {
     description: 'Get schema information from the ledger using its schema ID.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiParam({
+    name: 'schemaId',
+    required: true
+  })
+  @ApiParam({
+    name: 'orgId', 
+   required: true
+})
   async getSchemaById(
     @Res() res: Response,
-    @Param('orgId') orgId: string,
-    @Param('schemaId') schemaId: string
+    @Param() getSchema: GetSchema
   ): Promise<object> {
 
-    if (!schemaId) {
+    if (!getSchema.schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
-    const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
+    const schemaDetails = await this.appService.getSchemaById(getSchema.schemaId, getSchema.orgId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,

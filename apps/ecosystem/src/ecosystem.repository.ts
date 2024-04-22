@@ -88,27 +88,36 @@ export class EcosystemRepository {
   }
 
    //eslint-disable-next-line camelcase
-    async addOrganizationInEcosystem(orgs: IEcosystemOrgs[], orgIds: string[], ecosystemId: string): Promise<[Prisma.BatchPayload, IEcosystemOrgsData[]]> {
+    async addOrganizationInEcosystem(orgs: IEcosystemOrgs[]): Promise<Prisma.BatchPayload> {
     try {
-      const result = await this.prisma.$transaction([
 
-      this.prisma.ecosystem_orgs.createMany({
+      const result = await this.prisma.ecosystem_orgs.createMany({
         data: orgs
-      }),
+      });
 
-      this.prisma.ecosystem_orgs.findMany({
+    return result;
+
+    } catch (error) {
+      this.logger.error(`Error in add organization ecosystem: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemOrgs(orgIds: string[], ecosystemId: string): Promise<IEcosystemOrgsData[]> {
+    try {
+      const result = await this.prisma.ecosystem_orgs.findMany({
          where: {
             orgId: {
               in: orgIds
             },
             ecosystemId
          }
-      })
-    ]);
+      });
+
     return result;
 
     } catch (error) {
-      this.logger.error(`Error in add organization ecosystem: ${error.message}`);
+      this.logger.error(`Error in fetch ecosystem orgs: ${error.message}`);
       throw error;
     }
   }

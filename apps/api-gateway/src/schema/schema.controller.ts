@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
@@ -42,18 +42,18 @@ export class SchemaController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
     @Res() res: Response,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
     @Param('schemaId') schemaId: string
-  ): Promise<object> {
+  ): Promise<Response> {
 
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
     const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
-      data: schemaDetails.response
+      data: schemaDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -72,7 +72,7 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getcredDeffListBySchemaId(
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
     @Param('schemaId') schemaId: string,
     @Query() getCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
@@ -85,8 +85,8 @@ export class SchemaController {
     getCredentialDefinitionBySchemaIdDto.schemaId = schemaId;
     getCredentialDefinitionBySchemaIdDto.orgId = orgId;
 
-    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(getCredentialDefinitionBySchemaIdDto, user);
-    const finalResponse: IResponseType = {
+    const credentialDefinitionList = await this.appService.getcredDefListBySchemaId(getCredentialDefinitionBySchemaIdDto, user);
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
       data: credentialDefinitionList
@@ -110,7 +110,7 @@ export class SchemaController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemas(
     @Query() getAllSchemaDto: GetAllSchemaDto,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
     @Res() res: Response,
     @User() user: IUserRequestInterface
   ): Promise<Response> {
@@ -125,7 +125,7 @@ export class SchemaController {
     };
     const schemasResponse = await this.appService.getSchemas(schemaSearchCriteria, user, orgId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
       data: schemasResponse
@@ -141,11 +141,11 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+  async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
 
     const schemaDetails = await this.appService.createW3CSchema(schemaPayload, orgId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.schema.success.create,
       data: schemaDetails
@@ -161,12 +161,12 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
 
     schema.orgId = orgId;
     const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.schema.success.create,
       data: schemaDetails

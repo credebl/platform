@@ -13,7 +13,9 @@ RUN pnpm i --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+# RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
+
 
 # Build the notification service
 RUN npm run build notification
@@ -34,8 +36,4 @@ COPY --from=build /app/libs/ ./libs/
 COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/notification/main.js"]
-
-# docker build -t notification -f Dockerfiles/Dockerfile.notification .
-# docker run -d --env-file .env --name notification docker.io/library/notification
-# docker logs -f notification
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/notification/main.js"]

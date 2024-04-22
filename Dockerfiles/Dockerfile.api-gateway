@@ -13,7 +13,8 @@ RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+# RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
 
 # Build the api-gateway service
 RUN pnpm run build api-gateway
@@ -33,4 +34,4 @@ COPY --from=build /app/node_modules  ./node_modules
 # COPY --from=build /app/uploadedFiles ./uploadedFiles
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/api-gateway/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/api-gateway/main.js"]

@@ -84,7 +84,9 @@ export const ResponseMessages = {
             clientCredentials: 'Client credentials fetched successfully',
             deleteCredentials:'Organization client credentials deleted',
             orgDids: 'Organization DIDs fetched successfully',
-            primaryDid: 'Primary Did updated successfully'
+            primaryDid: 'Primary DID updated successfully',
+            didDetails: 'DID Details updated sucessfully'
+
         },
         error: {
             exists: 'An organization name is already exist',
@@ -114,8 +116,8 @@ export const ResponseMessages = {
             roleNotMatch: 'User does not have access',
             orgDoesNotMatch: 'Organization does not match',
             invalidClient: 'Invalid client credentials',
-            primaryDid: 'This did is already set to primary DID',
-            didNotFound: 'Did does not exist in organiation'
+            primaryDid: 'This DID is already set to primary DID',
+            didNotFound: 'DID does not exist in organiation'
         }
     },
 

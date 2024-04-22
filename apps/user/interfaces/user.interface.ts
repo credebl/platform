@@ -115,7 +115,7 @@ export interface ISendVerificationEmail {
     users: OrgUser[]
   }
 
-  export interface DidList {
+  export interface IDidList {
     id: string;
     createDateTime: Date;
     did: string;

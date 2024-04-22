@@ -8,7 +8,7 @@ import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { organisation } from '@prisma/client';
 import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
-import { DidList, IOrgUsers } from 'apps/user/interfaces/user.interface';
+import { IDidList, IOrgUsers } from 'apps/user/interfaces/user.interface';
 import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
@@ -188,7 +188,7 @@ export class OrganizationService extends BaseService {
 
   async getDidList(
     orgId: string
-  ): Promise<DidList[]> {
+  ): Promise<IDidList[]> {
     const payload = { orgId };
     return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-dids', payload);
   }

@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { DidDetails, DidList, IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
+import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -735,7 +735,7 @@ export class OrganizationRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getAllOrganizationDid(orgId: string): Promise<DidList[]> {
+  async getAllOrganizationDid(orgId: string): Promise<IDidList[]> {
     try {
       return this.prisma.org_dids.findMany({
         where:{
@@ -751,7 +751,7 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error in getAllOrganizationDid: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      throw error;
     }
   }
 
@@ -776,14 +776,14 @@ export class OrganizationRepository {
            }
        })   
         ]);
-       return 'Did Details updated sucessfully';
+       return ResponseMessages.organisation.success.didDetails;
     } catch (error) {
         this.logger.error(`[setOrgsPrimaryDid] - Update DID details: ${JSON.stringify(error)}`);
         throw error;
     }
 }
 
- async getPerviousPrimaryDid(orgId:string): Promise<DidDetails> {
+ async getPerviousPrimaryDid(orgId:string): Promise<IDidDetails> {
   try {
     return this.prisma.org_dids.findFirstOrThrow({
       where: {
@@ -797,7 +797,7 @@ export class OrganizationRepository {
   }
  }
 
- async setPreviousDidFlase(id:string): Promise<DidDetails> {
+ async setPreviousDidFlase(id:string): Promise<IDidDetails> {
   try {
     return this.prisma.org_dids.update({
       where: {

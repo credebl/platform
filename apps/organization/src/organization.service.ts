@@ -27,7 +27,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, DidList } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -198,7 +198,7 @@ export class OrganizationService {
       await Promise.all([setPrimaryDid, getExistingPrimaryDid, setPriviousDidFalse]);
 
 
-      return 'Primary DID updated sucessfully';
+      return ResponseMessages.organisation.success.primaryDid;
       
     } catch (error) {
       this.logger.error(`In setPrimaryDid method: ${JSON.stringify(error)}`);
@@ -1497,7 +1497,7 @@ export class OrganizationService {
    * @param orgId
    * @returns fetch organization did list
    */
-  async getOrgDidList(orgId: string): Promise<DidList[]> {
+  async getOrgDidList(orgId: string): Promise<IDidList[]> {
     try {
       return await this.organizationRepository.getAllOrganizationDid(orgId);
     } catch (error) {

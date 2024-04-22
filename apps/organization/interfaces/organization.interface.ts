@@ -145,7 +145,7 @@ export interface Payload {
   search: string;
 }
 
-export interface DidList {
+export interface IDidList {
   id: string;
   createDateTime: Date;
   did: string;
@@ -153,12 +153,12 @@ export interface DidList {
   isPrimaryDid: boolean;
 }
 
-export interface PrimaryDid {
+export interface IPrimaryDid {
   orgId: string,
   did: string
 }
 
-export interface DidDetails {
+export interface IDidDetails {
   id: string;
   createDateTime: Date; 
   createdBy: string;

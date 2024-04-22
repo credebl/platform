@@ -6,7 +6,7 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
 import { organisation } from '@prisma/client';
 import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
@@ -66,7 +66,7 @@ export class OrganizationController {
    * @returns organization's did list
    */
   @MessagePattern({ cmd: 'fetch-organization-dids' })
-  async getOrgDidList(payload: {orgId:string}): Promise<DidList[]> {
+  async getOrgDidList(payload: {orgId:string}): Promise<IDidList[]> {
     return this.organizationService.getOrgDidList(payload.orgId);
   }
 

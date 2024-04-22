@@ -184,7 +184,7 @@ export interface IStoreOrgAgentDetails {
   agentType?: string;
 }
 
-export interface StoreDidDetails {
+export interface IStoreDidDetails {
   orgId: string;
   isPrimaryDid?: boolean;
   did: string;

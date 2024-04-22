@@ -329,7 +329,7 @@ export class OrganizationController {
    @ApiBearerAuth()
    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-   @ApiOperation({ summary: 'Fetch organization dids', description: 'Get all dids from organization' })
+   @ApiOperation({ summary: 'Fetch organization DIDs', description: 'Get all DIDs from organization' })
   
    async getAllDidByOrgId(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
      const users = await this.organizationService.getDidList(orgId);

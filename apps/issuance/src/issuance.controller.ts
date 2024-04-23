@@ -10,10 +10,8 @@ export class IssuanceController {
   constructor(private readonly issuanceService: IssuanceService) { }
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<string> {
-
-    const { orgId, user, credentialDefinitionId, comment, connectionId, attributes, autoAcceptCredential } = payload;
-    return this.issuanceService.sendCredentialCreateOffer(orgId, user, credentialDefinitionId, comment, connectionId, attributes, autoAcceptCredential);
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
+    return this.issuanceService.sendCredentialCreateOffer(payload);
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })

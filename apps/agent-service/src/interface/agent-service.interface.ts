@@ -75,6 +75,7 @@ export interface IDidCreate {
   did?: string;
   role?: string;
   endorserDid?: string;
+  isPrimaryDid?: boolean;
 }
 export interface ITenantSchema {
   tenantId?: string;
@@ -181,6 +182,15 @@ export interface IStoreOrgAgentDetails {
   tenantId?: string;
   ledgerId?: string[];
   agentType?: string;
+}
+
+export interface IStoreDidDetails {
+  orgId: string;
+  isPrimaryDid?: boolean;
+  did: string;
+  didDocument?: string;
+  userId: string;
+  orgAgentId: string;
 }
 
 export interface IStoreOrgAgent {

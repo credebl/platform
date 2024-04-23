@@ -222,13 +222,13 @@ export class AgentController {
    * @param orgId 
    * @returns did
    */
-   @Post('/orgs/:orgId/agents/createDid')
+   @Post('/orgs/:orgId/agents/did')
    @ApiOperation({
-     summary: 'Create did',
-     description: 'Create did'
+     summary: 'Create new did',
+     description: 'Create new did for an organization'
    })
    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
    async createDid(
      @Param('orgId') orgId: string,

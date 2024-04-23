@@ -6,8 +6,7 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
-import { IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
 import { organisation } from '@prisma/client';
 import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
@@ -30,6 +29,17 @@ export class OrganizationController {
   }
 
   /**
+   * Description: Set primary did
+   * @param payload did and organization details
+   * @returns Sucess message and required details
+   */
+
+  @MessagePattern({ cmd: 'set-primary-did' })
+  async setPrimaryDid(@Body() payload: { orgId:string, did:string, id:string}): Promise<string> {
+    return this.organizationService.setPrimaryDid(payload.orgId, payload.did, payload.id);
+  }
+
+  /**
    * 
    * @param payload 
    * @returns organization client credentials
@@ -48,6 +58,16 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'update-organization' })
   async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: string, orgId: string }): Promise<organisation> {
     return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId, payload.orgId);
+  }
+
+  /**
+   *
+   * @param payload
+   * @returns organization's did list
+   */
+  @MessagePattern({ cmd: 'fetch-organization-dids' })
+  async getOrgDidList(payload: {orgId:string}): Promise<IDidList[]> {
+    return this.organizationService.getOrgDidList(payload.orgId);
   }
 
   /**

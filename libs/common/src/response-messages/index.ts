@@ -82,7 +82,11 @@ export const ResponseMessages = {
             orgCredentials: 'Organization credentials created successfully',
             fetchedOrgCredentials: 'Organization credentials fetched successfully',
             clientCredentials: 'Client credentials fetched successfully',
-            deleteCredentials:'Organization client credentials deleted'
+            deleteCredentials:'Organization client credentials deleted',
+            orgDids: 'Organization DIDs fetched successfully',
+            primaryDid: 'Primary DID updated successfully',
+            didDetails: 'DID Details updated sucessfully'
+
         },
         error: {
             exists: 'An organization name is already exist',
@@ -111,7 +115,9 @@ export const ResponseMessages = {
             ecosystemIdIsRequired:'ecosystemId is required',
             roleNotMatch: 'User does not have access',
             orgDoesNotMatch: 'Organization does not match',
-            invalidClient: 'Invalid client credentials'
+            invalidClient: 'Invalid client credentials',
+            primaryDid: 'This DID is already set to primary DID',
+            didNotFound: 'DID does not exist in organiation'
         }
     },
 
@@ -227,7 +233,9 @@ export const ResponseMessages = {
             nullTenantId:'TenantId must not be null',
             tenantIdNotFound:'TenantId not found',
             invalidTenantIdIdFormat:'Invalid tenantId format',
-            requiredTenantId:'Tenant Id is required'
+            requiredTenantId:'Tenant Id is required',
+            createDid:'Error while creating DID',
+            storeDid: 'Error while storing DID'
         }
     },
     connection: {

@@ -149,7 +149,7 @@ export class ConnectionRepository {
           break;
       }
 
-      const connectionDetails = await this.prisma.connections.upsert({
+      return this.prisma.connections.upsert({
         where: {
           connectionId: connectionDto?.id
         },
@@ -169,7 +169,6 @@ export class ConnectionRepository {
           orgId: organisationId
         }
       });
-      return connectionDetails;
     } catch (error) {
       this.logger.error(`Error in saveConnectionWebhook: ${error.message} `);
       throw error;

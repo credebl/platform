@@ -1,8 +1,8 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
+import { ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()

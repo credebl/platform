@@ -115,6 +115,14 @@ export interface ISendVerificationEmail {
     users: OrgUser[]
   }
 
+  export interface IDidList {
+    id: string;
+    createDateTime: Date;
+    did: string;
+    lastChangedDateTime: Date;
+    isPrimaryDid: boolean;
+  }
+
   interface OrgUser {
     id: string;
     username: string;

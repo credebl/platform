@@ -105,7 +105,7 @@ class Credential {
     @IsObject()
     public credentialStatus?: JsonLdCredentialDetailCredentialStatus;
   }
-class Attribute {
+export class Attribute {
     @ApiProperty()
     @IsString({ message: 'Attribute name should be string' })
     @IsNotEmpty({ message: 'Attribute name is required' })
@@ -121,18 +121,15 @@ class Attribute {
     @ApiProperty({ default: false })
     @IsBoolean()
     @IsOptional()
-    @IsNotEmpty({ message: 'isRequired property is required' })
     isRequired?: boolean = false;
 
 }
-
-class CredentialsIssuanceDto {
+export class CredentialsIssuanceDto {
     @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'Please provide valid credential definition id' })
-    @IsString({ message: 'credential definition id should be string' })
+    @IsNotEmpty({ message: 'Credential definition Id is required' })
+    @IsString({ message: 'Credential definition id should be string' })
     @Transform(({ value }) => value.trim())
-    @IsOptional()
-    credentialDefinitionId?: string;
+    credentialDefinitionId: string;
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid comment' })
@@ -278,23 +275,6 @@ class CredentialOffer {
     @Type(() => JsonLdCredentialDetailOptions)
     options?:JsonLdCredentialDetailOptions;
     
-}
-
-export class IssueCredentialDto extends OOBIssueCredentialDto {
-    @ApiProperty({ example: 'string' })
-    @IsNotEmpty({ message: 'connectionId is required' })
-    @IsString({ message: 'connectionId should be string' })
-    @Transform(({ value }) => trim(value))
-    connectionId: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString({ message: 'auto accept proof must be in string' })
-    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
-    @IsEnum(AutoAccept, {
-        message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
-    })
-    autoAcceptCredential?: string;
 }
 
 export class IssuanceDto {

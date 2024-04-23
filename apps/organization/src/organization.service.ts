@@ -27,7 +27,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -150,6 +150,58 @@ export class OrganizationService {
       return organizationDetails;
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+   /**
+   *
+   * @param registerOrgDto
+   * @returns
+   */
+
+  // eslint-disable-next-line camelcase
+  async setPrimaryDid(
+    orgId:string,
+    did:string,
+    id:string
+  ): Promise<string> {
+    try {
+      const organizationExist = await this.organizationRepository.getOrgProfile(orgId);
+      if (!organizationExist) {
+        throw new NotFoundException(ResponseMessages.organisation.error.notFound);
+      }
+      const orgAgentDetails = await this.organizationRepository.getAgentEndPoint(orgId);
+      if (orgAgentDetails.orgDid === did) {
+        throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
+      }
+
+      const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
+      const isDidMatch = organizationDidList.some(item => item.did === did);
+
+      if (!isDidMatch) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+
+      const getExistingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
+
+      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(did, orgId, id);
+
+
+     if (!getExistingPrimaryDid) {
+       throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+     }
+
+      const setPriviousDidFalse = await this.organizationRepository.setPreviousDidFlase(getExistingPrimaryDid.id);
+      
+
+      await Promise.all([setPrimaryDid, getExistingPrimaryDid, setPriviousDidFalse]);
+
+
+      return ResponseMessages.organisation.success.primaryDid;
+      
+    } catch (error) {
+      this.logger.error(`In setPrimaryDid method: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -1438,6 +1490,20 @@ export class OrganizationService {
         },
         error.status
       );
+    }
+  }
+
+  /**
+   *
+   * @param orgId
+   * @returns fetch organization did list
+   */
+  async getOrgDidList(orgId: string): Promise<IDidList[]> {
+    try {
+      return await this.organizationRepository.getAllOrganizationDid(orgId);
+    } catch (error) {
+      this.logger.error(`get Org dids: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

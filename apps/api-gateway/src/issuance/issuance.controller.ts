@@ -43,8 +43,8 @@ import {
   ClientDetails,
   FileParameter,
   IssuanceDto,
-  IssueCredentialDto,
-  OutOfBandCredentialOfferDto,
+  OOBCredentialDtoWithEmail,
+  OOBIssueCredentialDto,
   PreviewFileDetails
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -62,6 +62,7 @@ import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
+import { IssueCredentialDto } from './dtos/multi-connection.dto';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -544,7 +545,7 @@ export class IssuanceController {
     issueCredentialDto.orgId = orgId;
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
-
+    
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,

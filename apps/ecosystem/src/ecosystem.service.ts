@@ -489,11 +489,15 @@ export class EcosystemService {
       let statusCode = HttpStatus.CREATED;
       let message = ResponseMessages.ecosystem.success.add;
       let getOrgs = [];
-      if (0 < addedOrgs.length) {
-        const orgs = addedOrgs.map((item) => item.orgId);
+
+      if (0 < addedOrgs?.length) {
+      const orgs = addedOrgs.map((item) => item.orgId);
         await this.ecosystemRepository.addOrganizationInEcosystem(addedOrgs);
+
+        //need to discuss
         getOrgs = await this.ecosystemRepository.getEcosystemOrgs(orgs, ecosystemLeadOrgs.ecosystemId);
       }
+      
       const success =
         0 < getOrgs?.length
           ? getOrgs?.map((item) => ({

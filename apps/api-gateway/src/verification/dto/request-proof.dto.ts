@@ -219,13 +219,17 @@ export class ProofRequestPresentationDefinition {
     @IsString()
     @IsNotEmpty({ message: 'id is required.' })
     id: string;
+
+    @IsString()
+    @IsOptional()
+    name: string;
+
     @ApiProperty({type: () =>  [InputDescriptors]})
     @IsNotEmpty({ message: 'inputDescriptors is required.' })
     @IsArray({ message: 'inputDescriptors must be an array' })
     @IsObject({ each: true })
     @Type(() => InputDescriptors)
     @ValidateNested()
-    
     // eslint-disable-next-line camelcase
     input_descriptors:InputDescriptors[];
 }

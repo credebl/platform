@@ -605,7 +605,12 @@ export class EcosystemRepository {
                 name: true,
                 orgSlug: true,
                 // eslint-disable-next-line camelcase
-                org_agents: true
+                org_agents: true,
+                userOrgRoles: {
+                  select: {
+                    userId: true
+                  }
+                }
               }
             }
           },

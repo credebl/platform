@@ -429,6 +429,12 @@ export class EcosystemService {
   }> {
     try {
       const ecosystemRoleDetails = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
+
+      const getEcosystemDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemLeadOrgs.ecosystemId);
+      const getEcosystemLeadOrg = getEcosystemDetails?.orgId;
+      const getEcosystemLeadOrgLedgerDetails = await this.ecosystemRepository.getAgentDetails(getEcosystemLeadOrg);
+      const getEcosystemLeadOrgLedgerId = getEcosystemLeadOrgLedgerDetails?.ledgerId;
+
       const { organizationIds } = ecosystemLeadOrgs;
       const errorOrgs: { statusCode: number; message: string; error?: string; data?: { orgId: string } }[] = [];
       const addedOrgs = [];
@@ -436,20 +442,19 @@ export class EcosystemService {
       let errorCount: number = 0;
 
       for (const orgId of organizationIds) {
-        const checkOrgExists = await this.ecosystemRepository.checkOrgExists(orgId);
         const result: { statusCode: number; message: string; error?: string; data?: { orgId: string } } = {
           statusCode: 0,
           message: ''
         };
 
-        if (checkOrgExists) {
-          const orgAgentDetails = await this.ecosystemRepository.getAgentDetails(orgId);
-
-          if (orgAgentDetails?.orgDid) {
-            const existingOrg = await this.ecosystemRepository.checkOrgExistsInEcosystem(
-              orgId,
-              ecosystemLeadOrgs.ecosystemId
-            );
+        const orgAgentDetails = await this.ecosystemRepository.getAgentDetails(orgId);
+        const getOrgLedgerId = orgAgentDetails?.ledgerId;
+        if (orgAgentDetails?.orgDid) {
+          const existingOrg = await this.ecosystemRepository.checkOrgExistsInEcosystem(
+            orgId,
+            ecosystemLeadOrgs.ecosystemId
+          );
+          if (getOrgLedgerId === getEcosystemLeadOrgLedgerId) {
             if (!existingOrg) {
               addedOrgs.push({
                 orgId,
@@ -470,14 +475,14 @@ export class EcosystemService {
             }
           } else {
             result.statusCode = HttpStatus.BAD_REQUEST;
-            result.message = `${ResponseMessages.ecosystem.error.agentNotSpunUp}`;
+            result.message = `${ResponseMessages.ecosystem.error.ledgerNotMatch}`;
             result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
             result.data = { orgId };
             errorCount++;
           }
         } else {
-          result.statusCode = HttpStatus.NOT_FOUND;
-          result.message = `${ResponseMessages.ecosystem.error.orgNotExist}`;
+          result.statusCode = HttpStatus.BAD_REQUEST;
+          result.message = `${ResponseMessages.ecosystem.error.agentNotSpunUp}`;
           result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
           result.data = { orgId };
           errorCount++;
@@ -491,13 +496,13 @@ export class EcosystemService {
       let getOrgs = [];
 
       if (0 < addedOrgs?.length) {
-      const orgs = addedOrgs.map((item) => item.orgId);
+        const orgs = addedOrgs.map((item) => item.orgId);
         await this.ecosystemRepository.addOrganizationInEcosystem(addedOrgs);
 
         //need to discuss
         getOrgs = await this.ecosystemRepository.getEcosystemOrgs(orgs, ecosystemLeadOrgs.ecosystemId);
       }
-      
+
       const success =
         0 < getOrgs?.length
           ? getOrgs?.map((item) => ({

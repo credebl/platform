@@ -1,7 +1,7 @@
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { MaxLength, IsString, Matches, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
+import { MaxLength, IsString, Matches, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateDidDto {
 
@@ -75,9 +75,4 @@ export class CreateDidDto {
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'endorser did must be in string format.' })
     endorserDid?: string;
-
-    @ApiProperty({example: false})
-    @ApiPropertyOptional()
-    @IsBoolean({ message: 'isPrimaryDid did must be true or false.' })
-    isPrimaryDid: boolean = false;
 }

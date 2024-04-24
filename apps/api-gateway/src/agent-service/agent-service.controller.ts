@@ -32,9 +32,9 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CreateDidDto } from './dto/create-did.dto';
 import { validateDid } from '@credebl/common/did.validator';
 import { CreateWalletDto } from './dto/create-wallet.dto';
+import { CreateNewDidDto } from './dto/create-new-did.dto';
 
 const seedLength = 32;
 
@@ -232,7 +232,7 @@ export class AgentController {
    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
    async createDid(
      @Param('orgId') orgId: string,
-     @Body() createDidDto: CreateDidDto,
+     @Body() createDidDto: CreateNewDidDto,
      @User() user: user,
      @Res() res: Response
    ): Promise<Response> {

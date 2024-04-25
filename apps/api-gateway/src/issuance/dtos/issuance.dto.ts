@@ -122,6 +122,7 @@ export class Attribute {
 
 }
 export class CredentialsIssuanceDto {
+    @ValidateIf((obj) => obj.credentialType === IssueCredentialType.INDY)
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Credential definition Id is required' })
     @IsString({ message: 'Credential definition id should be string' })
@@ -210,7 +211,15 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   @IsNotEmpty({ message: 'Please provide valid attributes' })
   @Type(() => Attribute)
   attributes?: Attribute[];
-  
+
+  @ApiProperty({
+    example: false
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsBoolean({message: 'isShortenUrl must be boolean'})
+  isShortenUrl?: boolean;
+
 
   @ApiProperty()
   @IsNotEmpty({ message: 'Please provide valid credential' })

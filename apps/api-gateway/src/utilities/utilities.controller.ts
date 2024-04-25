@@ -39,7 +39,7 @@ export class UtilitiesController {
   @ApiOperation({ summary: 'Store an object and return a short url to it', description: 'Create a short url representing the object' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async storeObject(@Body() storeObjectDto: GenericDto, @Param('persist') persist: boolean, @Res() res: Response): Promise<Response> {
-    const shorteningUrl = await this.utilitiesService.storeObject(persist.valueOf(), storeObjectDto);
+    const shorteningUrl = await this.utilitiesService.storeObject(persist.valueOf(), storeObjectDto.data);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.storeObject.success.storeObject,

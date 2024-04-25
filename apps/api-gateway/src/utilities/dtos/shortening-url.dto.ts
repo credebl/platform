@@ -40,7 +40,7 @@ interface Attribute {
     value: string;
   }
 
-  export class GenericDto {
+  export class StoreObjectDto {
   @ApiProperty()
   @IsNotEmpty()
   data: string | object;

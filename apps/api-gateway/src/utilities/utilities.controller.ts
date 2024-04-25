@@ -7,7 +7,7 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { GenericDto, UtilitiesDto } from './dtos/shortening-url.dto';
+import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 import { UtilitiesService } from './utilities.service';
 
 @UseFilters(CustomExceptionFilter)
@@ -38,7 +38,7 @@ export class UtilitiesController {
   @Post('/store-object/:persist')
   @ApiOperation({ summary: 'Store an object and return a short url to it', description: 'Create a short url representing the object' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-  async storeObject(@Body() storeObjectDto: GenericDto, @Param('persist') persist: boolean, @Res() res: Response): Promise<Response> {
+  async storeObject(@Body() storeObjectDto: StoreObjectDto, @Param('persist') persist: boolean, @Res() res: Response): Promise<Response> {
     const shorteningUrl = await this.utilitiesService.storeObject(persist.valueOf(), storeObjectDto.data);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

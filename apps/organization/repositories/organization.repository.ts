@@ -551,14 +551,24 @@ export class OrganizationRepository {
     queryObject: object,
     filterOptions: object,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
+    role?: string,
+    userId?: string
   ): Promise<IGetOrganization> {
     try {
       const sortByName = SortValue.DESC;
       const result = await this.prisma.$transaction([
         this.prisma.organisation.findMany({
           where: {
-            ...queryObject
+            ...queryObject,
+            userOrgRoles: {
+              some: {
+                orgRole: {
+                  name: role
+                },
+                userId
+              }
+            }
           },
           select: {
             id: true,
@@ -566,7 +576,19 @@ export class OrganizationRepository {
             description: true,
             logoUrl: true,
             orgSlug: true,
+            createDateTime: true,
+            ecosystemOrgs: {
+              select: {
+                ecosystemId: true
+              }
+            },
             userOrgRoles: {
+              where: {
+                orgRole: {
+                  name: role
+                },
+                ...filterOptions
+              },
               select: {
                 id: true,
                 orgRole: {
@@ -576,27 +598,29 @@ export class OrganizationRepository {
                     description: true
                   }
                 }
-              },
-              where: {
-                ...filterOptions
-                // Additional filtering conditions if needed
               }
             }
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
           orderBy: {
-            name: sortByName
-            
+            createDateTime: sortByName
           }
         }),
         this.prisma.organisation.count({
           where: {
-            ...queryObject
+            ...queryObject,
+            userOrgRoles: {
+              some: {
+                orgRole: {
+                  name: role
+                },
+                userId
+              }
+            }
           }
         })
       ]);
-
       const organizations = result[0];
       const totalCount = result[1];
       const totalPages = Math.ceil(totalCount / pageSize);

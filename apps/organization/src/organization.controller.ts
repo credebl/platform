@@ -79,8 +79,8 @@ export class OrganizationController {
   async getOrganizations(
     @Body() payload: { userId: string} & Payload
   ): Promise<IGetOrganization> {
-    const { userId, pageNumber, pageSize, search } = payload;
-    return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search);
+    const { userId, pageNumber, pageSize, search, role } = payload;
+    return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search, role);
   }
 
   /**

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { UtilitiesDto } from './dtos/shortening-url.dto';
+import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
@@ -13,7 +13,8 @@ export class UtilitiesService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'create-shortening-url', shorteningUrlDto);
   }
 
-  async storeObject(persistent: boolean, storeObj: unknown): Promise<string> {
+  async storeObject(persistent: boolean, storeObjectDto: StoreObjectDto): Promise<string> {
+    const storeObj = storeObjectDto.data;
     const payload = {persistent, storeObj};
     return this.sendNatsMessage(this.serviceProxy, 'store-object-return-url', payload);
   }

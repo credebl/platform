@@ -320,6 +320,7 @@ export const ResponseMessages = {
             success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem details updated successfully',
+            add: 'Organization added successfully',
             delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
             getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
@@ -340,6 +341,10 @@ export const ResponseMessages = {
         },
         error: {
             notCreated: 'Error while creating ecosystem',
+            agentNotSpunUp: 'Agent is not spun up for this organization',
+            orgAlreadyExists: 'Organization is already exists in ecosystem',
+            unableToAdd: 'Unable to add organization',
+            partiallyAdded: 'Organization(s) are partially added',
             orgNotExist: 'Organization does not exist',
             orgDidNotExist: 'Organization did does not exist',
             exists: 'An ecosystem name is already exist',

@@ -29,7 +29,7 @@ export interface IPlatformCredDefs {
   sortField?: string;
   sortBy?: string;
   search?: string;
-  user?: IUserRequestInterface
+  user: IUserRequestInterface
 }
 
 export interface CredDefPayload {

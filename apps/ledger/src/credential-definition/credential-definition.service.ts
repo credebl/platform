@@ -173,24 +173,24 @@ export class CredentialDefinitionService extends BaseService {
 
     async getAllPlatformCredDefs(credDefsPayload: IPlatformCredDefs): Promise<IPlatformCredDefsData> {
         try {
-          const response = await this.credentialDefinitionRepository.getAllPlatformCredDefsDetails(credDefsPayload);
-    
-          const credDefResponse: IPlatformCredDefsData = {
-            totalItems: response.credDefCount,
-            hasNextPage: credDefsPayload.pageSize * credDefsPayload.pageNumber < response.credDefCount,
-            hasPreviousPage: 1 < credDefsPayload.pageNumber,
-            nextPage: credDefsPayload.pageNumber + 1,
-            previousPage: credDefsPayload.pageNumber - 1,
-            lastPage: Math.ceil(response.credDefCount / credDefsPayload.pageSize),
-            data: response.credDefResult
-          };
-    
-          if (0 !== response.credDefCount) {
-            return credDefResponse;
+           const { pageSize, pageNumber } = credDefsPayload;
+           const response = await this.credentialDefinitionRepository.getAllPlatformCredDefsDetails(credDefsPayload);
 
-          } else {
-            throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
-          }
+           const credDefResponse: IPlatformCredDefsData = {
+             totalItems: response.credDefCount,
+             hasNextPage: pageSize * pageNumber < response.credDefCount,
+             hasPreviousPage: 1 < pageNumber,
+             nextPage: pageNumber + 1,
+             previousPage: pageNumber - 1,
+             lastPage: Math.ceil(response.credDefCount / pageSize),
+             data: response.credDefResult
+           };
+
+           if (0 !== response.credDefCount) {
+             return credDefResponse;
+           } else {
+             throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
+           }
     
     
         } catch (error) {

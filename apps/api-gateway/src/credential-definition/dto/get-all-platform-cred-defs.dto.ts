@@ -8,10 +8,11 @@ import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 export class GetAllPlatformCredDefsDto extends PaginationDto {
 
     @ApiProperty({ example: '1a7eac11-ff05-40d7-8351-4d7467687cad'})
+    @Transform(({ value }) => trim(value))
     @ApiPropertyOptional()
     @IsOptional()
     @IsUUID('4', { message: 'Invalid format of ledgerId' })
-    ledgerId?: string;
+    ledgerId: string;
     
     @ApiProperty({
         required: false
@@ -22,6 +23,7 @@ export class GetAllPlatformCredDefsDto extends PaginationDto {
     sortField: string = CredDefSortFields.CREATED_DATE_TIME;
 
     @ApiProperty({ required: false })
+    @Transform(({ value }) => trim(value))
     @IsOptional()
     sortBy: string = SortValue.DESC;  
     

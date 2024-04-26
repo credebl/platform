@@ -14,6 +14,7 @@ import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 
 @Injectable()
@@ -79,8 +80,8 @@ export class OrganizationService extends BaseService {
    * @returns Organizations details
    */
 
-  async getOrganizations(paginationDto: PaginationDto, userId: string): Promise<IGetOrganization> {
-    const payload = { userId, ...paginationDto };
+  async getOrganizations(organizationDto: GetAllOrganizationsDto, userId: string): Promise<IGetOrganization> {
+    const payload = { userId, ...organizationDto };
     const fetchOrgs = await this.sendNatsMessage(this.serviceProxy, 'get-organizations', payload);
     return fetchOrgs;
   }

@@ -499,7 +499,7 @@ export class OrganizationService {
         userOrgRoles: {
           some: { userId }
         },
-        OR: [
+          OR: [
           { name: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } }
         ]

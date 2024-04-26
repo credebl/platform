@@ -2,7 +2,8 @@
 FROM node:18-slim as build
 RUN npm install -g pnpm
 
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y
+RUN apt-get --no-install-recommends install -y openssl
 # Set the working directory
 WORKDIR /app
 
@@ -23,7 +24,8 @@ RUN pnpm run build utility
 # Stage 2: Create the final image
 FROM node:18-slim
 
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y
+RUN apt-get --no-install-recommends install -y openssl
 # Set the working directory
 WORKDIR /app
 RUN npm install -g pnpm

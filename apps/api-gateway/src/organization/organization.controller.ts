@@ -25,6 +25,7 @@ import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
+import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 
 @UseFilters(CustomExceptionFilter)
@@ -215,27 +216,9 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
-  @ApiQuery({
-    name: 'pageNumber',
-    example: '1',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    example: '10',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'search',
-    example: '',
-    type: String,
-    required: false
-  })
-  async getOrganizations(@Query() paginationDto: PaginationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async getOrganizations(@Query() organizationDto: GetAllOrganizationsDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
-    const getOrganizations = await this.organizationService.getOrganizations(paginationDto, reqUser.id);
+    const getOrganizations = await this.organizationService.getOrganizations(organizationDto, reqUser.id);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,

@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
+import { Prisma, credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, organisation, platform_config, schema } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, IEcosystemInvitation, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, IEcosystemInvitation, IEcosystemOrgs, IEcosystemOrgsData, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -84,6 +84,72 @@ export class EcosystemRepository {
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
       throw error;
+    }
+  }
+
+   //eslint-disable-next-line camelcase
+    async addOrganizationInEcosystem(orgs: IEcosystemOrgs[]): Promise<Prisma.BatchPayload> {
+    try {
+
+      const result = await this.prisma.ecosystem_orgs.createMany({
+        data: orgs
+      });
+
+    return result;
+
+    } catch (error) {
+      this.logger.error(`Error in add organization ecosystem: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemOrgs(orgIds: string[], ecosystemId: string): Promise<IEcosystemOrgsData[]> {
+    try {
+      const result = await this.prisma.ecosystem_orgs.findMany({
+         where: {
+            orgId: {
+              in: orgIds
+            },
+            ecosystemId
+         }
+      });
+
+    return result;
+
+    } catch (error) {
+      this.logger.error(`Error in fetch ecosystem orgs: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async checkOrgExists(orgId: string): Promise<organisation> {
+    try {
+      const isOrgExists = await this.prisma.organisation.findUnique({
+        where: {
+          id: orgId
+        }
+      });
+      return isOrgExists;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  // eslint-disable-next-line camelcase
+  async checkOrgExistsInEcosystem(orgId: string, ecosystemId: string): Promise<ecosystem_orgs> {
+    try {
+      const existingOrgs = await this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          ecosystemId,
+          orgId
+        }
+      });
+      return existingOrgs;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
     }
   }
 
@@ -539,7 +605,12 @@ export class EcosystemRepository {
                 name: true,
                 orgSlug: true,
                 // eslint-disable-next-line camelcase
-                org_agents: true
+                org_agents: true,
+                userOrgRoles: {
+                  select: {
+                    userId: true
+                  }
+                }
               }
             }
           },

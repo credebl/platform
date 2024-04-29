@@ -22,16 +22,17 @@ export class ProofRequestAttribute {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    @IsNotEmpty({ message: 'schemaId is required.' })
     schemaId?: string;
 
     @ApiPropertyOptional()
+    @ValidateIf((obj) => obj.value !== undefined)
     @IsString()
-    @IsOptional()
     @IsNotEmpty({ message: 'condition is required.' })
     condition?: string;
 
+    @ValidateIf((obj) => obj.condition !== undefined)
     @ApiPropertyOptional()
-    @IsOptional()
     @IsNotEmpty({ message: 'value is required.' })
     @IsNumberString({}, { message: 'Value must be a number' })
     value?: string;
@@ -39,6 +40,7 @@ export class ProofRequestAttribute {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    @IsNotEmpty({ message: 'credDefId is required.' })
     credDefId?: string;
 }
 
@@ -68,7 +70,8 @@ class ProofPayload {
     protocolVersion: string;
 }
 
-export class RequestProofDto extends ProofPayload {
+class PresentationPayload extends ProofPayload { 
+     
     @ApiProperty()
     @IsString()
     @Transform(({ value }) => trim(value))
@@ -76,18 +79,7 @@ export class RequestProofDto extends ProofPayload {
     @IsNotEmpty({ message: 'connectionId is required.' })
     connectionId: string;
 
-    @ApiProperty({
-        'example': [
-            {
-                attributeName: 'attributeName',
-                condition: '>=',
-                value: 'predicates',
-                credDefId: 'string',
-                schemaId: 'string'
-            }
-        ],
-        type: () => [ProofRequestAttribute]
-    })
+    @ApiProperty()
     @IsArray({ message: 'attributes must be in array' })
     @ValidateNested()
     @IsObject({ each: true })
@@ -100,7 +92,7 @@ export class RequestProofDto extends ProofPayload {
     @IsString({ message: 'comment must be in string' })
     comment: string;
 
-    orgId: string;
+     orgId: string;
 
     @ApiPropertyOptional()
     @IsString({ message: 'auto accept proof must be in string' })
@@ -110,6 +102,43 @@ export class RequestProofDto extends ProofPayload {
         message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
     })
     autoAcceptProof: AutoAccept;
+    
+
+}
+export class RequestProofDto  {
+
+        @ApiProperty({
+        'example': [
+            {
+                goalCode: 'string',
+                parentThreadId: 'string',
+                willConfirm: true,
+                protocolVersion: 'v1',
+                connectionId: 'string',
+                attributes: [
+                    {
+                        attributeName: 'attributeName',
+                        condition: '>=',
+                        value: 'predicates',
+                        credDefId: 'string',
+                        schemaId: 'string'
+                    }
+                ],
+                comment: 'string',
+                autoAcceptProof: 'always'
+            }
+    
+        ]
+    })
+    @IsArray({ message: 'attributes must be in array' })
+    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} connections max).`})
+    @ValidateNested()
+    @IsObject({ each: true })
+    @IsNotEmpty({ message: 'please provide valid attributes' })
+    @Type(() => PresentationPayload)
+    presentationData: PresentationPayload[];
+
+    orgId: string;
 }
 
 export class OutOfBandRequestProof extends ProofPayload {

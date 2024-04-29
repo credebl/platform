@@ -53,6 +53,12 @@ export class CreateOutOfBandConnectionInvitation {
         @IsOptional()
         appendedAttachments?: object[];
 
+        @ApiPropertyOptional()
+        @IsString()
+        @IsOptional()
+        @IsNotEmpty({ message: 'Please provide recipientKey' })
+        recipientKey: string;
+        
         orgId;
 }
 

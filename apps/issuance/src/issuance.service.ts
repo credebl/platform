@@ -50,38 +50,36 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
-    async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
-
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
     try {
       const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
 
-      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
+      if (payload.credentialType === IssueCredentialType.INDY) {
+        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
 
-      if (schemaResponse?.attributes) {
-        const schemaResponseError = [];
-        const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
-    
-        attributesArray.forEach((attribute) => {
+        if (schemaResponse?.attributes) {
+          const schemaResponseError = [];
+          const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
+
+          attributesArray.forEach((attribute) => {
             if (attribute.attributeName && attribute.isRequired) {
-    
-                credentialData.forEach((credential, i) => {
-                  credential.attributes.forEach((attr) => {
-                        if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                            schemaResponseError.push(
-                                `Attribute ${attribute.attributeName} is required at position ${i + 1}`
-                            );
-                        }
-                    });
+              credentialData.forEach((credential, i) => {
+                credential.attributes.forEach((attr) => {
+                  if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+                    schemaResponseError.push(`Attribute ${attribute.attributeName} is required at position ${i + 1}`);
+                  }
                 });
+              });
             }
-        });
-    
-        if (0 < schemaResponseError.length) {
+          });
+
+          if (0 < schemaResponseError.length) {
             throw new BadRequestException(schemaResponseError);
+          }
         }
-    }
+      }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
@@ -103,31 +101,50 @@ export class IssuanceService {
 
       const issuancePromises: Promise<ICreateOfferResponse>[] = [];
 
-      for (const credentials of credentialData) {
-        const { connectionId, attributes } = credentials;
-        const issueData: IIssueData = {
-          protocolVersion: 'v1',
-          connectionId,
-          credentialFormats: {
-            indy: {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              attributes: (attributes).map(({ isRequired, ...rest }) => rest),
-              credentialDefinitionId
-  
-            }
-          },
-          autoAcceptCredential: payload.autoAcceptCredential || 'always',
-          comment
-        };
-
-        await this.delay(500);
-        const credentialCreateOfferDetails = this._sendCredentialCreateOffer(issueData, url, orgId);
-        issuancePromises.push(credentialCreateOfferDetails);
+      let issueData;
+      if (payload.credentialType === IssueCredentialType.INDY) {
+        for (const credentials of credentialData) {
+          const { connectionId, attributes } = credentials;
+          issueData = {
+            protocolVersion: 'v1',
+            connectionId,
+            credentialFormats: {
+              indy: {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                attributes: attributes.map(({ isRequired, ...rest }) => rest),
+                credentialDefinitionId
+              }
+            },
+            autoAcceptCredential: payload.autoAcceptCredential || 'always',
+            comment
+          };
+        }
       }
 
+      if (payload.credentialType === IssueCredentialType.JSONLD) {
+        for (const credentials of credentialData) {
+          const { connectionId, credential, options } = credentials;
+
+          issueData = {
+            protocolVersion: payload.protocolVersion || 'v2',
+            connectionId,
+            credentialFormats: {
+              jsonld: {
+                credential,
+                options
+              }
+            },
+            autoAcceptCredential: payload.autoAcceptCredential || 'always',
+            comment: comment || ''
+          };
+        }
+      }
+
+      await this.delay(500);
+      const credentialCreateOfferDetails = this._sendCredentialCreateOffer(issueData, url, orgId);
+      issuancePromises.push(credentialCreateOfferDetails);
       const results = await Promise.allSettled(issuancePromises);
       return results;
-
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;

@@ -17,7 +17,7 @@ class Issuer {
   @Type(() => String) 
   id:string | { id?: string };
 }
-class Credential {
+export class Credential {
     @ApiProperty()
     @IsNotEmpty({ message: 'context  is required' })
     @IsCredentialJsonLdContext()
@@ -130,7 +130,7 @@ export class CredentialsIssuanceDto {
     @IsNotEmpty({ message: 'Credential definition Id is required' })
     @IsString({ message: 'Credential definition id should be string' })
     @Transform(({ value }) => value.trim())
-    credentialDefinitionId: string;
+    credentialDefinitionId?: string;
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid comment' })

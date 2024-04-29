@@ -1,10 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-
 import { AutoAccept } from '@credebl/enum/enum';
 import { trim } from '@credebl/common/cast.helper';
-import { Attribute, CredentialsIssuanceDto } from './issuance.dto';
+import { Attribute, Credential, CredentialsIssuanceDto, JsonLdCredentialDetailOptions } from './issuance.dto';
 
 class ConnectionAttributes {
     @ApiProperty({ example: 'string' })
@@ -26,7 +25,23 @@ class ConnectionAttributes {
     @ArrayMinSize(1)
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @Type(() => Attribute)
-    attributes: Attribute[];
+    @IsOptional()
+    attributes?: Attribute[];
+
+    @IsNotEmpty({ message: 'Please provide valid credential' })
+    @IsObject({ message: 'credential should be an object' })
+    @Type(() => Credential)
+    @IsOptional()
+    @ValidateNested({ each: true })
+    credential?: Credential;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid options' })
+    @IsObject({ message: 'options should be an object' })
+    @ValidateNested({ each: true })
+    @Type(() => JsonLdCredentialDetailOptions)
+    options?:JsonLdCredentialDetailOptions;
 }
 
 export class IssueCredentialDto extends CredentialsIssuanceDto {

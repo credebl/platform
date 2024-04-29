@@ -15,6 +15,8 @@ export interface IAttributes {
 interface ICredentialsAttributes {
   connectionId: string;
   attributes: IAttributes[];
+  credential?:ICredential;
+  options?:IOptions
 }
 export interface IIssuance {
   user?: IUserRequest;
@@ -27,7 +29,8 @@ export interface IIssuance {
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
-  label?: string
+  label?: string,
+  credentialType: string,
 }
 
 interface IIndy {

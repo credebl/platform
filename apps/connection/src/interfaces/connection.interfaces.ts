@@ -282,6 +282,7 @@ export interface ICreateConnectionInvitation {
   routing?: object;
   appendedAttachments?: object[];
   orgId?: string;
+  recipientKey?: string;
 }
 
 export interface ICreateOutOfbandConnectionInvitation {

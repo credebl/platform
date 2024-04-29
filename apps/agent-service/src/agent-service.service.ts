@@ -1636,14 +1636,7 @@ export class AgentServiceService {
     response: string;
   }> {
     try {
-      return this.agentServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
-        .toPromise()
+      return this.agentServiceProxy.send<string>(pattern, payload).pipe(map((response) => ({response}))).toPromise()
         .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(

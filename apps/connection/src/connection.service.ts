@@ -644,7 +644,8 @@ export class ConnectionService {
         appendedAttachments: appendedAttachments || undefined,
         routing: routing || undefined,
         messages: messages || undefined,
-        recipientKey: recipientKey || undefined
+        recipientKey: recipientKey || undefined,
+        invitationDid: invitationDid || undefined
       };
 
       const createConnectionInvitationFlag = 'connection-invitation';
@@ -661,12 +662,13 @@ export class ConnectionService {
         connectionInvitationUrl,
         connectionPayload.multiUseInvitation
       );
-      const recipientsKey = createConnectionInvitation?.response?.recipientKey || recipientKey;
+
+      const invitationsDid = createConnectionInvitation?.response?.invitationDid || invitationDid;
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
         shortenedUrl,
         agentId,
         orgId,
-        recipientsKey
+        invitationsDid 
       );
       const connectionStorePayload: ConnectionResponseDetail = {
         id: saveConnectionDetails.id,
@@ -679,7 +681,7 @@ export class ConnectionService {
         lastChangedDateTime: saveConnectionDetails.lastChangedDateTime,
         lastChangedBy: saveConnectionDetails.lastChangedBy,
         recordId: createConnectionInvitation.response.outOfBandRecord.id,
-        recipientKey: saveConnectionDetails.recipientKey
+        invitationDid: saveConnectionDetails.invitationDid
       };
       return connectionStorePayload;
     } catch (error) {

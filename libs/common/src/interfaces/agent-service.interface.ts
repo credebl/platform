@@ -11,6 +11,7 @@ export interface InvitationMessage {
       };
       outOfBandRecord: OutOfBandRecord;
       recipientKey?:string
+      invitationDid?: string
     };
   }
   

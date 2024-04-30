@@ -6,7 +6,7 @@ import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresen
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -167,50 +167,9 @@ export class VerificationService {
    * @param orgId 
    * @returns Requested proof presentation details
    */
-  async sendProofRequest(requestProof: IRequestProof): Promise<string> {
+  async sendProofRequest(requestProof: ISendProofRequestPayload): Promise<string> {
     try {
       const comment = requestProof.comment ? requestProof.comment : '';
-
-      let proofRequestPayload: ISendProofRequestPayload = {
-        protocolVersion: '',
-        comment: '',
-        connectionId: '',
-        proofFormats: {
-          indy: {
-            name: '',
-            requested_attributes: {},
-            requested_predicates: {},
-            version: ''
-          }
-        },
-        autoAcceptProof: '',
-        label: '',
-        goalCode: '',
-        parentThreadId: '',
-        willConfirm: false
-      };
-
-      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
-
-      proofRequestPayload = {
-        protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
-        comment,
-        connectionId: requestProof.connectionId,
-        proofFormats: {
-          indy: {
-            name: 'Proof Request',
-            version: '1.0',
-            // eslint-disable-next-line camelcase
-            requested_attributes: requestedAttributes,
-            // eslint-disable-next-line camelcase
-            requested_predicates: requestedPredicates
-          }
-        },
-        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : 'never',
-        goalCode: requestProof.goalCode || undefined,
-        parentThreadId: requestProof.parentThreadId || undefined,
-        willConfirm: requestProof.willConfirm || undefined
-      };
 
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
 
@@ -218,7 +177,47 @@ export class VerificationService {
       const verificationMethodLabel = 'request-proof';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
       
-      const payload = { orgId: requestProof.orgId, url, proofRequestPayload };
+      const payload: IProofRequestPayload = {
+        orgId: requestProof.orgId,
+        url,
+        proofRequestPayload: {}
+      };
+
+      const proofRequestPayload = {
+        comment,
+        connectionId: requestProof.connectionId,
+        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.Never,
+        goalCode: requestProof.goalCode || undefined,
+        parentThreadId: requestProof.parentThreadId || undefined,
+        willConfirm: requestProof.willConfirm || undefined
+      };
+
+      if (requestProof.type === ProofRequestType.INDY) {
+        const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof as IRequestProof);
+        payload.proofRequestPayload = {
+          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
+          proofFormats: {
+            indy: {
+              name: 'Proof Request',
+              version: '1.0',
+              requested_attributes: requestedAttributes,
+              requested_predicates: requestedPredicates
+            }
+          },
+          ...proofRequestPayload
+        };
+
+      } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE) {
+        payload.proofRequestPayload = {
+          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v2',
+          proofFormats: {
+            presentationExchange: {
+              presentationDefinition: requestProof.presentationDefinition
+            }
+        },
+        ...proofRequestPayload
+      };
+    }
 
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;
@@ -346,8 +345,16 @@ export class VerificationService {
       
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
-      const { isShortenUrl, emailId, type, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
+      const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      let recipientKey: string | undefined;
+      if (true === reuseConnection) {
+        const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
+         if (data && 0 < data.length) {
+          const [firstElement] = data;
+          recipientKey = firstElement?.recipientKey ?? undefined;
+      }
+      }
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
 
       
       let payload: IProofRequestPayload;

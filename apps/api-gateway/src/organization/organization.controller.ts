@@ -353,7 +353,7 @@ export class OrganizationController {
  * @returns success message
  */
 
-  @Post('/:orgId/primary-did')
+  @Put('/:orgId/primary-did')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiOperation({ summary: 'Set primary DID', description: 'Set primary DID for an organization' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })

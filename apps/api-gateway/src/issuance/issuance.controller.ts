@@ -534,17 +534,26 @@ export class IssuanceController {
     issueCredentialDto.credentialType = credentialType;
 
     const credOffer = issueCredentialDto?.credentialData || [];
-    if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType) {
+
+    if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType) {
       throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
-}
-    if (issueCredentialDto.credentialType === IssueCredentialType.JSONLD   && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
+    }
+
+    if (credentialType === IssueCredentialType.INDY && !issueCredentialDto.credentialDefinitionId) {
+        throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
+    }
+
+    if (issueCredentialDto.credentialType !== IssueCredentialType.INDY && !credOffer.every(offer => (!offer?.attributes || 0 === Object.keys(offer?.attributes).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
+    }
+    
+    if (issueCredentialDto.credentialType === IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
       throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
     }
 
-    if (issueCredentialDto.credentialType   ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
+    if (issueCredentialDto.credentialType ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
       throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
     }
-
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
     
     const finalResponse: IResponse = {

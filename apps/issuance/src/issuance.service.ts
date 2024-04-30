@@ -56,7 +56,6 @@ export class IssuanceService {
         const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
           credentialDefinitionId
         );
-
         if (schemaResponse?.attributes) {
           const schemaResponseError = [];
           const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
@@ -80,42 +79,26 @@ export class IssuanceService {
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-
       const { agentEndPoint } = agentDetails;
 
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
       if (!orgAgentType) {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
       }
 
       const issuanceMethodLabel = 'create-offer';
+      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const issueData: IIssueData = {
-        protocolVersion: 'v1',
-        connectionId,
-        credentialFormats: {
-          indy: {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
-            credentialDefinitionId
-            
-          }
-        },
-        autoAcceptCredential: autoAcceptCredential || 'always',
-        comment
-      };
+      const issuancePromises = credentialData.map(async (credentials) => {
+        const { connectionId, attributes, credential, options } = credentials;
+        let issueData;
 
-      let issueData;
-      if (payload.credentialType === IssueCredentialType.INDY) {
-        for (const credentials of credentialData) {
-          const { connectionId, attributes } = credentials;
+        if (payload.credentialType === IssueCredentialType.INDY) {
           issueData = {
-            protocolVersion: 'v1',
+            protocolVersion: payload.protocolVersion || 'v1',
             connectionId,
             credentialFormats: {
               indy: {
@@ -127,13 +110,7 @@ export class IssuanceService {
             autoAcceptCredential: payload.autoAcceptCredential || 'always',
             comment
           };
-        }
-      }
-
-      if (payload.credentialType === IssueCredentialType.JSONLD) {
-        for (const credentials of credentialData) {
-          const { connectionId, credential, options } = credentials;
-
+        } else if (payload.credentialType === IssueCredentialType.JSONLD) {
           issueData = {
             protocolVersion: payload.protocolVersion || 'v2',
             connectionId,
@@ -147,16 +124,17 @@ export class IssuanceService {
             comment: comment || ''
           };
         }
-      }
 
-      await this.delay(500);
-      const credentialCreateOfferDetails = this._sendCredentialCreateOffer(issueData, url, orgId);
-      issuancePromises.push(credentialCreateOfferDetails);
+        await this.delay(500);
+        return this._sendCredentialCreateOffer(issueData, url, orgId);
+      });
+
       const results = await Promise.allSettled(issuancePromises);
       return results;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
+
       if (errorStack) {
         throw new RpcException({
           error: errorStack?.message ? errorStack?.message : errorStack,

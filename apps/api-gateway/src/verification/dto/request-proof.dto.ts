@@ -4,6 +4,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
 import { IProofFormats } from '../interfaces/verification.interface';
+import { ProofRequestType } from '../enum/verification.enum';
 
 export class ProofRequestAttribute {
 
@@ -68,6 +69,118 @@ class ProofPayload {
     protocolVersion: string;
 }
 
+export class Fields {
+  @ApiProperty()
+  @IsArray()
+  @IsNotEmpty({ message: 'path is required.' })
+  path: string[];
+}
+
+export class Constraints {
+  @ApiProperty({type: () => [Fields]})
+  @IsOptional()
+  @IsNotEmpty({ message: 'Fields are required.' })
+  @ValidateNested()
+  @Type(() => Fields)
+  fields: Fields[];
+}
+
+
+export class Schema {
+  @ApiProperty()
+  @IsNotEmpty({ message: 'uri is required.' })
+  @IsString()
+  uri:string;
+
+}
+export class InputDescriptors {
+  @ApiProperty()
+  @IsNotEmpty({ message: 'id is required.' })
+  @IsString()
+  id:string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty({ message: 'name is required.' })
+  name:string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty({ message: 'purpose is required.' })
+  purpose:string;
+
+
+  @ApiProperty({type: () => [Schema]})
+  @IsNotEmpty({ message: 'schema is required.' })
+  @ValidateNested()
+  @Type(() => Schema)
+  schema:Schema[];
+
+  
+  @ApiProperty({type: () => Constraints})
+  @IsOptional()
+  @IsNotEmpty({ message: 'Constraints are required.' })
+  @ValidateNested()
+  @Type(() => Constraints)
+  constraints:Constraints;
+
+}
+
+export class ProofRequestPresentationDefinition {
+
+  @IsString()
+  @IsNotEmpty({ message: 'id is required.' })
+  id: string;
+
+  @IsString()
+  @IsOptional()
+  name: string;
+
+  @ApiProperty({type: () =>  [InputDescriptors]})
+  @IsNotEmpty({ message: 'inputDescriptors is required.' })
+  @IsArray({ message: 'inputDescriptors must be an array' })
+  @IsObject({ each: true })
+  @Type(() => InputDescriptors)
+  @ValidateNested()
+  // eslint-disable-next-line camelcase
+  input_descriptors:InputDescriptors[];
+}
+
+export class ProofRequestAttributeDto {
+  @ApiProperty({
+    'example': [
+        {
+            attributeName: 'attributeName',
+            condition: '>=',
+            value: 'predicates',
+            credDefId: 'string',
+            schemaId: 'string'
+        }
+    ],
+    type: () => [ProofRequestAttribute]
+})
+@IsArray({ message: 'attributes must be in array' })
+@ValidateNested()
+@IsObject({ each: true })
+@IsNotEmpty({ message: 'please provide valid attributes' })
+@Type(() => ProofRequestAttribute)
+attributes?: ProofRequestAttribute[];
+}
+
+export class IndyDto {
+  @ApiProperty()
+  @IsObject()
+  indy: ProofRequestAttributeDto;
+}
+
+export class ProofFormatDto {
+  @ApiProperty()
+  @IsObject()
+  proofFormats: IndyDto;
+}
+
 export class RequestProofDto extends ProofPayload {
     @ApiProperty()
     @IsString()
@@ -77,28 +190,68 @@ export class RequestProofDto extends ProofPayload {
     connectionId: string;
 
     @ApiProperty({
-        'example': [
+      'example': 
+      {
+        'proofFormats':{
+          'indy': [
+          {
+              attributeName: 'attributeName',
+              condition: '>=',
+              value: 'predicates',
+              credDefId: 'string',
+              schemaId: 'string'
+          }
+      ]
+    }
+    },
+      type: () => [IndyDto]
+  })
+  @IsOptional()
+  @ValidateNested()
+  @IsObject({ message: 'ProofFormatDto must be an object' })
+  @IsNotEmpty({ message: 'ProofFormatDto must not be empty' })
+  @Type(() => IndyDto)
+  proofFormats: IndyDto;    
+
+    @ApiProperty({
+        'example': 
             {
-                attributeName: 'attributeName',
-                condition: '>=',
-                value: 'predicates',
-                credDefId: 'string',
-                schemaId: 'string'
-            }
-        ],
-        type: () => [ProofRequestAttribute]
+                id: '32f54163-7166-48f1-93d8-ff217bdb0653',
+                inputDescriptors: [
+                    {
+                      'id': 'banking_input_1',
+                      'name': 'Bank Account Information',
+                      'schema': [
+                        {
+                          'uri': 'https://bank-schemas.org/1.0.0/accounts.json'
+                        }
+                        
+                      ],
+                      'constraints': {
+                        'fields': [
+                          {
+                            'path': ['$.issuer']
+                          }
+                        ]
+                      }
+                    }
+                  ]
+            },
+       type: () => [ProofRequestPresentationDefinition]
     })
-    @IsArray({ message: 'attributes must be in array' })
+    @IsOptional()
     @ValidateNested()
-    @IsObject({ each: true })
-    @IsNotEmpty({ message: 'please provide valid attributes' })
-    @Type(() => ProofRequestAttribute)
-    attributes: ProofRequestAttribute[];
+    @IsObject({ message: 'presentationDefinition must be an object' })
+    @IsNotEmpty({ message: 'presentationDefinition must not be empty' })
+    @Type(() => ProofRequestPresentationDefinition)
+    presentationDefinition?:ProofRequestPresentationDefinition;
 
     @ApiPropertyOptional()
     @IsOptional()
     @IsString({ message: 'comment must be in string' })
     comment: string;
+
+    type:ProofRequestType;
 
     orgId: string;
 
@@ -153,85 +306,6 @@ export class OutOfBandRequestProof extends ProofPayload {
         message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
     })
     autoAcceptProof: string;
-}
-
-export class Fields {
-    @ApiProperty()
-    @IsArray()
-    @IsNotEmpty({ message: 'path is required.' })
-    path: string[];
-  }
-
-export class Constraints {
-    @ApiProperty({type: () => [Fields]})
-    @IsOptional()
-    @IsNotEmpty({ message: 'Fields are required.' })
-    @ValidateNested()
-    @Type(() => Fields)
-    fields: Fields[];
-  }
-
-
-export class Schema {
-    @ApiProperty()
-    @IsNotEmpty({ message: 'uri is required.' })
-    @IsString()
-    uri:string;
-
-}
-export class InputDescriptors {
-    @ApiProperty()
-    @IsNotEmpty({ message: 'id is required.' })
-    @IsString()
-    id:string;
-
-    @ApiProperty()
-    @IsString()
-    @IsOptional()
-    @IsNotEmpty({ message: 'name is required.' })
-    name:string;
-
-    @ApiProperty()
-    @IsString()
-    @IsOptional()
-    @IsNotEmpty({ message: 'purpose is required.' })
-    purpose:string;
-
-
-    @ApiProperty({type: () => [Schema]})
-    @IsNotEmpty({ message: 'schema is required.' })
-    @ValidateNested()
-    @Type(() => Schema)
-    schema:Schema[];
-
-    
-    @ApiProperty({type: () => Constraints})
-    @IsOptional()
-    @IsNotEmpty({ message: 'Constraints are required.' })
-    @ValidateNested()
-    @Type(() => Constraints)
-    constraints:Constraints;
-  
-}
-
-export class ProofRequestPresentationDefinition {
-
-    @IsString()
-    @IsNotEmpty({ message: 'id is required.' })
-    id: string;
-
-    @IsString()
-    @IsOptional()
-    name: string;
-
-    @ApiProperty({type: () =>  [InputDescriptors]})
-    @IsNotEmpty({ message: 'inputDescriptors is required.' })
-    @IsArray({ message: 'inputDescriptors must be an array' })
-    @IsObject({ each: true })
-    @Type(() => InputDescriptors)
-    @ValidateNested()
-    // eslint-disable-next-line camelcase
-    input_descriptors:InputDescriptors[];
 }
 
 export class SendProofRequestPayload {

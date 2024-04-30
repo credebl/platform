@@ -168,7 +168,10 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: RequestProofDto })
+    @ApiBody({ type: RequestProofDto })@ApiQuery({
+        name: 'requestType',
+        enum: ProofRequestType
+      })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
@@ -176,11 +179,12 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
-        @Body() requestProof: RequestProofDto
+        @Body() requestProof: RequestProofDto,
+        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
 
         const attributeArray = [];
-        for (const attrData of requestProof.attributes) {
+        for (const attrData of requestProof.proofFormats.indy.attributes) {
           if (0 === attributeArray.length) {
             attributeArray.push(Object.values(attrData)[0]);
           } else if (!attributeArray.includes(Object.values(attrData)[0])) {
@@ -192,6 +196,7 @@ export class VerificationController {
         }
 
         requestProof.orgId = orgId;
+        requestProof.type = requestType;
         const proofData = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,

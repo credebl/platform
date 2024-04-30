@@ -122,11 +122,11 @@ export class Attribute {
 
 }
 export class CredentialsIssuanceDto {
-    @ValidateIf((obj) => obj.credentialType === IssueCredentialType.INDY)
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Credential definition Id is required' })
     @IsString({ message: 'Credential definition id should be string' })
     @Transform(({ value }) => value.trim())
+    @IsOptional()
     credentialDefinitionId?: string;
 
     @ApiProperty({ example: 'string' })

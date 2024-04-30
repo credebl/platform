@@ -130,16 +130,16 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
   }
 }
 
-export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
-  registerDecorator({
-    name: 'isNotUUID',
-    target: object.constructor,
-    propertyName,
-    options: validationOptions,
-    validator: {
-      validate(value) {
-        return !isUUID(value);
-      }
-    }
-  });
-};
+// export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
+//   registerDecorator({
+//     name: 'isNotUUID',
+//     target: object.constructor,
+//     propertyName,
+//     options: validationOptions,
+//     validator: {
+//       validate(value) {
+//         return !isUUID(value);
+//       }
+//     }
+//   });
+// };

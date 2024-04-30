@@ -195,6 +195,7 @@ export class IndyDto {
 export class RequestProofDto extends ProofPayload {
     @ApiProperty()
     @IsString()
+    @Transform(({ value }) => trim(value))
     @IsUUID()
     @IsNotEmpty({ message: 'connectionId is required.' })
     connectionId: string;

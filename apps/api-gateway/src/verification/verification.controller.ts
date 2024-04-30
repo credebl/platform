@@ -183,7 +183,19 @@ export class VerificationController {
         @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
 
-        const attributeArray = [];
+        if (requestType === ProofRequestType.INDY) {
+            if (!requestProof.proofFormats) {
+                throw new BadRequestException(`type: ${requestType} requires proofFormats`);
+            }
+        }
+
+        if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
+            if (!requestProof.presentationDefinition) {
+                throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
+            }
+        }
+        if (requestProof.proofFormats) {
+            const attributeArray = [];
         for (const attrData of requestProof.proofFormats.indy.attributes) {
           if (0 === attributeArray.length) {
             attributeArray.push(Object.values(attrData)[0]);
@@ -193,6 +205,7 @@ export class VerificationController {
             throw new BadRequestException('Please provide unique attribute names');
           }           
 
+        }
         }
 
         requestProof.orgId = orgId;

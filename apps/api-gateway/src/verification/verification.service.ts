@@ -57,7 +57,7 @@ export class VerificationService extends BaseService {
           protocolVersion: requestProofDto.protocolVersion,
           willConfirm: requestProofDto.willConfirm
         };
-        if (requestProofDto.proofFormats.indy.attributes) {
+        if (requestProofDto.proofFormats) {
           requestProof.attributes = requestProofDto.proofFormats.indy.attributes;
         }
         if (requestProofDto.presentationDefinition) {

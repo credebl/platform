@@ -192,7 +192,6 @@ export class RequestProofDto extends ProofPayload {
     @ApiProperty({
       'example': 
       {
-        'proofFormats':{
           'indy': [
           {
               attributeName: 'attributeName',
@@ -202,7 +201,6 @@ export class RequestProofDto extends ProofPayload {
               schemaId: 'string'
           }
       ]
-    }
     },
       type: () => [IndyDto]
   })
@@ -211,7 +209,7 @@ export class RequestProofDto extends ProofPayload {
   @IsObject({ message: 'ProofFormatDto must be an object' })
   @IsNotEmpty({ message: 'ProofFormatDto must not be empty' })
   @Type(() => IndyDto)
-  proofFormats: IndyDto;    
+  proofFormats?: IndyDto;    
 
     @ApiProperty({
         'example': 

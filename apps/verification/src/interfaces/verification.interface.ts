@@ -163,6 +163,7 @@ export interface ISendProofRequestPayload {
     presentationDefinition?:IProofRequestPresentationDefinition;
     reuseConnection?: boolean;
     recipientKey?:string;
+    invitationDid?: string
 }
 
 export interface IWSendProofRequestPayload {

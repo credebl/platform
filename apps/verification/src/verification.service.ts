@@ -348,12 +348,12 @@ export class VerificationService {
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
       const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
-      let recipientKey: string | undefined;
+      let invitationDid: string | undefined;
       if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
+        const data: agent_invitations[] = await this.verificationRepository.getInvitationDidByOrgId(user.orgId);
          if (data && 0 < data.length) {
           const [firstElement] = data;
-          recipientKey = firstElement?.recipientKey ?? undefined;
+          invitationDid = firstElement?.invitationDid ?? undefined;
       }
       }
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
@@ -363,7 +363,7 @@ export class VerificationService {
 
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
-        updateOutOfBandRequestProof.recipientKey = recipientKey || undefined;
+        updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
         payload   = {
         orgId: user.orgId,
         url,
@@ -390,7 +390,7 @@ export class VerificationService {
               }
             },
             autoAcceptProof:outOfBandRequestProof.autoAcceptProof,
-            recipientKey:recipientKey || undefined
+            invitationDid:invitationDid || undefined
           }
         };  
       }

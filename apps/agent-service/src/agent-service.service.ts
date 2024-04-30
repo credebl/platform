@@ -779,8 +779,20 @@ export class AgentServiceService {
 
       this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
 
-      await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
+      const orgAgentDetails = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
+      const createdDidDetails = {
+        orgId: payload.orgId,
+        did: tenantDetails.DIDCreationOption.did,
+        didDocument: tenantDetails.DIDCreationOption.didDocument || tenantDetails.DIDCreationOption.didDoc,
+        isPrimaryDid: true,
+        orgAgentId: orgAgentDetails.id,
+        userId: user.id
+      };
+      
+      await this.agentServiceRepository.storeDidDetails(createdDidDetails);
+
+  
       this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
 
       // Create the legacy connection invitation

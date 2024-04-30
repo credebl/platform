@@ -170,15 +170,25 @@ attributes?: ProofRequestAttribute[];
 }
 
 export class IndyDto {
-  @ApiProperty()
-  @IsObject()
+  @ApiProperty({
+    'example': {
+        'attributes': [
+          {
+            attributeName: 'attributeName',
+            condition: '>=',
+            value: 'predicates',
+            credDefId: 'string',
+            schemaId: 'string'
+          }
+        ]
+      },
+      type: () => [ProofRequestAttributeDto]
+    })
+  @ValidateNested()
+  @IsObject({ each: true })
+  @IsNotEmpty({ message: 'please provide valid attributes' })
+  @Type(() => ProofRequestAttributeDto)
   indy: ProofRequestAttributeDto;
-}
-
-export class ProofFormatDto {
-  @ApiProperty()
-  @IsObject()
-  proofFormats: IndyDto;
 }
 
 export class RequestProofDto extends ProofPayload {

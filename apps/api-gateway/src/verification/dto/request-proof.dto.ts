@@ -217,18 +217,18 @@ export class RequestProofDto extends ProofPayload {
                 id: '32f54163-7166-48f1-93d8-ff217bdb0653',
                 inputDescriptors: [
                     {
-                      'id': 'banking_input_2',
-                      'name': 'Bank Account Info',
+                      'id': 'healthcare_input_1',
+                      'name': 'Medical History',
                       'schema': [
                         {
-                          'uri': 'https://bank-schemas.org/1.0.1/accounts.json'
+                          'uri': 'https://health-schemas.org/1.0.1/medical_history.json'
                         }
                         
                       ],
                       'constraints': {
                         'fields': [
                           {
-                            'path': ['$.Issuer']
+                            'path': ['$.PatientID']
                           }
                         ]
                       }

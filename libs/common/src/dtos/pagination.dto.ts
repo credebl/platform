@@ -8,12 +8,12 @@ export class PaginationDto {
     @IsOptional()
     @IsNumber()
     @Min(1, { message: 'Page number must be greater than 0' })
-    pageNumber = 1;
+    pageNumber: number = 1;
 
     @ApiProperty({ required: false })
     @IsOptional()
     @Type(() => String)
-    search = '';
+    search: string = '';
 
     @Type(() => Number)
     @ApiProperty({ required: false, default: 10 })
@@ -21,6 +21,6 @@ export class PaginationDto {
     @IsNumber()
     @Min(1, { message: 'Page size must be greater than 0' })
     @Max(100, { message: 'Page size must be less than 100' })
-    pageSize = 10;
+    pageSize: number = 10;
 
 }

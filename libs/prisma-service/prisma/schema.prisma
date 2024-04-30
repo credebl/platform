@@ -194,6 +194,21 @@ model org_agents {
   org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
   organisation        organisation?       @relation(fields: [orgId], references: [id])
   webhookUrl          String?             @db.VarChar
+  org_dids            org_dids[]
+}
+
+model org_dids {
+  id                  String      @id @default(uuid()) @db.Uuid
+  createDateTime      DateTime    @default(now()) @db.Timestamptz(6)
+  createdBy           String      @db.Uuid
+  lastChangedDateTime DateTime    @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String      @db.Uuid
+  orgId               String      @db.Uuid
+  isPrimaryDid          Boolean
+  did                 String      @db.VarChar(500)
+  didDocument         Json
+  orgAgentId          String      @db.Uuid
+  org_agents          org_agents  @relation(fields: [orgAgentId], references: [id])
 }
 
 model org_agents_type {
@@ -221,8 +236,7 @@ model ledgers {
   poolConfig          String       @db.VarChar
   isActive            Boolean
   networkString       String       @db.VarChar
-  registerDIDEndpoint String       @db.VarChar
-  registerDIDPayload  Json?
+  nymTxnEndpoint      String       @db.VarChar
   indyNamespace       String?      @db.VarChar
   networkUrl          String?      @db.VarChar
   org_agents          org_agents[]
@@ -294,7 +308,7 @@ model agent_invitations {
   lastChangedBy        Int          @default(1)
   org_agents           org_agents   @relation(fields: [agentId], references: [id])
   organisation         organisation @relation(fields: [orgId], references: [id])
-  recipientKey         String? 
+  recipientKey         String?
 }
 
 model connections {
@@ -488,6 +502,7 @@ model notification {
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
 }
+
 model ledgerConfig {
   id                  String    @id @default(uuid()) @db.Uuid
   name                String

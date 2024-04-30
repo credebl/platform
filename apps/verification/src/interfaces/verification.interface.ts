@@ -8,13 +8,20 @@ interface IProofRequestAttribute {
     value?: string;
     credDefId?: string;
     schemaId?: string;
-    credentialName: string;
+    credentialName?: string;
+}
+
+export enum ProofRequestType {
+    INDY = 'indy',
+    PRESENTATIONEXCHANGE = 'presentationExchange'
 }
 
 export interface IRequestProof {
     orgId: string;
     connectionId?: string;
-    attributes: IProofRequestAttribute[];
+    attributes?: IProofRequestAttribute[];
+    type: ProofRequestType;
+    presentationDefinition?:IProofRequestPresentationDefinition;
     comment: string;
     autoAcceptProof: AutoAccept;
     protocolVersion?: string;
@@ -113,6 +120,7 @@ export interface IInputDescriptors {
 
 export interface IProofRequestPresentationDefinition {
     id:string;
+    name: string;
     input_descriptors:IInputDescriptors[];
 }
 
@@ -121,7 +129,8 @@ export interface IPresentationExchange {
    
 }
 export interface IPresentationExchangeProofFormats {
-    presentationExchange : IPresentationExchange;
+    presentationExchange? : IPresentationExchange;
+    indy?: IndyProof
 }
 export interface ISendPresentationExchangeProofRequestPayload {
     protocolVersion: string;
@@ -142,7 +151,7 @@ export interface ISendProofRequestPayload {
     comment?: string;
     connectionId?: string;
     proofFormats?: IProofFormats;
-    autoAcceptProof?: string;
+    autoAcceptProof?: AutoAccept;
     label?: string;
     goalCode?: string;
     parentThreadId?: string;
@@ -151,6 +160,7 @@ export interface ISendProofRequestPayload {
     emailId?: string[]
     isShortenUrl?: boolean;
     type?:string;
+    orgId?: string;
     presentationDefinition?:IProofRequestPresentationDefinition;
     reuseConnection?: boolean;
     recipientKey?:string;
@@ -175,7 +185,7 @@ export interface IWSendProofRequestPayload {
 export interface IProofRequestPayload {
     url: string;
     apiKey?: string;
-    orgId?: string
+    orgId?: string;
     proofRequestPayload: ISendProofRequestPayload | ISendPresentationExchangeProofRequestPayload;
 }
 

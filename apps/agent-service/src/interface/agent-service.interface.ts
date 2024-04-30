@@ -75,6 +75,7 @@ export interface IDidCreate {
   did?: string;
   role?: string;
   endorserDid?: string;
+  isPrimaryDid?: boolean;
 }
 export interface ITenantSchema {
   tenantId?: string;
@@ -181,6 +182,15 @@ export interface IStoreOrgAgentDetails {
   tenantId?: string;
   ledgerId?: string[];
   agentType?: string;
+}
+
+export interface IStoreDidDetails {
+  orgId: string;
+  isPrimaryDid?: boolean;
+  did: string;
+  didDocument?: string;
+  userId: string;
+  orgAgentId: string;
 }
 
 export interface IStoreOrgAgent {
@@ -314,8 +324,40 @@ export interface IAgentStatus {
   isInitialized: boolean;
 }
 
+export interface ISchema {
+  uri:string;
+}
+export interface IFields {
+  path: string[];
+}
+export interface IConstraints {
+  fields: IFields[];
+}
+
+export interface IInputDescriptors {
+
+  id:string;
+  name?:string;
+  purpose?:string;
+  schema:ISchema[];
+  constraints?:IConstraints;
+
+}
+
+export interface IProofRequestPresentationDefinition {
+  id:string;
+  name: string;
+  input_descriptors:IInputDescriptors[];
+}
+
+export interface IPresentationExchange {
+  presentationDefinition:IProofRequestPresentationDefinition;
+ 
+}
+
 interface IProofFormats {
-  indy: IndyProof;
+  indy?: IndyProof;
+  presentationExchange? : IPresentationExchange;
 }
 
 interface IndyProof {
@@ -504,8 +546,7 @@ interface Ledger {
   poolConfig: string;
   isActive: boolean;
   networkString: string;
-  registerDIDEndpoint: string;
-  registerDIDPayload: string;
+  nymTxnEndpoint: string;
   indyNamespace: string;
   networkUrl: string | null;
 }

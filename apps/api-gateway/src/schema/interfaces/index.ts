@@ -40,3 +40,20 @@ export interface IOrgAgentInterface {
   agentsTypeId: string;
   orgId: string;
 }
+
+export interface ISchemaInfo {
+  schema: Ischema;
+  schemaId: string;
+  schemaMetadata: ISchemaMetadata;
+}
+interface Ischema {
+  attrNames: string[];
+  name: string;
+  version: string;
+  issuerId: string;
+}
+
+interface ISchemaMetadata {
+  didIndyNamespace: string;
+  indyLedgerSeqNo: number;
+}

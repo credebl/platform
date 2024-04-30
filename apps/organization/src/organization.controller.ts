@@ -6,7 +6,7 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
 import { organisation } from '@prisma/client';
 import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
@@ -26,6 +26,17 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'create-organization' })
   async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string, keycloakUserId: string }): Promise<organisation> {
     return this.organizationService.createOrganization(payload.createOrgDto, payload.userId, payload.keycloakUserId);
+  }
+
+  /**
+   * Description: Set primary did
+   * @param payload did and organization details
+   * @returns Sucess message and required details
+   */
+
+  @MessagePattern({ cmd: 'set-primary-did' })
+  async setPrimaryDid(@Body() payload: { orgId:string, did:string, id:string}): Promise<string> {
+    return this.organizationService.setPrimaryDid(payload.orgId, payload.did, payload.id);
   }
 
   /**
@@ -50,6 +61,16 @@ export class OrganizationController {
   }
 
   /**
+   *
+   * @param payload
+   * @returns organization's did list
+   */
+  @MessagePattern({ cmd: 'fetch-organization-dids' })
+  async getOrgDidList(payload: {orgId:string}): Promise<IDidList[]> {
+    return this.organizationService.getOrgDidList(payload.orgId);
+  }
+
+  /**
    * Description: get organizations
    * @param
    * @returns Get created organization details
@@ -58,8 +79,8 @@ export class OrganizationController {
   async getOrganizations(
     @Body() payload: { userId: string} & Payload
   ): Promise<IGetOrganization> {
-    const { userId, pageNumber, pageSize, search } = payload;
-    return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search);
+    const { userId, pageNumber, pageSize, search, role } = payload;
+    return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search, role);
   }
 
   /**

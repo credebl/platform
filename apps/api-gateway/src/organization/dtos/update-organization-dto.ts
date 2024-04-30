@@ -2,7 +2,7 @@ import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, IsBoolean, MaxLength, MinLength, Validate } from 'class-validator';
 
 import { Transform } from 'class-transformer';
-import { ImageBase64Validator, IsNotUUID, trim } from '@credebl/common/cast.helper';
+import { ImageBase64Validator, trim } from '@credebl/common/cast.helper';
 
 @ApiExtraModels()
 export class UpdateOrganizationDto {
@@ -17,7 +17,6 @@ export class UpdateOrganizationDto {
     @MinLength(2, { message: 'Organization name must be at least 2 characters.' })
     @MaxLength(50, { message: 'Organization name must be at most 50 characters.' })
     @IsString({ message: 'Organization name must be in string format.' })
-    @IsNotUUID({message: 'Invalid orgName'})
     name: string;
 
     @ApiPropertyOptional()

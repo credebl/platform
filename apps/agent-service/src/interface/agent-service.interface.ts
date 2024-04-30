@@ -324,8 +324,40 @@ export interface IAgentStatus {
   isInitialized: boolean;
 }
 
+export interface ISchema {
+  uri:string;
+}
+export interface IFields {
+  path: string[];
+}
+export interface IConstraints {
+  fields: IFields[];
+}
+
+export interface IInputDescriptors {
+
+  id:string;
+  name?:string;
+  purpose?:string;
+  schema:ISchema[];
+  constraints?:IConstraints;
+
+}
+
+export interface IProofRequestPresentationDefinition {
+  id:string;
+  name: string;
+  input_descriptors:IInputDescriptors[];
+}
+
+export interface IPresentationExchange {
+  presentationDefinition:IProofRequestPresentationDefinition;
+ 
+}
+
 interface IProofFormats {
-  indy: IndyProof;
+  indy?: IndyProof;
+  presentationExchange? : IPresentationExchange;
 }
 
 interface IndyProof {

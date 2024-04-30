@@ -185,42 +185,9 @@ export class VerificationService {
         proofRequestPayload: {}
       };
 
-      // let proofRequestPayload: ISendProofRequestPayload = {
-      //   protocolVersion: '',
-      //   comment: '',
-      //   connectionId: '',
-      //   proofFormats: {
-      //     indy: {
-      //       name: '',
-      //       requested_attributes: {},
-      //       requested_predicates: {},
-      //       version: ''
-      //     }
-      //   },
-      //   autoAcceptProof: '',
-      //   label: '',
-      //   goalCode: '',
-      //   parentThreadId: '',
-      //   willConfirm: false
-      // };
-
-      // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
-
       const proofRequestPayload = {
-      // let proofRequestPayload: IRequestProof = {
-        // protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
         comment,
         connectionId: requestProof.connectionId,
-        // proofFormats: {
-        //   indy: {
-        //     name: 'Proof Request',
-        //     version: '1.0',
-        //     // eslint-disable-next-line camelcase
-        //     requested_attributes: requestedAttributes,
-        //     // eslint-disable-next-line camelcase
-        //     requested_predicates: requestedPredicates
-        //   }
-        // },
         autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.Never,
         goalCode: requestProof.goalCode || undefined,
         parentThreadId: requestProof.parentThreadId || undefined,
@@ -242,7 +209,6 @@ export class VerificationService {
           ...proofRequestPayload
         };
 
-        // payload.proofRequestPayload = proofRequestPayload;
       } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE) {
         payload.proofRequestPayload = {
           protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v2',

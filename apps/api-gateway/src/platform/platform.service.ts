@@ -4,6 +4,8 @@ import { BaseService } from '../../../../libs/service/base.service';
 import { ILedgers, ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { INetworkUrl, ISchemaDetails } from '@credebl/common/interfaces/schema.interface';
+import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
+import { IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 
 @Injectable()
 export class PlatformService extends BaseService {
@@ -17,6 +19,11 @@ export class PlatformService extends BaseService {
         const schemaSearch = { schemaSearchCriteria, user };
         return this.sendNatsMessage(this.platformServiceProxy, 'get-all-schemas', schemaSearch);
 
+    }
+
+    async getAllPlatformCredDefs(getAllPlatformCredDefs: GetAllPlatformCredDefsDto, user: IUserRequestInterface): Promise<IPlatformCredDefsData> {
+        const credDefs = { ...getAllPlatformCredDefs, user };
+        return this.sendNatsMessage(this.platformServiceProxy, 'get-all-platform-cred-defs', credDefs);
     }
 
     async getAllLedgers(): Promise<ILedgers> {

@@ -13,6 +13,13 @@ export enum SortFields {
     ISSUER_ID = 'issuerId'
 }
 
+export enum CredDefSortFields {
+    CREATED_DATE_TIME = 'createDateTime',
+    TAG = 'tag',
+    LEDGER_ID = 'schemaLedgerId',
+    CRED_DEF_ID= 'credentialDefinitionId'
+}
+
 export enum AgentType {
     AFJ = 'AFJ',
     ACAPY = 'ACAPY'

@@ -12,7 +12,8 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AuthGuard } from '@nestjs/passport';
 import * as QRCode from 'qrcode';
-import { SortFields } from '@credebl/enum/enum';
+import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
+import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)
@@ -57,6 +58,36 @@ export class PlatformController {
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
+
+
+    @Get('/platform/cred-defs')
+    @ApiTags('credential-definitions')
+    @ApiOperation({
+        summary: 'Get all credential-definitions from platform.',
+        description: 'Get all credential-definitions list from platform.'
+    })
+    @ApiQuery({
+        name: 'sortField',
+        enum: CredDefSortFields,
+        required: false
+      })    
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    async getAllCredDefs(
+        @Query() getAllPlatformCredDefs: GetAllPlatformCredDefsDto,
+        @Res() res: Response,
+        @User() user: IUserRequestInterface
+    ): Promise<Response> {
+        const schemasResponse = await this.platformService.getAllPlatformCredDefs(getAllPlatformCredDefs, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.credentialDefinition.success.fetch,
+            data: schemasResponse
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
+    }
+
 
     @Get('/platform/ledgers')
     @ApiTags('ledgers')

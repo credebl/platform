@@ -22,6 +22,16 @@ export interface CreateCredDefPayload {
   orgId?: string;
 }
 
+export interface IPlatformCredDefs {
+  ledgerId?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  sortField?: string;
+  sortBy?: string;
+  search?: string;
+  user: IUserRequestInterface
+}
+
 export interface CredDefPayload {
   userId?: string,
   schemaId?: string;
@@ -46,7 +56,6 @@ export class GetAllCredDefsDto {
   revocable?: boolean;
   sortByValue?: string;
 }
-
 export interface GetAllCredDefsPayload {
   credDefSearchCriteria: GetAllCredDefsDto,
   user: IUserRequestInterface,

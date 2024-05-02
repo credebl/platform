@@ -19,7 +19,7 @@ import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateSchemaDto, CreateW3CSchemaDto } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
+import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')

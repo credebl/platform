@@ -1,10 +1,4 @@
-export interface ICredDefDetails {
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
+export interface ICredDefDetails extends IPaginationDetails{
     data: ICredDefData[];
 }
 
@@ -18,3 +12,22 @@ export interface ICredDefData {
     orgId: string;
     revocable: boolean;
 }
+
+export interface IPlatformCredDefDetails {
+    credDefCount: number;
+    credDefResult: ICredDefData[];
+  }
+
+  export interface IPaginationDetails {
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    nextPage: number;
+    previousPage: number;
+    lastPage: number;
+  }
+  
+  export interface IPlatformCredDefsData extends IPaginationDetails{
+    data: ICredDefData[];
+  }
+   

@@ -65,9 +65,9 @@ export class VerificationRepository {
         where: {
           orgId,
           OR: [
-            { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
         ]
         },
         select: {
@@ -90,9 +90,9 @@ export class VerificationRepository {
         where: {
           orgId,
           OR: [
-            { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
           ]
         }
       });

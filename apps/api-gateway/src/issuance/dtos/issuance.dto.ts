@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/array-type */
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
@@ -125,11 +125,11 @@ export class Attribute {
 
 }
 export class CredentialsIssuanceDto {
-    @ValidateIf((obj) => obj.credentialType === IssueCredentialType.INDY)
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Credential definition Id is required' })
     @IsString({ message: 'Credential definition id should be string' })
     @Transform(({ value }) => value.trim())
+    @IsOptional()
     credentialDefinitionId?: string;
 
     @ApiProperty({ example: 'string' })

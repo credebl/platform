@@ -480,12 +480,14 @@ export class OrganizationService {
     logoUrl: string,
     orgId: string
   ): Promise<ICreateConnectionUrl> {
-    const pattern = { cmd: 'create-connection' };
+    const pattern = { cmd: 'create-connection-invitation' };
 
     const payload = {
-      orgName,
-      logoUrl,
-      orgId
+      createOutOfBandConnectionInvitation: {
+        orgName,
+        logoUrl,
+        orgId
+      }
     };
     const connectionInvitationData = await this.organizationServiceProxy
       .send(pattern, payload)

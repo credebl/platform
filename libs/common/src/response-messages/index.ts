@@ -378,6 +378,7 @@ export const ResponseMessages = {
             invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
             transactionSubmitted: 'Transaction already submitted',
+            transactionNotSigned: 'Transaction request is not signed',
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',

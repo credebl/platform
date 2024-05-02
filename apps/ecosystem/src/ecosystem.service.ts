@@ -1452,17 +1452,22 @@ export class EcosystemService {
   async submitTransaction(transactionPayload: TransactionPayload): Promise<object> {
     try {
       const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
+      const checkEndorsementRequestIsSubmitted = await this.ecosystemRepository.getEndorsementTransactionById(
+        endorsementId,
+        endorsementTransactionStatus.SUBMITED
+      );
+
+      if (checkEndorsementRequestIsSubmitted) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.transactionSubmitted);
+      }
+
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
         endorsementTransactionStatus.SIGNED
       );
 
       if (!endorsementTransactionPayload) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
-      }
-
-      if ('submitted' === endorsementTransactionPayload.status) {
-        throw new ConflictException(ResponseMessages.ecosystem.error.transactionSubmitted);
+        throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotSigned);
       }
 
       const ecosystemMemberDetails = await this.getEcosystemMemberDetails(endorsementTransactionPayload);

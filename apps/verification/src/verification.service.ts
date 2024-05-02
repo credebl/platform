@@ -682,6 +682,7 @@ export class VerificationService {
     }
   }
 
+  // TODO: This function is only for anoncreds indy
   async getVerifiedProofdetails(proofId: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);

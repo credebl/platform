@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
+import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -779,8 +779,9 @@ export class OrganizationRepository {
     }
   }
 
-  async setOrgsPrimaryDid(primaryDid:string, orgId:string, id:string): Promise<string> {
+  async setOrgsPrimaryDid(primaryDidDetails: IPrimaryDidDetails): Promise<string> {
     try {
+      const {did, didDocument, id, orgId} = primaryDidDetails;
       await this.prisma.$transaction([
         this.prisma.org_dids.update({
           where: {
@@ -790,13 +791,13 @@ export class OrganizationRepository {
              isPrimaryDid: true
          }
          }),
-
           this.prisma.org_agents.update({
             where: {
                orgId
             },
            data: {
-               orgDid: primaryDid
+               orgDid: did,
+               didDocument
            }
        })   
         ]);
@@ -806,6 +807,19 @@ export class OrganizationRepository {
         throw error;
     }
 }
+
+async getDidDetailsByDid(did:string): Promise<IDidDetails> {
+  try {
+    return this.prisma.org_dids.findFirstOrThrow({
+      where: {
+        did
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getPerviousPrimaryDid] - get DID details: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
 
  async getPerviousPrimaryDid(orgId:string): Promise<IDidDetails> {
   try {

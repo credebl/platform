@@ -27,7 +27,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -175,17 +175,28 @@ export class OrganizationService {
       if (orgAgentDetails.orgDid === did) {
         throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
       }
-
+      //check user DID exist in the organization's did list
       const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
       const isDidMatch = organizationDidList.some(item => item.did === did);
 
       if (!isDidMatch) {
         throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
       }
+      const didDetails = await this.organizationRepository.getDidDetailsByDid(did);
+
+      if (!didDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+      const primaryDidDetails: IPrimaryDidDetails = {
+        did,
+        orgId,
+        id,
+        didDocument: didDetails.didDocument
+      };
+
+      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
 
       const getExistingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
-
-      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(did, orgId, id);
 
 
      if (!getExistingPrimaryDid) {

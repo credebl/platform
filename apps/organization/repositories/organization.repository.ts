@@ -816,7 +816,7 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
       }
     });
   } catch (error) {
-      this.logger.error(`[getPerviousPrimaryDid] - get DID details: ${JSON.stringify(error)}`);
+      this.logger.error(`[getDidDetailsByDid] - get DID details: ${JSON.stringify(error)}`);
       throw error;
   }
  }

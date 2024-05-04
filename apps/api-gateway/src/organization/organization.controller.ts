@@ -1,6 +1,6 @@
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
-import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete, ParseUUIDPipe, BadRequestException, ValidationPipe, UsePipes } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import  IResponse from '@credebl/common/interfaces/response.interface';
@@ -498,8 +498,12 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiParam({
+    name: 'orgId'
+  })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
-  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  @UsePipes(new ValidationPipe())
+  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     updateOrgDto.orgId = orgId;
     await this.organizationService.updateOrganization(updateOrgDto, reqUser.id, orgId);

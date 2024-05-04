@@ -468,7 +468,7 @@ export class AgentServiceService {
 
         const getOrganization = await this.agentServiceRepository.getOrgDetails(orgData?.id);
 
-        await this._createLegacyConnectionInvitation(orgData?.id, user, getOrganization.name);
+        await this._createConnectionInvitation(orgData?.id, user, getOrganization.name);
         if (agentSpinupDto.clientSocketId) {
           socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
         }
@@ -620,7 +620,7 @@ export class AgentServiceService {
     }
   }
 
-  async _createLegacyConnectionInvitation(
+  async _createConnectionInvitation(
     orgId: string,
     user: IUserRequestInterface,
     label: string
@@ -629,9 +629,9 @@ export class AgentServiceService {
   }> {
     try {
       const pattern = {
-        cmd: 'create-connection'
+        cmd: 'create-connection-invitation'
       };
-      const payload = { orgId, user, label };
+      const payload = { createOutOfBandConnectionInvitation: { orgId, user, label } };
       return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`error in create-connection in wallet provision : ${JSON.stringify(error)}`);
@@ -798,7 +798,7 @@ export class AgentServiceService {
       this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
 
       // Create the legacy connection invitation
-      await this._createLegacyConnectionInvitation(payload.orgId, user, getOrganization.name);
+      await this._createConnectionInvitation(payload.orgId, user, getOrganization.name);
 
       this.notifyClientSocket('invitation-url-creation-success', payload.clientSocketId);
     } catch (error) {
@@ -850,7 +850,7 @@ export class AgentServiceService {
    */
   async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
     try {
-      const {isPrimaryDid} = createDidPayload;
+      const { isPrimaryDid } = createDidPayload;
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
 
       const getApiKey = await this.getOrgAgentApiKey(orgId);
@@ -1530,35 +1530,39 @@ export class AgentServiceService {
 
   async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
-        const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
-        const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-        const cacheKey = orgAgentApiKey?.orgAgentTypeId === orgAgentId ? CommonConstants.CACHE_SHARED_APIKEY_KEY : CommonConstants.CACHE_APIKEY_KEY;
-      
-        let apiKey = await this.cacheService.get(cacheKey);
-        if (!apiKey) {
-            if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
-                const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(CommonConstants.PLATFORM_ADMIN_ORG);
-                if (!platformAdminSpinnedUp) {
-                    throw new InternalServerErrorException('Agent not able to spin-up');
-                }
-                apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
-            } else {
-                apiKey = orgAgentApiKey?.apiKey;
-            }
-            if (!apiKey) {
-                throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
-            }
-            await this.cacheService.set(cacheKey, apiKey, 0);
+      const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
+      const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
+      const cacheKey =
+        orgAgentApiKey?.orgAgentTypeId === orgAgentId
+          ? CommonConstants.CACHE_SHARED_APIKEY_KEY
+          : CommonConstants.CACHE_APIKEY_KEY;
+
+      let apiKey = await this.cacheService.get(cacheKey);
+      if (!apiKey) {
+        if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
+          const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
+            CommonConstants.PLATFORM_ADMIN_ORG
+          );
+          if (!platformAdminSpinnedUp) {
+            throw new InternalServerErrorException('Agent not able to spin-up');
+          }
+          apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
+        } else {
+          apiKey = orgAgentApiKey?.apiKey;
         }
+        if (!apiKey) {
+          throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
+        }
+        await this.cacheService.set(cacheKey, apiKey, 0);
+      }
 
-        const decryptedToken = await this.commonService.decryptPassword(apiKey);
-        return decryptedToken;
+      const decryptedToken = await this.commonService.decryptPassword(apiKey);
+      return decryptedToken;
     } catch (error) {
-        this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
-        throw error;
+      this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
+      throw error;
     }
-}
-
+  }
 
   async handleAgentSpinupStatusErrors(error: string): Promise<object> {
     if (error && Object.keys(error).length === 0) {
@@ -1598,26 +1602,30 @@ export class AgentServiceService {
     const getApiKey = await this.getOrgAgentApiKey(orgId);
 
     const data = await this.commonService
-        .httpGet(url, { headers: { authorization: getApiKey } })
-        .then(async (response) => response)
-        .catch((error) => this.handleAgentSpinupStatusErrors(error));
+      .httpGet(url, { headers: { authorization: getApiKey } })
+      .then(async (response) => response)
+      .catch((error) => this.handleAgentSpinupStatusErrors(error));
 
-      return data; 
+    return data;
   }
 
   async createW3CSchema(url: string, orgId: string, schemaRequestPayload): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const schemaRequest = await this.commonService
-        .httpPost(url, schemaRequestPayload, { headers: { 'authorization': getApiKey } })
-        .then(async response => response);
+        .httpPost(url, schemaRequestPayload, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
       return schemaRequest;
     } catch (error) {
       this.logger.error(`Error in createW3CSchema request in agent service : ${JSON.stringify(error)}`);
     }
   }
 
-  async createConnectionInvitation(url: string, orgId: string, connectionPayload: ICreateConnectionInvitation): Promise<object> {
+  async createConnectionInvitation(
+    url: string,
+    orgId: string,
+    connectionPayload: ICreateConnectionInvitation
+  ): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
 
@@ -1631,25 +1639,23 @@ export class AgentServiceService {
     }
   }
 
-  async natsCall(pattern: object, payload: object): Promise<{
+  async natsCall(
+    pattern: object,
+    payload: object
+  ): Promise<{
     response: string;
   }> {
     try {
-      return this.agentServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
+      return this.agentServiceProxy.send<string>(pattern, payload).pipe(map((response) => ({response}))).toPromise()
+        .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(
             {
               status: error.statusCode,
               error: error.message
-            }, error.error);
+            },
+            error.error
+          );
         });
     } catch (error) {
       this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);

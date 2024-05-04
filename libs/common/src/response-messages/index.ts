@@ -181,6 +181,7 @@ export const ResponseMessages = {
             NotSaved: 'Error in saving credential definition.',
             Conflict: 'Credential definition already exists',
             schemaIdNotFound: 'SchemaLedgerId not found',
+            isRequired: 'Credential definition Id is required',
             OrgDidNotFound: 'OrgDid not found',
             credDefIdNotFound: 'Credential Definition Id not found'
         }
@@ -290,6 +291,7 @@ export const ResponseMessages = {
             orgAgentTypeNotFound: 'Organization agent type not found',
             credentialNotPresent: 'credential is required',
             optionsNotPresent:'options are required',
+            attributesAreRequired: 'attributes are required',
             invalidCredentialType:'invalid credential type'
         }
     },
@@ -376,6 +378,7 @@ export const ResponseMessages = {
             invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
             transactionSubmitted: 'Transaction already submitted',
+            transactionNotSigned: 'Transaction request is not signed',
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',

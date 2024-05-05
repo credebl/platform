@@ -375,6 +375,7 @@ export class VerificationService {
           orgId: user.orgId,
           url,
           proofRequestPayload: {
+            goalCode: outOfBandRequestProof.goalCode,
             protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
             comment:outOfBandRequestProof.comment,
             label,

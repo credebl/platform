@@ -1,0 +1,36 @@
+docker exec -it f5c447b1e3b9 sh
+
+# access databse as super user
+psql -U ndi_super_user -d ndi_foundation_issuer_db
+psql -U ndi_super_user -d 
+# create db role
+CREATE ROLE db_role;
+# grant permission
+GRANT CONNECT ON DATABASE ndi_database_service_db TO db_role;
+GRANT USAGE ON SCHEMA public TO db_role;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO db_role;
+GRANT USAGE ON SCHEMA public TO db_role;
+GRANT CREATE ON SCHEMA public TO db_role;
+
+
+
+
+
+
+
+
+
+# creste user
+CREATE USER ndi_tr_core_user WITH PASSWORD 'NDITR2420Stage';
+
+
+
+
+
+
+GRANT db_role TO ndi_core_user;
+
+# check oermission
+SELECT r.rolname, m.roleid, m.member
+FROM pg_roles r
+JOIN pg_auth_members m ON r.oid = m.member

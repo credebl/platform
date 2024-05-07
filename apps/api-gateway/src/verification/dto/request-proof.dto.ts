@@ -202,15 +202,17 @@ export class RequestProofDto extends ProofPayload {
     @ApiProperty({
       'example': 
       {
-          'indy': [
-          {
+        'indy': {
+          'attributes': [
+            {
               attributeName: 'attributeName',
               condition: '>=',
               value: 'predicates',
               credDefId: 'string',
               schemaId: 'string'
-          }
-      ]
+            }
+          ]
+        }
     },
       type: () => [IndyDto]
   })

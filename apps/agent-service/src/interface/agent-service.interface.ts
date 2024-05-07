@@ -23,6 +23,15 @@ export interface IAgentSpinupDto {
   ledgerName?: string[];
   platformAdminEmail?: string;
   apiKey?: string;
+  isOnPremises?: boolean;
+  inboundEndpoint?: string;
+  walletStorageHost?: string;
+  walletStoragePort?: string;
+  walletStorageUser?: string;
+  walletStoragePassword?: string;
+  protocol?: string;
+  externalEndpoint?: string;
+  credoImage?: string;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -141,7 +150,7 @@ export interface IWalletProvision {
   agentType: string;
   orgName: string;
   indyLedger: string;
-  afjVersion: string;
+  credoImage: string;
   protocol: string;
   tenant: boolean;
   inboundEndpoint: string;

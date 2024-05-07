@@ -118,7 +118,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.ledgerId ? agentSpinupDto.ledgerId : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -298,26 +298,34 @@ export class AgentServiceService {
       indyNamespace: ledger.indyNamespace
     }));
 
-    const escapedJsonString = JSON.stringify(ledgerArray).replace(/"/g, '\\"');
+    const escapedJsonString = JSON.stringify(ledgerArray);
 
     const walletProvisionPayload: IWalletProvision = {
       orgId: orgData?.id,
-      externalIp,
-      walletName: agentSpinupDto?.walletName,
-      walletPassword: agentSpinupDto?.walletPassword,
-      seed: agentSpinupDto?.seed,
+      externalIp: agentSpinupDto.isOnPremises ? agentSpinupDto.externalEndpoint : externalIp,
+      walletName: agentSpinupDto.walletName,
+      walletPassword: agentSpinupDto.walletPassword,
+      seed: agentSpinupDto.seed,
       webhookEndpoint: apiEndpoint,
-      walletStorageHost: process.env.WALLET_STORAGE_HOST || '',
-      walletStoragePort: process.env.WALLET_STORAGE_PORT || '',
-      walletStorageUser: process.env.WALLET_STORAGE_USER || '',
-      walletStoragePassword: process.env.WALLET_STORAGE_PASSWORD || '',
-      inboundEndpoint,
+      walletStorageHost: agentSpinupDto.isOnPremises
+        ? agentSpinupDto.walletStorageHost || ''
+        : process.env.WALLET_STORAGE_HOST || '',
+      walletStoragePort: agentSpinupDto.isOnPremises
+        ? agentSpinupDto.walletStoragePort || ''
+        : process.env.WALLET_STORAGE_PORT || '',
+      walletStorageUser: agentSpinupDto.isOnPremises
+        ? agentSpinupDto.walletStorageUser || ''
+        : process.env.WALLET_STORAGE_USER || '',
+      walletStoragePassword: agentSpinupDto.isOnPremises
+        ? agentSpinupDto.walletStoragePassword || ''
+        : process.env.WALLET_STORAGE_PASSWORD || '',
+      inboundEndpoint: agentSpinupDto.isOnPremises ? agentSpinupDto.inboundEndpoint : inboundEndpoint,
       containerName: orgData.name.split(' ').join('_'),
       agentType: AgentType.AFJ,
       orgName: orgData?.name,
       indyLedger: escapedJsonString,
-      afjVersion: process.env.AFJ_VERSION || '',
-      protocol: process.env.AGENT_PROTOCOL || '',
+      credoImage: agentSpinupDto.isOnPremises ? agentSpinupDto.credoImage || '' : process.env.AFJ_VERSION || '',
+      protocol: agentSpinupDto.isOnPremises ? agentSpinupDto.protocol || '' : process.env.AGENT_PROTOCOL || '',
       tenant: agentSpinupDto.tenant || false,
       apiKey: agentSpinupDto.apiKey
     };
@@ -791,10 +799,9 @@ export class AgentServiceService {
         orgAgentId: orgAgentDetails.id,
         userId: user.id
       };
-      
+
       await this.agentServiceRepository.storeDidDetails(createdDidDetails);
 
-  
       this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
 
       // Create the legacy connection invitation
@@ -1648,7 +1655,10 @@ export class AgentServiceService {
     response: string;
   }> {
     try {
-      return this.agentServiceProxy.send<string>(pattern, payload).pipe(map((response) => ({response}))).toPromise()
+      return this.agentServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(map((response) => ({ response })))
+        .toPromise()
         .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(

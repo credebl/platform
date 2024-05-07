@@ -16,6 +16,7 @@ import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 
 @ApiBearerAuth()
@@ -59,7 +60,7 @@ export class CredentialDefinitionController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   async getCredentialDefinitionBySchemaId(
-    @Param('schemaId') schemaId: string,
+    @Param('schemaId', TrimStringParamPipe) schemaId: string,
     @Res() res: Response
   ): Promise<Response> {
     

@@ -1,14 +1,6 @@
-import { BadRequestException } from '@nestjs/common';
-import {
-  ValidationArguments,
-  ValidationOptions,
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
-  isBase64,
-  isMimeType,
-  registerDecorator
-} from 'class-validator';
-import { ResponseMessages } from './response-messages';
+import { BadRequestException, PipeTransform } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
+import { ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, isBase64, isMimeType, isUUID, registerDecorator } from 'class-validator';
 
 interface ToNumberOptions {
   default?: number;
@@ -126,13 +118,23 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
     return newValue;
 }
 
-export function ledgerName(value: string): string {
-   let network;
-    network = value.replace(":", " ");
-    network = network.charAt(0).toUpperCase() + network.slice(1);
-    const words = network.split(" ");
-    network = `${words[0]} ${words[1].charAt(0).toUpperCase()}${words[1].slice(1)}`;
-
-    return network;
-
+export class TrimStringParamPipe implements PipeTransform {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  transform(value: string) {
+    return plainToClass(String, value.trim());
+  }
 }
+
+// export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
+//   registerDecorator({
+//     name: 'isNotUUID',
+//     target: object.constructor,
+//     propertyName,
+//     options: validationOptions,
+//     validator: {
+//       validate(value) {
+//         return !isUUID(value);
+//       }
+//     }
+//   });
+// };

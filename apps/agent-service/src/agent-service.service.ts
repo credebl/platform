@@ -868,12 +868,10 @@ export class AgentServiceService {
       }
 
       delete createDidPayload.isPrimaryDid;
+      
+      const didDetails = await this.commonService.httpPost(url, createDidPayload, { headers: { authorization: getApiKey } });
 
-      const didDetails = await this.commonService.httpPost(url, createDidPayload, {
-        headers: { authorization: getApiKey }
-      });
-
-      if (!didDetails) {
+      if (!didDetails || Object.keys(didDetails).length === 0) {
         throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.serverError
@@ -882,7 +880,7 @@ export class AgentServiceService {
       const createdDidDetails = {
         orgId,
         did: didDetails.did,
-        didDocument: didDetails.didDocument,
+        didDocument: didDetails.didDocument || didDetails.didDoc,
         isPrimaryDid,
         orgAgentId: agentDetails.id,
         userId: user.id

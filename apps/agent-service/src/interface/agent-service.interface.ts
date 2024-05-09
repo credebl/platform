@@ -1,3 +1,4 @@
+import { AgentSpinUpStatus } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
@@ -22,16 +23,11 @@ export interface IAgentSpinupDto {
   tenant?: boolean;
   ledgerName?: string[];
   platformAdminEmail?: string;
-  apiKey?: string;
   isOnPremises?: boolean;
-  inboundEndpoint?: string;
-  walletStorageHost?: string;
-  walletStoragePort?: string;
-  walletStorageUser?: string;
-  walletStoragePassword?: string;
-  protocol?: string;
-  externalEndpoint?: string;
-  credoImage?: string;
+  agentEndpoint?: string;
+  apiKey?: string;
+  orgAgentType?: string;
+  userId?: string;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -191,6 +187,7 @@ export interface IStoreOrgAgentDetails {
   tenantId?: string;
   ledgerId?: string[];
   agentType?: string;
+  userId?: string;
 }
 
 export interface IStoreDidDetails {
@@ -334,7 +331,7 @@ export interface IAgentStatus {
 }
 
 export interface ISchema {
-  uri:string;
+  uri: string;
 }
 export interface IFields {
   path: string[];
@@ -344,29 +341,26 @@ export interface IConstraints {
 }
 
 export interface IInputDescriptors {
-
-  id:string;
-  name?:string;
-  purpose?:string;
-  schema:ISchema[];
-  constraints?:IConstraints;
-
+  id: string;
+  name?: string;
+  purpose?: string;
+  schema: ISchema[];
+  constraints?: IConstraints;
 }
 
 export interface IProofRequestPresentationDefinition {
-  id:string;
+  id: string;
   name: string;
-  input_descriptors:IInputDescriptors[];
+  input_descriptors: IInputDescriptors[];
 }
 
 export interface IPresentationExchange {
-  presentationDefinition:IProofRequestPresentationDefinition;
- 
+  presentationDefinition: IProofRequestPresentationDefinition;
 }
 
 interface IProofFormats {
   indy?: IndyProof;
-  presentationExchange? : IPresentationExchange;
+  presentationExchange?: IPresentationExchange;
 }
 
 interface IndyProof {
@@ -578,4 +572,31 @@ export interface ICreateConnectionInvitation {
   routing?: object;
   appendedAttachments?: object[];
   orgId?: string;
+}
+
+export interface AgentHealthData {
+  label: string;
+  endpoints: string[];
+  isInitialized: boolean;
+}
+
+export interface IAgentStore {
+  did?: string;
+  verkey?: string;
+  isDidPublic?: boolean;
+  agentSpinUpStatus?: AgentSpinUpStatus;
+  walletName?: string;
+  agentsTypeId?: string;
+  orgId?: string;
+  agentEndPoint?: string;
+  agentId?: string;
+  orgAgentTypeId?: string;
+  ledgerId?: string[];
+  id?: string;
+  apiKey?: string;
+  userId?: string;
+  createdBy?: string;
+  lastChangedBy?: string;
+  didDoc?: string;
+  tenantId?: string;
 }

@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, isBase64, isMimeType, registerDecorator } from 'class-validator';
+import { ResponseMessages } from './response-messages';
 
 interface ToNumberOptions {
     default?: number;
@@ -131,24 +132,31 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
 }
 
 
-export const IsOnPremisesValid = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
-  registerDecorator({
-    name: 'isOnPremisesValid',
-    target: object.constructor,
-    propertyName,
-    options: validationOptions,
-    validator: {
-      validate(value, args: ValidationArguments) {
-        // eslint-disable-next-line prefer-destructuring
-        const isOnPremises = args.object['isOnPremises'];
-          if (isOnPremises) {
-            return false;
-          }
-          return true;
-      },
-      defaultMessage(args: ValidationArguments) {
-        return `${args.property} is required when isOnPremises is true.`;
+export class AgentSpinupValidator {
+  private static validateField(value: string, errorMessage: string): void {
+      if (!value) {
+          throw new BadRequestException(errorMessage);
       }
+  }
+
+  private static validateWalletName(walletName: string): void {
+    const regex = /^[a-zA-Z0-9]+$/;
+    if (!regex.test(walletName)) {
+        throw new BadRequestException(ResponseMessages.agent.error.seedChar, {
+            cause: new Error(),
+            description: 'Please enter a valid wallet name. Only alphanumeric characters are allowed.'
+        });
     }
-  });
-};
+}
+
+  public static validate(agentSpinupDto): void {
+      if (agentSpinupDto.isOnPremises) {
+          this.validateField(agentSpinupDto.agentEndpoint, 'agentEndpoint is required');
+          this.validateField(agentSpinupDto.did, 'DID is required');
+          this.validateField(agentSpinupDto.apiKey, 'apiKey is required');
+          this.validateField(agentSpinupDto.network, 'network is required');
+          this.validateField(agentSpinupDto.walletName, 'walletName is required');
+          this.validateWalletName(agentSpinupDto.walletName);
+      }
+  }
+}

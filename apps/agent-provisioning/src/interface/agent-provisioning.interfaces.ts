@@ -18,7 +18,7 @@ export interface IWalletProvision {
     orgName: string;
     indyLedger: string;
     protocol: string;
-    afjVersion: string;
+    credoImage: string;
     tenant: boolean;
     inboundEndpoint: string;
     apiKey?:string;

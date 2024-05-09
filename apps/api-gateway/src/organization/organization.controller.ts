@@ -360,11 +360,10 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async setPrimaryDid(@Param('orgId') orgId: string, @Body() primaryDidPayload: PrimaryDid, @Res() res: Response): Promise<Response> {
-    const orgData = await this.organizationService.setPrimaryDid(primaryDidPayload, orgId);
+    await this.organizationService.setPrimaryDid(primaryDidPayload, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.primaryDid,
-      data: orgData
+      message: ResponseMessages.organisation.success.primaryDid
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

@@ -1,28 +1,56 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
-import { IAgentStatus, IConnectionDetails, IUserRequestInterface, ISendProofRequestPayload, IAgentSpinUpSatus, IGetCredDefAgentRedirection, IGetSchemaAgentRedirection, IAgentSpinupDto, IIssuanceCreateOffer, ITenantCredDef, ITenantDto, ITenantSchema, IOutOfBandCredentialOffer, IAgentProofRequest, IDidCreate, IWallet, ITenantRecord, ICreateConnectionInvitation  } from './interface/agent-service.interface';
+import {
+  IAgentStatus,
+  IConnectionDetails,
+  IUserRequestInterface,
+  ISendProofRequestPayload,
+  IAgentSpinUpSatus,
+  IGetCredDefAgentRedirection,
+  IGetSchemaAgentRedirection,
+  IAgentSpinupDto,
+  IIssuanceCreateOffer,
+  ITenantCredDef,
+  ITenantDto,
+  ITenantSchema,
+  IOutOfBandCredentialOffer,
+  IAgentProofRequest,
+  IDidCreate,
+  IWallet,
+  ITenantRecord,
+  ICreateConnectionInvitation,
+  IStoreAgent
+} from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
+import { AgentSpinUpStatus } from '@credebl/enum/enum';
 
 @Controller()
 export class AgentServiceController {
-  constructor(private readonly agentServiceService: AgentServiceService) { }
+  constructor(private readonly agentServiceService: AgentServiceService) {}
 
   /**
    * Spinup the agent by organization
-   * @param payload 
+   * @param payload
    * @returns Get agent status
    */
   @MessagePattern({ cmd: 'agent-spinup' })
-  async walletProvision(payload: { agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface }): Promise<IAgentSpinUpSatus> {
+  async walletProvision(payload: { agentSpinupDto: IAgentSpinupDto; user: IUserRequestInterface }): Promise<
+    | IStoreAgent
+    | {
+        agentSpinupStatus: AgentSpinUpStatus;
+      }
+  > {
     return this.agentServiceService.walletProvision(payload.agentSpinupDto, payload.user);
   }
 
-
   //DONE
   @MessagePattern({ cmd: 'create-tenant' })
-  async createTenant(payload: { createTenantDto: ITenantDto, user: IUserRequestInterface }): Promise<IAgentSpinUpSatus> {
+  async createTenant(payload: {
+    createTenantDto: ITenantDto;
+    user: IUserRequestInterface;
+  }): Promise<IAgentSpinUpSatus> {
     return this.agentServiceService.createTenant(payload.createTenantDto, payload.user);
   }
 
@@ -30,12 +58,12 @@ export class AgentServiceController {
    * @returns did
    */
   @MessagePattern({ cmd: 'create-did' })
-  async createDid(payload: { createDidDto: IDidCreate, orgId: string, user: IUserRequestInterface }): Promise<object> {
+  async createDid(payload: { createDidDto: IDidCreate; orgId: string; user: IUserRequestInterface }): Promise<object> {
     return this.agentServiceService.createDid(payload.createDidDto, payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'create-wallet' })
-  async createWallet(payload: { createWalletDto: IWallet, user: IUserRequestInterface}): Promise<ITenantRecord> {
+  async createWallet(payload: { createWalletDto: IWallet; user: IUserRequestInterface }): Promise<ITenantRecord> {
     return this.agentServiceService.createWallet(payload.createWalletDto);
   }
 
@@ -47,7 +75,7 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-create-w3c-schema' })
-  async createW3CSchema(payload: { url, orgId, schemaRequestPayload }): Promise<object> {
+  async createW3CSchema(payload: { url; orgId; schemaRequestPayload }): Promise<object> {
     return this.agentServiceService.createW3CSchema(payload.url, payload.orgId, payload.schemaRequestPayload);
   }
 
@@ -71,8 +99,16 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-create-connection-legacy-invitation' })
-  async createLegacyConnectionInvitation(payload: { connectionPayload: IConnectionDetails, url: string, orgId: string }): Promise<InvitationMessage> {
-    return this.agentServiceService.createLegacyConnectionInvitation(payload.connectionPayload, payload.url, payload.orgId);
+  async createLegacyConnectionInvitation(payload: {
+    connectionPayload: IConnectionDetails;
+    url: string;
+    orgId: string;
+  }): Promise<InvitationMessage> {
+    return this.agentServiceService.createLegacyConnectionInvitation(
+      payload.connectionPayload,
+      payload.url,
+      payload.orgId
+    );
   }
 
   @MessagePattern({ cmd: 'agent-send-credential-create-offer' })
@@ -129,17 +165,17 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-get-connection-details-by-connectionId' })
-  async getConnectionsByconnectionId(payload: { url: string, orgId: string }): Promise<object> {
+  async getConnectionsByconnectionId(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getConnectionsByconnectionId(payload.url, payload.orgId);
   }
 
   /**
    * Get agent health
-   * @param payload 
+   * @param payload
    * @returns Get agent health
    */
   @MessagePattern({ cmd: 'agent-health' })
-  async getAgentHealth(payload: { user: user, orgId: string }): Promise<IAgentStatus> {
+  async getAgentHealth(payload: { user: user; orgId: string }): Promise<IAgentStatus> {
     return this.agentServiceService.getAgentHealthDetails(payload.orgId);
   }
 
@@ -178,11 +214,7 @@ export class AgentServiceController {
     orgId: string;
     requestSchemaPayload: object;
   }): Promise<object> {
-    return this.agentServiceService.credDefEndorsementRequest(
-      payload.url,
-      payload.orgId,
-      payload.requestSchemaPayload
-    );
+    return this.agentServiceService.credDefEndorsementRequest(payload.url, payload.orgId, payload.requestSchemaPayload);
   }
 
   //DONE
@@ -199,8 +231,16 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'agent-out-of-band-credential-offer' })
-  async outOfBandCredentialOffer(payload: { outOfBandIssuancePayload: IOutOfBandCredentialOffer, url: string, orgId: string }): Promise<object> {
-    return this.agentServiceService.outOfBandCredentialOffer(payload.outOfBandIssuancePayload, payload.url, payload.orgId);
+  async outOfBandCredentialOffer(payload: {
+    outOfBandIssuancePayload: IOutOfBandCredentialOffer;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.outOfBandCredentialOffer(
+      payload.outOfBandIssuancePayload,
+      payload.url,
+      payload.orgId
+    );
   }
 
   @MessagePattern({ cmd: 'delete-wallet' })
@@ -209,40 +249,27 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-receive-invitation-url' })
-  async receiveInvitationUrl(payload: {
-    url,
-    orgId,
-    receiveInvitationUrl
-  }): Promise<string> {
+  async receiveInvitationUrl(payload: { url; orgId; receiveInvitationUrl }): Promise<string> {
     return this.agentServiceService.receiveInvitationUrl(payload.receiveInvitationUrl, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-receive-invitation' })
-  async receiveInvitation(payload: {
-    url,
-    orgId,
-    receiveInvitation
-  }): Promise<string> {
+  async receiveInvitation(payload: { url; orgId; receiveInvitation }): Promise<string> {
     return this.agentServiceService.receiveInvitation(payload.receiveInvitation, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-send-question' })
-  async sendQuestion(payload: {
-    url,
-    orgId,
-    questionPayload
-  }): Promise<object> {
-    
+  async sendQuestion(payload: { url; orgId; questionPayload }): Promise<object> {
     return this.agentServiceService.sendQuestion(payload.questionPayload, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-get-question-answer-record' })
-  async getQuestionAnswersRecord(payload: { url: string, orgId: string }): Promise<object> {
+  async getQuestionAnswersRecord(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getQuestionAnswersRecord(payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'polygon-create-keys' })
-  async createSecp256k1KeyPair(payload: {orgId: string}): Promise<object> {
+  async createSecp256k1KeyPair(payload: { orgId: string }): Promise<object> {
     return this.agentServiceService.createSecp256k1KeyPair(payload.orgId);
   }
 

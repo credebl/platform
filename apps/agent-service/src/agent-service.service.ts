@@ -47,7 +47,10 @@ import {
   IWallet,
   ITenantRecord,
   LedgerListResponse,
-  ICreateConnectionInvitation
+  ICreateConnectionInvitation,
+  IStoreAgent,
+  AgentHealthData,
+  IAgentStore
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -91,20 +94,22 @@ export class AgentServiceService {
    * @param user
    * @returns Get agent status
    */
-  async walletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<IAgentSpinUpSatus> {
+  async walletProvision(
+    agentSpinupDto: IAgentSpinupDto,
+    user: IUserRequestInterface
+  ): Promise<IStoreAgent | { agentSpinupStatus: AgentSpinUpStatus }> {
     let agentProcess: ICreateOrgAgent;
     try {
-      // Invoke an internal function to create wallet
-      await this.processWalletProvision(agentSpinupDto, user);
-      const agentStatusResponse = {
-        agentSpinupStatus: AgentSpinUpStatus.PROCESSED
-      };
-
-      return agentStatusResponse;
+      if (agentSpinupDto.isOnPremises) {
+        const spinupOnPremisesAgent = await this.onPremisesAgent(agentSpinupDto, user);
+        return spinupOnPremisesAgent;
+      } else {
+        await this.processWalletProvision(agentSpinupDto, user);
+        return { agentSpinupStatus: AgentSpinUpStatus.PROCESSED };
+      }
     } catch (error) {
-      // Invoke an internal function to handle error to create wallet
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ?? error);
     }
   }
 
@@ -118,7 +123,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.ledgerId ? agentSpinupDto.ledgerId : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -222,6 +227,88 @@ export class AgentServiceService {
     }
   }
 
+  async onPremisesAgent(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<IStoreAgent> {
+    try {
+      const { agentEndpoint, apiKey, did, walletName, orgId, ledgerId } = agentSpinupDto;
+      const { id: userId } = user;
+      const orgExist = await this.agentServiceRepository.getAgentDetails(orgId);
+      if (orgExist) {
+        throw new ConflictException(ResponseMessages.agent.error.alreadySpinUp);
+      }
+
+      if (!agentEndpoint) {
+        throw new BadRequestException(ResponseMessages.agent.error.agentEndpointRequired);
+      }
+
+      const { isInitialized } = await this.getAgentHealthData(agentEndpoint, apiKey);
+      if (!isInitialized) {
+        throw new BadRequestException(ResponseMessages.agent.error.agentSpinupError);
+      }
+
+      const [agentsTypeId, encryptedToken, orgAgentTypeId] = await Promise.allSettled([
+        this.agentServiceRepository.getAgentTypeDetails(),
+        this.tokenEncryption(apiKey),
+        this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED)
+    ])
+    .then((results) => {
+        const fulfilledValues = results.map((result) => (result.status === 'fulfilled' ? result.value : null));
+        const rejectedIndices = results
+            .map((result, index) => (result.status === 'rejected' ? index : -1))
+            .filter((index) => index !== -1);
+        
+        rejectedIndices.forEach((index) => {
+            switch (index) {
+                case 0:
+                    throw new Error(ResponseMessages.agent.error.failedAgentType);
+                case 1:
+                    throw new Error(ResponseMessages.agent.error.failedApiKey);
+                case 2:
+                    throw new Error(ResponseMessages.agent.error.failedOrganization);
+                default:
+                    throw new Error(ResponseMessages.agent.error.promiseReject);
+            }
+        });
+
+        return fulfilledValues.filter((value) => value !== null);
+    });
+
+      const ledgerIds = ledgerId || [Ledgers.Indicio_Demonet];
+      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledgerIds);
+      const getOrganization = await this.agentServiceRepository.getOrgDetails(orgId);
+      
+      const storeAgentConfig = await this.agentServiceRepository.storeOrgAgentDetails({
+        did,
+        isDidPublic: true,
+        agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
+        walletName,
+        agentsTypeId,
+        orgId,
+        agentEndPoint: agentEndpoint,
+        orgAgentTypeId,
+        ledgerId: ledgerIdData.map((ledger) => ledger?.id),
+        apiKey: encryptedToken,
+        userId
+      });
+      
+      await this._createConnectionInvitation(orgId, user, getOrganization.name);
+      return storeAgentConfig;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async getAgentHealthData(agentEndpoint: string, apiKey: string): Promise<AgentHealthData> {
+    try {
+      return this.commonService
+        .httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_STATUS}`, {
+          headers: { authorization: apiKey }
+        })
+        .then((response) => response);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   validatePlatformConfig(platformConfig: platform_config): void {
     if (!platformConfig) {
       this.logger.error(`Platform configuration is missing or invalid`);
@@ -297,38 +384,29 @@ export class AgentServiceService {
       indyNamespace: ledger.indyNamespace
     }));
 
-    const escapedJsonString = JSON.stringify(ledgerArray);
+    const escapedJsonString = JSON.stringify(ledgerArray).replace(/"/g, '\\"');
 
     const walletProvisionPayload: IWalletProvision = {
       orgId: orgData?.id,
-      externalIp: agentSpinupDto.isOnPremises ? agentSpinupDto.externalEndpoint : externalIp,
-      walletName: agentSpinupDto.walletName,
-      walletPassword: agentSpinupDto.walletPassword,
-      seed: agentSpinupDto.seed,
+      externalIp,
+      walletName: agentSpinupDto?.walletName,
+      walletPassword: agentSpinupDto?.walletPassword,
+      seed: agentSpinupDto?.seed,
       webhookEndpoint: apiEndpoint,
-      walletStorageHost: agentSpinupDto.isOnPremises
-        ? agentSpinupDto.walletStorageHost || ''
-        : process.env.WALLET_STORAGE_HOST || '',
-      walletStoragePort: agentSpinupDto.isOnPremises
-        ? agentSpinupDto.walletStoragePort || ''
-        : process.env.WALLET_STORAGE_PORT || '',
-      walletStorageUser: agentSpinupDto.isOnPremises
-        ? agentSpinupDto.walletStorageUser || ''
-        : process.env.WALLET_STORAGE_USER || '',
-      walletStoragePassword: agentSpinupDto.isOnPremises
-        ? agentSpinupDto.walletStoragePassword || ''
-        : process.env.WALLET_STORAGE_PASSWORD || '',
-      inboundEndpoint: agentSpinupDto.isOnPremises ? agentSpinupDto.inboundEndpoint : inboundEndpoint,
+      walletStorageHost: process.env.WALLET_STORAGE_HOST || '',
+      walletStoragePort: process.env.WALLET_STORAGE_PORT || '',
+      walletStorageUser: process.env.WALLET_STORAGE_USER || '',
+      walletStoragePassword: process.env.WALLET_STORAGE_PASSWORD || '',
+      inboundEndpoint,
       containerName: orgData.name.split(' ').join('_'),
       agentType: AgentType.AFJ,
       orgName: orgData?.name,
       indyLedger: escapedJsonString,
-      credoImage: agentSpinupDto.isOnPremises ? agentSpinupDto.credoImage || '' : process.env.AFJ_VERSION || '',
-      protocol: agentSpinupDto.isOnPremises ? agentSpinupDto.protocol || '' : process.env.AGENT_PROTOCOL || '',
+      credoImage: process.env.AFJ_VERSION || '',
+      protocol: process.env.AGENT_PROTOCOL || '',
       tenant: agentSpinupDto.tenant || false,
       apiKey: agentSpinupDto.apiKey
     };
-
     return walletProvisionPayload;
   }
 
@@ -868,8 +946,10 @@ export class AgentServiceService {
       }
 
       delete createDidPayload.isPrimaryDid;
-      
-      const didDetails = await this.commonService.httpPost(url, createDidPayload, { headers: { authorization: getApiKey } });
+
+      const didDetails = await this.commonService.httpPost(url, createDidPayload, {
+        headers: { authorization: getApiKey }
+      });
 
       if (!didDetails || Object.keys(didDetails).length === 0) {
         throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {

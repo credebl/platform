@@ -124,37 +124,31 @@ export class AgentServiceRepository {
     // eslint-disable-next-line camelcase
     async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
         try {
+            const { id, userId, ledgerId, did, ...commonFields } = storeOrgAgentDetails;
+            const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
+            const data = {
+                ...commonFields,
+                ledgerId: firstLedgerId,
+                createdBy: userId,
+                lastChangedBy: userId,
+                orgDid: did
+            };
+            
+            // eslint-disable-next-line camelcase
+            const query: Promise<org_agents> = id ?
+                this.prisma.org_agents.update({
+                    where: { id },
+                    data
+                }) :
+                this.prisma.org_agents.create({ data });
 
-            return await this.prisma.org_agents.update({
-                where: {
-                    id: storeOrgAgentDetails.id
-                },
-                data: {
-                    orgDid: storeOrgAgentDetails.did,
-                    didDocument: storeOrgAgentDetails.didDoc,
-                    verkey: storeOrgAgentDetails.verkey,
-                    isDidPublic: storeOrgAgentDetails.isDidPublic,
-                    agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
-                    walletName: storeOrgAgentDetails.walletName,
-                    agentsTypeId: storeOrgAgentDetails.agentsTypeId,
-                    orgId: storeOrgAgentDetails.orgId,
-                    agentEndPoint: storeOrgAgentDetails.agentEndPoint,
-                    agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
-                    orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
-                    tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
-                    ledgerId: storeOrgAgentDetails.ledgerId[0],
-                    apiKey: storeOrgAgentDetails.apiKey
-                },
-                select: {
-                    id: true
-                }
-            });
+            return { id: (await query).id };
         } catch (error) {
             this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
             throw error;
         }
     }
-
+      
     /**
      * Store DID details
      * @param storeDidDetails

@@ -8,7 +8,7 @@ import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invit
 import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
-import { RequestSchemaDto, RequestCredDefDto } from './dtos/request-schema.dto';
+import { RequestSchemaDto, RequestCredDefDto, RequestW3CSchemaDto } from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
@@ -163,11 +163,12 @@ export class EcosystemService extends BaseService {
   }
 
   async schemaEndorsementRequest(
-    requestSchemaPayload: RequestSchemaDto,
+    requestSchemaPayload: RequestSchemaDto | RequestW3CSchemaDto,
+    schemaType: string,
     orgId: string,
     ecosystemId: string
   ): Promise<IEndorsementTransaction> {
-    const payload = { requestSchemaPayload, orgId, ecosystemId };
+    const payload = { requestSchemaPayload, schemaType, orgId, ecosystemId };
     return this.sendNatsMessage(this.serviceProxy, 'schema-endorsement-request', payload);
   }
 

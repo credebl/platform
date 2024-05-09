@@ -8,7 +8,7 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
-import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs } from '../interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, RequestCredDeffEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs, IRequestSchemaEndorsement, IRequestW3CSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 // eslint-disable-next-line camelcase
 
@@ -156,15 +156,14 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'schema-endorsement-request' })
   async schemaEndorsementRequest(payload: {
-    requestSchemaPayload: RequestSchemaEndorsement;
+    requestSchemaPayload: IRequestSchemaEndorsement | IRequestW3CSchemaEndorsement;
+    schemaType: string;
     orgId: string;
     ecosystemId: string;
   }): Promise<IEndorsementTransaction> {
-    return this.ecosystemService.requestSchemaEndorsement(
-      payload.requestSchemaPayload,
-      payload.orgId,
-      payload.ecosystemId
-    );
+    const { requestSchemaPayload, schemaType, orgId, ecosystemId } = payload;
+
+    return this.ecosystemService.requestSchemaEndorsement(requestSchemaPayload, schemaType, orgId, ecosystemId);
   }
 
   /**

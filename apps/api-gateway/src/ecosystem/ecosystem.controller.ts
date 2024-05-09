@@ -1,7 +1,7 @@
-import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { EcosystemService } from './ecosystem.service';
 import { Controller, UseFilters, Put, Post, Get, Body, Param, UseGuards, Query, BadRequestException, Delete, HttpStatus, Res, ParseUUIDPipe } from '@nestjs/common';
-import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema.dto';
+import { RequestCredDefDto, RequestSchemaDto, RequestW3CSchemaDto } from './dtos/request-schema.dto';
 import IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -12,7 +12,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invitations.dto';
-import { EcosystemRoles, Invitation } from '@credebl/enum/enum';
+import { EcosystemRoles, Invitation, schemaRequestType } from '@credebl/enum/enum';
 import { User } from '../authz/decorators/user.decorator';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -310,19 +310,39 @@ export class EcosystemController {
   @Post('/:ecosystemId/:orgId/transaction/schema')
   @ApiOperation({ summary: 'Request new schema', description: 'Create request for new schema' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  @ApiQuery({
+    name: 'schemaType',
+    enum: schemaRequestType
+  })
+  @ApiBody({
+    type: RequestSchemaDto || RequestW3CSchemaDto
+  })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_OWNER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
+  async requestSchemaTransaction(
+    @Body() requestSchemaPayload: RequestSchemaDto | RequestW3CSchemaDto,
+    @Param('orgId') orgId: string,
+    @Param('ecosystemId') ecosystemId: string,
+    @Res() res: Response,
+    @User() user: user,
+    @Query('schemaType') schemaType: schemaRequestType = schemaRequestType.INDY
+  ): Promise<Response> {
     requestSchemaPayload.userId = user.id;
-    
-    const createSchemaRequest: IEndorsementTransaction = await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId, ecosystemId);
+    const createSchemaRequest: IEndorsementTransaction = await this.ecosystemService.schemaEndorsementRequest(
+      requestSchemaPayload,
+      schemaType,
+      orgId,
+      ecosystemId
+    );
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.schemaRequest,
       data: createSchemaRequest
     };
+
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 

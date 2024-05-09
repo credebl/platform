@@ -73,6 +73,71 @@ export class RequestSchemaDto {
 
 }
 
+class W3CSchemaAttributesValue {
+
+  @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'title is required' })
+  @IsString({ message: 'title must be in string format' })
+  title: string;
+
+  @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'type is required' })
+  @IsString({ message: 'type must be in string format' })
+  type: string;
+
+  @ApiProperty()
+  @IsBoolean({ message: 'isRequired property must be in boolean format' })
+  @IsNotEmpty({ message: 'isRequired property is required' })
+  isRequired: boolean;
+}
+
+export class RequestW3CSchemaDto {
+
+  @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'schemaName is required' })
+  @IsString({ message: 'schemaName must be in string format.' })
+  schemaName: string;
+
+  @ApiProperty({
+    type: [W3CSchemaAttributesValue],
+    'example': [
+      {
+        title: 'name',
+        type: 'string',
+        isRequired: true
+      }
+    ]
+  })
+  @IsArray({ message: 'schemaAttributes must be an array' })
+  @IsNotEmpty({ message: 'schemaAttributes are required' })
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => W3CSchemaAttributesValue)
+  schemaAttributes: W3CSchemaAttributesValue[];
+
+  @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'did is required' })
+  @IsString({ message: 'did must be in string format.' })
+  did: string;
+
+  @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'description is required' })
+  @IsString({ message: 'description must be in string format.' })
+  description: string;
+
+  @ApiProperty()
+  @IsBoolean({ message: 'endorse must be a boolean.' })
+  @IsOptional()
+  endorse?: boolean;
+
+  userId?: string;
+
+}
 export class SchemaDetails {
   @ApiProperty()
   @IsString({ message: 'name must be a string.' })

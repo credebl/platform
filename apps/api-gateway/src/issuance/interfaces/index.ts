@@ -79,8 +79,9 @@ export interface IIssuedCredentialSearchParams {
 }
 
 export enum IssueCredentialType {
+    ANONCREDS = 'anoncreds',
     JSONLD = 'jsonld',
-    INDY = 'indy'
+    INDY = 'indy',
 }
 
 export interface JsonObject {

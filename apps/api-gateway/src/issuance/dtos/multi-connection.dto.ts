@@ -1,10 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
+import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
 import { trim } from '@credebl/common/cast.helper';
-import { Attribute, Credential, CredentialsIssuanceDto, JsonLdCredentialDetailOptions } from './issuance.dto';
+import { AnonCredsDto, CredentialsIssuanceDto, IndyDto, JsonLdDto } from './issuance.dto';
 
+@ApiExtraModels(AnonCredsDto)
+@ApiExtraModels(JsonLdDto)
+@ApiExtraModels(IndyDto)
 class ConnectionAttributes {
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'connectionId is required' })
@@ -12,86 +15,97 @@ class ConnectionAttributes {
     @Transform(({ value }) => trim(value))
     connectionId: string;
 
+    // Note: Anon creds default
+    // @ApiProperty({
+    //   example: [
+    //     {
+    //       value: 'string',
+    //       name: 'string'
+    //     }
+    //   ]
+    // })
+    // @IsArray()
+    // @ValidateNested({ each: true })
+    // @ArrayMinSize(1)
+    // @IsNotEmpty({ message: 'Please provide valid attributes' })
+    // @Type(() => Attribute)
+    // @IsOptional()
+    // attributes?: Attribute[];
+
+    // @ApiProperty()
+    // @IsNotEmpty({ message: 'Please provide valid credential' })
+    // @IsObject({ message: 'credential should be an object' })
+    // @Type(() => Credential)
+    // @IsOptional()
+    // @ValidateNested({ each: true })
+    // credential?: Credential;
+
     @ApiProperty({
-      example: [
-        {
-          value: 'string',
-          name: 'string'
-        }
+      anyOf: [
+        { $ref: getSchemaPath(AnonCredsDto) },
+        { $ref: getSchemaPath(JsonLdDto) },
+        { $ref: getSchemaPath(IndyDto) }
       ]
     })
-    @IsArray()
-    @ValidateNested({ each: true })
-    @ArrayMinSize(1)
-    @IsNotEmpty({ message: 'Please provide valid attributes' })
-    @Type(() => Attribute)
-    @IsOptional()
-    attributes?: Attribute[];
+    credentialFormats: AnonCredsDto | JsonLdDto | IndyDto;
 
-    @ApiProperty()
-    @IsNotEmpty({ message: 'Please provide valid credential' })
-    @IsObject({ message: 'credential should be an object' })
-    @Type(() => Credential)
-    @IsOptional()
-    @ValidateNested({ each: true })
-    credential?: Credential;
-
-    @ApiProperty()
-    @IsNotEmpty({ message: 'Please provide valid options' })
-    @IsObject({ message: 'options should be an object' })
-    @Type(() => JsonLdCredentialDetailOptions)
-    @IsOptional()
-    @ValidateNested({ each: true })
-    options?:JsonLdCredentialDetailOptions;
+    // Note: Anon creds default
+    // @ApiProperty()
+    // @IsNotEmpty({ message: 'Please provide valid options' })
+    // @IsObject({ message: 'options should be an object' })
+    // @Type(() => JsonLdCredentialDetailOptions)
+    // @IsOptional()
+    // @ValidateNested({ each: true })
+    // options?:JsonLdCredentialDetailOptions;
 }
 
 export class IssueCredentialDto extends CredentialsIssuanceDto {
     @ApiProperty({
-      example: [
-          {
-              'connectionId': 'string',
-              'attributes': [
-                  {
-                      'value': 'string',
-                      'name': 'string'
-                  }
-              ],
-              'credential': {
-                '@context': [
-                  'https://www.w3.org/2018/credentials/v1',
-                  'https://www.w3.org/2018/credentials/examples/v1'
-                ],
-                'type': [
-                  'VerifiableCredential',
-                  'UniversityDegreeCredential'
-                ],
-                'issuer': {
-                  'id': 'did:key:z6Mkn72LVp3mq1fWSefkSMh5V7qrmGfCV4KH3K6SoTM21ouM'
-                },
-                'issuanceDate': '2019-10-12T07:20:50.52Z',
-                'credentialSubject': {
-                  'id': 'did:key:z6Mkn72LVp3mq1fWSefkSMh5V7qrmGfCV4KH3K6SoTM21ouM',
-                  'degree': {
-                    'type': 'BachelorDegree',
-                    'name': 'Bachelor of Science and Arts'
-                  }
-                }
-              },
-              'options': {
-                'proofType': 'Ed25519Signature2018',
-                'proofPurpose': 'assertionMethod'
-              }
+      type: [ConnectionAttributes]
+      // example: [
+      //     {
+      //         'connectionId': 'string',
+      //         'attributes': [
+      //             {
+      //                 'value': 'string',
+      //                 'name': 'string'
+      //             }
+      //         ],
+      //         'credential': {
+      //           '@context': [
+      //             'https://www.w3.org/2018/credentials/v1',
+      //             'https://www.w3.org/2018/credentials/examples/v1'
+      //           ],
+      //           'type': [
+      //             'VerifiableCredential',
+      //             'UniversityDegreeCredential'
+      //           ],
+      //           'issuer': {
+      //             'id': 'did:key:z6Mkn72LVp3mq1fWSefkSMh5V7qrmGfCV4KH3K6SoTM21ouM'
+      //           },
+      //           'issuanceDate': '2019-10-12T07:20:50.52Z',
+      //           'credentialSubject': {
+      //             'id': 'did:key:z6Mkn72LVp3mq1fWSefkSMh5V7qrmGfCV4KH3K6SoTM21ouM',
+      //             'degree': {
+      //               'type': 'BachelorDegree',
+      //               'name': 'Bachelor of Science and Arts'
+      //             }
+      //           }
+      //         },
+      //         'options': {
+      //           'proofType': 'Ed25519Signature2018',
+      //           'proofPurpose': 'assertionMethod'
+      //         }
       
-          }
-      ]
-      
+      //     }
+      // ]
     })
     @IsArray()
-    @ValidateNested({ each: true })
+    // @ValidateNested({ each: true })
     @ArrayMinSize(1)
-    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} connections max).` })
+    // @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} connections max).` })
     @IsNotEmpty({ message: 'credentialData is required' })
-    @Type(() => ConnectionAttributes)
+    // @Type(() => ConnectionAttributes)
     credentialData: ConnectionAttributes[];
 
     @ApiPropertyOptional()

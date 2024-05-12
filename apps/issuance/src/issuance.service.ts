@@ -52,33 +52,35 @@ export class IssuanceService {
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
     try {
-      const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
+      // const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
+      const { orgId, comment, credentialData} = payload || {};
 
-      if (payload.credentialType === IssueCredentialType.INDY) {
-        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
-        if (schemaResponse?.attributes) {
-          const schemaResponseError = [];
-          const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
 
-          attributesArray.forEach((attribute) => {
-            if (attribute.attributeName && attribute.isRequired) {
-              credentialData.forEach((credential, i) => {
-                credential.attributes.forEach((attr) => {
-                  if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                    schemaResponseError.push(`Attribute ${attribute.attributeName} is required at position ${i + 1}`);
-                  }
-                });
-              });
-            }
-          });
+      // if (payload.credentialType === IssueCredentialType.INDY) {
+      //   const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+      //     credentialDefinitionId
+      //   );
+      //   if (schemaResponse?.attributes) {
+      //     const schemaResponseError = [];
+      //     // const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
 
-          if (0 < schemaResponseError.length) {
-            throw new BadRequestException(schemaResponseError);
-          }
-        }
-      }
+      //     // attributesArray.forEach((attribute) => {
+      //     //   if (attribute.attributeName && attribute.isRequired) {
+      //     //     credentialData.forEach((credential, i) => {
+      //     //       credential.attributes.forEach((attr) => {
+      //     //         if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+      //     //           schemaResponseError.push(`Attribute ${attribute.attributeName} is required at position ${i + 1}`);
+      //     //         }
+      //     //       });
+      //     //     });
+      //     //   }
+      //     // });
+
+      //     if (0 < schemaResponseError.length) {
+      //       throw new BadRequestException(schemaResponseError);
+      //     }
+      //   }
+      // }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
@@ -95,36 +97,52 @@ export class IssuanceService {
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const issuancePromises = credentialData.map(async (credentials) => {
-        const { connectionId, attributes, credential, options } = credentials;
-        let issueData;
+        // const { connectionId, attributes, credential, options } = credentials;
 
-        if (payload.credentialType === IssueCredentialType.INDY) {
-          issueData = {
-            protocolVersion: payload.protocolVersion || 'v1',
-            connectionId,
-            credentialFormats: {
-              indy: {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                attributes: attributes.map(({ isRequired, ...rest }) => rest),
-                credentialDefinitionId
-              }
-            },
-            autoAcceptCredential: payload.autoAcceptCredential || 'always',
-            comment
-          };
-        } else if (payload.credentialType === IssueCredentialType.JSONLD) {
-          issueData = {
-            protocolVersion: payload.protocolVersion || 'v2',
-            connectionId,
-            credentialFormats: {
-              jsonld: {
-                credential,
-                options
-              }
-            },
-            autoAcceptCredential: payload.autoAcceptCredential || 'always',
-            comment: comment || ''
-          };
+        const {connectionId, credentialFormats} = credentials;
+        // let issueData;
+
+        // if (payload.credentialType === IssueCredentialType.INDY) {
+        //   issueData = {
+        //     protocolVersion: payload.protocolVersion || 'v1',
+        //     connectionId,
+        //     credentialFormats: {
+        //       indy: {
+        //         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        //         attributes: attributes.map(({ isRequired, ...rest }) => rest),
+        //         credentialDefinitionId
+        //       }
+        //     },
+        //     autoAcceptCredential: payload.autoAcceptCredential || 'always',
+        //     comment
+        //   };
+        // } else if (payload.credentialType === IssueCredentialType.JSONLD) {
+        //   issueData = {
+        //     protocolVersion: payload.protocolVersion || 'v2',
+        //     connectionId,
+        //     credentialFormats: {
+        //       jsonld: {
+        //         credential,
+        //         options
+        //       }
+        //     },
+        //     autoAcceptCredential: payload.autoAcceptCredential || 'always',
+        //     comment: comment || ''
+        //   };
+        // }
+
+        const issueData = {
+          connectionId,
+          credentialFormats,
+          autoAcceptCredential: payload.autoAcceptCredential || 'always',
+          comment: comment || '',
+          protocolVersion: ''
+        };
+
+        if (payload.credentialType === IssueCredentialType.ANONCREDS || payload.credentialType === IssueCredentialType.JSONLD) {
+          issueData.protocolVersion = payload.protocolVersion || 'v2';
+        } else if (payload.credentialType === IssueCredentialType.INDY) {
+          issueData.protocolVersion = payload.protocolVersion || 'v1';
         }
 
         await this.delay(500);

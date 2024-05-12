@@ -14,9 +14,11 @@ export interface IAttributes {
 
 interface ICredentialsAttributes {
   connectionId: string;
-  attributes: IAttributes[];
-  credential?:ICredential;
-  options?:IOptions
+  // Anoncreds: To do- Add type for credentialFormats
+  credentialFormats: unknown;
+  // attributes: IAttributes[];
+  // credential?:ICredential;
+  // options?:IOptions
 }
 export interface IIssuance {
   user?: IUserRequest;
@@ -33,6 +35,7 @@ export interface IIssuance {
   credentialType: string,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface IIndy {
   attributes: IAttributes[],
   credentialDefinitionId: string
@@ -41,9 +44,11 @@ interface IIndy {
 export interface IIssueData {
   protocolVersion?: string;
   connectionId: string;
-  credentialFormats: {
-    indy: IIndy
-  },
+  // Anoncreds: To do- Add type for credentialFormats
+  credentialFormats: unknown;
+  // {
+  //   indy: IIndy
+  // },
   autoAcceptCredential: string,
   comment?: string;
 }

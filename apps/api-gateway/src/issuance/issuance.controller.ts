@@ -526,7 +526,8 @@ export class IssuanceController {
   async sendCredential(
     @User() user: IUserRequest,
     @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
-    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
+    // Note: Anoncreds update
+    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.ANONCREDS,
     @Body() issueCredentialDto: IssueCredentialDto,
     @Res() res: Response
   ): Promise<Response> {
@@ -535,25 +536,27 @@ export class IssuanceController {
 
     const credOffer = issueCredentialDto?.credentialData || [];
 
-    if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType) {
-      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
-    }
+    // Note: Anon creds default
+    // if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType && IssueCredentialType.ANONCREDS !== credentialType) {
+    //   throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
+    // }
 
-    if (credentialType === IssueCredentialType.INDY && !issueCredentialDto.credentialDefinitionId) {
-        throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
-    }
+    // if (credentialType === IssueCredentialType.INDY && !issueCredentialDto.credentialDefinitionId) {
+    //     throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
+    // }
 
-    if (issueCredentialDto.credentialType !== IssueCredentialType.INDY && !credOffer.every(offer => (!offer?.attributes || 0 === Object.keys(offer?.attributes).length))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
-    }
+    // if (issueCredentialDto.credentialType !== IssueCredentialType.INDY && !credOffer.every(offer => (!offer?.attributes || 0 === Object.keys(offer?.attributes).length))) {
+    //   throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
+    // }
     
-    if (issueCredentialDto.credentialType === IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
-    }
+    // if (issueCredentialDto.credentialType === IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
+    //   throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
+    // }
 
-    if (issueCredentialDto.credentialType ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
-    }
+    // if (issueCredentialDto.credentialType ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
+    //   throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
+    // }
+
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
     
     const finalResponse: IResponse = {

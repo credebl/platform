@@ -20,7 +20,8 @@ import {
   IWallet,
   ITenantRecord,
   ICreateConnectionInvitation,
-  IStoreAgent
+  IStoreAgent,
+  IAgentConfigure
 } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
@@ -36,12 +37,9 @@ export class AgentServiceController {
    * @returns Get agent status
    */
   @MessagePattern({ cmd: 'agent-spinup' })
-  async walletProvision(payload: { agentSpinupDto: IAgentSpinupDto; user: IUserRequestInterface }): Promise<
-    | IStoreAgent
-    | {
-        agentSpinupStatus: AgentSpinUpStatus;
-      }
-  > {
+  async walletProvision(payload: { agentSpinupDto: IAgentSpinupDto; user: IUserRequestInterface }): Promise<{
+    agentSpinupStatus: AgentSpinUpStatus;
+  }> {
     return this.agentServiceService.walletProvision(payload.agentSpinupDto, payload.user);
   }
 

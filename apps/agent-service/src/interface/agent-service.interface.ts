@@ -30,6 +30,16 @@ export interface IAgentSpinupDto {
   userId?: string;
 }
 
+export interface IAgentConfigure {
+  walletName: string;
+  did: string;
+  agentEndpoint: string;
+  apiKey: string;
+  orgId: string;
+  network?: string;
+  tenant?: boolean;
+}
+
 export interface IOutOfBandCredentialOffer {
   emailId: string;
   attributes: IAttributes[];

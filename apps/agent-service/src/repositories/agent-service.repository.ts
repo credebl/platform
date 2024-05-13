@@ -124,13 +124,14 @@ export class AgentServiceRepository {
     // eslint-disable-next-line camelcase
     async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
         try {
-            const { id, userId, ledgerId, did, ...commonFields } = storeOrgAgentDetails;
+            const { id, userId, ledgerId, did, didDoc, ...commonFields } = storeOrgAgentDetails;
             const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
             const data = {
                 ...commonFields,
                 ledgerId: firstLedgerId,
                 createdBy: userId,
                 lastChangedBy: userId,
+                didDocument: didDoc,
                 orgDid: did
             };
             

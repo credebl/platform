@@ -50,7 +50,8 @@ import {
   ICreateConnectionInvitation,
   IStoreAgent,
   AgentHealthData,
-  IAgentStore
+  IAgentStore,
+  IAgentConfigure
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -97,16 +98,13 @@ export class AgentServiceService {
   async walletProvision(
     agentSpinupDto: IAgentSpinupDto,
     user: IUserRequestInterface
-  ): Promise<IStoreAgent | { agentSpinupStatus: AgentSpinUpStatus }> {
+  ): Promise<{
+    agentSpinupStatus: AgentSpinUpStatus;
+  }> {
     let agentProcess: ICreateOrgAgent;
     try {
-      if (agentSpinupDto.isOnPremises) {
-        const spinupOnPremisesAgent = await this.onPremisesAgent(agentSpinupDto, user);
-        return spinupOnPremisesAgent;
-      } else {
-        await this.processWalletProvision(agentSpinupDto, user);
-        return { agentSpinupStatus: AgentSpinUpStatus.PROCESSED };
-      }
+      await this.processWalletProvision(agentSpinupDto, user);
+      return { agentSpinupStatus: AgentSpinUpStatus.PROCESSED };
     } catch (error) {
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
       throw new RpcException(error.response ?? error);
@@ -123,7 +121,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.network ? agentSpinupDto.network : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -227,9 +225,9 @@ export class AgentServiceService {
     }
   }
 
-  async onPremisesAgent(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<IStoreAgent> {
+  async agentConfigure(agentConfigureDto: IAgentConfigure, user: IUserRequestInterface): Promise<IStoreAgent> {
     try {
-      const { agentEndpoint, apiKey, did, walletName, orgId, ledgerId } = agentSpinupDto;
+      const { agentEndpoint, apiKey, did, walletName, orgId, network } = agentConfigureDto;
       const { id: userId } = user;
       const orgExist = await this.agentServiceRepository.getAgentDetails(orgId);
       if (orgExist) {
@@ -249,33 +247,31 @@ export class AgentServiceService {
         this.agentServiceRepository.getAgentTypeDetails(),
         this.tokenEncryption(apiKey),
         this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED)
-    ])
-    .then((results) => {
+      ]).then((results) => {
         const fulfilledValues = results.map((result) => (result.status === 'fulfilled' ? result.value : null));
         const rejectedIndices = results
-            .map((result, index) => (result.status === 'rejected' ? index : -1))
-            .filter((index) => index !== -1);
-        
+          .map((result, index) => (result.status === 'rejected' ? index : -1))
+          .filter((index) => index !== -1);
+
         rejectedIndices.forEach((index) => {
-            switch (index) {
-                case 0:
-                    throw new Error(ResponseMessages.agent.error.failedAgentType);
-                case 1:
-                    throw new Error(ResponseMessages.agent.error.failedApiKey);
-                case 2:
-                    throw new Error(ResponseMessages.agent.error.failedOrganization);
-                default:
-                    throw new Error(ResponseMessages.agent.error.promiseReject);
-            }
+          switch (index) {
+            case 0:
+              throw new Error(ResponseMessages.agent.error.failedAgentType);
+            case 1:
+              throw new Error(ResponseMessages.agent.error.failedApiKey);
+            case 2:
+              throw new Error(ResponseMessages.agent.error.failedOrganization);
+            default:
+              throw new Error(ResponseMessages.agent.error.promiseReject);
+          }
         });
 
         return fulfilledValues.filter((value) => value !== null);
-    });
+      });
 
-      const ledgerIds = ledgerId || [Ledgers.Indicio_Demonet];
-      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledgerIds);
+      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(network);
       const getOrganization = await this.agentServiceRepository.getOrgDetails(orgId);
-      
+
       const storeAgentConfig = await this.agentServiceRepository.storeOrgAgentDetails({
         did,
         isDidPublic: true,
@@ -289,7 +285,7 @@ export class AgentServiceService {
         apiKey: encryptedToken,
         userId
       });
-      
+
       await this._createConnectionInvitation(orgId, user, getOrganization.name);
       return storeAgentConfig;
     } catch (error) {

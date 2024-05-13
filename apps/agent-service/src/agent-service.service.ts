@@ -296,7 +296,7 @@ export class AgentServiceService {
 
   private async getAgentHealthData(agentEndpoint: string, apiKey: string): Promise<AgentHealthData> {
     try {
-      return this.commonService
+      return await this.commonService
         .httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_STATUS}`, {
           headers: { authorization: apiKey }
         })

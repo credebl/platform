@@ -43,6 +43,7 @@ import { validateDid } from '@credebl/common/did.validator';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
 import { AgentSpinupValidator } from '@credebl/common/cast.helper';
+import { AgentConfigureDto } from './dto/agent-configure.dto';
 
 const seedLength = 32;
 
@@ -257,6 +258,40 @@ export class AgentController {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.createKeys,
       data: didDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Configure the agent by organization
+   * @param agentSpinupDto
+   * @param user
+   * @returns Get agent status
+   */
+  @Post('/orgs/:orgId/agents/configure')
+  @ApiOperation({
+    summary: 'Agent configure',
+    description: 'Create a new agent configure.'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async agentconfigure(
+    @Param('orgId') orgId: string,
+    @Body() agentConfigureDto: AgentConfigureDto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    this.logger.log(`**** Configure the agent...${JSON.stringify(agentConfigureDto)}`);
+
+    agentConfigureDto.orgId = orgId;
+    const agentDetails = await this.agentService.agentConfigure(agentConfigureDto, user);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.create,
+      data: agentDetails
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

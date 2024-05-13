@@ -2,9 +2,8 @@ import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
-import { CreateDidDto } from './create-did.dto';
 const regex = /^[a-zA-Z0-9 ]*$/;
-export class AgentSpinupDto extends CreateDidDto {
+export class AgentConfigureDto {
   @ApiProperty()
   @MaxLength(25, { message: 'Maximum length for wallet must be 25 characters.' })
   @IsString({ message: 'label must be in string format.' })
@@ -16,26 +15,31 @@ export class AgentSpinupDto extends CreateDidDto {
   })
   walletName: string;
 
-  @ApiProperty()
-  @Transform(({ value }) => trim(value))
-  @IsOptional()
-  @IsString({ message: 'walletPassword must be in string format.' })
-  @IsNotEmpty({ message: 'Password is required.' })
-  walletPassword?: string;
-
-  @ApiPropertyOptional({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
-  @IsOptional()
+  @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
   @IsString({ message: 'did must be in string format.' })
-  did?: string;
+  @IsNotEmpty()
+  did: string;
 
-  @ApiPropertyOptional({ example: 'ojIckSD2jqNzOqIrAGzL' })
+  @ApiProperty({ example: 'https://example.com' })
+  @IsString()
+  @IsNotEmpty()
+  agentEndpoint: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  apiKey: string;
+
+  @ApiProperty()
+  @IsString()
   @IsOptional()
-  clientSocketId?: string;
-
+  network?: string;
+  
   @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()
   tenant?: boolean;
-  
+
+
   orgId: string;
 }

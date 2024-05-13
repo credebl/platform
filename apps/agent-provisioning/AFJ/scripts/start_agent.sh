@@ -198,7 +198,8 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker compose -p "${AGENCY}_${CONTAINER_NAME}" -f $FILE_NAME up -d
+  docker rm -f "${AGENCY}_${CONTAINER_NAME}" || true
+  docker-compose -f $FILE_NAME --project-name ${CONTAINER_NAME}_${AGENCY} up -d
   if [ $? -eq 0 ]; then
 
     n=0

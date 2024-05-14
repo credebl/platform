@@ -931,7 +931,9 @@ export class AgentServiceService {
     try {
       const { isPrimaryDid } = createDidPayload;
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-
+      if (createDidPayload.method === DidMethod.POLYGON) {
+        createDidPayload.endpoint = agentDetails.agentEndPoint;
+      }
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       let url;
@@ -940,7 +942,7 @@ export class AgentServiceService {
       } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
         url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
       }
-
+      
       delete createDidPayload.isPrimaryDid;
 
       const didDetails = await this.commonService.httpPost(url, createDidPayload, {

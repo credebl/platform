@@ -1,0 +1,32 @@
+{
+  "label": "65cdfdd5-6b67-4982-beba-9ac05f81caf8_Platform-admin",
+  "walletId": "platform-admin",
+  "walletKey": "U2FsdGVkX18Y7bdtrjA444InlqFbMTownPCloGszjy0=",
+  "walletType": "postgres",
+  "walletUrl": "192.168.1.125:5432",
+  "walletAccount": "postgres",
+  "walletPassword": "Password1",
+  "walletAdminAccount": "postgres",
+  "walletAdminPassword": "Password1",
+  "walletScheme": "DatabasePerWallet",
+  "indyLedger": [],
+  "endpoint": [
+    "http://192.168.1.125:9036"
+  ],
+  "autoAcceptConnections": true,
+  "autoAcceptCredentials": "contentApproved",
+  "autoAcceptProofs": "contentApproved",
+  "logLevel": 5,
+  "inboundTransport": [
+    {
+      "transport": "http",
+      "port": "9036"
+    }
+  ],
+  "outboundTransport": [
+    "http"
+  ],
+  "webhookUrl": "http://192.168.1.125:5000/wh/65cdfdd5-6b67-4982-beba-9ac05f81caf8",
+  "adminPort": "8036",
+  "tenancy": true
+}

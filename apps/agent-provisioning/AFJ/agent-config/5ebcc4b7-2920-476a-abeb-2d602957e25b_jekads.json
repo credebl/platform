@@ -1,0 +1,32 @@
+{
+  "label": "5ebcc4b7-2920-476a-abeb-2d602957e25b_jekads",
+  "walletId": "dopalos",
+  "walletKey": "dkemdlksa",
+  "walletType": "postgres",
+  "walletUrl": "192.168.31.50:5432",
+  "walletAccount": "postgres",
+  "walletPassword": "Password1",
+  "walletAdminAccount": "postgres",
+  "walletAdminPassword": "Password1",
+  "walletScheme": "DatabasePerWallet",
+  "indyLedger": [],
+  "endpoint": [
+    "http://192.168.31.50:9031"
+  ],
+  "autoAcceptConnections": true,
+  "autoAcceptCredentials": "contentApproved",
+  "autoAcceptProofs": "contentApproved",
+  "logLevel": 5,
+  "inboundTransport": [
+    {
+      "transport": "http",
+      "port": "9031"
+    }
+  ],
+  "outboundTransport": [
+    "http"
+  ],
+  "webhookUrl": "http://192.168.31.50:5000/wh/5ebcc4b7-2920-476a-abeb-2d602957e25b",
+  "adminPort": "8031",
+  "tenancy": true
+}

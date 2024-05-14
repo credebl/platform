@@ -1,0 +1,32 @@
+{
+  "label": "e579d9ad-f3de-4a9a-89dc-04b4171c7ce8_dcxzs",
+  "walletId": "string",
+  "walletKey": "string",
+  "walletType": "postgres",
+  "walletUrl": "192.168.31.50:5432",
+  "walletAccount": "postgres",
+  "walletPassword": "Password1",
+  "walletAdminAccount": "postgres",
+  "walletAdminPassword": "Password1",
+  "walletScheme": "DatabasePerWallet",
+  "indyLedger": [],
+  "endpoint": [
+    "http://192.168.31.50:9032"
+  ],
+  "autoAcceptConnections": true,
+  "autoAcceptCredentials": "contentApproved",
+  "autoAcceptProofs": "contentApproved",
+  "logLevel": 5,
+  "inboundTransport": [
+    {
+      "transport": "http",
+      "port": "9032"
+    }
+  ],
+  "outboundTransport": [
+    "http"
+  ],
+  "webhookUrl": "http://192.168.31.50:5000/wh/e579d9ad-f3de-4a9a-89dc-04b4171c7ce8",
+  "adminPort": "8032",
+  "tenancy": true
+}

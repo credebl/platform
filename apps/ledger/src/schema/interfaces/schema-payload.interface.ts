@@ -17,6 +17,7 @@ export interface ISchema {
     transactionId?: string;
     endorserWriteTxn?: string;
     orgDid?: string;
+    type?: string;
 }
 
 export interface IAttributeValue {
@@ -86,7 +87,8 @@ export interface SchemaPayload {
   
 export interface W3CSchemaPayload {
     schemaPayload: SchemaPayload,
-    orgId: string
+    orgId: string,
+    user: IUserRequestInterface
   }
 
 export interface W3CCreateSchema {

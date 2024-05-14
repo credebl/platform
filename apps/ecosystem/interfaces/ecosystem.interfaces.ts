@@ -134,6 +134,7 @@ export interface SaveSchema {
   publisherDid: string;
   orgId: string;
   ledgerId: string;
+  type?: string;
 }
 
 export interface saveCredDef {

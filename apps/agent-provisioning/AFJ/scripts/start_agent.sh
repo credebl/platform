@@ -18,6 +18,7 @@ TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 INBOUND_ENDPOINT=${16}
+SCHEMA_FILE_SERVER_URL=${17}
 
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
@@ -150,7 +151,8 @@ cat <<EOF >${CONFIG_FILE}
   ],
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
   "adminPort": "$ADMIN_PORT",
-  "tenancy": $TENANT
+  "tenancy": $TENANT,
+  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
 }
 EOF
 

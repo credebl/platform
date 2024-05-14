@@ -1204,7 +1204,7 @@ export class AgentServiceService {
           '#',
           `${payload.schemaId}`
         )}`;
-        schemaResponse = await this.commonService.httpGet(url, payload.schemaId).then(async (schema) => schema);
+        schemaResponse = await this.commonService.httpGet(url, { headers: { authorization: getApiKey } }).then(async (schema) => schema);
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`
           .replace('@', `${payload.payload.schemaId}`)
@@ -1613,29 +1613,30 @@ export class AgentServiceService {
     try {
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-      const cacheKey =
-        orgAgentApiKey?.orgAgentTypeId === orgAgentId
-          ? CommonConstants.CACHE_SHARED_APIKEY_KEY
-          : CommonConstants.CACHE_APIKEY_KEY;
+      // const cacheKey =
+      //   orgAgentApiKey?.orgAgentTypeId === orgAgentId
+      //     ? CommonConstants.CACHE_SHARED_APIKEY_KEY
+      //     : CommonConstants.CACHE_APIKEY_KEY;
 
-      let apiKey = await this.cacheService.get(cacheKey);
-      if (!apiKey) {
-        if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
-          const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
-            CommonConstants.PLATFORM_ADMIN_ORG
-          );
-          if (!platformAdminSpinnedUp) {
-            throw new InternalServerErrorException('Agent not able to spin-up');
-          }
-          apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
-        } else {
-          apiKey = orgAgentApiKey?.apiKey;
+      // let apiKey = await this.cacheService.get(cacheKey);
+      let apiKey;
+      // if (!apiKey) {
+      if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
+          CommonConstants.PLATFORM_ADMIN_ORG
+        );
+        if (!platformAdminSpinnedUp) {
+          throw new InternalServerErrorException('Agent not able to spin-up');
         }
-        if (!apiKey) {
-          throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
-        }
-        await this.cacheService.set(cacheKey, apiKey, 0);
+        apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
+      } else {
+        apiKey = orgAgentApiKey?.apiKey;
       }
+
+      if (!apiKey) {
+        throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
+      }
+      // }
 
       const decryptedToken = await this.commonService.decryptPassword(apiKey);
       return decryptedToken;

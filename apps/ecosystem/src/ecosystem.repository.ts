@@ -1175,7 +1175,7 @@ export class EcosystemRepository {
 
   async saveSchema(schemaResult: SaveSchema): Promise<schema> {
     try {
-      const { name, version, attributes, schemaLedgerId, issuerId, createdBy, lastChangedBy, publisherDid, orgId, ledgerId } = schemaResult;
+      const { name, version, attributes, schemaLedgerId, issuerId, createdBy, lastChangedBy, publisherDid, orgId, ledgerId, type } = schemaResult;
       const saveResult = await this.prisma.schema.create({
         data: {
           name,
@@ -1187,7 +1187,8 @@ export class EcosystemRepository {
           lastChangedBy,
           publisherDid,
           orgId: String(orgId),
-          ledgerId
+          ledgerId,
+          type
         }
       });
       return saveResult;

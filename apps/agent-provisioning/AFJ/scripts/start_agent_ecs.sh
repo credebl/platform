@@ -18,11 +18,12 @@ TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 INBOUND_ENDPOINT=${16}
-AGENT_HOST=${17}
-AWS_ACCOUNT_ID=${18}
-S3_BUCKET_ARN=${19}
-CLUSTER_NAME=${20}
-TESKDEFINITION_FAMILY=${21}
+SCHEMA_FILE_SERVER_URL=${17}
+AGENT_HOST=${18}
+AWS_ACCOUNT_ID=${19}
+S3_BUCKET_ARN=${20}
+CLUSTER_NAME=${21}
+TESKDEFINITION_FAMILY=${22}
 
 DESIRED_COUNT=1
 
@@ -138,7 +139,8 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   ],
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
   "adminPort": $ADMIN_PORT,
-  "tenancy": $TENANT
+  "tenancy": $TENANT,
+  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
 }
 EOF
 # scp ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json ${AGENT_HOST}:/home/ec2-user/config/

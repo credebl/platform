@@ -291,7 +291,7 @@ export class AgentServiceService {
       await this._createConnectionInvitation(orgId, user, getOrganization.name);
       return storeAgentConfig;
     } catch (error) {
-      throw error;
+      throw new RpcException(error.response ?? error);
     }
   }
 

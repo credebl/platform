@@ -150,75 +150,55 @@ export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: 
   const errors: string[] = [];
 
   switch (true) {
-    case schemaRequestType.INDY === schemaType && !schemaPayload?.name:
-      errors.push('name is required for indy schema');
-      break;
-
-    case schemaRequestType.INDY === schemaType && !schemaPayload?.version:
-      errors.push('version is required for indy schema');
-      break;
-
-    case schemaRequestType.INDY === schemaType && !schemaPayload?.endorse:
-      errors.push('endorse property is required for indy schema');
-      break;
-
-    case schemaRequestType.INDY === schemaType && !schemaPayload?.attributes:
-      if (!Array.isArray(schemaPayload.attributes)) {
-        errors.push('attributes are required for indy schema');
-        break;
+    case schemaRequestType.INDY === schemaType:
+      if (!schemaPayload?.name) {
+        errors.push('name is required for indy schema type');
+      } else if (!schemaPayload?.version) {
+        errors.push('version is required for indy schema type');
+      } else if (!schemaPayload?.endorse) {
+        errors.push('endorse property is required for indy schema type');
       }
-      schemaPayload.attributes.forEach((attribute, index) => {
-        switch (true) {
-          case !attribute:
-            errors.push(`attributes are required at index ${index} in indy schema`);
-
-            break;
-          default:
-            switch (true) {
-              case !attribute.attributeName:
-                errors.push(`attributeName is required at index ${index} in indy schema`);
-                break;
-              case !attribute.schemaDataType:
-                errors.push(`schemaDataType is required at index ${index} in indy schema`);
-                break;
-              case !attribute.displayName:
-                errors.push(`displayName is required at index ${index} in indy schema`);
-                break;
-              default:
-                break;
+      if (!Array.isArray(schemaPayload?.attributes) || 0 === schemaPayload?.attributes.length) {
+        errors.push('attributes array must not be empty for indy schema type');
+      } else {
+        schemaPayload?.attributes.forEach((attribute, index) => {
+          if (!attribute) {
+            errors.push(`attributes are required at position ${index + 1} in indy schema type`);
+          } else {
+            if (!attribute?.displayName) {
+              errors.push(`displayName is required at position ${index + 1} in indy schema type`);
             }
-            break;
-        }
-      });
+            if (!attribute?.attributeName) {
+              errors.push(`attributeName is required at position ${index + 1} in indy schema type`);
+            }
+            if (!attribute?.schemaDataType) {
+              errors.push(`schemaDataType is required at position ${index + 1} in indy schema type`);
+            }
+          }
+        });
+      }
       break;
 
-    case schemaRequestType.INDY === schemaType && 0 === schemaPayload?.attributes?.length:
-      errors.push('attributes array must not be empty for indy schema');
-      break;
-
-      case schemaRequestType.W3C === schemaType:
-
+    case schemaRequestType.W3C === schemaType:
       if (!schemaPayload?.schemaName) {
-        errors.push('schemaName is required for w3c schema');
+        errors.push('schemaName is required for w3c schema type');
       } else if (!schemaPayload?.did) {
-              errors.push('did is required for w3c schema');
-
+        errors.push('did is required for w3c schema type');
       } else if (!schemaPayload?.description) {
-        errors.push('description is required for w3c schema');
-
-}
+        errors.push('description is required for w3c schema type');
+      }
       if (!Array.isArray(schemaPayload.schemaAttributes) || 0 === schemaPayload.schemaAttributes.length) {
-        errors.push('schemaAttributes array must not be empty for w3c schema');
+        errors.push('schemaAttributes array must not be empty for w3c schema type');
       } else {
         schemaPayload.schemaAttributes.forEach((attribute, index) => {
           if (!attribute) {
-            errors.push(`schemaAttributes are required at position ${index + 1} in w3c schema`);
+            errors.push(`schemaAttributes are required at position ${index + 1} in w3c schema type`);
           } else {
             if (!attribute.title) {
-              errors.push(`title is required at position ${index + 1} in w3c schema`);
+              errors.push(`title is required at position ${index + 1} in w3c schema type`);
             }
             if (!attribute.type) {
-              errors.push(`type is required at position ${index + 1} in w3c schema`);
+              errors.push(`type is required at position ${index + 1} in w3c schema type`);
             }
           }
         });
@@ -233,3 +213,4 @@ export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: 
     throw new BadRequestException(errors);
   }
 }
+

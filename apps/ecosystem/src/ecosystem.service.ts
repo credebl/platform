@@ -814,10 +814,10 @@ export class EcosystemService {
     ecosystemId: string
   ): Promise<IEndorsementTransaction> {
     try {
-      
+      let alreadySchemaExist;
       if (schemaType === schemaRequestType.INDY) {
         const { name, version } = requestSchemaPayload as IRequestSchemaEndorsement;
-        const alreadySchemaExist = await this._schemaExist(version, name);
+        alreadySchemaExist = await this._schemaExist(name, version);
         this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist.length)}`);
   
         if (0 !== alreadySchemaExist.length) {
@@ -839,20 +839,18 @@ export class EcosystemService {
         }
         return await this.requestIndySchemaEndorsement(requestSchemaPayload as IRequestSchemaEndorsement, orgId, ecosystemId);
       } else if (schemaType === schemaRequestType.W3C) {
+        const { schemaName } = requestSchemaPayload as IRequestW3CSchemaEndorsement;
+        alreadySchemaExist = await this._schemaExist(schemaName);
+
+        if (0 !== alreadySchemaExist.length) {
+          throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+        }
+
         return await this.requestW3CSchemaEndorsement(requestSchemaPayload as IRequestW3CSchemaEndorsement, orgId, ecosystemId);
       }
 
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
-      // const errorObj = error?.status?.message?.error;
-      // if (errorObj) {
-      //   throw new RpcException({
-      //     message: errorObj?.reason ? errorObj?.reason : errorObj,
-      //     statusCode: error?.status?.code
-      //   });
-      // } else {
-      //   throw new RpcException(error.response ? error.response : error);
-      // }
 
       const errorObject = error?.error;
       if (errorObject) {
@@ -1001,39 +999,10 @@ export class EcosystemService {
       if (!ecosystemMemberOrgAgentDetails) {
           throw new InternalServerErrorException('Error in fetching agent details');
       }
-      const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberOrgAgentDetails.orgAgentTypeId);
-
-      const url = await this.getAgentUrl(
-        orgAgentType,
-        ecosystemMemberOrgAgentDetails.agentEndPoint,
-        endorsementTransactionType.W3CSCHEMA,
-        ecosystemMemberOrgAgentDetails.tenantId
-      );
-      const title = requestSchemaPayload?.schemaAttributes?.map((item) => item.title);
-      const type = requestSchemaPayload?.schemaAttributes?.map((item) => item.type);
-      const w3cSchemaTransactionPayload = {
-        schemaName: requestSchemaPayload?.schemaName, 
-        schema: {
-          title, 
-          type
-        },
-        did: requestSchemaPayload?.did
-      };
-
-      const w3cSchemaTransactionRequest: SchemaMessage = await this._requestSchemaEndorsement(
-        w3cSchemaTransactionPayload,
-        url,
-        orgId
-      );
-
-      if ('failed' === w3cSchemaTransactionRequest?.message?.schemaState?.state) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestSchemaTransaction);
-      }
-
       const w3cSchemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: ecosystemMemberOrgAgentDetails.orgDid,
-        requestPayload: JSON.stringify(w3cSchemaTransactionRequest?.message),
+        requestPayload: JSON.stringify(requestSchemaPayload),
         status: endorsementTransactionStatus.REQUESTED,
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id,
         userId: requestSchemaPayload.userId
@@ -1045,7 +1014,6 @@ export class EcosystemService {
         endorsementTransactionType.W3CSCHEMA
       );
 
-
       await this.removeEndorsementTransactionFields(storeTransaction);
 
       return storeTransaction;
@@ -1055,9 +1023,9 @@ export class EcosystemService {
     }
   }
 
-  async _schemaExist(version: string, schemaName: string): Promise<string> {
+  async _schemaExist(schemaName: string, version?: string): Promise<string> {
     const pattern = { cmd: 'schema-exist' };
-    const payload = { version, schemaName };
+    const payload = { schemaName, version };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1247,13 +1215,6 @@ export class EcosystemService {
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw error;
-      // throw new InternalServerErrorException(
-      //   {
-      //     statusCode: error?.message?.statusCode,
-      //     error: error?.message?.error?.message
-      //   },
-      //   error.status
-      // );
     }
   }
 
@@ -1341,6 +1302,7 @@ export class EcosystemService {
           schemaTransactionRequest.message.signedTransaction
         );
 
+
         if (!updateSignedTransaction) {
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateTransactionError);
         }
@@ -1364,26 +1326,7 @@ export class EcosystemService {
         }
   
       } else if (endorsementTransactionPayload && endorsementTransactionPayload?.type === endorsementTransactionType.W3CSCHEMA) {
-
-        const updateAutoEndorsementFlag = await this.ecosystemRepository.updateEcosystemConfig(ecosystemLeadDetails.ecosystemId);
-
-        if (true === updateAutoEndorsementFlag?.['autoEndorsement']) {
-          const submitW3CTxn = await this.submitTransaction({
-            endorsementId,
-            ecosystemId,
-            ecosystemLeadAgentEndPoint: ecosystemLeadAgentDetails.agentEndPoint,
-            orgId: ecosystemLeadDetails.orgId
-          });
-          if (!submitW3CTxn) {
-            await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
-            throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
-          }
-          return {
-            autoEndorsement: updateAutoEndorsementFlag?.['autoEndorsement'],
-            submitW3CTxn
-          };
-
-        }
+         throw new BadRequestException(ResponseMessages.ecosystem.error.signTransactionNotApplicable);
       }
       
       await this.removeEndorsementTransactionFields(updateSignedTransaction);
@@ -1391,12 +1334,12 @@ export class EcosystemService {
 
     } catch (error) {
       this.logger.error(`In sign transaction: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      const errorObject = error?.error;
+      if (errorObject) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          statusCode: errorObject?.error?.error?.message?.statusCode,
+          message: 'Error in transaction process',
+          error: errorObject?.error?.error?.message?.error?.message
         });
       } else {
         throw new RpcException(error.response ? error.response : error);
@@ -1510,15 +1453,6 @@ export class EcosystemService {
           issuerId: ecosystemMemberDetails.orgDid
         };
         break;
-
-        case endorsementTransactionType.W3CSCHEMA:
-          payload.schema = {
-            attributes: parsedRequestPayload.operation.data.attr_names,
-            version: parsedRequestPayload.operation.data.version,
-            name: parsedRequestPayload.operation.data.name,
-            issuerId: ecosystemMemberDetails.orgDid
-          };
-          break;
   
       case endorsementTransactionType.CREDENTIAL_DEFINITION:
         payload.credentialDefinition = {
@@ -1709,6 +1643,7 @@ export class EcosystemService {
         if (!updateSchemaId) {
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateSchemaId);
         }
+
         const response = this.handleSchemaSubmission(
           endorsementTransactionPayload,
           ecosystemMemberDetails,
@@ -1764,7 +1699,7 @@ export class EcosystemService {
 
   async submitW3CTransaction(transactionPayload: TransactionPayload): Promise<object> {
     try {
-      const { endorsementId, orgId } = transactionPayload;
+      const { endorsementId } = transactionPayload;
 
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
@@ -1775,9 +1710,8 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotSigned);
       }
 
-
       const w3cEndorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionByIdAndType(endorsementId, endorsementTransactionType.W3CSCHEMA);
-      
+
       const w3cPayload = {
         schemaPayload : {
           schemaAttributes: w3cEndorsementTransactionPayload?.requestBody?.['schemaAttributes'],
@@ -1785,21 +1719,20 @@ export class EcosystemService {
           did: w3cEndorsementTransactionPayload?.requestBody?.['did'],
           description: w3cEndorsementTransactionPayload?.requestBody?.['description']      
         },
-        orgId
+        orgId: w3cEndorsementTransactionPayload?.['ecosystemOrgs']?.orgId,
+        user: w3cEndorsementTransactionPayload?.requestBody?.['userId']     
       };
       
-      await this._createW3CSchema(w3cPayload);
+      const w3cSchemaResponse = await this._createW3CSchema(w3cPayload);
       
-      const w3cTransactionPayload = await this.updateTransactionStatus(endorsementId);
-      
-      return w3cTransactionPayload;
+      const resourceId = w3cSchemaResponse?.['schemaUrl'];
+    
+      await this.ecosystemRepository.updateResourse(endorsementId, resourceId);
 
-        // return this.handleSchemaSubmission(
-        //   w3cEndorsementTransactionPayload,
-        //   ecosystemMemberDetails,
-        //   submitTransactionRequest
-        // );
-      
+      await this.updateTransactionStatus(endorsementId);
+
+      return w3cSchemaResponse;
+            
     } catch (error) {
       this.logger.error(`In submit w3c transaction: ${JSON.stringify(error)}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
@@ -1868,6 +1801,7 @@ export class EcosystemService {
     transactionDetails: object
   ): Promise<object> {
     try {
+
       // eslint-disable-next-line prefer-destructuring
       const message = transactionDetails['message'];
       if (!message) {

@@ -420,7 +420,7 @@ export class EcosystemController {
           throw new BadRequestException(`Invalid format for orgId`);
         }
       })
-    )    
+    ) orgId: string,   
     @Res() res: Response
   ): Promise<Response> {
 

@@ -27,9 +27,6 @@ export function validateDid(createDid: IDidCreate): void {
         case DidMethod.POLYGON === createDid.method && createDid.privatekey && 64 !== createDid.privatekey.length:
             errors.push('Private key must be exactly 64 characters long');
             break;
-        case DidMethod.POLYGON === createDid.method && !createDid.endpoint:
-            errors.push('endpoint is required for polygon method');
-            break;
         case (DidMethod.INDY === createDid.method || DidMethod.KEY === createDid.method || DidMethod.WEB === createDid.method) && (!createDid.seed):
             errors.push('seed is required');
             break;

@@ -9,3 +9,7 @@ export enum SortFields {
     PUBLISHER_DID = 'publisherDid',
     ISSUER_ID = 'issuerId'
 }
+
+export enum W3CSchemaVersion {
+    W3C_SCHEMA_VERSION = 'draft-07'
+}

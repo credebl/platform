@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  agent:
+    image: afj-0.5.0:latest
+
+    container_name: 5ebcc4b7-2920-476a-abeb-2d602957e25b_jekads
+    restart: always
+    environment:
+      AFJ_REST_LOG_LEVEL: 1
+    ports:
+     - 9031:9031
+     - 8031:8031
+   
+    volumes: 
+      - ./agent-config/5ebcc4b7-2920-476a-abeb-2d602957e25b_jekads.json:/config.json   
+      
+    command: --auto-accept-connections --config /config.json
+      
+volumes:
+  pgdata:
+  agent-indy_client:
+  agent-tmp:

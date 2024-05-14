@@ -20,7 +20,15 @@ export interface ISchemasWithPagination extends IPaginationDetails{
   export interface ISchemaDetails extends IPaginationDetails{
     data: ISchema[];
   }
-  
+
+  export interface IW3CSchema {
+    response: {
+      did: string,
+      schemaId: string,
+      schemaTxnHash: string,
+      resourceTxnHash: string
+    }
+  }
   interface ISchema {
     createDateTime: Date;
     createdBy: string;

@@ -1010,11 +1010,71 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
+  async getTransactionDetailsByEndorsementId(endorsementId: string): Promise<endorsement_transaction> {
+    try {
+      const endorsementTransactionDetails = await this.prisma.endorsement_transaction.findUnique({
+        where: {
+          id: endorsementId
+        },
+        include: {
+          ecosystemOrgs: {
+            select: {
+              orgId: true
+            }
+          }
+        }
+      });
+
+      return endorsementTransactionDetails;
+
+    } catch (error) {
+      this.logger.error(`Error in getting endorsement transaction details: ${error.message} `);
+      throw error;
+    }
+  }
+
+    // eslint-disable-next-line camelcase
+    async getEndorsementTransactionByIdAndType(endorsementId: string, type: endorsementTransactionType): Promise<endorsement_transaction> {
+      try {
+        const ecosystemLeadDetails = await this.prisma.endorsement_transaction.findUnique({
+          where: {
+            id: endorsementId,
+            type
+          },
+          include: {
+            ecosystemOrgs: {
+              select: {
+                orgId: true
+              }
+            }
+          }
+        });
+  
+        return ecosystemLeadDetails;
+  
+      } catch (error) {
+        this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
+        throw error;
+      }
+    }
+
+    
+  // eslint-disable-next-line camelcase
   async findRecordsByNameAndVersion(name: string, version: string): Promise<endorsement_transaction[]> {
     try {
       return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'name' = ${name} AND "requestBody"->>'version' = ${version}`;
     } catch (error) {
       this.logger.error(`Error in getting ecosystem schema: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async findW3CSchemaRecords(schemaName: string): Promise<endorsement_transaction[]> {
+    try {
+      return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'schemaName' = ${schemaName}`;
+    } catch (error) {
+      this.logger.error(`Error in getting w3c schema: ${error.message} `);
       throw error;
     }
   }
@@ -1069,6 +1129,25 @@ export class EcosystemRepository {
 
     } catch (error) {
       this.logger.error(`Error in updating endorsement transaction: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateEcosystemConfig(
+    ecosystemId: string
+  ): Promise<object> {
+    try {
+      const updateAutoEndorsementFlag = await this.prisma.ecosystem.update({
+        where: { id: ecosystemId },
+        data: {
+          autoEndorsement: true
+        }
+      });
+
+      return updateAutoEndorsementFlag;
+
+    } catch (error) {
+      this.logger.error(`Error in updating endorsement flag: ${error.message}`);
       throw error;
     }
   }

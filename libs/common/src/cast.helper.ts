@@ -1,6 +1,7 @@
+import { schemaRequestType } from '@credebl/enum/enum';
 import { BadRequestException } from '@nestjs/common';
-import { ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, isBase64, isMimeType, isUUID, registerDecorator } from 'class-validator';
-
+import { ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, isBase64, isMimeType, registerDecorator } from 'class-validator';
+import { ISchemaFields } from './interfaces/schema.interface';
 interface ToNumberOptions {
     default?: number;
     min?: number;
@@ -143,3 +144,92 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
 //     }
 //   });
 // };
+
+
+export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: string): void {
+  const errors: string[] = [];
+
+  switch (true) {
+    case schemaRequestType.INDY === schemaType && !schemaPayload?.name:
+      errors.push('name is required for indy schema');
+      break;
+
+    case schemaRequestType.INDY === schemaType && !schemaPayload?.version:
+      errors.push('version is required for indy schema');
+      break;
+
+    case schemaRequestType.INDY === schemaType && !schemaPayload?.endorse:
+      errors.push('endorse property is required for indy schema');
+      break;
+
+    case schemaRequestType.INDY === schemaType && !schemaPayload?.attributes:
+      if (!Array.isArray(schemaPayload.attributes)) {
+        errors.push('attributes are required for indy schema');
+        break;
+      }
+      schemaPayload.attributes.forEach((attribute, index) => {
+        switch (true) {
+          case !attribute:
+            errors.push(`attributes are required at index ${index} in indy schema`);
+
+            break;
+          default:
+            switch (true) {
+              case !attribute.attributeName:
+                errors.push(`attributeName is required at index ${index} in indy schema`);
+                break;
+              case !attribute.schemaDataType:
+                errors.push(`schemaDataType is required at index ${index} in indy schema`);
+                break;
+              case !attribute.displayName:
+                errors.push(`displayName is required at index ${index} in indy schema`);
+                break;
+              default:
+                break;
+            }
+            break;
+        }
+      });
+      break;
+
+    case schemaRequestType.INDY === schemaType && 0 === schemaPayload?.attributes?.length:
+      errors.push('attributes array must not be empty for indy schema');
+      break;
+
+      case schemaRequestType.W3C === schemaType:
+
+      if (!schemaPayload?.schemaName) {
+        errors.push('schemaName is required for w3c schema');
+      } else if (!schemaPayload?.did) {
+              errors.push('did is required for w3c schema');
+
+      } else if (!schemaPayload?.description) {
+        errors.push('description is required for w3c schema');
+
+}
+      if (!Array.isArray(schemaPayload.schemaAttributes) || 0 === schemaPayload.schemaAttributes.length) {
+        errors.push('schemaAttributes array must not be empty for w3c schema');
+      } else {
+        schemaPayload.schemaAttributes.forEach((attribute, index) => {
+          if (!attribute) {
+            errors.push(`schemaAttributes are required at position ${index + 1} in w3c schema`);
+          } else {
+            if (!attribute.title) {
+              errors.push(`title is required at position ${index + 1} in w3c schema`);
+            }
+            if (!attribute.type) {
+              errors.push(`type is required at position ${index + 1} in w3c schema`);
+            }
+          }
+        });
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  if (0 < errors.length) {
+    throw new BadRequestException(errors);
+  }
+}

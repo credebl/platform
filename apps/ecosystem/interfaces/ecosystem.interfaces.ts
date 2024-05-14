@@ -412,3 +412,8 @@ export interface IEcosystemOrgDetails {
   count: Prisma.BatchPayload;
   ecosystemOrgs: IEcosystemOrgsData[];
 }
+
+
+export interface IEcosystemEndorsementFlag {
+  autoEndorsement: boolean;
+}

@@ -10,6 +10,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotAcceptableException,
   NotFoundException
 } from '@nestjs/common';
 import { EcosystemRepository } from './ecosystem.repository';
@@ -73,6 +74,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { W3CSchemaPayload } from 'apps/ledger/src/schema/interfaces/schema-payload.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -814,27 +816,27 @@ export class EcosystemService {
     try {
       
       if (schemaType === schemaRequestType.INDY) {
-        // const { name, version } = requestSchemaPayload as IRequestSchemaEndorsement;
-        // const alreadySchemaExist = await this._schemaExist(version, name);
-        // this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist.length)}`);
+        const { name, version } = requestSchemaPayload as IRequestSchemaEndorsement;
+        const alreadySchemaExist = await this._schemaExist(version, name);
+        this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist.length)}`);
   
-        // if (0 !== alreadySchemaExist.length) {
-        //   throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
-        // }
+        if (0 !== alreadySchemaExist.length) {
+          throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+        }
   
-        // if (0 === name.length) {
-        //   throw new BadRequestException(ResponseMessages.schema.error.nameNotEmpty);
-        // }
+        if (0 === name.length) {
+          throw new BadRequestException(ResponseMessages.schema.error.nameNotEmpty);
+        }
   
-        // if (0 === version.length) {
-        //   throw new BadRequestException(ResponseMessages.schema.error.versionNotEmpty);
-        // }
+        if (0 === version.length) {
+          throw new BadRequestException(ResponseMessages.schema.error.versionNotEmpty);
+        }
   
-        // const schemaVersionIndexOf = -1;
+        const schemaVersionIndexOf = -1;
   
-        // if (isNaN(parseFloat(version)) || version.toString().indexOf('.') === schemaVersionIndexOf) {
-        //   throw new NotAcceptableException(ResponseMessages.schema.error.invalidVersion);
-        // }
+        if (isNaN(parseFloat(version)) || version.toString().indexOf('.') === schemaVersionIndexOf) {
+          throw new NotAcceptableException(ResponseMessages.schema.error.invalidVersion);
+        }
         return await this.requestIndySchemaEndorsement(requestSchemaPayload as IRequestSchemaEndorsement, orgId, ecosystemId);
       } else if (schemaType === schemaRequestType.W3C) {
         return await this.requestW3CSchemaEndorsement(requestSchemaPayload as IRequestW3CSchemaEndorsement, orgId, ecosystemId);
@@ -842,14 +844,25 @@ export class EcosystemService {
 
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
-      const errorObj = error?.status?.message?.error;
-      if (errorObj) {
+      // const errorObj = error?.status?.message?.error;
+      // if (errorObj) {
+      //   throw new RpcException({
+      //     message: errorObj?.reason ? errorObj?.reason : errorObj,
+      //     statusCode: error?.status?.code
+      //   });
+      // } else {
+      //   throw new RpcException(error.response ? error.response : error);
+      // }
+
+      const errorObject = error?.error;
+      if (errorObject) {
         throw new RpcException({
-          message: errorObj?.reason ? errorObj?.reason : errorObj,
-          statusCode: error?.status?.code
+          error: errorObject?.message?.error?.message,
+          message: 'error in requesting schema endorsement',
+          statusCode: errorObject?.message?.statusCode
         });
       } else {
-        throw new RpcException(error.response ? error.response : error);
+        throw new RpcException(error.response ? error.response : {...error});
       }
     }
   }
@@ -866,13 +879,11 @@ export class EcosystemService {
       const [
         schemaRequestExist,
         ecosystemOrgAgentDetails,
-        platformConfig,
         ecosystemLeadAgentDetails,
         getEcosystemOrgDetailsByOrgId
       ] = await Promise.all([
         this.ecosystemRepository.findRecordsByNameAndVersion(requestSchemaPayload?.name, requestSchemaPayload?.version),
         this.ecosystemRepository.getAgentDetails(orgId),
-        this.ecosystemRepository.getPlatformConfigDetails(),
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
@@ -890,10 +901,6 @@ export class EcosystemService {
 
       if (!ecosystemOrgAgentDetails) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.notFound);
-      }
-
-      if (!platformConfig) {
-        throw new NotFoundException(ResponseMessages.ecosystem.error.platformConfigNotFound);
       }
 
       if (!getEcosystemLeadDetails) {
@@ -955,16 +962,8 @@ export class EcosystemService {
 
       return storeTransaction;
     } catch (error) {
-      this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
-      const errorObj = error?.status?.message?.error;
-      if (errorObj) {
-        throw new RpcException({
-          message: errorObj?.reason ? errorObj?.reason : errorObj,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.logger.error(`In request indy schema endorsement : ${JSON.stringify(error)}`);
+      throw new RpcException(error.error ? error.error.message : error.message);
     }
   }
 
@@ -975,18 +974,29 @@ export class EcosystemService {
   ): Promise<IEndorsementTransaction> {
     try {
 
-      const { schemaAttributes, schemaName, description} = requestSchemaPayload;
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
       const [
+        schemaRequestExist,
         ecosystemMemberOrgAgentDetails,
         ecosystemLeadAgentDetails,
         getEcosystemOrgDetailsByOrgId
       ] = await Promise.all([
+        this.ecosystemRepository.findW3CSchemaRecords(requestSchemaPayload?.schemaName),
         this.ecosystemRepository.getAgentDetails(orgId),
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
       ]);
+
+      const existSchema =
+        schemaRequestExist?.filter(
+          (schema) => schema.status === endorsementTransactionStatus.REQUESTED ||
+            schema.status === endorsementTransactionStatus.SUBMITED
+        ) ?? [];
+
+      if (0 < existSchema.length) {
+        throw new ConflictException(' w3c schema is already exists');
+      }
 
       if (!ecosystemMemberOrgAgentDetails) {
           throw new InternalServerErrorException('Error in fetching agent details');
@@ -999,250 +1009,50 @@ export class EcosystemService {
         endorsementTransactionType.W3CSCHEMA,
         ecosystemMemberOrgAgentDetails.tenantId
       );
-      // const title = requestSchemaPayload?.schemaAttributes?.map((item) => item.title);
-      // const type = requestSchemaPayload?.schemaAttributes?.map((item) => item.type);
-      // const w3cSchemaTransactionPayload = {
-      //   schemaName: requestSchemaPayload?.schemaName, 
-      //   schema: {
-      //     title, 
-      //     type
-      //   },
-      //   did: ecosystemMemberOrgAgentDetails?.orgDid
-      // };
-
-      const schemaObject = await this.w3cSchemaBuilder(schemaAttributes, schemaName, description);
-      
-      if (!schemaObject) {
-        throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.badRequest
-        });
-      }
+      const title = requestSchemaPayload?.schemaAttributes?.map((item) => item.title);
+      const type = requestSchemaPayload?.schemaAttributes?.map((item) => item.type);
       const w3cSchemaTransactionPayload = {
-        schema:schemaObject,
-        did: ecosystemMemberOrgAgentDetails?.orgDid,
-        schemaName
+        schemaName: requestSchemaPayload?.schemaName, 
+        schema: {
+          title, 
+          type
+        },
+        did: requestSchemaPayload?.did
       };
 
-      const w3cSchemaTransactionRequest = await this._requestSchemaEndorsement(
+      const w3cSchemaTransactionRequest: SchemaMessage = await this._requestSchemaEndorsement(
         w3cSchemaTransactionPayload,
         url,
         orgId
       );
 
+      if ('failed' === w3cSchemaTransactionRequest?.message?.schemaState?.state) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.requestSchemaTransaction);
+      }
+
       const w3cSchemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: ecosystemMemberOrgAgentDetails.orgDid,
-        requestPayload: JSON.stringify(w3cSchemaTransactionRequest),
+        requestPayload: JSON.stringify(w3cSchemaTransactionRequest?.message),
         status: endorsementTransactionStatus.REQUESTED,
         ecosystemOrgId: getEcosystemOrgDetailsByOrgId.id,
         userId: requestSchemaPayload.userId
       };
+
       const storeTransaction = await this.ecosystemRepository.storeTransactionRequest(
         w3cSchemaTransactionResponse,
         requestSchemaPayload,
         endorsementTransactionType.W3CSCHEMA
       );
 
+
       await this.removeEndorsementTransactionFields(storeTransaction);
 
       return storeTransaction;
     } catch (error) {
-      this.logger.error(`In request w3c schema endorsement : ${JSON.stringify(error)}`);
-      const errorObj = error?.status?.message?.error;
-      if (errorObj) {
-        throw new RpcException({
-          message: errorObj?.reason ? errorObj?.reason : errorObj,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.logger.error(`In request w3c schema endorsement: ${JSON.stringify(error)}`);
+      throw error;    
     }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private async w3cSchemaBuilder(schemaAttributes, schemaName: string, description: string) {
-    const schemaAttributeJson = schemaAttributes.map((attribute, index) => ({
-      [attribute.title]: {
-        type: attribute.type.toLowerCase(),
-        order: index,
-        title: attribute.title
-      }
-    }));
-
-    // Add the format property to the id key
-    schemaAttributeJson.unshift({
-      id: {
-        type: 'string',
-        format: 'uri'
-      }
-    });
-
-    const nestedObject = {};
-    schemaAttributeJson.forEach((obj) => {
-      // eslint-disable-next-line prefer-destructuring
-      const key = Object.keys(obj)[0];
-      nestedObject[key] = obj[key];
-    });
-   
-     const schemaNameObject = {}; 
-     schemaNameObject[schemaName] = {
-     "const": schemaName
-     };
-     const date = new Date().toISOString();
-     
-    const W3CSchema = {
-      $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: `${date}-${schemaName}`,
-      type: 'object',
-      required: ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
-      properties: {
-        '@context': {
-          $ref: '#/definitions/context'
-        },
-        type: {
-          type: 'array',
-          items: {
-            anyOf: [
-              {
-                $ref: '#/definitions/VerifiableCredential'
-              },
-              {
-                const: `#/definitions/$${schemaName}`
-              }
-            ]
-          }
-        },
-        credentialSubject: {
-          $ref: '#/definitions/credentialSubject'
-        },
-        id: {
-          type: 'string',
-          format: 'uri'
-        },
-        issuer: {
-          $ref: '#/definitions/uriOrId'
-        },
-        issuanceDate: {
-          type: 'string',
-          format: 'date-time'
-        },
-        expirationDate: {
-          type: 'string',
-          format: 'date-time'
-        },
-        credentialStatus: {
-          $ref: '#/definitions/credentialStatus'
-        },
-        credentialSchema: {
-          $ref: '#/definitions/credentialSchema'
-        }
-      },
-      definitions: {
-        context: {
-          type: 'array',
-          items: [
-            {
-              const: 'https://www.w3.org/2018/credentials/v1'
-            }
-          ],
-          additionalItems: {
-            oneOf: [
-              {
-                type: 'string',
-                format: 'uri'
-              },
-              {
-                type: 'object'
-              },
-              {
-                type: 'array',
-                items: {
-                  $ref: '#/definitions/context'
-                }
-              }
-            ]
-          },
-          minItems: 1,
-          uniqueItems: true
-        },
-        credentialSubject: {
-          type: 'object',
-          required: ['id'],
-          additionalProperties: false,
-          properties: nestedObject
-        },
-        VerifiableCredential: {
-          const: 'VerifiableCredential'
-        },
-        credentialSchema: {
-          oneOf: [
-            {
-              $ref: '#/definitions/idAndType'
-            },
-            {
-              type: 'array',
-              items: {
-                $ref: '#/definitions/idAndType'
-              },
-              minItems: 1,
-              uniqueItems: true
-            }
-          ]
-        },
-        credentialStatus: {
-          oneOf: [
-            {
-              $ref: '#/definitions/idAndType'
-            },
-            {
-              type: 'array',
-              items: {
-                $ref: '#/definitions/idAndType'
-              },
-              minItems: 1,
-              uniqueItems: true
-            }
-          ]
-        },
-        idAndType: {
-          type: 'object',
-          required: ['id', 'type'],
-          properties: {
-            id: {
-              type: 'string',
-              format: 'uri'
-            },
-            type: {
-              type: 'string'
-            }
-          }
-        },
-        uriOrId: {
-          oneOf: [
-            {
-              type: 'string',
-              format: 'uri'
-            },
-            {
-              type: 'object',
-              required: ['id'],
-              properties: {
-                id: {
-                  type: 'string',
-                  format: 'uri'
-                }
-              }
-            }
-          ]
-        },
-        ...schemaNameObject
-      },
-      title: schemaName,
-      description: `${description}`
-    };
-    return W3CSchema;
   }
 
   async _schemaExist(version: string, schemaName: string): Promise<string> {
@@ -1430,20 +1240,20 @@ export class EcosystemService {
   async _requestSchemaEndorsement(requestSchemaPayload: object, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-schema-endorsement-request' };
     const payload = { requestSchemaPayload, url, orgId };
-
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
       return { message };
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException(
-        {
-          status: error.status,
-          error: error.message
-        },
-        error.status
-      );
+      throw error;
+      // throw new InternalServerErrorException(
+      //   {
+      //     statusCode: error?.message?.statusCode,
+      //     error: error?.message?.error?.message
+      //   },
+      //   error.status
+      // );
     }
   }
 
@@ -1469,6 +1279,7 @@ export class EcosystemService {
 
   async signTransaction(endorsementId: string, ecosystemId: string): Promise<object> {
     try {
+      let updateSignedTransaction;
       const [endorsementTransactionPayload, ecosystemLeadDetails, platformConfig] = await Promise.all([
         this.ecosystemRepository.getEndorsementTransactionById(endorsementId, endorsementTransactionStatus.REQUESTED),
         this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId),
@@ -1507,52 +1318,77 @@ export class EcosystemService {
         endorserDid: endorsementTransactionPayload.endorserDid
       };
 
-      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(
-        payload,
-        url,
-        ecosystemLeadDetails.orgId
-      );
 
-      if (!schemaTransactionRequest) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
-      }
+      if (endorsementTransactionPayload && endorsementTransactionPayload?.type === endorsementTransactionType.SCHEMA) {
 
-      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
+        const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(
+          payload,
+          url,
+          ecosystemLeadDetails.orgId
+        );
 
-      if (!ecosystemDetails) {
-        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
-      }
-
-      const updateSignedTransaction = await this.ecosystemRepository.updateTransactionDetails(
-        endorsementId,
-        schemaTransactionRequest.message.signedTransaction
-      );
-
-      if (!updateSignedTransaction) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateTransactionError);
-      }
-
-      if (updateSignedTransaction && true === ecosystemDetails.autoEndorsement) {
-        const submitTxn = await this.submitTransaction({
-          endorsementId,
-          ecosystemId,
-          ecosystemLeadAgentEndPoint: ecosystemLeadAgentDetails.agentEndPoint,
-          orgId: ecosystemLeadDetails.orgId
-        });
-        if (!submitTxn) {
-          await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
-          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
+        if (!schemaTransactionRequest) {
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
         }
-        return {
-          autoEndorsement: ecosystemDetails.autoEndorsement,
-          submitTxn
-        };
+        const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
+  
+        if (!ecosystemDetails) {
+          throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
+        }
+  
+        updateSignedTransaction = await this.ecosystemRepository.updateTransactionDetails(
+          endorsementId,
+          schemaTransactionRequest.message.signedTransaction
+        );
+
+        if (!updateSignedTransaction) {
+          throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateTransactionError);
+        }
+      
+        if (updateSignedTransaction && true === ecosystemDetails.autoEndorsement) {
+          const submitTxn = await this.submitTransaction({
+            endorsementId,
+            ecosystemId,
+            ecosystemLeadAgentEndPoint: ecosystemLeadAgentDetails.agentEndPoint,
+            orgId: ecosystemLeadDetails.orgId
+          });
+          if (!submitTxn) {
+            await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
+            throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
+          }
+          const finalResponse = {
+            autoEndorsement: ecosystemDetails.autoEndorsement,
+            submitTxn
+          };
+          return finalResponse;
+        }
+  
+      } else if (endorsementTransactionPayload && endorsementTransactionPayload?.type === endorsementTransactionType.W3CSCHEMA) {
+
+        const updateAutoEndorsementFlag = await this.ecosystemRepository.updateEcosystemConfig(ecosystemLeadDetails.ecosystemId);
+
+        if (true === updateAutoEndorsementFlag?.['autoEndorsement']) {
+          const submitW3CTxn = await this.submitTransaction({
+            endorsementId,
+            ecosystemId,
+            ecosystemLeadAgentEndPoint: ecosystemLeadAgentDetails.agentEndPoint,
+            orgId: ecosystemLeadDetails.orgId
+          });
+          if (!submitW3CTxn) {
+            await this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.REQUESTED);
+            throw new InternalServerErrorException(ResponseMessages.ecosystem.error.sumbitTransaction);
+          }
+          return {
+            autoEndorsement: updateAutoEndorsementFlag?.['autoEndorsement'],
+            submitW3CTxn
+          };
+
+        }
       }
-
-      // To return selective response
+      
       await this.removeEndorsementTransactionFields(updateSignedTransaction);
+      return updateSignedTransaction;  
 
-      return updateSignedTransaction;
     } catch (error) {
       this.logger.error(`In sign transaction: ${JSON.stringify(error)}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
@@ -1664,26 +1500,42 @@ export class EcosystemService {
       endorsedTransaction: jsonString,
       endorserDid: ecosystemLeadAgentDetails.orgDid
     };
+  
+    switch (endorsementTransactionPayload.type) {
+      case endorsementTransactionType.SCHEMA:
+        payload.schema = {
+          attributes: parsedRequestPayload.operation.data.attr_names,
+          version: parsedRequestPayload.operation.data.version,
+          name: parsedRequestPayload.operation.data.name,
+          issuerId: ecosystemMemberDetails.orgDid
+        };
+        break;
 
-    if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
-      payload.schema = {
-        attributes: parsedRequestPayload.operation.data.attr_names,
-        version: parsedRequestPayload.operation.data.version,
-        name: parsedRequestPayload.operation.data.name,
-        issuerId: ecosystemMemberDetails.orgDid
-      };
-    } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
-      payload.credentialDefinition = {
-        tag: parsedRequestPayload.operation.tag,
-        issuerId: ecosystemMemberDetails.orgDid,
-        schemaId: endorsementTransactionPayload.requestBody.credentialDefinition['schemaId'],
-        type: endorsementTransactionPayload.requestBody.credentialDefinition['type'],
-        value: endorsementTransactionPayload.requestBody.credentialDefinition['value']
-      };
+        case endorsementTransactionType.W3CSCHEMA:
+          payload.schema = {
+            attributes: parsedRequestPayload.operation.data.attr_names,
+            version: parsedRequestPayload.operation.data.version,
+            name: parsedRequestPayload.operation.data.name,
+            issuerId: ecosystemMemberDetails.orgDid
+          };
+          break;
+  
+      case endorsementTransactionType.CREDENTIAL_DEFINITION:
+        payload.credentialDefinition = {
+          tag: parsedRequestPayload.operation.tag,
+          issuerId: ecosystemMemberDetails.orgDid,
+          schemaId: endorsementTransactionPayload.requestBody.credentialDefinition['schemaId'],
+          type: endorsementTransactionPayload.requestBody.credentialDefinition['type'],
+          value: endorsementTransactionPayload.requestBody.credentialDefinition['value']
+        };
+        break;
+      default:
+        throw new Error('Unsupported endorsement transaction type');
     }
-
+  
     return payload;
   }
+  
 
   async handleSchemaSubmission(
     endorsementTransactionPayload,
@@ -1756,7 +1608,7 @@ export class EcosystemService {
 
   async submitTransaction(transactionPayload: TransactionPayload): Promise<object> {
     try {
-      const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
+      const { endorsementId} = transactionPayload;
       const checkEndorsementRequestIsSubmitted = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
         endorsementTransactionStatus.SUBMITED
@@ -1765,6 +1617,37 @@ export class EcosystemService {
       if (checkEndorsementRequestIsSubmitted) {
         throw new ConflictException(ResponseMessages.ecosystem.error.transactionSubmitted);
       }
+
+      const endorsementPayload = await this.ecosystemRepository.getTransactionDetailsByEndorsementId(endorsementId);
+
+      let txnPayload;
+
+      if (endorsementPayload?.type === endorsementTransactionType.SCHEMA) {        
+        txnPayload = await this.submitIndyTransaction(transactionPayload);
+      } else if (endorsementPayload?.type === endorsementTransactionType.W3CSCHEMA) {
+        txnPayload = await this.submitW3CTransaction(transactionPayload);
+      }
+
+      return txnPayload;
+
+    } catch (error) {
+      this.logger.error(`In submit transaction: ${JSON.stringify(error)}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
+  async submitIndyTransaction(transactionPayload: TransactionPayload): Promise<object> {
+    try {
+      const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
 
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
@@ -1825,11 +1708,13 @@ export class EcosystemService {
         if (!updateSchemaId) {
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateSchemaId);
         }
-        return this.handleSchemaSubmission(
+        const response = this.handleSchemaSubmission(
           endorsementTransactionPayload,
           ecosystemMemberDetails,
           submitTransactionRequest
         );
+
+        return response;
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
         if ('undefined' === submitTransactionRequest['message'].credentialDefinitionId.split(':')[3]) {
           const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
@@ -1861,7 +1746,7 @@ export class EcosystemService {
         );
       }
     } catch (error) {
-      this.logger.error(`In submit transaction: ${JSON.stringify(error)}`);
+      this.logger.error(`In submit Indy transaction: ${JSON.stringify(error)}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
         throw new RpcException({
           message: error?.status?.message?.error?.reason
@@ -1873,6 +1758,80 @@ export class EcosystemService {
         throw new RpcException(error.response ? error.response : error);
       }
     }
+  }
+
+
+  async submitW3CTransaction(transactionPayload: TransactionPayload): Promise<object> {
+    try {
+      const { endorsementId, orgId } = transactionPayload;
+
+      const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
+        endorsementId,
+        endorsementTransactionStatus.REQUESTED
+      );
+
+      if (!endorsementTransactionPayload) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotSigned);
+      }
+
+
+      const w3cEndorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionByIdAndType(endorsementId, endorsementTransactionType.W3CSCHEMA);
+      
+      const w3cPayload = {
+        schemaPayload : {
+          schemaAttributes: w3cEndorsementTransactionPayload?.requestBody?.['schemaAttributes'],
+          schemaName: w3cEndorsementTransactionPayload?.requestBody?.['schemaName'],
+          did: w3cEndorsementTransactionPayload?.requestBody?.['did'],
+          description: w3cEndorsementTransactionPayload?.requestBody?.['description']      
+        },
+        orgId
+      };
+      
+      await this._createW3CSchema(w3cPayload);
+      
+      const w3cTransactionPayload = await this.updateTransactionStatus(endorsementId);
+      
+      return w3cTransactionPayload;
+
+        // return this.handleSchemaSubmission(
+        //   w3cEndorsementTransactionPayload,
+        //   ecosystemMemberDetails,
+        //   submitTransactionRequest
+        // );
+      
+    } catch (error) {
+      this.logger.error(`In submit w3c transaction: ${JSON.stringify(error)}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
+  async _createW3CSchema(payload: W3CSchemaPayload): Promise<object> {
+    const pattern = { cmd: 'create-w3c-schema' };
+
+    const w3cSchemaData = await this.ecosystemServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return w3cSchemaData;
   }
 
   /**

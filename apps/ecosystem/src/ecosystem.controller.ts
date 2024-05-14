@@ -190,8 +190,9 @@ export class EcosystemController {
    * @returns sign endorsement request
    */
   @MessagePattern({ cmd: 'sign-endorsement-transaction' })
-  async signTransaction(payload: { endorsementId: string; ecosystemId: string }): Promise<object> {
-    return this.ecosystemService.signTransaction(payload.endorsementId, payload.ecosystemId);
+  async signTransaction(payload: { endorsementId: string; ecosystemId: string}): Promise<object> {
+    const { endorsementId, ecosystemId } = payload;
+    return this.ecosystemService.signTransaction(endorsementId, ecosystemId);
   }
 
   /**

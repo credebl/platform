@@ -130,11 +130,6 @@ export class RequestW3CSchemaDto {
   @IsString({ message: 'description must be in string format.' })
   description: string;
 
-  @ApiProperty()
-  @IsBoolean({ message: 'endorse must be a boolean.' })
-  @IsOptional()
-  endorse?: boolean;
-
   userId?: string;
 
 }
@@ -163,12 +158,14 @@ export class RequestCredDefDto {
   endorse?: boolean;
 
   @ApiProperty()
+  @Transform(({ value }) => trim(value))
   @IsString({ message: 'tag must be a string.' })
   tag: string;
 
   userId?: string;
 
   @ApiProperty()
+  @Transform(({ value }) => trim(value))
   @IsString({ message: 'schemaId must be a string.' })
   schemaId: string;
 

@@ -16,16 +16,19 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { OrgAgentType, SchemaType } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemaDetails, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonService } from '@credebl/common';
+import { W3CSchemaVersion } from './enum/schema.enum';
 
 @Injectable()
 export class SchemaService extends BaseService {
   constructor(
     private readonly schemaRepository: SchemaRepository,
+    private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {
@@ -174,7 +177,8 @@ export class SchemaService extends BaseService {
             issuerId: '',
             onLedgerStatus: 'Submitted on ledger',
             orgId,
-            ledgerId: getLedgerId.id
+            ledgerId: getLedgerId.id,
+            type: SchemaType.INDY
           };
 
           if ('finished' === responseObj.schema.state) {
@@ -242,8 +246,17 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async createW3CSchema(orgId:string, schemaPayload: SchemaPayload): Promise<object> {
+  async createW3CSchema(orgId:string, schemaPayload: SchemaPayload, user: IUserRequestInterface): Promise<string> {
     try {
+      const schemaSchemaExist = await this.schemaRepository.schemaExists(schemaPayload.schemaName, W3CSchemaVersion.W3C_SCHEMA_VERSION);
+
+      if (0 !== schemaSchemaExist.length) {
+        throw new ConflictException(ResponseMessages.schema.error.exists, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.conflict
+        });
+      }
+
       const { description, did, schemaAttributes, schemaName} = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {
@@ -282,7 +295,11 @@ export class SchemaService extends BaseService {
         orgId,
         schemaRequestPayload: agentSchemaPayload
       };
-      return this._createW3CSchema(W3cSchemaPayload);
+      const createSchema = await this._createW3CSchema(W3cSchemaPayload);
+      
+      await this.storeW3CSchemas(createSchema.response, user, orgId);
+      
+      return createSchema.response;
     } catch (error) {
       this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
       throw new RpcException(error.error ? error.error.message : error.message);
@@ -473,6 +490,58 @@ export class SchemaService extends BaseService {
     return W3CSchema;
   }
   
+   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+   private async storeW3CSchemas(schemaDetails, user, orgId) {
+
+    const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
+
+    const schemaRequest = await this.commonService
+    .httpGet(schemaServerUrl)
+    .then(async (response) => response);
+  
+    if (!schemaRequest) {
+      throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.notFound
+      });
+    }
+  const schemaAttributeJson = schemaRequest.definitions.credentialSubject.properties;
+  const extractedData = [];
+  
+  for (const key in schemaAttributeJson) {
+      if (2 < Object.keys(schemaAttributeJson[key]).length) {
+          const { type, title } = schemaAttributeJson[key];
+          const schemaDataType = type;
+          const displayName = title;
+          const isRequired = false;
+          extractedData.push({ 'attributeName': title, schemaDataType, displayName, isRequired });
+      }
+  }
+  const indyNamespace = schemaDetails?.did.includes(':testnet:') ? 'polygon:testnet' : 'polygon';
+  const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
+
+    const storeSchemaDetails = {
+        schema: {
+          schemaName: schemaRequest.title,
+          schemaVersion: W3CSchemaVersion.W3C_SCHEMA_VERSION,
+          attributes:extractedData,
+          id: schemaDetails.schemaUrl
+
+        },
+      issuerId: schemaDetails.did,
+      createdBy: user.id,
+      changedBy: user.id,
+      publisherDid: schemaDetails.did,
+      orgId,
+      ledgerId: getLedgerId.id,
+      type: SchemaType.INDY
+    };
+    const saveResponse = await this.schemaRepository.saveSchema(
+      storeSchemaDetails
+    );
+    return saveResponse;
+   }
+  
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {
@@ -515,7 +584,7 @@ export class SchemaService extends BaseService {
         ).toPromise()
         .catch(error => {
           this.logger.error(`Error in creating W3C schema : ${JSON.stringify(error)}`);
-          throw new RpcException(error.error ? error.error.message : error.message);
+          throw new Error(error.error ? error.error.message : error.message);
         });
       return W3CSchemaResponse;  
   }

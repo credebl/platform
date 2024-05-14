@@ -22,7 +22,7 @@ import { EcosystemInviteTemplate } from '../templates/EcosystemInviteTemplate';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
-import { EcosystemConfigSettings, Invitation, OrgAgentType } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, Invitation, OrgAgentType, SchemaType } from '@credebl/enum/enum';
 import {
   DeploymentModeType,
   EcosystemOrgStatus,
@@ -1403,7 +1403,8 @@ export class EcosystemService {
       lastChangedBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
       publisherDid: extractedDidValue,
       orgId: endorsementTransactionPayload.ecosystemOrgs.orgId,
-      ledgerId: ecosystemMemberDetails.ledgerId
+      ledgerId: ecosystemMemberDetails.ledgerId,
+      type: SchemaType.W3C_Schema
     };
     const saveSchemaDetails = await this.ecosystemRepository.saveSchema(saveSchemaPayload);
     if (!saveSchemaDetails) {

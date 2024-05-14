@@ -168,7 +168,8 @@ export const ResponseMessages = {
             agentDetailsNotFound: 'Agent details not found',
             failedFetchSchema: 'Failed to fetch schema data',
             atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
-            schemaBuilder: 'Error while creating schema JSON`'
+            schemaBuilder: 'Error while creating schema JSON',
+            W3CSchemaNotFOund: 'Error while resolving W3C schema'
         }
     },
     credentialDefinition: {

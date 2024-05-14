@@ -169,7 +169,8 @@ export const ResponseMessages = {
             failedFetchSchema: 'Failed to fetch schema data',
             atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
             schemaBuilder: 'Error while creating schema JSON',
-            W3CSchemaNotFOund: 'Error while resolving W3C schema'
+            W3CSchemaNotFOund: 'Error while resolving W3C schema',
+            storeW3CSchema: 'Error while storing W3C schema'
         }
     },
     credentialDefinition: {

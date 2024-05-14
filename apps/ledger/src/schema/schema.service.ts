@@ -248,13 +248,10 @@ export class SchemaService extends BaseService {
 
   async createW3CSchema(orgId:string, schemaPayload: SchemaPayload, user: IUserRequestInterface): Promise<string> {
     try {
-      const schemaSchemaExist = await this.schemaRepository.schemaExists(schemaPayload.schemaName, W3CSchemaVersion.W3C_SCHEMA_VERSION);
+      const isSchemaExist = await this.schemaRepository.schemaExists(schemaPayload.schemaName, W3CSchemaVersion.W3C_SCHEMA_VERSION);
 
-      if (0 !== schemaSchemaExist.length) {
-        throw new ConflictException(ResponseMessages.schema.error.exists, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.conflict
-        });
+      if (0 !== isSchemaExist.length) {
+        throw new ConflictException(ResponseMessages.schema.error.exists);
       }
 
       const { description, did, schemaAttributes, schemaName} = schemaPayload;
@@ -297,12 +294,19 @@ export class SchemaService extends BaseService {
       };
       const createSchema = await this._createW3CSchema(W3cSchemaPayload);
       
-      await this.storeW3CSchemas(createSchema.response, user, orgId);
+     const storeW3CSchema = await this.storeW3CSchemas(createSchema.response, user, orgId);
+
+     if (!storeW3CSchema) {
+      throw new ConflictException(ResponseMessages.schema.error.storeW3CSchema, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.notFound
+      });
+     }
       
       return createSchema.response;
     } catch (error) {
       this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.error ? error.error.message : error.message);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -534,7 +538,7 @@ export class SchemaService extends BaseService {
       publisherDid: schemaDetails.did,
       orgId,
       ledgerId: getLedgerId.id,
-      type: SchemaType.INDY
+      type: SchemaType.W3C_Schema
     };
     const saveResponse = await this.schemaRepository.saveSchema(
       storeSchemaDetails

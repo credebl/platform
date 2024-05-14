@@ -1404,7 +1404,7 @@ export class EcosystemService {
       publisherDid: extractedDidValue,
       orgId: endorsementTransactionPayload.ecosystemOrgs.orgId,
       ledgerId: ecosystemMemberDetails.ledgerId,
-      type: SchemaType.W3C_Schema
+      type: SchemaType.INDY
     };
     const saveSchemaDetails = await this.ecosystemRepository.saveSchema(saveSchemaPayload);
     if (!saveSchemaDetails) {

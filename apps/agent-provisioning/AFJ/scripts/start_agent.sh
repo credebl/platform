@@ -198,8 +198,12 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker rm -f "${AGENCY}_${CONTAINER_NAME}" || true
-  docker compose -f $FILE_NAME --project-name ${CONTAINER_NAME}_${AGENCY} up -d
+  # Convert to lowercase and replace hyphens with underscores
+  PROJECT_NAME=$(echo "${AGENCY}_${CONTAINER_NAME}" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+
+  docker rm -f "${PROJECT_NAME}" || true
+
+  docker compose -f $FILE_NAME --project-name "${PROJECT_NAME}" up -d
   if [ $? -eq 0 ]; then
 
     n=0

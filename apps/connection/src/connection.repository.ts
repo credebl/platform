@@ -49,7 +49,7 @@ export class ConnectionRepository {
     connectionInvitation: string,
     agentId: string,
     orgId: string,
-    invitationDid : string
+    invitationDid: string
     // eslint-disable-next-line camelcase
   ): Promise<agent_invitations> {
     try {
@@ -89,44 +89,64 @@ export class ConnectionRepository {
     }
   }
 
-    /**
-    * Description: Save connection details
-    * @param connectionInvitation
-    * @param agentId
-    * @param orgId
-    * @returns Get connection details
-    */
-    // eslint-disable-next-line camelcase
-    async saveConnectionWebhook(createDateTime: string, lastChangedDateTime: string, connectionId: string, state: string, orgDid: string, theirLabel: string, autoAcceptConnection: boolean, outOfBandId: string, orgId: string): Promise<connections> {
-        try {
-            const agentDetails = await this.prisma.connections.upsert({
-                where: {
-                    connectionId
-                },
-                update: {
-                    lastChangedDateTime,
-                    lastChangedBy: orgId,
-                    state,
-                    orgDid,
-                    theirLabel,
-                    autoAcceptConnection,
-                    outOfBandId
-                },
-                create: {
-                    createDateTime,
-                    lastChangedDateTime,
-                    createdBy: orgId,
-                    lastChangedBy: orgId,
-                    connectionId,
-                    state,
-                    orgDid,
-                    theirLabel,
-                    autoAcceptConnection,
-                    outOfBandId,
-                    orgId
-                }
-            });
-            return agentDetails;
+  /**
+   * Description: Save connection details
+   * @param connectionInvitation
+   * @param agentId
+   * @param orgId
+   * @returns Get connection details
+   */
+  // eslint-disable-next-line camelcase
+  async saveConnectionWebhook(payload: ICreateConnection): Promise<object> {
+    try {
+      let organisationId;
+      const { connectionDto, orgId } = payload;
+
+      if ('default' !== connectionDto?.contextCorrelationId) {
+        const getOrganizationId = await this.getOrganization(connectionDto?.contextCorrelationId);
+        organisationId = getOrganizationId?.orgId;
+      } else {
+        organisationId = orgId;
+      }
+
+      const walletLabelName = connectionDto?.theirLabel;
+      let maskedTheirLabel: string;
+      let firstLetters: string;
+      let maskedMiddleLetters: string;
+      let lastLetters: string;
+
+      switch (true) {
+        case 3 >= walletLabelName.length:
+          firstLetters = walletLabelName.slice(0, 1);
+          maskedMiddleLetters = walletLabelName.slice(1).replace(/./g, '*');
+          maskedTheirLabel = firstLetters + maskedMiddleLetters;
+          break;
+
+        case 3 < walletLabelName.length && 6 > walletLabelName.length:
+          firstLetters = walletLabelName.slice(0, 1);
+          lastLetters = walletLabelName.slice(-1);
+          maskedMiddleLetters = walletLabelName.slice(1, -1).replace(/./g, '*');
+          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
+          break;
+
+        case 6 <= walletLabelName.length && 8 >= walletLabelName.length:
+          firstLetters = walletLabelName.slice(0, 2);
+          lastLetters = walletLabelName.slice(-2);
+          maskedMiddleLetters = walletLabelName.slice(2, -2).replace(/./g, '*');
+          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
+          break;
+
+        case 8 < walletLabelName.length:
+          firstLetters = walletLabelName.slice(0, 3);
+          lastLetters = walletLabelName.slice(-3);
+          maskedMiddleLetters = walletLabelName.slice(3, -3).replace(/./g, '*');
+          maskedTheirLabel = firstLetters + maskedMiddleLetters + lastLetters;
+          break;
+
+        default:
+          maskedTheirLabel = walletLabelName;
+          break;
+      }
 
       return this.prisma.connections.upsert({
         where: {
@@ -245,20 +265,20 @@ export class ConnectionRepository {
           connectionId: true
         },
         orderBy: {
-          [connectionSearchCriteria.sortField]: SortValue.ASC === connectionSearchCriteria.sortBy ? 'asc' : 'desc' 
+          [connectionSearchCriteria.sortField]: SortValue.ASC === connectionSearchCriteria.sortBy ? 'asc' : 'desc'
         },
         take: Number(connectionSearchCriteria.pageSize),
         skip: (connectionSearchCriteria.pageNumber - 1) * connectionSearchCriteria.pageSize
       });
       const connectionCount = await this.prisma.connections.count({
-          where: {
-            orgId,
-            OR: [
-              { theirLabel: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } },
-              { connectionId: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } }
-            ]
-          }
-        });
+        where: {
+          orgId,
+          OR: [
+            { theirLabel: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } },
+            { connectionId: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } }
+          ]
+        }
+      });
 
       return { connectionCount, connectionsList };
     } catch (error) {

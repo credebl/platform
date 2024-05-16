@@ -423,7 +423,7 @@ export class EcosystemController {
     ) orgId: string,   
     @Res() res: Response
   ): Promise<Response> {
-
+    
     const transactionResponse = await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
 
     const responseMessage =

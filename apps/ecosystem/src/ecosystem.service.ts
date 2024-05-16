@@ -993,7 +993,7 @@ export class EcosystemService {
         ) ?? [];
 
       if (0 < existSchema.length) {
-        throw new ConflictException(' w3c schema is already exists');
+        throw new ConflictException(ResponseMessages.ecosystem.error.schemaNameAlreadyExist);
       }
 
       if (!ecosystemMemberOrgAgentDetails) {
@@ -1240,12 +1240,31 @@ export class EcosystemService {
 
   async signTransaction(endorsementId: string, ecosystemId: string): Promise<object> {
     try {
-      let updateSignedTransaction;
+      
+      const checkEndorsementRequestIsSigned = await this.ecosystemRepository.getEndorsementTransactionById(
+        endorsementId,
+        endorsementTransactionStatus.SIGNED
+      );
+
+      if (checkEndorsementRequestIsSigned) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.transactionAlreadySigned);
+      }
+
+      const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
+  
+      if (!ecosystemDetails) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
+      }
+
       const [endorsementTransactionPayload, ecosystemLeadDetails, platformConfig] = await Promise.all([
         this.ecosystemRepository.getEndorsementTransactionById(endorsementId, endorsementTransactionStatus.REQUESTED),
         this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId),
         this.ecosystemRepository.getPlatformConfigDetails()
       ]);
+
+      if (endorsementTransactionPayload && endorsementTransactionPayload?.type === endorsementTransactionType.W3CSCHEMA) {
+         throw new BadRequestException(ResponseMessages.ecosystem.error.signTransactionNotApplicable);
+      }
 
       if (!endorsementTransactionPayload) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
@@ -1278,10 +1297,6 @@ export class EcosystemService {
         transaction: jsonString,
         endorserDid: endorsementTransactionPayload.endorserDid
       };
-
-
-      if (endorsementTransactionPayload && endorsementTransactionPayload?.type === endorsementTransactionType.SCHEMA) {
-
         const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(
           payload,
           url,
@@ -1291,17 +1306,11 @@ export class EcosystemService {
         if (!schemaTransactionRequest) {
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
         }
-        const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
-  
-        if (!ecosystemDetails) {
-          throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
-        }
-  
-        updateSignedTransaction = await this.ecosystemRepository.updateTransactionDetails(
+
+        const updateSignedTransaction = await this.ecosystemRepository.updateTransactionDetails(
           endorsementId,
           schemaTransactionRequest.message.signedTransaction
         );
-
 
         if (!updateSignedTransaction) {
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateTransactionError);
@@ -1324,11 +1333,7 @@ export class EcosystemService {
           };
           return finalResponse;
         }
-  
-      } else if (endorsementTransactionPayload && endorsementTransactionPayload?.type === endorsementTransactionType.W3CSCHEMA) {
-         throw new BadRequestException(ResponseMessages.ecosystem.error.signTransactionNotApplicable);
-      }
-      
+        
       await this.removeEndorsementTransactionFields(updateSignedTransaction);
       return updateSignedTransaction;  
 
@@ -1543,26 +1548,23 @@ export class EcosystemService {
 
   async submitTransaction(transactionPayload: TransactionPayload): Promise<object> {
     try {
-      const { endorsementId} = transactionPayload;
+      const { endorsementId } = transactionPayload;
       const checkEndorsementRequestIsSubmitted = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
         endorsementTransactionStatus.SUBMITED
       );
-
       if (checkEndorsementRequestIsSubmitted) {
         throw new ConflictException(ResponseMessages.ecosystem.error.transactionSubmitted);
       }
 
       const endorsementPayload = await this.ecosystemRepository.getTransactionDetailsByEndorsementId(endorsementId);
-
       let txnPayload;
-
-      if (endorsementPayload?.type === endorsementTransactionType.SCHEMA) {        
-        txnPayload = await this.submitIndyTransaction(transactionPayload);
-      } else if (endorsementPayload?.type === endorsementTransactionType.W3CSCHEMA) {
+      
+      if (endorsementPayload?.type === endorsementTransactionType.W3CSCHEMA) {
         txnPayload = await this.submitW3CTransaction(transactionPayload);
+      } else {
+        txnPayload = await this.submitIndyTransaction(transactionPayload);       
       }
-
       return txnPayload;
 
     } catch (error) {
@@ -1595,7 +1597,6 @@ export class EcosystemService {
 
       const ecosystemMemberDetails = await this.getEcosystemMemberDetails(endorsementTransactionPayload);
       const ecosystemLeadAgentDetails = await this.getEcosystemLeadAgentDetails(ecosystemId);
-
       const agentEndPoint = ecosystemLeadAgentEndPoint
         ? ecosystemLeadAgentEndPoint
         : ecosystemMemberDetails.agentEndPoint;
@@ -1654,7 +1655,6 @@ export class EcosystemService {
       } else if (endorsementTransactionPayload.type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
         if ('undefined' === submitTransactionRequest['message'].credentialDefinitionId.split(':')[3]) {
           const ecosystemDetails = await this.ecosystemRepository.getEcosystemDetails(ecosystemId);
-
           if (true === ecosystemDetails.autoEndorsement) {
             await this.ecosystemRepository.updateTransactionStatus(
               endorsementId,
@@ -1700,14 +1700,13 @@ export class EcosystemService {
   async submitW3CTransaction(transactionPayload: TransactionPayload): Promise<object> {
     try {
       const { endorsementId } = transactionPayload;
-
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
         endorsementTransactionStatus.REQUESTED
       );
 
       if (!endorsementTransactionPayload) {
-        throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotSigned);
+        throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotRequested);
       }
 
       const w3cEndorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionByIdAndType(endorsementId, endorsementTransactionType.W3CSCHEMA);

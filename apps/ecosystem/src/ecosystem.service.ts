@@ -843,7 +843,7 @@ export class EcosystemService {
         alreadySchemaExist = await this._schemaExist(schemaName);
 
         if (0 !== alreadySchemaExist.length) {
-          throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+          throw new ConflictException(ResponseMessages.ecosystem.error.schemaNameAlreadyExist);
         }
 
         return await this.requestW3CSchemaEndorsement(requestSchemaPayload as IRequestW3CSchemaEndorsement, orgId, ecosystemId);
@@ -851,17 +851,7 @@ export class EcosystemService {
 
     } catch (error) {
       this.logger.error(`In request schema endorsement : ${JSON.stringify(error)}`);
-
-      const errorObject = error?.error;
-      if (errorObject) {
-        throw new RpcException({
-          error: errorObject?.message?.error?.message,
-          message: 'error in requesting schema endorsement',
-          statusCode: errorObject?.message?.statusCode
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : {...error});
-      }
+      throw new RpcException(error.response ? error.response : error?.error);
     }
   }
 
@@ -961,7 +951,7 @@ export class EcosystemService {
       return storeTransaction;
     } catch (error) {
       this.logger.error(`In request indy schema endorsement : ${JSON.stringify(error)}`);
-      throw new RpcException(error.error ? error.error.message : error.message);
+      throw new RpcException(error ? error.response : error);
     }
   }
 

@@ -10,9 +10,6 @@ export class AgentConfigureDto {
   @Transform(({ value }) => trim(value))
   @MinLength(2, { message: 'Minimum length for wallet name must be 2 characters.' })
   @Matches(regex, { message: 'Wallet name must not contain special characters.' })
-  @Matches(/^\S*$/, {
-    message: 'Spaces are not allowed in label'
-  })
   walletName: string;
 
   @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
@@ -30,7 +27,7 @@ export class AgentConfigureDto {
   @IsNotEmpty()
   apiKey: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   network?: string;

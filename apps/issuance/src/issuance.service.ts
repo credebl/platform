@@ -9,8 +9,8 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { CredentialFormatType, CredentialOffer, FileUploadData, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
+import { OrgAgentType, ProtocolVersion } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -33,6 +33,7 @@ import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gat
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { agent_invitations, organisation } from '@prisma/client';
+import { CredentialFormatPayload } from '@credo-ts/core';
 
 
 @Injectable()
@@ -97,39 +98,7 @@ export class IssuanceService {
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
       const issuancePromises = credentialData.map(async (credentials) => {
-        // const { connectionId, attributes, credential, options } = credentials;
-
         const {connectionId, credentialFormats} = credentials;
-        // let issueData;
-
-        // if (payload.credentialType === IssueCredentialType.INDY) {
-        //   issueData = {
-        //     protocolVersion: payload.protocolVersion || 'v1',
-        //     connectionId,
-        //     credentialFormats: {
-        //       indy: {
-        //         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        //         attributes: attributes.map(({ isRequired, ...rest }) => rest),
-        //         credentialDefinitionId
-        //       }
-        //     },
-        //     autoAcceptCredential: payload.autoAcceptCredential || 'always',
-        //     comment
-        //   };
-        // } else if (payload.credentialType === IssueCredentialType.JSONLD) {
-        //   issueData = {
-        //     protocolVersion: payload.protocolVersion || 'v2',
-        //     connectionId,
-        //     credentialFormats: {
-        //       jsonld: {
-        //         credential,
-        //         options
-        //       }
-        //     },
-        //     autoAcceptCredential: payload.autoAcceptCredential || 'always',
-        //     comment: comment || ''
-        //   };
-        // }
 
         const issueData = {
           connectionId,
@@ -170,35 +139,35 @@ export class IssuanceService {
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
 
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType, isShortenUrl, reuseConnection } = payload;
-      if (credentialType === IssueCredentialType.INDY) {
-        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
+      const { orgId, comment, protocolVersion, credentialFormats, credentialType, isShortenUrl, reuseConnection, parentThreadId, willConfirm, goalCode, autoAcceptCredential } = payload;
+      // if (credentialType === IssueCredentialType.INDY) {
+      //   const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+      //     credentialDefinitionId
+      //   );
 
-        if (schemadetailsResponse?.attributes) {
-          const schemadetailsResponseError = [];
-          const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
+      //   if (schemadetailsResponse?.attributes) {
+      //     const schemadetailsResponseError = [];
+      //     const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
 
-          attributesArray.forEach((attribute) => {
-            if (attribute.attributeName && attribute.isRequired) {
+      //     attributesArray.forEach((attribute) => {
+      //       if (attribute.attributeName && attribute.isRequired) {
 
-              payload.attributes.map((attr) => {
-                if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                  schemadetailsResponseError.push(
-                    `Attribute '${attribute.attributeName}' is required but has an empty value.`
-                  );
-                }
-                return true;
-              });
-            }
-          });
-          if (0 < schemadetailsResponseError.length) {
-            throw new BadRequestException(schemadetailsResponseError);
-          }
+      //         payload.attributes.map((attr) => {
+      //           if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+      //             schemadetailsResponseError.push(
+      //               `Attribute '${attribute.attributeName}' is required but has an empty value.`
+      //             );
+      //           }
+      //           return true;
+      //         });
+      //       }
+      //     });
+      //     if (0 < schemadetailsResponseError.length) {
+      //       throw new BadRequestException(schemadetailsResponseError);
+      //     }
 
-        }
-      }
+      //   }
+      // }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       let invitationDid: string | undefined;
@@ -221,49 +190,26 @@ export class IssuanceService {
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
 
-      let issueData;
-      if (credentialType === IssueCredentialType.INDY) {
+      const issueData = {
+        protocolVersion,
+        credentialFormats,
+        autoAcceptCredential: autoAcceptCredential || 'always',
+        goalCode: goalCode || undefined,
+        parentThreadId: parentThreadId || undefined,
+        willConfirm: willConfirm || undefined,
+        imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
+        label: organisation?.name,
+        comment: comment || '',
+        invitationDid:invitationDid || undefined
+      };
 
-        issueData = {
-          protocolVersion: protocolVersion || 'v1',
-          credentialFormats: {
-            indy: {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              attributes: (attributes).map(({ isRequired, ...rest }) => rest),
-              credentialDefinitionId
-            }
-          },
-          autoAcceptCredential: payload.autoAcceptCredential || 'always',
-          goalCode: payload.goalCode || undefined,
-          parentThreadId: payload.parentThreadId || undefined,
-          willConfirm: payload.willConfirm || undefined,
-          imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
-          label: organisation?.name,
-          comment: comment || '',
-          invitationDid:invitationDid || undefined
-        };
 
+      if (IssueCredentialType.INDY === credentialType) {
+        issueData.protocolVersion = protocolVersion || ProtocolVersion.v1;
+      } else if (IssueCredentialType.JSONLD === credentialType || IssueCredentialType.ANONCREDS === credentialType) {
+        issueData.protocolVersion = protocolVersion || ProtocolVersion.v2;
       }
 
-      if (credentialType === IssueCredentialType.JSONLD) {
-        issueData = {
-          protocolVersion: protocolVersion || 'v2',
-          credentialFormats: {
-            jsonld: {
-              credential,
-              options
-            }
-          },
-          autoAcceptCredential: payload.autoAcceptCredential || 'always',
-          goalCode: payload.goalCode || undefined,
-          parentThreadId: payload.parentThreadId || undefined,
-          willConfirm: payload.willConfirm || undefined,
-          imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
-          label: organisation?.name,
-          comment: comment || '',
-          invitationDid:invitationDid || undefined
-        };
-      }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
       if (isShortenUrl) {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
@@ -468,59 +414,58 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     const {
       credentialOffer,
       comment,
-      credentialDefinitionId,
+      credentialFormats,
+      // credentialDefinitionId,
       orgId,
       protocolVersion,
-      attributes,
       emailId,
       credentialType
     } = outOfBandCredential;
 
-    if (IssueCredentialType.INDY === credentialType) {
-      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
+    // if (IssueCredentialType.INDY === credentialType) {
+    //   const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+    //     credentialDefinitionId
+    //   );
 
-      let attributesArray: IAttributes[] = [];
-      if (schemaResponse?.attributes) {
-        attributesArray = JSON.parse(schemaResponse.attributes);
-      }
+    //   let attributesArray: IAttributes[] = [];
+    //   if (schemaResponse?.attributes) {
+    //     attributesArray = JSON.parse(schemaResponse.attributes);
+    //   }
 
-      if (0 < attributes?.length) {
-        const attrError = [];
-        attributesArray.forEach((schemaAttribute, i) => {
-          if (schemaAttribute.isRequired) {
-            const attribute = attributes.find((attribute) => attribute.name === schemaAttribute.attributeName);
-            if (!attribute?.value) {
-              attrError.push(`attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`);
-            }
-          }
-        });
-        if (0 < attrError.length) {
-          throw new BadRequestException(attrError);
-        }
-      }
-      if (0 < credentialOffer?.length) {
-        const credefError = [];
-        credentialOffer.forEach((credentialAttribute, index) => {
-          attributesArray.forEach((schemaAttribute, i) => {
-            const attribute = credentialAttribute.attributes.find(
-              (attribute) => attribute.name === schemaAttribute.attributeName
-            );
+    //   if (0 < attributes?.length) {
+    //     const attrError = [];
+    //     attributesArray.forEach((schemaAttribute, i) => {
+    //       if (schemaAttribute.isRequired) {
+    //         const attribute = attributes.find((attribute) => attribute.name === schemaAttribute.attributeName);
+    //         if (!attribute?.value) {
+    //           attrError.push(`attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`);
+    //         }
+    //       }
+    //     });
+    //     if (0 < attrError.length) {
+    //       throw new BadRequestException(attrError);
+    //     }
+    //   }
+    //   if (0 < credentialOffer?.length) {
+    //     const credefError = [];
+    //     credentialOffer.forEach((credentialAttribute, index) => {
+    //       attributesArray.forEach((schemaAttribute, i) => {
+    //         const attribute = credentialAttribute.attributes.find(
+    //           (attribute) => attribute.name === schemaAttribute.attributeName
+    //         );
 
-            if (schemaAttribute.isRequired && !attribute?.value) {
-              credefError.push(
-                `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
-              );
-            }
-          });
-        });
-        if (0 < credefError.length) {
-          throw new BadRequestException(credefError);
-        }
-      }
-    }
-
+    //         if (schemaAttribute.isRequired && !attribute?.value) {
+    //           credefError.push(
+    //             `credentialOffer.${index}.attributes.${i}.Attribute ${schemaAttribute.attributeName} is required`
+    //           );
+    //         }
+    //       });
+    //     });
+    //     if (0 < credefError.length) {
+    //       throw new BadRequestException(credefError);
+    //     }
+    //   }
+    // }
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
     const { organisation } = agentDetails;
@@ -549,11 +494,11 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     const sendEmailCredentialOffer: {
       iterator: CredentialOffer;
       emailId: string;
+      // Note: Anoncreds change
+      credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
       index: number;
       credentialType: IssueCredentialType;
       protocolVersion: string;
-      attributes: IAttributes[];
-      credentialDefinitionId: string;
       outOfBandCredential: OutOfBandCredentialOfferPayload;
       comment: string;
       organisation: organisation;
@@ -564,8 +509,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     } = {
       credentialType,
       protocolVersion,
-      attributes,
-      credentialDefinitionId,
+      credentialFormats,
       outOfBandCredential,
       comment,
       organisation,
@@ -631,8 +575,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     index,
     credentialType,
     protocolVersion,
-    attributes,
-    credentialDefinitionId,
+    credentialFormats,
     outOfBandCredential,
     comment,
     organisation,
@@ -644,47 +587,22 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
   const iterationNo = index + 1;
   try {
-    let outOfBandIssuancePayload;
+    const outOfBandIssuancePayload = {
+      protocolVersion: '',
+      credentialFormats: credentialFormats ? credentialFormats : iterator?.credentialFormats,
+      autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+      comment,
+      goalCode: outOfBandCredential.goalCode || undefined,
+      parentThreadId: outOfBandCredential.parentThreadId || undefined,
+      willConfirm: outOfBandCredential.willConfirm || undefined,
+      label: organisation?.name,
+      imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
+    };
     if (IssueCredentialType.INDY === credentialType) {
-    
-      outOfBandIssuancePayload = {
-        protocolVersion: protocolVersion || 'v1',
-        credentialFormats: {
-          indy: {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            attributes: attributes ? attributes : iterator.attributes.map(({ isRequired, ...rest }) => rest),
-            credentialDefinitionId
-          }
-        },
-        autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
-        comment,
-        goalCode: outOfBandCredential.goalCode || undefined,
-        parentThreadId: outOfBandCredential.parentThreadId || undefined,
-        willConfirm: outOfBandCredential.willConfirm || undefined,
-        label: organisation?.name,
-        imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
-      };
+      outOfBandIssuancePayload.protocolVersion = protocolVersion || 'v1';
+    } else if (IssueCredentialType.ANONCREDS === credentialType || IssueCredentialType.JSONLD === credentialType) {
+      outOfBandIssuancePayload.protocolVersion = protocolVersion || 'v2';
     }
-
-    if (IssueCredentialType.JSONLD === credentialType) {
-      outOfBandIssuancePayload = {
-        protocolVersion: 'v2',
-        credentialFormats: {
-          jsonld: {
-            credential: iterator.credential,
-            options: iterator.options
-          }
-        },
-        autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
-        comment,
-        goalCode: outOfBandCredential.goalCode || undefined,
-        parentThreadId: outOfBandCredential.parentThreadId || undefined,
-        willConfirm: outOfBandCredential.willConfirm || undefined,
-        label: organisation?.name,
-        imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
-      };
-    }
-
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
 
     if (!credentialCreateOfferDetails) {
@@ -1222,20 +1140,24 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     const { organisation } = agentDetails;
     let isErrorOccurred = false;
     try {
-
+      // Depricating Indy credential and sending anoncreds in bulk issuance
       const oobIssuancepayload = {
-        credentialDefinitionId: jobDetails.credentialDefinitionId,
+        credentialFormats : {
+          'anoncreds': {
+            'attributes': [],
+            'credentialDefinitionId': jobDetails.credentialDefinitionId
+          }
+        },
         orgId: jobDetails.orgId,
         label: organisation?.name,
-        attributes: [],
         emailId: jobDetails.data.email,
-        credentialType: IssueCredentialType.INDY
+        credentialType: IssueCredentialType.ANONCREDS
       };
 
       for (const key in jobDetails.data) {
         if (jobDetails.data.hasOwnProperty(key) && 'email' !== key) {
           const value = jobDetails.data[key];
-          oobIssuancepayload.attributes.push({ name: key, value });
+          oobIssuancepayload.credentialFormats.anoncreds.attributes.push({ name: key, value });
         }
       }
 

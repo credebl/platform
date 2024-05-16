@@ -913,12 +913,12 @@ export class EcosystemService {
       const attributeArray = requestSchemaPayload.attributes.map((item) => item.attributeName);
 
       const schemaTransactionPayload = {
-        endorserDid: ecosystemLeadAgentDetails.orgDid,
+        endorserDid: ecosystemLeadAgentDetails.orgDid.trim(),
         endorse: requestSchemaPayload.endorse,
         attributes: attributeArray,
         version: String(requestSchemaPayload.version),
-        name: requestSchemaPayload.name,
-        issuerId: ecosystemOrgAgentDetails.orgDid
+        name: requestSchemaPayload.name.trim(),
+        issuerId: ecosystemOrgAgentDetails.orgDid.trim()
       };
      
       const schemaTransactionRequest: SchemaMessage = await this._requestSchemaEndorsement(

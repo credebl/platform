@@ -330,7 +330,14 @@ export class EcosystemController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async requestSchemaTransaction(
     @Body() requestSchemaPayload: RequestSchemaDto | RequestW3CSchemaDto,
-    @Param('orgId') orgId: string,
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(`Invalid format for orgId`);
+        }
+      })
+    ) orgId: string,   
     @Param('ecosystemId') ecosystemId: string,
     @Res() res: Response,
     @User() user: user,

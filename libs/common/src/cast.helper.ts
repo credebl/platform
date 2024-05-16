@@ -162,12 +162,18 @@ export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: 
 
   switch (true) {
     case schemaRequestType.INDY === schemaType:
-      if (!schemaPayload?.name) {
-        errors.push('name is required for indy schema type');
-      } else if (!schemaPayload?.version) {
-        errors.push('version is required for indy schema type');
-      } else if (!schemaPayload?.endorse) {
-        errors.push('endorse property is required for indy schema type');
+      switch (true) {
+        case !schemaPayload?.name:
+          errors.push('name is required for indy schema type');
+          break;
+        case 'string' !== typeof schemaPayload?.name:
+          errors.push('name must be string');
+          break;
+        case !schemaPayload?.version:
+          errors.push('version is required for indy schema type');
+          break;
+        default:
+          break;
       }
       if (!Array.isArray(schemaPayload?.attributes) || 0 === schemaPayload?.attributes.length) {
         errors.push('attributes array must not be empty for indy schema type');
@@ -176,14 +182,18 @@ export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: 
           if (!attribute) {
             errors.push(`attributes are required at position ${index + 1} in indy schema type`);
           } else {
-            if (!attribute?.displayName) {
-              errors.push(`displayName is required at position ${index + 1} in indy schema type`);
-            }
-            if (!attribute?.attributeName) {
-              errors.push(`attributeName is required at position ${index + 1} in indy schema type`);
-            }
-            if (!attribute?.schemaDataType) {
-              errors.push(`schemaDataType is required at position ${index + 1} in indy schema type`);
+            switch (true) {
+              case !attribute?.displayName:
+                errors.push(`displayName is required at position ${index + 1} in indy schema type`);
+                break;
+              case !attribute?.attributeName:
+                errors.push(`attributeName is required at position ${index + 1} in indy schema type`);
+                break;
+              case !attribute?.schemaDataType:
+                errors.push(`schemaDataType is required at position ${index + 1} in indy schema type`);
+                break;
+              default:
+                break;
             }
           }
         });
@@ -191,12 +201,29 @@ export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: 
       break;
 
     case schemaRequestType.W3C === schemaType:
-      if (!schemaPayload?.schemaName) {
-        errors.push('schemaName is required for w3c schema type');
-      } else if (!schemaPayload?.did) {
-        errors.push('did is required for w3c schema type');
-      } else if (!schemaPayload?.description) {
-        errors.push('description is required for w3c schema type');
+      switch (true) {
+        case !schemaPayload?.schemaName:
+          errors.push('schemaName is required for w3c schema type');
+          break;
+        case 'string' !== typeof schemaPayload?.schemaName:
+          errors.push('schemaName must be string');
+          break;
+
+        case !schemaPayload?.did:
+          errors.push('did is required for w3c schema type');
+          break;
+        case 'string' !== typeof schemaPayload?.did:
+          errors.push('did must be string');
+          break;
+
+        case !schemaPayload?.description:
+          errors.push('description is required for w3c schema type');
+          break;
+        case 'string' !== typeof schemaPayload?.description:
+          errors.push('description must be string');
+          break;
+        default:
+          break;
       }
       if (!Array.isArray(schemaPayload.schemaAttributes) || 0 === schemaPayload.schemaAttributes.length) {
         errors.push('schemaAttributes array must not be empty for w3c schema type');
@@ -205,11 +232,15 @@ export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: 
           if (!attribute) {
             errors.push(`schemaAttributes are required at position ${index + 1} in w3c schema type`);
           } else {
-            if (!attribute.title) {
-              errors.push(`title is required at position ${index + 1} in w3c schema type`);
-            }
-            if (!attribute.type) {
-              errors.push(`type is required at position ${index + 1} in w3c schema type`);
+            switch (true) {
+              case !attribute.title:
+                errors.push(`title is required at position ${index + 1} in w3c schema type`);
+                break;
+              case !attribute.type:
+                errors.push(`type is required at position ${index + 1} in w3c schema type`);
+                break;
+              default:
+                break;
             }
           }
         });

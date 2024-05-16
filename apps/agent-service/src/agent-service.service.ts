@@ -947,9 +947,7 @@ export class AgentServiceService {
       }
       
       delete createDidPayload.isPrimaryDid;
-      
-      delete createDidPayload.isPrimaryDid;
-      
+            
       const didDetails = await this.commonService.httpPost(url, createDidPayload, { headers: { authorization: getApiKey } });
 
       if (!didDetails || Object.keys(didDetails).length === 0) {

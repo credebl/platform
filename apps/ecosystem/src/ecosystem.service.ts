@@ -1569,16 +1569,7 @@ export class EcosystemService {
 
     } catch (error) {
       this.logger.error(`In submit transaction: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.handleException(error);
     }
   }
 
@@ -1683,16 +1674,7 @@ export class EcosystemService {
       }
     } catch (error) {
       this.logger.error(`In submit Indy transaction: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.handleException(error);
     }
   }
 
@@ -1734,19 +1716,23 @@ export class EcosystemService {
             
     } catch (error) {
       this.logger.error(`In submit w3c transaction: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-        throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.handleException(error);
     }
   }
 
+  private handleException(error): void {
+    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      throw new RpcException({
+        message: error?.status?.message?.error?.reason
+          ? error?.status?.message?.error?.reason
+          : error?.status?.message?.error,
+        statusCode: error?.status?.code
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+  
   async _createW3CSchema(payload: W3CSchemaPayload): Promise<object> {
     const pattern = { cmd: 'create-w3c-schema' };
 

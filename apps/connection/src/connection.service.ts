@@ -624,7 +624,9 @@ export class ConnectionService {
         invitationDid
       } = payload?.createOutOfBandConnectionInvitation;
 
-      const agentDetails = await this.connectionRepository.getAgentEndPoint(payload?.createOutOfBandConnectionInvitation?.orgId);
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(
+        payload?.createOutOfBandConnectionInvitation?.orgId
+      );
 
       const { agentEndPoint, id, organisation } = agentDetails;
       const agentId = id;
@@ -649,7 +651,7 @@ export class ConnectionService {
         recipientKey: recipientKey || undefined,
         invitationDid: invitationDid || undefined
       };
-      
+
       const createConnectionInvitationFlag = 'connection-invitation';
       const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(
@@ -672,7 +674,7 @@ export class ConnectionService {
         orgId,
         invitationsDid 
       );
-      const connectionDetailRecords: ConnectionResponseDetail = {
+      const connectionStorePayload: ConnectionResponseDetail = {
         id: saveConnectionDetails.id,
         orgId: saveConnectionDetails.orgId,
         agentId: saveConnectionDetails.agentId,
@@ -685,7 +687,7 @@ export class ConnectionService {
         recordId: createConnectionInvitation.response.outOfBandRecord.id,
         invitationDid: saveConnectionDetails.invitationDid
       };
-      return connectionDetailRecords;
+      return connectionStorePayload;
     } catch (error) {
       this.logger.error(`[createConnectionInvitation] - error in connection oob invitation: ${error}`);
       this.handleError(error);

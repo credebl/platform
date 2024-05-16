@@ -1,10 +1,13 @@
 // eslint-disable-next-line camelcase
 import { AutoAccept } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds';
+import { CredentialFormatPayload, JsonLdCredentialFormat } from '@credo-ts/core';
 import { organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 
+export type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat;
 export interface IAttributes {
   attributeName: string;
   name: string;
@@ -15,14 +18,15 @@ export interface IAttributes {
 interface ICredentialsAttributes {
   connectionId: string;
   // Anoncreds: To do- Add type for credentialFormats
-  credentialFormats: unknown;
+  // Note: Anoncreds change
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   // attributes: IAttributes[];
   // credential?:ICredential;
   // options?:IOptions
 }
 export interface IIssuance {
   user?: IUserRequest;
-  credentialDefinitionId: string;
+  credentialDefinitionId?: string;
   comment?: string;
   credentialData: ICredentialsAttributes[];
   orgId: string;
@@ -45,10 +49,8 @@ export interface IIssueData {
   protocolVersion?: string;
   connectionId: string;
   // Anoncreds: To do- Add type for credentialFormats
-  credentialFormats: unknown;
-  // {
-  //   indy: IIndy
-  // },
+  // Note: Anoncred changes
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   autoAcceptCredential: string,
   comment?: string;
 }
@@ -151,17 +153,17 @@ export interface IOptions{
 }
 export interface CredentialOffer {
   emailId: string;
-  attributes: IAttributes[];
-  credential?:ICredential;
-  options?:IOptions
+  // Note: Anoncreds change
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
 }
 export interface OutOfBandCredentialOfferPayload {
   credentialDefinitionId?: string;
+  // Note: Anoncreds change
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   orgId: string;
   comment?: string;
   credentialOffer?: CredentialOffer[];
   emailId?: string;
-  attributes?: IAttributes[];
   protocolVersion?: string;
   goalCode?: string,
   parentThreadId?: string,
@@ -255,12 +257,14 @@ export interface OrgAgent {
 
 export interface SendEmailCredentialOffer {
   iterator: CredentialOffer;
-  emailId: string;
+  // Note: Anoncreds change
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
+  emailId?: string;
   index: number;
   credentialType: IssueCredentialType; 
   protocolVersion: string;
-  attributes: IAttributes[]; 
-  credentialDefinitionId: string; 
+  attributes?: IAttributes[]; 
+  credentialDefinitionId?: string; 
   outOfBandCredential: OutOfBandCredentialOfferPayload;
   comment: string;
   organisation: organisation; 

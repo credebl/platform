@@ -68,7 +68,7 @@ export class VerificationRepository {
             { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
             { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
             { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
-        ]
+          ]
         },
         select: {
           createDateTime: true,
@@ -80,7 +80,7 @@ export class VerificationRepository {
           presentationId: true
         },
         orderBy: {
-          [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc' 
+          [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc'
         },
 
         take: Number(proofRequestsSearchCriteria.pageSize),
@@ -109,7 +109,7 @@ export class VerificationRepository {
       let organisationId: string;
       const { proofPresentationPayload, orgId } = payload;
 
-      if (proofPresentationPayload?.contextCorrelationId) {
+      if ('default' !== proofPresentationPayload?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(proofPresentationPayload?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
@@ -185,7 +185,7 @@ export class VerificationRepository {
       throw error;
     }
   }
-  
+
   // eslint-disable-next-line camelcase
   async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {

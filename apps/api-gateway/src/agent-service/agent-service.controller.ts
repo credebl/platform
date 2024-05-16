@@ -14,7 +14,14 @@ import {
   UseFilters,
   Param
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiOperation, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiResponse,
+  ApiOperation,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBearerAuth
+} from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -35,6 +42,8 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { validateDid } from '@credebl/common/did.validator';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
+import { AgentSpinupValidator } from '@credebl/common/cast.helper';
+import { AgentConfigureDto } from './dto/agent-configure.dto';
 
 const seedLength = 32;
 
@@ -45,14 +54,14 @@ const seedLength = 32;
 @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class AgentController {
-  constructor(private readonly agentService: AgentService) { }
+  constructor(private readonly agentService: AgentService) {}
   private readonly logger = new Logger();
 
   /**
    * Get Organization agent health
-   * @param orgId 
-   * @param reqUser 
-   * @param res 
+   * @param orgId
+   * @param reqUser
+   * @param res
    * @returns Get agent details
    */
   @Get('/orgs/:orgId/agents/health')
@@ -61,12 +70,7 @@ export class AgentController {
     description: 'Get the agent health details'
   })
   @UseGuards(AuthGuard('jwt'))
-  async getAgentHealth(
-    @Param('orgId') orgId: string,
-    @User() reqUser: user,
-    @Res() res: Response
-  ): Promise<Response> {
-
+  async getAgentHealth(@Param('orgId') orgId: string, @User() reqUser: user, @Res() res: Response): Promise<Response> {
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
     const finalResponse: IResponse = {
@@ -76,7 +80,6 @@ export class AgentController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   @Get('/orgs/agents/ledgerConfig')
@@ -85,11 +88,7 @@ export class AgentController {
     description: 'Get the ledger config details'
   })
   @UseGuards(AuthGuard('jwt'))
-  async getLedgerDetails(
-    @User() reqUser: user,
-    @Res() res: Response
-  ): Promise<Response> {
-
+  async getLedgerDetails(@User() reqUser: user, @Res() res: Response): Promise<Response> {
     const ledgerConfigData = await this.agentService.getLedgerConfig(reqUser);
 
     const finalResponse: IResponse = {
@@ -99,13 +98,12 @@ export class AgentController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   /**
    * Spinup the agent by organization
-   * @param agentSpinupDto 
-   * @param user 
+   * @param agentSpinupDto
+   * @param user
    * @returns Get agent status
    */
   @Post('/orgs/:orgId/agents/spinup')
@@ -122,22 +120,11 @@ export class AgentController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-
-    const regex = new RegExp('^[a-zA-Z0-9]+$');
-
-    if (!regex.test(agentSpinupDto.walletName)) {
-      this.logger.error(`Please enter valid wallet name, It allows only alphanumeric values`);
-      throw new BadRequestException(
-        ResponseMessages.agent.error.seedChar,
-        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-      );
-    }
-
+    AgentSpinupValidator.validate(agentSpinupDto);
     this.logger.log(`**** Spin up the agent...${JSON.stringify(agentSpinupDto)}`);
 
     agentSpinupDto.orgId = orgId;
     const agentDetails = await this.agentService.agentSpinup(agentSpinupDto, user);
-
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
@@ -150,10 +137,10 @@ export class AgentController {
 
   /**
    * Create wallet for shared agent
-   * @param orgId 
-   * @param createTenantDto 
-   * @param user 
-   * @param res 
+   * @param orgId
+   * @param createTenantDto
+   * @param user
+   * @param res
    * @returns wallet initialization status
    */
   @Post('/orgs/:orgId/agents/wallet')
@@ -170,7 +157,6 @@ export class AgentController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-
     createTenantDto.orgId = orgId;
 
     const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
@@ -186,100 +172,128 @@ export class AgentController {
 
   /**
    * Create wallet
-   * @param orgId 
+   * @param orgId
    * @returns wallet
    */
-     @Post('/orgs/:orgId/agents/createWallet')
-     @ApiOperation({
-       summary: 'Create wallet',
-       description: 'Create wallet'
-     })
-     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-     async createWallet(
-       @Param('orgId') orgId: string,
-       @Body() createWalletDto: CreateWalletDto,
-       @User() user: user,
-       @Res() res: Response
-     ): Promise<Response> {
-   
-      createWalletDto.orgId = orgId;
-      const walletDetails = await this.agentService.createWallet(createWalletDto, user);
-   
-       const finalResponse: IResponse = {
-         statusCode: HttpStatus.CREATED,
-         message: ResponseMessages.agent.success.createWallet,
-         data: walletDetails
-       };
-   
-       return res.status(HttpStatus.CREATED).json(finalResponse);
-     }
-  
+  @Post('/orgs/:orgId/agents/createWallet')
+  @ApiOperation({
+    summary: 'Create wallet',
+    description: 'Create wallet'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createWallet(
+    @Param('orgId') orgId: string,
+    @Body() createWalletDto: CreateWalletDto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    createWalletDto.orgId = orgId;
+    const walletDetails = await this.agentService.createWallet(createWalletDto, user);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.createWallet,
+      data: walletDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
   // This function will be used after multiple did method implementation in create wallet
-   /**
+  /**
    * Create did
-   * @param orgId 
+   * @param orgId
    * @returns did
    */
-   @Post('/orgs/:orgId/agents/did')
-   @ApiOperation({
-     summary: 'Create new did',
-     description: 'Create new did for an organization'
-   })
-   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-   async createDid(
-     @Param('orgId') orgId: string,
-     @Body() createDidDto: CreateNewDidDto,
-     @User() user: user,
-     @Res() res: Response
-   ): Promise<Response> {
-  
+  @Post('/orgs/:orgId/agents/did')
+  @ApiOperation({
+    summary: 'Create new did',
+    description: 'Create new did for an organization'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createDid(
+    @Param('orgId') orgId: string,
+    @Body() createDidDto: CreateNewDidDto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
     await validateDid(createDidDto);
 
     if (createDidDto.seed && seedLength !== createDidDto.seed.length) {
       this.logger.error(`seed must be at most 32 characters.`);
-      throw new BadRequestException(
-        ResponseMessages.agent.error.seedChar,
-        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-      );
+      throw new BadRequestException(ResponseMessages.agent.error.seedChar, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.badRequest
+      });
     }
 
-     const didDetails = await this.agentService.createDid(createDidDto, orgId, user);
- 
-     const finalResponse: IResponse = {
-       statusCode: HttpStatus.CREATED,
-       message: ResponseMessages.agent.success.createDid,
-       data: didDetails
-     };
- 
-     return res.status(HttpStatus.CREATED).json(finalResponse);
-   }
+    const didDetails = await this.agentService.createDid(createDidDto, orgId, user);
 
-    /**
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.createDid,
+      data: didDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
    * Create Secp256k1 key pair for polygon DID
-   * @param orgId 
+   * @param orgId
    * @returns Secp256k1 key pair for polygon DID
    */
-    @Post('/orgs/:orgId/agents/polygon/create-keys')
-    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.PLATFORM_ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-    async createSecp256k1KeyPair(
-      @Param('orgId') orgId: string,
-      @Res() res: Response
-    ): Promise<Response> {
-   
-      const didDetails = await this.agentService.createSecp256k1KeyPair(orgId);
-  
-      const finalResponse: IResponse = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.agent.success.createKeys,
-        data: didDetails
-      };
-  
-      return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
+  @Post('/orgs/:orgId/agents/polygon/create-keys')
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.PLATFORM_ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createSecp256k1KeyPair(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+    const didDetails = await this.agentService.createSecp256k1KeyPair(orgId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.createKeys,
+      data: didDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Configure the agent by organization
+   * @param agentSpinupDto
+   * @param user
+   * @returns Get agent status
+   */
+  @Post('/orgs/:orgId/agents/configure')
+  @ApiOperation({
+    summary: 'Agent configure',
+    description: 'Create a new agent configure.'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async agentconfigure(
+    @Param('orgId') orgId: string,
+    @Body() agentConfigureDto: AgentConfigureDto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    this.logger.log(`**** Configure the agent...${JSON.stringify(agentConfigureDto)}`);
+
+    agentConfigureDto.orgId = orgId;
+    const agentDetails = await this.agentService.agentConfigure(agentConfigureDto, user);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.create,
+      data: agentDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
 }

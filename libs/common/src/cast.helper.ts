@@ -1,96 +1,106 @@
 import { BadRequestException } from '@nestjs/common';
-import { ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, isBase64, isMimeType, isUUID, registerDecorator } from 'class-validator';
+import {
+  ValidationArguments,
+  ValidationOptions,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  isBase64,
+  isMimeType,
+  registerDecorator
+} from 'class-validator';
+import { ResponseMessages } from './response-messages';
 
 interface ToNumberOptions {
-    default?: number;
-    min?: number;
-    max?: number;
+  default?: number;
+  min?: number;
+  max?: number;
 }
 
 export function toLowerCase(value: string): string {
-    return value.toLowerCase();
+  return value.toLowerCase();
 }
 
 export function trim(value: string): string {
-    if ('string' === typeof value) { return value.trim(); }
+  if ('string' === typeof value) {
+    return value.trim();
+  }
 }
 
 export function toDate(value: string): Date {
-    return new Date(value);
+  return new Date(value);
 }
 
 export function toBoolean(value: string): boolean {
-    // eslint-disable-next-line no-param-reassign
-    value = value.toLowerCase();
+  // eslint-disable-next-line no-param-reassign
+  value = value.toLowerCase();
 
-    // return 'true' === value || '1' === value ? true : false;
+  // return 'true' === value || '1' === value ? true : false;
 
-    return Boolean('true' === value || '1' === value);
-
+  return Boolean('true' === value || '1' === value);
 }
 
 export function toNumber(value: string, opts: ToNumberOptions = {}): number {
-    let newValue: number = Number.parseInt(value || String(opts.default), 10);
+  let newValue: number = Number.parseInt(value || String(opts.default), 10);
 
-    if (Number.isNaN(newValue)) {
-        newValue = opts.default;
+  if (Number.isNaN(newValue)) {
+    newValue = opts.default;
+  }
+
+  if (opts.min) {
+    if (newValue < opts.min) {
+      newValue = opts.min;
     }
 
-    if (opts.min) {
-        if (newValue < opts.min) {
-            newValue = opts.min;
-        }
-
-        if (newValue > opts.max) {
-            newValue = opts.max;
-        }
+    if (newValue > opts.max) {
+      newValue = opts.max;
     }
+  }
 
-    return newValue;
+  return newValue;
 }
 
 export function ledgerName(value: string): string {
-   let network;
-    network = value.replace(":", " ");
-    network = network.charAt(0).toUpperCase() + network.slice(1);
-    const words = network.split(" ");
-    network = `${words[0]} ${words[1].charAt(0).toUpperCase()}${words[1].slice(1)}`;
+  let network;
+  network = value.replace(':', ' ');
+  network = network.charAt(0).toUpperCase() + network.slice(1);
+  const words = network.split(' ');
+  network = `${words[0]} ${words[1].charAt(0).toUpperCase()}${words[1].slice(1)}`;
 
-    return network;
-
+  return network;
 }
 
 export function isSafeString(value: string): boolean {
-    // Define a regular expression to allow alphanumeric characters, spaces, and some special characters
-    const safeRegex = /^[a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/;
-  
-    // Check if the value matches the safe regex
-    return safeRegex.test(value);
-  }
+  // Define a regular expression to allow alphanumeric characters, spaces, and some special characters
+  const safeRegex = /^[a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/;
 
-  export const IsNotSQLInjection = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
-      registerDecorator({
-        name: 'isNotSQLInjection',
-        target: object.constructor,
-        propertyName,
-        options: validationOptions,
-        validator: {
-          validate(value) {
-            // Check if the value contains any common SQL injection keywords
-            const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', 'WHERE', 'AND', 'OR'];
-            for (const keyword of sqlKeywords) {
-              if (value.includes(keyword)) {
-                return false; // Value contains a SQL injection keyword
-              }
+  // Check if the value matches the safe regex
+  return safeRegex.test(value);
+}
+
+export const IsNotSQLInjection =
+  (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
+    registerDecorator({
+      name: 'isNotSQLInjection',
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      validator: {
+        validate(value) {
+          // Check if the value contains any common SQL injection keywords
+          const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', 'WHERE', 'AND', 'OR'];
+          for (const keyword of sqlKeywords) {
+            if (value.includes(keyword)) {
+              return false; // Value contains a SQL injection keyword
             }
-            return true; // Value does not contain any SQL injection keywords
-          },
-          defaultMessage(args: ValidationArguments) {
-            return `${args.property} contains SQL injection keywords.`;
           }
+          return true; // Value does not contain any SQL injection keywords
+        },
+        defaultMessage(args: ValidationArguments) {
+          return `${args.property} contains SQL injection keywords.`;
         }
-      });
-    };
+      }
+    });
+  };
 
 @ValidatorConstraint({ name: 'customText', async: false })
 export class ImageBase64Validator implements ValidatorConstraintInterface {
@@ -130,16 +140,24 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
   }
 }
 
-// export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
-//   registerDecorator({
-//     name: 'isNotUUID',
-//     target: object.constructor,
-//     propertyName,
-//     options: validationOptions,
-//     validator: {
-//       validate(value) {
-//         return !isUUID(value);
-//       }
-//     }
-//   });
-// };
+export class AgentSpinupValidator {
+  private static validateField(value: string, errorMessage: string): void {
+    if (!value) {
+      throw new BadRequestException(errorMessage);
+    }
+  }
+
+  private static validateWalletName(walletName: string): void {
+    const regex = /^[a-zA-Z0-9]+$/;
+    if (!regex.test(walletName)) {
+      throw new BadRequestException(ResponseMessages.agent.error.seedChar, {
+        cause: new Error(),
+        description: 'Please enter a valid wallet name. Only alphanumeric characters are allowed.'
+      });
+    }
+  }
+
+  public static validate(agentSpinupDto): void {
+    this.validateWalletName(agentSpinupDto.walletName);
+  }
+}

@@ -11,9 +11,6 @@ export class AgentSpinupDto extends CreateDidDto {
   @Transform(({ value }) => trim(value))
   @MinLength(2, { message: 'Minimum length for wallet name must be 2 characters.' })
   @Matches(regex, { message: 'Wallet name must not contain special characters.' })
-  @Matches(/^\S*$/, {
-    message: 'Spaces are not allowed in label'
-  })
   walletName: string;
 
   @ApiProperty()
@@ -25,6 +22,7 @@ export class AgentSpinupDto extends CreateDidDto {
 
   @ApiPropertyOptional({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
   @IsOptional()
+  @Transform(({ value }) => trim(value))
   @IsString({ message: 'did must be in string format.' })
   did?: string;
 

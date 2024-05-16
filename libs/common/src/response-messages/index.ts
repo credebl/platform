@@ -168,7 +168,9 @@ export const ResponseMessages = {
             agentDetailsNotFound: 'Agent details not found',
             failedFetchSchema: 'Failed to fetch schema data',
             atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
-            schemaBuilder: 'Error while creating schema JSON`'
+            schemaBuilder: 'Error while creating schema JSON',
+            W3CSchemaNotFOund: 'Error while resolving W3C schema',
+            storeW3CSchema: 'Error while storing W3C schema'
         }
     },
     credentialDefinition: {
@@ -236,7 +238,13 @@ export const ResponseMessages = {
             invalidTenantIdIdFormat:'Invalid tenantId format',
             requiredTenantId:'Tenant Id is required',
             createDid:'Error while creating DID',
-            storeDid: 'Error while storing DID'
+            storeDid: 'Error while storing DID',
+            agentSpinupError: 'Agent endpoint unreachable',
+            agentEndpointRequired: 'Agent endpoint is required',
+            failedAgentType: 'Agent endpoint is required',
+            failedApiKey: 'Failed to encrypt API key',
+            failedOrganization: 'Failed to fetch organization agent type details',
+            promiseReject: 'One or more promises were rejected.'
         }
     },
     connection: {

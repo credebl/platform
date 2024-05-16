@@ -47,7 +47,11 @@ import {
   IWallet,
   ITenantRecord,
   LedgerListResponse,
-  ICreateConnectionInvitation
+  ICreateConnectionInvitation,
+  IStoreAgent,
+  AgentHealthData,
+  IAgentStore,
+  IAgentConfigure
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -91,20 +95,19 @@ export class AgentServiceService {
    * @param user
    * @returns Get agent status
    */
-  async walletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<IAgentSpinUpSatus> {
+  async walletProvision(
+    agentSpinupDto: IAgentSpinupDto,
+    user: IUserRequestInterface
+  ): Promise<{
+    agentSpinupStatus: AgentSpinUpStatus;
+  }> {
     let agentProcess: ICreateOrgAgent;
     try {
-      // Invoke an internal function to create wallet
       await this.processWalletProvision(agentSpinupDto, user);
-      const agentStatusResponse = {
-        agentSpinupStatus: AgentSpinUpStatus.PROCESSED
-      };
-
-      return agentStatusResponse;
+      return { agentSpinupStatus: AgentSpinUpStatus.PROCESSED };
     } catch (error) {
-      // Invoke an internal function to handle error to create wallet
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ?? error);
     }
   }
 
@@ -118,7 +121,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.network ? agentSpinupDto.network : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -223,6 +226,88 @@ export class AgentServiceService {
     }
   }
 
+  async agentConfigure(agentConfigureDto: IAgentConfigure, user: IUserRequestInterface): Promise<IStoreAgent> {
+    try {
+      const { agentEndpoint, apiKey, did, walletName, orgId, network } = agentConfigureDto;
+      const { id: userId } = user;
+      const orgExist = await this.agentServiceRepository.getAgentDetails(orgId);
+      if (orgExist) {
+        throw new ConflictException(ResponseMessages.agent.error.alreadySpinUp);
+      }
+
+      if (!agentEndpoint) {
+        throw new BadRequestException(ResponseMessages.agent.error.agentEndpointRequired);
+      }
+
+      const { isInitialized } = await this.getAgentHealthData(agentEndpoint, apiKey);
+      if (!isInitialized) {
+        throw new BadRequestException(ResponseMessages.agent.error.agentSpinupError);
+      }
+
+      const [agentsTypeId, encryptedToken, orgAgentTypeId] = await Promise.allSettled([
+        this.agentServiceRepository.getAgentTypeDetails(),
+        this.tokenEncryption(apiKey),
+        this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED)
+      ]).then((results) => {
+        const fulfilledValues = results.map((result) => (result.status === 'fulfilled' ? result.value : null));
+        const rejectedIndices = results
+          .map((result, index) => (result.status === 'rejected' ? index : -1))
+          .filter((index) => index !== -1);
+
+        rejectedIndices.forEach((index) => {
+          switch (index) {
+            case 0:
+              throw new Error(ResponseMessages.agent.error.failedAgentType);
+            case 1:
+              throw new Error(ResponseMessages.agent.error.failedApiKey);
+            case 2:
+              throw new Error(ResponseMessages.agent.error.failedOrganization);
+            default:
+              throw new Error(ResponseMessages.agent.error.promiseReject);
+          }
+        });
+
+        return fulfilledValues.filter((value) => value !== null);
+      });
+
+      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(network);
+      const getOrganization = await this.agentServiceRepository.getOrgDetails(orgId);
+
+      const storeAgentConfig = await this.agentServiceRepository.storeOrgAgentDetails({
+        did,
+        isDidPublic: true,
+        agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
+        walletName,
+        agentsTypeId,
+        orgId,
+        agentEndPoint: agentEndpoint,
+        orgAgentTypeId,
+        ledgerId: ledgerIdData.map((ledger) => ledger?.id),
+        apiKey: encryptedToken,
+        userId
+      });
+
+      await this._createConnectionInvitation(orgId, user, getOrganization.name);
+      return storeAgentConfig;
+    } catch (error) {
+
+      this.logger.error(`Error Agent configure ::: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
+  private async getAgentHealthData(agentEndpoint: string, apiKey: string): Promise<AgentHealthData> {
+    try {
+      return await this.commonService
+        .httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_STATUS}`, {
+          headers: { authorization: apiKey }
+        })
+        .then((response) => response);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   validatePlatformConfig(platformConfig: platform_config): void {
     if (!platformConfig) {
       this.logger.error(`Platform configuration is missing or invalid`);
@@ -316,12 +401,11 @@ export class AgentServiceService {
       agentType: AgentType.AFJ,
       orgName: orgData?.name,
       indyLedger: escapedJsonString,
-      afjVersion: process.env.AFJ_VERSION || '',
+      credoImage: process.env.AFJ_VERSION || '',
       protocol: process.env.AGENT_PROTOCOL || '',
       tenant: agentSpinupDto.tenant || false,
       apiKey: agentSpinupDto.apiKey
     };
-
     return walletProvisionPayload;
   }
 
@@ -791,10 +875,9 @@ export class AgentServiceService {
         orgAgentId: orgAgentDetails.id,
         userId: user.id
       };
-      
+
       await this.agentServiceRepository.storeDidDetails(createdDidDetails);
 
-  
       this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
 
       // Create the legacy connection invitation
@@ -852,7 +935,9 @@ export class AgentServiceService {
     try {
       const { isPrimaryDid } = createDidPayload;
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-
+      if (createDidPayload.method === DidMethod.POLYGON) {
+        createDidPayload.endpoint = agentDetails.agentEndPoint;
+      }
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       let url;
@@ -861,9 +946,9 @@ export class AgentServiceService {
       } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
         url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
       }
-
-      delete createDidPayload.isPrimaryDid;
       
+      delete createDidPayload.isPrimaryDid;
+            
       const didDetails = await this.commonService.httpPost(url, createDidPayload, { headers: { authorization: getApiKey } });
 
       if (!didDetails || Object.keys(didDetails).length === 0) {
@@ -1123,7 +1208,7 @@ export class AgentServiceService {
           '#',
           `${payload.schemaId}`
         )}`;
-        schemaResponse = await this.commonService.httpGet(url, payload.schemaId).then(async (schema) => schema);
+        schemaResponse = await this.commonService.httpGet(url, { headers: { authorization: getApiKey } }).then(async (schema) => schema);
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`
           .replace('@', `${payload.payload.schemaId}`)
@@ -1532,28 +1617,21 @@ export class AgentServiceService {
     try {
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-      const cacheKey =
-        orgAgentApiKey?.orgAgentTypeId === orgAgentId
-          ? CommonConstants.CACHE_SHARED_APIKEY_KEY
-          : CommonConstants.CACHE_APIKEY_KEY;
+      let apiKey;
+      if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
+          CommonConstants.PLATFORM_ADMIN_ORG
+        );
+        if (!platformAdminSpinnedUp) {
+          throw new InternalServerErrorException('Agent not able to spin-up');
+        }
+        apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
+      } else {
+        apiKey = orgAgentApiKey?.apiKey;
+      }
 
-      let apiKey = await this.cacheService.get(cacheKey);
       if (!apiKey) {
-        if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
-          const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
-            CommonConstants.PLATFORM_ADMIN_ORG
-          );
-          if (!platformAdminSpinnedUp) {
-            throw new InternalServerErrorException('Agent not able to spin-up');
-          }
-          apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
-        } else {
-          apiKey = orgAgentApiKey?.apiKey;
-        }
-        if (!apiKey) {
-          throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
-        }
-        await this.cacheService.set(cacheKey, apiKey, 0);
+        throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }
 
       const decryptedToken = await this.commonService.decryptPassword(apiKey);
@@ -1646,7 +1724,10 @@ export class AgentServiceService {
     response: string;
   }> {
     try {
-      return this.agentServiceProxy.send<string>(pattern, payload).pipe(map((response) => ({response}))).toPromise()
+      return this.agentServiceProxy
+        .send<string>(pattern, payload)
+        .pipe(map((response) => ({ response })))
+        .toPromise()
         .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(

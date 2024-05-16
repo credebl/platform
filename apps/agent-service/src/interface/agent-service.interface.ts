@@ -1,5 +1,9 @@
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
+import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds';
+import type {CredentialFormatPayload, JsonLdCredentialFormat} from '@credo-ts/core';
 
+
+export type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat
 export interface IAgentSpinupDto {
   walletName: string;
   walletPassword: string;
@@ -27,8 +31,10 @@ export interface IAgentSpinupDto {
 
 export interface IOutOfBandCredentialOffer {
   emailId: string;
-  attributes: IAttributes[];
-  credentialDefinitionId: string;
+  // Note: Anoncreds change
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
+  attributes?: IAttributes[];
+  credentialDefinitionId?: string;
   comment: string;
   protocolVersion?: string;
   orgId: string;
@@ -289,7 +295,9 @@ export interface IGetCredDefFromTenantPayload {
 
 export interface IIssuanceCreateOffer {
   connectionId: string;
-  credentialFormats: ICredentialFormats;
+  // Note: Anoncreds change
+  // credentialFormats: ICredentialFormats;
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   autoAcceptCredential: string;
   comment: string;
 }

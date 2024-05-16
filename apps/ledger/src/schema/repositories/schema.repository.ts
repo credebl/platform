@@ -5,7 +5,7 @@ import { ledgers, org_agents, org_agents_type, organisation, schema } from '@pri
 import { ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
-import { SortValue } from '@credebl/enum/enum';
+import { SchemaType, SortValue } from '@credebl/enum/enum';
 import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
@@ -36,7 +36,7 @@ export class SchemaRepository {
             publisherDid: schemaResult.issuerId.split(':')[4] || schemaResult.issuerId,
             orgId: schemaResult.orgId,
             ledgerId: schemaResult.ledgerId,
-            type: schemaResult.type
+            type: schemaResult.type as SchemaType
           }
         });
         return saveResult;
@@ -280,21 +280,23 @@ export class SchemaRepository {
     }
   }
 
-  async schemaExist(payload: ISchemaExist): Promise<{
-    id: string;
-    createDateTime: Date;
-    createdBy: string;
-    lastChangedDateTime: Date;
-    lastChangedBy: string;
-    name: string;
-    version: string;
-    attributes: string;
-    schemaLedgerId: string;
-    publisherDid: string;
-    issuerId: string;
-    orgId: string;
-    ledgerId: string;
-  }[]> {
+  async schemaExist(payload: ISchemaExist): Promise<
+    {
+      id: string;
+      createDateTime: Date;
+      createdBy: string;
+      lastChangedDateTime: Date;
+      lastChangedBy: string;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: string;
+      ledgerId: string;
+    }[]
+  > {
     try {
       return this.prisma.schema.findMany({
         where: {

@@ -267,7 +267,7 @@ model schema {
   organisation          organisation            @relation(fields: [orgId], references: [id])
   ledgers               ledgers?                @relation(fields: [ledgerId], references: [id])
   ledgerId              String?                 @db.Uuid
-  type                  String?                 @db.VarChar
+  type                  SchemaType              @default(indy)
   credential_definition credential_definition[]
 }
 
@@ -512,4 +512,9 @@ model ledgerConfig {
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
+}
+
+enum SchemaType {
+  indy
+  w3c
 }

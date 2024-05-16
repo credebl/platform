@@ -1618,14 +1618,7 @@ export class AgentServiceService {
     try {
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-      // const cacheKey =
-      //   orgAgentApiKey?.orgAgentTypeId === orgAgentId
-      //     ? CommonConstants.CACHE_SHARED_APIKEY_KEY
-      //     : CommonConstants.CACHE_APIKEY_KEY;
-
-      // let apiKey = await this.cacheService.get(cacheKey);
       let apiKey;
-      // if (!apiKey) {
       if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
           CommonConstants.PLATFORM_ADMIN_ORG
@@ -1641,7 +1634,6 @@ export class AgentServiceService {
       if (!apiKey) {
         throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }
-      // }
 
       const decryptedToken = await this.commonService.decryptPassword(apiKey);
       return decryptedToken;

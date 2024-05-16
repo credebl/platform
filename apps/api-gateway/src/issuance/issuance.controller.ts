@@ -41,12 +41,15 @@ import { Response } from 'express';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
 import {
+  AnonCredsDto,
   ClientDetails,
   FileParameter,
   IssuanceDto,
   OOBCredentialDtoWithEmail,
   OOBIssueCredentialDto,
-  PreviewFileDetails
+  PreviewFileDetails,
+  IndyDto,
+  JsonLdDto
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
@@ -520,6 +523,7 @@ export class IssuanceController {
     name:'credentialType',
     enum: IssueCredentialType
   })
+  @ApiBody({type: IssueCredentialDto})
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
@@ -537,25 +541,33 @@ export class IssuanceController {
     const credOffer = issueCredentialDto?.credentialData || [];
 
     // Note: Anon creds default
-    // if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType && IssueCredentialType.ANONCREDS !== credentialType) {
-    //   throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
-    // }
+    if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType && IssueCredentialType.ANONCREDS !== credentialType) {
+      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
+    }
 
-    // if (credentialType === IssueCredentialType.INDY && !issueCredentialDto.credentialDefinitionId) {
-    //     throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
-    // }
+    if (credentialType === IssueCredentialType.INDY && !credOffer.every(offer => (!(offer.credentialFormats as IndyDto)?.indy.credentialDefinitionId))) {
+      throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
+    }
 
-    // if (issueCredentialDto.credentialType !== IssueCredentialType.INDY && !credOffer.every(offer => (!offer?.attributes || 0 === Object.keys(offer?.attributes).length))) {
-    //   throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
-    // }
+    if (credentialType === IssueCredentialType.INDY && !credOffer.every(offer => (!(offer.credentialFormats as IndyDto)?.indy.attributes || 0 === Object.keys((offer.credentialFormats as IndyDto)?.indy.attributes).length))) {
+        throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
+    }
+
+    if (credentialType === IssueCredentialType.ANONCREDS && !credOffer.every(offer => (!(offer.credentialFormats as AnonCredsDto)?.anoncreds.credentialDefinitionId))) {
+      throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
+    }
+
+    if (credentialType === IssueCredentialType.ANONCREDS && !credOffer.every(offer => (!(offer.credentialFormats as AnonCredsDto)?.anoncreds.attributes || 0 === Object.keys((offer.credentialFormats as AnonCredsDto)?.anoncreds.attributes).length))) {
+        throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
+    }
     
-    // if (issueCredentialDto.credentialType === IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
-    //   throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
-    // }
+    if (issueCredentialDto.credentialType === IssueCredentialType.JSONLD && credOffer.every(offer => (!(offer.credentialFormats as JsonLdDto)?.jsonld.credential || 0 === Object.keys((offer.credentialFormats as JsonLdDto).jsonld.credential).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
+    }
 
-    // if (issueCredentialDto.credentialType ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
-    //   throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
-    // }
+    if (issueCredentialDto.credentialType ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!(offer.credentialFormats as JsonLdDto)?.jsonld.options || 0 === Object.keys((offer.credentialFormats as JsonLdDto)?.jsonld.options).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
+    }
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
     
@@ -589,6 +601,7 @@ export class IssuanceController {
     name:'credentialType',
     enum: IssueCredentialType
   })
+  @ApiBody({type: OOBCredentialDtoWithEmail})
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
@@ -599,16 +612,17 @@ export class IssuanceController {
     outOfBandCredentialDto.orgId = orgId;
     outOfBandCredentialDto.credentialType = credentialType;
     const credOffer = outOfBandCredentialDto?.credentialOffer || [];
-    if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType) {
+    if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType &&  IssueCredentialType.ANONCREDS !== credentialType) {
       throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
 }
-    if (outOfBandCredentialDto.credentialType === IssueCredentialType.JSONLD   && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
+    if (outOfBandCredentialDto.credentialType === IssueCredentialType.JSONLD   && credOffer.every(offer => (!(offer.credentialFormats as JsonLdDto)?.jsonld.credential || 0 === Object.keys((offer.credentialFormats as JsonLdDto)?.jsonld.credential).length))) {
       throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
     }
 
-    if (outOfBandCredentialDto.credentialType   ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
+    if (outOfBandCredentialDto.credentialType   ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!(offer.credentialFormats as JsonLdDto)?.jsonld.options || 0 === Object.keys((offer.credentialFormats as JsonLdDto)?.jsonld.options).length))) {
       throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
     }
+
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(
       user,
       outOfBandCredentialDto
@@ -637,6 +651,7 @@ export class IssuanceController {
       name:'credentialType',
       enum: IssueCredentialType
     })
+    @ApiBody({type: OOBIssueCredentialDto})
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })

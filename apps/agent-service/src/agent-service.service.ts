@@ -284,7 +284,8 @@ export class AgentServiceService {
       await this._createConnectionInvitation(orgId, user, getOrganization.name);
       return storeAgentConfig;
     } catch (error) {
-      this.logger.error(`Agent configure ::: ${JSON.stringify(error)}`);
+
+      this.logger.error(`Error Agent configure ::: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
   }

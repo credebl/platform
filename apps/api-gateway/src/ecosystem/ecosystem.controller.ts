@@ -28,7 +28,7 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
-import { validateSchemaPayload } from '@credebl/common/cast.helper';
+import { TrimStringParamPipe, validateSchemaPayload } from '@credebl/common/cast.helper';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -334,11 +334,11 @@ export class EcosystemController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for orgId`);
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
         }
       })
     ) orgId: string,   
-    @Param('ecosystemId') ecosystemId: string,
+    @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string,
     @Res() res: Response,
     @User() user: user,
     @Query('schemaType') schemaType: schemaRequestType = schemaRequestType.INDY
@@ -399,7 +399,7 @@ export class EcosystemController {
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('orgId') orgId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
+  async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
     requestCredDefPayload.userId = user.id;
     const createCredDefRequest: IEndorsementTransaction = await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
     const finalResponse: IResponse = {
@@ -418,13 +418,13 @@ export class EcosystemController {
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   async SignEndorsementRequests(
-    @Param('endorsementId') endorsementId: string,
-    @Param('ecosystemId') ecosystemId: string,
+    @Param('endorsementId', TrimStringParamPipe) endorsementId: string,
+    @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string,
     @Param(
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for orgId`);
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
         }
       })
     ) orgId: string,   
@@ -454,13 +454,13 @@ export class EcosystemController {
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER, EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async SubmitEndorsementRequests(
-    @Param('endorsementId') endorsementId: string,
-    @Param('ecosystemId') ecosystemId: string,
+    @Param('endorsementId', TrimStringParamPipe) endorsementId: string,
+    @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string,
     @Param(
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for orgId`);
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
         }
       })
     )

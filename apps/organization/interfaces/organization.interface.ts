@@ -171,3 +171,8 @@ export interface IDidDetails {
   didDocument: Prisma.JsonValue;
   orgAgentId: string;
 }
+
+export interface IPrimaryDidDetails extends IPrimaryDid {
+  id: string,
+  didDocument: Prisma.JsonValue
+}

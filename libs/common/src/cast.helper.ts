@@ -1,6 +1,7 @@
 import { schemaRequestType } from '@credebl/enum/enum';
-import { BadRequestException } from '@nestjs/common';
 import { ISchemaFields } from './interfaces/schema.interface';
+import { BadRequestException, PipeTransform } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
 import {
   ValidationArguments,
   ValidationOptions,
@@ -139,6 +140,13 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
   defaultMessage(_args: ValidationArguments) {
     return 'Default message received from [ImageBase64Validator]';
+  }
+}
+
+export class TrimStringParamPipe implements PipeTransform {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  transform(value: string) {
+    return plainToClass(String, value.trim());
   }
 }
 

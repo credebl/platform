@@ -1133,25 +1133,6 @@ export class EcosystemRepository {
     }
   }
 
-  async updateEcosystemConfig(
-    ecosystemId: string
-  ): Promise<object> {
-    try {
-      const updateAutoEndorsementFlag = await this.prisma.ecosystem.update({
-        where: { id: ecosystemId },
-        data: {
-          autoEndorsement: true
-        }
-      });
-
-      return updateAutoEndorsementFlag;
-
-    } catch (error) {
-      this.logger.error(`Error in updating endorsement flag: ${error.message}`);
-      throw error;
-    }
-  }
-
   async updateResourse(
     endorsementId: string,
     resourceId: string

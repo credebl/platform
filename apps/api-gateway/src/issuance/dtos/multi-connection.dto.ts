@@ -30,9 +30,10 @@ export class IssueCredentialDto extends IssuanceFields {
       type: [ConnectionAttributes]
     })
     // @IsArray()
-    // @ValidateNested({ each: true })
     @ArrayMinSize(1)
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} connections max).` })
     @IsNotEmpty({ message: 'credentialData is required' })
+    // @ValidateNested({ each: true })
+    // @Type(() => ConnectionAttributes)
     credentialData: ConnectionAttributes[];
 }

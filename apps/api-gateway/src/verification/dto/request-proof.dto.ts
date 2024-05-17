@@ -43,6 +43,88 @@ export class ProofRequestAttribute {
     credDefId?: string;
 }
 
+export declare const anonCredsPredicateType: readonly [">=", ">", "<=", "<"];
+export type AnonCredsPredicateType = (typeof anonCredsPredicateType)[number];
+
+export class AnonCredsProofRequestRestriction {
+  // eslint-disable-next-line camelcase
+  schema_id?: string;
+  // eslint-disable-next-line camelcase
+  schema_issuer_id?: string;
+  // eslint-disable-next-line camelcase
+  schema_name?: string;
+  // eslint-disable-next-line camelcase
+  schema_version?: string;
+  // eslint-disable-next-line camelcase
+  issuer_id?: string;
+  // eslint-disable-next-line camelcase
+  cred_def_id?: string;
+
+  // Note: Not supported
+  // rev_reg_id?: string;
+  // eslint-disable-next-line camelcase
+  schema_issuer_did?: string;
+  // eslint-disable-next-line camelcase
+  issuer_did?: string;
+  [key: `attr::${string}::marker`]: '1' | '0';
+  [key: `attr::${string}::value`]: string;
+}
+
+// Note: Not supported
+// export interface AnonCredsNonRevokedInterval {
+//   from?: number;
+//   to?: number;
+// }
+
+export interface AnonCredsRequestedAttribute {
+  name?: string;
+  names?: string[];
+  restrictions?: AnonCredsProofRequestRestriction[];
+
+  // Note: Not supported
+  // non_revoked?: AnonCredsNonRevokedInterval;
+}
+
+export class AnonCredsRequestedPredicate {
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty({ message: 'name is required.' })
+  name: string;
+  
+  @ApiProperty({enum: anonCredsPredicateType})
+  @IsNotEmpty({message: 'p_type must not be empty'})
+  // eslint-disable-next-line camelcase
+  p_type: AnonCredsPredicateType;
+  // eslint-disable-next-line camelcase
+  p_value: number;
+
+  @ApiProperty({type: [AnonCredsProofRequestRestriction]})
+  restrictions?: AnonCredsProofRequestRestriction[];
+
+  // Note: Not supported
+  // non_revoked?: AnonCredsNonRevokedInterval;
+}
+
+export class AnonCredsRequestProofFormat {
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty({ message: 'name is required.' })
+  name: string;
+
+
+  version: string;
+  // Note: Not supported
+  // non_revoked?: AnonCredsNonRevokedInterval;
+
+  // eslint-disable-next-line camelcase
+  requested_attributes?: Record<string, AnonCredsRequestedAttribute>;
+
+  // eslint-disable-next-line camelcase
+  requested_predicates?: Record<string, AnonCredsRequestedPredicate>;
+}
+
 class ProofPayload {
     @ApiPropertyOptional()
     @IsString({ message: 'goalCode must be in string' })
@@ -189,6 +271,14 @@ export class IndyDto {
   @IsNotEmpty({ message: 'please provide valid attributes' })
   @Type(() => ProofRequestAttributeDto)
   indy: ProofRequestAttributeDto;
+
+  // @ApiProperty({type: () => [IndyVerificationObject]
+  //   })
+  // @ValidateNested()
+  // @IsObject({ each: true })
+  // @IsNotEmpty({ message: 'please provide valid attributes' })
+  // @Type(() => ProofRequestAttributeDto)
+  // indy: IndyVerificationObject;
 }
 
 export class RequestProofDto extends ProofPayload {

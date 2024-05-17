@@ -1,11 +1,6 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
-# RUN npm install -g pnpm
-# Install AWS CLI
-# RUN apk update
-# RUN apk add openssh-client
-# RUN apk update
-# RUN apk add aws-cli
+
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \
@@ -15,14 +10,6 @@ RUN set -eux \
     && npm install -g pnpm --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
     && rm -rf /var/cache/apk/*
-
-RUN docker --version && \
-    docker-compose --version
-
-ARG ROOT_PATH
-ENV ROOT_PATH ${ROOT_PATH}
-
-RUN echo "ROOT_PATH is set to: $ROOT_PATH"
 
 # Set the working directory
 WORKDIR /app
@@ -37,7 +24,8 @@ RUN pnpm i
 COPY . .
 
 # Generate Prisma client
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+# RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
 RUN ls -R /app/apps/agent-provisioning/AFJ/
 
 # Build the user service
@@ -45,11 +33,7 @@ RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
 FROM node:18-alpine as prod
-# Install AWS CLI
-# RUN apk update
-# RUN apk add openssh-client
-# RUN apk update
-# RUN apk add aws-cli
+
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \
@@ -86,7 +70,4 @@ RUN chmod 777 /app/agent-provisioning/AFJ/token
 COPY libs/ ./libs/
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js $ROOT_PATH"]
-
-# docker build -t agent-provisioning-service -f Dockerfiles/Dockerfile.agent-provisioning .
-# docker run -d --env-file .env --name agent-provisioning-service docker.io/library/agent-provisioning-service
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/agent-provisioning/main.js"]

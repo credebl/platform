@@ -27,7 +27,8 @@ RUN pnpm install
 
 # Copy the rest of the application code
 COPY . .
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+# RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
 
 # Build the user service
 RUN pnpm run build user
@@ -62,8 +63,4 @@ COPY --from=build /app/node_modules  ./node_modules
 
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && npx prisma  && cd ../.. && node dist/apps/user/main.js"]
-
-# docker build -t user -f Dockerfiles/Dockerfile.user .
-# docker run -d --env-file .env --name user docker.io/library/user
-# docker logs -f user
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy  && cd ../.. && node dist/apps/user/main.js"]

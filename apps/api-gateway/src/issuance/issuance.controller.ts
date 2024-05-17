@@ -18,7 +18,8 @@ import {
   UseInterceptors,
   Logger,
   BadRequestException,
-  NotFoundException
+  NotFoundException,
+  ParseUUIDPipe
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -43,7 +44,6 @@ import {
   ClientDetails,
   FileParameter,
   IssuanceDto,
-  IssueCredentialDto,
   OOBCredentialDtoWithEmail,
   OOBIssueCredentialDto,
   PreviewFileDetails
@@ -63,6 +63,7 @@ import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
+import { IssueCredentialDto } from './dtos/multi-connection.dto';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -515,19 +516,46 @@ export class IssuanceController {
     summary: `Issuer create a credential offer`,
     description: `Issuer creates a credential offer and sends it to the holder`
   })
+  @ApiQuery({
+    name:'credentialType',
+    enum: IssueCredentialType
+  })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async sendCredential(
     @User() user: IUserRequest,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
+    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
     @Body() issueCredentialDto: IssueCredentialDto,
     @Res() res: Response
   ): Promise<Response> {
     issueCredentialDto.orgId = orgId;
+    issueCredentialDto.credentialType = credentialType;
 
+    const credOffer = issueCredentialDto?.credentialData || [];
+
+    if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType) {
+      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
+    }
+
+    if (credentialType === IssueCredentialType.INDY && !issueCredentialDto.credentialDefinitionId) {
+        throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
+    }
+
+    if (issueCredentialDto.credentialType !== IssueCredentialType.INDY && !credOffer.every(offer => (!offer?.attributes || 0 === Object.keys(offer?.attributes).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
+    }
+    
+    if (issueCredentialDto.credentialType === IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.credential || 0 === Object.keys(offer?.credential).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
+    }
+
+    if (issueCredentialDto.credentialType ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!offer?.options || 0 === Object.keys(offer?.options).length))) {
+      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
+    }
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
-
+    
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,

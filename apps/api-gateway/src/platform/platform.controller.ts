@@ -1,18 +1,19 @@
 import { Controller, Get, HttpStatus, Logger, Param, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { PlatformService } from './platform.service';
-import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { GetAllSchemaByPlatformDto } from '../schema/dtos/get-all-schema.dto';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { User } from '../authz/decorators/user.decorator';
 import { Response } from 'express';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
-import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
+import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AuthGuard } from '@nestjs/passport';
 import * as QRCode from 'qrcode';
-
+import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
+import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)
@@ -27,6 +28,11 @@ export class PlatformController {
         summary: 'Get all schemas from platform.',
         description: 'Get all schemas from platform.'
     })
+    @ApiQuery({
+        name: 'sortField',
+        enum: SortFields,
+        required: false
+      })    
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -34,7 +40,7 @@ export class PlatformController {
         @Query() getAllSchemaDto: GetAllSchemaByPlatformDto,
         @Res() res: Response,
         @User() user: IUserRequestInterface
-    ): Promise<object> {
+    ): Promise<Response> {
         const { ledgerId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
         const schemaSearchCriteria: ISchemaSearchPayload = {
             ledgerId,
@@ -45,13 +51,43 @@ export class PlatformController {
             sortBy: sortByValue
         };
         const schemasResponse = await this.platformService.getAllSchema(schemaSearchCriteria, user);
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.schema.success.fetch,
-            data: schemasResponse.response
+            data: schemasResponse
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
+
+
+    @Get('/platform/cred-defs')
+    @ApiTags('credential-definitions')
+    @ApiOperation({
+        summary: 'Get all credential-definitions from platform.',
+        description: 'Get all credential-definitions list from platform.'
+    })
+    @ApiQuery({
+        name: 'sortField',
+        enum: CredDefSortFields,
+        required: false
+      })    
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    async getAllCredDefs(
+        @Query() getAllPlatformCredDefs: GetAllPlatformCredDefsDto,
+        @Res() res: Response,
+        @User() user: IUserRequestInterface
+    ): Promise<Response> {
+        const schemasResponse = await this.platformService.getAllPlatformCredDefs(getAllPlatformCredDefs, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.credentialDefinition.success.fetch,
+            data: schemasResponse
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
+    }
+
 
     @Get('/platform/ledgers')
     @ApiTags('ledgers')
@@ -67,10 +103,10 @@ export class PlatformController {
     ): Promise<object> {
         const networksResponse = await this.platformService.getAllLedgers();
 
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.ledger.success.fetch,
-            data: networksResponse.response
+            data: networksResponse
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
@@ -87,13 +123,13 @@ export class PlatformController {
     async getNetwrkUrl(
         @Param('indyNamespace') indyNamespace: string,
         @Res() res: Response
-    ): Promise<object> {
+    ): Promise<Response> {
         const networksResponse = await this.platformService.getNetworkUrl(indyNamespace);
 
-        const finalResponse: IResponseType = {
+        const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.ledger.success.fetch,
-            data: networksResponse.response
+            message: ResponseMessages.ledger.success.fetchNetworkUrl,
+            data: networksResponse
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
@@ -140,4 +176,3 @@ export class PlatformController {
         res.send(qrCodeBuffer);
     }
 }
-

@@ -1,3 +1,4 @@
+import { AgentSpinUpStatus } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
@@ -22,7 +23,21 @@ export interface IAgentSpinupDto {
   tenant?: boolean;
   ledgerName?: string[];
   platformAdminEmail?: string;
+  isOnPremises?: boolean;
+  agentEndpoint?: string;
   apiKey?: string;
+  orgAgentType?: string;
+  userId?: string;
+}
+
+export interface IAgentConfigure {
+  walletName: string;
+  did: string;
+  agentEndpoint: string;
+  apiKey: string;
+  orgId: string;
+  network?: string;
+  tenant?: boolean;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -75,6 +90,7 @@ export interface IDidCreate {
   did?: string;
   role?: string;
   endorserDid?: string;
+  isPrimaryDid?: boolean;
 }
 export interface ITenantSchema {
   tenantId?: string;
@@ -140,7 +156,7 @@ export interface IWalletProvision {
   agentType: string;
   orgName: string;
   indyLedger: string;
-  afjVersion: string;
+  credoImage: string;
   protocol: string;
   tenant: boolean;
   inboundEndpoint: string;
@@ -181,6 +197,16 @@ export interface IStoreOrgAgentDetails {
   tenantId?: string;
   ledgerId?: string[];
   agentType?: string;
+  userId?: string;
+}
+
+export interface IStoreDidDetails {
+  orgId: string;
+  isPrimaryDid?: boolean;
+  did: string;
+  didDocument?: string;
+  userId: string;
+  orgAgentId: string;
 }
 
 export interface IStoreOrgAgent {
@@ -314,8 +340,37 @@ export interface IAgentStatus {
   isInitialized: boolean;
 }
 
+export interface ISchema {
+  uri: string;
+}
+export interface IFields {
+  path: string[];
+}
+export interface IConstraints {
+  fields: IFields[];
+}
+
+export interface IInputDescriptors {
+  id: string;
+  name?: string;
+  purpose?: string;
+  schema: ISchema[];
+  constraints?: IConstraints;
+}
+
+export interface IProofRequestPresentationDefinition {
+  id: string;
+  name: string;
+  input_descriptors: IInputDescriptors[];
+}
+
+export interface IPresentationExchange {
+  presentationDefinition: IProofRequestPresentationDefinition;
+}
+
 interface IProofFormats {
-  indy: IndyProof;
+  indy?: IndyProof;
+  presentationExchange?: IPresentationExchange;
 }
 
 interface IndyProof {
@@ -504,8 +559,7 @@ interface Ledger {
   poolConfig: string;
   isActive: boolean;
   networkString: string;
-  registerDIDEndpoint: string;
-  registerDIDPayload: string;
+  nymTxnEndpoint: string;
   indyNamespace: string;
   networkUrl: string | null;
 }
@@ -528,4 +582,31 @@ export interface ICreateConnectionInvitation {
   routing?: object;
   appendedAttachments?: object[];
   orgId?: string;
+}
+
+export interface AgentHealthData {
+  label: string;
+  endpoints: string[];
+  isInitialized: boolean;
+}
+
+export interface IAgentStore {
+  did?: string;
+  verkey?: string;
+  isDidPublic?: boolean;
+  agentSpinUpStatus?: AgentSpinUpStatus;
+  walletName?: string;
+  agentsTypeId?: string;
+  orgId?: string;
+  agentEndPoint?: string;
+  agentId?: string;
+  orgAgentTypeId?: string;
+  ledgerId?: string[];
+  id?: string;
+  apiKey?: string;
+  userId?: string;
+  createdBy?: string;
+  lastChangedBy?: string;
+  didDoc?: string;
+  tenantId?: string;
 }

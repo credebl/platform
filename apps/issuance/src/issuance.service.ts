@@ -50,50 +50,43 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
-
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICreateOfferResponse> {
-
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
     try {
-      const { orgId, credentialDefinitionId, comment, connectionId, attributes } = payload || {};
+      const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
 
-      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
+      if (payload.credentialType === IssueCredentialType.INDY) {
+        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
+        if (schemaResponse?.attributes) {
+          const schemaResponseError = [];
+          const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
 
-      if (schemaResponse?.attributes) {
-        const schemaResponseError = [];
-        const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
+          attributesArray.forEach((attribute) => {
+            if (attribute.attributeName && attribute.isRequired) {
+              credentialData.forEach((credential, i) => {
+                credential.attributes.forEach((attr) => {
+                  if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+                    schemaResponseError.push(`Attribute ${attribute.attributeName} is required at position ${i + 1}`);
+                  }
+                });
+              });
+            }
+          });
 
-        attributesArray.forEach((attribute) => {
-          if (attribute.attributeName && attribute.isRequired) {
-
-            payload.attributes.map((attr) => {
-              if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                schemaResponseError.push(
-                  `Attribute ${attribute.attributeName} is required`
-                );
-              }
-              return true;
-            });
+          if (0 < schemaResponseError.length) {
+            throw new BadRequestException(schemaResponseError);
           }
-        });
-        if (0 < schemaResponseError.length) {
-          throw new BadRequestException(schemaResponseError);
-
         }
-
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-
       const { agentEndPoint } = agentDetails;
 
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
       if (!orgAgentType) {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
       }
@@ -101,35 +94,49 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const issueData: IIssueData = {
-        protocolVersion: 'v1',
-        connectionId,
-        credentialFormats: {
-          indy: {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            attributes: (attributes).map(({ isRequired, ...rest }) => rest),
-            credentialDefinitionId
+      const issuancePromises = credentialData.map(async (credentials) => {
+        const { connectionId, attributes, credential, options } = credentials;
+        let issueData;
 
-          }
-        },
-        autoAcceptCredential: payload.autoAcceptCredential || 'always',
-        comment
-      };
+        if (payload.credentialType === IssueCredentialType.INDY) {
+          issueData = {
+            protocolVersion: payload.protocolVersion || 'v1',
+            connectionId,
+            credentialFormats: {
+              indy: {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                attributes: attributes.map(({ isRequired, ...rest }) => rest),
+                credentialDefinitionId
+              }
+            },
+            autoAcceptCredential: payload.autoAcceptCredential || 'always',
+            comment
+          };
+        } else if (payload.credentialType === IssueCredentialType.JSONLD) {
+          issueData = {
+            protocolVersion: payload.protocolVersion || 'v2',
+            connectionId,
+            credentialFormats: {
+              jsonld: {
+                credential,
+                options
+              }
+            },
+            autoAcceptCredential: payload.autoAcceptCredential || 'always',
+            comment: comment || ''
+          };
+        }
 
-      const credentialCreateOfferDetails: ICreateOfferResponse = await this._sendCredentialCreateOffer(issueData, url, orgId);
+        await this.delay(500);
+        return this._sendCredentialCreateOffer(issueData, url, orgId);
+      });
 
-      if (credentialCreateOfferDetails && 0 < Object.keys(credentialCreateOfferDetails).length) {
-        delete credentialCreateOfferDetails._tags;
-        delete credentialCreateOfferDetails.metadata;
-        delete credentialCreateOfferDetails.credentials;
-        delete credentialCreateOfferDetails.credentialAttributes;
-        delete credentialCreateOfferDetails.autoAcceptCredential;
-      }
-
-      return credentialCreateOfferDetails;
+      const results = await Promise.allSettled(issuancePromises);
+      return results;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
+
       if (errorStack) {
         throw new RpcException({
           error: errorStack?.message ? errorStack?.message : errorStack,
@@ -176,12 +183,12 @@ export class IssuanceService {
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      let recipientKey: string | undefined;
+      let invitationDid: string | undefined;
       if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.issuanceRepository.getRecipientKeyByOrgId(orgId);
+        const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
          if (data && 0 < data.length) {
           const [firstElement] = data;
-          recipientKey = firstElement?.recipientKey ?? undefined;
+          invitationDid = firstElement?.invitationDid ?? undefined;
       }
       }
       const { agentEndPoint, organisation } = agentDetails;
@@ -215,7 +222,7 @@ export class IssuanceService {
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
           comment: comment || '',
-          recipientKey:recipientKey || undefined
+          invitationDid:invitationDid || undefined
         };
 
       }
@@ -236,7 +243,7 @@ export class IssuanceService {
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
           comment: comment || '',
-          recipientKey:recipientKey || undefined
+          invitationDid:invitationDid || undefined
         };
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);

@@ -1,13 +1,13 @@
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject } from '@nestjs/common';
+import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ConnectionService } from './connection.service';
-import { ConnectionDto, CreateConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
+import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -86,7 +86,7 @@ export class ConnectionController {
     async getConnections(
         @Query() getAllConnectionsDto: GetAllConnectionsDto,
         @User() user: IUserRequest,
-        @Param('orgId') orgId: string,
+        @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
         @Res() res: Response
     ): Promise<Response> {
 
@@ -163,42 +163,13 @@ export class ConnectionController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-    /**
-        * Create out-of-band connection legacy invitation
-        * @param connectionDto 
-        * @param res 
-        * @returns Created out-of-band connection invitation url
-    */
-    @Post('/orgs/:orgId/connections')
-    @ApiOperation({ summary: 'Create outbound out-of-band connection (Legacy Invitation)', description: 'Create outbound out-of-band connection (Legacy Invitation)' })
-    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-    async createLegacyConnectionInvitation(
-        @Param('orgId') orgId: string,
-        @Body() connectionDto: CreateConnectionDto,
-        @User() reqUser: IUserRequestInterface,
-        @Res() res: Response
-    ): Promise<Response> {
-
-        connectionDto.orgId = orgId;
-        const connectionData = await this.connectionService.createLegacyConnectionInvitation(connectionDto, reqUser);
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.connection.success.create,
-            data: connectionData
-        };
-        return res.status(HttpStatus.CREATED).json(finalResponse);
-
-    }
-
      /**
         * Create out-of-band connection invitation
         * @param connectionDto 
         * @param res 
         * @returns Created out-of-band connection invitation url
     */
-     @Post('/orgs/:orgId/connection-invitation')
+     @Post('/orgs/:orgId/connections')
      @ApiOperation({ summary: 'Create outbound out-of-band connection invitation', description: 'Create outbound out-of-band connection invitation' })
      @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
      @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)

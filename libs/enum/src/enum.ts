@@ -3,6 +3,23 @@ export enum SortValue {
     DESC = 'desc'
 }
 
+export enum SortFields {
+    ID = 'id',
+    CREATED_DATE_TIME = 'createDateTime',
+    NAME = 'name',
+    VERSION = 'version',
+    LEDGER_ID = 'schemaLedgerId',
+    PUBLISHER_DID = 'publisherDid',
+    ISSUER_ID = 'issuerId'
+}
+
+export enum CredDefSortFields {
+    CREATED_DATE_TIME = 'createDateTime',
+    TAG = 'tag',
+    LEDGER_ID = 'schemaLedgerId',
+    CRED_DEF_ID= 'credentialDefinitionId'
+}
+
 export enum AgentType {
     AFJ = 'AFJ',
     ACAPY = 'ACAPY'
@@ -103,3 +120,8 @@ const transitionMap: { [key in Invitation]: Invitation[] } = {
 };
 
 export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));
+
+export enum SchemaType {
+    INDY = 'indy',
+    W3C_Schema = 'w3c'
+}

@@ -82,7 +82,11 @@ export const ResponseMessages = {
             orgCredentials: 'Organization credentials created successfully',
             fetchedOrgCredentials: 'Organization credentials fetched successfully',
             clientCredentials: 'Client credentials fetched successfully',
-            deleteCredentials:'Organization client credentials deleted'
+            deleteCredentials:'Organization client credentials deleted',
+            orgDids: 'Organization DIDs fetched successfully',
+            primaryDid: 'Primary DID updated successfully',
+            didDetails: 'DID Details updated sucessfully'
+
         },
         error: {
             exists: 'An organization name is already exist',
@@ -111,7 +115,9 @@ export const ResponseMessages = {
             ecosystemIdIsRequired:'ecosystemId is required',
             roleNotMatch: 'User does not have access',
             orgDoesNotMatch: 'Organization does not match',
-            invalidClient: 'Invalid client credentials'
+            invalidClient: 'Invalid client credentials',
+            primaryDid: 'This DID is already set to primary DID',
+            didNotFound: 'DID does not exist in organiation'
         }
     },
 
@@ -162,7 +168,9 @@ export const ResponseMessages = {
             agentDetailsNotFound: 'Agent details not found',
             failedFetchSchema: 'Failed to fetch schema data',
             atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
-            schemaBuilder: 'Error while creating schema JSON`'
+            schemaBuilder: 'Error while creating schema JSON',
+            W3CSchemaNotFOund: 'Error while resolving W3C schema',
+            storeW3CSchema: 'Error while storing W3C schema'
         }
     },
     credentialDefinition: {
@@ -175,13 +183,15 @@ export const ResponseMessages = {
             NotSaved: 'Error in saving credential definition.',
             Conflict: 'Credential definition already exists',
             schemaIdNotFound: 'SchemaLedgerId not found',
+            isRequired: 'Credential definition Id is required',
             OrgDidNotFound: 'OrgDid not found',
             credDefIdNotFound: 'Credential Definition Id not found'
         }
     },
     ledger: {
         success: {
-            fetch: 'Ledgers retrieved successfully.'
+            fetch: 'Ledger details retrieved successfully.',
+            fetchNetworkUrl: 'Network url retrieved successfully'
         },
         error: {
             NotFound: 'No ledgers found.'
@@ -226,7 +236,15 @@ export const ResponseMessages = {
             nullTenantId:'TenantId must not be null',
             tenantIdNotFound:'TenantId not found',
             invalidTenantIdIdFormat:'Invalid tenantId format',
-            requiredTenantId:'Tenant Id is required'
+            requiredTenantId:'Tenant Id is required',
+            createDid:'Error while creating DID',
+            storeDid: 'Error while storing DID',
+            agentSpinupError: 'Agent endpoint unreachable',
+            agentEndpointRequired: 'Agent endpoint is required',
+            failedAgentType: 'Agent endpoint is required',
+            failedApiKey: 'Failed to encrypt API key',
+            failedOrganization: 'Failed to fetch organization agent type details',
+            promiseReject: 'One or more promises were rejected.'
         }
     },
     connection: {
@@ -281,6 +299,7 @@ export const ResponseMessages = {
             orgAgentTypeNotFound: 'Organization agent type not found',
             credentialNotPresent: 'credential is required',
             optionsNotPresent:'options are required',
+            attributesAreRequired: 'attributes are required',
             invalidCredentialType:'invalid credential type'
         }
     },
@@ -311,6 +330,7 @@ export const ResponseMessages = {
             success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem details updated successfully',
+            add: 'Organization added successfully',
             delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
             getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
@@ -331,6 +351,10 @@ export const ResponseMessages = {
         },
         error: {
             notCreated: 'Error while creating ecosystem',
+            agentNotSpunUp: 'Agent is not spun up for this organization',
+            orgAlreadyExists: 'Organization is already exists in ecosystem',
+            unableToAdd: 'Unable to add organization',
+            partiallyAdded: 'Organization(s) are partially added',
             orgNotExist: 'Organization does not exist',
             orgDidNotExist: 'Organization did does not exist',
             exists: 'An ecosystem name is already exist',
@@ -362,6 +386,7 @@ export const ResponseMessages = {
             invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
             transactionSubmitted: 'Transaction already submitted',
+            transactionNotSigned: 'Transaction request is not signed',
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',

@@ -1,27 +1,30 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 /* eslint-disable camelcase */
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { SortValue } from '../../enum';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsOptional } from 'class-validator';
-import { trim } from '@credebl/common/cast.helper';
-import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
+import { IsEnum, IsOptional, IsUUID, Min } from 'class-validator';
+import { toNumber, trim } from '@credebl/common/cast.helper';
+import { CredDefSortFields, SortFields, SortValue } from '@credebl/enum/enum';
 
 export class GetAllSchemaDto {
-    @ApiProperty({ required: false })
-    @IsOptional()
-    pageNumber: number = 1;
-
     @ApiProperty({ required: false })
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @Type(() => String)
     searchByText: string = '';
 
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, default: 1 })
     @IsOptional()
-    pageSize: number = 10;
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page number must be greater than 0' })
+    pageNumber: number = 1;
 
+    @ApiProperty({ required: false, default: 10 })
+    @IsOptional()
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page size must be greater than 0' })
+    pageSize: number = 10;
+    
     @ApiProperty({
         required: false
     })
@@ -41,15 +44,23 @@ export class GetAllSchemaDto {
 }
 
 export class GetCredentialDefinitionBySchemaIdDto {
-    @ApiProperty({ required: false })
+
+    @ApiProperty({ required: false, default: 1 })
     @IsOptional()
-    @Type(() => Number)
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page number must be greater than 0' })
     pageNumber: number = 1;
+
+    @ApiProperty({ required: false, default: 10 })
+    @IsOptional()
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page size must be greater than 0' })
+    pageSize: number = 10;
 
     @ApiProperty({ required: false })
     @IsOptional()
-    @Type(() => Number)
-    pageSize: number = 10;
+    @Type(() => String)
+    searchByText: string = '';
 
     @ApiProperty({
         required: false
@@ -73,15 +84,19 @@ export class GetCredentialDefinitionBySchemaIdDto {
     orgId: string;
 }
 
+
 export class GetAllSchemaByPlatformDto {
 
-    @ApiProperty()
+    @ApiProperty({ example: '1a7eac11-ff05-40d7-8351-4d7467687cad'})
     @ApiPropertyOptional()
     @IsOptional()
+    @IsUUID('4', { message: 'Invalid format of ledgerId' })
     ledgerId?: string;
     
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, default: 1  })
     @IsOptional()
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page number must be greater than 0' })
     pageNumber: number = 1;
 
     @ApiProperty({ required: false })
@@ -89,15 +104,22 @@ export class GetAllSchemaByPlatformDto {
     @Type(() => String)
     searchByText: string = '';
 
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, default: 10  })
     @IsOptional()
+    @Transform(({ value }) => toNumber(value))
+    @Min(1, { message: 'Page size must be greater than 0' })
     pageSize: number = 10;
 
-    @ApiProperty({ required: false })
+    @ApiProperty({
+        required: false
+    })
+    @Transform(({ value }) => trim(value))
     @IsOptional()
-    sorting: string = 'id';
+    @IsEnum(SortFields)
+    sorting: string = SortFields.CREATED_DATE_TIME;
 
     @ApiProperty({ required: false })
     @IsOptional()
     sortByValue: string = SortValue.DESC;
+    
 }

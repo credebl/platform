@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 export interface IUserOrgRoles {
   id: string
   userId: string
@@ -141,4 +143,36 @@ export interface Payload {
   pageNumber: number;
   pageSize: number;
   search: string;
+  role?: string;
+}
+
+export interface IDidList {
+  id: string;
+  createDateTime: Date;
+  did: string;
+  lastChangedDateTime: Date;
+  isPrimaryDid: boolean;
+}
+
+export interface IPrimaryDid {
+  orgId: string,
+  did: string
+}
+
+export interface IDidDetails {
+  id: string;
+  createDateTime: Date; 
+  createdBy: string;
+  lastChangedDateTime: Date; 
+  lastChangedBy: string;
+  orgId: string;
+  isPrimaryDid: boolean;
+  did: string;
+  didDocument: Prisma.JsonValue;
+  orgAgentId: string;
+}
+
+export interface IPrimaryDidDetails extends IPrimaryDid {
+  id: string,
+  didDocument: Prisma.JsonValue
 }

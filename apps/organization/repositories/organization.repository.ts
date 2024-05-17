@@ -6,7 +6,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
+import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -551,14 +551,24 @@ export class OrganizationRepository {
     queryObject: object,
     filterOptions: object,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
+    role?: string,
+    userId?: string
   ): Promise<IGetOrganization> {
     try {
       const sortByName = SortValue.DESC;
       const result = await this.prisma.$transaction([
         this.prisma.organisation.findMany({
           where: {
-            ...queryObject
+            ...queryObject,
+            userOrgRoles: {
+              some: {
+                orgRole: {
+                  name: role
+                },
+                userId
+              }
+            }
           },
           select: {
             id: true,
@@ -566,7 +576,19 @@ export class OrganizationRepository {
             description: true,
             logoUrl: true,
             orgSlug: true,
+            createDateTime: true,
+            ecosystemOrgs: {
+              select: {
+                ecosystemId: true
+              }
+            },
             userOrgRoles: {
+              where: {
+                orgRole: {
+                  name: role
+                },
+                ...filterOptions
+              },
               select: {
                 id: true,
                 orgRole: {
@@ -576,27 +598,29 @@ export class OrganizationRepository {
                     description: true
                   }
                 }
-              },
-              where: {
-                ...filterOptions
-                // Additional filtering conditions if needed
               }
             }
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
           orderBy: {
-            name: sortByName
-            
+            createDateTime: sortByName
           }
         }),
         this.prisma.organisation.count({
           where: {
-            ...queryObject
+            ...queryObject,
+            userOrgRoles: {
+              some: {
+                orgRole: {
+                  name: role
+                },
+                userId
+              }
+            }
           }
         })
       ]);
-
       const organizations = result[0];
       const totalCount = result[1];
       const totalPages = Math.ceil(totalCount / pageSize);
@@ -672,7 +696,7 @@ export class OrganizationRepository {
   async getAgentEndPoint(orgId: string): Promise<org_agents> {
     try {
 
-      const agentDetails = await this.prisma.org_agents.findFirst({
+      const agentDetails = await this.prisma.org_agents.findFirstOrThrow({
         where: {
           orgId
         }
@@ -733,5 +757,99 @@ export class OrganizationRepository {
       throw error;
     }
   }
+
+  // eslint-disable-next-line camelcase
+  async getAllOrganizationDid(orgId: string): Promise<IDidList[]> {
+    try {
+      return this.prisma.org_dids.findMany({
+        where:{
+          orgId
+        },
+        select:{
+          id: true,
+          createDateTime: true,
+          did: true,
+          lastChangedDateTime: true,
+          isPrimaryDid: true  
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error in getAllOrganizationDid: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async setOrgsPrimaryDid(primaryDidDetails: IPrimaryDidDetails): Promise<string> {
+    try {
+      const {did, didDocument, id, orgId} = primaryDidDetails;
+      await this.prisma.$transaction([
+        this.prisma.org_dids.update({
+          where: {
+            id
+          },
+         data: {
+             isPrimaryDid: true
+         }
+         }),
+          this.prisma.org_agents.update({
+            where: {
+               orgId
+            },
+           data: {
+               orgDid: did,
+               didDocument
+           }
+       })   
+        ]);
+       return ResponseMessages.organisation.success.didDetails;
+    } catch (error) {
+        this.logger.error(`[setOrgsPrimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+        throw error;
+    }
+}
+
+async getDidDetailsByDid(did:string): Promise<IDidDetails> {
+  try {
+    return this.prisma.org_dids.findFirstOrThrow({
+      where: {
+        did
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getDidDetailsByDid] - get DID details: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
+
+ async getPerviousPrimaryDid(orgId:string): Promise<IDidDetails> {
+  try {
+    return this.prisma.org_dids.findFirstOrThrow({
+      where: {
+        orgId,
+        isPrimaryDid: true
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getPerviousPrimaryDid] - get DID details: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
+
+ async setPreviousDidFlase(id:string): Promise<IDidDetails> {
+  try {
+    return this.prisma.org_dids.update({
+      where: {
+        id
+      },
+      data: {
+        isPrimaryDid: false
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[setPreviousDidFlase] - Update DID details: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
+
 
 }

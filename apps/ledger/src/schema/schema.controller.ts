@@ -12,6 +12,7 @@ import { schema } from '@prisma/client';
 import {
   ICredDefWithPagination,
   ISchemaData,
+  ISchemaDetails,
   ISchemasWithPagination
 } from '@credebl/common/interfaces/schema.interface';
 
@@ -26,9 +27,9 @@ export class SchemaController {
   }
 
   @MessagePattern({ cmd: 'create-w3c-schema' })
-  async createW3CSchema(payload: W3CSchemaPayload): Promise<object> {
-    const {orgId, schemaPayload} = payload;
-    return this.schemaService.createW3CSchema(orgId, schemaPayload);
+  async createW3CSchema(payload: W3CSchemaPayload): Promise<string> {
+    const {orgId, schemaPayload, user} = payload;
+    return this.schemaService.createW3CSchema(orgId, schemaPayload, user);
   }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })
@@ -43,30 +44,13 @@ export class SchemaController {
     return this.schemaService.getSchemas(schemaSearchCriteria, orgId);
   }
 
-  @MessagePattern({ cmd: 'get-cred-deff-list-by-schemas-id' })
-  async getcredDeffListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<ICredDefWithPagination> {
-    return this.schemaService.getcredDeffListBySchemaId(payload);
+  @MessagePattern({ cmd: 'get-cred-def-list-by-schemas-id' })
+  async getcredDefListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<ICredDefWithPagination> {
+    return this.schemaService.getcredDefListBySchemaId(payload);
   }
 
   @MessagePattern({ cmd: 'get-all-schemas' })
-  async getAllSchema(schemaSearch: ISchemaSearchPayload): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      schemaLedgerId: string;
-      version: string;
-      attributes: string;
-      publisherDid: string;
-      issuerId: string;
-    }[];
-  }> {
+  async getAllSchema(schemaSearch: ISchemaSearchPayload): Promise<ISchemaDetails> {
     const { schemaSearchCriteria } = schemaSearch;
     return this.schemaService.getAllSchema(schemaSearchCriteria);
   }

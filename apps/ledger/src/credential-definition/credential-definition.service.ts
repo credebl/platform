@@ -9,14 +9,15 @@ import {
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CredentialDefinitionRepository } from './repositories/credential-definition.repository';
-import { CreateCredDefPayload, CredDefPayload, GetAllCredDefsPayload, GetCredDefBySchemaId, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
+import { CreateCredDefPayload, CredDefPayload, GetAllCredDefsPayload, GetCredDefBySchemaId, GetCredDefPayload, IPlatformCredDefs } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CreateCredDefAgentRedirection, CredDefSchema, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { OrgAgentType, SortValue } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
     constructor(
@@ -170,6 +171,34 @@ export class CredentialDefinitionService extends BaseService {
         }
     }
 
+    async getAllPlatformCredDefs(credDefsPayload: IPlatformCredDefs): Promise<IPlatformCredDefsData> {
+        try {
+           const { pageSize, pageNumber } = credDefsPayload;
+           const response = await this.credentialDefinitionRepository.getAllPlatformCredDefsDetails(credDefsPayload);
+
+           const credDefResponse: IPlatformCredDefsData = {
+             totalItems: response.credDefCount,
+             hasNextPage: pageSize * pageNumber < response.credDefCount,
+             hasPreviousPage: 1 < pageNumber,
+             nextPage: pageNumber + 1,
+             previousPage: pageNumber - 1,
+             lastPage: Math.ceil(response.credDefCount / pageSize),
+             data: response.credDefResult
+           };
+
+           if (0 !== response.credDefCount) {
+             return credDefResponse;
+           } else {
+             throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
+           }
+    
+    
+        } catch (error) {
+          this.logger.error(`Error in retrieving all credential definitions: ${error}`);
+          throw new RpcException(error.response ? error.response : error);
+        }
+      }
+    
     async getCredentialDefinitionById(payload: GetCredDefPayload): Promise<credential_definition> {
         try {
             const { credentialDefinitionId, orgId } = payload;
@@ -189,6 +218,7 @@ export class CredentialDefinitionService extends BaseService {
             } else if (OrgAgentType.SHARED === orgAgentType) {
                 const { tenantId } = await this.credentialDefinitionRepository.getAgentDetailsByOrgId(String(orgId));
                 const getSchemaPayload = {
+                    orgId, 
                     tenantId,
                     method: 'getCredentialDefinitionById',
                     payload: { credentialDefinitionId },
@@ -200,6 +230,7 @@ export class CredentialDefinitionService extends BaseService {
             if (credDefResponse.response.resolutionMetadata.error) {
                 throw new NotFoundException(ResponseMessages.credentialDefinition.error.credDefIdNotFound);
             }
+
             return credDefResponse;
         } catch (error) {
             this.logger.error(`Error retrieving credential definition with id ${payload.credentialDefinitionId}`);
@@ -218,6 +249,7 @@ export class CredentialDefinitionService extends BaseService {
     async _getCredentialDefinitionById(payload: GetCredDefAgentRedirection): Promise<{
         response: string;
     }> {
+        
         try {
             const pattern = {
                 cmd: 'agent-get-credential-definition'
@@ -245,24 +277,7 @@ export class CredentialDefinitionService extends BaseService {
         }
     }
 
-    async getAllCredDefs(payload: GetAllCredDefsPayload): Promise<{
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-        nextPage: number;
-        previousPage: number;
-        lastPage: number;
-        data: {
-            createDateTime: Date;
-            createdBy: string;
-            credentialDefinitionId: string;
-            tag: string;
-            schemaLedgerId: string;
-            schemaId: string;
-            orgId: string;
-            revocable: boolean;
-        }[]
-    }> {
+    async getAllCredDefs(payload: GetAllCredDefsPayload): Promise<ICredDefDetails> {
         try {
             const { credDefSearchCriteria, orgId } = payload;
             const response = await this.credentialDefinitionRepository.getAllCredDefs(credDefSearchCriteria, orgId);
@@ -302,7 +317,7 @@ export class CredentialDefinitionService extends BaseService {
         try {
             const payload = {
                 orgId,
-                sortValue: 'ASC',
+                sortValue: SortValue.ASC,
                 credDefSortBy: 'id'
             };
 

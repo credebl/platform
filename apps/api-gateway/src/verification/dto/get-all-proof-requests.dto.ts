@@ -1,24 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
 import { SortValue } from '../../enum';
 import { trim } from '@credebl/common/cast.helper';
 import { SortFields } from '../enum/verification.enum';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
-export class GetAllProofRequestsDto {
-    @ApiProperty({ required: false, example: '1' })
-    @IsOptional()
-    pageNumber: number = 1;
-    
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Transform(({ value }) => trim(value))
-    @Type(() => String)
-    searchByText: string = '';
-    
-    @ApiProperty({ required: false, example: '10' })
-    @IsOptional()
-    pageSize: number = 10;
+export class GetAllProofRequestsDto extends PaginationDto {
     
     @ApiProperty({
         enum: [SortValue.DESC, SortValue.ASC],

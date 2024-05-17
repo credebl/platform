@@ -65,10 +65,10 @@ export class VerificationRepository {
         where: {
           orgId,
           OR: [
-            { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
-        ]
+            { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
+          ]
         },
         select: {
           createDateTime: true,
@@ -80,7 +80,7 @@ export class VerificationRepository {
           presentationId: true
         },
         orderBy: {
-          [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc' 
+          [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc'
         },
 
         take: Number(proofRequestsSearchCriteria.pageSize),
@@ -90,9 +90,9 @@ export class VerificationRepository {
         where: {
           orgId,
           OR: [
-            { connectionId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { state: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.searchByText, mode: 'insensitive' } }
+            { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
           ]
         }
       });
@@ -109,7 +109,7 @@ export class VerificationRepository {
       let organisationId: string;
       const { proofPresentationPayload, orgId } = payload;
 
-      if (proofPresentationPayload?.contextCorrelationId) {
+      if ('default' !== proofPresentationPayload?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(proofPresentationPayload?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
@@ -185,9 +185,9 @@ export class VerificationRepository {
       throw error;
     }
   }
-  
+
   // eslint-disable-next-line camelcase
-  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
+  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({
         where: {
@@ -198,7 +198,7 @@ export class VerificationRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getRecipientKey in verification repository: ${error.message}`);
+      this.logger.error(`Error in getInvitationDid in verification repository: ${error.message}`);
       throw error;
     }
   }

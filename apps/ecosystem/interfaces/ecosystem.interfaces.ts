@@ -134,6 +134,7 @@ export interface SaveSchema {
   publisherDid: string;
   orgId: string;
   ledgerId: string;
+  type?: string;
 }
 
 export interface saveCredDef {
@@ -368,4 +369,32 @@ export interface IEcosystemList {
   pageNumber: number;
   pageSize: number;
   search: string;
+}
+
+export interface IEcosystemLeadOrgs {
+  organizationIds: string[];
+  ecosystemId: string;
+  orgId: string;
+  userId: string;
+}
+
+export interface IEcosystemOrgs {
+  orgId: string,
+  ecosystemId: string,
+  ecosystemRoleId: string,
+  status: string,
+  deploymentMode: string,
+  createdBy: string,
+  lastChangedBy: string
+}
+export interface IEcosystemOrgsData extends IEcosystemOrgs {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+}
+
+export interface IEcosystemOrgDetails {
+  count: Prisma.BatchPayload;
+  ecosystemOrgs: IEcosystemOrgsData[];
 }

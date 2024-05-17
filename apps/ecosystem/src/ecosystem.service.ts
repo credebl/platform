@@ -5,6 +5,7 @@ import {
   ConflictException,
   ForbiddenException,
   HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -21,8 +22,9 @@ import { EcosystemInviteTemplate } from '../templates/EcosystemInviteTemplate';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
-import { EcosystemConfigSettings, Invitation, OrgAgentType } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, Invitation, OrgAgentType, SchemaType } from '@credebl/enum/enum';
 import {
+  DeploymentModeType,
   EcosystemOrgStatus,
   EcosystemRoles,
   endorsementTransactionStatus,
@@ -49,7 +51,8 @@ import {
   IEcosystemInvitations,
   IEditEcosystem,
   IEndorsementTransaction,
-  IEcosystemList
+  IEcosystemList,
+  IEcosystemLeadOrgs
 } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -419,6 +422,114 @@ export class EcosystemService {
     }
   }
 
+  async addOrganizationsInEcosystem(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<{
+    results: { statusCode: number; message: string; error?: string; data?: { orgId: string } }[];
+    statusCode: number;
+    message: string;
+  }> {
+    try {
+      const ecosystemRoleDetails = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
+
+      const getEcosystemDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemLeadOrgs.ecosystemId);
+      const getEcosystemLeadOrg = getEcosystemDetails?.orgId;
+      const getEcosystemLeadOrgLedgerDetails = await this.ecosystemRepository.getAgentDetails(getEcosystemLeadOrg);
+      const getEcosystemLeadOrgLedgerId = getEcosystemLeadOrgLedgerDetails?.ledgerId;
+
+      const { organizationIds } = ecosystemLeadOrgs;
+      const errorOrgs: { statusCode: number; message: string; error?: string; data?: { orgId: string } }[] = [];
+      const addedOrgs = [];
+      let successCount: number = 0;
+      let errorCount: number = 0;
+
+      for (const orgId of organizationIds) {
+        const result: { statusCode: number; message: string; error?: string; data?: { orgId: string } } = {
+          statusCode: 0,
+          message: ''
+        };
+
+        const orgAgentDetails = await this.ecosystemRepository.getAgentDetails(orgId);
+        const getOrgLedgerId = orgAgentDetails?.ledgerId;
+        if (orgAgentDetails?.orgDid) {
+          const existingOrg = await this.ecosystemRepository.checkOrgExistsInEcosystem(
+            orgId,
+            ecosystemLeadOrgs.ecosystemId
+          );
+          if (getOrgLedgerId === getEcosystemLeadOrgLedgerId) {
+            if (!existingOrg) {
+              addedOrgs.push({
+                orgId,
+                ecosystemId: ecosystemLeadOrgs.ecosystemId,
+                ecosystemRoleId: ecosystemRoleDetails.id,
+                status: EcosystemOrgStatus.ACTIVE,
+                deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
+                createdBy: ecosystemLeadOrgs.userId,
+                lastChangedBy: ecosystemLeadOrgs.userId
+              });
+              successCount++;
+            } else {
+              result.statusCode = HttpStatus.CONFLICT;
+              result.message = `${ResponseMessages.ecosystem.error.orgAlreadyExists}`;
+              result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+              result.data = { orgId };
+              errorCount++;
+            }
+          } else {
+            result.statusCode = HttpStatus.BAD_REQUEST;
+            result.message = `${ResponseMessages.ecosystem.error.ledgerNotMatch}`;
+            result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+            result.data = { orgId };
+            errorCount++;
+          }
+        } else {
+          result.statusCode = HttpStatus.BAD_REQUEST;
+          result.message = `${ResponseMessages.ecosystem.error.agentNotSpunUp}`;
+          result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+          result.data = { orgId };
+          errorCount++;
+        }
+        if (0 !== result.statusCode) {
+          errorOrgs.push(result);
+        }
+      }
+      let statusCode = HttpStatus.CREATED;
+      let message = ResponseMessages.ecosystem.success.add;
+      let getOrgs = [];
+
+      if (0 < addedOrgs?.length) {
+        const orgs = addedOrgs.map((item) => item.orgId);
+        await this.ecosystemRepository.addOrganizationInEcosystem(addedOrgs);
+
+        //need to discuss
+        getOrgs = await this.ecosystemRepository.getEcosystemOrgs(orgs, ecosystemLeadOrgs.ecosystemId);
+      }
+
+      const success =
+        0 < getOrgs?.length
+          ? getOrgs?.map((item) => ({
+              statusCode: HttpStatus.CREATED,
+              message: `${ResponseMessages.ecosystem.success.add}`,
+              data: {
+                orgId: item.orgId
+              }
+            }))
+          : [];
+      const finalResult = [...errorOrgs, ...success];
+
+      if (0 === successCount) {
+        statusCode = HttpStatus.BAD_REQUEST;
+        message = ResponseMessages.ecosystem.error.unableToAdd;
+      } else if (0 < errorCount && 0 < successCount) {
+        statusCode = HttpStatus.PARTIAL_CONTENT;
+        message = ResponseMessages.ecosystem.error.partiallyAdded;
+      }
+
+      return { results: finalResult, statusCode, message };
+    } catch (error) {
+      this.logger.error(`In add organizations: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async checkLedgerMatches(orgDetails: OrganizationData, ecosystemId: string): Promise<boolean> {
     const orgLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
 
@@ -443,7 +554,10 @@ export class EcosystemService {
    * @param userId
    * @returns Ecosystem invitation status
    */
-  async acceptRejectEcosystemInvitations(acceptRejectInvitation: AcceptRejectEcosystemInvitationDto, email: string): Promise<string> {
+  async acceptRejectEcosystemInvitations(
+    acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
+    email: string
+  ): Promise<string> {
     try {
       const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(
         EcosystemConfigSettings.MULTI_ECOSYSTEM
@@ -1088,7 +1202,11 @@ export class EcosystemService {
         endorserDid: endorsementTransactionPayload.endorserDid
       };
 
-      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(payload, url, ecosystemLeadDetails.orgId);
+      const schemaTransactionRequest: SignedTransactionMessage = await this._signTransaction(
+        payload,
+        url,
+        ecosystemLeadDetails.orgId
+      );
 
       if (!schemaTransactionRequest) {
         throw new InternalServerErrorException(ResponseMessages.ecosystem.error.signRequestError);
@@ -1285,7 +1403,8 @@ export class EcosystemService {
       lastChangedBy: endorsementTransactionPayload.ecosystemOrgs.orgId,
       publisherDid: extractedDidValue,
       orgId: endorsementTransactionPayload.ecosystemOrgs.orgId,
-      ledgerId: ecosystemMemberDetails.ledgerId
+      ledgerId: ecosystemMemberDetails.ledgerId,
+      type: SchemaType.INDY
     };
     const saveSchemaDetails = await this.ecosystemRepository.saveSchema(saveSchemaPayload);
     if (!saveSchemaDetails) {
@@ -1333,18 +1452,23 @@ export class EcosystemService {
 
   async submitTransaction(transactionPayload: TransactionPayload): Promise<object> {
     try {
-     const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
+      const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
+      const checkEndorsementRequestIsSubmitted = await this.ecosystemRepository.getEndorsementTransactionById(
+        endorsementId,
+        endorsementTransactionStatus.SUBMITED
+      );
+
+      if (checkEndorsementRequestIsSubmitted) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.transactionSubmitted);
+      }
+
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
         endorsementTransactionStatus.SIGNED
       );
 
       if (!endorsementTransactionPayload) {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invalidTransaction);
-      }
-
-      if ('submitted' === endorsementTransactionPayload.status) {
-        throw new ConflictException(ResponseMessages.ecosystem.error.transactionSubmitted);
+        throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotSigned);
       }
 
       const ecosystemMemberDetails = await this.getEcosystemMemberDetails(endorsementTransactionPayload);
@@ -1366,20 +1490,17 @@ export class EcosystemService {
         ecosystemMemberDetails,
         ecosystemLeadAgentDetails
       );
-     
+
       if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
-        const isSchemaExists = await this.ecosystemRepository.schemaExist(
-         payload.schema.name,
-          payload.schema.version
-          );
-  
-          if (0 !== isSchemaExists.length) {
-            this.logger.error(ResponseMessages.ecosystem.error.schemaAlreadyExist);
-            throw new ConflictException(
-              ResponseMessages.ecosystem.error.schemaAlreadyExist,
-              { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
-            );
-          }
+        const isSchemaExists = await this.ecosystemRepository.schemaExist(payload.schema.name, payload.schema.version);
+
+        if (0 !== isSchemaExists.length) {
+          this.logger.error(ResponseMessages.ecosystem.error.schemaAlreadyExist);
+          throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.conflict
+          });
+        }
       }
 
       const submitTransactionRequest = await this._submitTransaction(payload, url, orgId);
@@ -1430,7 +1551,7 @@ export class EcosystemService {
           throw new InternalServerErrorException(ResponseMessages.ecosystem.error.updateCredDefId);
         }
         return this.handleCredDefSubmission(
-          endorsementTransactionPayload, 
+          endorsementTransactionPayload,
           ecosystemMemberDetails,
           submitTransactionRequest
         );

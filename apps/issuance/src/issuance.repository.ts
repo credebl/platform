@@ -71,19 +71,18 @@ export class IssuanceRepository {
     }
   }
 
-
-  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
+  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({
         where: {
           orgId
         },
         orderBy: {
-          createDateTime: 'asc' 
+          createDateTime: 'asc'
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getRecipientKey in issuance repository: ${error.message}`);
+      this.logger.error(`Error in getInvitationDid in issuance repository: ${error.message}`);
       throw error;
     }
   }
@@ -128,7 +127,7 @@ export class IssuanceRepository {
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
-     
+
       const issuedCredentialsCount = await this.prisma.credentials.count({
         where: {
           orgId,
@@ -157,7 +156,7 @@ export class IssuanceRepository {
       let organisationId: string;
       const { issueCredentialDto, id } = payload;
 
-      if (issueCredentialDto?.contextCorrelationId) {
+      if ('default' !== issueCredentialDto?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(issueCredentialDto?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
@@ -168,15 +167,15 @@ export class IssuanceRepository {
 
       if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId) {
         schemaId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId;
-      } 
-    
+      }
+
       let credDefId = '';
       if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId) {
         credDefId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId;
       }
 
       const credentialDetails = await this.prisma.credentials.upsert({
-        where: { 
+        where: {
           threadId: issueCredentialDto?.threadId
         },
         update: {

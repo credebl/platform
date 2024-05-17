@@ -27,7 +27,8 @@ export class FidoService extends BaseService {
     }
 
     async generateAuthenticationOption(generateAuthentication: GenerateAuthenticationDto) : Promise<{response: object}> {
-        const payload = { generateAuthentication };
+        const {userName} = generateAuthentication;
+        const payload = { userName };
         return this.sendNats(this.fidoServiceProxy, 'generate-authentication-options', payload);
     }
 

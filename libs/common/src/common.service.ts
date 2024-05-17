@@ -102,7 +102,20 @@ export class CommonService {
           data.data
         );
     } catch (error) {
-      this.logger.error(`ERROR in GET : ${JSON.stringify(error.response.data)}`);
+      this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`);
+      if (
+        error.message
+          .toString()
+          .includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)
+      ) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            error: error.message
+          },
+          HttpStatus.NOT_FOUND
+        );
+      }
       if (
         error
           .toString()

@@ -17,7 +17,7 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
     return this.issuanceService.sendCredentialCreateOffer(payload);
   }
 

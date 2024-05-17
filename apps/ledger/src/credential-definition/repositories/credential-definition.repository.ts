@@ -6,8 +6,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
 import { ICredDefData, IPlatformCredDefDetails } from '@credebl/common/interfaces/cred-def.interface';
-import { SchemaType, SortValue } from '@credebl/enum/enum';
-import { ISchemaResponse } from '../interfaces';
+import { SortValue } from '@credebl/enum/enum';
 
 @Injectable()
 export class CredentialDefinitionRepository {

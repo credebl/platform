@@ -27,7 +27,6 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -142,7 +141,7 @@ export class EcosystemController {
   })
   async getEcosystem(
     @Query() paginationDto: PaginationDto,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     const ecosystemList = await this.ecosystemService.getAllEcosystem(orgId, paginationDto);
@@ -529,11 +528,11 @@ export class EcosystemController {
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
     async addOrganizationsInEcosystem(
       @Body() addOrganizationsDto: AddOrganizationsDto,
-      @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }}), TrimStringParamPipe) ecosystemId: string,
+      @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }})) ecosystemId: string,
       @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
       @User() user: user,
       @Res() res: Response
-    ): Promise<Response> {  
+    ): Promise<Response> {
   
       addOrganizationsDto.ecosystemId = ecosystemId;
       addOrganizationsDto.orgId = orgId;

@@ -12,7 +12,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { AuthGuard } from '@nestjs/passport';
 import * as QRCode from 'qrcode';
-import { CredDefSortFields, SchemaType, SortFields } from '@credebl/enum/enum';
+import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
 
 @Controller('')
@@ -32,11 +32,6 @@ export class PlatformController {
         name: 'sortField',
         enum: SortFields,
         required: false
-      }) 
-    @ApiQuery({
-        name: 'schemaType',
-        enum: SchemaType,
-        required: false
       })    
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
@@ -46,7 +41,7 @@ export class PlatformController {
         @Res() res: Response,
         @User() user: IUserRequestInterface
     ): Promise<Response> {
-        const { ledgerId, pageSize, searchByText, pageNumber, sorting, sortByValue, schemaType } = getAllSchemaDto;
+        const { ledgerId, pageSize, searchByText, pageNumber, sorting, sortByValue } = getAllSchemaDto;
         const schemaSearchCriteria: ISchemaSearchPayload = {
             ledgerId,
             pageNumber,

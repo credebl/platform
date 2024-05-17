@@ -5,7 +5,7 @@ import { ledgers, org_agents, org_agents_type, organisation, schema } from '@pri
 import { ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
-import { SchemaType, SortValue } from '@credebl/enum/enum';
+import { SortValue } from '@credebl/enum/enum';
 import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
@@ -262,7 +262,7 @@ export class SchemaRepository {
           type: true
         },
         orderBy: {
-          [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
+          [payload.sortField]: SortValue.DESC === payload.sortBy ? SortValue.DESC : SortValue.ASC
         },
         take: Number(pageSize),
         skip: (pageNumber - 1) * pageSize

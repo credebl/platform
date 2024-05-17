@@ -6,7 +6,7 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { organisation, user } from '@prisma/client';
+import { organisation } from '@prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
@@ -190,6 +190,13 @@ export class OrganizationService extends BaseService {
     const payload = { orgId, pageNumber, pageSize, search };
 
     return this.sendNats(this.serviceProxy, 'fetch-organization-user', payload);
+  }
+
+  async getDidList(
+    orgId: string
+  ): Promise<IDidList[]> {
+    const payload = { orgId };
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-dids', payload);
   }
 
   async getDidList(

@@ -138,6 +138,12 @@ export class CreateConnectionDto {
     @IsOptional()
     @IsNotEmpty({ message: 'Please provide recipientKey' })
     recipientKey: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide invitation did' })
+    invitationDid?: string;
 }
 
 export class ConnectionDto {

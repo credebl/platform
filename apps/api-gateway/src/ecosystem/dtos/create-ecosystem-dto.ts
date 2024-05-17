@@ -13,6 +13,7 @@ export class CreateEcosystemDto {
     @MinLength(2, { message: 'Ecosystem name must be at least 2 characters.' })
     @MaxLength(50, { message: 'Ecosystem name must be at most 50 characters.' })
     @IsString({ message: 'Ecosystem name must be in string format.' })
+    @IsNotSQLInjection({ message: 'Ecosystem name is required.' })
     name: string;
   
     @ApiProperty()

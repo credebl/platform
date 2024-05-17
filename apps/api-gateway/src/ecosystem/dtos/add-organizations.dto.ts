@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import { ArrayNotEmpty, ArrayUnique, IsArray, IsString, IsUUID } from 'class-validator';
 
 export class AddOrganizationsDto {
@@ -11,7 +10,6 @@ export class AddOrganizationsDto {
     @IsUUID('4', { each: true })
     @ArrayUnique({ message: 'Duplicate Organization Ids are not allowed' })
     @IsString({ each: true, message: 'Each organization Id in the array should be a string' })
-    @Transform(({ value }) => value.map((item: string) => item.trim()))
     organizationIds: string[];   
     
     ecosystemId: string;

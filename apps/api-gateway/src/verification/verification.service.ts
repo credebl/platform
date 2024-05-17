@@ -9,7 +9,6 @@ import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './int
 import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
 import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
-import { user } from '@prisma/client';
 
 
 @Injectable()

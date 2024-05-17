@@ -56,34 +56,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
-  async getIssuanceRecords(orgId: string): Promise<number> {
-    try {
-      return await this.issuanceRepository.getIssuanceRecordsCount(orgId);
-    } catch (error) {
-                    
-      this.logger.error(
-        `[getIssuanceRecords ] [NATS call]- error in get issuance records count : ${JSON.stringify(error)}`
-      );
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
-  async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes[]> {
-    const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
-    if (!schemaRequest) {
-      throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
-        cause: new Error(),
-        description: ResponseMessages.errorMessages.notFound
-      });
-    } 
-
-      const getSchemaDetails = await this.issuanceRepository.getSchemaDetails(schemaUrl);
-      const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
-
-      return schemaAttributes;
-  }
-
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
     try {
       const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
 
@@ -127,11 +100,6 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-
-      if (payload.credentialType === IssueCredentialType.JSONLD) {
-        await validateAndUpdateIssuanceDates(credentialData);
-      }
-      
       const issuancePromises = credentialData.map(async (credentials) => {
         const { connectionId, attributes, credential, options } = credentials;
         let issueData;
@@ -163,15 +131,6 @@ export class IssuanceService {
             autoAcceptCredential: payload.autoAcceptCredential || 'always',
             comment: comment || ''
           };
-          const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
-
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, ...filteredIssuanceAttributes } = payloadAttributes;
-
-          const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
-
-          const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
-          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
         }
 
         await this.delay(500);
@@ -179,49 +138,7 @@ export class IssuanceService {
       });
 
       const results = await Promise.allSettled(issuancePromises);
-
-      const processedResults = results.map((result) => {
-        if (PromiseResult.REJECTED === result.status) {
-          return {
-            statusCode: result?.reason?.status?.message?.statusCode || result?.reason?.response?.statusCode,
-            message: result?.reason?.status?.message?.error?.message || result?.reason?.response?.message,
-            error: result?.reason?.response?.error || ResponseMessages.errorMessages.serverError
-          };
-        } else if (PromiseResult.FULFILLED === result.status) {
-          return {
-            statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.issuance.success.create,
-            data: result.value
-          };
-        }
-        return null;
-      });
-
-      const allSuccessful = processedResults.every((result) => result?.statusCode === HttpStatus.CREATED);
-      const allFailed = processedResults.every((result) => result?.statusCode !== HttpStatus.CREATED);
-
-      let finalStatusCode: HttpStatus;
-      let finalMessage: string;
-
-      if (allSuccessful) {
-        finalStatusCode = HttpStatus.CREATED;
-        finalMessage = ResponseMessages.issuance.success.create;
-      } else if (allFailed) {
-        finalStatusCode = HttpStatus.BAD_REQUEST;
-        finalMessage = ResponseMessages.issuance.error.unableToCreateOffer;
-      } else {
-        finalStatusCode = HttpStatus.PARTIAL_CONTENT;
-        finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
-      }
-
-      const finalResult = {
-        statusCode: finalStatusCode,
-        message: finalMessage,
-        data: processedResults
-      };
-
-      return finalResult;
-      
+      return results;
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
@@ -271,12 +188,12 @@ export class IssuanceService {
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      let recipientKey: string | undefined;
+      let invitationDid: string | undefined;
       if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.issuanceRepository.getRecipientKeyByOrgId(orgId);
+        const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
          if (data && 0 < data.length) {
           const [firstElement] = data;
-          recipientKey = firstElement?.recipientKey ?? undefined;
+          invitationDid = firstElement?.invitationDid ?? undefined;
       }
       }
       const { agentEndPoint, organisation } = agentDetails;
@@ -310,7 +227,7 @@ export class IssuanceService {
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
           comment: comment || '',
-          recipientKey:recipientKey || undefined
+          invitationDid:invitationDid || undefined
         };
 
     }
@@ -331,7 +248,7 @@ export class IssuanceService {
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
           comment: comment || '',
-          recipientKey:recipientKey || undefined
+          invitationDid:invitationDid || undefined
         };
         const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
 

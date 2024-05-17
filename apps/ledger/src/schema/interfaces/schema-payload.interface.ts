@@ -90,7 +90,7 @@ export interface SchemaPayload {
 export interface W3CSchemaPayload {
     schemaPayload: SchemaPayload,
     orgId: string,
-    user: string
+    user: IUserRequestInterface
   }
 
 export interface W3CCreateSchema {

@@ -50,7 +50,7 @@ export class ConnectionRepository {
     connectionInvitation: string,
     agentId: string,
     orgId: string,
-    recipientKey: string
+    invitationDid: string
     // eslint-disable-next-line camelcase
   ): Promise<agent_invitations> {
     try {
@@ -60,7 +60,7 @@ export class ConnectionRepository {
           agentId,
           connectionInvitation,
           multiUse: true,
-          recipientKey
+          invitationDid
         }
       });
       return agentDetails;

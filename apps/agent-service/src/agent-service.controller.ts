@@ -276,8 +276,25 @@ export class AgentServiceController {
     return this.agentServiceService.createSecp256k1KeyPair(payload.orgId);
   }
 
-    @MessagePattern({ cmd: 'agent-create-connection-invitation' })
-    async createConnectionInvitation(payload: { url: string; orgId: string; connectionPayload: ICreateConnectionInvitation }): Promise<object> {
-      return this.agentServiceService.createConnectionInvitation(payload.url, payload.orgId, payload.connectionPayload);
-    }
+  @MessagePattern({ cmd: 'agent-create-connection-invitation' })
+  async createConnectionInvitation(payload: {
+    url: string,
+    orgId: string,
+    connectionPayload: ICreateConnectionInvitation,
+  }): Promise<object> {
+    return this.agentServiceService.createConnectionInvitation(payload.url, payload.orgId, payload.connectionPayload);
+  }
+
+  /**
+   * Configure the agent by organization
+   * @param payload
+   * @returns Get agent status
+   */
+  @MessagePattern({ cmd: 'agent-configure' })
+  async agentConfigure(payload: {
+    agentConfigureDto: IAgentConfigure,
+    user: IUserRequestInterface,
+  }): Promise<IStoreAgent> {
+    return this.agentServiceService.agentConfigure(payload.agentConfigureDto, payload.user);
+  }
 }

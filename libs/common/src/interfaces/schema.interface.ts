@@ -63,6 +63,7 @@ export interface ISchemasWithPagination extends IPaginationDetails{
     ledgerId: string;
     type: string;
   }
+  
 
   export interface IPlatformSchemas {
     schemasCount: number;

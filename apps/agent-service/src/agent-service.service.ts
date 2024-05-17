@@ -128,7 +128,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.network ? agentSpinupDto.network : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -940,6 +940,7 @@ export class AgentServiceService {
    */
   async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
     try {
+      const { isPrimaryDid } = createDidPayload;
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
 
       if (createDidPayload?.network) {

@@ -621,7 +621,7 @@ export class ConnectionService {
    */
   async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<ICreateConnectionUrl> {
     try {
-      const { createOutOfBandConnectionInvitation } = payload;
+      
       const {
         alias,
         appendedAttachments,
@@ -634,8 +634,10 @@ export class ConnectionService {
         messages,
         multiUseInvitation,
         orgId,
-        routing
-      } = createOutOfBandConnectionInvitation;
+        routing,
+        recipientKey,
+        invitationDid
+      } = payload?.createOutOfBandConnectionInvitation;
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(
         payload?.createOutOfBandConnectionInvitation?.orgId

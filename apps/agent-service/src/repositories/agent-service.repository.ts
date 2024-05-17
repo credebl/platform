@@ -220,6 +220,31 @@ export class AgentServiceRepository {
         }
     }
 
+
+    /**
+     * Set primary DID
+     * @param did
+     * @returns did details
+     */
+    // eslint-disable-next-line camelcase
+    async setPrimaryDid(isPrimaryDid:string, orgId:string): Promise<org_agents> {
+        try {
+          return await this.prisma.org_agents.update({
+                 where: {
+                    orgId
+                 },
+                data: {
+                    orgDid: isPrimaryDid
+                }
+            });
+           
+        } catch (error) {
+            this.logger.error(`[setprimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+
     /**
      * Get agent details
      * @param orgId

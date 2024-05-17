@@ -412,7 +412,6 @@ export class VerificationService {
       }
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
 
-
       let payload: IProofRequestPayload;
 
       if (ProofRequestType.INDY === type) {
@@ -741,6 +740,7 @@ export class VerificationService {
     }
   }
 
+  // TODO: This function is only for anoncreds indy
   async getVerifiedProofdetails(proofId: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);

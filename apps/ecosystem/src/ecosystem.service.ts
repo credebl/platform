@@ -529,7 +529,6 @@ export class EcosystemService {
           errorOrgs.push(result);
         }
       }
-
       let statusCode = HttpStatus.CREATED;
       let message = ResponseMessages.ecosystem.success.add;
       let getOrgs = [];

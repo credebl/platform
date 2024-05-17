@@ -188,7 +188,6 @@ export class OrganizationService {
       if (orgAgentDetails.orgDid === did) {
         throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
       }
-
       //check user DID exist in the organization's did list
       const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
       const isDidMatch = organizationDidList.some(item => item.did === did);

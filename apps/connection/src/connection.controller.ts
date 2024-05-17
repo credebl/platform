@@ -11,7 +11,7 @@ import {
   IReceiveInvitationByUrlOrg,
   IReceiveInvitationResponse
 } from './interfaces/connection.interfaces';
-import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/messaging.interfaces';
 import { user } from '@prisma/client';
@@ -20,17 +20,7 @@ export class ConnectionController {
   constructor(private readonly connectionService: ConnectionService) {}
 
   /**
-   * Description: Create out-of-band connection legacy invitation
-   * @param payload
-   * @returns Created connection invitation for out-of-band
-   */
-  @MessagePattern({ cmd: 'create-connection' })
-  async createLegacyConnectionInvitation(payload: IConnection): Promise<ICreateConnectionUrl> {
-    return this.connectionService.createLegacyConnectionInvitation(payload);   
-  }
-
-  /**
-   * Description: Catch connection webhook responses and save details in connection table
+   * Receive connection webhook responses and save details in connection table
    * @param orgId
    * @returns Callback URL for connection and created connections details
    */

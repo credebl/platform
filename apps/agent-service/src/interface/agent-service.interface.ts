@@ -1,5 +1,4 @@
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
-import { Prisma } from '@prisma/client';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
@@ -38,6 +37,7 @@ export interface IAgentConfigure {
   apiKey: string;
   orgId: string;
   network?: string;
+  tenant?: boolean;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -80,16 +80,17 @@ export interface IWallet {
 }
 
 export interface IDidCreate {
-    keyType: KeyType;
-    seed: string;
-    domain?: string;
-    network?: string;
-    privatekey?: string;
-    endpoint?: string;
-    method: string;
-    did?: string;
-    role?: string;
-    endorserDid?: string;
+  keyType: KeyType;
+  seed: string;
+  domain?: string;
+  network?: string;
+  privatekey?: string;
+  endpoint?: string;
+  method: string;
+  did?: string;
+  role?: string;
+  endorserDid?: string;
+  isPrimaryDid?: boolean;
 }
 export interface ITenantSchema {
   tenantId?: string;
@@ -196,6 +197,16 @@ export interface IStoreOrgAgentDetails {
   tenantId?: string;
   ledgerId?: string[];
   agentType?: string;
+  userId?: string;
+}
+
+export interface IStoreDidDetails {
+  orgId: string;
+  isPrimaryDid?: boolean;
+  did: string;
+  didDocument?: string;
+  userId: string;
+  orgAgentId: string;
 }
 
 export interface IStoreOrgAgent {
@@ -610,46 +621,4 @@ export interface IAgentStore {
   lastChangedBy?: string;
   didDoc?: string;
   tenantId?: string;
-}
-
-export interface LedgerNameSpace {
-  id: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  name: string;
-  networkType: string;
-  poolConfig: string;
-  isActive: boolean;
-  networkString: string;
-  nymTxnEndpoint: string;
-  indyNamespace: string;
-  networkUrl: string;
-}
-
-export interface OrgDid {
-  id: string;
-  createDateTime: Date;
-  createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
-  orgId: string;
-  isPrimaryDid: boolean;
-  did: string;
-  didDocument: Prisma.JsonValue;
-  orgAgentId: string;
-}
-
-export interface ILedgers {
-    id: string;
-    createDateTime: Date;
-    lastChangedDateTime: Date;
-    name: string;
-    networkType: string;
-    poolConfig: string;
-    isActive: boolean;
-    networkString: string;
-    nymTxnEndpoint: string;
-    indyNamespace: string;
-    networkUrl: string;
-
 }

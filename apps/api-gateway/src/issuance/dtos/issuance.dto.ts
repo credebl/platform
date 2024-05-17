@@ -16,6 +16,48 @@ class Issuer {
   @Type(() => String)
   id: string | { id?: string };
 }
+export class Credential {
+    @ApiProperty()
+    @IsNotEmpty({ message: 'context  is required' })
+    @IsCredentialJsonLdContext()
+    '@context': Array<string | JsonObject>;
+
+    @ApiProperty()
+    @IsNotEmpty({ message: 'type is required' })
+    type: string[];
+
+    @ApiProperty()
+    @IsString({ message: 'id should be string' })
+    @IsNotEmpty({ message: 'id  is required' })
+    @Type(() => String)
+    @IsOptional()
+    id?:string;
+
+    
+    @ApiProperty()
+    @ValidateNested({ each: true })
+    @Type(() => Issuer)
+    issuer:Issuer;
+
+    @ApiProperty()
+    @IsString({ message: 'issuance date should be string' })
+    @IsNotEmpty({ message: 'issuance date is required' })
+    @Type(() => String)
+    issuanceDate:string;
+   
+    @ApiProperty()
+    @IsString({ message: 'expiration date should be string' })
+    @IsNotEmpty({ message: 'expiration date  is required' })
+    @Type(() => String)
+    @IsOptional()
+    expirationDate?:string;
+
+     @ApiProperty()
+     @IsNotEmpty({ message: ' credential subject required' })
+     credentialSubject: SingleOrArray<JsonObject>;
+     [key: string]: unknown
+   
+  }
 
 class PrettyVc {
   @ApiPropertyOptional()
@@ -102,6 +144,23 @@ export class JsonLdCredentialDetailOptions {
       this.proofType = options.proofType;
     }
   }
+export class Attribute {
+    @ApiProperty()
+    @IsString({ message: 'Attribute name should be string' })
+    @IsNotEmpty({ message: 'Attribute name is required' })
+    @Transform(({ value }) => trim(value))
+    @Type(() => String)
+    name: string;
+
+    @ApiProperty()
+    @IsDefined()
+    @Transform(({ value }) => trim(value))
+    value: string;
+
+    @ApiProperty({ default: false })
+    @IsBoolean()
+    @IsOptional()
+    isRequired?: boolean = false;
 
   @IsString()
   @IsNotEmpty({ message: 'proof purpose is required' })
@@ -146,77 +205,77 @@ export class Attribute {
   isRequired?: boolean = false;
 }
 export class CredentialsIssuanceDto {
-  @ApiProperty({ example: 'string' })
-  @IsNotEmpty({ message: 'Credential definition Id is required' })
-  @IsString({ message: 'Credential definition id should be string' })
-  @Transform(({ value }) => value.trim())
-  @IsOptional()
-  credentialDefinitionId?: string;
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Credential definition Id is required' })
+    @IsString({ message: 'Credential definition id should be string' })
+    @Transform(({ value }) => value.trim())
+    @IsOptional()
+    credentialDefinitionId?: string;
 
-  @ApiProperty({ example: 'string' })
-  @IsNotEmpty({ message: 'Please provide valid comment' })
-  @IsString({ message: 'comment should be string' })
-  @IsOptional()
-  comment: string;
+    @ApiProperty({ example: 'string' })
+    @IsNotEmpty({ message: 'Please provide valid comment' })
+    @IsString({ message: 'comment should be string' })
+    @IsOptional()
+    comment: string;
 
-  @ApiPropertyOptional({ example: 'v1' })
-  @IsOptional()
-  @IsNotEmpty({ message: 'Please provide valid protocol version' })
-  @IsString({ message: 'protocol version should be string' })
-  protocolVersion?: string;
+    @ApiPropertyOptional({ example: 'v1' })
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid protocol version' })
+    @IsString({ message: 'protocol version should be string' })
+    protocolVersion?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNotEmpty({ message: 'Please provide valid goal code' })
-  @IsString({ message: 'goal code should be string' })
-  goalCode?: string;
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid goal code' })
+    @IsString({ message: 'goal code should be string' })
+    goalCode?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNotEmpty({ message: 'Please provide valid parent thread id' })
-  @IsString({ message: 'parent thread id should be string' })
-  parentThreadId?: string;
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid parent thread id' })
+    @IsString({ message: 'parent thread id should be string' })
+    parentThreadId?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNotEmpty({ message: 'Please provide valid willConfirm' })
-  @IsBoolean({ message: 'willConfirm should be boolean' })
-  willConfirm?: boolean;
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid willConfirm' })
+    @IsBoolean({ message: 'willConfirm should be boolean' })
+    willConfirm?: boolean;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNotEmpty({ message: 'Please provide valid label' })
-  @IsString({ message: 'label should be string' })
-  label?: string;
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'Please provide valid label' })
+    @IsString({ message: 'label should be string' })
+    label?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNotEmpty({ message: 'please provide valid imageUrl' })
-  @IsString({ message: 'imageUrl must be a string' })
-  imageUrl?: string;
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid imageUrl' })
+    @IsString({ message: 'imageUrl must be a string' })
+    imageUrl?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString({ message: 'auto accept proof must be in string' })
-  @IsNotEmpty({ message: 'please provide valid auto accept proof' })
-  @IsEnum(AutoAccept, {
-    message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
-  })
-  autoAcceptCredential?: string;
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString({ message: 'auto accept proof must be in string' })
+    @IsNotEmpty({ message: 'please provide valid auto accept proof' })
+    @IsEnum(AutoAccept, {
+        message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+    })
+    autoAcceptCredential?: string;
 
-  @ApiProperty({ example: 'jsonld' })
-  @IsNotEmpty({ message: 'Please provide credential type ' })
-  @Transform(({ value }) => trim(value).toLocaleLowerCase())
-  @IsOptional()
-  credentialType: IssueCredentialType;
+    @ApiProperty({ example: 'jsonld' })
+    @IsNotEmpty({ message: 'Please provide credential type ' })
+    @Transform(({ value }) => trim(value).toLocaleLowerCase())
+    @IsOptional()
+    credentialType:IssueCredentialType;
 
-  @ApiPropertyOptional({ default: true })
-  @IsOptional()
-  @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
-  @IsBoolean({ message: 'reuseConnection must be a boolean' })
-  reuseConnection?: boolean;
+    @ApiPropertyOptional({ default: true })
+    @IsOptional()
+    @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
+    @IsBoolean({ message: 'reuseConnection must be a boolean' })
+    reuseConnection?: boolean;
 
-  orgId: string;
+    orgId: string;
 }
 
 export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
@@ -286,15 +345,6 @@ class CredentialOffer {
   @ValidateNested({ each: true })
   credential?: Credential;
 
-  @ApiProperty()
-  @IsOptional()
-  @IsNotEmpty({ message: 'Please provide valid options' })
-  @IsObject({ message: 'options should be an object' })
-  @ValidateNested({ each: true })
-  @Type(() => JsonLdCredentialDetailOptions)
-  options?: JsonLdCredentialDetailOptions;
-}
-
 export class IssuanceDto {
   @ApiProperty()
   @IsOptional()
@@ -352,13 +402,14 @@ export class IssuanceDto {
   @IsOptional()
   contextCorrelationId: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  type: string;
+    @ApiPropertyOptional()
+    @IsOptional()
+    type: string;
 
-  @ApiProperty()
-  @IsOptional()
-  outOfBandId: string | null;
+    @ApiProperty()
+    @IsOptional()
+    outOfBandId: string | null;
+}
 
   @ApiProperty()
   @IsOptional()

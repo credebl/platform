@@ -1,9 +1,9 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, ILedgers, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace, OrgDid } from '../interface/agent-service.interface';
-import { AgentType, PrismaTables } from '@credebl/enum/enum';
+import { ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
+import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
 export class AgentServiceRepository {
@@ -153,13 +153,76 @@ export class AgentServiceRepository {
     // eslint-disable-next-line camelcase
     async setPrimaryDid(orgDid: string, orgId: string, didDocument: Prisma.JsonValue): Promise<org_agents> {
         try {
+            const { id, userId, ledgerId, did, didDoc, ...commonFields } = storeOrgAgentDetails;
+            const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
+            const data = {
+                ...commonFields,
+                ledgerId: firstLedgerId,
+                createdBy: userId,
+                lastChangedBy: userId,
+                didDocument: didDoc,
+                orgDid: did
+            };
+            
+            // eslint-disable-next-line camelcase
+            const query: Promise<org_agents> = id ?
+                this.prisma.org_agents.update({
+                    where: { id },
+                    data
+                }) :
+                this.prisma.org_agents.create({ data });
+
+            return { id: (await query).id };
+        } catch (error) {
+            this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+      
+    /**
+     * Store DID details
+     * @param storeDidDetails
+     * @returns did details
+     */
+    // eslint-disable-next-line camelcase
+    async storeDidDetails(storeDidDetails: IStoreDidDetails): Promise<org_dids> {
+        try {
+          const {orgId, did, didDocument, isPrimaryDid, userId, orgAgentId} = storeDidDetails;
+
+          return this.prisma.org_dids.create({
+                data: {
+                    orgId,
+                    did,
+                    didDocument,
+                    isPrimaryDid,
+                    createdBy: userId,
+                    lastChangedBy: userId,
+                    orgAgentId
+                }
+            });
+           
+        } catch (error) {
+            this.logger.error(`[storeDidDetails] - Store DID details: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+  }
+
+
+    /**
+     * Set primary DID
+     * @param did
+     * @returns did details
+     */
+    // eslint-disable-next-line camelcase
+    async setPrimaryDid(isPrimaryDid:string, orgId:string): Promise<org_agents> {
+        try {
           return await this.prisma.org_agents.update({
                  where: {
                     orgId
                  },
                 data: {
-                    orgDid,
-                    didDocument
+                    orgDid: isPrimaryDid
                 }
             });
            
@@ -168,8 +231,13 @@ export class AgentServiceRepository {
             throw error;
         }
     }
-  }
 
+
+    /**
+     * Get agent details
+     * @param orgId
+     * @returns
+     */
     // eslint-disable-next-line camelcase
     async updateLedgerId(orgId: string, ledgerId: string): Promise<org_agents> {
         try {

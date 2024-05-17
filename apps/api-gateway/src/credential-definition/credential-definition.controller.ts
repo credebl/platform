@@ -99,6 +99,27 @@ export class CredentialDefinitionController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
+  @Get('/orgs/:orgId/bulk/cred-defs')
+  @ApiOperation({
+    summary: 'Fetch all credential definitions for bulk opeartion',
+    description: 'Retrieve all credential definitions for bulk operation'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getAllCredDefAndSchemaForBulkOperation(
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefAndSchemaForBulkOperation(orgId);
+    const credDefResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.credentialDefinition.success.fetch,
+      data: credentialsDefinitionDetails
+    };
+    return res.status(HttpStatus.CREATED).json(credDefResponse);
+  }
+
   @Post('/orgs/:orgId/cred-defs')
   @ApiOperation({
     summary: 'Sends a credential definition to ledger',

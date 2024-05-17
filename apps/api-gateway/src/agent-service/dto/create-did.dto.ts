@@ -26,45 +26,43 @@ export class CreateDidDto {
     @IsString({ message: 'method must be in string format.' })
     method: string;
 
-    @ApiProperty({example: 'bcovrin:testnet'})
+    @ApiPropertyOptional({example: 'bcovrin:testnet'})
     @IsOptional()
-    @ApiPropertyOptional()
+    @Transform(({ value }) => trim(value))
     @IsString({ message: 'network must be in string format.' })
     network?: string;
 
-    @ApiProperty({example: 'www.github.com'})
+    @ApiPropertyOptional({example: 'www.github.com'})
     @IsOptional()
-    @ApiPropertyOptional()
+    @Transform(({ value }) => trim(value))
     @IsString({ message: 'domain must be in string format.' })
     domain?: string;
 
-    @ApiProperty({example: 'endorser'})
+    @ApiPropertyOptional({example: 'endorser'})
     @IsOptional()
-    @ApiPropertyOptional()
+    @Transform(({ value }) => trim(value))
     @IsString({ message: 'role must be in string format.' })
     role?: string;
 
-    @ApiProperty({example: ''})
+    @ApiPropertyOptional({example: ''})
     @IsOptional()
-    @ApiPropertyOptional()
     @IsString({ message: 'private key must be in string format.' })
     privatekey?: string;
 
-    @ApiProperty({example: 'http://localhost:6006/docs'})
+    @ApiPropertyOptional({example: 'http://localhost:6006/docs'})
     @IsOptional()
-    @ApiPropertyOptional()
     @IsString({ message: 'endpoint must be in string format.' })
     endpoint?: string;
 
-    @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
+    @ApiPropertyOptional({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
     @IsOptional()
-    @ApiPropertyOptional()
+    @Transform(({ value }) => trim(value))
     @IsString({ message: 'did must be in string format.' })
     did?: string;
 
-    @ApiProperty({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
+    @ApiPropertyOptional({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
     @IsOptional()
-    @ApiPropertyOptional()
+    @Transform(({ value }) => trim(value))
     @IsString({ message: 'endorser did must be in string format.' })
     endorserDid?: string;
 }

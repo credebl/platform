@@ -41,11 +41,10 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CreateDidDto } from './dto/create-did.dto';
 import { validateDid } from '@credebl/common/did.validator';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
-import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { AgentSpinupValidator } from '@credebl/common/cast.helper';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 
 const seedLength = 32;
@@ -103,29 +102,6 @@ export class AgentController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/orgs/agents/ledgerConfig')
-  @ApiOperation({
-    summary: 'Get the ledger config details',
-    description: 'Get the ledger config details'
-  })
-  @UseGuards(AuthGuard('jwt'))
-  async getLedgerDetails(
-    @User() reqUser: user,
-    @Res() res: Response
-  ): Promise<Response> {
-
-    const ledgerConfigData = await this.agentService.getLedgerConfig(reqUser);
-
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.agent.success.ledgerConfig,
-      data: ledgerConfigData
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
   /**
    * Spinup the agent by organization
    * @param agentSpinupDto
@@ -146,17 +122,7 @@ export class AgentController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-
-    const regex = new RegExp('^[a-zA-Z0-9]+$');
-
-    if (!regex.test(agentSpinupDto.walletName)) {
-      this.logger.error(`Please enter valid wallet name, It allows only alphanumeric values`);
-      throw new BadRequestException(
-        ResponseMessages.agent.error.seedChar,
-        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-      );
-    }
-
+    AgentSpinupValidator.validate(agentSpinupDto);
     this.logger.log(`**** Spin up the agent...${JSON.stringify(agentSpinupDto)}`);
 
     agentSpinupDto.orgId = orgId;
@@ -208,81 +174,79 @@ export class AgentController {
 
   /**
    * Create wallet
-   * @param orgId 
+   * @param orgId
    * @returns wallet
    */
-     @Post('/orgs/:orgId/agents/createWallet')
-     @ApiOperation({
-       summary: 'Create wallet',
-       description: 'Create wallet'
-     })
-     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-     async createWallet(
-       @Param('orgId') orgId: string,
-       @Body() createWalletDto: CreateWalletDto,
-       @User() user: user,
-       @Res() res: Response
-     ): Promise<Response> {
-   
-      createWalletDto.orgId = orgId;
-      const walletDetails = await this.agentService.createWallet(createWalletDto, user);
-   
-       const finalResponse: IResponse = {
-         statusCode: HttpStatus.CREATED,
-         message: ResponseMessages.agent.success.createWallet,
-         data: walletDetails
-       };
-   
-       return res.status(HttpStatus.CREATED).json(finalResponse);
-     }
-  
+  @Post('/orgs/:orgId/agents/createWallet')
+  @ApiOperation({
+    summary: 'Create wallet',
+    description: 'Create wallet'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createWallet(
+    @Param('orgId') orgId: string,
+    @Body() createWalletDto: CreateWalletDto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    createWalletDto.orgId = orgId;
+    const walletDetails = await this.agentService.createWallet(createWalletDto, user);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.createWallet,
+      data: walletDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
   // This function will be used after multiple did method implementation in create wallet
-   /**
+  /**
    * Create did
-   * @param orgId 
+   * @param orgId
    * @returns did
    */
-   @Post('/orgs/:orgId/agents/createDid')
-   @ApiOperation({
-     summary: 'Create did',
-     description: 'Create did'
-   })
-   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-   async createDid(
-     @Param('orgId') orgId: string,
-     @Body() createDidDto: CreateDidDto,
-     @User() user: user,
-     @Res() res: Response
-   ): Promise<Response> {
-  
+  @Post('/orgs/:orgId/agents/did')
+  @ApiOperation({
+    summary: 'Create new did',
+    description: 'Create new did for an organization'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createDid(
+    @Param('orgId') orgId: string,
+    @Body() createDidDto: CreateNewDidDto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
     await validateDid(createDidDto);
 
     if (createDidDto.seed && seedLength !== createDidDto.seed.length) {
       this.logger.error(`seed must be at most 32 characters.`);
-      throw new BadRequestException(
-        ResponseMessages.agent.error.seedChar,
-        { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-      );
+      throw new BadRequestException(ResponseMessages.agent.error.seedChar, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.badRequest
+      });
     }
 
-     const didDetails = await this.agentService.createDid(createDidDto, orgId, user);
- 
-     const finalResponse: IResponse = {
-       statusCode: HttpStatus.CREATED,
-       message: ResponseMessages.agent.success.createDid,
-       data: didDetails
-     };
- 
-     return res.status(HttpStatus.CREATED).json(finalResponse);
-   }
+    const didDetails = await this.agentService.createDid(createDidDto, orgId, user);
 
-    /**
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.createDid,
+      data: didDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
    * Create Secp256k1 key pair for polygon DID
-   * @param orgId 
+   * @param orgId
    * @returns Secp256k1 key pair for polygon DID
    */
   @Post('/orgs/:orgId/agents/polygon/create-keys')
@@ -315,7 +279,7 @@ export class AgentController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async agentConfigure(
+  async agentconfigure(
     @Param('orgId') orgId: string,
     @Body() agentConfigureDto: AgentConfigureDto,
     @User() user: user,
@@ -333,28 +297,5 @@ export class AgentController {
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
-  @Delete('/orgs/:orgId/agents/wallet')
-  @ApiOperation({
-    summary: 'Delete wallet',
-    description: 'Delete agent wallet by organization.'
-  })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Roles(OrgRoles.OWNER)
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  async deleteWallet(
-    @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
-    @User() user: user,
-    @Res() res: Response
-  ): Promise<Response> {
-    await this.agentService.deleteWallet(orgId, user);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.agent.success.walletDelete
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

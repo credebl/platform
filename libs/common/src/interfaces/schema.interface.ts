@@ -40,29 +40,6 @@ export interface ISchemasWithPagination extends IPaginationDetails{
     issuerId: string;
   }
   
-  interface Attribute {
-    attributeName: string;
-    schemaDataType: string;
-    displayName: string;
-    isRequired: boolean;
-  }
-  
-  export interface ISchemaDetail {
-    id: string;
-    createDateTime: string;
-    createdBy: string;
-    lastChangedDateTime: string;
-    lastChangedBy: string;
-    name: string;
-    version: string;
-    attributes: Attribute[];
-    schemaLedgerId: string;
-    publisherDid: string;
-    issuerId: string;
-    orgId: string;
-    ledgerId: string;
-    type: string;
-  }
 
   export interface IPlatformSchemas {
     schemasCount: number;
@@ -89,26 +66,3 @@ export interface ISchemasWithPagination extends IPaginationDetails{
   export interface INetworkUrl {
     networkUrl: string;
   }
-
-  export interface ISchemaFields {
-    name?: string;
-    schemaName?: string;
-    attributes?: IIndySchemaAttributesValue[];
-    schemaAttributes?: IW3CSchemaAttributesValue[];
-    endorse?: boolean;
-    version?: string;
-    did?: string;
-    description?: string;
-  }
-
-  interface IIndySchemaAttributesValue {
-    attributeName: string;
-    schemaDataType: string;
-    displayName: string;
-  }
-  
-  interface IW3CSchemaAttributesValue {
-    title: string;
-    type: string;
-  }
-  

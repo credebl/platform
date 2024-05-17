@@ -160,9 +160,11 @@ export interface ISendProofRequestPayload {
     emailId?: string[]
     isShortenUrl?: boolean;
     type?:string;
+    orgId?: string;
     presentationDefinition?:IProofRequestPresentationDefinition;
     reuseConnection?: boolean;
     recipientKey?:string;
+    invitationDid?: string
 }
 
 export interface IWSendProofRequestPayload {
@@ -184,7 +186,7 @@ export interface IWSendProofRequestPayload {
 export interface IProofRequestPayload {
     url: string;
     apiKey?: string;
-    orgId?: string
+    orgId?: string;
     proofRequestPayload: ISendProofRequestPayload | ISendPresentationExchangeProofRequestPayload;
 }
 

@@ -4,9 +4,9 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
-import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
-import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
-import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/enum/enum';
+import { CommonConstants } from '@credebl/common/common.constant';
+import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
+import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -401,15 +401,15 @@ export class VerificationService {
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
       const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
-      let recipientKey: string | undefined;
+      let invitationDid: string | undefined;
       if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
+        const data: agent_invitations[] = await this.verificationRepository.getInvitationDidByOrgId(user.orgId);
          if (data && 0 < data.length) {
           const [firstElement] = data;
-          recipientKey = firstElement?.recipientKey ?? undefined;
+          invitationDid = firstElement?.invitationDid ?? undefined;
       }
       }
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
 
 
       let payload: IProofRequestPayload;
@@ -417,7 +417,6 @@ export class VerificationService {
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
         updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
-        updateOutOfBandRequestProof.imageUrl = getOrganization?.logoUrl || undefined;
         payload   = {
         orgId: user.orgId,
         url,
@@ -446,7 +445,7 @@ export class VerificationService {
               }
             },
             autoAcceptProof:outOfBandRequestProof.autoAcceptProof,
-            recipientKey:recipientKey || undefined
+            invitationDid:invitationDid || undefined
           }
         };  
       }
@@ -741,6 +740,7 @@ export class VerificationService {
     }
   }
 
+  // TODO: This function is only for anoncreds indy
   async getVerifiedProofdetails(proofId: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);

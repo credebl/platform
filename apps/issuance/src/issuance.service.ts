@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
+import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISchemaAttributes, ISendOfferNatsPayload, IValidationResults, ImportFileDetails, IssuanceAttributes, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -50,9 +50,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
-  async sendCredentialCreateOffer(
-    payload: IIssuance
-  ): Promise<ICredentialOfferResponse> {
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
     try {
       const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
 
@@ -135,35 +133,8 @@ export class IssuanceService {
 
           const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
 
-          const schemaUrlAttributes = await this.validateSchemaAttributes(schemaServerUrl);
-
-          const mismatchedAttributes = [];
-          const missingAttributes = [];
-
-          Object.entries(filteredIssuanceAttributes).forEach(([key, value]) => {
-            const schemaAttribute = schemaUrlAttributes[key];
-            if (!schemaAttribute) {
-              mismatchedAttributes.push(`Attribute ${key} is not defined in the schema`);
-            } else if (schemaAttribute.type !== value?.['type']) {
-              mismatchedAttributes.push(
-                `Attribute ${key} has type ${value?.['type'] || null} but expected type ${schemaAttribute.type}`
-              );
-            }
-          });
-
-          Object.keys(schemaUrlAttributes).forEach((key) => {
-            if (!(key in filteredIssuanceAttributes)) {
-              missingAttributes.push(`Attribute ${key} is missing`);
-            }
-          });
-
-          if (0 < missingAttributes.length) {
-            throw new BadRequestException(`Validation failed: ${missingAttributes.join(', ')}`);
-          }
-
-          if (0 < mismatchedAttributes.length) {
-            throw new BadRequestException(`Validation failed: ${mismatchedAttributes.join(', ')}`);
-          }
+          const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
+          await this.validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
         }
 
         await this.delay(500);
@@ -189,12 +160,12 @@ export class IssuanceService {
         return null;
       });
 
-      const allSuccessful = processedResults.every(result => result?.statusCode === HttpStatus.CREATED);
-      const allFailed = processedResults.every(result => result?.statusCode !== HttpStatus.CREATED);
-      
+      const allSuccessful = processedResults.every((result) => result?.statusCode === HttpStatus.CREATED);
+      const allFailed = processedResults.every((result) => result?.statusCode !== HttpStatus.CREATED);
+
       let finalStatusCode: HttpStatus;
       let finalMessage: string;
-      
+
       switch (true) {
         case allSuccessful:
           finalStatusCode = HttpStatus.CREATED;
@@ -209,16 +180,14 @@ export class IssuanceService {
           finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
           break;
       }
-        
-      const finalResult =  
-        {
-          statusCode: finalStatusCode,
-          message: finalMessage,
-          data: processedResults
-        };
-      
+
+      const finalResult = {
+        statusCode: finalStatusCode,
+        message: finalMessage,
+        data: processedResults
+      };
+
       return finalResult;
-      
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
@@ -235,7 +204,38 @@ export class IssuanceService {
     }
   }
 
-  private async validateSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes> {
+  async validateW3CSchemaAttributes(filteredIssuanceAttributes: IssuanceAttributes, schemaUrlAttributes: ISchemaAttributes): Promise<IValidationResults> {
+    const mismatchedAttributes = [];
+    const missingAttributes = [];
+
+    Object.entries(filteredIssuanceAttributes).forEach(([key, value]) => {
+      const schemaAttribute = schemaUrlAttributes[key];
+      if (!schemaAttribute) {
+        mismatchedAttributes.push(`Attribute ${key} is not defined in the schema`);
+      } else if (schemaAttribute.type !== value?.['type']) {
+        mismatchedAttributes.push(
+          `Attribute ${key} has type ${value?.['type'] || null} but expected type ${schemaAttribute.type}`
+        );
+      }
+    });
+
+    Object.keys(schemaUrlAttributes).forEach((key) => {
+      if (!(key in filteredIssuanceAttributes)) {
+        missingAttributes.push(`Attribute ${key} is missing`);
+      }
+    });
+
+    if (0 < missingAttributes.length) {
+      throw new BadRequestException(`Validation failed: ${missingAttributes.join(', ')}`);
+    }
+
+    if (0 < mismatchedAttributes.length) {
+      throw new BadRequestException(`Validation failed: ${mismatchedAttributes.join(', ')}`);
+    }
+    return { mismatchedAttributes, missingAttributes };
+  }
+
+  private async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes> {
     const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
 
     if (!schemaRequest) {
@@ -248,7 +248,7 @@ export class IssuanceService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...filteredSchemaAttributes } = schemaAttributeJson;
-    
+
     return filteredSchemaAttributes;
   }
 

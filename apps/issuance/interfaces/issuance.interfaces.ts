@@ -273,3 +273,14 @@ interface ISchemaAttributeKeys {
 export interface ISchemaAttributes {
   [key: string]: ISchemaAttributeKeys;
 }
+
+export interface IssuanceAttributes {
+  [key: string]: {
+      type: string;
+      title: string;
+  };
+}
+export interface IValidationResults {
+  mismatchedAttributes: string[];
+  missingAttributes: string[];
+}

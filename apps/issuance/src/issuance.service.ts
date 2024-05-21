@@ -1,7 +1,7 @@
 /* eslint-disable no-useless-catch */
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { BadRequestException, ConflictException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
+import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
@@ -30,7 +30,7 @@ import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { agent_invitations, organisation } from '@prisma/client';
 
@@ -50,7 +50,9 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
+  async sendCredentialCreateOffer(
+    payload: IIssuance
+  ): Promise<ICredentialOfferResponse> {
     try {
       const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
 
@@ -125,6 +127,43 @@ export class IssuanceService {
             autoAcceptCredential: payload.autoAcceptCredential || 'always',
             comment: comment || ''
           };
+
+          const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...filteredIssuanceAttributes } = payloadAttributes;
+
+          const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+
+          const schemaUrlAttributes = await this.validateSchemaAttributes(schemaServerUrl);
+
+          const mismatchedAttributes = [];
+          const missingAttributes = [];
+
+          Object.entries(filteredIssuanceAttributes).forEach(([key, value]) => {
+            const schemaAttribute = schemaUrlAttributes[key];
+            if (!schemaAttribute) {
+              mismatchedAttributes.push(`Attribute ${key} is not defined in the schema`);
+            } else if (schemaAttribute.type !== value?.['type']) {
+              mismatchedAttributes.push(
+                `Attribute ${key} has type ${value?.['type'] || null} but expected type ${schemaAttribute.type}`
+              );
+            }
+          });
+
+          Object.keys(schemaUrlAttributes).forEach((key) => {
+            if (!(key in filteredIssuanceAttributes)) {
+              missingAttributes.push(`Attribute ${key} is missing`);
+            }
+          });
+
+          if (0 < missingAttributes.length) {
+            throw new BadRequestException(`Validation failed: ${missingAttributes.join(', ')}`);
+          }
+
+          if (0 < mismatchedAttributes.length) {
+            throw new BadRequestException(`Validation failed: ${mismatchedAttributes.join(', ')}`);
+          }
         }
 
         await this.delay(500);
@@ -132,7 +171,49 @@ export class IssuanceService {
       });
 
       const results = await Promise.allSettled(issuancePromises);
-      return results;
+
+      const processedResults = results.map((result) => {
+        if ('rejected' === result.status) {
+          return {
+            statusCode: result?.reason?.status?.code || result?.reason?.status,
+            message: result?.reason?.response?.message || result?.reason?.status?.message?.error?.message,
+            error: result?.reason?.response?.error || result?.reason?.response?.error
+          };
+        } else if ('fulfilled' === result.status) {
+          return {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.issuance.success.create,
+            data: result.value
+          };
+        }
+        return null;
+      });
+
+      const allSuccessful = processedResults.every(result => result?.statusCode === HttpStatus.CREATED);
+      const allFailed = processedResults.every(result => result?.statusCode !== HttpStatus.CREATED);
+      let finalStatusCode: HttpStatus;
+      let finalMessage: string;
+  
+      if (allSuccessful) {
+        finalStatusCode = HttpStatus.CREATED;
+        finalMessage = ResponseMessages.issuance.success.create;
+      } else if (allFailed) {
+        finalStatusCode = HttpStatus.BAD_REQUEST;
+        finalMessage = ResponseMessages.issuance.error.unableToCreateOffer;
+      } else {
+        finalStatusCode = HttpStatus.PARTIAL_CONTENT;
+        finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
+      }
+  
+      const finalResult =  
+        {
+          statusCode: finalStatusCode,
+          message: finalMessage,
+          data: processedResults
+        };
+      
+      return finalResult;
+      
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
@@ -147,6 +228,23 @@ export class IssuanceService {
         throw new RpcException(error.response ? error.response : error);
       }
     }
+  }
+
+  private async validateSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes> {
+    const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
+
+    if (!schemaRequest) {
+      throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.notFound
+      });
+    }
+    const schemaAttributeJson = schemaRequest.definitions.credentialSubject.properties;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...filteredSchemaAttributes } = schemaAttributeJson;
+    
+    return filteredSchemaAttributes;
   }
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {

@@ -264,3 +264,12 @@ export interface SendEmailCredentialOffer {
   orgId: string; 
   organizationDetails: organisation;
 }
+
+interface ISchemaAttributeKeys {
+  type: string;
+  order: number;
+  title: string;
+}
+export interface ISchemaAttributes {
+  [key: string]: ISchemaAttributeKeys;
+}

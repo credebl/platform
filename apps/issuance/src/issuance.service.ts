@@ -191,20 +191,25 @@ export class IssuanceService {
 
       const allSuccessful = processedResults.every(result => result?.statusCode === HttpStatus.CREATED);
       const allFailed = processedResults.every(result => result?.statusCode !== HttpStatus.CREATED);
+      
       let finalStatusCode: HttpStatus;
       let finalMessage: string;
-  
-      if (allSuccessful) {
-        finalStatusCode = HttpStatus.CREATED;
-        finalMessage = ResponseMessages.issuance.success.create;
-      } else if (allFailed) {
-        finalStatusCode = HttpStatus.BAD_REQUEST;
-        finalMessage = ResponseMessages.issuance.error.unableToCreateOffer;
-      } else {
-        finalStatusCode = HttpStatus.PARTIAL_CONTENT;
-        finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
+      
+      switch (true) {
+        case allSuccessful:
+          finalStatusCode = HttpStatus.CREATED;
+          finalMessage = ResponseMessages.issuance.success.create;
+          break;
+        case allFailed:
+          finalStatusCode = HttpStatus.BAD_REQUEST;
+          finalMessage = ResponseMessages.issuance.error.unableToCreateOffer;
+          break;
+        default:
+          finalStatusCode = HttpStatus.PARTIAL_CONTENT;
+          finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
+          break;
       }
-  
+        
       const finalResult =  
         {
           statusCode: finalStatusCode,

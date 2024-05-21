@@ -201,6 +201,23 @@ export class AgentServiceRepository {
         }
     }
 
+    // eslint-disable-next-line camelcase
+    async updateLedgerId(orgId: string, ledgerId: string): Promise<org_agents> {
+        try {
+          return await this.prisma.org_agents.update({
+                 where: {
+                    orgId
+                 },
+                data: {
+                    ledgerId
+                }
+            });
+           
+        } catch (error) {
+            this.logger.error(`[updateLedgerId] - Update ledgerId: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
 
     /**
      * Get agent details
@@ -415,6 +432,35 @@ export class AgentServiceRepository {
 
     } catch (error) {
       this.logger.error(`[getAgentApiKey] - get api key: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getLedgerByNameSpace(indyNamespace: string): Promise<{
+    id: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    nymTxnEndpoint: string;
+    indyNamespace: string;
+    networkUrl: string;
+}> {
+    try {
+      if (indyNamespace) {
+        const ledgerDetails = await this.prisma.ledgers.findFirst({
+          where: {
+            indyNamespace
+          }
+        });
+        return ledgerDetails;
+      }
+
+    } catch (error) {
+      this.logger.error(`[getLedgerByNameSpace] - get indy ledger: ${JSON.stringify(error)}`);
       throw error;
     }
   }

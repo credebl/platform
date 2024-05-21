@@ -37,7 +37,6 @@ export interface IAgentConfigure {
   apiKey: string;
   orgId: string;
   network?: string;
-  tenant?: boolean;
 }
 
 export interface IOutOfBandCredentialOffer {

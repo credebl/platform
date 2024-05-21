@@ -1,7 +1,7 @@
 import { trim } from '@credebl/common/cast.helper';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 const regex = /^[a-zA-Z0-9 ]*$/;
 export class AgentConfigureDto {
   @ApiProperty()
@@ -15,11 +15,6 @@ export class AgentConfigureDto {
   })
   walletName: string;
 
-  @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
-  @IsString({ message: 'did must be in string format.' })
-  @IsNotEmpty()
-  did: string;
-
   @ApiProperty({ example: 'https://example.com' })
   @IsString()
   @IsNotEmpty()
@@ -29,16 +24,6 @@ export class AgentConfigureDto {
   @IsString()
   @IsNotEmpty()
   apiKey: string;
-
-  @ApiPropertyOptional()
-  @IsString()
-  @IsOptional()
-  network?: string;
-
-  @ApiPropertyOptional({ example: true })
-  @IsOptional()
-  @IsBoolean()
-  tenant?: boolean;
 
   orgId: string;
 }

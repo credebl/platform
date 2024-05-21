@@ -148,7 +148,7 @@ export class IssuanceService {
           return {
             statusCode: result?.reason?.status?.code || result?.reason?.status,
             message: result?.reason?.response?.message || result?.reason?.status?.message?.error?.message,
-            error: result?.reason?.response?.error || result?.reason?.response?.error
+            error: result?.reason?.response?.error
           };
         } else if ('fulfilled' === result.status) {
           return {

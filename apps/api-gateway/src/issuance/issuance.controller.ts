@@ -549,15 +549,15 @@ export class IssuanceController {
       throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
     }
 
-    if (credentialType === IssueCredentialType.INDY && !credOffer.every(offer => (!(offer.credentialFormats as IndyDto)?.indy.attributes || 0 === Object.keys((offer.credentialFormats as IndyDto)?.indy.attributes).length))) {
+    if (credentialType === IssueCredentialType.INDY && !credOffer.every(offer => ((offer.credentialFormats as IndyDto)?.indy.attributes || 0 === Object.keys((offer.credentialFormats as IndyDto)?.indy.attributes).length))) {
         throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
     }
 
-    if (credentialType === IssueCredentialType.ANONCREDS && !credOffer.every(offer => (!(offer.credentialFormats as AnonCredsDto)?.anoncreds.credentialDefinitionId))) {
+    if (credentialType === IssueCredentialType.ANONCREDS && !credOffer.every(offer => ((offer.credentialFormats as AnonCredsDto)?.anoncreds.credentialDefinitionId))) {
       throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
     }
 
-    if (credentialType === IssueCredentialType.ANONCREDS && !credOffer.every(offer => (!(offer.credentialFormats as AnonCredsDto)?.anoncreds.attributes || 0 === Object.keys((offer.credentialFormats as AnonCredsDto)?.anoncreds.attributes).length))) {
+    if (credentialType === IssueCredentialType.ANONCREDS && !credOffer.every(offer => ((offer.credentialFormats as AnonCredsDto)?.anoncreds.attributes || 0 === Object.keys((offer.credentialFormats as AnonCredsDto)?.anoncreds.attributes).length))) {
         throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
     }
     

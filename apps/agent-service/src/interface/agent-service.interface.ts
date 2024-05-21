@@ -2,28 +2,41 @@ import { AgentSpinUpStatus } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
-    walletName: string;
-    walletPassword: string;
-    seed: string;
-    orgId?: string;
-    orgName?: string;
-    ledgerId?: string[];
-    keyType: string;
-    domain?: string;
-    privatekey?: string;
-    endpoint?: string;
-    role?: string;
-    network?: string
-    endorserDid?: string
-    method: string;
-    did?: string;
-    agentType?: string;
-    transactionApproval?: boolean;
-    clientSocketId?: string
-    tenant?: boolean;
-    ledgerName?: string[];
-    platformAdminEmail?: string;
-    apiKey?: string;
+  walletName: string;
+  walletPassword: string;
+  seed: string;
+  orgId?: string;
+  orgName?: string;
+  ledgerId?: string[];
+  keyType: string;
+  domain?: string;
+  privatekey?: string;
+  endpoint?: string;
+  role?: string;
+  network?: string;
+  endorserDid?: string;
+  method: string;
+  did?: string;
+  agentType?: string;
+  transactionApproval?: boolean;
+  clientSocketId?: string;
+  tenant?: boolean;
+  ledgerName?: string[];
+  platformAdminEmail?: string;
+  isOnPremises?: boolean;
+  agentEndpoint?: string;
+  apiKey?: string;
+  orgAgentType?: string;
+  userId?: string;
+}
+
+export interface IAgentConfigure {
+  walletName: string;
+  did: string;
+  agentEndpoint: string;
+  apiKey: string;
+  orgId: string;
+  network?: string;
 }
 
 export interface IOutOfBandCredentialOffer {

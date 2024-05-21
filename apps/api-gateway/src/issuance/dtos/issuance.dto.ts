@@ -252,7 +252,7 @@ export class IssuanceFields {
   @IsNotEmpty({ message: 'Please provide valid comment' })
   @IsString({ message: 'comment should be string' })
   @IsOptional()
-  comment: string;
+  comment?: string;
 
   @ApiPropertyOptional({ enum: ProtocolVersion, example: 'v2' })
   @IsOptional()
@@ -449,7 +449,7 @@ export class CredentialAttributes {
 }
 
 @ApiExtraModels(AnonCredsDto, JsonLdDto, IndyDto)
-export class OOBCredentialDtoWithEmail {
+export class OOBCredentialDtoWithEmail extends CredentialsIssuanceDto {
     @ApiProperty({type: [CredentialOffer]})
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })

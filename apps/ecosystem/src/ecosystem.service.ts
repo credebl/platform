@@ -43,7 +43,6 @@ import {
   SaveSchema,
   SchemaMessage,
   SignedTransactionMessage,
-  TransactionPayload,
   saveCredDef,
   submitTransactionPayload,
   IEcosystem,
@@ -53,7 +52,8 @@ import {
   IEndorsementTransaction,
   IEcosystemList,
   IEcosystemLeadOrgs,
-  IRequestW3CSchemaEndorsement
+  IRequestW3CSchemaEndorsement,
+  ITransactionData
 } from '../interfaces/ecosystem.interfaces';
 import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -809,18 +809,24 @@ export class EcosystemService {
 
   async requestSchemaEndorsement(
     requestSchemaPayload: IRequestSchemaEndorsement | IRequestW3CSchemaEndorsement,   
-    schemaType: string,
+    schemaType: schemaRequestType,
     orgId: string,
     ecosystemId: string
   ): Promise<IEndorsementTransaction> {
-    try {
-      let alreadySchemaExist;
+    try {     
+      const platformConfig = await this.ecosystemRepository.getPlatformConfigDetails();
+      
+      if (!platformConfig) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.platformConfigNotFound);
+      }
+      
+      let isSchemaExist;
       if (schemaType === schemaRequestType.INDY) {
         const { name, version } = requestSchemaPayload as IRequestSchemaEndorsement;
-        alreadySchemaExist = await this._schemaExist(name, version);
-        this.logger.log(`alreadySchemaExist ::: ${JSON.stringify(alreadySchemaExist.length)}`);
+        isSchemaExist = await this._schemaExist(name, version);
+        this.logger.log(`isSchemaExist ::: ${JSON.stringify(isSchemaExist.length)}`);
   
-        if (0 !== alreadySchemaExist.length) {
+        if (0 !== isSchemaExist.length) {
           throw new ConflictException(ResponseMessages.ecosystem.error.schemaAlreadyExist);
         }
   
@@ -840,9 +846,9 @@ export class EcosystemService {
         return await this.requestIndySchemaEndorsement(requestSchemaPayload as IRequestSchemaEndorsement, orgId, ecosystemId);
       } else if (schemaType === schemaRequestType.W3C) {
         const { schemaName } = requestSchemaPayload as IRequestW3CSchemaEndorsement;
-        alreadySchemaExist = await this._schemaExist(schemaName);
+        isSchemaExist = await this._schemaExist(schemaName);
 
-        if (0 !== alreadySchemaExist.length) {
+        if (0 !== isSchemaExist.length) {
           throw new ConflictException(ResponseMessages.ecosystem.error.schemaNameAlreadyExist);
         }
 
@@ -961,7 +967,6 @@ export class EcosystemService {
     ecosystemId: string
   ): Promise<IEndorsementTransaction> {
     try {
-
       const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
 
       const [
@@ -970,7 +975,7 @@ export class EcosystemService {
         ecosystemLeadAgentDetails,
         getEcosystemOrgDetailsByOrgId
       ] = await Promise.all([
-        this.ecosystemRepository.findW3CSchemaRecords(requestSchemaPayload?.schemaName),
+        this.ecosystemRepository.findSchemaRecordsBySchemaName(requestSchemaPayload?.schemaName),
         this.ecosystemRepository.getAgentDetails(orgId),
         this.ecosystemRepository.getAgentDetails(getEcosystemLeadDetails.orgId),
         this.ecosystemRepository.getEcosystemOrgDetailsbyId(orgId, ecosystemId)
@@ -989,6 +994,7 @@ export class EcosystemService {
       if (!ecosystemMemberOrgAgentDetails) {
           throw new InternalServerErrorException('Error in fetching agent details');
       }
+
       const w3cSchemaTransactionResponse = {
         endorserDid: ecosystemLeadAgentDetails.orgDid,
         authorDid: ecosystemMemberOrgAgentDetails.orgDid,
@@ -1001,9 +1007,8 @@ export class EcosystemService {
       const storeTransaction = await this.ecosystemRepository.storeTransactionRequest(
         w3cSchemaTransactionResponse,
         requestSchemaPayload,
-        endorsementTransactionType.W3CSCHEMA
+        endorsementTransactionType.W3C_SCHEMA
       );
-
       await this.removeEndorsementTransactionFields(storeTransaction);
 
       return storeTransaction;
@@ -1252,7 +1257,7 @@ export class EcosystemService {
         this.ecosystemRepository.getPlatformConfigDetails()
       ]);
 
-      if (endorsementTransactionPayload && endorsementTransactionPayload?.type === endorsementTransactionType.W3CSCHEMA) {
+      if (endorsementTransactionPayload && endorsementTransactionPayload?.type === endorsementTransactionType.W3C_SCHEMA) {
          throw new BadRequestException(ResponseMessages.ecosystem.error.signTransactionNotApplicable);
       }
 
@@ -1536,7 +1541,7 @@ export class EcosystemService {
     return this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.SUBMITED);
   }
 
-  async submitTransaction(transactionPayload: TransactionPayload): Promise<object> {
+  async submitTransaction(transactionPayload: ITransactionData): Promise<object> {
     try {
       const { endorsementId } = transactionPayload;
       const checkEndorsementRequestIsSubmitted = await this.ecosystemRepository.getEndorsementTransactionById(
@@ -1550,7 +1555,7 @@ export class EcosystemService {
       const endorsementPayload = await this.ecosystemRepository.getTransactionDetailsByEndorsementId(endorsementId);
       let txnPayload;
       
-      if (endorsementPayload?.type === endorsementTransactionType.W3CSCHEMA) {
+      if (endorsementPayload?.type === endorsementTransactionType.W3C_SCHEMA) {
         txnPayload = await this.submitW3CTransaction(transactionPayload);
       } else {
         txnPayload = await this.submitIndyTransaction(transactionPayload);       
@@ -1563,7 +1568,7 @@ export class EcosystemService {
     }
   }
 
-  async submitIndyTransaction(transactionPayload: TransactionPayload): Promise<object> {
+  async submitIndyTransaction(transactionPayload: ITransactionData): Promise<object> {
     try {
       const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
 
@@ -1669,7 +1674,7 @@ export class EcosystemService {
   }
 
 
-  async submitW3CTransaction(transactionPayload: TransactionPayload): Promise<object> {
+  async submitW3CTransaction(transactionPayload: ITransactionData): Promise<object> {
     try {
       const { endorsementId } = transactionPayload;
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
@@ -1681,7 +1686,7 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotRequested);
       }
 
-      const w3cEndorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionByIdAndType(endorsementId, endorsementTransactionType.W3CSCHEMA);
+      const w3cEndorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionByIdAndType(endorsementId, endorsementTransactionType.W3C_SCHEMA);
 
       const w3cPayload = {
         schemaPayload : {
@@ -1807,7 +1812,7 @@ export class EcosystemService {
       if (orgAgentTypeId === OrgAgentType.DEDICATED) {
         if (type === endorsementTransactionType.SCHEMA) {
           url = `${agentEndPoint}${CommonConstants.URL_SCHM_CREATE_SCHEMA}`;
-        } else if (type === endorsementTransactionType.W3CSCHEMA) {
+        } else if (type === endorsementTransactionType.W3C_SCHEMA) {
           url = `${agentEndPoint}${CommonConstants.DEDICATED_CREATE_POLYGON_W3C_SCHEMA}`;
         } else if (type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
           url = `${agentEndPoint}${CommonConstants.URL_SCHM_CREATE_CRED_DEF}`;
@@ -1821,7 +1826,7 @@ export class EcosystemService {
         if (tenantId !== undefined) {
           if (type === endorsementTransactionType.SCHEMA) {
             url = `${agentEndPoint}${CommonConstants.TRANSACTION_MULTITENANT_SCHEMA}`.replace('#', tenantId);
-          } else if (type === endorsementTransactionType.W3CSCHEMA) {
+          } else if (type === endorsementTransactionType.W3C_SCHEMA) {
             url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
           } else if (type === endorsementTransactionType.CREDENTIAL_DEFINITION) {
             url = `${agentEndPoint}${CommonConstants.TRANSACTION_MULTITENANT_CRED_DEF}`.replace('#', tenantId);

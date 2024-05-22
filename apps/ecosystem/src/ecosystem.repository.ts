@@ -1070,7 +1070,7 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async findW3CSchemaRecords(schemaName: string): Promise<endorsement_transaction[]> {
+  async findSchemaRecordsBySchemaName(schemaName: string): Promise<endorsement_transaction[]> {
     try {
       return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'schemaName' = ${schemaName}`;
     } catch (error) {

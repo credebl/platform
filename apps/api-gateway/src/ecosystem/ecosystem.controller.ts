@@ -345,13 +345,14 @@ export class EcosystemController {
   ): Promise<Response> {
     requestSchemaPayload.userId = user.id;
 
+
     validateSchemaPayload(requestSchemaPayload, schemaType);
 
     const createSchemaRequest = await this.ecosystemService.schemaEndorsementRequest(
       requestSchemaPayload,
-      schemaType,
       orgId,
-      ecosystemId
+      ecosystemId,
+      schemaType
     );
 
     const finalResponse: IResponse = {

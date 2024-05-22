@@ -10,6 +10,7 @@ import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interfac
 import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { IEcosystemDashboard, RequestCredDeffEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs, IRequestSchemaEndorsement, IRequestW3CSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { schemaRequestType } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 
 @Controller()
@@ -157,7 +158,7 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'schema-endorsement-request' })
   async schemaEndorsementRequest(payload: {
     requestSchemaPayload: IRequestSchemaEndorsement | IRequestW3CSchemaEndorsement;
-    schemaType: string;
+    schemaType: schemaRequestType;
     orgId: string;
     ecosystemId: string;
   }): Promise<IEndorsementTransaction> {

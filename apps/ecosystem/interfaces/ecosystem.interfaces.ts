@@ -5,7 +5,7 @@ export interface AttributeValue {
   displayName: string;
 }
 
-export interface IW3CSchemaAttributesVAlue {
+export interface IW3CSchemaAttributesValue {
   title: string;
   type: string;
 }
@@ -24,9 +24,8 @@ export interface IRequestW3CSchemaEndorsement {
   userId?: string;
   schemaName: string;
   did: string;
-  schemaAttributes: IW3CSchemaAttributesVAlue[];
+  schemaAttributes: IW3CSchemaAttributesValue[];
   description: string;
-  endorse?: boolean;
 }
 
 export interface RequestCredDeffEndorsement {
@@ -272,7 +271,7 @@ export interface IEcosystemInvitation {
   totalPages: number;
 }
 
-export interface TransactionPayload {
+export interface ITransactionData {
   endorsementId: string;
   ecosystemId: string;
   ecosystemLeadAgentEndPoint?: string;

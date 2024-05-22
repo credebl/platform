@@ -15,6 +15,7 @@ import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcos
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
+import { schemaRequestType } from '@credebl/enum/enum';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -164,9 +165,9 @@ export class EcosystemService extends BaseService {
 
   async schemaEndorsementRequest(
     requestSchemaPayload: RequestSchemaDto | RequestW3CSchemaDto,
-    schemaType: string,
     orgId: string,
-    ecosystemId: string
+    ecosystemId: string,
+    schemaType: schemaRequestType = schemaRequestType.INDY
   ): Promise<IEndorsementTransaction> {
     const payload = { requestSchemaPayload, schemaType, orgId, ecosystemId };
     return this.sendNatsMessage(this.serviceProxy, 'schema-endorsement-request', payload);

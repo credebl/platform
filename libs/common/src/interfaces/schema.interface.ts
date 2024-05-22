@@ -71,7 +71,7 @@ export interface ISchemasWithPagination extends IPaginationDetails{
     name?: string;
     schemaName?: string;
     attributes?: IIndySchemaAttributesValue[];
-    schemaAttributes?: IW3CSchemaAttributesVAlue[];
+    schemaAttributes?: IW3CSchemaAttributesValue[];
     endorse?: boolean;
     version?: string;
     did?: string;
@@ -84,7 +84,7 @@ export interface ISchemasWithPagination extends IPaginationDetails{
     displayName: string;
   }
   
-  interface IW3CSchemaAttributesVAlue {
+  interface IW3CSchemaAttributesValue {
     title: string;
     type: string;
   }

@@ -379,6 +379,8 @@ export interface IPresentationExchange {
 interface IProofFormats {
   indy?: IndyProof;
   presentationExchange?: IPresentationExchange;
+  // Note: Anoncreds change. Add type for anoncreds
+  anoncreds?:unknown
 }
 
 interface IndyProof {

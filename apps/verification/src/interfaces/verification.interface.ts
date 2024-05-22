@@ -12,6 +12,7 @@ interface IProofRequestAttribute {
 }
 
 export enum ProofRequestType {
+    ANONCREDS = 'anoncreds',
     INDY = 'indy',
     PRESENTATIONEXCHANGE = 'presentationExchange'
 }
@@ -22,6 +23,7 @@ export interface IRequestProof {
     attributes?: IProofRequestAttribute[];
     type: ProofRequestType;
     presentationDefinition?:IProofRequestPresentationDefinition;
+    proofFormats?: unknown,
     comment: string;
     autoAcceptProof: AutoAccept;
     protocolVersion?: string;
@@ -60,9 +62,11 @@ export interface IProofPresentationData {
     user: IUserRequest;
 }
 
-interface IProofFormats {
-    indy: IndyProof
-}
+// Note: Anoncreds changes
+type IProofFormats = unknown;
+// interface IProofFormats {
+//     indy: IndyProof
+// }
 
 interface IndyProof {
     name: string;

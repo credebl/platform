@@ -182,44 +182,24 @@ export class VerificationService {
       const payload: IProofRequestPayload = {
         orgId: requestProof.orgId,
         url,
-        proofRequestPayload: {}
-      };
-
-      const proofRequestPayload = {
-        comment,
-        connectionId: requestProof.connectionId,
-        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.Never,
-        goalCode: requestProof.goalCode || undefined,
-        parentThreadId: requestProof.parentThreadId || undefined,
-        willConfirm: requestProof.willConfirm || undefined
+        proofRequestPayload: {
+          comment,
+          connectionId: requestProof.connectionId,
+          autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.Never,
+          goalCode: requestProof.goalCode || undefined,
+          parentThreadId: requestProof.parentThreadId || undefined,
+          willConfirm: requestProof.willConfirm || undefined,
+          proofFormats: requestProof.proofFormats
+        }
       };
 
       if (requestProof.type === ProofRequestType.INDY) {
-        const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof as IRequestProof);
-        payload.proofRequestPayload = {
-          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
-          proofFormats: {
-            indy: {
-              name: 'Proof Request',
-              version: '1.0',
-              requested_attributes: requestedAttributes,
-              requested_predicates: requestedPredicates
-            }
-          },
-          ...proofRequestPayload
-        };
+        // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof as IRequestProof);
+        payload.proofRequestPayload.protocolVersion =  requestProof.protocolVersion ? requestProof.protocolVersion : 'v1';
 
-      } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE) {
-        payload.proofRequestPayload = {
-          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v2',
-          proofFormats: {
-            presentationExchange: {
-              presentationDefinition: requestProof.presentationDefinition
-            }
-        },
-        ...proofRequestPayload
-      };
-    }
+      } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE || requestProof.type === ProofRequestType.ANONCREDS) {
+        payload.proofRequestPayload.protocolVersion = requestProof.protocolVersion ? requestProof.protocolVersion : 'v2';
+      }
 
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;

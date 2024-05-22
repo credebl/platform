@@ -55,14 +55,9 @@ export class VerificationService extends BaseService {
           goalCode: requestProofDto.goalCode,
           parentThreadId: requestProofDto.parentThreadId,
           protocolVersion: requestProofDto.protocolVersion,
-          willConfirm: requestProofDto.willConfirm
+          willConfirm: requestProofDto.willConfirm,
+          proofFormats: requestProofDto.proofFormats
         };
-        if (requestProofDto.proofFormats) {
-          requestProof.attributes = requestProofDto.proofFormats.indy.attributes;
-        }
-        if (requestProofDto.presentationDefinition) {
-          requestProof.presentationDefinition = requestProofDto.presentationDefinition;
-        }
 
         const payload = { requestProof, user };
         return this.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);

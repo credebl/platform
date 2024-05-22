@@ -168,7 +168,8 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: RequestProofDto })@ApiQuery({
+    @ApiBody({ type: RequestProofDto })
+    @ApiQuery({
         name: 'requestType',
         enum: ProofRequestType
       })
@@ -183,30 +184,30 @@ export class VerificationController {
         @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
 
-        if (requestType === ProofRequestType.INDY) {
-            if (!requestProof.proofFormats) {
-                throw new BadRequestException(`type: ${requestType} requires proofFormats`);
-            }
-        }
+        // if (requestType === ProofRequestType.INDY) {
+        //     if (!requestProof.proofFormats) {
+        //         throw new BadRequestException(`type: ${requestType} requires proofFormats`);
+        //     }
+        // }
 
-        if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
-            if (!requestProof.presentationDefinition) {
-                throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
-            }
-        }
-        if (requestProof.proofFormats) {
-            const attributeArray = [];
-        for (const attrData of requestProof.proofFormats.indy.attributes) {
-          if (0 === attributeArray.length) {
-            attributeArray.push(Object.values(attrData)[0]);
-          } else if (!attributeArray.includes(Object.values(attrData)[0])) {
-            attributeArray.push(Object.values(attrData)[0]);
-          } else {
-            throw new BadRequestException('Please provide unique attribute names');
-          }           
+        // if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
+        //     if (!requestProof.presentationDefinition) {
+        //         throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
+        //     }
+        // }
+        // if (requestProof.proofFormats) {
+        //     const attributeArray = [];
+        // for (const attrData of requestProof.proofFormats.indy.attributes) {
+        //   if (0 === attributeArray.length) {
+        //     attributeArray.push(Object.values(attrData)[0]);
+        //   } else if (!attributeArray.includes(Object.values(attrData)[0])) {
+        //     attributeArray.push(Object.values(attrData)[0]);
+        //   } else {
+        //     throw new BadRequestException('Please provide unique attribute names');
+        //   }           
 
-        }
-        }
+        // }
+        // }
 
         requestProof.orgId = orgId;
         requestProof.type = requestType;

@@ -1,10 +1,11 @@
 import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize } from 'class-validator';
 import { trim } from '@credebl/common/cast.helper';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
 import { IProofFormats } from '../interfaces/verification.interface';
 import { ProofRequestType } from '../enum/verification.enum';
+import { BadRequestException } from '@nestjs/common';
 
 export class ProofRequestAttribute {
 
@@ -76,9 +77,22 @@ export class AnonCredsProofRequestRestriction {
 //   to?: number;
 // }
 
-export interface AnonCredsRequestedAttribute {
+export class AnonCredsRequestedAttribute {
+
+  @ApiProperty({example: 'name'})
+  @ValidateIf((obj) => obj.names === undefined)
+  @IsNotEmpty()
+  @IsString()
   name?: string;
+
+  @ApiProperty()
+  @ValidateIf((obj) => obj.name === undefined)
+  @IsNotEmpty()
+  @IsString()
   names?: string[];
+
+  @ApiPropertyOptional({type: [AnonCredsProofRequestRestriction]})
+  @IsOptional()
   restrictions?: AnonCredsProofRequestRestriction[];
 
   // Note: Not supported
@@ -96,15 +110,24 @@ export class AnonCredsRequestedPredicate {
   @IsNotEmpty({message: 'p_type must not be empty'})
   // eslint-disable-next-line camelcase
   p_type: AnonCredsPredicateType;
+
+  @ApiProperty({type: Number})
+  @IsNotEmpty({message: 'value must not be empty'})
   // eslint-disable-next-line camelcase
   p_value: number;
 
   @ApiProperty({type: [AnonCredsProofRequestRestriction]})
+  @ValidateNested()
+  @Type(() => AnonCredsProofRequestRestriction)
   restrictions?: AnonCredsProofRequestRestriction[];
 
   // Note: Not supported
   // non_revoked?: AnonCredsNonRevokedInterval;
 }
+
+class AnonCredsRequestedAttributes {
+  [key: string]: AnonCredsRequestedAttribute;
+};
 
 export class AnonCredsRequestProofFormat {
   @ApiProperty()
@@ -113,16 +136,49 @@ export class AnonCredsRequestProofFormat {
   @IsNotEmpty({ message: 'name is required.' })
   name: string;
 
-
+  @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'version is required' })
+  @IsString({ message: 'version must be in string format.' })
   version: string;
-  // Note: Not supported
   // non_revoked?: AnonCredsNonRevokedInterval;
 
+  @ApiProperty({
+    'example': {
+      'v1Id': {
+        'name': 'Name',
+        'restrictions': [
+          {
+            'schema_id': '6P7SfcCfugF6cSC3B5NpNE:2:aadhar card:0.1',
+            'issuer_id': 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7'
+          }
+        ]
+      }
+    }
+  })
+  @IsNotEmpty({message: 'requested_attributes must not be empty'})
+  @Type(() => AnonCredsRequestedAttributes)
+  // requested_attributes?: Record<string, AnonCredsRequestedAttribute>;
   // eslint-disable-next-line camelcase
-  requested_attributes?: Record<string, AnonCredsRequestedAttribute>;
+  requested_attributes?: AnonCredsRequestedAttributes;
 
+  @ApiProperty({ example: {
+    'proofReq': {
+      'name': 'Name',
+      'p_type': '>=',
+      'p_value': 18
+    }
+  } })
+  @IsNotEmpty({message: 'requested_predicates must not be empty'})
   // eslint-disable-next-line camelcase
   requested_predicates?: Record<string, AnonCredsRequestedPredicate>;
+}
+
+export class AnoncredsVerificationDto {
+
+  @ApiProperty({type: AnonCredsRequestProofFormat})
+  @IsNotEmpty()
+  'anoncreds': AnonCredsRequestProofFormat;
 }
 
 class ProofPayload {
@@ -281,81 +337,126 @@ export class IndyDto {
   // indy: IndyVerificationObject;
 }
 
+export class IndyVerificationDto {}
+
+export class PresentationExchangeObject {
+  @ApiProperty({type: ProofRequestPresentationDefinition})
+  @IsOptional()
+  @ValidateNested()
+  @IsObject({ message: 'presentationDefinition must be an object' })
+  @IsNotEmpty({ message: 'presentationDefinition must not be empty' })
+  @Type(() => ProofRequestPresentationDefinition)
+  presentationDefinition?:ProofRequestPresentationDefinition;
+}
+
+export class PresentationExchangeDto {
+  'presentationExchange': PresentationExchangeObject;
+}
+
+@ApiExtraModels(AnoncredsVerificationDto, PresentationExchangeDto, IndyVerificationDto)
 export class RequestProofDto extends ProofPayload {
-    @ApiProperty()
+    @ApiProperty({example: '7bb1db20-2b3e-4d7c-a773-46cc2871a2b4'})
     @IsString()
     @Transform(({ value }) => trim(value))
     @IsUUID()
     @IsNotEmpty({ message: 'connectionId is required.' })
     connectionId: string;
 
-    @ApiProperty({
-      'example': 
-      {
-        'indy': {
-          'attributes': [
-            {
-              attributeName: 'attributeName',
-              condition: '>=',
-              value: 'predicates',
-              credDefId: 'string',
-              schemaId: 'string'
-            }
-          ]
-        }
-    },
-      type: () => [IndyDto]
-  })
-  @IsOptional()
-  @ValidateNested()
-  @IsObject({ message: 'ProofFormatDto must be an object' })
-  @IsNotEmpty({ message: 'ProofFormatDto must not be empty' })
-  @Type(() => IndyDto)
-  proofFormats?: IndyDto;    
+  //   @ApiProperty({
+  //     'example': 
+  //     {
+  //       'indy': {
+  //         'attributes': [
+  //           {
+  //             attributeName: 'attributeName',
+  //             condition: '>=',
+  //             value: 'predicates',
+  //             credDefId: 'string',
+  //             schemaId: 'string'
+  //           }
+  //         ]
+  //       }
+  //   },
+  //     type: () => [IndyDto]
+  // })
+  // @IsOptional()
+  // @ValidateNested()
+  // @IsObject({ message: 'ProofFormatDto must be an object' })
+  // @IsNotEmpty({ message: 'ProofFormatDto must not be empty' })
+  // @Type(() => IndyDto)
+  // proofFormats?: IndyDto;
 
-    @ApiProperty({
-        'example': 
-            {
-                id: '32f54163-7166-48f1-93d8-ff217bdb0653',
-                inputDescriptors: [
-                    {
-                      'id': 'healthcare_input_1',
-                      'name': 'Medical History',
-                      'schema': [
-                        {
-                          'uri': 'https://health-schemas.org/1.0.1/medical_history.json'
-                        }
+  @ApiProperty({
+    oneOf: [
+      { $ref: getSchemaPath(AnoncredsVerificationDto) },
+      { $ref: getSchemaPath(PresentationExchangeDto) },
+      { $ref: getSchemaPath(IndyVerificationDto) }
+    ]
+  })
+  @Type(({ object }) => {
+    const presentationType = object.type;
+    switch (presentationType) {
+      case ProofRequestType.ANONCREDS:
+        return AnoncredsVerificationDto;
+      case ProofRequestType.INDY:
+        return PresentationExchangeDto;
+      case ProofRequestType.PRESENTATIONEXCHANGE:
+        return IndyVerificationDto;
+      default:
+        throw new BadRequestException('Invalid credentialType');
+    }
+  })
+  @IsNotEmpty()
+  proofFormats: AnoncredsVerificationDto | PresentationExchangeDto | IndyVerificationDto;
+
+    // @ApiProperty({
+    //     'example': 
+    //         {
+    //             id: '32f54163-7166-48f1-93d8-ff217bdb0653',
+    //             inputDescriptors: [
+    //                 {
+    //                   'id': 'healthcare_input_1',
+    //                   'name': 'Medical History',
+    //                   'schema': [
+    //                     {
+    //                       'uri': 'https://health-schemas.org/1.0.1/medical_history.json'
+    //                     }
                         
-                      ],
-                      'constraints': {
-                        'fields': [
-                          {
-                            'path': ['$.PatientID']
-                          }
-                        ]
-                      }
-                    }
-                  ]
-            },
-       type: () => [ProofRequestPresentationDefinition]
-    })
-    @IsOptional()
-    @ValidateNested()
-    @IsObject({ message: 'presentationDefinition must be an object' })
-    @IsNotEmpty({ message: 'presentationDefinition must not be empty' })
-    @Type(() => ProofRequestPresentationDefinition)
-    presentationDefinition?:ProofRequestPresentationDefinition;
+    //                   ],
+    //                   'constraints': {
+    //                     'fields': [
+    //                       {
+    //                         'path': ['$.PatientID']
+    //                       }
+    //                     ]
+    //                   }
+    //                 }
+    //               ]
+    //         },
+    //    type: () => [ProofRequestPresentationDefinition]
+    // })
+    // @IsOptional()
+    // @ValidateNested()
+    // @IsObject({ message: 'presentationDefinition must be an object' })
+    // @IsNotEmpty({ message: 'presentationDefinition must not be empty' })
+    // @Type(() => ProofRequestPresentationDefinition)
+    // presentationDefinition?:ProofRequestPresentationDefinition;
 
     @ApiPropertyOptional()
     @IsOptional()
     @IsString({ message: 'comment must be in string' })
     comment: string;
 
-    type:ProofRequestType;
+    @ApiProperty({enum: ProofRequestType})
+    @IsNotEmpty()
+    @IsEnum(ProofRequestType, {
+      message: `Invalid ProofRequestType. It should be one of: ${Object.values(ProofRequestType).join(', ')}`
+    })
+    type: ProofRequestType;
 
     orgId: string;
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({enum: AutoAccept})
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()

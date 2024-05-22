@@ -555,13 +555,15 @@ export class IssuanceController {
       throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
     }
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
-    
+    const { statusCode, message, data} = getCredentialDetails;
+
     const finalResponse: IResponse = {
-      statusCode: getCredentialDetails?.statusCode,
-      message: getCredentialDetails?.message,
-      data: getCredentialDetails?.data
+      statusCode,
+      message,
+      data
     };
-    return res.status(getCredentialDetails?.statusCode).json(finalResponse);
+    
+    return res.status(statusCode).json(finalResponse);
   }
 
   /**

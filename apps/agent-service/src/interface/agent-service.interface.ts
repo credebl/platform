@@ -548,20 +548,76 @@ export interface IValidResponses {
     tenantId: string;
   }
 interface Ledger {
-    id: string;
-    createDateTime: string;
-    lastChangedDateTime: string;
-    name: string;
-    networkType: string;
-    poolConfig: string;
-    isActive: boolean;
-    networkString: string;
-    registerDIDEndpoint: string;
-    registerDIDPayload: string;
-    indyNamespace: string;
-    networkUrl: string | null;
-  }
-  
-  export interface LedgerListResponse {
-    response: Ledger[];
-  }
+  id: string;
+  createDateTime: string;
+  lastChangedDateTime: string;
+  name: string;
+  networkType: string;
+  poolConfig: string;
+  isActive: boolean;
+  networkString: string;
+  nymTxnEndpoint: string;
+  indyNamespace: string;
+  networkUrl: string | null;
+}
+
+export interface LedgerListResponse {
+  response: Ledger[];
+}
+
+export interface ICreateConnectionInvitation {
+  label?: string;
+  alias?: string;
+  imageUrl?: string;
+  goalCode?: string;
+  goal?: string;
+  handshake?: boolean;
+  handshakeProtocols?: object[];
+  messages?: object[];
+  multiUseInvitation?: boolean;
+  autoAcceptConnection?: boolean;
+  routing?: object;
+  appendedAttachments?: object[];
+  orgId?: string;
+}
+
+export interface AgentHealthData {
+  label: string;
+  endpoints: string[];
+  isInitialized: boolean;
+}
+
+export interface IAgentStore {
+  did?: string;
+  verkey?: string;
+  isDidPublic?: boolean;
+  agentSpinUpStatus?: AgentSpinUpStatus;
+  walletName?: string;
+  agentsTypeId?: string;
+  orgId?: string;
+  agentEndPoint?: string;
+  agentId?: string;
+  orgAgentTypeId?: string;
+  ledgerId?: string[];
+  id?: string;
+  apiKey?: string;
+  userId?: string;
+  createdBy?: string;
+  lastChangedBy?: string;
+  didDoc?: string;
+  tenantId?: string;
+}
+
+export interface LedgerNameSpace {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  name: string;
+  networkType: string;
+  poolConfig: string;
+  isActive: boolean;
+  networkString: string;
+  nymTxnEndpoint: string;
+  indyNamespace: string;
+  networkUrl: string;
+}

@@ -1,8 +1,8 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
+import { ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -499,22 +499,10 @@ export class AgentServiceRepository {
     }
   }
 
-  async getLedgerByNameSpace(indyNamespace: string): Promise<{
-    id: string;
-    createDateTime: Date;
-    lastChangedDateTime: Date;
-    name: string;
-    networkType: string;
-    poolConfig: string;
-    isActive: boolean;
-    networkString: string;
-    nymTxnEndpoint: string;
-    indyNamespace: string;
-    networkUrl: string;
-}> {
+  async getLedgerByNameSpace(indyNamespace: string): Promise<LedgerNameSpace> {
     try {
       if (indyNamespace) {
-        const ledgerDetails = await this.prisma.ledgers.findFirst({
+        const ledgerDetails = await this.prisma.ledgers.findFirstOrThrow({
           where: {
             indyNamespace
           }

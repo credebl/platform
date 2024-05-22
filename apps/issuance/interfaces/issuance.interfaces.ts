@@ -274,7 +274,7 @@ export interface ISchemaAttributes {
   [key: string]: ISchemaAttributeKeys;
 }
 
-export interface IssuanceAttributes {
+export interface IIssuanceAttributes {
   [key: string]: {
       type: string;
       title: string;

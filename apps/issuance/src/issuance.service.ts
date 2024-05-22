@@ -1085,12 +1085,12 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       if (!respFile) {
         throw new BadRequestException(ResponseMessages.issuance.error.fileData);
       }
-      // ------------------------ Remove after user ---------------------------
+      // ------------------------ Remove after debugging ---------------------------
       const queueRunningStatus = await this.bulkIssuanceQueue.isReady();
       this.logger.log(`respFile::::::`, respFile);
        // eslint-disable-next-line no-console
        console.log('queueRunningStatus:::::::::', queueRunningStatus);
-       // ------------------------ Remove after user ---------------------------
+       // ------------------------ Remove after debugging ---------------------------
 
       for (const element of respFile) {
         try {

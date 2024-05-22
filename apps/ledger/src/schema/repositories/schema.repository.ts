@@ -280,23 +280,21 @@ export class SchemaRepository {
     }
   }
 
-  async schemaExist(payload: ISchemaExist): Promise<
-    {
-      id: string;
-      createDateTime: Date;
-      createdBy: string;
-      lastChangedDateTime: Date;
-      lastChangedBy: string;
-      name: string;
-      version: string;
-      attributes: string;
-      schemaLedgerId: string;
-      publisherDid: string;
-      issuerId: string;
-      orgId: string;
-      ledgerId: string;
-    }[]
-  > {
+  async schemaExist(payload: ISchemaExist): Promise<{
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    name: string;
+    version: string;
+    attributes: string;
+    schemaLedgerId: string;
+    publisherDid: string;
+    issuerId: string;
+    orgId: string;
+    ledgerId: string;
+  }[]> {
     try {
       return this.prisma.schema.findMany({
         where: {

@@ -161,3 +161,31 @@ export class AgentSpinupValidator {
     this.validateWalletName(agentSpinupDto.walletName);
   }
 }
+
+@ValidatorConstraint({ name: 'isHostPortOrDomain', async: false })
+export class IsHostPortOrDomainConstraint implements ValidatorConstraintInterface {
+  validate(value: string): boolean {
+    // Regular expression for validating host:port or domain
+    const hostPortRegex =
+      /^(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):(?:\d{1,5})$/;
+    const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+
+    return hostPortRegex.test(value) || domainRegex.test(value);
+  }
+
+  defaultMessage(): string {
+    return 'Invalid host:port or domain format';
+  }
+}
+
+export function IsHostPortOrDomain(validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string): void {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsHostPortOrDomainConstraint
+    });
+  };
+}

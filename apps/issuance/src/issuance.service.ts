@@ -348,8 +348,19 @@ export class IssuanceService {
           comment: comment || '',
           invitationDid:invitationDid || undefined
         };
+        const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...filteredIssuanceAttributes } = payloadAttributes;
+
+        const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+
+        const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
+        await this.validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
+
       if (isShortenUrl) {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
@@ -362,7 +373,7 @@ export class IssuanceService {
       const errorStack = error?.status?.message?.error;
       if (errorStack) {
         throw new RpcException({
-          message: errorStack?.reason ? errorStack?.reason : errorStack,
+          message: errorStack?.reason ? errorStack?.reason : errorStack?.message,
           statusCode: error?.status?.code
         });
 

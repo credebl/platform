@@ -238,7 +238,7 @@ export class IssuanceService {
     return { mismatchedAttributes, missingAttributes };
   }
 
-  private async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes> {
+  async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes> {
     const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
 
     if (!schemaRequest) {

@@ -1,4 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, PipeTransform } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
 import {
   ValidationArguments,
   ValidationOptions,
@@ -140,6 +141,26 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
   }
 }
 
+export class TrimStringParamPipe implements PipeTransform {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  transform(value: string) {
+    return plainToClass(String, value.trim());
+  }
+}
+
+// export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
+//   registerDecorator({
+//     name: 'isNotUUID',
+//     target: object.constructor,
+//     propertyName,
+//     options: validationOptions,
+//     validator: {
+//       validate(value) {
+//         return !isUUID(value);
+//       }
+//     }
+//   });
+// };
 export class AgentSpinupValidator {
   private static validateField(value: string, errorMessage: string): void {
     if (!value) {

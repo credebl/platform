@@ -281,7 +281,6 @@ export class AgentServiceService {
         orgId,
         agentEndPoint: agentEndpoint,
         orgAgentTypeId,
-        ledgerId: null,
         apiKey: encryptedToken,
         userId
       });

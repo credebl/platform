@@ -338,42 +338,21 @@ export class VerificationService {
       }
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
 
-      
-      let payload: IProofRequestPayload;
-
-      if (ProofRequestType.INDY === type) {
-        updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
-        updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
-        payload   = {
-        orgId: user.orgId,
-        url,
-        proofRequestPayload: updateOutOfBandRequestProof
-      };
-      }
-      
-      if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
-       
-         payload = {
+      const payload: IProofRequestPayload = {
           orgId: user.orgId,
           url,
           proofRequestPayload: {
-            goalCode: outOfBandRequestProof.goalCode,
-            protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
-            comment:outOfBandRequestProof.comment,
-            label,
-            proofFormats: {
-              presentationExchange: {
-                presentationDefinition: {
-                  id: outOfBandRequestProof.presentationDefinition.id,
-                  name: outOfBandRequestProof.presentationDefinition.name,
-                  input_descriptors: [...outOfBandRequestProof.presentationDefinition.input_descriptors]
-                }
-              }
-            },
-            autoAcceptProof:outOfBandRequestProof.autoAcceptProof,
-            invitationDid:invitationDid || undefined
+            invitationDid: invitationDid || undefined,
+            ...updateOutOfBandRequestProof
           }
-        };  
+        };
+
+      if (ProofRequestType.INDY === type) {
+        payload.proofRequestPayload.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
+      }
+      
+      if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
+        payload.proofRequestPayload.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v2';
       }
 
       if (emailId) {

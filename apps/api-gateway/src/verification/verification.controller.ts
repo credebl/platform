@@ -16,7 +16,7 @@ import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards,
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { SendProofRequestPayload, RequestProofDto } from './dto/request-proof.dto';
+import { SendProofRequestPayload, RequestProofDto, AnoncredsVerificationDto, IndyVerificationDto } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -169,10 +169,6 @@ export class VerificationController {
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBody({ type: RequestProofDto })
-    @ApiQuery({
-        name: 'requestType',
-        enum: ProofRequestType
-      })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
@@ -180,37 +176,27 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
-        @Body() requestProof: RequestProofDto,
-        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
+        @Body() requestProof: RequestProofDto
     ): Promise<Response> {
 
-        // if (requestType === ProofRequestType.INDY) {
-        //     if (!requestProof.proofFormats) {
-        //         throw new BadRequestException(`type: ${requestType} requires proofFormats`);
-        //     }
-        // }
-
-        // if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
-        //     if (!requestProof.presentationDefinition) {
-        //         throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
-        //     }
-        // }
-        // if (requestProof.proofFormats) {
-        //     const attributeArray = [];
-        // for (const attrData of requestProof.proofFormats.indy.attributes) {
-        //   if (0 === attributeArray.length) {
-        //     attributeArray.push(Object.values(attrData)[0]);
-        //   } else if (!attributeArray.includes(Object.values(attrData)[0])) {
-        //     attributeArray.push(Object.values(attrData)[0]);
-        //   } else {
-        //     throw new BadRequestException('Please provide unique attribute names');
-        //   }           
-
-        // }
-        // }
+    if (requestProof.type === ProofRequestType.ANONCREDS || requestProof.type === ProofRequestType.INDY) {
+        let requestedAttributes, requestedPredicates, formats;
+        if (requestProof.type === ProofRequestType.ANONCREDS) {
+            formats = requestProof.proofFormats as AnoncredsVerificationDto;
+            requestedAttributes = formats.anoncreds.requested_attributes;
+            requestedPredicates = formats.anoncreds.requested_predicates;
+        } else if (requestProof.type === ProofRequestType.INDY) {
+            requestedAttributes = (requestProof.proofFormats as IndyVerificationDto).indy.requested_attributes;
+            requestedPredicates = (requestProof.proofFormats as IndyVerificationDto).indy.requested_predicates;
+        }
+        const reqAttrlength = Object.keys(requestedAttributes).length;
+        const reqPredlength = Object.keys(requestedPredicates).length;
+        if (0 === reqAttrlength && 0 === reqPredlength) {
+            throw new BadRequestException('Proof request must atleast have one requested attribute or predicate');
+        }
+    }
 
         requestProof.orgId = orgId;
-        requestProof.type = requestType;
         const proofData = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
@@ -266,10 +252,6 @@ export class VerificationController {
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBody({ type: SendProofRequestPayload })
-    @ApiQuery({
-        name: 'requestType',
-        enum: ProofRequestType
-      })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -277,11 +259,9 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Body() outOfBandRequestProof: SendProofRequestPayload,
-        @Param('orgId') orgId: string,
-        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
+        @Param('orgId') orgId: string
     ): Promise<Response> {
         user.orgId = orgId;
-        outOfBandRequestProof.type = requestType;
         const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.CREATED,

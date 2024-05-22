@@ -1,9 +1,8 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize, ArrayMinSize } from 'class-validator';
 import { trim } from '@credebl/common/cast.helper';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { AutoAccept } from '@credebl/enum/enum';
-import { IProofFormats } from '../interfaces/verification.interface';
+import { AutoAccept, ProtocolVersion } from '@credebl/enum/enum';
 import { ProofRequestType } from '../enum/verification.enum';
 import { BadRequestException } from '@nestjs/common';
 
@@ -71,12 +70,6 @@ export class AnonCredsProofRequestRestriction {
   [key: `attr::${string}::value`]: string;
 }
 
-// Note: Not supported
-// export interface AnonCredsNonRevokedInterval {
-//   from?: number;
-//   to?: number;
-// }
-
 export class AnonCredsRequestedAttribute {
 
   @ApiProperty({example: 'name'})
@@ -94,9 +87,6 @@ export class AnonCredsRequestedAttribute {
   @ApiPropertyOptional({type: [AnonCredsProofRequestRestriction]})
   @IsOptional()
   restrictions?: AnonCredsProofRequestRestriction[];
-
-  // Note: Not supported
-  // non_revoked?: AnonCredsNonRevokedInterval;
 }
 
 export class AnonCredsRequestedPredicate {
@@ -120,12 +110,13 @@ export class AnonCredsRequestedPredicate {
   @ValidateNested()
   @Type(() => AnonCredsProofRequestRestriction)
   restrictions?: AnonCredsProofRequestRestriction[];
-
-  // Note: Not supported
-  // non_revoked?: AnonCredsNonRevokedInterval;
 }
 
 class AnonCredsRequestedAttributes {
+  [key: string]: AnonCredsRequestedAttribute;
+};
+
+class AnonCredsRequestedPredicates {
   [key: string]: AnonCredsRequestedAttribute;
 };
 
@@ -158,26 +149,28 @@ export class AnonCredsRequestProofFormat {
   })
   @IsNotEmpty({message: 'requested_attributes must not be empty'})
   @Type(() => AnonCredsRequestedAttributes)
-  // requested_attributes?: Record<string, AnonCredsRequestedAttribute>;
   // eslint-disable-next-line camelcase
   requested_attributes?: AnonCredsRequestedAttributes;
 
   @ApiProperty({ example: {
     'proofReq': {
-      'name': 'Name',
+      'name': 'Age',
       'p_type': '>=',
       'p_value': 18
     }
   } })
+  @Type(() => AnonCredsRequestedPredicates)
   @IsNotEmpty({message: 'requested_predicates must not be empty'})
   // eslint-disable-next-line camelcase
-  requested_predicates?: Record<string, AnonCredsRequestedPredicate>;
+  requested_predicates?: AnonCredsRequestedPredicates;
 }
 
 export class AnoncredsVerificationDto {
 
   @ApiProperty({type: AnonCredsRequestProofFormat})
   @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => AnonCredsRequestProofFormat)
   'anoncreds': AnonCredsRequestProofFormat;
 }
 
@@ -200,11 +193,14 @@ class ProofPayload {
     @IsOptional()
     willConfirm: boolean;
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({enum: ProtocolVersion})
     @IsString({ message: 'protocolVersion must be in string' })
     @IsNotEmpty({ message: 'please provide valid protocol version' })
     @IsOptional()
-    protocolVersion: string;
+    @IsEnum(ProtocolVersion, {
+      message: `Invalid ProtocolVersion. It should be one of: ${Object.values(ProtocolVersion).join(', ')}`
+    })
+    protocolVersion: ProtocolVersion;
 }
 
 export class Fields {
@@ -268,10 +264,12 @@ export class InputDescriptors {
 
 export class ProofRequestPresentationDefinition {
 
+  @ApiProperty()
   @IsString()
   @IsNotEmpty({ message: 'id is required.' })
   id: string;
 
+  @ApiProperty()
   @IsString()
   @IsOptional()
   name: string;
@@ -279,9 +277,9 @@ export class ProofRequestPresentationDefinition {
   @ApiProperty({type: () =>  [InputDescriptors]})
   @IsNotEmpty({ message: 'inputDescriptors is required.' })
   @IsArray({ message: 'inputDescriptors must be an array' })
-  @IsObject({ each: true })
-  @Type(() => InputDescriptors)
+  @ArrayMinSize(1, {message: 'input_descriptors must be non empty'})
   @ValidateNested()
+  @Type(() => InputDescriptors)
   // eslint-disable-next-line camelcase
   input_descriptors:InputDescriptors[];
 }
@@ -327,29 +325,74 @@ export class IndyDto {
   @IsNotEmpty({ message: 'please provide valid attributes' })
   @Type(() => ProofRequestAttributeDto)
   indy: ProofRequestAttributeDto;
-
-  // @ApiProperty({type: () => [IndyVerificationObject]
-  //   })
-  // @ValidateNested()
-  // @IsObject({ each: true })
-  // @IsNotEmpty({ message: 'please provide valid attributes' })
-  // @Type(() => ProofRequestAttributeDto)
-  // indy: IndyVerificationObject;
 }
 
-export class IndyVerificationDto {}
+export class IndyRequestProofFormat {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty({ message: 'name is required.' })
+  name: string;
+
+  @ApiProperty()
+  @Transform(({ value }) => trim(value))
+  @IsNotEmpty({ message: 'version is required' })
+  @IsString({ message: 'version must be in string format.' })
+  version: string;
+
+  @ApiProperty({
+    'example': {
+      'v1Id': {
+        'name': 'Name',
+        'restrictions': [
+          {
+            'schema_id': '6P7SfcCfugF6cSC3B5NpNE:2:aadhar card:0.1',
+            'issuer_id': 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7'
+          }
+        ]
+      }
+    }
+  })
+  @IsNotEmpty({message: 'requested_attributes must not be empty'})
+  @Type(() => AnonCredsRequestedAttributes)
+  // eslint-disable-next-line camelcase
+  requested_attributes?: AnonCredsRequestedAttributes;
+
+  @ApiProperty({ example: {
+    'proofReq': {
+      'name': 'Age',
+      'p_type': '>=',
+      'p_value': 18
+    }
+  } })
+  @Type(() => AnonCredsRequestedPredicates)
+  @IsNotEmpty({message: 'requested_predicates must not be empty'})
+  // eslint-disable-next-line camelcase
+  requested_predicates?: AnonCredsRequestedPredicates;
+}
+
+export class IndyVerificationDto {
+    @ApiProperty({type: IndyRequestProofFormat})
+    @IsNotEmpty()
+    @ValidateNested()
+    @Type(() => IndyRequestProofFormat)
+    'indy': IndyRequestProofFormat;
+}
 
 export class PresentationExchangeObject {
   @ApiProperty({type: ProofRequestPresentationDefinition})
-  @IsOptional()
-  @ValidateNested()
   @IsObject({ message: 'presentationDefinition must be an object' })
   @IsNotEmpty({ message: 'presentationDefinition must not be empty' })
+  @ValidateNested()
   @Type(() => ProofRequestPresentationDefinition)
-  presentationDefinition?:ProofRequestPresentationDefinition;
+  presentationDefinition:ProofRequestPresentationDefinition;
 }
 
 export class PresentationExchangeDto {
+
+  @ApiProperty({type: PresentationExchangeObject})
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => PresentationExchangeObject)
   'presentationExchange': PresentationExchangeObject;
 }
 
@@ -362,30 +405,6 @@ export class RequestProofDto extends ProofPayload {
     @IsNotEmpty({ message: 'connectionId is required.' })
     connectionId: string;
 
-  //   @ApiProperty({
-  //     'example': 
-  //     {
-  //       'indy': {
-  //         'attributes': [
-  //           {
-  //             attributeName: 'attributeName',
-  //             condition: '>=',
-  //             value: 'predicates',
-  //             credDefId: 'string',
-  //             schemaId: 'string'
-  //           }
-  //         ]
-  //       }
-  //   },
-  //     type: () => [IndyDto]
-  // })
-  // @IsOptional()
-  // @ValidateNested()
-  // @IsObject({ message: 'ProofFormatDto must be an object' })
-  // @IsNotEmpty({ message: 'ProofFormatDto must not be empty' })
-  // @Type(() => IndyDto)
-  // proofFormats?: IndyDto;
-
   @ApiProperty({
     oneOf: [
       { $ref: getSchemaPath(AnoncredsVerificationDto) },
@@ -393,54 +412,22 @@ export class RequestProofDto extends ProofPayload {
       { $ref: getSchemaPath(IndyVerificationDto) }
     ]
   })
+  @ValidateNested()
   @Type(({ object }) => {
     const presentationType = object.type;
     switch (presentationType) {
       case ProofRequestType.ANONCREDS:
         return AnoncredsVerificationDto;
       case ProofRequestType.INDY:
-        return PresentationExchangeDto;
-      case ProofRequestType.PRESENTATIONEXCHANGE:
         return IndyVerificationDto;
+      case ProofRequestType.PRESENTATIONEXCHANGE:
+        return PresentationExchangeDto;
       default:
         throw new BadRequestException('Invalid credentialType');
     }
   })
   @IsNotEmpty()
   proofFormats: AnoncredsVerificationDto | PresentationExchangeDto | IndyVerificationDto;
-
-    // @ApiProperty({
-    //     'example': 
-    //         {
-    //             id: '32f54163-7166-48f1-93d8-ff217bdb0653',
-    //             inputDescriptors: [
-    //                 {
-    //                   'id': 'healthcare_input_1',
-    //                   'name': 'Medical History',
-    //                   'schema': [
-    //                     {
-    //                       'uri': 'https://health-schemas.org/1.0.1/medical_history.json'
-    //                     }
-                        
-    //                   ],
-    //                   'constraints': {
-    //                     'fields': [
-    //                       {
-    //                         'path': ['$.PatientID']
-    //                       }
-    //                     ]
-    //                   }
-    //                 }
-    //               ]
-    //         },
-    //    type: () => [ProofRequestPresentationDefinition]
-    // })
-    // @IsOptional()
-    // @ValidateNested()
-    // @IsObject({ message: 'presentationDefinition must be an object' })
-    // @IsNotEmpty({ message: 'presentationDefinition must not be empty' })
-    // @Type(() => ProofRequestPresentationDefinition)
-    // presentationDefinition?:ProofRequestPresentationDefinition;
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -517,11 +504,14 @@ export class SendProofRequestPayload {
     @IsString({ message: 'goal code should be string' })
     goalCode?: string;
     
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({enum: ProtocolVersion})
     @IsString({ message: 'protocolVersion must be in string' })
+    @IsEnum(ProtocolVersion, {
+      message: `Invalid ProofRequestType. It should be one of: ${Object.values(ProtocolVersion).join(', ')}`
+    })
     @IsNotEmpty({ message: 'please provide valid protocol version' })
     @IsOptional()
-    protocolVersion: string;
+    protocolVersion: ProtocolVersion;
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -529,69 +519,36 @@ export class SendProofRequestPayload {
     comment: string;
 
     @ApiProperty({
-        'example': [
-            {
-                indy: {
-                    name: 'Verify national identity',
-                    version: '1.0',
-                    // eslint-disable-next-line camelcase
-                    requested_attributes: {
-                        verifynameAddress: {
-                            names: ['name', 'address'],
-                            restrictions: [{ 'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:National ID:1.0.0' }]
-                        },
-                        verifyBirthPlace: {
-                            name: 'Place',
-                            restrictions: [{ 'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:Birth Certificate:1.0.0' }]
-                        }
-                    },
-                    // eslint-disable-next-line camelcase
-                    requested_predicates: {}
-                }
-            }
-        ]
+      oneOf: [
+        { $ref: getSchemaPath(AnoncredsVerificationDto) },
+        { $ref: getSchemaPath(PresentationExchangeDto) },
+        { $ref: getSchemaPath(IndyVerificationDto) }
+      ]
     })
-    @IsObject({ each: true })
-    @IsNotEmpty({ message: 'please provide valid proofFormat' })
-    @IsOptional()
-    proofFormats?: IProofFormats;
-
-    @ApiProperty({
-        'example': 
-            {
-                id: '32f54163-7166-48f1-93d8-ff217bdb0653',
-                inputDescriptors: [
-                    {
-                      'id': 'banking_input_1',
-                      'name': 'Bank Account Information',
-                      'schema': [
-                        {
-                          'uri': 'https://bank-schemas.org/1.0.0/accounts.json'
-                        }
-                        
-                      ],
-                      'constraints': {
-                        'fields': [
-                          {
-                            'path': ['$.issuer']
-                          }
-                        ]
-                      }
-                    }
-                  ]
-            },
-       type: () => [ProofRequestPresentationDefinition]
+    @Type(({ object }) => {
+      const presentationType = object.type;
+      switch (presentationType) {
+        case ProofRequestType.ANONCREDS:
+          return AnoncredsVerificationDto;
+        case ProofRequestType.INDY:
+          return PresentationExchangeDto;
+        case ProofRequestType.PRESENTATIONEXCHANGE:
+          return IndyVerificationDto;
+        default:
+          throw new BadRequestException('Invalid credentialType');
+      }
     })
-    @IsOptional()
-    @ValidateNested()
-    @IsObject({ message: 'presentationDefinition must be an object' })
-    @IsNotEmpty({ message: 'presentationDefinition must not be empty' })
-    @Type(() => ProofRequestPresentationDefinition)
-    presentationDefinition?:ProofRequestPresentationDefinition;
+    @IsNotEmpty()
+    proofFormats: AnoncredsVerificationDto | PresentationExchangeDto | IndyVerificationDto;
 
-    type:string;
+    @ApiProperty({enum: ProofRequestType})
+    @IsNotEmpty()
+    @IsEnum(ProofRequestType, {
+      message: `Invalid ProofRequestType. It should be one of: ${Object.values(ProofRequestType).join(', ')}`
+    })
+    type: ProofRequestType;
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({enum: AutoAccept})
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide from valid auto accept proof options' })
     @IsOptional()

@@ -1,4 +1,4 @@
-import { trim } from '@credebl/common/cast.helper';
+import { IsHostPortOrDomain, trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';
@@ -18,6 +18,7 @@ export class AgentConfigureDto {
   @ApiProperty({ example: 'https://example.com' })
   @IsString()
   @IsNotEmpty()
+  @IsHostPortOrDomain()
   agentEndpoint: string;
 
   @ApiProperty()

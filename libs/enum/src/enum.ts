@@ -77,6 +77,11 @@ export enum EndorserTransactionType {
     CREDENTIAL_DEFINITION = 'credential-definition',
 }
 
+export enum schemaRequestType {
+    W3C = 'w3c',
+    INDY = 'indy'
+}
+
 export enum OrgAgentType {
     DEDICATED = 'DEDICATED',
     SHARED = 'SHARED'

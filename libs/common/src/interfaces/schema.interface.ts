@@ -66,3 +66,26 @@ export interface ISchemasWithPagination extends IPaginationDetails{
   export interface INetworkUrl {
     networkUrl: string;
   }
+
+  export interface ISchemaFields {
+    name?: string;
+    schemaName?: string;
+    attributes?: IIndySchemaAttributesValue[];
+    schemaAttributes?: IW3CSchemaAttributesValue[];
+    endorse?: boolean;
+    version?: string;
+    did?: string;
+    description?: string;
+  }
+
+  interface IIndySchemaAttributesValue {
+    attributeName: string;
+    schemaDataType: string;
+    displayName: string;
+  }
+  
+  interface IW3CSchemaAttributesValue {
+    title: string;
+    type: string;
+  }
+  

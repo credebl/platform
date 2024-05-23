@@ -8,7 +8,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISchemaAttributes, ISendOfferNatsPayload, IValidationResults, ImportFileDetails, IIssuanceAttributes, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
+import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
 import { OrgAgentType } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -31,7 +31,7 @@ import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gat
 import { ICredentialOfferResponse, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { agent_invitations, organisation } from '@prisma/client';
-
+import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 
 @Injectable()
 export class IssuanceService {
@@ -132,7 +132,7 @@ export class IssuanceService {
           const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
 
           const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
-          await this.validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
         }
 
         await this.delay(500);
@@ -202,41 +202,6 @@ export class IssuanceService {
     }
   }
 
-  async validateW3CSchemaAttributes(filteredIssuanceAttributes: IIssuanceAttributes, schemaUrlAttributes: ISchemaAttributes): Promise<IValidationResults> {
-    const mismatchedAttributes = [];
-    const missingAttributes = [];
-
-    Object.entries(filteredIssuanceAttributes).forEach(([key, value]) => {
-
-      if (!value?.['title'] || '' === value['title'].trim()) {
-        mismatchedAttributes.push(`Validation failed: Attribute ${key} must have a non-empty title`);
-      }
-  
-      const schemaAttribute = schemaUrlAttributes[key];
-      if (!schemaAttribute) {
-        mismatchedAttributes.push(`Attribute ${key} is not defined in the schema`);
-      } else if (schemaAttribute.type !== value?.['type']) {
-        mismatchedAttributes.push(
-          `Attribute ${key} has type ${value?.['type'] || null} but expected type ${schemaAttribute.type}`
-        );
-      }
-    });
-
-    Object.keys(schemaUrlAttributes).forEach((key) => {
-      if (!(key in filteredIssuanceAttributes)) {
-        missingAttributes.push(`Attribute ${key} is missing`);
-      }
-    });
-
-    if (0 < missingAttributes.length) {
-      throw new BadRequestException(`Validation failed: ${missingAttributes.join(', ')}`);
-    }
-
-    if (0 < mismatchedAttributes.length) {
-      throw new BadRequestException(`Validation failed: ${mismatchedAttributes.join(', ')}`);
-    }
-    return { mismatchedAttributes, missingAttributes };
-  }
 
   async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes> {
     const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
@@ -359,7 +324,7 @@ export class IssuanceService {
         const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
 
         const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
-        await this.validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+        validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
 
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
@@ -782,15 +747,14 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
       };
       const payloadAttributes = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.credentialSubject;
-
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, ...filteredIssuanceAttributes } = payloadAttributes;
 
       const schemaServerUrl = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
 
       const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
-      await this.validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
 
+      validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
     }
 
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);

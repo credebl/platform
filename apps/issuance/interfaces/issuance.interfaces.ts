@@ -280,7 +280,3 @@ export interface IIssuanceAttributes {
       title: string;
   };
 }
-export interface IValidationResults {
-  mismatchedAttributes: string[];
-  missingAttributes: string[];
-}

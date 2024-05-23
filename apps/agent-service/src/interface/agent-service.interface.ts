@@ -376,11 +376,17 @@ export interface IPresentationExchange {
   presentationDefinition: IProofRequestPresentationDefinition;
 }
 
+interface IAnoncredsProof {
+  name: string;
+  version: string;
+  requested_attributes: IRequestedAttributes;
+  requested_predicates: IRequestedPredicates;
+}
+
 interface IProofFormats {
   indy?: IndyProof;
   presentationExchange?: IPresentationExchange;
-  // Note: Anoncreds change. Add type for anoncreds
-  anoncreds?:unknown
+  anoncreds?: IAnoncredsProof;
 }
 
 interface IndyProof {

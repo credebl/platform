@@ -1,5 +1,5 @@
 import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize, ArrayMinSize } from 'class-validator';
-import { trim } from '@credebl/common/cast.helper';
+import { IsNestedElements, trim } from '@credebl/common/cast.helper';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { AutoAccept, ProtocolVersion } from '@credebl/enum/enum';
@@ -43,34 +43,70 @@ export class ProofRequestAttribute {
     credDefId?: string;
 }
 
-export declare const anonCredsPredicateType: readonly [">=", ">", "<=", "<"];
-export type AnonCredsPredicateType = (typeof anonCredsPredicateType)[number];
+export declare const PredicateType: readonly [">=", ">", "<=", "<"];
+export type PredicateType = (typeof PredicateType)[number];
 
-export class AnonCredsProofRequestRestriction {
+export class ProofRequestRestriction {
+  @ApiPropertyOptional({example: '7qEncxNHupBrPBBtNB9e1p:2:Employee Visiting Card:0.1.1'})
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   // eslint-disable-next-line camelcase
   schema_id?: string;
+
+  @ApiPropertyOptional({example: 'did:indy:bcovrin:testnet:7qEncxNHupBrPBBtNB9e1p'})
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   // eslint-disable-next-line camelcase
   schema_issuer_id?: string;
+
+  @ApiPropertyOptional({example: 'Passport'})
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   // eslint-disable-next-line camelcase
   schema_name?: string;
+
+  @ApiPropertyOptional({example: '0.1.1'})
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   // eslint-disable-next-line camelcase
   schema_version?: string;
+
+  @ApiPropertyOptional({example: 'did:indy:bcovrin:testnet:7qEncxNHupBrPBBtNB9e1p'})
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   // eslint-disable-next-line camelcase
   issuer_id?: string;
+
+  @ApiPropertyOptional({example: '7qEncxNHupBrPBBtNB9e1p:3:CL:726198:default'})
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   // eslint-disable-next-line camelcase
   cred_def_id?: string;
 
-  // Note: Not supported
-  // rev_reg_id?: string;
+  @ApiPropertyOptional({example: 'did:indy:bcovrin:testnet:7qEncxNHupBrPBBtNB9e1p'})
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   // eslint-disable-next-line camelcase
   schema_issuer_did?: string;
+
+  @ApiPropertyOptional({example: 'did:indy:bcovrin:testnet:7qEncxNHupBrPBBtNB9e1p'})
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   // eslint-disable-next-line camelcase
   issuer_did?: string;
   [key: `attr::${string}::marker`]: '1' | '0';
   [key: `attr::${string}::value`]: string;
 }
 
-export class AnonCredsRequestedAttribute {
+export class RequestedAttribute {
 
   @ApiProperty({example: 'name'})
   @ValidateIf((obj) => obj.names === undefined)
@@ -84,46 +120,47 @@ export class AnonCredsRequestedAttribute {
   @IsString()
   names?: string[];
 
-  @ApiPropertyOptional({type: [AnonCredsProofRequestRestriction]})
+  @ApiPropertyOptional({type: [ProofRequestRestriction]})
   @IsOptional()
-  restrictions?: AnonCredsProofRequestRestriction[];
+  restrictions?: ProofRequestRestriction[];
 }
 
-export class AnonCredsRequestedPredicate {
+export class RequestedPredicate {
   @ApiProperty()
   @IsString()
-  @IsOptional()
+  // @IsOptional()
   @IsNotEmpty({ message: 'name is required.' })
   name: string;
   
-  @ApiProperty({enum: anonCredsPredicateType})
+  @ApiProperty({type: PredicateType, example: '<'})
   @IsNotEmpty({message: 'p_type must not be empty'})
   // eslint-disable-next-line camelcase
-  p_type: AnonCredsPredicateType;
+  p_type: PredicateType;
 
   @ApiProperty({type: Number})
   @IsNotEmpty({message: 'value must not be empty'})
   // eslint-disable-next-line camelcase
   p_value: number;
 
-  @ApiProperty({type: [AnonCredsProofRequestRestriction]})
+  @ApiPropertyOptional({type: [ProofRequestRestriction]})
+  @IsOptional()
   @ValidateNested()
-  @Type(() => AnonCredsProofRequestRestriction)
-  restrictions?: AnonCredsProofRequestRestriction[];
+  @Type(() => ProofRequestRestriction)
+  restrictions?: ProofRequestRestriction[];
 }
 
-class AnonCredsRequestedAttributes {
-  [key: string]: AnonCredsRequestedAttribute;
-};
+// class AnonCredsRequestedAttributes {
+//   [key: string]: RequestedAttribute;
+// };
 
-class AnonCredsRequestedPredicates {
-  [key: string]: AnonCredsRequestedAttribute;
-};
+// class AnonCredsRequestedPredicates {
+//   [key: string]: RequestedPredicate;
+// };
 
+@ApiExtraModels(RequestedPredicate, RequestedAttribute)
 export class AnonCredsRequestProofFormat {
   @ApiProperty()
   @IsString()
-  @IsOptional()
   @IsNotEmpty({ message: 'name is required.' })
   name: string;
 
@@ -135,34 +172,37 @@ export class AnonCredsRequestProofFormat {
   // non_revoked?: AnonCredsNonRevokedInterval;
 
   @ApiProperty({
-    'example': {
-      'v1Id': {
-        'name': 'Name',
-        'restrictions': [
-          {
-            'schema_id': '6P7SfcCfugF6cSC3B5NpNE:2:aadhar card:0.1',
-            'issuer_id': 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7'
-          }
-        ]
-      }
-    }
+    type: 'object',
+    additionalProperties: { $ref: getSchemaPath(RequestedAttribute) }
   })
   @IsNotEmpty({message: 'requested_attributes must not be empty'})
-  @Type(() => AnonCredsRequestedAttributes)
+  // @ValidateNested()
+  // @Type(() => RequestedAttribute)
+  @IsNestedElements(RequestedAttribute)
   // eslint-disable-next-line camelcase
-  requested_attributes?: AnonCredsRequestedAttributes;
+  requested_attributes?: Record<string, RequestedAttribute>;
+  // requested_attributes?: AnonCredsRequestedAttributes;
 
-  @ApiProperty({ example: {
-    'proofReq': {
-      'name': 'Age',
-      'p_type': '>=',
-      'p_value': 18
-    }
-  } })
-  @Type(() => AnonCredsRequestedPredicates)
+  // @ApiProperty({ 
+  //   example: {
+  //   'proofReq': {
+  //     'name': 'Age',
+  //     'p_type': '>=',
+  //     'p_value': 18
+  //   }
+  // } 
+  // })
+  // @Type(() => AnonCredsRequestedPredicates)
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: { $ref: getSchemaPath(RequestedPredicate) }
+  })
   @IsNotEmpty({message: 'requested_predicates must not be empty'})
+  @IsNestedElements(RequestedPredicate)
   // eslint-disable-next-line camelcase
-  requested_predicates?: AnonCredsRequestedPredicates;
+  // requested_predicates?: AnonCredsRequestedPredicates;
+  // eslint-disable-next-line camelcase
+  requested_predicates?: Record<string, RequestedPredicate>;
 }
 
 export class AnoncredsVerificationDto {
@@ -327,6 +367,7 @@ export class IndyDto {
   indy: ProofRequestAttributeDto;
 }
 
+@ApiExtraModels(RequestedPredicate, RequestedAttribute)
 export class IndyRequestProofFormat {
   @ApiProperty()
   @IsString()
@@ -339,35 +380,53 @@ export class IndyRequestProofFormat {
   @IsString({ message: 'version must be in string format.' })
   version: string;
 
+  // @ApiProperty({
+  //   'example': {
+  //     'v1Id': {
+  //       'name': 'Name',
+  //       'restrictions': [
+  //         {
+  //           'schema_id': '6P7SfcCfugF6cSC3B5NpNE:2:aadhar card:0.1',
+  //           'issuer_id': 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7'
+  //         }
+  //       ]
+  //     }
+  //   }
+  // })
+  // @IsNotEmpty({message: 'requested_attributes must not be empty'})
+  // @Type(() => AnonCredsRequestedAttributes)
+  // // eslint-disable-next-line camelcase
+  // requested_attributes?: AnonCredsRequestedAttributes;
+
   @ApiProperty({
-    'example': {
-      'v1Id': {
-        'name': 'Name',
-        'restrictions': [
-          {
-            'schema_id': '6P7SfcCfugF6cSC3B5NpNE:2:aadhar card:0.1',
-            'issuer_id': 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7'
-          }
-        ]
-      }
-    }
+    type: 'object',
+    additionalProperties: { $ref: getSchemaPath(RequestedAttribute) }
   })
   @IsNotEmpty({message: 'requested_attributes must not be empty'})
-  @Type(() => AnonCredsRequestedAttributes)
+  @IsNestedElements(RequestedAttribute)
   // eslint-disable-next-line camelcase
-  requested_attributes?: AnonCredsRequestedAttributes;
+  requested_attributes?: Record<string, RequestedAttribute>;
+  
+  // @ApiProperty({ example: {
+  //   'proofReq': {
+  //     'name': 'Age',
+  //     'p_type': '>=',
+  //     'p_value': 18
+  //   }
+  // } })
+  // @Type(() => AnonCredsRequestedPredicates)
+  // @IsNotEmpty({message: 'requested_predicates must not be empty'})
+  // // eslint-disable-next-line camelcase
+  // requested_predicates?: AnonCredsRequestedPredicates;
 
-  @ApiProperty({ example: {
-    'proofReq': {
-      'name': 'Age',
-      'p_type': '>=',
-      'p_value': 18
-    }
-  } })
-  @Type(() => AnonCredsRequestedPredicates)
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: { $ref: getSchemaPath(RequestedPredicate) }
+  })
   @IsNotEmpty({message: 'requested_predicates must not be empty'})
+  @IsNestedElements(RequestedPredicate)
   // eslint-disable-next-line camelcase
-  requested_predicates?: AnonCredsRequestedPredicates;
+  requested_predicates?: Record<string, RequestedPredicate>;
 }
 
 export class IndyVerificationDto {
@@ -496,6 +555,7 @@ export class OutOfBandRequestProof extends ProofPayload {
     autoAcceptProof: string;
 }
 
+@ApiExtraModels(AnoncredsVerificationDto, PresentationExchangeDto, IndyVerificationDto)
 export class SendProofRequestPayload {
 
     @ApiPropertyOptional()
@@ -525,15 +585,16 @@ export class SendProofRequestPayload {
         { $ref: getSchemaPath(IndyVerificationDto) }
       ]
     })
+    @ValidateNested()
     @Type(({ object }) => {
       const presentationType = object.type;
       switch (presentationType) {
         case ProofRequestType.ANONCREDS:
           return AnoncredsVerificationDto;
         case ProofRequestType.INDY:
-          return PresentationExchangeDto;
-        case ProofRequestType.PRESENTATIONEXCHANGE:
           return IndyVerificationDto;
+        case ProofRequestType.PRESENTATIONEXCHANGE:
+          return PresentationExchangeDto;
         default:
           throw new BadRequestException('Invalid credentialType');
       }

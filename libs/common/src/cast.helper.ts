@@ -1,5 +1,5 @@
 import { BadRequestException, PipeTransform } from '@nestjs/common';
-import { plainToClass } from 'class-transformer';
+import { ClassConstructor, plainToClass } from 'class-transformer';
 import {
   ValidationArguments,
   ValidationOptions,
@@ -7,7 +7,8 @@ import {
   ValidatorConstraintInterface,
   isBase64,
   isMimeType,
-  registerDecorator
+  registerDecorator,
+  validate
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
 
@@ -182,3 +183,37 @@ export class AgentSpinupValidator {
     this.validateWalletName(agentSpinupDto.walletName);
   }
 }
+
+@ValidatorConstraint()
+export class IsNestedElementsConstraint<T extends object> implements ValidatorConstraintInterface {
+
+  constructor(private typeRef: ClassConstructor<T>) {
+  }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
+  public async validate(value: unknown, args: ValidationArguments) {
+    const validations = [];
+    Object.entries(value).forEach(entry => {
+      validations.push(validate(plainToClass(this.typeRef, entry[1])));
+    });
+    const process = await Promise.all(validations);
+    return process.every(p => 0 >= p.length);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  public defaultMessage(args: ValidationArguments) {
+    return `${args.property} error`; 
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const IsNestedElements = (type, validationOptions?: ValidationOptions) => (object: object, propertyName: string) => {
+    registerDecorator({
+      name: 'IsNestedElementsConstraint',
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: new IsNestedElementsConstraint(type)
+    });
+  };

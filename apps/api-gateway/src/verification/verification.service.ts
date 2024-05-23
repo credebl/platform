@@ -8,7 +8,7 @@ import { IProofPresentationDetails, IProofPresentationList } from '@credebl/comm
 import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
-import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
+// import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
 
 
 @Injectable()
@@ -46,7 +46,7 @@ export class VerificationService extends BaseService {
      * @returns Requested proof presentation details
      */
     sendProofRequest(requestProofDto: RequestProofDto, user: IUserRequest): Promise<IProofRequest> {
-        const requestProof: IRequestProof = {
+        const requestProof = {
           orgId: requestProofDto.orgId,
           type: requestProofDto.type,
           comment: requestProofDto.comment,

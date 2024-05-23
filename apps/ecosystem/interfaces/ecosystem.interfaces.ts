@@ -5,13 +5,27 @@ export interface AttributeValue {
   displayName: string;
 }
 
-export interface RequestSchemaEndorsement {
+export interface IW3CSchemaAttributesValue {
+  title: string;
+  type: string;
+}
+
+export interface IRequestSchemaEndorsement {
   orgId: string;
   userId?: string;
   name: string;
   version: string;
   attributes: AttributeValue[];
   endorse?: boolean;
+}
+
+export interface IRequestW3CSchemaEndorsement {
+  orgId: string;
+  userId?: string;
+  schemaName: string;
+  did: string;
+  schemaAttributes: IW3CSchemaAttributesValue[];
+  description: string;
 }
 
 export interface RequestCredDeffEndorsement {
@@ -257,7 +271,7 @@ export interface IEcosystemInvitation {
   totalPages: number;
 }
 
-export interface TransactionPayload {
+export interface ITransactionData {
   endorsementId: string;
   ecosystemId: string;
   ecosystemLeadAgentEndPoint?: string;
@@ -397,4 +411,9 @@ export interface IEcosystemOrgsData extends IEcosystemOrgs {
 export interface IEcosystemOrgDetails {
   count: Prisma.BatchPayload;
   ecosystemOrgs: IEcosystemOrgsData[];
+}
+
+
+export interface IEcosystemEndorsementFlag {
+  autoEndorsement: boolean;
 }

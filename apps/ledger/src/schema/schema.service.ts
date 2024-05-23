@@ -246,10 +246,9 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async createW3CSchema(orgId:string, schemaPayload: SchemaPayload, user: IUserRequestInterface): Promise<string> {
+  async createW3CSchema(orgId:string, schemaPayload: SchemaPayload, user: string): Promise<string> {
     try {
       const isSchemaExist = await this.schemaRepository.schemaExists(schemaPayload.schemaName, W3CSchemaVersion.W3C_SCHEMA_VERSION);
-
       if (0 !== isSchemaExist.length) {
         throw new ConflictException(ResponseMessages.schema.error.exists);
       }
@@ -293,7 +292,6 @@ export class SchemaService extends BaseService {
         schemaRequestPayload: agentSchemaPayload
       };
       const createSchema = await this._createW3CSchema(W3cSchemaPayload);
-      
      const storeW3CSchema = await this.storeW3CSchemas(createSchema.response, user, orgId);
 
      if (!storeW3CSchema) {
@@ -533,8 +531,8 @@ export class SchemaService extends BaseService {
 
         },
       issuerId: schemaDetails.did,
-      createdBy: user.id,
-      changedBy: user.id,
+      createdBy: user,
+      changedBy: user,
       publisherDid: schemaDetails.did,
       orgId,
       ledgerId: getLedgerId.id,

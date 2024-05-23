@@ -40,3 +40,14 @@ interface Ecosystem {
     ecosystemList: Ecosystem[];
   }
   
+  export interface IEndorsementTransaction {
+    id: string;
+    endorserDid: string;
+    authorDid: string;
+    status: string;
+    ecosystemOrgId: string;
+    createDateTime: Date;
+    createdBy: string;
+    type?: string;
+  }
+    

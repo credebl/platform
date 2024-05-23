@@ -168,7 +168,9 @@ export const ResponseMessages = {
             agentDetailsNotFound: 'Agent details not found',
             failedFetchSchema: 'Failed to fetch schema data',
             atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
-            schemaBuilder: 'Error while creating schema JSON`'
+            schemaBuilder: 'Error while creating schema JSON',
+            W3CSchemaNotFOund: 'Error while resolving W3C schema',
+            storeW3CSchema: 'Error while storing W3C schema'
         }
     },
     credentialDefinition: {
@@ -236,7 +238,13 @@ export const ResponseMessages = {
             invalidTenantIdIdFormat:'Invalid tenantId format',
             requiredTenantId:'Tenant Id is required',
             createDid:'Error while creating DID',
-            storeDid: 'Error while storing DID'
+            storeDid: 'Error while storing DID',
+            agentSpinupError: 'Agent endpoint unreachable',
+            agentEndpointRequired: 'Agent endpoint is required',
+            failedAgentType: 'Agent endpoint is required',
+            failedApiKey: 'Failed to encrypt API key',
+            failedOrganization: 'Failed to fetch organization agent type details',
+            promiseReject: 'One or more promises were rejected.'
         }
     },
     connection: {
@@ -358,6 +366,7 @@ export const ResponseMessages = {
             orgsNotUpdate: 'Ecosystem Orgs not updated',
             ecosystemNotEnabled: 'Ecosystem service is not enabled',
             sumbitTransaction: 'Error while submitting transaction',
+            signTransactionNotApplicable: 'Signing transaction for w3c schema is not aapllicable',
             requestSchemaTransaction: 'Error while request schema transaction',
             requestCredDefTransaction: 'Error while submitting transaction',
             notFound: 'Organization not found',
@@ -371,6 +380,7 @@ export const ResponseMessages = {
             signRequestError: 'Error while signing the transaction',
             updateTransactionError: 'Error while update the transaction',
             schemaAlreadyExist: 'Schema name and schema version already exist',
+            schemaNameAlreadyExist: 'Schema name already exist',
             credDefAlreadyExist: 'Credential definition already exist',
             saveSchema: 'Error while storing the schema details',
             saveCredDef: 'Error while storing the credential-definition details',
@@ -378,7 +388,9 @@ export const ResponseMessages = {
             invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
             transactionSubmitted: 'Transaction already submitted',
+            transactionAlreadySigned: 'Transaction already signed',
             transactionNotSigned: 'Transaction request is not signed',
+            transactionNotRequested: 'Transaction is not requested',
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',

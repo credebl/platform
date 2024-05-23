@@ -77,6 +77,11 @@ export enum EndorserTransactionType {
     CREDENTIAL_DEFINITION = 'credential-definition',
 }
 
+export enum schemaRequestType {
+    W3C = 'w3c',
+    INDY = 'indy'
+}
+
 export enum OrgAgentType {
     DEDICATED = 'DEDICATED',
     SHARED = 'SHARED'
@@ -120,3 +125,8 @@ const transitionMap: { [key in Invitation]: Invitation[] } = {
 };
 
 export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));
+
+export enum SchemaType {
+    INDY = 'indy',
+    W3C_Schema = 'w3c'
+}

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/array-type */
 
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsInstance, IsMimeType, IsNotEmpty, IsNotEmptyObject, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsMimeType, IsNotEmpty, IsNotEmptyObject, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
@@ -10,6 +10,7 @@ import { AutoAccept, ProtocolVersion } from '@credebl/enum/enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { SortValue } from '../../enum';
 import { trim } from '@credebl/common/cast.helper';
+import { BadRequestException } from '@nestjs/common';
 
 class Issuer {
   @ApiProperty()
@@ -156,8 +157,8 @@ export class Credential {
   
     @ApiProperty({type: [CredentialPreviewAttribute]})
     @ArrayMinSize(1)
-    @ValidateNested({ each: true })
-    @IsInstance(CredentialPreviewAttribute, { each: true })
+    @ValidateNested()
+    @Type(() => CredentialPreviewAttribute)
     attributes: CredentialPreviewAttribute[];
   
     @ApiProperty({ example: 'Mdst5jN9uavVM8tq4qgxUm:3:CL:60112:default' })
@@ -180,10 +181,11 @@ export class Credential {
   }
   
   export class IndyObject {
-    @ApiProperty({ type: [AttributesDto], example: '[list of attributes]'})
-    @IsArray()
+    @ApiProperty({ type: [AttributesDto]})
+    @ArrayMinSize(1)
     @IsNotEmpty()
-    @ValidateNested({ each: true })
+    @ValidateNested()
+    @Type(() => AttributesDto)
     attributes: AttributesDto[];
   
     @ApiProperty({ example: 'Mdst5jN9uavVM8tq4qgxUm:3:CL:60112:default' })
@@ -196,34 +198,38 @@ export class Credential {
   export class JsonLdObject {
     @ApiProperty({ type: Credential })
     @IsNotEmpty({ message: 'Please provide valid credential' })
-    @IsObject({ message: 'credential should be an object' })
-    @ValidateNested({ each: true })
-    credential:Credential;
+    @ValidateNested()
+    @Type(() => Credential)
+    credential: Credential;
   
     @ApiProperty({ type: JsonLdCredentialDetailOptions })
-    @IsOptional()
     @IsNotEmpty({ message: 'Please provide valid options' })
-    @IsObject({ message: 'options should be an object' })
-    @ValidateNested({ each: true })
+    @ValidateNested()
     @Type(() => JsonLdCredentialDetailOptions)
-    options:JsonLdCredentialDetailOptions;
+    options: JsonLdCredentialDetailOptions;
   }
   
   export class IndyDto {
     @ApiProperty({type: IndyObject})
-    @ValidateNested({ each: true })
+    @IsNotEmpty()
+    @ValidateNested()
+    @Type(() => IndyObject)
     indy: IndyObject;
   }
   
   export class AnonCredsDto {
     @ApiProperty({type: AnoncredsObject})
-    @IsNotEmptyObject()
-    @ValidateNested({each: true})
+    @IsNotEmpty()
+    @ValidateNested()
+    @Type(() => AnoncredsObject)
     anoncreds: AnoncredsObject;
   }
   
   export class JsonLdDto {
     @ApiProperty({type: JsonLdObject})
+    @IsNotEmpty()
+    @ValidateNested()
+    @Type(() => JsonLdObject)
     jsonld: JsonLdObject;
   }
 
@@ -248,7 +254,7 @@ export class Attribute {
 }
 
 export class IssuanceFields {
-  @ApiProperty({ example: 'string' })
+  @ApiPropertyOptional({ example: 'string' })
   @IsNotEmpty({ message: 'Please provide valid comment' })
   @IsString({ message: 'comment should be string' })
   @IsOptional()
@@ -266,14 +272,17 @@ export class IssuanceFields {
   @IsOptional()
   @IsString({ message: 'auto accept proof must be in string' })
   @IsNotEmpty({ message: 'please provide valid auto accept proof' })
-  // @IsEnum(AutoAccept, {
-  //     message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
-  // })
+  @IsEnum(AutoAccept, {
+      message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+  })
   autoAcceptCredential: AutoAccept;
 
-  @ApiProperty({ enum: IssueCredentialType, example: 'anoncreds' })
+  @ApiProperty({ enum: IssueCredentialType })
   @IsNotEmpty({ message: 'Please provide credential type ' })
   @Transform(({ value }) => trim(value).toLocaleLowerCase())
+  @IsEnum(IssueCredentialType, {
+    message: `Invalid auto accept credential. It should be one of: ${Object.values(IssueCredentialType).join(', ')}`
+  })
   credentialType:IssueCredentialType;
 
   orgId: string;
@@ -328,7 +337,21 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
       { $ref: getSchemaPath(IndyDto) }
     ]
   })
-  @IsNotEmptyObject()
+  @ValidateNested()
+  @Type(({ object }) => {
+    const {credentialType} = object;
+    switch (credentialType) {
+      case IssueCredentialType.INDY:
+        return IndyDto;
+      case IssueCredentialType.ANONCREDS:
+        return AnonCredsDto;
+      case IssueCredentialType.JSONLD:
+        return JsonLdDto;
+      default:
+        throw new BadRequestException('Invalid credentialType');
+    }
+  })
+  @IsNotEmpty()
   credentialFormats: AnonCredsDto | JsonLdDto | IndyDto;
 
   @ApiProperty({
@@ -342,7 +365,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
 }
 
 @ApiExtraModels(AnonCredsDto, JsonLdDto, IndyDto)
-class CredentialOffer {
+export class CredentialOffer {
 
     @ApiProperty({
       type: Object,
@@ -470,14 +493,6 @@ export class OOBCredentialDtoWithEmail extends CredentialsIssuanceDto {
     @IsNotEmpty({ message: 'Please provide valid protocol version' })
     @IsString({ message: 'protocol version should be string' })
     protocolVersion?: ProtocolVersion;
-
-    @ApiProperty({ enum: IssueCredentialType })
-    @IsNotEmpty({ message: 'Please provide credential type ' })
-    @Transform(({ value }) => trim(value).toLocaleLowerCase())
-    @IsOptional()
-    credentialType:IssueCredentialType;
-
-    imageUrl?: string;
     
     orgId: string;
 }

@@ -18,7 +18,6 @@ import {
   UseInterceptors,
   Logger,
   BadRequestException,
-  NotFoundException,
   ParseUUIDPipe
 } from '@nestjs/common';
 import {
@@ -41,16 +40,12 @@ import { Response } from 'express';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
 import {
-  AnonCredsDto,
   ClientDetails,
   FileParameter,
   IssuanceDto,
   OOBCredentialDtoWithEmail,
   OOBIssueCredentialDto,
-  PreviewFileDetails,
-  IndyDto,
-  JsonLdDto
-} from './dtos/issuance.dto';
+  PreviewFileDetails} from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -58,7 +53,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { FileExportResponse, IIssuedCredentialSearchParams, IssueCredentialType, RequestPayload } from './interfaces';
+import { FileExportResponse, IIssuedCredentialSearchParams, RequestPayload } from './interfaces';
 import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
@@ -67,6 +62,7 @@ import { RpcException } from '@nestjs/microservices';
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
+import { validateCredential } from './utils/helper';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -519,10 +515,6 @@ export class IssuanceController {
     summary: `Issuer create a credential offer`,
     description: `Issuer creates a credential offer and sends it to the holder`
   })
-  @ApiQuery({
-    name:'credentialType',
-    enum: IssueCredentialType
-  })
   @ApiBody({type: IssueCredentialDto})
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
@@ -530,44 +522,14 @@ export class IssuanceController {
   async sendCredential(
     @User() user: IUserRequest,
     @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
-    // Note: Anoncreds update
-    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.ANONCREDS,
     @Body() issueCredentialDto: IssueCredentialDto,
     @Res() res: Response
   ): Promise<Response> {
     issueCredentialDto.orgId = orgId;
-    issueCredentialDto.credentialType = credentialType;
 
     const credOffer = issueCredentialDto?.credentialData || [];
 
-    // Note: Anon creds default
-    if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType && IssueCredentialType.ANONCREDS !== credentialType) {
-      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
-    }
-
-    if (credentialType === IssueCredentialType.INDY && !credOffer.every(offer => (!(offer.credentialFormats as IndyDto)?.indy.credentialDefinitionId))) {
-      throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
-    }
-
-    if (credentialType === IssueCredentialType.INDY && !credOffer.every(offer => ((offer.credentialFormats as IndyDto)?.indy.attributes || 0 === Object.keys((offer.credentialFormats as IndyDto)?.indy.attributes).length))) {
-        throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
-    }
-
-    if (credentialType === IssueCredentialType.ANONCREDS && !credOffer.every(offer => ((offer.credentialFormats as AnonCredsDto)?.anoncreds.credentialDefinitionId))) {
-      throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
-    }
-
-    if (credentialType === IssueCredentialType.ANONCREDS && !credOffer.every(offer => ((offer.credentialFormats as AnonCredsDto)?.anoncreds.attributes || 0 === Object.keys((offer.credentialFormats as AnonCredsDto)?.anoncreds.attributes).length))) {
-        throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
-    }
-    
-    if (issueCredentialDto.credentialType === IssueCredentialType.JSONLD && credOffer.every(offer => (!(offer.credentialFormats as JsonLdDto)?.jsonld.credential || 0 === Object.keys((offer.credentialFormats as JsonLdDto).jsonld.credential).length))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
-    }
-
-    if (issueCredentialDto.credentialType ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!(offer.credentialFormats as JsonLdDto)?.jsonld.options || 0 === Object.keys((offer.credentialFormats as JsonLdDto)?.jsonld.options).length))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
-    }
+    validateCredential(issueCredentialDto.credentialType, credOffer);
 
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
     
@@ -597,31 +559,16 @@ export class IssuanceController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  @ApiQuery({
-    name:'credentialType',
-    enum: IssueCredentialType
-  })
   @ApiBody({type: OOBCredentialDtoWithEmail})
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
-    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
-    outOfBandCredentialDto.credentialType = credentialType;
     const credOffer = outOfBandCredentialDto?.credentialOffer || [];
-    if (IssueCredentialType.INDY !== credentialType &&  IssueCredentialType.JSONLD !== credentialType &&  IssueCredentialType.ANONCREDS !== credentialType) {
-      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
-}
-    if (outOfBandCredentialDto.credentialType === IssueCredentialType.JSONLD   && credOffer.every(offer => (!(offer.credentialFormats as JsonLdDto)?.jsonld.credential || 0 === Object.keys((offer.credentialFormats as JsonLdDto)?.jsonld.credential).length))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
-    }
-
-    if (outOfBandCredentialDto.credentialType   ===  IssueCredentialType.JSONLD && credOffer.every(offer => (!(offer.credentialFormats as JsonLdDto)?.jsonld.options || 0 === Object.keys((offer.credentialFormats as JsonLdDto)?.jsonld.options).length))) {
-      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
-    }
+    validateCredential(outOfBandCredentialDto.credentialType, credOffer);
 
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(
       user,
@@ -647,22 +594,16 @@ export class IssuanceController {
       summary: `Create out-of-band credential offer`,
       description: `Creates an out-of-band credential offer`
     })
-    @ApiQuery({
-      name:'credentialType',
-      enum: IssueCredentialType
-    })
     @ApiBody({type: OOBIssueCredentialDto})
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     async createOOBCredentialOffer(
-      @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
       @Param('orgId') orgId: string,
       @Body() issueCredentialDto: OOBIssueCredentialDto,
       @Res() res: Response
     ): Promise<Response> {
       issueCredentialDto.orgId = orgId;
-      issueCredentialDto.credentialType = credentialType;
       const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,

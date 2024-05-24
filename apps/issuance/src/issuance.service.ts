@@ -494,7 +494,6 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     const sendEmailCredentialOffer: {
       iterator: CredentialOffer;
       emailId: string;
-      // Note: Anoncreds change
       credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
       index: number;
       credentialType: IssueCredentialType;

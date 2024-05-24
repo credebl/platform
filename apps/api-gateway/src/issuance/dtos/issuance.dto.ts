@@ -477,7 +477,6 @@ export class OOBCredentialDtoWithEmail extends CredentialsIssuanceDto {
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} credentials max). Easily handle larger batches via seamless CSV file uploads` })
-    // @IsInstance(CredentialOffer, { each: true })
     @ValidateNested({ each: true })
     @Type(() => CredentialOffer)
     credentialOffer: CredentialOffer[];

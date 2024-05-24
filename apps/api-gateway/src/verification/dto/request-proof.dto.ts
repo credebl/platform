@@ -149,14 +149,6 @@ export class RequestedPredicate {
   restrictions?: ProofRequestRestriction[];
 }
 
-// class AnonCredsRequestedAttributes {
-//   [key: string]: RequestedAttribute;
-// };
-
-// class AnonCredsRequestedPredicates {
-//   [key: string]: RequestedPredicate;
-// };
-
 @ApiExtraModels(RequestedPredicate, RequestedAttribute)
 export class AnonCredsRequestProofFormat {
   @ApiProperty()

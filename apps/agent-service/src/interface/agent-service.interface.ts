@@ -45,7 +45,6 @@ export interface IAgentConfigure {
 
 export interface IOutOfBandCredentialOffer {
   emailId: string;
-  // Note: Anoncreds change
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   attributes?: IAttributes[];
   credentialDefinitionId?: string;
@@ -310,8 +309,6 @@ export interface IGetCredDefFromTenantPayload {
 
 export interface IIssuanceCreateOffer {
   connectionId: string;
-  // Note: Anoncreds change
-  // credentialFormats: ICredentialFormats;
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   autoAcceptCredential: string;
   comment: string;

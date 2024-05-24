@@ -7,8 +7,6 @@ import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentation } from './interfaces/verification.interface';
-// To do make a similar interface in API-gateway
-// import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
 
 
 @Injectable()

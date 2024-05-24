@@ -17,12 +17,7 @@ export interface IAttributes {
 
 interface ICredentialsAttributes {
   connectionId: string;
-  // Anoncreds: To do- Add type for credentialFormats
-  // Note: Anoncreds change
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
-  // attributes: IAttributes[];
-  // credential?:ICredential;
-  // options?:IOptions
 }
 export interface IIssuance {
   user?: IUserRequest;
@@ -48,8 +43,6 @@ interface IIndy {
 export interface IIssueData {
   protocolVersion?: string;
   connectionId: string;
-  // Anoncreds: To do- Add type for credentialFormats
-  // Note: Anoncred changes
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   autoAcceptCredential: string,
   comment?: string;
@@ -153,12 +146,10 @@ export interface IOptions{
 }
 export interface CredentialOffer {
   emailId: string;
-  // Note: Anoncreds change
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
 }
 export interface OutOfBandCredentialOfferPayload {
   credentialDefinitionId?: string;
-  // Note: Anoncreds change
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   orgId: string;
   comment?: string;
@@ -257,7 +248,6 @@ export interface OrgAgent {
 
 export interface SendEmailCredentialOffer {
   iterator: CredentialOffer;
-  // Note: Anoncreds change
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   emailId?: string;
   index: number;

@@ -169,38 +169,22 @@ export class AnonCredsRequestProofFormat {
   @IsNotEmpty({ message: 'version is required' })
   @IsString({ message: 'version must be in string format.' })
   version: string;
-  // non_revoked?: AnonCredsNonRevokedInterval;
 
   @ApiProperty({
     type: 'object',
     additionalProperties: { $ref: getSchemaPath(RequestedAttribute) }
   })
   @IsNotEmpty({message: 'requested_attributes must not be empty'})
-  // @ValidateNested()
-  // @Type(() => RequestedAttribute)
   @IsNestedElements(RequestedAttribute)
   // eslint-disable-next-line camelcase
   requested_attributes?: Record<string, RequestedAttribute>;
-  // requested_attributes?: AnonCredsRequestedAttributes;
 
-  // @ApiProperty({ 
-  //   example: {
-  //   'proofReq': {
-  //     'name': 'Age',
-  //     'p_type': '>=',
-  //     'p_value': 18
-  //   }
-  // } 
-  // })
-  // @Type(() => AnonCredsRequestedPredicates)
   @ApiProperty({
     type: 'object',
     additionalProperties: { $ref: getSchemaPath(RequestedPredicate) }
   })
   @IsNotEmpty({message: 'requested_predicates must not be empty'})
   @IsNestedElements(RequestedPredicate)
-  // eslint-disable-next-line camelcase
-  // requested_predicates?: AnonCredsRequestedPredicates;
   // eslint-disable-next-line camelcase
   requested_predicates?: Record<string, RequestedPredicate>;
 }
@@ -380,24 +364,6 @@ export class IndyRequestProofFormat {
   @IsString({ message: 'version must be in string format.' })
   version: string;
 
-  // @ApiProperty({
-  //   'example': {
-  //     'v1Id': {
-  //       'name': 'Name',
-  //       'restrictions': [
-  //         {
-  //           'schema_id': '6P7SfcCfugF6cSC3B5NpNE:2:aadhar card:0.1',
-  //           'issuer_id': 'did:indy:bcovrin:testnet:LRCUFcizUL74AGgLqdJHK7'
-  //         }
-  //       ]
-  //     }
-  //   }
-  // })
-  // @IsNotEmpty({message: 'requested_attributes must not be empty'})
-  // @Type(() => AnonCredsRequestedAttributes)
-  // // eslint-disable-next-line camelcase
-  // requested_attributes?: AnonCredsRequestedAttributes;
-
   @ApiProperty({
     type: 'object',
     additionalProperties: { $ref: getSchemaPath(RequestedAttribute) }
@@ -406,18 +372,6 @@ export class IndyRequestProofFormat {
   @IsNestedElements(RequestedAttribute)
   // eslint-disable-next-line camelcase
   requested_attributes?: Record<string, RequestedAttribute>;
-  
-  // @ApiProperty({ example: {
-  //   'proofReq': {
-  //     'name': 'Age',
-  //     'p_type': '>=',
-  //     'p_value': 18
-  //   }
-  // } })
-  // @Type(() => AnonCredsRequestedPredicates)
-  // @IsNotEmpty({message: 'requested_predicates must not be empty'})
-  // // eslint-disable-next-line camelcase
-  // requested_predicates?: AnonCredsRequestedPredicates;
 
   @ApiProperty({
     type: 'object',

@@ -8,8 +8,9 @@ import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosys
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
-import { IEcosystemDashboard, RequestCredDeffEndorsement, RequestSchemaEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs } from '../interfaces/ecosystem.interfaces';
+import { IEcosystemDashboard, RequestCredDeffEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs, IRequestSchemaEndorsement, IRequestW3CSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { schemaRequestType } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 
 @Controller()
@@ -156,15 +157,14 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'schema-endorsement-request' })
   async schemaEndorsementRequest(payload: {
-    requestSchemaPayload: RequestSchemaEndorsement;
+    requestSchemaPayload: IRequestSchemaEndorsement | IRequestW3CSchemaEndorsement;
+    schemaType: schemaRequestType;
     orgId: string;
     ecosystemId: string;
   }): Promise<IEndorsementTransaction> {
-    return this.ecosystemService.requestSchemaEndorsement(
-      payload.requestSchemaPayload,
-      payload.orgId,
-      payload.ecosystemId
-    );
+    const { requestSchemaPayload, schemaType, orgId, ecosystemId } = payload;
+
+    return this.ecosystemService.requestSchemaEndorsement(requestSchemaPayload, schemaType, orgId, ecosystemId);
   }
 
   /**
@@ -191,8 +191,9 @@ export class EcosystemController {
    * @returns sign endorsement request
    */
   @MessagePattern({ cmd: 'sign-endorsement-transaction' })
-  async signTransaction(payload: { endorsementId: string; ecosystemId: string }): Promise<object> {
-    return this.ecosystemService.signTransaction(payload.endorsementId, payload.ecosystemId);
+  async signTransaction(payload: { endorsementId: string; ecosystemId: string}): Promise<object> {
+    const { endorsementId, ecosystemId } = payload;
+    return this.ecosystemService.signTransaction(endorsementId, ecosystemId);
   }
 
   /**

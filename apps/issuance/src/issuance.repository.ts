@@ -235,7 +235,7 @@ export class IssuanceRepository {
 
   async getCredentialDefinitionDetails(credentialDefinitionId: string): Promise<SchemaDetails> {
     try {
-      const credentialDefinitionDetails = await this.prisma.credential_definition.findFirst({
+      const credentialDefinitionDetails = await this.prisma.credential_definition.findFirstOrThrow({
         where: {
           credentialDefinitionId
         }
@@ -245,11 +245,8 @@ export class IssuanceRepository {
         throw new NotFoundException(`Credential definition not found for ID: ${credentialDefinitionId}`);
       }
 
-      const schemaDetails = await this.prisma.schema.findFirst({
-        where: {
-          schemaLedgerId: credentialDefinitionDetails.schemaLedgerId
-        }
-      });
+      const schemaDetails = await this.getSchemaDetailsBySchemaIdentifier(credentialDefinitionDetails.schemaLedgerId);
+       
 
       if (!schemaDetails) {
         throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
@@ -267,6 +264,17 @@ export class IssuanceRepository {
       this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
       throw new InternalServerErrorException(error.message);
     }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getSchemaDetailsBySchemaIdentifier (schemaIdentifier: string): Promise <any> {
+
+    const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+      where: {
+        schemaLedgerId: schemaIdentifier
+      }
+    });
+    return schemaDetails;
   }
 
   async saveFileUploadDetails(fileUploadPayload, userId: string): Promise<file_upload> {

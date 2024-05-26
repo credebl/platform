@@ -46,7 +46,8 @@ import {
   IssuanceDto,
   OOBCredentialDtoWithEmail,
   OOBIssueCredentialDto,
-  PreviewFileDetails
+  PreviewFileDetails,
+  TemplateDetails
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
@@ -55,7 +56,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { FileExportResponse, IIssuedCredentialSearchParams, IssueCredentialType, RequestPayload } from './interfaces';
+import { FileExportResponse, IIssuedCredentialSearchParams, IssueCredentialType, UploadedFileDetails } from './interfaces';
 import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
@@ -64,6 +65,7 @@ import { RpcException } from '@nestjs/microservices';
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
+import { SchemaType } from '@credebl/enum/enum';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -172,9 +174,40 @@ export class IssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/orgs/:orgId/:credentialDefinitionId/download')
+  @Get('/orgs/:orgId/credentials/bulk/template')
+  @ApiOperation({
+    summary: 'Fetch all templates for bulk opeartion',
+    description: 'Retrieve all templates for bulk operation'
+  })
+  @ApiQuery({
+    name:'schemaType',
+    enum: SchemaType
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getAllCredentialTemplates(
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+    @Res() res: Response,
+    @Query('schemaType') schemaType: SchemaType = SchemaType.INDY
+  ): Promise<Response> {
+    const credentialsDefinitionDetails = await this.issueCredentialService.getAllCredentialTemplates(orgId, schemaType);
+    const credDefResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.credentialDefinition.success.template,
+      data: credentialsDefinitionDetails
+    };
+    return res.status(HttpStatus.CREATED).json(credDefResponse);
+  }
+
+  @Post('/orgs/:orgId/credentials/bulk/template')
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Header('Content-Disposition', 'attachment; filename="schema.csv"')
   @Header('Content-Type', 'application/csv')
   @ApiOperation({
@@ -182,14 +215,15 @@ export class IssuanceController {
     description: 'Download csv template for bulk-issuance'
   })
   async downloadBulkIssuanceCSVTemplate(
-    @Param('credentialDefinitionId') credentialDefinitionId: string,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+    @Body() templateDetails: TemplateDetails, 
     @Res() res: Response
   ): Promise<object> {
     try {
       const exportedData: FileExportResponse = await this.issueCredentialService.exportSchemaToCSV(
-        credentialDefinitionId
+        orgId, templateDetails
       );
+
       return res
         .header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`)
         .status(HttpStatus.OK)
@@ -231,15 +265,27 @@ export class IssuanceController {
     },
     required: true
   })
+  @ApiQuery({
+    name: 'schemaType',
+    enum: SchemaType,
+    required: true,
+    description: 'The type of schema to be used'
+  })
+  @ApiQuery({
+    name: 'templateId',
+    type: 'string',
+    required: false,
+    description: 'The ID of the template to be used'
+  })
   @UseInterceptors(FileInterceptor('file'))
   async importAndPreviewDataForIssuance(
-    @Query('credDefId') credentialDefinitionId: string,
+    @Param('orgId') orgId: string,
+    @Query('schemaType') schemaType: SchemaType = SchemaType.INDY,
+    @Query('templateId') templateId: string,
     @UploadedFile() file: Express.Multer.File,
     @Body() fileDetails: object,
-    @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<object> {
-
       if (file) {
         const fileKey: string = uuidv4();
         try {
@@ -247,14 +293,15 @@ export class IssuanceController {
         } catch (error) {
           throw new RpcException(error.response ? error.response : error);
         }
-
-        const reqPayload: RequestPayload = {
-          credDefId: credentialDefinitionId,
+        
+        const uploadedfileDetails: UploadedFileDetails = {
+          type: schemaType,
+          templateId,
           fileKey,
           fileName: fileDetails['fileName'] || file?.filename || file?.originalname
         };
 
-        const importCsvDetails = await this.issueCredentialService.importCsv(reqPayload);
+        const importCsvDetails = await this.issueCredentialService.importCsv(uploadedfileDetails);
         const finalResponse: IResponseType = {
           statusCode: HttpStatus.CREATED,
           message: ResponseMessages.issuance.success.importCSV,
@@ -372,7 +419,7 @@ export class IssuanceController {
   ): Promise<Response> {
 
     clientDetails.userId = user.id;
-    let reqPayload: RequestPayload;
+    let reqPayload;
 
     if (file && clientDetails?.isSelectiveIssuance) {
       const fileKey: string = uuidv4();

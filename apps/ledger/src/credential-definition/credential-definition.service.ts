@@ -14,7 +14,7 @@ import { credential_definition } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CreateCredDefAgentRedirection, CredDefSchema, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
-import { OrgAgentType, SortValue } from '@credebl/enum/enum';
+import { OrgAgentType, SchemaType, SortValue } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
@@ -313,7 +313,11 @@ export class CredentialDefinitionService extends BaseService {
         }
     }
 
-    async getAllCredDefAndSchemaForBulkOperation(orgId: string): Promise<CredDefSchema[]> {
+    async getAllCredentialTemplates(orgId: string, schemaType: string): Promise<CredDefSchema[]> {
+        const schemaTypeEnum = schemaType as SchemaType;
+        if (!Object.values(SchemaType).includes(schemaTypeEnum)) {
+            throw new NotFoundException(ResponseMessages.credentialDefinition.error.InvalidSchemaType);
+        }
         try {
             const payload = {
                 orgId,
@@ -321,6 +325,20 @@ export class CredentialDefinitionService extends BaseService {
                 credDefSortBy: 'id'
             };
 
+            if (schemaType == SchemaType.W3C_Schema) {
+                const schemaList =  await this.credentialDefinitionRepository.getAllSchemaByOrgIdAndType(orgId, schemaType);
+                
+                const schemaResponse = await Promise.all(schemaList.map(async (schemaDetails) => ({
+                    schemaCredDefName: `${schemaDetails.name}-${schemaDetails.version}`,
+                    schemaName: schemaDetails.name,
+                    schemaVersion: schemaDetails.version,
+                    schemaAttributes: schemaDetails.attributes,
+                    type: SchemaType.W3C_Schema,
+                    schemaIdentifier: schemaDetails.schemaLedgerId
+                })));
+                
+                return schemaResponse;
+            }
             const credDefSchemaList: CredDefSchema[] =
                 await this.credentialDefinitionRepository.getAllCredDefsByOrgIdForBulk(
                     payload
@@ -333,7 +351,15 @@ export class CredentialDefinitionService extends BaseService {
             this.logger.error(
                 `get Cred-Defs and schema List By OrgId for bulk operations: ${JSON.stringify(error)}`
             );
-            throw new RpcException(error.response);
+            if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+                throw new RpcException({
+                    message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+                    statusCode: error?.status?.code
+                });
+
+            } else {
+                throw new RpcException(error.response ? error.response : error);
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
+import { IClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
@@ -45,9 +45,10 @@ export class IssuanceController {
 
   @MessagePattern({ cmd: 'export-schema-to-csv-by-credDefId' })
   async exportSchemaToCSV(payload: {
-    credentialDefinitionId: string
+    orgId: string, templateDetails: TemplateDetailsInterface
   }): Promise<object> {
-    return this.issuanceService.exportSchemaToCSV(payload.credentialDefinitionId);
+    const {orgId, templateDetails} = payload;
+    return this.issuanceService.exportSchemaToCSV(orgId, templateDetails);
   }
 
   @MessagePattern({ cmd: 'import-and-preview-data-for-issuance' })

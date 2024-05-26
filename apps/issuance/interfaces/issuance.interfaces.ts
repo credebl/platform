@@ -1,5 +1,5 @@
 // eslint-disable-next-line camelcase
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
@@ -176,13 +176,20 @@ export interface SchemaDetails {
   tag: string;
   schemaLedgerId: string;
   attributes: string;
+  name?: string;
 }
 export interface ImportFileDetails {
-  credDefId: string;
+  templateId: string;
   fileKey: string;
   fileName: string;
+  type: SchemaType
 }
-
+export interface ICredentialPayload {
+schemaLedgerId: string,
+credentialDefinitionId: string,
+fileData: object,
+fileName: string
+}
 export interface PreviewRequest {
   pageNumber: number,
   pageSize: number,
@@ -263,4 +270,9 @@ export interface SendEmailCredentialOffer {
   url: string;
   orgId: string; 
   organizationDetails: organisation;
+}
+
+export interface TemplateDetailsInterface {
+  templateId?: string;
+  schemaType?: SchemaType;
 }

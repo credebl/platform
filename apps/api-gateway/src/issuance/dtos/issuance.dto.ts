@@ -6,7 +6,7 @@ import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
 
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType } from '@credebl/enum/enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { SortValue } from '../../enum';
 import { trim } from '@credebl/common/cast.helper';
@@ -515,4 +515,25 @@ export class ClientDetails {
 
     userId?: string;
     
+}
+
+export class TemplateDetails {
+
+  @ApiProperty({ required: false, example: '68y647ayAv79879' })
+  @IsOptional()
+  @IsString({ message: 'templateId should be string' })
+  templateId: string = '';
+
+  @ApiProperty({ enum: SchemaType, required: false })
+  @IsOptional()
+  @IsEnum(SchemaType, { message: 'Schema type should be a valid' })
+  schemaType: SchemaType;
+}
+
+export class FileUploadDetails extends TemplateDetails {
+  
+  @ApiProperty({ required: false, example: '68y647ayAv79879' })
+  @IsOptional()
+  @IsString({ message: 'fileName should be string' })
+  fileName: string;
 }

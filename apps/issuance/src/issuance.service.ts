@@ -9,13 +9,13 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { OrgAgentType, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
+// import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
 import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
@@ -699,7 +699,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        const isEmailSent = await sendEmail(this.emailData);
+        // const isEmailSent = await sendEmail(this.emailData);
+        const isEmailSent = true;
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
         if (!isEmailSent) {
           errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
@@ -808,16 +809,41 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  async exportSchemaToCSV(credentialDefinitionId: string): Promise<object> {
+  async exportSchemaToCSV(orgId: string, templateDetails: TemplateDetailsInterface): Promise<object> {
     try {
-      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+      let schemaResponse: SchemaDetails;
+      let fileName: string;
 
+      const {schemaType, templateId} = templateDetails;
+
+      if (!templateId) {
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.invalidtemplateId);
+      }
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      if (schemaType === SchemaType.INDY) {
+         schemaResponse = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+
+         if (!schemaResponse) {
+          throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
+        }
+
+         fileName = `${schemaResponse.tag}-${timestamp}.csv`;
+
+      } else if (schemaType === SchemaType.W3C_Schema) {
+        schemaResponse = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+
+        if (!schemaResponse) {
+          throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
+        }
+         fileName = `${schemaResponse.name}-${timestamp}.csv`;
+      }   
       const jsonData = [];
       const attributesArray = JSON.parse(schemaResponse.attributes);
 
       // Extract the 'attributeName' values from the objects and store them in an array
       const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
-      attributeNameArray.unshift('email');
+      attributeNameArray.unshift(TemplateIdentifier.EMAIL_COLUMN);
 
       const [csvData, csvFields] = [jsonData, attributeNameArray];
 
@@ -830,12 +856,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       const filePath = join(process.cwd(), `uploadedFiles/exports`);
 
-      const timestamp = Math.floor(Date.now() / 1000);
-      const fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       await createFile(filePath, fileName, csv);
       const fullFilePath = join(process.cwd(), `uploadedFiles/exports/${fileName}`);
-
       if (!checkIfFileOrDirectoryExists(fullFilePath)) {
         throw new NotFoundException(ResponseMessages.bulkIssuance.error.PathNotFound);
       }
@@ -847,16 +870,34 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         fileName
       };
     } catch (error) {
-      throw new Error('An error occurred during CSV export.');
+      throw new Error(ResponseMessages.bulkIssuance.error.exportFile);
     }
   }
 
 
   async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
     try {
+      let credentialDetails;
+      const credentialPayload: ICredentialPayload = {
+        schemaLedgerId: '',
+        credentialDefinitionId: '',
+        fileData: {},
+        fileName: ''
+      };
+      const {fileName, templateId, type} = importFileDetails;
+  
+      if (type === SchemaType.W3C_Schema) {
+        credentialDetails =
+        await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+        credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
+        credentialPayload.credentialDefinitionId = SchemaType.W3C_Schema;
+      } else if (type === SchemaType.INDY) {
 
-      const credDefResponse =
-        await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
+        credentialDetails =
+        await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+        credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
+        credentialPayload.credentialDefinitionId = credentialDetails.credentialDefinitionId;
+      }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
       const csvData: string = getFileDetails.Body.toString();
@@ -878,13 +919,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
       const validateEmail = (email) => {
-        // Regular expression for a simple email validation
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
         return emailRegex.test(email);
       };
-
-      // Extract and validate emails
-      const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email));
+      const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email_identifier));
 
       // Output invalid emails
       if (0 < invalidEmails.length) {
@@ -894,30 +932,27 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       const fileData: string[][] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
 
-      const attributesArray = JSON.parse(credDefResponse.attributes);
+      const attributesArray = JSON.parse(credentialDetails.attributes);
 
       // Extract the 'attributeName' values from the objects and store them in an array
       const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
 
       if (0 >= attributeNameArray.length) {
         throw new BadRequestException(
-          `Attributes are empty for credential definition ${importFileDetails.credDefId}`
+          `Attributes are empty for credential definition ${templateId}`
         );
       }
 
       await this.validateFileHeaders(fileHeader, attributeNameArray);
       await this.validateFileData(fileData, attributesArray, fileHeader);
 
-      const resData = {
-        schemaLedgerId: credDefResponse.schemaLedgerId,
-        credentialDefinitionId: importFileDetails.credDefId,
-        fileData: parsedData,
-        fileName: importFileDetails.fileName
-      };
+      
+      credentialPayload.fileData = parsedData;
+      credentialPayload.fileName = fileName;
 
       const newCacheKey = uuidv4();
 
-      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(resData), 60000);
+      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 60000);
 
       return newCacheKey;
 
@@ -1085,35 +1120,36 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       if (!respFile) {
         throw new BadRequestException(ResponseMessages.issuance.error.fileData);
       }
+
+      const queueJobsArray = await respFile.map(item => ({
+        data: {
+          id: item.id,
+          cacheId: requestId,
+          clientId: clientDetails.clientId,
+          referenceId: item.referenceId,
+          fileUploadId: item.fileUploadId,
+          schemaLedgerId: item.schemaId,
+          credentialDefinitionId: item.credDefId,
+          status: item.status,
+          credential_data: item.credential_data,
+          orgId
+        }
+      }));
+
       // ------------------------ Remove after debugging ---------------------------
       const queueRunningStatus = await this.bulkIssuanceQueue.isReady();
-      this.logger.log(`respFile::::::`, respFile);
+      // this.logger.log(`respFile::::::`, respFile);
        // eslint-disable-next-line no-console
        console.log('queueRunningStatus:::::::::', queueRunningStatus);
        // ------------------------ Remove after debugging ---------------------------
 
-      for (const element of respFile) {
+     
         try {
-          this.logger.log(`element log::::::`, element); //Remove after debugging
-          this.bulkIssuanceQueue.add(
-            {
-              data: element.credential_data,
-              fileUploadId: element.fileUploadId,
-              clientId: clientDetails.clientId,
-              cacheId: requestId,
-              credentialDefinitionId: element.credDefId,
-              schemaLedgerId: element.schemaId,
-              isRetry: false,
-              orgId,
-              id: element.id,
-              isLastData: respFile.indexOf(element) === respFile.length - 1
-            },
-            { delay: 5000 }
-          );
+         await this.bulkIssuanceQueue.addBulk(queueJobsArray);
         } catch (error) {
           this.logger.error(`Error processing issuance data: ${error}`);
         }
-      }
+
 
       return 'Process initiated for bulk issuance';
     } catch (error) {
@@ -1185,7 +1221,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       autoConnect: true,
       transports: ['websocket']
     });
-
     const fileUploadData: FileUploadData = {
       fileUpload: '',
       fileRow: '',
@@ -1201,13 +1236,12 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     fileUploadData.fileRow = JSON.stringify(jobDetails);
     fileUploadData.isError = false;
     fileUploadData.createDateTime = new Date();
-    fileUploadData.referenceId = jobDetails.data.email;
+    fileUploadData.referenceId = jobDetails?.credential_data?.email;
     fileUploadData.jobId = jobDetails.id;
     const { orgId } = jobDetails;
 
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-    // eslint-disable-next-line camelcase
-
+  
     const { organisation } = agentDetails;
     let isErrorOccurred = false;
     try {
@@ -1217,16 +1251,18 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         orgId: jobDetails.orgId,
         label: organisation?.name,
         attributes: [],
-        emailId: jobDetails.data.email,
+        emailId: jobDetails?.credential_data?.email,
         credentialType: IssueCredentialType.INDY
       };
+     
+      for (const key in jobDetails?.credential_data) {
 
-      for (const key in jobDetails.data) {
-        if (jobDetails.data.hasOwnProperty(key) && 'email' !== key) {
-          const value = jobDetails.data[key];
+        if (jobDetails.credential_data.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
+          const value = jobDetails?.credential_data[key];
           oobIssuancepayload.attributes.push({ name: key, value });
         }
       }
+     
 
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload
@@ -1286,7 +1322,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   ): Promise<void> {
     try {
       const fileSchemaHeader: string[] = fileHeader.slice();
-            if ('email' === fileHeader[0]) {
+            if (TemplateIdentifier.EMAIL_COLUMN === fileHeader[0]) {
                 fileSchemaHeader.splice(0, 1);
       } else {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emailColumn

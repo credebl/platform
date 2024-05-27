@@ -15,7 +15,7 @@ export interface IAttributes {
   isRequired?: boolean;
 }
 
-interface ICredentialsAttributes {
+export interface ICredentialsAttributes {
   connectionId: string;
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
 }

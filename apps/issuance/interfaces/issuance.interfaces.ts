@@ -265,13 +265,11 @@ export interface SendEmailCredentialOffer {
   organizationDetails: organisation;
 }
 
-interface ISchemaAttributeKeys {
-  type: string;
-  order: number;
-  title: string;
-}
 export interface ISchemaAttributes {
-  [key: string]: ISchemaAttributeKeys;
+  attributeName: string;
+  schemaDataType: string;
+  displayName: string;
+  isRequired: boolean;
 }
 
 export interface IIssuanceAttributes {

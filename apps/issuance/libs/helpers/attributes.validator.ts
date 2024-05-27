@@ -1,57 +1,48 @@
 import { BadRequestException } from '@nestjs/common';
-import {
-  IIssuanceAttributes,
-  ISchemaAttributes
-} from 'apps/issuance/interfaces/issuance.interfaces';
+import { IIssuanceAttributes, ISchemaAttributes } from 'apps/issuance/interfaces/issuance.interfaces';
 
 export function validateW3CSchemaAttributes(
   filteredIssuanceAttributes: IIssuanceAttributes,
-  schemaUrlAttributes: ISchemaAttributes
+  schemaUrlAttributes: ISchemaAttributes[]
 ): void {
   const mismatchedAttributes: string[] = [];
   const missingAttributes: string[] = [];
 
   for (const [key, value] of Object.entries(filteredIssuanceAttributes)) {
     const { type, title } = value || {};
+    const schemaAttribute = schemaUrlAttributes.find((attr) => attr.attributeName === key);
 
-    if (!title) {
-      mismatchedAttributes.push(`Validation failed: Attribute ${key} must have a title`);
-    } else {
-      const titleType = typeof title;
-      switch (type) {
-        case 'string':
-          if ('string' !== titleType) {
-            mismatchedAttributes.push(`Validation failed: Attribute ${key} must have a title of type string`);
-          }
-          break;
-        case 'number':
-          if ('number' !== titleType) {
-            mismatchedAttributes.push(`Validation failed: Attribute ${key} must have a title of type number`);
-          }
-          break;
-        case 'boolean':
-          if ('boolean' !== titleType) {
-            mismatchedAttributes.push(`Validation failed: Attribute ${key} must have a title of type boolean`);
-          }
-          break;
-        default:
-          mismatchedAttributes.push(`Validation failed: Attribute ${key} has an unsupported type ${type}`);
-      }
-    }
+    switch (true) {
+      case !type:
+        mismatchedAttributes.push(`Attribute ${key} must have a type`);
+        break;
 
-    const schemaAttribute = schemaUrlAttributes[key];
-    if (!schemaAttribute) {
-      mismatchedAttributes.push(`Attribute ${key} is not defined in the schema`);
-    } else if (schemaAttribute.type !== type) {
-      mismatchedAttributes.push(
-        `Attribute ${key} has type ${type || null} but expected type ${schemaAttribute.type}`
-      );
+      case !schemaAttribute:
+        mismatchedAttributes.push(`Attribute ${key} is not defined in the schema`);
+        break;
+
+      case schemaAttribute.schemaDataType !== type:
+        mismatchedAttributes.push(
+          `Attribute ${key} has type ${type || null} but expected type ${schemaAttribute.schemaDataType}`
+        );
+        break;
+
+      case schemaAttribute.isRequired && !title:
+        mismatchedAttributes.push(`Attribute ${key} must have a non-empty title`);
+        break;
+
+      case title !== undefined && null !== title && typeof title !== schemaAttribute.schemaDataType:
+        mismatchedAttributes.push(`Attribute ${key} must have a title of type ${schemaAttribute.schemaDataType}`);
+        break;
+
+      default:
+        break;
     }
   }
 
-  for (const key of Object.keys(schemaUrlAttributes)) {
-    if (!(key in filteredIssuanceAttributes)) {
-      missingAttributes.push(`Attribute ${key} is missing`);
+  for (const schemaAttribute of schemaUrlAttributes) {
+    if (schemaAttribute.isRequired && !(schemaAttribute.attributeName in filteredIssuanceAttributes)) {
+      missingAttributes.push(`Attribute ${schemaAttribute.attributeName} is missing`);
     }
   }
 
@@ -62,5 +53,4 @@ export function validateW3CSchemaAttributes(
   if (0 < mismatchedAttributes.length) {
     throw new BadRequestException(`Validation failed: ${mismatchedAttributes.join(', ')}`);
   }
-
 }

@@ -125,7 +125,6 @@ export class IssuanceService {
           };
 
           const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
-
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { id, ...filteredIssuanceAttributes } = payloadAttributes;
 
@@ -203,21 +202,19 @@ export class IssuanceService {
   }
 
 
-  async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes> {
+  async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes[]> {
     const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
-
     if (!schemaRequest) {
       throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
         cause: new Error(),
         description: ResponseMessages.errorMessages.notFound
       });
-    }
-    const schemaAttributeJson = schemaRequest.definitions.credentialSubject.properties;
+    } 
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id, ...filteredSchemaAttributes } = schemaAttributeJson;
+      const getSchemaDetails = await this.issuanceRepository.getSchemaDetails(schemaUrl);
+      const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
 
-    return filteredSchemaAttributes;
+      return schemaAttributes;
   }
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {

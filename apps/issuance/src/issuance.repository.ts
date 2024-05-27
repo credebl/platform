@@ -9,7 +9,8 @@ import {
   file_upload,
   org_agents,
   organisation,
-  platform_config
+  platform_config,
+  schema
 } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import {
@@ -265,6 +266,21 @@ export class IssuanceRepository {
       return credentialDefRes;
     } catch (error) {
       this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getSchemaDetails(schemaId: string): Promise<schema> {
+    try {
+      const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+        where: {
+          schemaLedgerId: schemaId
+        }
+      });
+
+      return schemaDetails;
+    } catch (error) {
+      this.logger.error(`Error in get schema details: ${error.message}`);
       throw new InternalServerErrorException(error.message);
     }
   }

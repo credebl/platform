@@ -265,7 +265,7 @@ export class IssuanceFields {
   @Transform(({ value }) => trim(value).toLocaleLowerCase())
   @IsNotEmpty({ message: 'Please provide valid protocol version' })
   @IsString({ message: 'protocol version should be string' })
-  protocolVersion?: ProtocolVersion;
+  protocolVersion?: ProtocolVersion = ProtocolVersion.v2;
 
 
   @ApiPropertyOptional({enum: AutoAccept})
@@ -275,7 +275,7 @@ export class IssuanceFields {
   @IsEnum(AutoAccept, {
       message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`
   })
-  autoAcceptCredential: AutoAccept;
+  autoAcceptCredential: AutoAccept = AutoAccept.ALWAYS;
 
   @ApiProperty({ enum: IssueCredentialType })
   @IsNotEmpty({ message: 'Please provide credential type ' })
@@ -283,7 +283,7 @@ export class IssuanceFields {
   @IsEnum(IssueCredentialType, {
     message: `Invalid auto accept credential. It should be one of: ${Object.values(IssueCredentialType).join(', ')}`
   })
-  credentialType:IssueCredentialType;
+  credentialType:IssueCredentialType = IssueCredentialType.ANONCREDS;
 
   orgId: string;
 }

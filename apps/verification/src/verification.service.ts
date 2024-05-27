@@ -185,7 +185,7 @@ export class VerificationService {
         proofRequestPayload: {
           comment,
           connectionId: requestProof.connectionId,
-          autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.Never,
+          autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.NEVER,
           goalCode: requestProof.goalCode || undefined,
           parentThreadId: requestProof.parentThreadId || undefined,
           willConfirm: requestProof.willConfirm || undefined,
@@ -336,7 +336,7 @@ export class VerificationService {
           invitationDid = firstElement?.invitationDid ?? undefined;
       }
       }
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.ALWAYS;
 
       const payload: IProofRequestPayload = {
           orgId: user.orgId,

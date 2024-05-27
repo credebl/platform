@@ -106,14 +106,14 @@ export enum NodeEnvironment {
 }
 
 export enum ProtocolVersion {
-    v1='v1',
-    v2='v2'
+    v1,
+    v2
 }
 
 export enum AutoAccept {
-    Always = "always",
-    ContentApproved = "contentApproved",
-    Never = "never"
+    ALWAYS = 'always',
+    CONTENTAPPROVED = 'contentApproved',
+    NEVER = 'never'
 }
 
 export enum SortMembers {

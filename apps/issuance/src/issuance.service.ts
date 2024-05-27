@@ -1138,7 +1138,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       // ------------------------ Remove after debugging ---------------------------
       const queueRunningStatus = await this.bulkIssuanceQueue.isReady();
-      // this.logger.log(`respFile::::::`, respFile);
+      this.logger.log(`respFile::::::`, respFile);
        // eslint-disable-next-line no-console
        console.log('queueRunningStatus:::::::::', queueRunningStatus);
        // ------------------------ Remove after debugging ---------------------------

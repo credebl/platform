@@ -252,7 +252,7 @@ export class IssuanceService {
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
       }
-      return credentialCreateOfferDetails;
+      return credentialCreateOfferDetails.response;
     } catch (error) {
       this.logger.error(`[storeIssuanceObjectReturnUrl] - error in create credentials : ${JSON.stringify(error)}`);
 

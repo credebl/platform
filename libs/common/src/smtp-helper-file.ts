@@ -7,7 +7,6 @@ dotenv.config();
 
 export const sendWithSMTP = async (emailDto: EmailDto): Promise<boolean> => {
   const { SMTP_HOST: host, SMTP_PORT: port, SMTP_USER: user, SMTP_PASS: pass } = process.env;
-  Logger.debug(`Inside sendWithSMTP Method :: Host: ${host}, Port: ${port}, User: ${user}`);
   const transporter = nodemailer.createTransport({
     host,
     port: parseInt(port, 10),
@@ -15,7 +14,7 @@ export const sendWithSMTP = async (emailDto: EmailDto): Promise<boolean> => {
   });
 
   try {
-    const info = await transporter
+    return await transporter
       .sendMail({
         from: emailDto.emailFrom,
         to: emailDto.emailTo,
@@ -27,7 +26,7 @@ export const sendWithSMTP = async (emailDto: EmailDto): Promise<boolean> => {
       .then(() => true)
       .catch(() => false);
   } catch (error) {
-    Logger.error('Error sending email with SMTP', error);
+    Logger.error('Error while sending email with SMTP', error);
     return false;
   }
 };

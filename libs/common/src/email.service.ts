@@ -16,6 +16,7 @@ export class EmailService {
       throw new Error('Email provider is not set in environment variables. Please provide Email Service Provider.');
     }
     try {
+      this.logger.debug(`Email Provider is ::::::::${provider}`);
       switch (provider) {
         case 'ses':
           result = await sendWithSES(emailDto);

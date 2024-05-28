@@ -7,7 +7,6 @@ dotenv.config();
 
 export const sendWithSendGrid = async (emailDto: EmailDto): Promise<boolean> => {
   try {
-    Logger.debug(`Inside sendWithSendGrid Method::Sending email via sendGrid`);
     sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
     return await sendgrid
       .send({

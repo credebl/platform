@@ -43,19 +43,19 @@ export class IssuanceController {
     return this.issuanceService.outOfBandCredentialOffer(outOfBandCredentialDto);
   }
 
-  @MessagePattern({ cmd: 'export-schema-to-csv-by-credDefId' })
+  @MessagePattern({ cmd: 'download-csv-template-for-bulk-operation' })
   async exportSchemaToCSV(payload: {
     orgId: string, templateDetails: TemplateDetailsInterface
   }): Promise<object> {
-    const {orgId, templateDetails} = payload;
-    return this.issuanceService.exportSchemaToCSV(orgId, templateDetails);
+    const {templateDetails} = payload;
+    return this.issuanceService.exportSchemaToCSV(templateDetails);
   }
 
-  @MessagePattern({ cmd: 'import-and-preview-data-for-issuance' })
-  async importCSV(payload: {
+  @MessagePattern({ cmd: 'upload-csv-template' })
+  async uploadCSVTemplate(payload: {
     importFileDetails: ImportFileDetails
   }): Promise<string> {
-    return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
+    return this.issuanceService.uploadCSVTemplate(payload.importFileDetails);
   }
 
   @MessagePattern({ cmd: 'preview-csv-details' })

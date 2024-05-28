@@ -16,3 +16,14 @@ export interface IIssuedCredential {
     lastPage: number;
     data: IIssuedCredentialResponse[];
   }
+  interface CredentialData {
+    email_identifier: string;
+    [key: string]: string;
+  }
+  export interface IJsonldCredential {
+    schemaName: string;
+    schemaLedgerId: string;
+    credentialData: CredentialData
+    orgDid: string;
+    orgId: string;
+  }

@@ -192,11 +192,11 @@ export class IssuanceController {
     @Res() res: Response,
     @Query('schemaType') schemaType: SchemaType = SchemaType.INDY
   ): Promise<Response> {
-    const credentialsDefinitionDetails = await this.issueCredentialService.getAllCredentialTemplates(orgId, schemaType);
+    const templateList = await this.issueCredentialService.getAllCredentialTemplates(orgId, schemaType);
     const credDefResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.credentialDefinition.success.template,
-      data: credentialsDefinitionDetails
+      data: templateList
     };
     return res.status(HttpStatus.CREATED).json(credDefResponse);
   }
@@ -220,14 +220,14 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<object> {
     try {
-      const exportedData: FileExportResponse = await this.issueCredentialService.exportSchemaToCSV(
+      const templateData: FileExportResponse = await this.issueCredentialService.downloadBulkIssuanceCSVTemplate(
         orgId, templateDetails
       );
 
       return res
-        .header('Content-Disposition', `attachment; filename="${exportedData.fileName}.csv"`)
+        .header('Content-Disposition', `attachment; filename="${templateData.fileName}.csv"`)
         .status(HttpStatus.OK)
-        .send(exportedData.fileContent);
+        .send(templateData.fileContent);
     } catch (error) { }
   }
 
@@ -278,8 +278,8 @@ export class IssuanceController {
     description: 'The ID of the template to be used'
   })
   @UseInterceptors(FileInterceptor('file'))
-  async importAndPreviewDataForIssuance(
-    @Param('orgId') orgId: string,
+  async uploadCSVTemplate(
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
     @Query('schemaType') schemaType: SchemaType = SchemaType.INDY,
     @Query('templateId') templateId: string,
     @UploadedFile() file: Express.Multer.File,
@@ -301,7 +301,7 @@ export class IssuanceController {
           fileName: fileDetails['fileName'] || file?.filename || file?.originalname
         };
 
-        const importCsvDetails = await this.issueCredentialService.importCsv(uploadedfileDetails);
+        const importCsvDetails = await this.issueCredentialService.uploadCSVTemplate(uploadedfileDetails);
         const finalResponse: IResponseType = {
           statusCode: HttpStatus.CREATED,
           message: ResponseMessages.issuance.success.importCSV,
@@ -420,7 +420,7 @@ export class IssuanceController {
 
     clientDetails.userId = user.id;
     let reqPayload;
-
+    // Need to update logic for University DEMO 
     if (file && clientDetails?.isSelectiveIssuance) {
       const fileKey: string = uuidv4();
       try {

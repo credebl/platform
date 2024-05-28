@@ -71,16 +71,16 @@ export class IssuanceService extends BaseService {
         return this.sendNatsMessage(this.issuanceProxy, 'get-all-credential-template-for-bulk-operation', payload);
       }
 
-    async exportSchemaToCSV(orgId: string, templateDetails: TemplateDetails
+    async downloadBulkIssuanceCSVTemplate(orgId: string, templateDetails: TemplateDetails
     ): Promise<FileExportResponse> {
         const payload = { orgId, templateDetails };
-        return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
+        return (await this.sendNats(this.issuanceProxy, 'download-csv-template-for-bulk-operation', payload)).response;
     }
 
-    async importCsv(importFileDetails: UploadedFileDetails
+    async uploadCSVTemplate(importFileDetails: UploadedFileDetails
     ): Promise<{ response: object }> {
         const payload = { importFileDetails };
-        return this.sendNats(this.issuanceProxy, 'import-and-preview-data-for-issuance', payload);
+        return this.sendNats(this.issuanceProxy, 'upload-csv-template', payload);
     }
 
     async previewCSVDetails(requestId: string,

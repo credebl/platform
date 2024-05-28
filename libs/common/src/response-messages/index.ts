@@ -302,7 +302,10 @@ export const ResponseMessages = {
             credentialNotPresent: 'credential is required',
             optionsNotPresent:'options are required',
             attributesAreRequired: 'attributes are required',
-            invalidCredentialType:'invalid credential type'
+            invalidCredentialType:'invalid credential type',
+            missingRequestId: 'Param requestId is missing from the request.',
+            cachedData: 'Cached data does not exist',
+            cachedfileData: 'Cached file data does not exist'
         }
     },
     verification: {
@@ -413,7 +416,10 @@ export const ResponseMessages = {
             emailColumn: '1st column of the file should always be email.',
             attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
             mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
-            fileDetailsNotFound: 'File details not found.'
+            fileDetailsNotFound: 'File details not found.',
+            emptyFile: 'File data is empty',
+            emptyheader: 'File header is empty',
+            invalidEmails: 'Invalid emails found in the chosen file'
         }
     },
     errorMessages: {

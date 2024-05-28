@@ -9,10 +9,12 @@ import {
   file_upload,
   org_agents,
   organisation,
-  platform_config
+  platform_config,
+  schema
 } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import {
+  FileUpload,
   FileUploadData,
   IssueCredentialWebhookPayload,
   OrgAgent,
@@ -256,7 +258,8 @@ export class IssuanceRepository {
         credentialDefinitionId: credentialDefinitionDetails.credentialDefinitionId,
         tag: credentialDefinitionDetails.tag,
         schemaLedgerId: schemaDetails.schemaLedgerId,
-        attributes: schemaDetails.attributes
+        attributes: schemaDetails.attributes,
+        schemaName: schemaDetails.name
       };
 
       return credentialDefRes;
@@ -266,8 +269,8 @@ export class IssuanceRepository {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getSchemaDetailsBySchemaIdentifier (schemaIdentifier: string): Promise <any> {
+ 
+  async getSchemaDetailsBySchemaIdentifier (schemaIdentifier: string): Promise <schema> {
 
     const schemaDetails = await this.prisma.schema.findFirstOrThrow({
       where: {
@@ -277,9 +280,9 @@ export class IssuanceRepository {
     return schemaDetails;
   }
 
-  async saveFileUploadDetails(fileUploadPayload, userId: string): Promise<file_upload> {
+  async saveFileUploadDetails(fileUploadPayload: FileUpload, userId: string): Promise<file_upload> {
     try {
-      const { name, status, upload_type, orgId } = fileUploadPayload;
+      const { name, status, upload_type, orgId, credentialType } = fileUploadPayload;
       return this.prisma.file_upload.create({
         data: {
           name: String(name),
@@ -287,7 +290,8 @@ export class IssuanceRepository {
           status,
           upload_type,
           createdBy: userId,
-          lastChangedBy: userId
+          lastChangedBy: userId,
+          credential_type: credentialType
         }
       });
     } catch (error) {
@@ -479,7 +483,7 @@ export class IssuanceRepository {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
   async saveFileDetails(fileData, userId: string) {
     try {
-      const { credential_data, schemaId, credDefId, status, isError, fileUploadId } = fileData;
+      const { credential_data, schemaId, credDefId, status, isError, fileUploadId, credentialType } = fileData;
       return this.prisma.file_data.create({
         data: {
           credential_data,
@@ -489,7 +493,8 @@ export class IssuanceRepository {
           fileUploadId,
           isError,
           createdBy: userId,
-          lastChangedBy: userId
+          lastChangedBy: userId,
+          credential_type: credentialType
         }
       });
     } catch (error) {

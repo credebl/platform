@@ -172,7 +172,7 @@ export interface OutOfBandCredentialOffer {
   outOfBandCredentialDto: OutOfBandCredentialOfferPayload;
 }
 export interface SchemaDetails {
-  credentialDefinitionId: string;
+  credentialDefinitionId?: string;
   tag: string;
   schemaLedgerId: string;
   attributes: string;
@@ -182,13 +182,15 @@ export interface ImportFileDetails {
   templateId: string;
   fileKey: string;
   fileName: string;
-  type: SchemaType
+  type: string
 }
 export interface ICredentialPayload {
 schemaLedgerId: string,
 credentialDefinitionId: string,
 fileData: object,
-fileName: string
+fileName: string,
+credentialType: string,
+schemaName?: string
 }
 export interface PreviewRequest {
   pageNumber: number,
@@ -199,12 +201,13 @@ export interface PreviewRequest {
 }
 
 export interface FileUpload {
-  name?: string;
-  upload_type?: string;
-  status?: string;
-  orgId?: string;
-  createDateTime?: Date;
-  lastChangedDateTime?: Date;
+  name?: string,
+  upload_type?: string,
+  status?: string,
+  orgId?: string,
+  createDateTime?: Date | null,
+  lastChangedDateTime?: Date | null,
+  credentialType?: string,
 }
 
 export interface FileUploadData {
@@ -275,4 +278,23 @@ export interface SendEmailCredentialOffer {
 export interface TemplateDetailsInterface {
   templateId?: string;
   schemaType?: SchemaType;
+}
+interface CredentialData {
+  email_identifier: string;
+  [key: string]: string;
+}
+
+export interface IJobDetails {
+  id: string;
+  schemaName: string;
+  cacheId?: string;
+  clientId?: string;
+  referenceId: string | null;
+  fileUploadId: string;
+  schemaLedgerId: string;
+  credentialDefinitionId?: string;
+  status?: boolean;
+  credential_data: CredentialData
+  orgId: string;
+  credentialType: string;
 }

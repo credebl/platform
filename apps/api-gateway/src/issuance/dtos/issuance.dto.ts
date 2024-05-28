@@ -518,21 +518,21 @@ export class ClientDetails {
 }
 
 export class TemplateDetails {
-
-  @ApiProperty({ required: false, example: '68y647ayAv79879' })
+  @ApiProperty({ required: true, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
   @IsOptional()
   @IsString({ message: 'templateId should be string' })
+  @IsNotEmpty({ message: 'Template Id is required' })
+  @Transform(({ value }) => trim(value))
   templateId: string = '';
 
-  @ApiProperty({ enum: SchemaType, required: false })
-  @IsOptional()
+  @ApiProperty({ enum: SchemaType, required: true })
   @IsEnum(SchemaType, { message: 'Schema type should be a valid' })
   schemaType: SchemaType;
 }
 
 export class FileUploadDetails extends TemplateDetails {
   
-  @ApiProperty({ required: false, example: '68y647ayAv79879' })
+  @ApiProperty({ required: false, example: 'CSV file' })
   @IsOptional()
   @IsString({ message: 'fileName should be string' })
   fileName: string;

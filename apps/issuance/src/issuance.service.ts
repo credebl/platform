@@ -15,7 +15,6 @@ import { OrgAgentType } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
 import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
@@ -33,6 +32,7 @@ import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gat
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { agent_invitations, organisation } from '@prisma/client';
+import { EmailService } from '@credebl/common/email.service';
 
 
 @Injectable()
@@ -47,7 +47,8 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly emailService : EmailService
   ) { }
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
@@ -699,7 +700,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        const isEmailSent = await sendEmail(this.emailData);
+        const isEmailSent = await this.emailService.sendEmail(this.emailData);
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
         if (!isEmailSent) {
           errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));

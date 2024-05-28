@@ -20,7 +20,6 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { PrismaService } from '@credebl/prisma-service';
 import { EcosystemInviteTemplate } from '../templates/EcosystemInviteTemplate';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { EcosystemConfigSettings, Invitation, OrgAgentType, schemaRequestType, SchemaType } from '@credebl/enum/enum';
 import {
@@ -75,6 +74,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { W3CSchemaPayload } from 'apps/ledger/src/schema/interfaces/schema-payload.interface';
+import { EmailService } from '@credebl/common/email.service';
 
 @Injectable()
 export class EcosystemService {
@@ -83,7 +83,8 @@ export class EcosystemService {
     private readonly ecosystemRepository: EcosystemRepository,
     private readonly logger: Logger,
     private readonly prisma: PrismaService,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly emailService : EmailService 
   ) {}
 
   /**
@@ -738,7 +739,7 @@ export class EcosystemService {
     );
 
     //Email is sent to user for the verification through emailData
-    const isEmailSent = await sendEmail(emailData);
+    const isEmailSent = await this.emailService.sendEmail(emailData);
 
     return isEmailSent;
   }

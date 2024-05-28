@@ -22,7 +22,6 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationInviteTemplate } from '../templates/organization-invitation.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
@@ -45,6 +44,7 @@ import {
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { EmailService } from '@credebl/common/email.service';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -58,7 +58,8 @@ export class OrganizationService {
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private readonly clientRegistrationService: ClientRegistrationService
+    private readonly clientRegistrationService: ClientRegistrationService,
+    private readonly emailService : EmailService
   ) {}
 
   /**
@@ -915,7 +916,7 @@ export class OrganizationService {
     );
 
     //Email is sent to user for the verification through emailData
-    const isEmailSent = await sendEmail(emailData);
+    const isEmailSent = await this.emailService.sendEmail(emailData);
 
     return isEmailSent;
   }

@@ -2,7 +2,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -197,6 +197,24 @@ export class AgentServiceRepository {
            
         } catch (error) {
             this.logger.error(`[setprimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    // eslint-disable-next-line camelcase
+    async updateLedgerId(orgId: string, ledgerId: string): Promise<org_agents> {
+        try {
+          return await this.prisma.org_agents.update({
+                 where: {
+                    orgId
+                 },
+                data: {
+                    ledgerId
+                }
+            });
+           
+        } catch (error) {
+            this.logger.error(`[updateLedgerId] - Update ledgerId: ${JSON.stringify(error)}`);
             throw error;
         }
     }
@@ -415,6 +433,23 @@ export class AgentServiceRepository {
 
     } catch (error) {
       this.logger.error(`[getAgentApiKey] - get api key: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getLedgerByNameSpace(indyNamespace: string): Promise<LedgerNameSpace> {
+    try {
+      if (indyNamespace) {
+        const ledgerDetails = await this.prisma.ledgers.findFirstOrThrow({
+          where: {
+            indyNamespace
+          }
+        });
+        return ledgerDetails;
+      }
+
+    } catch (error) {
+      this.logger.error(`[getLedgerByNameSpace] - get indy ledger: ${JSON.stringify(error)}`);
       throw error;
     }
   }

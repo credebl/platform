@@ -252,7 +252,7 @@ export class IssuanceService {
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
       }
-      return credentialCreateOfferDetails;
+      return credentialCreateOfferDetails.response;
     } catch (error) {
       this.logger.error(`[storeIssuanceObjectReturnUrl] - error in create credentials : ${JSON.stringify(error)}`);
 
@@ -1085,23 +1085,31 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       if (!respFile) {
         throw new BadRequestException(ResponseMessages.issuance.error.fileData);
       }
+      // ------------------------ Remove after debugging ---------------------------
+      const queueRunningStatus = await this.bulkIssuanceQueue.isReady();
+      this.logger.log(`respFile::::::`, respFile);
+       // eslint-disable-next-line no-console
+       console.log('queueRunningStatus:::::::::', queueRunningStatus);
+       // ------------------------ Remove after debugging ---------------------------
+
       for (const element of respFile) {
         try {
-          const payload = {
-            data: element.credential_data,
-            fileUploadId: element.fileUploadId,
-            clientId: clientDetails.clientId,
-            cacheId: requestId,
-            credentialDefinitionId: element.credDefId,
-            schemaLedgerId: element.schemaId,
-            isRetry: false,
-            orgId,
-            id: element.id,
-            isLastData: respFile.indexOf(element) === respFile.length - 1
-          };
-
-          await this.delay(500); // Wait for 0.5 secends
-          this.processIssuanceData(payload);
+          this.logger.log(`element log::::::`, element); //Remove after debugging
+          this.bulkIssuanceQueue.add(
+            {
+              data: element.credential_data,
+              fileUploadId: element.fileUploadId,
+              clientId: clientDetails.clientId,
+              cacheId: requestId,
+              credentialDefinitionId: element.credDefId,
+              schemaLedgerId: element.schemaId,
+              isRetry: false,
+              orgId,
+              id: element.id,
+              isLastData: respFile.indexOf(element) === respFile.length - 1
+            },
+            { delay: 5000 }
+          );
         } catch (error) {
           this.logger.error(`Error processing issuance data: ${error}`);
         }

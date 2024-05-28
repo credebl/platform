@@ -25,7 +25,7 @@ export const sendWithSES = async (emailDto: EmailDto): Promise<boolean> => {
     return await transporter
       .sendMail({
         from: emailDto.emailFrom,
-        to: 'deepak.nemade@ayanworks.com', //list  of receivers
+        to: emailDto.emailTo, //list  of receivers
         subject: emailDto.emailSubject,
         text: emailDto.emailText,
         html: emailDto.emailHtml,

@@ -228,7 +228,7 @@ export class AgentServiceService {
 
   async agentConfigure(agentConfigureDto: IAgentConfigure, user: IUserRequestInterface): Promise<IStoreAgent> {
     try {
-      const { agentEndpoint, apiKey, did, walletName, orgId, network } = agentConfigureDto;
+      const { agentEndpoint, apiKey, did, walletName, orgId } = agentConfigureDto;
       const { id: userId } = user;
       const orgExist = await this.agentServiceRepository.getAgentDetails(orgId);
       if (orgExist) {
@@ -270,7 +270,6 @@ export class AgentServiceService {
         return fulfilledValues.filter((value) => value !== null);
       });
 
-      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(network);
       const getOrganization = await this.agentServiceRepository.getOrgDetails(orgId);
 
       const storeAgentConfig = await this.agentServiceRepository.storeOrgAgentDetails({
@@ -282,7 +281,6 @@ export class AgentServiceService {
         orgId,
         agentEndPoint: agentEndpoint,
         orgAgentTypeId,
-        ledgerId: ledgerIdData.map((ledger) => ledger?.id),
         apiKey: encryptedToken,
         userId
       });
@@ -290,7 +288,6 @@ export class AgentServiceService {
       await this._createConnectionInvitation(orgId, user, getOrganization.name);
       return storeAgentConfig;
     } catch (error) {
-
       this.logger.error(`Error Agent configure ::: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
@@ -946,10 +943,12 @@ export class AgentServiceService {
       } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
         url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
       }
-      
+
       delete createDidPayload.isPrimaryDid;
-            
-      const didDetails = await this.commonService.httpPost(url, createDidPayload, { headers: { authorization: getApiKey } });
+
+      const didDetails = await this.commonService.httpPost(url, createDidPayload, {
+        headers: { authorization: getApiKey }
+      });
 
       if (!didDetails || Object.keys(didDetails).length === 0) {
         throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
@@ -975,6 +974,11 @@ export class AgentServiceService {
       }
       if (isPrimaryDid && storeDidDetails.did) {
         await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId);
+      }
+
+      if (isPrimaryDid) {
+        const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(createDidPayload.network);
+        await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
       }
 
       return storeDidDetails;
@@ -1208,7 +1212,9 @@ export class AgentServiceService {
           '#',
           `${payload.schemaId}`
         )}`;
-        schemaResponse = await this.commonService.httpGet(url, { headers: { authorization: getApiKey } }).then(async (schema) => schema);
+        schemaResponse = await this.commonService
+          .httpGet(url, { headers: { authorization: getApiKey } })
+          .then(async (schema) => schema);
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`
           .replace('@', `${payload.payload.schemaId}`)

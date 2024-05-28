@@ -251,7 +251,7 @@ export class IssuanceService {
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
       }
-      return credentialCreateOfferDetails;
+      return credentialCreateOfferDetails.response;
     } catch (error) {
       this.logger.error(`[storeIssuanceObjectReturnUrl] - error in create credentials : ${JSON.stringify(error)}`);
 
@@ -1121,7 +1121,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       const queueJobsArrayPromises = bulkpayload.map(async (item) => ({
           data: {
             id: item.id,
-            schemaName: 'Test schema',
             cacheId: requestId,
             clientId: clientDetails.clientId,
             referenceId: item.referenceId,

@@ -1565,7 +1565,16 @@ export class EcosystemService {
 
     } catch (error) {
       this.logger.error(`In submit transaction: ${JSON.stringify(error)}`);
-      this.handleException(error);
+      if (error?.error) {
+        throw new RpcException({
+          statusCode: error?.error?.statusCode,
+          message: error?.error?.message,
+          error: error?.error?.error
+        });
+  
+      } else {
+        this.handleException(error);
+      }
     }
   }
 

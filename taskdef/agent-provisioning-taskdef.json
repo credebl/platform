@@ -34,7 +34,7 @@
                 "options": {
                     "awslogs-create-group": "true",
                     "awslogs-group": "/ecs/DEV_AGENT-PROVISIONING_SERVICE_TASKDEFINITION",
-                    "awslogs-region": "me-central-1",
+                    "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },
                 "secretOptions": []

@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -141,13 +141,13 @@ export class IssuanceService {
       const results = await Promise.allSettled(issuancePromises);
 
       const processedResults = results.map((result) => {
-        if ('rejected' === result.status) {
+        if (PromiseResult.REJECTED === result.status) {
           return {
             statusCode: result?.reason?.status?.code || result?.reason?.status,
             message: result?.reason?.response?.message || result?.reason?.status?.message?.error?.message,
             error: result?.reason?.response?.error
           };
-        } else if ('fulfilled' === result.status) {
+        } else if (PromiseResult.FULFILLED === result.status) {
           return {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.issuance.success.create,
@@ -163,19 +163,15 @@ export class IssuanceService {
       let finalStatusCode: HttpStatus;
       let finalMessage: string;
 
-      switch (true) {
-        case allSuccessful:
-          finalStatusCode = HttpStatus.CREATED;
-          finalMessage = ResponseMessages.issuance.success.create;
-          break;
-        case allFailed:
-          finalStatusCode = HttpStatus.BAD_REQUEST;
-          finalMessage = ResponseMessages.issuance.error.unableToCreateOffer;
-          break;
-        default:
-          finalStatusCode = HttpStatus.PARTIAL_CONTENT;
-          finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
-          break;
+      if (allSuccessful) {
+        finalStatusCode = HttpStatus.CREATED;
+        finalMessage = ResponseMessages.issuance.success.create;
+      } else if (allFailed) {
+        finalStatusCode = HttpStatus.BAD_REQUEST;
+        finalMessage = ResponseMessages.issuance.error.unableToCreateOffer;
+      } else {
+        finalStatusCode = HttpStatus.PARTIAL_CONTENT;
+        finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
       }
 
       const finalResult = {

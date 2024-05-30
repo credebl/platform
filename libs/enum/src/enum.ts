@@ -130,3 +130,8 @@ export enum SchemaType {
     INDY = 'indy',
     W3C_Schema = 'w3c'
 }
+
+export enum PromiseResult {
+    REJECTED = 'rejected',
+    FULFILLED = 'fulfilled'
+}

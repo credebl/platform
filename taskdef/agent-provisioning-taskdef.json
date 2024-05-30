@@ -1,0 +1,78 @@
+{
+    "family": "DEV_AGENT-PROVISIONING_SERVICE_TASKDEFINITION",
+    "containerDefinitions": [
+        {
+            "name": "agent_provisioning",
+            "image": "%REPOSITORY_URI%:AGENT-PROVISIONING_v_%BUILD_NUMBER%",
+            "cpu": 256,
+            "memory": 512,
+            "portMappings": [],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [
+                {
+                    "value": "${S3_ARN}",
+                    "type": "s3"
+                }
+            ],
+            "mountPoints": [
+                {
+                    "sourceVolume": "agent-config",
+                    "containerPath": "/app/agent-provisioning/AFJ/agent-config",
+                    "readOnly": false
+                },
+                {
+                    "sourceVolume": "port-file",
+                    "containerPath": "/app/agent-provisioning/AFJ/port-file",
+                    "readOnly": false
+                }
+            ],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/DEV_AGENT-PROVISIONING_SERVICE_TASKDEFINITION",
+                    "awslogs-region": "me-central-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            }
+        }
+    ],
+    "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "volumes": [
+        {
+            "name": "agent-config",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "${EFS}",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "${AGENT_CONFIG_ACCESS_POINT}",
+                    "iam": "DISABLED"
+                }
+            }
+        },
+        {
+            "name": "port-file",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "${EFS}",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "${PORT_FILE_ACCESS_POINT}",
+                    "iam": "DISABLED"
+                }
+            }
+        }
+    ]
+}

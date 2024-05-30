@@ -125,6 +125,7 @@ export class IssuanceService {
           };
 
           const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { id, ...filteredIssuanceAttributes } = payloadAttributes;
 

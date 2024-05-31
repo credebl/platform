@@ -170,6 +170,7 @@ export class OrganizationService {
       if (orgAgentDetails.orgDid === did) {
         throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
       }
+
       //check user DID exist in the organization's did list
       const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
       const isDidMatch = organizationDidList.some(item => item.did === did);
@@ -189,17 +190,16 @@ export class OrganizationService {
         didDocument: didDetails.didDocument
       };
 
-      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
-
+      
       const getExistingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
-
-
+      
      if (!getExistingPrimaryDid) {
        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
      }
 
       const setPriviousDidFalse = await this.organizationRepository.setPreviousDidFlase(getExistingPrimaryDid.id);
       
+      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
 
       await Promise.all([setPrimaryDid, getExistingPrimaryDid, setPriviousDidFalse]);
 

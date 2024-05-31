@@ -1003,7 +1003,6 @@ export class AgentServiceService {
    */
   async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
     try {
-      const { isPrimaryDid } = createDidPayload;
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
       if (createDidPayload.method === DidMethod.POLYGON) {
         createDidPayload.endpoint = agentDetails.agentEndPoint;
@@ -1017,18 +1016,37 @@ export class AgentServiceService {
         url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
       }
 
-      delete createDidPayload.isPrimaryDid;
+      const { isPrimaryDid, ...payload } = createDidPayload;
 
-      const didDetails = await this.commonService.httpPost(url, createDidPayload, {
+      const getDidByOrg = await this.agentServiceRepository.getOrgDid(orgId);
+
+      
+      const didDetails = await this.commonService.httpPost(url, payload, {
         headers: { authorization: getApiKey }
       });
-
+      
       if (!didDetails || Object.keys(didDetails).length === 0) {
         throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.serverError
         });
       }
+      
+      
+      const didExist = getDidByOrg.some((orgDidExist) => orgDidExist.did === didDetails.did);
+      if (didExist) {
+        throw new ConflictException(ResponseMessages.agent.error.didAlreadyExist, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.serverError
+        });
+      }
+      
+      if (isPrimaryDid) {
+        getDidByOrg.map(async () => {
+          await this.agentServiceRepository.updateIsPrimaryDid(orgId, false);
+        });
+      }
+      
       const createdDidDetails = {
         orgId,
         did: didDetails.did,
@@ -1037,6 +1055,7 @@ export class AgentServiceService {
         orgAgentId: agentDetails.id,
         userId: user.id
       };
+
       const storeDidDetails = await this.agentServiceRepository.storeDidDetails(createdDidDetails);
 
       if (!storeDidDetails) {

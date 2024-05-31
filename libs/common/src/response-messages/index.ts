@@ -273,7 +273,8 @@ export const ResponseMessages = {
             importCSV: 'File imported successfully',
             previewCSV: 'File details fetched successfully',
             bulkIssuance: 'Issuance process started. It will take some time',
-            notFound: 'Schema records not found'
+            notFound: 'Schema records not found',
+            bulkProcess: 'Process initiated for bulk issuance'
         },
         error: {
             exists: 'Credentials is already exist',

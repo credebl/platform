@@ -681,8 +681,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
           return false;
         }
-        this.emailData.emailFrom = platformConfigData.emailFrom;
-        this.emailData.emailTo = iterator.emailId ?? emailId;
+        this.emailData.emailFrom = platformConfigData?.emailFrom;
+        this.emailData.emailTo = iterator?.emailId ?? emailId;
         this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
         this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, shortenUrl);
         this.emailData.emailAttachments = [
@@ -693,7 +693,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        this.logger.log(`this.emailData ::: ${JSON.stringify(this.emailData.emailTo)}`);
         const isEmailSent = await sendEmail(this.emailData);
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
         if (!isEmailSent) {
@@ -1131,23 +1130,13 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       
       // Await all promises to complete
       const queueJobsArray = await Promise.all(queueJobsArrayPromises);
-
-      // // ------------------------ Remove after debugging ---------------------------
-      // const queueRunningStatus = await this.bulkIssuanceQueue.isReady();
-      // // this.logger.log(`respFile::::::`, respFile);
-      //  // eslint-disable-next-line no-console
-      //  console.log('queueRunningStatus:::::::::', queueRunningStatus);
-      //  // ------------------------ Remove after debugging ---------------------------
-
-     
         try {
          await this.bulkIssuanceQueue.addBulk(queueJobsArray);
         } catch (error) {
           this.logger.error(`Error processing issuance data: ${error}`);
         }
 
-
-      return 'Process initiated for bulk issuance';
+      return ResponseMessages.issuance.success.bulkProcess;
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;
       this.logger.error(`error in issueBulkCredential : ${error}`);
@@ -1271,7 +1260,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails);
       }
     
-    
+
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload
       );

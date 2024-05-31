@@ -472,6 +472,7 @@ model file_upload {
   file_data           file_data[]
   organisation        organisation? @relation(fields: [orgId], references: [id])
   orgId               String?       @db.Uuid
+  credential_type     String?
 }
 
 model file_data {
@@ -491,6 +492,7 @@ model file_data {
   credDefId           String?
   status              Boolean     @default(false)
   credential_data     Json?
+  credential_type     String?
 }
 
 model notification {

@@ -198,38 +198,39 @@ export class IssuanceController {
       message: ResponseMessages.credentialDefinition.success.template,
       data: templateList
     };
-    return res.status(HttpStatus.CREATED).json(credDefResponse);
+    return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
   @Post('/orgs/:orgId/credentials/bulk/template')
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-  @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Header('Content-Disposition', 'attachment; filename="schema.csv"')
-  @Header('Content-Type', 'application/csv')
-  @ApiOperation({
-    summary: 'Download csv template for bulk-issuance',
-    description: 'Download csv template for bulk-issuance'
-  })
-  async downloadBulkIssuanceCSVTemplate(
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
-    @Body() templateDetails: TemplateDetails, 
-    @Res() res: Response
-  ): Promise<object> {
-    try {
-      const templateData: FileExportResponse = await this.issueCredentialService.downloadBulkIssuanceCSVTemplate(
-        orgId, templateDetails
-      );
-
-      return res
-        .header('Content-Disposition', `attachment; filename="${templateData.fileName}.csv"`)
-        .status(HttpStatus.OK)
-        .send(templateData.fileContent);
-    } catch (error) { }
+@ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiBearerAuth()
+@Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+@UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+@Header('Content-Disposition', 'attachment; filename="schema.csv"')
+@Header('Content-Type', 'application/csv')
+@ApiOperation({
+  summary: 'Download csv template for bulk-issuance',
+  description: 'Download csv template for bulk-issuance'
+})
+async downloadBulkIssuanceCSVTemplate(
+  @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+  @Body() templateDetails: TemplateDetails, 
+  @Res() res: Response
+): Promise<object> {
+  try {
+    const templateData: FileExportResponse = await this.issueCredentialService.downloadBulkIssuanceCSVTemplate(
+      orgId, templateDetails
+    );
+    return res
+      .header('Content-Disposition', `attachment; filename="${templateData.fileName}"`)
+      .status(HttpStatus.OK)
+      .send(templateData.fileContent);
+  } catch (error) { 
+    return res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json(error.error);
   }
+}
 
   @Post('/orgs/:orgId/bulk/upload')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
@@ -328,8 +329,8 @@ export class IssuanceController {
     type: ForbiddenErrorDto
   })
   @ApiOperation({
-    summary: 'file-preview',
-    description: 'file-preview'
+    summary: 'Preview uploded file details',
+    description: 'Preview uploded file details'
   })
   @ApiQuery({
     name: 'pageNumber',
@@ -461,8 +462,8 @@ export class IssuanceController {
     type: ForbiddenErrorDto
   })
   @ApiOperation({
-    summary: 'Get the file list for bulk operation',
-    description: 'Get all the file list for organization for bulk operation'
+    summary: 'Get all file list uploaded for bulk operation',
+    description: 'Get all file list uploaded for bulk operation'
   })
   async issuedFileDetails(
     @Param('orgId') orgId: string,
@@ -494,8 +495,8 @@ export class IssuanceController {
     type: ForbiddenErrorDto
   })
   @ApiOperation({
-    summary: 'Get the file data',
-    description: 'Get the file data by file id'
+    summary: 'Get uploaded file details by file id',
+    description: 'Get uploaded file details by file id'
   })
   async getFileDetailsByFileId(
     @Param('orgId') orgId: string,

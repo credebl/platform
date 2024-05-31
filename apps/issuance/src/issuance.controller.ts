@@ -44,11 +44,11 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'download-csv-template-for-bulk-operation' })
-  async exportSchemaToCSV(payload: {
+  async downloadBulkIssuanceCSVTemplate(payload: {
     orgId: string, templateDetails: TemplateDetailsInterface
   }): Promise<object> {
     const {templateDetails} = payload;
-    return this.issuanceService.exportSchemaToCSV(templateDetails);
+    return this.issuanceService.downloadBulkIssuanceCSVTemplate(templateDetails);
   }
 
   @MessagePattern({ cmd: 'upload-csv-template' })

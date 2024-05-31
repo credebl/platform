@@ -237,12 +237,12 @@ export class IssuanceRepository {
 
   async getCredentialDefinitionDetails(credentialDefinitionId: string): Promise<SchemaDetails> {
     try {
-      const credentialDefinitionDetails = await this.prisma.credential_definition.findFirstOrThrow({
+      const credentialDefinitionDetails = await this.prisma.credential_definition.findFirst({
         where: {
           credentialDefinitionId
         }
       });
-
+      
       if (!credentialDefinitionDetails) {
         throw new NotFoundException(`Credential definition not found for ID: ${credentialDefinitionId}`);
       }

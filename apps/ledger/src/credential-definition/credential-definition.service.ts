@@ -326,9 +326,9 @@ export class CredentialDefinitionService extends BaseService {
             };
 
             if (schemaType == SchemaType.W3C_Schema) {
-                const schemaList =  await this.credentialDefinitionRepository.getAllSchemaByOrgIdAndType(orgId, schemaType);
+                const schemaDetailList =  await this.credentialDefinitionRepository.getAllSchemaByOrgIdAndType(orgId, schemaType);
                 
-                const schemaResponse = await Promise.all(schemaList.map(async (schemaDetails) => ({
+                const schemaResponse = await Promise.all(schemaDetailList.map(async (schemaDetails) => ({
                     schemaCredDefName: `${schemaDetails.name}-${schemaDetails.version}`,
                     schemaName: schemaDetails.name,
                     schemaVersion: schemaDetails.version,

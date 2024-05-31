@@ -110,3 +110,9 @@ export interface JsonObject {
     schemaAttributes: string;
     credentialDefinition: string;
   }
+
+  export interface IReqPayload {
+    credDefId: string;
+    fileKey: string | null;
+    fileName: string;
+  }

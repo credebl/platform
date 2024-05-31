@@ -4,7 +4,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails, TemplateDetails } from './dtos/issuance.dto';
-import { FileExportResponse, IIssuedCredentialSearchParams, ITemplateFormat, IssueCredentialType, UploadedFileDetails } from './interfaces';
+import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITemplateFormat, IssueCredentialType, UploadedFileDetails } from './interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 
@@ -119,7 +119,7 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'issued-file-data', payload);
     }
 
-    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload): Promise<object> {
+    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: IReqPayload): Promise<object> {
         const payload = { requestId, orgId, clientDetails, reqPayload };
         return this.sendNatsMessage(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }

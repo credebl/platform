@@ -173,7 +173,7 @@ export interface OutOfBandCredentialOffer {
 }
 export interface SchemaDetails {
   credentialDefinitionId?: string;
-  tag: string;
+  tag?: string;
   schemaLedgerId: string;
   attributes: string;
   name?: string;

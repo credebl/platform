@@ -803,7 +803,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  async exportSchemaToCSV(templateDetails: TemplateDetailsInterface): Promise<object> {
+  async downloadBulkIssuanceCSVTemplate(templateDetails: TemplateDetailsInterface): Promise<object> {
     try {
       let schemaResponse: SchemaDetails;
       let fileName: string;
@@ -817,20 +817,15 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       
       if (schemaType === SchemaType.INDY) {
          schemaResponse = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
-
          if (!schemaResponse) {
           throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
         }
-
          fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       } else if (schemaType === SchemaType.W3C_Schema) {
         const schemDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
         const {attributes, schemaLedgerId, name} = schemDetails;
-        schemaResponse.attributes = attributes;
-        schemaResponse.schemaLedgerId = schemaLedgerId;
-        schemaResponse.name = name;
-
+        schemaResponse = { attributes, schemaLedgerId, name };
         if (!schemaResponse) {
           throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
         }
@@ -838,7 +833,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }   
       const jsonData = [];
       const attributesArray = JSON.parse(schemaResponse.attributes);
-
+      
       // Extract the 'attributeName' values from the objects and store them in an array
       const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
       attributeNameArray.unshift(TemplateIdentifier.EMAIL_COLUMN);

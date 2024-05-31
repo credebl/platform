@@ -9,6 +9,8 @@ import {
   registerDecorator
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
+import { TemplateIdentifier } from '@credebl/enum/enum';
+import { IJsonldCredential } from './interfaces/issuance.interface';
 
 interface ToNumberOptions {
   default?: number;
@@ -160,7 +162,57 @@ export class AgentSpinupValidator {
   public static validate(agentSpinupDto): void {
     this.validateWalletName(agentSpinupDto.walletName);
   }
+
 }
+
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+  return emailRegex.test(email);
+};
+
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential) => {
+  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
+  const credentialSubject = { 'id': 'did:key:kdfJmG7pi1MnrX4y4nkJe' };
+
+  for (const key in credentialData) {
+    if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
+      credentialSubject[key] = {
+        'type': typeof credentialData[key],
+        'title': credentialData[key]
+      };
+    }
+  }
+
+  return {
+    credentialOffer: [
+      {
+        'emailId': `${credentialData.email_identifier}`,
+        'credential': {
+          '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
+          'type': [
+            'VerifiableCredential',
+            `${schemaName}`
+          ],
+          'issuer': {
+            'id': `${orgDid}`
+          },
+          'issuanceDate': new Date().toISOString(),
+          credentialSubject
+        },
+        'options': {
+          'proofType': 'Ed25519Signature2018',
+          'proofPurpose': 'assertionMethod'
+        }
+      }
+    ],
+    'comment': 'string',
+    'protocolVersion': 'v2',
+    'credentialType': 'jsonld',
+    orgId
+  };
+};
 
 
 @ValidatorConstraint({ name: 'isHostPortOrDomain', async: false })

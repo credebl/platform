@@ -40,3 +40,11 @@ export interface IOrgAgentInterface {
   agentsTypeId: string;
   orgId: string;
 }
+
+export interface ISchemaResponse{
+  name: string;
+  version: string;
+  attributes: string;
+  schemaLedgerId: string;
+  orgId: string;
+}

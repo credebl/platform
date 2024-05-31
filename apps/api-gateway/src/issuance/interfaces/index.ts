@@ -1,3 +1,4 @@
+import { SchemaType } from '@credebl/enum/enum';
 import { JsonLdCredentialDetailCredentialStatus } from '../dtos/issuance.dto';
 import { JsonValue } from '../utils/helper';
 
@@ -65,10 +66,11 @@ export interface FileExportResponse {
     fileName: string
 }
 
-export interface RequestPayload {
-    credDefId: string;
+export interface UploadedFileDetails {
+    templateId: string;
     fileKey: string;
     fileName: string;
+    type: SchemaType
 }
 export interface IIssuedCredentialSearchParams {
     pageNumber: number;
@@ -98,4 +100,19 @@ export interface JsonObject {
     challenge?: string
     credentialStatus?: JsonLdCredentialDetailCredentialStatus
     proofType: string
+  }
+
+  export interface ITemplateFormat {
+    credentialDefinitionId: string;
+    schemaCredDefName: string;
+    schemaName: string;
+    schemaVersion: string;
+    schemaAttributes: string;
+    credentialDefinition: string;
+  }
+
+  export interface IReqPayload {
+    credDefId: string;
+    fileKey: string | null;
+    fileName: string;
   }

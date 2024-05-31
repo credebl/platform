@@ -9,10 +9,12 @@ import {
   file_upload,
   org_agents,
   organisation,
-  platform_config
+  platform_config,
+  schema
 } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import {
+  FileUpload,
   FileUploadData,
   IssueCredentialWebhookPayload,
   OrgAgent,
@@ -241,16 +243,13 @@ export class IssuanceRepository {
           credentialDefinitionId
         }
       });
-
+      
       if (!credentialDefinitionDetails) {
         throw new NotFoundException(`Credential definition not found for ID: ${credentialDefinitionId}`);
       }
 
-      const schemaDetails = await this.prisma.schema.findFirst({
-        where: {
-          schemaLedgerId: credentialDefinitionDetails.schemaLedgerId
-        }
-      });
+      const schemaDetails = await this.getSchemaDetailsBySchemaIdentifier(credentialDefinitionDetails.schemaLedgerId);
+       
 
       if (!schemaDetails) {
         throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
@@ -260,7 +259,8 @@ export class IssuanceRepository {
         credentialDefinitionId: credentialDefinitionDetails.credentialDefinitionId,
         tag: credentialDefinitionDetails.tag,
         schemaLedgerId: schemaDetails.schemaLedgerId,
-        attributes: schemaDetails.attributes
+        attributes: schemaDetails.attributes,
+        schemaName: schemaDetails.name
       };
 
       return credentialDefRes;
@@ -269,19 +269,29 @@ export class IssuanceRepository {
       throw new InternalServerErrorException(error.message);
     }
 
-    async countErrorsForFile(fileUploadId: string): Promise<number> {
-        try {
-            const errorCount = await this.prisma.file_data.count({
-                where: {
-                    fileUploadId,
-                    isError: true
-                }
-            });
-    
-            return errorCount;
-        } catch (error) {
-            this.logger.error(`[countErrorsForFile] - error: ${JSON.stringify(error)}`);
-            throw error;
+ 
+  async getSchemaDetailsBySchemaIdentifier (schemaIdentifier: string): Promise <schema> {
+
+    const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+      where: {
+        schemaLedgerId: schemaIdentifier
+      }
+    });
+    return schemaDetails;
+  }
+
+  async saveFileUploadDetails(fileUploadPayload: FileUpload, userId: string): Promise<file_upload> {
+    try {
+      const { name, status, upload_type, orgId, credentialType } = fileUploadPayload;
+      return this.prisma.file_upload.create({
+        data: {
+          name: String(name),
+          orgId: String(orgId),
+          status,
+          upload_type,
+          createdBy: userId,
+          lastChangedBy: userId,
+          credential_type: credentialType
         }
       });
     } catch (error) {
@@ -431,26 +441,21 @@ export class IssuanceRepository {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
-    async saveFileDetails(fileData, userId: string) {
-        try {
-            const { credential_data, schemaId, credDefId, status, isError, fileUploadId } = fileData;
-            return this.prisma.file_data.create({
-                data: {
-                    credential_data,
-                    schemaId,
-                    credDefId,
-                    status,
-                    fileUploadId,
-                    isError,
-                    createdBy: userId,
-                    lastChangedBy: userId
-                }
-            });
-
-        } catch (error) {
-            this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
-            throw error;
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
+  async saveFileDetails(fileData, userId: string) {
+    try {
+      const { credential_data, schemaId, credDefId, status, isError, fileUploadId, credentialType } = fileData;
+      return this.prisma.file_data.create({
+        data: {
+          credential_data,
+          schemaId,
+          credDefId,
+          status,
+          fileUploadId,
+          isError,
+          createdBy: userId,
+          lastChangedBy: userId,
+          credential_type: credentialType
         }
       });
     } catch (error) {

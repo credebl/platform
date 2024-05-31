@@ -40,8 +40,9 @@ export class CredentialDefinitionController {
         return this.credDefService.getCredentialDefinitionBySchemaId(payload);
     }
 
-    @MessagePattern({ cmd: 'get-all-schema-cred-defs-for-bulk-operation' })
-    async getAllCredDefAndSchemaForBulkOperation (payload: {orgId : string}): Promise<CredDefSchema[]> {
-        return this.credDefService.getAllCredDefAndSchemaForBulkOperation(payload.orgId);
+    @MessagePattern({ cmd: 'get-all-credential-template-for-bulk-operation' })
+    async getAllCredentialTemplates (payload: {orgId : string, schemaType: string }): Promise<CredDefSchema[]> {
+        const {orgId, schemaType} = payload;
+        return this.credDefService.getAllCredentialTemplates(orgId, schemaType);
     }
 }

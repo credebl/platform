@@ -33,7 +33,7 @@ export interface GetCredDefFromTenantPayload {
 }
 
 export interface CredDefSchema {
-    credentialDefinitionId: string;
+    credentialDefinitionId?: string;
     schemaCredDefName: string;
 }
 

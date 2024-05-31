@@ -351,15 +351,15 @@ export class CredentialDefinitionService extends BaseService {
             this.logger.error(
                 `get Cred-Defs and schema List By OrgId for bulk operations: ${JSON.stringify(error)}`
             );
-            if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+            if (error?.status?.message?.error) {
+                const reason = error?.status?.message?.error?.reason ?? error?.status?.message?.error;
                 throw new RpcException({
-                    message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+                    message: reason,
                     statusCode: error?.status?.code
                 });
-
             } else {
-                throw new RpcException(error.response ? error.response : error);
-            }
+                throw new RpcException(error.response ?? error);
+            }         
         }
     }
 

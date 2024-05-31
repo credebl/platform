@@ -45,6 +45,7 @@ import {
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { toNumber } from '@credebl/common/cast.helper';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -99,6 +100,12 @@ export class OrganizationService {
         createOrgDto.logo = '';
       }
 
+      const userOrgCount = await this.organizationRepository.countUserOrganizations(userId);
+
+    if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
+      throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+    }
+      
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
       // To return selective object data
@@ -515,6 +522,20 @@ export class OrganizationService {
       });
 
     return connectionInvitationData;
+  }
+
+  async countTotalOrgs(
+    userId: string
+    
+   ): Promise<number> {
+    try {
+      
+      const getOrgs = await this.organizationRepository.countUserOrganizations(userId);
+      return getOrgs;
+    } catch (error) {
+      this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
   
   /**
@@ -1052,6 +1073,13 @@ export class OrganizationService {
       const { orgId, status, invitationId, userId, keycloakUserId, email } = payload;
       const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
+      if ('accepted' === payload.status) {
+        const userOrgCount = await this.organizationRepository.countUserOrganizations(userId);
+
+        if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
+          throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+        }
+      }
       if (!invitation || (invitation && invitation.email !== email)) {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
       }

@@ -62,7 +62,8 @@ export const ResponseMessages = {
             resetPasswordLink: 'Unable to create reset password token',
             invalidResetLink: 'Invalid or expired reset password link',
             invalidAccessToken: 'Authentication failed',
-            invalidRefreshToken: 'Invalid refreshToken provided'
+            invalidRefreshToken: 'Invalid refreshToken provided',
+            maximumOrgsLimit:'Limit reached you can be associated with only 10 orgs'
         }
     },
     organisation: {
@@ -117,7 +118,8 @@ export const ResponseMessages = {
             orgDoesNotMatch: 'Organization does not match',
             invalidClient: 'Invalid client credentials',
             primaryDid: 'This DID is already set to primary DID',
-            didNotFound: 'DID does not exist in organiation'
+            didNotFound: 'DID does not exist in organiation',
+            MaximumOrgsLimit:'Limit reached: you can only create maximum 10 organizations'
         }
     },
 

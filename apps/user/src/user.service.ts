@@ -60,6 +60,7 @@ import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
+import { toNumber } from '@credebl/common/cast.helper';
 
 @Injectable()
 export class UserService {
@@ -823,11 +824,40 @@ export class UserService {
   async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(userId);
+     
+      if ('accepted' === acceptRejectInvitation.status) {
+        const payload = {userId};
+        const TotalOrgs = await this._getTotalOrgCount(payload);
+  
+        if (TotalOrgs >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
+        throw new BadRequestException(ResponseMessages.user.error.maximumOrgsLimit);
+         }
+      }
       return this.fetchInvitationsStatus(acceptRejectInvitation, userData.keycloakUserId, userData.email, userId);
     } catch (error) {
       this.logger.error(`acceptRejectInvitations: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  async  _getTotalOrgCount(payload): Promise<number> {
+    const pattern = { cmd: 'get-count-organizations' };
+
+    const w3cSchemaData = await this.userServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return w3cSchemaData;
   }
 
   async shareUserCertificate(shareUserCertificate: IShareUserCertificate): Promise<string> {

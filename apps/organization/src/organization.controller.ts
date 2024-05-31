@@ -82,6 +82,20 @@ export class OrganizationController {
     const { userId, pageNumber, pageSize, search, role } = payload;
     return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search, role);
   }
+  /**
+   * Description: get organization count
+   * @param
+   * @returns Get created organization details
+   */
+  @MessagePattern({ cmd: 'get-count-organizations' })
+  async countTotalOrgs(
+    @Body() payload: { userId: string}
+  ): Promise<number> {
+    
+    const { userId } = payload;
+    
+    return this.organizationService.countTotalOrgs(userId);
+  }
 
   /**
    * @returns Get public organization details

@@ -841,7 +841,7 @@ export class UserService {
   }
 
   async  _getTotalOrgCount(payload): Promise<number> {
-    const pattern = { cmd: 'get-count-organizations' };
+    const pattern = { cmd: 'get-organizations-count' };
 
     const w3cSchemaData = await this.userServiceProxy
       .send(pattern, payload)

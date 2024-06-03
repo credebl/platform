@@ -87,7 +87,7 @@ export class OrganizationController {
    * @param
    * @returns Get created organization details
    */
-  @MessagePattern({ cmd: 'get-count-organizations' })
+  @MessagePattern({ cmd: 'get-organizations-count' })
   async countTotalOrgs(
     @Body() payload: { userId: string}
   ): Promise<number> {

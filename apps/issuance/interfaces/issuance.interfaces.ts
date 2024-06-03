@@ -1,5 +1,5 @@
 // eslint-disable-next-line camelcase
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept, ProtocolVersion } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds';
 import { CredentialFormatPayload, JsonLdCredentialFormat } from '@credo-ts/core';
@@ -26,7 +26,7 @@ export interface IIssuance {
   credentialData: ICredentialsAttributes[];
   orgId: string;
   autoAcceptCredential?: AutoAccept,
-  protocolVersion?: string;
+  protocolVersion?: ProtocolVersion;
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
@@ -41,10 +41,10 @@ interface IIndy {
 }
 
 export interface IIssueData {
-  protocolVersion?: string;
+  protocolVersion?: ProtocolVersion;
   connectionId: string;
   credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
-  autoAcceptCredential: string,
+  autoAcceptCredential: AutoAccept,
   comment?: string;
 }
 
@@ -155,7 +155,7 @@ export interface OutOfBandCredentialOfferPayload {
   comment?: string;
   credentialOffer?: CredentialOffer[];
   emailId?: string;
-  protocolVersion?: string;
+  protocolVersion?: ProtocolVersion;
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
@@ -252,7 +252,7 @@ export interface SendEmailCredentialOffer {
   emailId?: string;
   index: number;
   credentialType: IssueCredentialType; 
-  protocolVersion: string;
+  protocolVersion: ProtocolVersion;
   attributes?: IAttributes[]; 
   credentialDefinitionId?: string; 
   outOfBandCredential: OutOfBandCredentialOfferPayload;

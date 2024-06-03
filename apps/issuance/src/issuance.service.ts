@@ -9,8 +9,8 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 // import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { CredentialFormatType, CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
-import { OrgAgentType, ProtocolVersion } from '@credebl/enum/enum';
+import { CredentialFormatType, CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialsAttributes, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
+import { AutoAccept, OrgAgentType, ProtocolVersion } from '@credebl/enum/enum';
 // import { platform_config } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -56,35 +56,36 @@ export class IssuanceService {
       const { orgId, comment, credentialData} = payload || {};
 
       if (IssueCredentialType.INDY === payload.credentialType || IssueCredentialType.ANONCREDS === payload.credentialType) {
-        for (const credential of credentialData) {
-          const credentialFormats = credential.credentialFormats[payload.credentialType];
-          const {credentialDefinitionId} = credentialFormats;
+        // for (const credential of credentialData) {
+        //   const credentialFormats = credential.credentialFormats[payload.credentialType];
+        //   const {credentialDefinitionId} = credentialFormats;
       
-          if (credentialDefinitionId) {
-            const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        //   if (credentialDefinitionId) {
+        //     const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
       
-            if (schemaResponse?.attributes) {
-              const schemaResponseError = [];
-              const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
+        //     if (schemaResponse?.attributes) {
+        //       const schemaResponseError = [];
+        //       const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
       
-              attributesArray.forEach((attribute) => {
-                if (attribute.attributeName && attribute.isRequired) {
-                  const foundAttribute = credentialFormats.attributes.find((attr) => attr.name === attribute.attributeName);
+        //       attributesArray.forEach((attribute) => {
+        //         if (attribute.attributeName && attribute.isRequired) {
+        //           const foundAttribute = credentialFormats.attributes.find((attr) => attr.name === attribute.attributeName);
 
-                  if (!foundAttribute) {
-                    schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
-                  } else if (!foundAttribute.value) {
-                    schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
-                  }
-                }
-              });
+        //           if (!foundAttribute) {
+        //             schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
+        //           } else if (!foundAttribute.value) {
+        //             schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
+        //           }
+        //         }
+        //       });
       
-              if (0 < schemaResponseError.length) {
-                throw new BadRequestException(schemaResponseError);
-              }
-            }
-          }
-        }
+        //       if (0 < schemaResponseError.length) {
+        //         throw new BadRequestException(schemaResponseError);
+        //       }
+        //     }
+        //   }
+        // }
+        this._validateRequiredAttributesCredentialData(credentialData, payload.credentialType);
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -107,16 +108,16 @@ export class IssuanceService {
         const issueData = {
           connectionId,
           credentialFormats,
-          autoAcceptCredential: payload.autoAcceptCredential || 'always',
+          autoAcceptCredential: payload.autoAcceptCredential || AutoAccept.ALWAYS,
           comment: comment || '',
-          protocolVersion: ''
+          protocolVersion: payload.protocolVersion || ProtocolVersion.v2
         };
 
-        if (payload.credentialType === IssueCredentialType.ANONCREDS || payload.credentialType === IssueCredentialType.JSONLD) {
-          issueData.protocolVersion = payload.protocolVersion || 'v2';
-        } else if (payload.credentialType === IssueCredentialType.INDY) {
-          issueData.protocolVersion = payload.protocolVersion || 'v1';
-        }
+        // if (payload.credentialType === IssueCredentialType.ANONCREDS || payload.credentialType === IssueCredentialType.JSONLD) {
+        //   issueData.protocolVersion = payload.protocolVersion || 'v2';
+        // } else if (payload.credentialType === IssueCredentialType.INDY) {
+        //   issueData.protocolVersion = payload.protocolVersion || 'v1';
+        // }
 
         await this.delay(500);
         return this._sendCredentialCreateOffer(issueData, url, orgId);
@@ -145,32 +146,33 @@ export class IssuanceService {
 
       const { orgId, comment, protocolVersion, credentialFormats, credentialType, isShortenUrl, reuseConnection, parentThreadId, willConfirm, goalCode, autoAcceptCredential } = payload;
 
-      if (IssueCredentialType.INDY === payload.credentialType || IssueCredentialType.ANONCREDS === payload.credentialType) {
-        const {credentialDefinitionId} = credentialFormats[credentialType];
+      if (IssueCredentialType.INDY === credentialType || IssueCredentialType.ANONCREDS === credentialType) {
+        // const {credentialDefinitionId} = credentialFormats[credentialType];
         
-        if (credentialDefinitionId) {
-          const schemaDetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
-          if (schemaDetailsResponse?.attributes) {
-            const schemaDetailsResponseError = [];
-            const attributesArray: IAttributes[] = JSON.parse(schemaDetailsResponse.attributes);
+        // if (credentialDefinitionId) {
+        //   const schemaDetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        //   if (schemaDetailsResponse?.attributes) {
+        //     const schemaDetailsResponseError = [];
+        //     const attributesArray: IAttributes[] = JSON.parse(schemaDetailsResponse.attributes);
       
-            attributesArray.forEach((attribute) => {
-              if (attribute.attributeName && attribute.isRequired) {
-                const foundAttribute = credentialFormats[credentialType].attributes.find((attr) => attr.name === attribute.attributeName);
+        //     attributesArray.forEach((attribute) => {
+        //       if (attribute.attributeName && attribute.isRequired) {
+        //         const foundAttribute = credentialFormats[credentialType].attributes.find((attr) => attr.name === attribute.attributeName);
 
-                if (!foundAttribute) {
-                  schemaDetailsResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
-                } else if (!foundAttribute.value) {
-                  schemaDetailsResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
-                }
-              }
-            });
+        //         if (!foundAttribute) {
+        //           schemaDetailsResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
+        //         } else if (!foundAttribute.value) {
+        //           schemaDetailsResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
+        //         }
+        //       }
+        //     });
       
-            if (0 < schemaDetailsResponseError.length) {
-              throw new BadRequestException(schemaDetailsResponseError);
-            }
-          }
-        }
+        //     if (0 < schemaDetailsResponseError.length) {
+        //       throw new BadRequestException(schemaDetailsResponseError);
+        //     }
+        //   }
+        // }
+        this._validateRequiredAttributesCredentialFormats(credentialFormats as CredentialFormatPayload<CredentialFormatType[], 'createOffer'>, credentialType);
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -195,9 +197,9 @@ export class IssuanceService {
 
 
       const issueData = {
-        protocolVersion,
+        protocolVersion: protocolVersion || ProtocolVersion.v2,
         credentialFormats,
-        autoAcceptCredential: autoAcceptCredential || 'always',
+        autoAcceptCredential: autoAcceptCredential || AutoAccept.ALWAYS,
         goalCode: goalCode || undefined,
         parentThreadId: parentThreadId || undefined,
         willConfirm: willConfirm || undefined,
@@ -208,11 +210,11 @@ export class IssuanceService {
       };
 
 
-      if (IssueCredentialType.INDY === credentialType) {
-        issueData.protocolVersion = protocolVersion || ProtocolVersion.v1;
-      } else if (IssueCredentialType.JSONLD === credentialType || IssueCredentialType.ANONCREDS === credentialType) {
-        issueData.protocolVersion = protocolVersion || ProtocolVersion.v2;
-      }
+      // if (IssueCredentialType.INDY === credentialType) {
+      //   issueData.protocolVersion = protocolVersion || ProtocolVersion.v1;
+      // } else if (IssueCredentialType.JSONLD === credentialType || IssueCredentialType.ANONCREDS === credentialType) {
+      //   issueData.protocolVersion = protocolVersion || ProtocolVersion.v2;
+      // }
 
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
       if (isShortenUrl) {
@@ -428,62 +430,67 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
 
     if (IssueCredentialType.INDY === credentialType || IssueCredentialType.ANONCREDS === credentialType) {
       if (outOfBandCredential.credentialFormats) {
-        const {credentialDefinitionId} = credentialFormats[credentialType];
+      //   const {credentialDefinitionId} = credentialFormats[credentialType];
       
-      if (credentialDefinitionId) {
-        const schemaDetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+      // if (credentialDefinitionId) {
+      //   const schemaDetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
     
-        if (schemaDetailsResponse?.attributes) {
-          const schemaDetailsResponseError = [];
-          const attributesArray: IAttributes[] = JSON.parse(schemaDetailsResponse.attributes);
+      //   if (schemaDetailsResponse?.attributes) {
+      //     const schemaDetailsResponseError = [];
+      //     const attributesArray: IAttributes[] = JSON.parse(schemaDetailsResponse.attributes);
     
-          attributesArray.forEach((attribute) => {
-            if (attribute.attributeName && attribute.isRequired) {
-              credentialFormats[credentialType].attributes.forEach((attr) => {
-                if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                  schemaDetailsResponseError.push(
-                    `Attribute '${attribute.attributeName}' is required but has an empty value.`
-                  );
-                }
-              });
-            }
-          });
+      //     attributesArray.forEach((attribute) => {
+      //       if (attribute.attributeName && attribute.isRequired) {
+      //         credentialFormats[credentialType].attributes.forEach((attr) => {
+      //           if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+      //             schemaDetailsResponseError.push(
+      //               `Attribute '${attribute.attributeName}' is required but has an empty value.`
+      //             );
+      //           }
+      //         });
+      //       }
+      //     });
     
-          if (0 < schemaDetailsResponseError.length) {
-            throw new BadRequestException(schemaDetailsResponseError);
-          }
-        }
-      }
+      //     if (0 < schemaDetailsResponseError.length) {
+      //       throw new BadRequestException(schemaDetailsResponseError);
+      //     }
+      //   }
+      // }
+      this._validateRequiredAttributesCredentialFormats(credentialFormats, credentialType);
       } else if (credentialOffer) {
-        for (const credential of credentialOffer) {
-          const credentialFormats = credential.credentialFormats[credentialType];
-          const {credentialDefinitionId} = credentialFormats;
+        // for (const credential of credentialOffer) {
+        //   const credentialFormats = credential.credentialFormats[credentialType];
+        //   const {credentialDefinitionId} = credentialFormats;
       
-          if (credentialDefinitionId) {
-            const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        //   if (credentialDefinitionId) {
+        //     const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
       
-            if (schemaResponse?.attributes) {
-              const schemaResponseError = [];
-              const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
+        //     if (schemaResponse?.attributes) {
+        //       const schemaResponseError = [];
+        //       const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
       
-              attributesArray.forEach((attribute) => {
-                if (attribute.attributeName && attribute.isRequired) {
-                  const foundAttribute = credentialFormats.attributes.find((attr) => attr.name === attribute.attributeName);
+        //       attributesArray.forEach((attribute) => {
+        //         if (attribute.attributeName && attribute.isRequired) {
+        //           const foundAttribute = credentialFormats.attributes.find((attr) => attr.name === attribute.attributeName);
 
-                  if (!foundAttribute) {
-                    schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
-                  } else if (!foundAttribute.value) {
-                    schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
-                  }
-                }
-              });
+        //           if (!foundAttribute) {
+        //             schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
+        //           } else if (!foundAttribute.value) {
+        //             schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
+        //           }
+        //         }
+        //       });
       
-              if (0 < schemaResponseError.length) {
-                throw new BadRequestException(schemaResponseError);
-              }
-            }
-          }
-        }
+        //       if (0 < schemaResponseError.length) {
+        //         throw new BadRequestException(schemaResponseError);
+        //       }
+        //     }
+        //   }
+        // }
+        
+        
+        // Note: Validation in case of CredentialOffer
+        this._validateRequiredAttributesCredentialData(credentialOffer, credentialType);
       }
     }
 
@@ -518,7 +525,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
       index: number;
       credentialType: IssueCredentialType;
-      protocolVersion: string;
+      protocolVersion: ProtocolVersion;
       outOfBandCredential: OutOfBandCredentialOfferPayload;
       comment: string;
       organisation: organisation;
@@ -528,7 +535,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       organizationDetails: organisation;
     } = {
       credentialType,
-      protocolVersion,
+      protocolVersion: protocolVersion || ProtocolVersion.v2,
       credentialFormats,
       outOfBandCredential,
       comment,
@@ -592,7 +599,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     iterator,
     emailId,
     index,
-    credentialType,
+    // credentialType,
     protocolVersion,
     credentialFormats,
     outOfBandCredential,
@@ -607,9 +614,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   const iterationNo = index + 1;
   try {
     const outOfBandIssuancePayload = {
-      protocolVersion: '',
+      protocolVersion: protocolVersion || ProtocolVersion.v2,
       credentialFormats: credentialFormats ? credentialFormats : iterator?.credentialFormats,
-      autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+      autoAcceptCredential: outOfBandCredential.autoAcceptCredential || AutoAccept.ALWAYS,
       comment,
       goalCode: outOfBandCredential.goalCode || undefined,
       parentThreadId: outOfBandCredential.parentThreadId || undefined,
@@ -617,11 +624,11 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       label: organisation?.name,
       imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
     };
-    if (IssueCredentialType.INDY === credentialType) {
-      outOfBandIssuancePayload.protocolVersion = protocolVersion || 'v1';
-    } else if (IssueCredentialType.ANONCREDS === credentialType || IssueCredentialType.JSONLD === credentialType) {
-      outOfBandIssuancePayload.protocolVersion = protocolVersion || 'v2';
-    }
+    // if (IssueCredentialType.INDY === credentialType) {
+    //   outOfBandIssuancePayload.protocolVersion = protocolVersion || 'v1';
+    // } else if (IssueCredentialType.ANONCREDS === credentialType || IssueCredentialType.JSONLD === credentialType) {
+    //   outOfBandIssuancePayload.protocolVersion = protocolVersion || 'v2';
+    // }
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
 
     if (!credentialCreateOfferDetails) {
@@ -1170,7 +1177,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       // Depricating Indy credential and sending anoncreds in bulk issuance
       const oobIssuancepayload = {
         credentialFormats : {
-          'anoncreds': {
+          [IssueCredentialType.ANONCREDS]: {
             'attributes': [],
             'credentialDefinitionId': jobDetails.credentialDefinitionId
           }
@@ -1318,6 +1325,73 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         status: error.status,
         error: error.message
       }, error.status);
+    }
+  }
+
+  async _validateRequiredAttributesCredentialData(credentialData: ICredentialsAttributes[] | CredentialOffer[], credentialType: IssueCredentialType.ANONCREDS | IssueCredentialType.INDY): Promise<void> {
+    try {
+      for (const credential of credentialData) {
+        const credentialFormats = credential.credentialFormats[credentialType];
+        const {credentialDefinitionId} = credentialFormats;
+    
+        if (credentialDefinitionId) {
+          const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+    
+          if (schemaResponse?.attributes) {
+            const schemaResponseError = [];
+            const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
+    
+            attributesArray.forEach((attribute) => {
+              if (attribute.attributeName && attribute.isRequired) {
+                const foundAttribute = credentialFormats.attributes.find((attr) => attr.name === attribute.attributeName);
+
+                if (!foundAttribute) {
+                  schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
+                } else if (!foundAttribute.value) {
+                  schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
+                }
+              }
+            });
+    
+            if (0 < schemaResponseError.length) {
+              throw new BadRequestException(schemaResponseError);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async _validateRequiredAttributesCredentialFormats(credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>, credentialType: IssueCredentialType.ANONCREDS | IssueCredentialType.INDY): Promise<void> {
+    try {
+      const {credentialDefinitionId} = credentialFormats[credentialType];
+        
+      if (credentialDefinitionId) {
+        const schemaDetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        if (schemaDetailsResponse?.attributes) {
+          const schemaDetailsResponseError = [];
+          const attributesArray: IAttributes[] = JSON.parse(schemaDetailsResponse.attributes);
+    
+          attributesArray.forEach((attribute) => {
+            if (attribute.attributeName && attribute.isRequired) {
+              const foundAttribute = credentialFormats[credentialType].attributes.find((attr) => attr.name === attribute.attributeName);
+              if (!foundAttribute) {
+                schemaDetailsResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
+              } else if (!foundAttribute.value) {
+                schemaDetailsResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
+              }
+            }
+          });
+    
+          if (0 < schemaDetailsResponseError.length) {
+            throw new BadRequestException(schemaDetailsResponseError);
+          }
+        }
+      }
+    } catch (error) {
+      throw error;
     }
   }
 

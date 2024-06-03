@@ -75,7 +75,7 @@ export class OrganizationService {
     keycloakUserId: string
   ): Promise<organisation> {
     try {
-      const userOrgCount = await this.organizationRepository.countUserOrganizations(userId); 
+      const userOrgCount = await this.organizationRepository.userOrganizationCount(userId); 
   
       if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
        throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
@@ -531,7 +531,7 @@ export class OrganizationService {
    ): Promise<number> {
     try {
       
-      const getOrgs = await this.organizationRepository.countUserOrganizations(userId);
+      const getOrgs = await this.organizationRepository.userOrganizationCount(userId);
       return getOrgs;
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
@@ -1075,7 +1075,7 @@ export class OrganizationService {
       const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
       if (Invitation.ACCEPTED === payload.status) {
-        const userOrgCount = await this.organizationRepository.countUserOrganizations(userId);
+        const userOrgCount = await this.organizationRepository.userOrganizationCount(userId);
 
         if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
           throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);

@@ -1,8 +1,8 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace } from '../interface/agent-service.interface';
+import { Prisma, ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace, OrgDid } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -184,14 +184,14 @@ export class AgentServiceRepository {
      * @returns did details
      */
     // eslint-disable-next-line camelcase
-    async setPrimaryDid(isPrimaryDid:string, orgId:string): Promise<org_agents> {
+    async setPrimaryDid(orgDid: string, orgId: string): Promise<org_agents> {
         try {
           return await this.prisma.org_agents.update({
                  where: {
                     orgId
                  },
                 data: {
-                    orgDid: isPrimaryDid
+                    orgDid
                 }
             });
            
@@ -449,6 +449,37 @@ export class AgentServiceRepository {
 
     } catch (error) {
       this.logger.error(`[getLedgerByNameSpace] - get indy ledger: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOrgDid(orgId: string): Promise<OrgDid[]> {
+    try {
+      const orgDids = await this.prisma.org_dids.findMany({
+        where: {
+          orgId
+        }
+      });
+      return orgDids;
+    } catch (error) {
+      this.logger.error(`[getOrgDid] - get org DID: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateIsPrimaryDid(orgId: string, isPrimaryDid: boolean): Promise<Prisma.BatchPayload> {
+    try {
+      const updateOrgDid = await this.prisma.org_dids.updateMany({
+        where: {
+          orgId
+        },
+        data: {
+          isPrimaryDid
+        }
+      });
+      return updateOrgDid;
+    } catch (error) {
+      this.logger.error(`[getOrgDid] - get org DID: ${JSON.stringify(error)}`);
       throw error;
     }
   }

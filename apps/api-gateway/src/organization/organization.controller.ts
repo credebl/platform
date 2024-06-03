@@ -308,7 +308,7 @@ export class OrganizationController {
   */
 
    @Get('/:orgId/dids')
-   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.MEMBER)
    @ApiBearerAuth()
    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })

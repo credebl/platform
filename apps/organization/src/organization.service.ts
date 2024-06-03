@@ -45,6 +45,7 @@ import {
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { toNumber } from '@credebl/common/cast.helper';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -74,6 +75,12 @@ export class OrganizationService {
     keycloakUserId: string
   ): Promise<organisation> {
     try {
+      const userOrgCount = await this.organizationRepository.userOrganizationCount(userId); 
+  
+      if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
+       throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+      }
+
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
 
       if (organizationExist) {
@@ -99,6 +106,7 @@ export class OrganizationService {
         createOrgDto.logo = '';
       }
 
+      
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
       // To return selective object data
@@ -515,6 +523,20 @@ export class OrganizationService {
       });
 
     return connectionInvitationData;
+  }
+
+  async countTotalOrgs(
+    userId: string
+    
+   ): Promise<number> {
+    try {
+      
+      const getOrgs = await this.organizationRepository.userOrganizationCount(userId);
+      return getOrgs;
+    } catch (error) {
+      this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
   
   /**
@@ -1052,6 +1074,13 @@ export class OrganizationService {
       const { orgId, status, invitationId, userId, keycloakUserId, email } = payload;
       const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
+      if (Invitation.ACCEPTED === payload.status) {
+        const userOrgCount = await this.organizationRepository.userOrganizationCount(userId);
+
+        if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
+          throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+        }
+      }
       if (!invitation || (invitation && invitation.email !== email)) {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
       }

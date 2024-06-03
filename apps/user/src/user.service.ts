@@ -843,7 +843,7 @@ export class UserService {
   async  _getTotalOrgCount(payload): Promise<number> {
     const pattern = { cmd: 'get-organizations-count' };
 
-    const w3cSchemaData = await this.userServiceProxy
+    const getOrganizationCount = await this.userServiceProxy
       .send(pattern, payload)
       .toPromise()
       .catch((error) => {
@@ -857,7 +857,7 @@ export class UserService {
         );
       });
 
-    return w3cSchemaData;
+    return getOrganizationCount;
   }
 
   async shareUserCertificate(shareUserCertificate: IShareUserCertificate): Promise<string> {

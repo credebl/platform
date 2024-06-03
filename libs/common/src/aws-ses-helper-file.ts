@@ -8,21 +8,25 @@ dotenv.config();
 
 export const sendWithSES = async (emailDto: EmailDto): Promise<boolean> => {
   const awsSES = new AWS.SES({
-    apiVersion: '2010-12-01',
+    apiVersion: process.env.AWS_SES_VERSION,
     region: process.env.AWS_SES_REGION,
     credentials: {
       accessKeyId: process.env.AWS_SES_ACCESS_KEY,
       secretAccessKey: process.env.AWS_SES_SECRET_KEY
-    }
+    },
+    endpoint: `https://email.${process.env.AWS_SES_REGION}.amazonaws.com`
   });
+
   const transporter = nodemailer.createTransport({
-    SES: awsSES
+    SES: awsSES,
+    secure: true
   });
+
   try {
     return await transporter
       .sendMail({
         from: emailDto.emailFrom,
-        to: emailDto.emailTo, //list  of receivers
+        to: emailDto.emailTo,
         subject: emailDto.emailSubject,
         text: emailDto.emailText,
         html: emailDto.emailHtml,

@@ -635,7 +635,9 @@ export class OrganizationRepository {
   async countUserOrganizations(userId: string): Promise<number> {
     const getOrgCount = await this.prisma.organisation.count({
       where: {
-        createdBy: userId
+        userOrgRoles: {
+          some: { userId }
+        }
       }
     });
     return getOrgCount;

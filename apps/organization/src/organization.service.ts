@@ -75,6 +75,12 @@ export class OrganizationService {
     keycloakUserId: string
   ): Promise<organisation> {
     try {
+      const userOrgCount = await this.organizationRepository.countUserOrganizations(userId); 
+  
+      if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
+       throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+      }
+
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
 
       if (organizationExist) {
@@ -100,11 +106,6 @@ export class OrganizationService {
         createOrgDto.logo = '';
       }
 
-      const userOrgCount = await this.organizationRepository.countUserOrganizations(userId);
-
-    if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
-      throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
-    }
       
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 

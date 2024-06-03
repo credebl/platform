@@ -62,7 +62,8 @@ export const ResponseMessages = {
             resetPasswordLink: 'Unable to create reset password token',
             invalidResetLink: 'Invalid or expired reset password link',
             invalidAccessToken: 'Authentication failed',
-            invalidRefreshToken: 'Invalid refreshToken provided'
+            invalidRefreshToken: 'Invalid refreshToken provided',
+            userOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.'
         }
     },
     organisation: {
@@ -117,7 +118,8 @@ export const ResponseMessages = {
             orgDoesNotMatch: 'Organization does not match',
             invalidClient: 'Invalid client credentials',
             primaryDid: 'This DID is already set to primary DID',
-            didNotFound: 'DID does not exist in organiation'
+            didNotFound: 'DID does not exist in organiation',
+            MaximumOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.'
         }
     },
 
@@ -240,6 +242,7 @@ export const ResponseMessages = {
             invalidTenantIdIdFormat:'Invalid tenantId format',
             requiredTenantId:'Tenant Id is required',
             createDid:'Error while creating DID',
+            didAlreadyExist:'DID already exist',
             storeDid: 'Error while storing DID',
             agentSpinupError: 'Agent endpoint unreachable',
             agentEndpointRequired: 'Agent endpoint is required',

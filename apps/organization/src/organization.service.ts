@@ -1073,7 +1073,7 @@ export class OrganizationService {
       const { orgId, status, invitationId, userId, keycloakUserId, email } = payload;
       const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
-      if ('accepted' === payload.status) {
+      if (Invitation.ACCEPTED === payload.status) {
         const userOrgCount = await this.organizationRepository.countUserOrganizations(userId);
 
         if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {

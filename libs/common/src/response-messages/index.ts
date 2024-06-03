@@ -63,7 +63,7 @@ export const ResponseMessages = {
             invalidResetLink: 'Invalid or expired reset password link',
             invalidAccessToken: 'Authentication failed',
             invalidRefreshToken: 'Invalid refreshToken provided',
-            maximumOrgsLimit:'Limit reached you can be associated with only 10 orgs'
+            userOrgsLimit:'Limit reached you can be associated with only 10 organizations'
         }
     },
     organisation: {

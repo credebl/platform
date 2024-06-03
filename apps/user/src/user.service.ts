@@ -47,7 +47,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { EcosystemConfigSettings, UserCertificateId } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, Invitation, UserCertificateId } from '@credebl/enum/enum';
 import { WinnerTemplate } from '../templates/winner-template';
 import { ParticipantTemplate } from '../templates/participant-template';
 import { ArbiterTemplate } from '../templates/arbiter-template';
@@ -825,12 +825,12 @@ export class UserService {
     try {
       const userData = await this.userRepository.getUserById(userId);
      
-      if ('accepted' === acceptRejectInvitation.status) {
+      if (Invitation.ACCEPTED === acceptRejectInvitation.status) {
         const payload = {userId};
         const TotalOrgs = await this._getTotalOrgCount(payload);
   
         if (TotalOrgs >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
-        throw new BadRequestException(ResponseMessages.user.error.maximumOrgsLimit);
+        throw new BadRequestException(ResponseMessages.user.error.userOrgsLimit);
          }
       }
       return this.fetchInvitationsStatus(acceptRejectInvitation, userData.keycloakUserId, userData.email, userId);

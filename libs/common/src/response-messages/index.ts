@@ -62,7 +62,8 @@ export const ResponseMessages = {
             resetPasswordLink: 'Unable to create reset password token',
             invalidResetLink: 'Invalid or expired reset password link',
             invalidAccessToken: 'Authentication failed',
-            invalidRefreshToken: 'Invalid refreshToken provided'
+            invalidRefreshToken: 'Invalid refreshToken provided',
+            userOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.'
         }
     },
     organisation: {
@@ -117,7 +118,8 @@ export const ResponseMessages = {
             orgDoesNotMatch: 'Organization does not match',
             invalidClient: 'Invalid client credentials',
             primaryDid: 'This DID is already set to primary DID',
-            didNotFound: 'DID does not exist in organiation'
+            didNotFound: 'DID does not exist in organiation',
+            MaximumOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.'
         }
     },
 
@@ -176,7 +178,8 @@ export const ResponseMessages = {
     credentialDefinition: {
         success: {
             fetch: 'Credential definition fetched successfully.',
-            create: 'Credential definition created successfully.'
+            create: 'Credential definition created successfully.',
+            template: 'Credential template fetched successfully.'
         },
         error: {
             NotFound: 'No credential definitions found.',
@@ -185,7 +188,8 @@ export const ResponseMessages = {
             schemaIdNotFound: 'SchemaLedgerId not found',
             isRequired: 'Credential definition Id is required',
             OrgDidNotFound: 'OrgDid not found',
-            credDefIdNotFound: 'Credential Definition Id not found'
+            credDefIdNotFound: 'Credential Definition Id not found',
+            InvalidSchemaType: 'Invalid schema type or not supported yet'
         }
     },
     ledger: {
@@ -238,6 +242,7 @@ export const ResponseMessages = {
             invalidTenantIdIdFormat:'Invalid tenantId format',
             requiredTenantId:'Tenant Id is required',
             createDid:'Error while creating DID',
+            didAlreadyExist:'DID already exist',
             storeDid: 'Error while storing DID',
             agentSpinupError: 'Agent endpoint unreachable',
             agentEndpointRequired: 'Agent endpoint is required',
@@ -271,7 +276,8 @@ export const ResponseMessages = {
             importCSV: 'File imported successfully',
             previewCSV: 'File details fetched successfully',
             bulkIssuance: 'Issuance process started. It will take some time',
-            notFound: 'Schema records not found'
+            notFound: 'Schema records not found',
+            bulkProcess: 'Process initiated for bulk issuance'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -300,7 +306,10 @@ export const ResponseMessages = {
             credentialNotPresent: 'credential is required',
             optionsNotPresent:'options are required',
             attributesAreRequired: 'attributes are required',
-            invalidCredentialType:'invalid credential type'
+            invalidCredentialType:'invalid credential type',
+            missingRequestId: 'Param requestId is missing from the request.',
+            cachedData: 'Cached data does not exist',
+            cachedfileData: 'Cached file data does not exist'
         }
     },
     verification: {
@@ -410,10 +419,16 @@ export const ResponseMessages = {
         },
         error: {
             PathNotFound: 'Path to export data not found.',
+            invalidtemplateId: 'Invalid template id.',
+            invalidIdentifier: 'Invalid Identifier',
+            exportFile: 'An error occurred during CSV export.',
             emailColumn: '1st column of the file should always be email.',
             attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
             mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
-            fileDetailsNotFound: 'File details not found.'
+            fileDetailsNotFound: 'File details not found.',
+            emptyFile: 'File data is empty',
+            emptyheader: 'File header is empty',
+            invalidEmails: 'Invalid emails found in the chosen file'
         }
     },
     errorMessages: {

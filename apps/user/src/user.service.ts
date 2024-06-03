@@ -25,7 +25,7 @@ import { URLUserEmailTemplate } from '../templates/user-email-template';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { EmailService } from '@credebl/common/email.service';
 import { user } from '@prisma/client';
 import {
   Attribute,
@@ -75,7 +75,8 @@ export class UserService {
     private readonly awsService: AwsService,
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
-    @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
+    @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
+    private readonly emailService : EmailService
   ) {}
 
   /**
@@ -164,7 +165,7 @@ export class UserService {
       emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Verify your email to activate your account`;
 
       emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode);
-      const isEmailSent = await sendEmail(emailData);
+      const isEmailSent = await this.emailService.sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
       } else {
@@ -461,7 +462,7 @@ export class UserService {
       emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Important: Password Reset Request`;
 
       emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, verificationCode);
-      const isEmailSent = await sendEmail(emailData);
+      const isEmailSent = await this.emailService.sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
       } else {

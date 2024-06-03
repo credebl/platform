@@ -31,7 +31,7 @@ import { IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { agent_invitations, organisation } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { EmailService } from '@credebl/common/email.service';
 
 
 @Injectable()
@@ -46,7 +46,8 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly emailService : EmailService
   ) { }
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
@@ -693,7 +694,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        const isEmailSent = await sendEmail(this.emailData);
+        const isEmailSent = await this.emailService.sendEmail(this.emailData);
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
         if (!isEmailSent) {
           errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));

@@ -1,4 +1,5 @@
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
+import { Prisma } from '@prisma/client';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 import type { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds';
 import type {CredentialFormatPayload, JsonLdCredentialFormat} from '@credo-ts/core';
@@ -635,4 +636,17 @@ export interface LedgerNameSpace {
   nymTxnEndpoint: string;
   indyNamespace: string;
   networkUrl: string;
+}
+
+export interface OrgDid {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  orgId: string;
+  isPrimaryDid: boolean;
+  did: string;
+  didDocument: Prisma.JsonValue;
+  orgAgentId: string;
 }

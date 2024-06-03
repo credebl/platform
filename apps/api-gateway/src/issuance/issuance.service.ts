@@ -3,8 +3,8 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
-import { FileExportResponse, IIssuedCredentialSearchParams, RequestPayload } from './interfaces';
+import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails, TemplateDetails } from './dtos/issuance.dto';
+import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITemplateFormat, UploadedFileDetails } from './interfaces';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 
@@ -61,16 +61,21 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
     }
 
-    async exportSchemaToCSV(credentialDefinitionId: string
+    getAllCredentialTemplates(orgId:string, schemaType:string): Promise<ITemplateFormat> {
+        const payload = { orgId, schemaType};
+        return this.sendNatsMessage(this.issuanceProxy, 'get-all-credential-template-for-bulk-operation', payload);
+      }
+
+    async downloadBulkIssuanceCSVTemplate(orgId: string, templateDetails: TemplateDetails
     ): Promise<FileExportResponse> {
-        const payload = { credentialDefinitionId };
-        return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
+        const payload = { orgId, templateDetails };
+        return (await this.sendNats(this.issuanceProxy, 'download-csv-template-for-bulk-operation', payload)).response;
     }
 
-    async importCsv(importFileDetails: RequestPayload
+    async uploadCSVTemplate(importFileDetails: UploadedFileDetails
     ): Promise<{ response: object }> {
         const payload = { importFileDetails };
-        return this.sendNats(this.issuanceProxy, 'import-and-preview-data-for-issuance', payload);
+        return this.sendNats(this.issuanceProxy, 'upload-csv-template', payload);
     }
 
     async previewCSVDetails(requestId: string,
@@ -109,7 +114,7 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'issued-file-data', payload);
     }
 
-    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: RequestPayload): Promise<object> {
+    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: IReqPayload): Promise<object> {
         const payload = { requestId, orgId, clientDetails, reqPayload };
         return this.sendNatsMessage(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }

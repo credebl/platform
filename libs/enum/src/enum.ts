@@ -135,3 +135,12 @@ export enum SchemaType {
     INDY = 'indy',
     W3C_Schema = 'w3c'
 }
+
+export enum IssueCredentialType {
+    JSONLD = 'jsonld',
+    INDY = 'indy'
+}
+
+export enum TemplateIdentifier {
+    EMAIL_COLUMN = 'email_identifier'
+}

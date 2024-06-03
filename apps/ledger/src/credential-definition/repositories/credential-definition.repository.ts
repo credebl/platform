@@ -7,6 +7,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
 import { ICredDefData, IPlatformCredDefDetails } from '@credebl/common/interfaces/cred-def.interface';
 import { SortValue } from '@credebl/enum/enum';
+import { ISchemaResponse } from '../interfaces';
 
 @Injectable()
 export class CredentialDefinitionRepository {
@@ -269,6 +270,28 @@ export class CredentialDefinitionRepository {
             throw error;
         }
     }
+
+    async getAllSchemaByOrgIdAndType(orgId: string, schemaType: string): Promise<ISchemaResponse[]> {
+        try { 
+            return await this.prisma.schema.findMany({
+                where: {
+                    orgId,
+                    type: schemaType 
+                },
+                select: {
+                    name: true,
+                    version: true,
+                    schemaLedgerId: true,
+                    orgId: true,
+                    attributes: true
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[getAllSchemaByOrgIdAndType] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+    
     
     async getOrgAgentType(orgAgentId: string): Promise<string> {
         try {

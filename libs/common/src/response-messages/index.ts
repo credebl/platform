@@ -411,7 +411,8 @@ export const ResponseMessages = {
     },
     bulkIssuance: {
         success: {
-            create: 'Issuance process successfully'
+            create: 'Issuance process successfully',
+            reinitiated: 'Process reinitiated for bulk issuance'
         },
         error: {
             PathNotFound: 'Path to export data not found.',

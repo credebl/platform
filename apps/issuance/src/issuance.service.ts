@@ -8,7 +8,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { OrgAgentType, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -37,6 +37,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
+  private processedJobsCounters: Record<string, number> = {};
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
@@ -1106,15 +1107,15 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       // Wait for all saveFileDetails operations to complete
       await Promise.all(saveFileDetailsPromises);
 
-      // Now fetch the file details
       const bulkpayload = await this.issuanceRepository.getFileDetails(csvFileDetail.id);
       if (!bulkpayload) {
         throw new BadRequestException(ResponseMessages.issuance.error.fileData);
       }
-
+      const uniqueJobId = uuidv4();
       const queueJobsArrayPromises = bulkpayload.map(async (item) => ({
           data: {
             id: item.id,
+            jobId: uniqueJobId,
             cacheId: requestId,
             clientId: clientDetails.clientId,
             referenceId: item.referenceId,
@@ -1124,11 +1125,13 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             status: item.status,
             credential_data: item.credential_data,
             orgId,
-            credentialType: item.credential_type
+            credentialType: item.credential_type,
+            totalJobs: bulkpayload.length,
+            isRetry: false,
+            isLastData: false
           }
         }));
-      
-      // Await all promises to complete
+
       const queueJobsArray = await Promise.all(queueJobsArrayPromises);
         try {
          await this.bulkIssuanceQueue.addBulk(queueJobsArray);
@@ -1150,7 +1153,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   }
 
   async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<string> {
-    let respFile;
+    let bulkpayloadRetry;
 
     try {
 
@@ -1158,47 +1161,55 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       if (!fileDetails) {
         throw new BadRequestException(ResponseMessages.issuance.error.retry);
       }
-      respFile = await this.issuanceRepository.getFailedCredentials(fileId);
-
-      if (0 === respFile.length) {
+      bulkpayloadRetry = await this.issuanceRepository.getFailedCredentials(fileId);
+      if (0 === bulkpayloadRetry.length) {
         const errorMessage = ResponseMessages.bulkIssuance.error.fileDetailsNotFound;
         throw new BadRequestException(`${errorMessage}`);
       }
-
-      for (const element of respFile) {
-        try {
-          const payload = {
-            data: element.credential_data,
-            fileUploadId: element.fileUploadId,
-            clientId,
-            credentialDefinitionId: element.credDefId,
-            schemaLedgerId: element.schemaId,
-            orgId,
-            id: element.id,
-            isRetry: true,
-            isLastData: respFile.indexOf(element) === respFile.length - 1
-          };
-
-          await this.delay(500); // Wait for 0.5 secends
-          this.processIssuanceData(payload);
-          if (0 === respFile.length) {
-            return FileUploadStatus.completed;
-          }
-        } catch (error) {
-          // Handle errors if needed
-          this.logger.error(`Error processing issuance data: ${error}`);
+      const uniqueJobId = uuidv4();
+      const queueJobsArrayPromises = bulkpayloadRetry.map(async (item) => ({
+        data: {
+          id: item.id,
+          jobId: uniqueJobId,
+          clientId,
+          referenceId: item.referenceId,
+          fileUploadId: item.fileUploadId,
+          schemaLedgerId: item.schemaId,
+          credentialDefinitionId: item.credDefId,
+          status: item.status,
+          credential_data: item.credential_data,
+          orgId,
+          credentialType: item.credential_type,
+          totalJobs: bulkpayloadRetry.length,
+          isRetry: true,
+          isLastData: false
         }
-      }
-
-      return 'Process reinitiated for bulk issuance';
+      }));
+      const queueJobsArray = await Promise.all(queueJobsArrayPromises);
+      try {
+        await this.bulkIssuanceQueue.addBulk(queueJobsArray);
+       } catch (error) {
+         this.logger.error(`Error processing issuance data: ${error}`);
+       }
+     
+      return ResponseMessages.bulkIssuance.success.reinitiated;
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
   
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  async processIssuanceData(jobDetails): Promise<void> {
+  async processIssuanceData(jobDetails: IQueuePayload): Promise<void> {
+    const {jobId, totalJobs} = jobDetails;
+    if (!this.processedJobsCounters[jobId]) {
+      this.processedJobsCounters[jobId] = 0;
+    }
+    this.processedJobsCounters[jobId] += 1;
+    if (this.processedJobsCounters[jobId] === totalJobs) {
+      jobDetails.isLastData = true;
+      delete this.processedJobsCounters[jobId];
+    }
+
     const socket = await io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,
       reconnectionDelay: 5000,

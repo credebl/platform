@@ -1,4 +1,4 @@
-import { schemaRequestType } from '@credebl/enum/enum';
+import { IssueCredentialType, schemaRequestType } from '@credebl/enum/enum';
 import { ISchemaFields } from './interfaces/schema.interface';
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 import { ClassConstructor, plainToClass } from 'class-transformer';
@@ -314,21 +314,25 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
     credentialOffer: [
       {
         'emailId': `${credentialData.email_identifier}`,
-        'credential': {
-          '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
-          'type': [
-            'VerifiableCredential',
-            `${schemaName}`
-          ],
-          'issuer': {
-            'id': `${orgDid}`
-          },
-          'issuanceDate': new Date().toISOString(),
-          credentialSubject
-        },
-        'options': {
-          'proofType': 'Ed25519Signature2018',
-          'proofPurpose': 'assertionMethod'
+        'credentialFormats': {
+          [IssueCredentialType.JSONLD]: {
+            'credential': {
+              '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
+              'type': [
+                'VerifiableCredential',
+                `${schemaName}`
+              ],
+              'issuer': {
+                'id': `${orgDid}`
+              },
+              'issuanceDate': new Date().toISOString(),
+              credentialSubject
+            },
+            'options': {
+              'proofType': 'Ed25519Signature2018',
+              'proofPurpose': 'assertionMethod'
+            }
+          }
         }
       }
     ],

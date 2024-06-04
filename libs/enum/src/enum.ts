@@ -106,8 +106,8 @@ export enum NodeEnvironment {
 }
 
 export enum ProtocolVersion {
-    v1,
-    v2
+    v1 = 'v1',
+    v2 = 'v2'
 }
 
 export enum AutoAccept {
@@ -138,7 +138,8 @@ export enum SchemaType {
 
 export enum IssueCredentialType {
     JSONLD = 'jsonld',
-    INDY = 'indy'
+    INDY = 'indy',
+    ANONCREDS = 'anoncreds',
 }
 
 export enum TemplateIdentifier {

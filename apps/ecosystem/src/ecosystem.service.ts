@@ -507,6 +507,7 @@ export class EcosystemService {
           result.data = { orgId };
           errorCount++;
         }
+        
         if (0 !== result.statusCode) {
           errorOrgs.push(result);
         }

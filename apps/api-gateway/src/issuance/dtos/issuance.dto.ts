@@ -283,7 +283,7 @@ export class IssuanceFields {
   @IsEnum(IssueCredentialType, {
     message: `Invalid auto accept credential. It should be one of: ${Object.values(IssueCredentialType).join(', ')}`
   })
-  credentialType:IssueCredentialType = IssueCredentialType.ANONCREDS;
+  credentialType:IssueCredentialType = IssueCredentialType.INDY;
 
   orgId: string;
 }

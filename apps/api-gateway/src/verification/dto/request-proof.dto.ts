@@ -216,7 +216,7 @@ class ProofPayload {
     @IsEnum(ProtocolVersion, {
       message: `Invalid ProtocolVersion. It should be one of: ${Object.values(ProtocolVersion).join(', ')}`
     })
-    protocolVersion: ProtocolVersion;
+    protocolVersion: ProtocolVersion = ProtocolVersion.v2;
 }
 
 export class Fields {
@@ -517,7 +517,7 @@ export class SendProofRequestPayload {
     })
     @IsNotEmpty({ message: 'please provide valid protocol version' })
     @IsOptional()
-    protocolVersion: ProtocolVersion;
+    protocolVersion: ProtocolVersion = ProtocolVersion.v2;
 
     @ApiPropertyOptional()
     @IsOptional()

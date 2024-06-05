@@ -131,6 +131,7 @@ const transitionMap: { [key in Invitation]: Invitation[] } = {
 
 export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));
 
+// To do: add support for 'Anoncreds' SchemaType
 export enum SchemaType {
     INDY = 'indy',
     W3C_Schema = 'w3c'

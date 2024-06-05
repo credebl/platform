@@ -6,7 +6,7 @@ import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresen
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
-import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
+import { AutoAccept, OrgAgentType, ProtocolVersion } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -16,7 +16,6 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
-import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
 
 @Injectable()
 export class VerificationService {
@@ -189,16 +188,11 @@ export class VerificationService {
           goalCode: requestProof.goalCode || undefined,
           parentThreadId: requestProof.parentThreadId || undefined,
           willConfirm: requestProof.willConfirm || undefined,
-          proofFormats: requestProof.proofFormats
+          proofFormats: requestProof.proofFormats,
+          // Note: Set protocol version to v2 irrespective of presentation type
+          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : ProtocolVersion.v2
         }
       };
-
-      if (requestProof.type === ProofRequestType.INDY) {
-        payload.proofRequestPayload.protocolVersion =  requestProof.protocolVersion ? requestProof.protocolVersion : 'v1';
-
-      } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE || requestProof.type === ProofRequestType.ANONCREDS) {
-        payload.proofRequestPayload.protocolVersion = requestProof.protocolVersion ? requestProof.protocolVersion : 'v2';
-      }
 
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;
@@ -326,7 +320,9 @@ export class VerificationService {
       
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
-      const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      const { isShortenUrl, emailId, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
+      // delete unused parameter 'type'
+      delete updateOutOfBandRequestProof.type;
       let invitationDid: string | undefined;
       if (true === reuseConnection) {
         const data: agent_invitations[] = await this.verificationRepository.getInvitationDidByOrgId(user.orgId);
@@ -346,13 +342,8 @@ export class VerificationService {
           }
         };
 
-      if (ProofRequestType.INDY === type) {
-        payload.proofRequestPayload.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
-      }
-      
-      if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
-        payload.proofRequestPayload.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v2';
-      }
+        // Note: Set v2 for all types of presentation
+        payload.proofRequestPayload.protocolVersion = updateOutOfBandRequestProof.protocolVersion || ProtocolVersion.v2;
 
       if (emailId) {
         await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);

@@ -356,7 +356,6 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       credentialOffer,
       comment,
       credentialFormats,
-      // credentialDefinitionId,
       orgId,
       protocolVersion,
       emailId,

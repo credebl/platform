@@ -398,4 +398,19 @@ export class AgentServiceRepository {
       throw error;
     }
   }
+
+  // eslint-disable-next-line camelcase
+  async deleteOrgAgentByOrg(orgId: string):Promise<org_agents> {
+    try {
+      const deleteOrgId = await this.prisma.org_agents.delete({
+        where: {
+          orgId
+        }
+      });
+      return deleteOrgId;
+    } catch (error) {
+      this.logger.error(`[deleteOrgAgentByOrg] - delete org agent record: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

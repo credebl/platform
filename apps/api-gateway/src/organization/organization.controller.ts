@@ -518,6 +518,7 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.ACCEPTED, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.OWNER)
   async deleteOrganization(
     @Param('orgId') orgId: string, 
     @Res() res: Response
@@ -526,10 +527,10 @@ export class OrganizationController {
     await this.organizationService.deleteOrganization(orgId);
 
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.ACCEPTED,
+      statusCode: HttpStatus.NO_CONTENT,
       message: ResponseMessages.organisation.success.delete
     };
-    return res.status(HttpStatus.ACCEPTED).json(finalResponse);
+    return res.status(HttpStatus.NO_CONTENT).json(finalResponse);
   }
 
   @Delete('/:orgId/client_credentials')

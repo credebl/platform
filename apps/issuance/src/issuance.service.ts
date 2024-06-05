@@ -1239,7 +1239,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
   async _validateRequiredAttributesCredentialData(credentialData: ICredentialsAttributes[] | CredentialOffer[], credentialType: IssueCredentialType.ANONCREDS | IssueCredentialType.INDY): Promise<void> {
     try {
-      for (const credential of credentialData) {
+      for (const [index, credential] of credentialData.entries()) {
         const credentialFormats = credential.credentialFormats[credentialType];
         const {credentialDefinitionId} = credentialFormats;
     
@@ -1255,9 +1255,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
                 const foundAttribute = credentialFormats.attributes.find((attr) => attr.name === attribute.attributeName);
 
                 if (!foundAttribute) {
-                  schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but not present.`);
+                  schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but absent at index: ${index}.`);
                 } else if (!foundAttribute.value) {
-                  schemaResponseError.push(`Attribute '${attribute.attributeName}' is required but has an empty value.`);
+                  schemaResponseError.push(`Attribute '${attribute.attributeName}' has an empty value at index: ${index}.`);
                 }
               }
             });

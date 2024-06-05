@@ -73,6 +73,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { W3CSchemaPayload } from 'apps/ledger/src/schema/interfaces/schema-payload.interface';
+import { OrgRoles } from 'libs/org-roles/enums';
 
 @Injectable()
 export class EcosystemService {
@@ -422,99 +423,116 @@ export class EcosystemService {
     }
   }
 
-  async addOrganizationsInEcosystem(ecosystemLeadOrgs: IEcosystemLeadOrgs): Promise<{
+  async addOrganizationsInEcosystem(
+    ecosystemLeadOrgs: IEcosystemLeadOrgs
+  ): Promise<{
     results: { statusCode: number; message: string; error?: string; data?: { orgId: string } }[];
     statusCode: number;
     message: string;
   }> {
     try {
-      const ecosystemRoleDetails = await this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER);
-
-      const getEcosystemDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemLeadOrgs.ecosystemId);
-      const getEcosystemLeadOrg = getEcosystemDetails?.orgId;
-      const getEcosystemLeadOrgLedgerDetails = await this.ecosystemRepository.getAgentDetails(getEcosystemLeadOrg);
-      const getEcosystemLeadOrgLedgerId = getEcosystemLeadOrgLedgerDetails?.ledgerId;
-
+      const [ecosystemRoleDetails, ecosystemDetails, userOrganizations, allOrgRoles] = await Promise.all([
+        this.ecosystemRepository.getEcosystemRole(EcosystemRoles.ECOSYSTEM_MEMBER),
+        this.ecosystemRepository.getEcosystemLeadDetails(ecosystemLeadOrgs.ecosystemId),
+        this.ecosystemRepository.getAllOrganizationsByUserId(ecosystemLeadOrgs.userId),
+        this.ecosystemRepository.getAllOrgRoles()
+      ]);
+  
+      const ecosystemLeadOrg = ecosystemDetails?.orgId;
+      const ecosystemLeadOrgLedgerDetails = await this.ecosystemRepository.getAgentDetails(ecosystemLeadOrg);
+      const ecosystemLeadOrgLedgerId = ecosystemLeadOrgLedgerDetails?.ledgerId;
+  
+      const ownerRoleId = allOrgRoles.find(role => OrgRoles.OWNER === role.name)?.id;
+      const ownerOrganizations = userOrganizations
+        .filter(org => org.orgRoleId === ownerRoleId)
+        .map(org => org.orgId);
+  
       const { organizationIds } = ecosystemLeadOrgs;
       const errorOrgs: { statusCode: number; message: string; error?: string; data?: { orgId: string } }[] = [];
       const addedOrgs = [];
       let successCount: number = 0;
       let errorCount: number = 0;
-
+  
       for (const orgId of organizationIds) {
         const result: { statusCode: number; message: string; error?: string; data?: { orgId: string } } = {
           statusCode: 0,
           message: ''
         };
-
+  
         const orgAgentDetails = await this.ecosystemRepository.getAgentDetails(orgId);
-        const getOrgLedgerId = orgAgentDetails?.ledgerId;
-        if (orgAgentDetails?.orgDid) {
-          const existingOrg = await this.ecosystemRepository.checkOrgExistsInEcosystem(
-            orgId,
-            ecosystemLeadOrgs.ecosystemId
-          );
-          if (getOrgLedgerId === getEcosystemLeadOrgLedgerId) {
-            if (!existingOrg) {
-              addedOrgs.push({
-                orgId,
-                ecosystemId: ecosystemLeadOrgs.ecosystemId,
-                ecosystemRoleId: ecosystemRoleDetails.id,
-                status: EcosystemOrgStatus.ACTIVE,
-                deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
-                createdBy: ecosystemLeadOrgs.userId,
-                lastChangedBy: ecosystemLeadOrgs.userId
-              });
-              successCount++;
+        const orgLedgerId = orgAgentDetails?.ledgerId;
+  
+        if (ownerOrganizations.includes(orgId)) {
+          if (orgAgentDetails?.orgDid) {
+            const existingOrg = await this.ecosystemRepository.checkOrgExistsInEcosystem(orgId, ecosystemLeadOrgs.ecosystemId);
+            if (orgLedgerId === ecosystemLeadOrgLedgerId) {
+              if (!existingOrg) {
+                addedOrgs.push({
+                  orgId,
+                  ecosystemId: ecosystemLeadOrgs.ecosystemId,
+                  ecosystemRoleId: ecosystemRoleDetails.id,
+                  status: EcosystemOrgStatus.ACTIVE,
+                  deploymentMode: DeploymentModeType.PROVIDER_HOSTED,
+                  createdBy: ecosystemLeadOrgs.userId,
+                  lastChangedBy: ecosystemLeadOrgs.userId
+                });
+                successCount++;
+              } else {
+                result.statusCode = HttpStatus.CONFLICT;
+                result.message = ResponseMessages.ecosystem.error.orgAlreadyExists;
+                result.error = ResponseMessages.errorMessages.conflict;
+                result.data = { orgId };
+                errorCount++;
+              }
             } else {
-              result.statusCode = HttpStatus.CONFLICT;
-              result.message = `${ResponseMessages.ecosystem.error.orgAlreadyExists}`;
-              result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+              result.statusCode = HttpStatus.BAD_REQUEST;
+              result.message = ResponseMessages.ecosystem.error.ledgerNotMatch;
+              result.error = ResponseMessages.errorMessages.badRequest;
               result.data = { orgId };
               errorCount++;
             }
           } else {
             result.statusCode = HttpStatus.BAD_REQUEST;
-            result.message = `${ResponseMessages.ecosystem.error.ledgerNotMatch}`;
-            result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+            result.message = ResponseMessages.ecosystem.error.agentNotSpunUp;
+            result.error = ResponseMessages.errorMessages.badRequest;
             result.data = { orgId };
             errorCount++;
           }
         } else {
-          result.statusCode = HttpStatus.BAD_REQUEST;
-          result.message = `${ResponseMessages.ecosystem.error.agentNotSpunUp}`;
-          result.error = `${ResponseMessages.ecosystem.error.unableToAdd}`;
+          result.statusCode = HttpStatus.FORBIDDEN;
+          result.message = ResponseMessages.ecosystem.error.userNotHaveAccess;
+          result.error = ResponseMessages.errorMessages.forbidden;
           result.data = { orgId };
           errorCount++;
         }
+        
         if (0 !== result.statusCode) {
           errorOrgs.push(result);
         }
       }
+  
       let statusCode = HttpStatus.CREATED;
       let message = ResponseMessages.ecosystem.success.add;
       let getOrgs = [];
-
+  
       if (0 < addedOrgs?.length) {
-        const orgs = addedOrgs.map((item) => item.orgId);
+        const orgs = addedOrgs?.map(item => item.orgId);
         await this.ecosystemRepository.addOrganizationInEcosystem(addedOrgs);
 
         //need to discuss
         getOrgs = await this.ecosystemRepository.getEcosystemOrgs(orgs, ecosystemLeadOrgs.ecosystemId);
       }
-
+  
       const success =
         0 < getOrgs?.length
-          ? getOrgs?.map((item) => ({
+          ? getOrgs?.map(item => ({
               statusCode: HttpStatus.CREATED,
-              message: `${ResponseMessages.ecosystem.success.add}`,
-              data: {
-                orgId: item.orgId
-              }
+              message: ResponseMessages.ecosystem.success.add,
+              data: { orgId: item.orgId }
             }))
           : [];
       const finalResult = [...errorOrgs, ...success];
-
+  
       if (0 === successCount) {
         statusCode = HttpStatus.BAD_REQUEST;
         message = ResponseMessages.ecosystem.error.unableToAdd;
@@ -522,14 +540,14 @@ export class EcosystemService {
         statusCode = HttpStatus.PARTIAL_CONTENT;
         message = ResponseMessages.ecosystem.error.partiallyAdded;
       }
-
+  
       return { results: finalResult, statusCode, message };
     } catch (error) {
       this.logger.error(`In add organizations: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
+  
   async checkLedgerMatches(orgDetails: OrganizationData, ecosystemId: string): Promise<boolean> {
     const orgLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
 

@@ -26,10 +26,9 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
+import { Invitation, transition } from '@credebl/enum/enum';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IDeleteOrganization } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
-import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
@@ -1298,35 +1297,11 @@ export class OrganizationService {
     }
   }
 
-  async deleteOrganization(orgId: string): Promise<boolean> {
+  async deleteOrganization(orgId: string): Promise<IDeleteOrganization> {
     try {
-      const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      let url;
-      if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {
-        url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
-      } else if (getAgent.orgAgentTypeId === OrgAgentType.SHARED) {
-        url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_SHARED_WALLET}`.replace('#', getAgent.tenantId);
-      }
-
-      const payload = {
-        url,
-        apiKey
-      };
-
-      const deleteWallet = await this._deleteWallet(payload);
-      if (deleteWallet) {
-        const orgDelete = await this.organizationRepository.deleteOrg(orgId);
-        if (false === orgDelete) {
-          throw new NotFoundException(ResponseMessages.organisation.error.deleteOrg);
-        }
-      }
-
-      return true;
+      const deleteOrg = await this.organizationRepository.deleteOrg(orgId);
+      return deleteOrg;
+      
     } catch (error) {
       this.logger.error(`delete organization: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

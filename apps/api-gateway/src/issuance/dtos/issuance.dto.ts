@@ -28,7 +28,7 @@ export class Credential {
     @IsNotEmpty({ message: 'type is required' })
     type: string[];
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString({ message: 'id should be string' })
     @IsNotEmpty({ message: 'id  is required' })
     @Type(() => String)
@@ -36,7 +36,7 @@ export class Credential {
     id?:string;
 
     
-    @ApiProperty()
+    @ApiProperty({type: Issuer})
     @ValidateNested({ each: true })
     @Type(() => Issuer)
     issuer:Issuer;
@@ -47,14 +47,19 @@ export class Credential {
     @Type(() => String)
     issuanceDate:string;
    
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString({ message: 'expiration date should be string' })
     @IsNotEmpty({ message: 'expiration date  is required' })
     @Type(() => String)
     @IsOptional()
     expirationDate?:string;
 
-     @ApiProperty()
+     @ApiProperty({example: {
+      'id': 'did:key:z6Mkn72LVp3mq1fWSefkSMh5V7qrmGfCV4KH3K6SoTM21ouM',
+      'First Name': 'sayali',
+      'Student Id': '123',
+      'Address': 'Pune'
+    }})
      @IsNotEmpty({ message: ' credential subject required' })
      credentialSubject: SingleOrArray<JsonObject>;
      [key: string]: unknown
@@ -89,17 +94,17 @@ export class Credential {
     @IsNotEmpty({ message: 'proofPurpose is required' })
     public proofPurpose!: string;
   
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     public created?: string;
   
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     public domain?: string;
   
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     public challenge?: string;
@@ -109,7 +114,7 @@ export class Credential {
     @IsNotEmpty({ message: 'proofType is required' })
     public proofType!: string;
   
-    @ApiProperty({ type: JsonLdCredentialDetailCredentialStatus })
+    @ApiPropertyOptional({ type: JsonLdCredentialDetailCredentialStatus })
     @IsOptional()
     @IsObject()
     public credentialStatus?: JsonLdCredentialDetailCredentialStatus;

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { Prisma, credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, organisation, platform_config, schema } from '@prisma/client';
+import { Prisma, credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, org_roles, organisation, platform_config, schema, user_org_roles } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { CreateEcosystem, IEcosystemInvitation, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
@@ -871,6 +871,34 @@ export class EcosystemRepository {
 
     } catch (error) {
       this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getAllOrganizationsByUserId(userId: string): Promise<user_org_roles[]> {
+    try {
+      const getUserorgs = await this.prisma.user_org_roles.findMany({
+        where: {
+          userId
+        }
+      });
+      return getUserorgs;
+
+    } catch (error) {
+      this.logger.error(`Error in getting user organizations: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getAllOrgRoles(): Promise<org_roles[]> {
+    try {
+      const getUserorgs = await this.prisma.org_roles.findMany();
+      return getUserorgs;
+
+    } catch (error) {
+      this.logger.error(`Error in getting organization roled: ${error.message} `);
       throw error;
     }
   }

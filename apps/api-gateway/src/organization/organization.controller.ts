@@ -516,12 +516,10 @@ export class OrganizationController {
   }
 
   /**
-   * @returns Boolean
+   * @returns Organization
    */
-  //Todo
   @Delete('/:orgId')
   @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
-  @ApiExcludeEndpoint()
   @ApiResponse({ status: HttpStatus.ACCEPTED, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))

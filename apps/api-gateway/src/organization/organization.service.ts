@@ -204,7 +204,7 @@ export class OrganizationService extends BaseService {
 
   async deleteOrganization(
     orgId: string
-  ): Promise<boolean> {
+  ): Promise<organisation> {
     const payload = { orgId };
 
     return this.sendNatsMessage(this.serviceProxy, 'delete-organization', payload);

@@ -21,6 +21,7 @@ interface IMetadata {
     '_internal/indyCredential': IndyCredential;
 }
 
+// To do: Remove unused DTO
 export class IssueCredentialSaveDto {
 
     @ApiProperty()

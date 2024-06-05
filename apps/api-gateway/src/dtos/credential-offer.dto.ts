@@ -6,6 +6,7 @@ interface attributeValue {
     value: string,
 }
 
+// To do: Remove unused DTO
 export class IssueCredentialOffer {
 
     @ApiProperty({ example: { 'protocolVersion': 'v1' } })

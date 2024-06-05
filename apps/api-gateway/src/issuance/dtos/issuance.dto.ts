@@ -86,7 +86,7 @@ export class Credential {
   
     @ApiProperty()
     @IsString()
-    @IsNotEmpty({ message: 'proof purpose is required' })
+    @IsNotEmpty({ message: 'proofPurpose is required' })
     public proofPurpose!: string;
   
     @ApiProperty()
@@ -106,7 +106,7 @@ export class Credential {
   
     @ApiProperty()
     @IsString()
-    @IsNotEmpty({ message: 'proof type is required' })
+    @IsNotEmpty({ message: 'proofType is required' })
     public proofType!: string;
   
     @ApiProperty({ type: JsonLdCredentialDetailCredentialStatus })

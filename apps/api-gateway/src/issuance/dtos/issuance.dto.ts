@@ -13,7 +13,7 @@ import { trim } from '@credebl/common/cast.helper';
 import { BadRequestException } from '@nestjs/common';
 
 class Issuer {
-  @ApiProperty()
+  @ApiProperty({example: 'did:polygon:testnet:0xc238BFC305159CB1473d0e4aBff1096e717356BF'})
   @IsNotEmpty({ message: 'id is required' })  
   @Type(() => String) 
   id:string | { id?: string };

@@ -210,7 +210,8 @@ export const ResponseMessages = {
             ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
             getWebhookUrl:'Webhook Url fetched successfully',
-            createKeys:'Key-pair created successfully'
+            createKeys:'Key-pair created successfully',
+            walletDelete: 'Wallet deleted successfully'
         },
         error: {
             exists: 'An agent name is already exist',

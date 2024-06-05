@@ -211,8 +211,8 @@ export class AgentServiceController {
 
   //DONE
   @MessagePattern({ cmd: 'delete-wallet' })
-  async deleteWallet(payload: { url, apiKey }): Promise<object> {
-    return this.agentServiceService.deleteWallet(payload.url, payload.apiKey);
+  async deleteWallet(payload: { orgId }): Promise<object> {
+    return this.agentServiceService.deleteWallet(payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-receive-invitation-url' })

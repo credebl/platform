@@ -2,6 +2,7 @@ import { OnQueueActive, Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { IssuanceService } from './issuance.service';
 import { Logger } from '@nestjs/common';
+import { IQueuePayload } from '../interfaces/issuance.interfaces';
 
 @Processor('bulk-issuance')
 export class BulkIssuanceProcessor {
@@ -16,7 +17,7 @@ export class BulkIssuanceProcessor {
   }
 
   @Process()
-  async issueCredential(job: Job<unknown>):Promise<void> {
+  async issueCredential(job: Job<IQueuePayload>):Promise<void> {
     this.logger.log(
       `Processing job ${job.id} of type ${job.name} with data ${JSON.stringify(job.data)}...`
     );

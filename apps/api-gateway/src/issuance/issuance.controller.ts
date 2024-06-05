@@ -431,10 +431,12 @@ async downloadBulkIssuanceCSVTemplate(
       }
 
       reqPayload = {
-        credDefId: credentialDefinitionId,
+        templateId: credentialDefinitionId,
         fileKey,
-        fileName: fileDetails['fileName'] || file?.filename || file?.originalname
+        fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
+        type: SchemaType.INDY
       };
+
     }
       const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails, reqPayload);
 

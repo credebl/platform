@@ -194,7 +194,6 @@ export class VerificationService {
       };
 
       if (requestProof.type === ProofRequestType.INDY) {
-        // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof as IRequestProof);
         payload.proofRequestPayload.protocolVersion =  requestProof.protocolVersion ? requestProof.protocolVersion : 'v1';
 
       } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE || requestProof.type === ProofRequestType.ANONCREDS) {

@@ -414,7 +414,7 @@ export const ResponseMessages = {
     },
     bulkIssuance: {
         success: {
-            create: 'Issuance process successfully',
+            create: 'Issuance process initiated successfully',
             reinitiated: 'Process reinitiated for bulk issuance'
         },
         error: {

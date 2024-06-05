@@ -491,7 +491,7 @@ export class OOBCredentialDtoWithEmail extends CredentialsIssuanceDto {
     @IsOptional()
     @IsNotEmpty({ message: 'Please provide valid protocol version' })
     @IsString({ message: 'protocol version should be string' })
-    protocolVersion?: ProtocolVersion;
+    protocolVersion?: ProtocolVersion = ProtocolVersion.v2;
     
     orgId: string;
 }

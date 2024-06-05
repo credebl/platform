@@ -361,6 +361,7 @@ export const ResponseMessages = {
         error: {
             notCreated: 'Error while creating ecosystem',
             agentNotSpunUp: 'Agent is not spun up for this organization',
+            userNotHaveAccess: 'You do not have access',
             orgAlreadyExists: 'Organization is already exists in ecosystem',
             unableToAdd: 'Unable to add organization',
             partiallyAdded: 'Organization(s) are partially added',
@@ -414,7 +415,8 @@ export const ResponseMessages = {
     },
     bulkIssuance: {
         success: {
-            create: 'Issuance process successfully'
+            create: 'Issuance process initiated successfully',
+            reinitiated: 'Process reinitiated for bulk issuance'
         },
         error: {
             PathNotFound: 'Path to export data not found.',

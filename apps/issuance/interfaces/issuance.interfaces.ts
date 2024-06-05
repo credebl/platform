@@ -298,3 +298,21 @@ export interface IJobDetails {
   orgId: string;
   credentialType: string;
 }
+
+export interface IQueuePayload{
+  id: string;
+  jobId: string;
+  cacheId?: string;
+  clientId: string;
+  referenceId: string;
+  fileUploadId: string;
+  schemaLedgerId: string;
+  credentialDefinitionId: string;
+  status: string;
+  credential_data: CredentialData;
+  orgId: string;
+  credentialType: string;
+  totalJobs: number;
+  isRetry: boolean;
+  isLastData: boolean;
+}

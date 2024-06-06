@@ -1064,8 +1064,8 @@ export class AgentServiceService {
           description: ResponseMessages.errorMessages.serverError
         });
       }
-      if (isPrimaryDid && storeDidDetails.did) {
-        await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId);
+      if (isPrimaryDid && storeDidDetails.did && storeDidDetails.didDocument) {
+        await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId, storeDidDetails.didDocument);
       }
 
       if (isPrimaryDid) {

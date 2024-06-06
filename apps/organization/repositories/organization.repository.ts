@@ -763,7 +763,7 @@ export class OrganizationRepository {
             });
 
             if (0 < isEcosystemLead.length) {
-                throw new ConflictException('This organization is an ecosystem lead or ecosystem owner.');
+                throw new ConflictException(ResponseMessages.organisation.error.organizationEcosystemValidate);
             }
 
             // User activity delete by orgId

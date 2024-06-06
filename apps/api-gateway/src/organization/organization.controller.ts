@@ -527,10 +527,10 @@ export class OrganizationController {
     await this.organizationService.deleteOrganization(orgId);
 
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.NO_CONTENT,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.delete
     };
-    return res.status(HttpStatus.NO_CONTENT).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Delete('/:orgId/client_credentials')

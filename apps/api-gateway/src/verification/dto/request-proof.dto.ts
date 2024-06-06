@@ -209,7 +209,7 @@ class ProofPayload {
     @IsOptional()
     willConfirm: boolean;
 
-    @ApiPropertyOptional({enum: ProtocolVersion})
+    @ApiPropertyOptional({enum: ProtocolVersion, example: ProtocolVersion.v2})
     @IsString({ message: 'protocolVersion must be in string' })
     @IsNotEmpty({ message: 'please provide valid protocol version' })
     @IsOptional()

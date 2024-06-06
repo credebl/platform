@@ -89,7 +89,7 @@ export class Credential {
       }
     }
   
-    @ApiProperty()
+    @ApiProperty({example: 'assertionMethod'})
     @IsString()
     @IsNotEmpty({ message: 'proofPurpose is required' })
     public proofPurpose!: string;
@@ -109,7 +109,7 @@ export class Credential {
     @IsOptional()
     public challenge?: string;
   
-    @ApiProperty()
+    @ApiProperty({example: 'EcdsaSecp256k1Signature2019'})
     @IsString()
     @IsNotEmpty({ message: 'proofType is required' })
     public proofType!: string;

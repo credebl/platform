@@ -1075,7 +1075,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     const { organisation, orgDid } = agentDetails;
     let isErrorOccurred = false;
     try {
-      // Depricating Indy credential and sending anoncreds in bulk issuance
+      // To do: depricating Indy credential and sending anoncreds in bulk issuance
       let oobIssuancepayload;
       if (jobDetails.credentialType === SchemaType.INDY) {
       oobIssuancepayload = {
@@ -1108,7 +1108,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         orgDid,
         orgId
       };
-      // To do: check if jsonld data is accroding to credentialFormats
       oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails);
       }
     

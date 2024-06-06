@@ -195,7 +195,7 @@ export class AgentServiceRepository {
      * @returns
      */
     // eslint-disable-next-line camelcase
-    async setPrimaryDid(orgDid: string, orgId: string): Promise<org_agents> {
+    async setPrimaryDid(orgDid: string, orgId: string, didDocument: Prisma.JsonValue): Promise<org_agents> {
         try {
 
             return await this.prisma.org_agents.update({
@@ -203,7 +203,8 @@ export class AgentServiceRepository {
                     id: storeOrgAgentDetails.id
                 },
                 data: {
-                    orgDid
+                    orgDid,
+                    didDocument
                 }
             });
            

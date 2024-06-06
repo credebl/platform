@@ -299,6 +299,7 @@ export const validateEmail = (email: string): boolean => {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential) => {
   const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
+  // To do: need to add did of credential subject dynamically
   const credentialSubject = { 'id': 'did:key:kdfJmG7pi1MnrX4y4nkJe' };
 
   for (const key in credentialData) {

@@ -1,5 +1,5 @@
 // eslint-disable-next-line camelcase
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
@@ -172,17 +172,26 @@ export interface OutOfBandCredentialOffer {
   outOfBandCredentialDto: OutOfBandCredentialOfferPayload;
 }
 export interface SchemaDetails {
-  credentialDefinitionId: string;
-  tag: string;
+  credentialDefinitionId?: string;
+  tag?: string;
   schemaLedgerId: string;
   attributes: string;
+  name?: string;
 }
 export interface ImportFileDetails {
-  credDefId: string;
+  templateId: string;
   fileKey: string;
   fileName: string;
+  type: string
 }
-
+export interface ICredentialPayload {
+schemaLedgerId: string,
+credentialDefinitionId: string,
+fileData: object,
+fileName: string,
+credentialType: string,
+schemaName?: string
+}
 export interface PreviewRequest {
   pageNumber: number,
   pageSize: number,
@@ -192,12 +201,13 @@ export interface PreviewRequest {
 }
 
 export interface FileUpload {
-  name?: string;
-  upload_type?: string;
-  status?: string;
-  orgId?: string;
-  createDateTime?: Date;
-  lastChangedDateTime?: Date;
+  name?: string,
+  upload_type?: string,
+  status?: string,
+  orgId?: string,
+  createDateTime?: Date | null,
+  lastChangedDateTime?: Date | null,
+  credentialType?: string,
 }
 
 export interface FileUploadData {
@@ -263,4 +273,46 @@ export interface SendEmailCredentialOffer {
   url: string;
   orgId: string; 
   organizationDetails: organisation;
+}
+
+export interface TemplateDetailsInterface {
+  templateId?: string;
+  schemaType?: SchemaType;
+}
+interface CredentialData {
+  email_identifier: string;
+  [key: string]: string;
+}
+
+export interface IJobDetails {
+  id: string;
+  schemaName: string;
+  cacheId?: string;
+  clientId?: string;
+  referenceId: string | null;
+  fileUploadId: string;
+  schemaLedgerId: string;
+  credentialDefinitionId?: string;
+  status?: boolean;
+  credential_data: CredentialData
+  orgId: string;
+  credentialType: string;
+}
+
+export interface IQueuePayload{
+  id: string;
+  jobId: string;
+  cacheId?: string;
+  clientId: string;
+  referenceId: string;
+  fileUploadId: string;
+  schemaLedgerId: string;
+  credentialDefinitionId: string;
+  status: string;
+  credential_data: CredentialData;
+  orgId: string;
+  credentialType: string;
+  totalJobs: number;
+  isRetry: boolean;
+  isLastData: boolean;
 }

@@ -303,10 +303,7 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
 
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
-      credentialSubject[key] = {
-        'type': typeof credentialData[key],
-        'title': credentialData[key]
-      };
+      credentialSubject[key] = credentialData[key];
     }
   }
 
@@ -329,7 +326,7 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
               credentialSubject
             },
             'options': {
-              'proofType': 'Ed25519Signature2018',
+              'proofType': 'EcdsaSecp256k1Signature2019',
               'proofPurpose': 'assertionMethod'
             }
           }

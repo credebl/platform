@@ -121,7 +121,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.network ? agentSpinupDto.network : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -1622,7 +1622,7 @@ export class AgentServiceService {
         const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
 
         if (!orgAgentTypeResult) {
-            throw new InternalServerErrorException('Failed to get agent type information');
+            throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
         }
 
         // Determine the URL based on the agent type
@@ -1636,11 +1636,10 @@ export class AgentServiceService {
         })
         .then(async (response) => response);
 
-        if (deleteWallet) {
-          await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
+        if (deleteWallet.status === 204) {
+          const deleteOrgAgent = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
+          return deleteOrgAgent;
         }
-
-        return deleteWallet;
     } catch (error) {
         this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
         throw new RpcException(error.response ? error.response : error);

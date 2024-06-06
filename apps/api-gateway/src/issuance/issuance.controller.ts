@@ -437,12 +437,13 @@ async downloadBulkIssuanceCSVTemplate(
       } catch (error) {
         throw new RpcException(error.response ? error.response : error);
       }
-
       reqPayload = {
-        credDefId: credentialDefinitionId,
+        templateId: credentialDefinitionId,
         fileKey,
-        fileName: fileDetails['fileName'] || file?.filename || file?.originalname
+        fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
+        type: fileDetails?.['type']
       };
+
     }
       const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails, reqPayload);
 

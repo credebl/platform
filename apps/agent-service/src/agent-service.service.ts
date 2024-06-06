@@ -46,7 +46,13 @@ import {
   IDidCreate,
   IWallet,
   ITenantRecord,
-  LedgerListResponse
+  LedgerListResponse,
+  ICreateConnectionInvitation,
+  IStoreAgent,
+  AgentHealthData,
+  IAgentStore,
+  IAgentConfigure,
+  OrgDid
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -1093,18 +1099,9 @@ export class AgentServiceService {
     );
   }
 
-  private async storeDid(createdDidDetails): Promise<{
-    id: string;
-    createDateTime: Date;
-    createdBy: string;
-    lastChangedDateTime: Date;
-    lastChangedBy: string;
-    orgId: string;
-    isPrimaryDid: boolean;
-    did: string;
-    didDocument: Prisma.JsonValue;
-    orgAgentId: string;
-  }> {
+  private async storeDid(createdDidDetails): Promise<
+    OrgDid
+  > {
     const storeDidDetails = await this.agentServiceRepository.storeDidDetails(createdDidDetails);
 
     if (!storeDidDetails) {
@@ -1122,7 +1119,7 @@ export class AgentServiceService {
       await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId, storeDidDetails.didDocument);
     }
 
-    if (method === 'indy') {
+    if (method === DidMethod.INDY) {
       const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(network);
       await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
     }

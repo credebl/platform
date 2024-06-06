@@ -347,10 +347,10 @@ export class AgentController {
     await this.agentService.deleteWallet(orgId, user);
 
     const finalResponse: IResponseType = {
-      statusCode: HttpStatus.NO_CONTENT,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.agent.success.walletDelete
     };
 
-    return res.status(HttpStatus.NO_CONTENT).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

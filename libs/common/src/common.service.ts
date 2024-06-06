@@ -232,13 +232,13 @@ export class CommonService {
     }
   }
 
-  async httpDelete(url: string, config?: unknown): Promise<object> {
+  async httpDelete(url: string, config?: unknown) {
     try {
       return await this.httpService
         .delete(url, config)
         .toPromise()
         .then((data) => {
-          return data.data;
+          return data;
         });
     } catch (error) {
       this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);

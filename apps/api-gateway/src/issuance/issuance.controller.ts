@@ -429,12 +429,11 @@ async downloadBulkIssuanceCSVTemplate(
       } catch (error) {
         throw new RpcException(error.response ? error.response : error);
       }
-
       reqPayload = {
         templateId: credentialDefinitionId,
         fileKey,
         fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
-        type: SchemaType.INDY
+        type: fileDetails?.['type']
       };
 
     }

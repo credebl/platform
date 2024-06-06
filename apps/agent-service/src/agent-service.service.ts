@@ -50,7 +50,7 @@ import {
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
-import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
+import { Prisma, ledgers, org_agents, organisation, platform_config } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
 import { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';
@@ -1004,73 +1004,37 @@ export class AgentServiceService {
   async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
     try {
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
+      const url = this.constructUrl(agentDetails, getOrgAgentType);
+
       if (createDidPayload.method === DidMethod.POLYGON) {
         createDidPayload.endpoint = agentDetails.agentEndPoint;
       }
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      let url;
-      if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
-        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-      } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
-        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
-      }
 
       const { isPrimaryDid, ...payload } = createDidPayload;
-
+      const didDetails = await this.getDidDetails(url, payload, getApiKey);
       const getDidByOrg = await this.agentServiceRepository.getOrgDid(orgId);
 
-      
-      const didDetails = await this.commonService.httpPost(url, payload, {
-        headers: { authorization: getApiKey }
-      });
-      
-      if (!didDetails || Object.keys(didDetails).length === 0) {
-        throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      
-      
-      const didExist = getDidByOrg.some((orgDidExist) => orgDidExist.did === didDetails.did);
-      if (didExist) {
-        throw new ConflictException(ResponseMessages.agent.error.didAlreadyExist, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      
+      await this.checkDidExistence(getDidByOrg, didDetails);
+
       if (isPrimaryDid) {
-        getDidByOrg.map(async () => {
-          await this.agentServiceRepository.updateIsPrimaryDid(orgId, false);
-        });
+        await this.updateAllDidsToNonPrimary(orgId, getDidByOrg);
       }
-      
+
       const createdDidDetails = {
         orgId,
-        did: didDetails.did,
-        didDocument: didDetails.didDocument || didDetails.didDoc,
+        did: didDetails?.['did'] ?? didDetails?.["didState"]?.["did"],
+        didDocument: didDetails?.['didDocument'] ?? didDetails?.['didDoc'] ?? didDetails?.["didState"]?.["didDocument"],
         isPrimaryDid,
         orgAgentId: agentDetails.id,
         userId: user.id
       };
-
-      const storeDidDetails = await this.agentServiceRepository.storeDidDetails(createdDidDetails);
-
-      if (!storeDidDetails) {
-        throw new InternalServerErrorException(ResponseMessages.agent.error.storeDid, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      if (isPrimaryDid && storeDidDetails.did && storeDidDetails.didDocument) {
-        await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId, storeDidDetails.didDocument);
-      }
+      const storeDidDetails = await this.storeDid(createdDidDetails);
 
       if (isPrimaryDid) {
-        const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(createDidPayload.network);
-        await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
+        await this.setPrimaryDidAndLedger(orgId, storeDidDetails, createDidPayload.network, createDidPayload.method);
       }
 
       return storeDidDetails;
@@ -1085,6 +1049,82 @@ export class AgentServiceService {
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
+    }
+  }
+
+  private constructUrl(agentDetails, getOrgAgentType): string {
+    if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
+      return `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
+    } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
+      return `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
+    }
+  }
+
+  private async getDidDetails(url, payload, apiKey): Promise<object> {
+    const didDetails = await this.commonService.httpPost(url, payload, {
+      headers: { authorization: apiKey }
+    });
+
+    if (!didDetails || Object.keys(didDetails).length === 0) {
+      throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.serverError
+      });
+    }
+
+    return didDetails;
+  }
+
+  private checkDidExistence(getDidByOrg, didDetails): void {
+    const didExist = getDidByOrg.some((orgDidExist) => orgDidExist.did === didDetails.did);
+    if (didExist) {
+      throw new ConflictException(ResponseMessages.agent.error.didAlreadyExist, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.serverError
+      });
+    }
+  }
+
+  private async updateAllDidsToNonPrimary(orgId, getDidByOrg): Promise<void> {
+    await Promise.all(
+      getDidByOrg.map(async () => {
+        await this.agentServiceRepository.updateIsPrimaryDid(orgId, false);
+      })
+    );
+  }
+
+  private async storeDid(createdDidDetails): Promise<{
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    orgId: string;
+    isPrimaryDid: boolean;
+    did: string;
+    didDocument: Prisma.JsonValue;
+    orgAgentId: string;
+  }> {
+    const storeDidDetails = await this.agentServiceRepository.storeDidDetails(createdDidDetails);
+
+    if (!storeDidDetails) {
+      throw new InternalServerErrorException(ResponseMessages.agent.error.storeDid, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.serverError
+      });
+    }
+
+    return storeDidDetails;
+  }
+
+  private async setPrimaryDidAndLedger(orgId, storeDidDetails, network, method): Promise<void> {
+    if (storeDidDetails.did && storeDidDetails.didDocument) {
+      await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId, storeDidDetails.didDocument);
+    }
+
+    if (method === 'indy') {
+      const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(network);
+      await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
     }
   }
 

@@ -12,7 +12,7 @@ import {
     ApiQuery,
     ApiExcludeEndpoint
 } from '@nestjs/swagger';
-import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe, Delete } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
@@ -336,5 +336,32 @@ export class VerificationController {
         }
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
+}
+
+@Delete('/:orgId/verification-records')
+@ApiOperation({ summary: 'Delete verification record', description: 'Delete verification records by orgId' })
+@ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+@ApiBearerAuth()
+@Roles(OrgRoles.OWNER)
+@UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+async deleteOrganizationInvitation(
+  @Param(
+    'orgId',
+    new ParseUUIDPipe({
+      exceptionFactory: (): Error => {
+        throw new BadRequestException(`Invalid format for orgId`);
+      }
+    })
+  )
+  orgId: string,
+  @User() user: IUserRequest,
+  @Res() res: Response
+): Promise<Response> {
+  await this.verificationService.deleteVerificationRecord(orgId, user?.['id']);
+  const finalResponse: IResponse = {
+    statusCode: HttpStatus.OK,
+    message: ResponseMessages.verification.success.deleteVerificationRecord
+  };
+  return res.status(HttpStatus.OK).json(finalResponse);
 }
 }

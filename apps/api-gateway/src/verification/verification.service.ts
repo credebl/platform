@@ -4,7 +4,7 @@ import { BaseService } from 'libs/service/base.service';
 import { SendProofRequestPayload, RequestProofDto } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
-import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
@@ -128,4 +128,8 @@ export class VerificationService extends BaseService {
         }
       }
 
+      async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
+        const payload = { orgId, userId };
+        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-record', payload);
+    }
 }

@@ -8,10 +8,8 @@ CREATE TABLE "user_org_delete_activity" (
     "orgId" UUID NOT NULL,
     "recordType" "RecordType" NOT NULL,
     "txnMetadata" JSONB NOT NULL,
-    "createdBy" UUID NOT NULL,
-    "lastChangedBy" UUID NOT NULL,
-    "lastChangedDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "createDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deletedBy" UUID NOT NULL,
+    "deleteDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "user_org_delete_activity_pkey" PRIMARY KEY ("id")
 );

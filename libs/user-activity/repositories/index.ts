@@ -23,15 +23,13 @@ export class UserActivityRepository {
     }
 
     async deletedActivity(userId: string, orgId: string, recordType: RecordType, txnMetadata:object): Promise<user_org_delete_activity> {
-
         return this.prisma.user_org_delete_activity.create({
             data: {
                 userId,
                 orgId,
                 recordType,
                 txnMetadata,
-                createdBy: userId,
-                lastChangedBy: userId
+                deletedBy: userId
             }
         });
     }

@@ -387,6 +387,11 @@ export class OrganizationRepository {
               name: true
             }
           },
+          userOrgRoles: {
+            select: {
+              orgRole: true
+            }
+          },
           org_agents: {
             select: {
               id: true,

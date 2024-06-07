@@ -321,7 +321,8 @@ export const ResponseMessages = {
             create: 'Presentation of proof received successfully.',
             verifiedProofDetails: 'Proof presentation details fetched successfully.',
             send: 'Proof request send successfully.',
-            verified: 'Proof presentation verified successfully.'
+            verified: 'Proof presentation verified successfully.',
+            deleteVerificationRecord: 'Verification records deleted'
         },
         error: {
             notFound: 'Organization agent not found',
@@ -335,7 +336,8 @@ export const ResponseMessages = {
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             batchEmailSend: 'Unable to send email in batches',
-            emailSend: 'Unable to send email to the user'
+            emailSend: 'Unable to send email to the user',
+            verificationRecordsNotFound: 'Verification records not found'
         }
     },
     ecosystem: {
@@ -426,7 +428,7 @@ export const ResponseMessages = {
             invalidtemplateId: 'Invalid template id.',
             invalidIdentifier: 'Invalid Identifier',
             exportFile: 'An error occurred during CSV export.',
-            emailColumn: '1st column of the file should always be email.',
+            emailColumn: '1st column of the file should always be email_identifier.',
             attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
             mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
             fileDetailsNotFound: 'File details not found.',

@@ -422,7 +422,7 @@ export const ResponseMessages = {
             invalidtemplateId: 'Invalid template id.',
             invalidIdentifier: 'Invalid Identifier',
             exportFile: 'An error occurred during CSV export.',
-            emailColumn: '1st column of the file should always be email.',
+            emailColumn: '1st column of the file should always be email_identifier.',
             attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
             mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
             fileDetailsNotFound: 'File details not found.',

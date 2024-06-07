@@ -2,7 +2,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IUsersActivity} from '../interface';
 import { PrismaService } from '@credebl/prisma-service';
-import { user_activity } from '@prisma/client';
+import { RecordType, user_activity, user_org_delete_activity } from '@prisma/client';
 
 @Injectable()
 export class UserActivityRepository {
@@ -22,6 +22,17 @@ export class UserActivityRepository {
         });
     }
 
+    async deletedActivity(userId: string, orgId: string, recordType: RecordType, txnMetadata:object): Promise<user_org_delete_activity> {
+        return this.prisma.user_org_delete_activity.create({
+            data: {
+                userId,
+                orgId,
+                recordType,
+                txnMetadata,
+                deletedBy: userId
+            }
+        });
+    }
 
     async getRecentActivities(userId: string, limit: number): Promise<IUsersActivity[]> {
         return this.prisma.user_activity.findMany({

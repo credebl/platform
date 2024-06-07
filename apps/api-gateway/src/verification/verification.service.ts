@@ -7,8 +7,6 @@ import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
 import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentation } from './interfaces/verification.interface';
-// To do make a similar interface in API-gateway
-import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
 
 
 @Injectable()
@@ -46,7 +44,7 @@ export class VerificationService extends BaseService {
      * @returns Requested proof presentation details
      */
     sendProofRequest(requestProofDto: RequestProofDto, user: IUserRequest): Promise<IProofRequest> {
-        const requestProof: IRequestProof = {
+        const requestProof = {
           orgId: requestProofDto.orgId,
           type: requestProofDto.type,
           comment: requestProofDto.comment,
@@ -55,14 +53,9 @@ export class VerificationService extends BaseService {
           goalCode: requestProofDto.goalCode,
           parentThreadId: requestProofDto.parentThreadId,
           protocolVersion: requestProofDto.protocolVersion,
-          willConfirm: requestProofDto.willConfirm
+          willConfirm: requestProofDto.willConfirm,
+          proofFormats: requestProofDto.proofFormats
         };
-        if (requestProofDto.proofFormats) {
-          requestProof.attributes = requestProofDto.proofFormats.indy.attributes;
-        }
-        if (requestProofDto.presentationDefinition) {
-          requestProof.presentationDefinition = requestProofDto.presentationDefinition;
-        }
 
         const payload = { requestProof, user };
         return this.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);

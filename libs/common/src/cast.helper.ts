@@ -1,7 +1,7 @@
-import { schemaRequestType } from '@credebl/enum/enum';
+import { IssueCredentialType, schemaRequestType } from '@credebl/enum/enum';
 import { ISchemaFields } from './interfaces/schema.interface';
 import { BadRequestException, PipeTransform } from '@nestjs/common';
-import { plainToClass } from 'class-transformer';
+import { ClassConstructor, plainToClass } from 'class-transformer';
 import {
   ValidationArguments,
   ValidationOptions,
@@ -9,7 +9,8 @@ import {
   ValidatorConstraintInterface,
   isBase64,
   isMimeType,
-  registerDecorator
+  registerDecorator,
+  validate
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
 import { TemplateIdentifier } from '@credebl/enum/enum';
@@ -298,14 +299,12 @@ export const validateEmail = (email: string): boolean => {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential) => {
   const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
+  // To do: need to add did of credential subject dynamically
   const credentialSubject = { 'id': 'did:key:kdfJmG7pi1MnrX4y4nkJe' };
 
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
-      credentialSubject[key] = {
-        'type': typeof credentialData[key],
-        'title': credentialData[key]
-      };
+      credentialSubject[key] = credentialData[key];
     }
   }
 
@@ -313,21 +312,25 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
     credentialOffer: [
       {
         'emailId': `${credentialData.email_identifier}`,
-        'credential': {
-          '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
-          'type': [
-            'VerifiableCredential',
-            `${schemaName}`
-          ],
-          'issuer': {
-            'id': `${orgDid}`
-          },
-          'issuanceDate': new Date().toISOString(),
-          credentialSubject
-        },
-        'options': {
-          'proofType': 'Ed25519Signature2018',
-          'proofPurpose': 'assertionMethod'
+        'credentialFormats': {
+          [IssueCredentialType.JSONLD]: {
+            'credential': {
+              '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
+              'type': [
+                'VerifiableCredential',
+                `${schemaName}`
+              ],
+              'issuer': {
+                'id': `${orgDid}`
+              },
+              'issuanceDate': new Date().toISOString(),
+              credentialSubject
+            },
+            'options': {
+              'proofType': 'EcdsaSecp256k1Signature2019',
+              'proofPurpose': 'assertionMethod'
+            }
+          }
         }
       }
     ],
@@ -366,3 +369,36 @@ export function IsHostPortOrDomain(validationOptions?: ValidationOptions) {
     });
   };
 }
+@ValidatorConstraint()
+export class IsNestedElementsConstraint<T extends object> implements ValidatorConstraintInterface {
+
+  constructor(private typeRef: ClassConstructor<T>) {
+  }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
+  public async validate(value: unknown, args: ValidationArguments) {
+    const validations = [];
+    Object.entries(value).forEach(entry => {
+      validations.push(validate(plainToClass(this.typeRef, entry[1])));
+    });
+    const process = await Promise.all(validations);
+    return process.every(p => 0 >= p.length);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  public defaultMessage(args: ValidationArguments) {
+    return `${args.property} error`; 
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const IsNestedElements = (type, validationOptions?: ValidationOptions) => (object: object, propertyName: string) => {
+    registerDecorator({
+      name: 'IsNestedElementsConstraint',
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: new IsNestedElementsConstraint(type)
+    });
+  };

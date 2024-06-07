@@ -105,10 +105,15 @@ export enum NodeEnvironment {
    PRODUCTION='PROD'
 }
 
+export enum ProtocolVersion {
+    v1 = 'v1',
+    v2 = 'v2'
+}
+
 export enum AutoAccept {
-    Always = "always",
-    ContentApproved = "contentApproved",
-    Never = "never"
+    ALWAYS = 'always',
+    CONTENTAPPROVED = 'contentApproved',
+    NEVER = 'never'
 }
 
 export enum SortMembers {
@@ -126,6 +131,7 @@ const transitionMap: { [key in Invitation]: Invitation[] } = {
 
 export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));
 
+// To do: add support for 'Anoncreds' SchemaType
 export enum SchemaType {
     INDY = 'indy',
     W3C_Schema = 'w3c'
@@ -133,7 +139,8 @@ export enum SchemaType {
 
 export enum IssueCredentialType {
     JSONLD = 'jsonld',
-    INDY = 'indy'
+    INDY = 'indy',
+    ANONCREDS = 'anoncreds',
 }
 
 export enum TemplateIdentifier {

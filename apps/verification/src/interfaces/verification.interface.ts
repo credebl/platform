@@ -1,4 +1,4 @@
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept, ProtocolVersion } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 interface IProofRequestAttribute {
@@ -12,23 +12,9 @@ interface IProofRequestAttribute {
 }
 
 export enum ProofRequestType {
+    ANONCREDS = 'anoncreds',
     INDY = 'indy',
     PRESENTATIONEXCHANGE = 'presentationExchange'
-}
-
-export interface IRequestProof {
-    orgId: string;
-    connectionId?: string;
-    attributes?: IProofRequestAttribute[];
-    type: ProofRequestType;
-    presentationDefinition?:IProofRequestPresentationDefinition;
-    comment: string;
-    autoAcceptProof: AutoAccept;
-    protocolVersion?: string;
-    emailId?: string[];
-    goalCode?: string;
-    parentThreadId?: string;
-    willConfirm?: boolean;
 }
 
 export interface IGetAllProofPresentations {
@@ -60,8 +46,12 @@ export interface IProofPresentationData {
     user: IUserRequest;
 }
 
-interface IProofFormats {
-    indy: IndyProof
+interface IAnoncredsProof {
+    name: string;
+    mimeType: string;
+    version: string;
+    requested_attributes: IRequestedAttributes;
+    requested_predicates: IRequestedPredicates;
 }
 
 interface IndyProof {
@@ -128,14 +118,31 @@ export interface IPresentationExchange {
     presentationDefinition:IProofRequestPresentationDefinition;
    
 }
-export interface IPresentationExchangeProofFormats {
+export interface IProofFormats {
     presentationExchange? : IPresentationExchange;
-    indy?: IndyProof
+    indy?: IndyProof;
+    anoncreds?: IAnoncredsProof;
+}
+
+export interface IRequestProof {
+    orgId: string;
+    connectionId?: string;
+    attributes?: IProofRequestAttribute[];
+    type: ProofRequestType;
+    presentationDefinition?:IProofRequestPresentationDefinition;
+    proofFormats?: IProofFormats,
+    comment: string;
+    autoAcceptProof: AutoAccept;
+    protocolVersion?: ProtocolVersion;
+    emailId?: string[];
+    goalCode?: string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
 }
 export interface ISendPresentationExchangeProofRequestPayload {
-    protocolVersion: string;
+    protocolVersion: ProtocolVersion;
     comment: string;
-    proofFormats: IPresentationExchangeProofFormats;
+    proofFormats: IProofFormats;
     autoAcceptProof: string;
     label?: string;
 }
@@ -147,7 +154,7 @@ export interface IPresentationExchangeProofRequestPayload {
 }
 
 export interface ISendProofRequestPayload {
-    protocolVersion?: string;
+    protocolVersion?: ProtocolVersion;
     comment?: string;
     connectionId?: string;
     proofFormats?: IProofFormats;

@@ -1,10 +1,13 @@
 // eslint-disable-next-line camelcase
-import { AutoAccept, SchemaType } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType, ProtocolVersion } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { AnonCredsCredentialFormat, LegacyIndyCredentialFormat } from '@credo-ts/anoncreds';
+import { CredentialFormatPayload, JsonLdCredentialFormat } from '@credo-ts/core';
 import { organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 
+export type CredentialFormatType = LegacyIndyCredentialFormat | JsonLdCredentialFormat | AnonCredsCredentialFormat;
 export interface IAttributes {
   attributeName: string;
   name: string;
@@ -12,20 +15,18 @@ export interface IAttributes {
   isRequired?: boolean;
 }
 
-interface ICredentialsAttributes {
+export interface ICredentialsAttributes {
   connectionId: string;
-  attributes: IAttributes[];
-  credential?:ICredential;
-  options?:IOptions
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
 }
 export interface IIssuance {
   user?: IUserRequest;
-  credentialDefinitionId: string;
+  credentialDefinitionId?: string;
   comment?: string;
   credentialData: ICredentialsAttributes[];
   orgId: string;
   autoAcceptCredential?: AutoAccept,
-  protocolVersion?: string;
+  protocolVersion?: ProtocolVersion;
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
@@ -33,18 +34,17 @@ export interface IIssuance {
   credentialType: string,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface IIndy {
   attributes: IAttributes[],
   credentialDefinitionId: string
 }
 
 export interface IIssueData {
-  protocolVersion?: string;
+  protocolVersion?: ProtocolVersion;
   connectionId: string;
-  credentialFormats: {
-    indy: IIndy
-  },
-  autoAcceptCredential: string,
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
+  autoAcceptCredential: AutoAccept,
   comment?: string;
 }
 
@@ -146,18 +146,16 @@ export interface IOptions{
 }
 export interface CredentialOffer {
   emailId: string;
-  attributes: IAttributes[];
-  credential?:ICredential;
-  options?:IOptions
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
 }
 export interface OutOfBandCredentialOfferPayload {
   credentialDefinitionId?: string;
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
   orgId: string;
   comment?: string;
   credentialOffer?: CredentialOffer[];
   emailId?: string;
-  attributes?: IAttributes[];
-  protocolVersion?: string;
+  protocolVersion?: ProtocolVersion;
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
@@ -260,12 +258,13 @@ export interface OrgAgent {
 
 export interface SendEmailCredentialOffer {
   iterator: CredentialOffer;
-  emailId: string;
+  credentialFormats: CredentialFormatPayload<CredentialFormatType[], 'createOffer'>;
+  emailId?: string;
   index: number;
   credentialType: IssueCredentialType; 
-  protocolVersion: string;
-  attributes: IAttributes[]; 
-  credentialDefinitionId: string; 
+  protocolVersion: ProtocolVersion;
+  attributes?: IAttributes[]; 
+  credentialDefinitionId?: string; 
   outOfBandCredential: OutOfBandCredentialOfferPayload;
   comment: string;
   organisation: organisation; 

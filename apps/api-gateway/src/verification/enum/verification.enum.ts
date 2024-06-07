@@ -6,6 +6,7 @@ export enum SortFields {
 }
 
 export enum ProofRequestType {
+    ANONCREDS = 'anoncreds',
     INDY = 'indy',
     PRESENTATIONEXCHANGE = 'presentationExchange'
 }

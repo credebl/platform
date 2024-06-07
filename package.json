@@ -105,6 +105,8 @@
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
+    "@credo-ts/anoncreds": "^0.5.3",
+    "@credo-ts/core": "^0.5.3",
     "@nestjs/cli": "^10.1.11",
     "@nestjs/schematics": "^10.0.1",
     "@nestjs/testing": "^10.1.3",

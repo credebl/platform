@@ -2,10 +2,10 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation} from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
+import { RecordType, agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
 import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
@@ -15,8 +15,9 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
+import { UserActivityService } from '@credebl/user-activity';
 
 @Injectable()
 export class VerificationService {
@@ -27,6 +28,7 @@ export class VerificationService {
     @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
     private readonly verificationRepository: VerificationRepository,
     private readonly outOfBandVerification: OutOfBandVerification,
+    private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
     @Inject(CACHE_MANAGER) private cacheService: Cache
 
@@ -84,7 +86,7 @@ export class VerificationService {
 
       return proofPresentationsResponse;
     } catch (error) {
-
+                    
       this.logger.error(
         `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
       );
@@ -912,5 +914,24 @@ export class VerificationService {
   
   async delay(ms: number): Promise<unknown> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
+    try {
+      const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
+      if (0 === deleteProofRecords?.deleteResult?.count) {
+        throw new NotFoundException(ResponseMessages.verification.error.verificationRecordsNotFound);
+      }
+
+      const deletedVerificationData = {
+        deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count
+      }; 
+
+      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.VERIFICATION_RECORD, deletedVerificationData);
+      return deleteProofRecords;
+    } catch (error) {
+      this.logger.error(`[deleteVerificationRecords] - error in deleting verification records: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 }             

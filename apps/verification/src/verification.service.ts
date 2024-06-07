@@ -936,10 +936,7 @@ export class VerificationService {
   async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
     try {
       const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
-      if (0 === deleteProofRecords?.deleteResult?.count) {
-        throw new NotFoundException(ResponseMessages.verification.error.verificationRecordsNotFound);
-      }
-
+      
       const deletedVerificationData = {
         deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count
       }; 

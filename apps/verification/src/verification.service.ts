@@ -11,7 +11,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { EmailService } from '@credebl/common/email.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -28,7 +28,8 @@ export class VerificationService {
     private readonly verificationRepository: VerificationRepository,
     private readonly outOfBandVerification: OutOfBandVerification,
     private readonly emailData: EmailDto,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly emailService : EmailService
 
   ) { }
 
@@ -499,7 +500,7 @@ export class VerificationService {
         disposition: 'attachment'
       }
     ];
-    const isEmailSent = await sendEmail(this.emailData);
+    const isEmailSent = await this.emailService.sendEmail(this.emailData);
 
     if (!isEmailSent) {
       throw new Error(ResponseMessages.verification.error.emailSend);

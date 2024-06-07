@@ -37,6 +37,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
+  private counter = 0;
   private processedJobsCounters: Record<string, number> = {};
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
@@ -694,8 +695,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        const isEmailSent = await sendEmail(this.emailData);
-        this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
+        const isEmailSent = await sendEmail(this.emailData);        
+        this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
+        this.counter++;
         if (!isEmailSent) {
           errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
           return false;

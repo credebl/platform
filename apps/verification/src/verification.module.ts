@@ -6,7 +6,6 @@ import { CommonModule } from '@credebl/common';
 import { VerificationRepository } from './repositories/verification.repository';
 import { PrismaService } from '@credebl/prisma-service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-
 @Module({
   imports: [
     ClientsModule.register([
@@ -22,6 +21,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     CacheModule.register()
   ],
   controllers: [VerificationController],
-  providers: [VerificationService, VerificationRepository, PrismaService, Logger, OutOfBandVerification, EmailDto]
+  providers: [VerificationService, VerificationRepository, PrismaService, UserActivityService, UserActivityRepository, Logger, OutOfBandVerification, EmailDto]
 })
 export class VerificationModule { }

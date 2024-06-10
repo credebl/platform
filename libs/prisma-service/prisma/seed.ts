@@ -303,21 +303,40 @@ const createLedgerConfig = async (): Promise<void> => {
         const { ledgerConfig } = JSON.parse(configData);
 
         const ledgerConfigList = await prisma.ledgerConfig.findMany();
+        
+        const checkDataIsEqual = (ledgerConfig, ledgerConfigList): boolean => {
+            if (ledgerConfig.length !== ledgerConfigList.length) {
+                return false;
+            }
+        
+            for (let i = 0; i < ledgerConfig.length; i++) {
+                const config1 = ledgerConfig[i];
+                const config2 = ledgerConfigList.find(item => item.name === config1.name && JSON.stringify(item.details) === JSON.stringify(config1.details));
+        
+                if (!config2) {
+                    return false;
+                }
+            }        
+            return true;
+        };
 
-
-        if (0 === ledgerConfigList.length && ledgerConfig) {
+        if (0 === ledgerConfigList.length) {
             const configDetails = await prisma.ledgerConfig.createMany({
                 data: ledgerConfig
             });
+            logger.log('Ledger config created:', configDetails);
 
-            logger.log(configDetails);
+        } else if (!checkDataIsEqual(ledgerConfig, ledgerConfigList)) {
+            await prisma.ledgerConfig.deleteMany({});
+            const configDetails = await prisma.ledgerConfig.createMany({
+                data: ledgerConfig
+            });
+            logger.log('Existing ledger config deleted and new ones created:', configDetails);
         } else {
             logger.log('Already seeding in ledger config');
         }
-
-
     } catch (e) {
-        logger.error('An error occurred ecosystem config:', e);
+        logger.error('An error occurred while configuring ledger:', e);
     }
 };
 

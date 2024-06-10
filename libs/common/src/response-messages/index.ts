@@ -119,7 +119,8 @@ export const ResponseMessages = {
             invalidClient: 'Invalid client credentials',
             primaryDid: 'This DID is already set to primary DID',
             didNotFound: 'DID does not exist in organiation',
-            MaximumOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.'
+            MaximumOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.',
+            organizationEcosystemValidate: 'This organization is an ecosystem lead or ecosystem owner.'
         }
     },
 
@@ -210,7 +211,8 @@ export const ResponseMessages = {
             ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
             getWebhookUrl:'Webhook Url fetched successfully',
-            createKeys:'Key-pair created successfully'
+            createKeys:'Key-pair created successfully',
+            walletDelete: 'Wallet is deleted'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -249,7 +251,8 @@ export const ResponseMessages = {
             failedAgentType: 'Agent endpoint is required',
             failedApiKey: 'Failed to encrypt API key',
             failedOrganization: 'Failed to fetch organization agent type details',
-            promiseReject: 'One or more promises were rejected.'
+            promiseReject: 'One or more promises were rejected.',
+            orgAgentNotFound: 'Org agent type not found'
         }
     },
     connection: {

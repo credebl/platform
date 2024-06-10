@@ -80,4 +80,11 @@ export class AgentService extends BaseService {
         return this.sendNatsMessage(this.agentServiceProxy, 'agent-configure', payload);
     }
 
+    async deleteWallet(orgId: string, user: user): Promise<object> {
+        const payload = { orgId, user };
+        // NATS call
+        
+        return this.sendNatsMessage(this.agentServiceProxy, 'delete-wallet', payload);
+    }
+
 }

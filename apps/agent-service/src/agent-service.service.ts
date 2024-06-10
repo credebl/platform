@@ -122,7 +122,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.network ? agentSpinupDto.network : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -1632,17 +1632,52 @@ export class AgentServiceService {
     }
   }
 
-  async deleteWallet(url: string, apiKey: string): Promise<object> {
+  async deleteWallet(orgId: string): Promise<object> {
     try {
-      const deleteWallet = await this.commonService
-        .httpDelete(url, { headers: { authorization: apiKey } })
+        // Retrieve the API key and agent information
+        const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
+            this.getOrgAgentApiKey(orgId),
+            this.agentServiceRepository.getAgentApiKey(orgId)
+        ]);
+
+        if (getApiKeyResult.status === 'rejected') {
+            throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
+        }
+
+        if (orgAgentResult.status === 'rejected') {
+            throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
+        }
+
+        const getApiKey = getApiKeyResult?.value;
+        const orgAgent = orgAgentResult?.value;
+
+        const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
+
+        if (!orgAgentTypeResult) {
+            throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
+        }
+
+        // Determine the URL based on the agent type
+        const url = orgAgentTypeResult.agent === OrgAgentType.SHARED
+            ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
+            : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
+
+        // Make the HTTP DELETE request
+        const deleteWallet = await this.commonService.httpDelete(url, {
+            headers: { authorization: getApiKey }
+        })
         .then(async (response) => response);
-      return deleteWallet;
+
+        if (deleteWallet.status === 204) {
+          const deleteOrgAgent = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
+          return deleteOrgAgent;
+        }
     } catch (error) {
-      this.logger.error(`Error in delete wallet in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+        this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
+        throw new RpcException(error.response ? error.response : error);
     }
   }
+
 
   async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, orgId: string): Promise<string> {
     try {

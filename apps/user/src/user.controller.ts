@@ -204,4 +204,14 @@ export class UserController {
     return this.userService.getPlatformEcosystemSettings();
   }
 
+
+  /** 
+  * @param email
+  * @returns User's email verification status exist status
+  * */
+  @MessagePattern({ cmd: 'check-user-email-verification-status' })
+  async checkUserEmailVerificationStatus(payload: { userEmail: string }): Promise<boolean> {
+    return this.userService.checkUserEmailVerificationStatus(payload.userEmail);
+  }
+
 }

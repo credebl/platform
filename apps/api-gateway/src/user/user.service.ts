@@ -101,4 +101,8 @@ export class UserService extends BaseService {
   async getPlatformSettings(): Promise<object> {
     return this.sendNatsMessage(this.serviceProxy, 'fetch-platform-settings', '');
   }
+  async checkUserEmailVerificationStatus(userEmail: string): Promise<boolean> {
+    const payload = { userEmail };
+    return this.sendNatsMessage(this.serviceProxy, 'check-user-email-verification-status', payload);
+  }
 }

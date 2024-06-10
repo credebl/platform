@@ -1143,4 +1143,17 @@ export class UserService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+
+  async checkUserEmailVerificationStatus(email: string): Promise<boolean> {
+    try {
+      const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase());
+       return userDetails.isEmailVerified;
+    } catch (error) {
+      this.logger.error(`In user email verification status : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+
 }

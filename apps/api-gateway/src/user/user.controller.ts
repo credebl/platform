@@ -51,6 +51,7 @@ import { AwsService } from '@credebl/aws/aws.service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { CreateCertificateDto } from './dto/share-certificate.dto';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
+import { CheckEmailVerificationDto } from './dto/check-email-vrification.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -416,6 +417,25 @@ export class UserController {
     const finalResponse = {
       statusCode: HttpStatus.OK,
       message: result
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   *
+   * @param email
+   * @returns User's email-verifiaction exist status
+   */
+  @Get('/email-verification-status')
+  @ApiOperation({ summary: 'Check  user email verification status', description: 'Check  user email verification status' })
+  async checkUserEmailVerificationStatus(@Body() checkEmailVerificationDto: CheckEmailVerificationDto, @Res() res: Response): Promise<Response> {
+    const userDetails = await this.userService.checkUserEmailVerificationStatus(checkEmailVerificationDto.email);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.checkEmail,
+      data: userDetails
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

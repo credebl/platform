@@ -82,14 +82,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
       exception.response?.status ??
       exception.response?.statusCode ??
       exception?.error?.meta?.cause ??
-      exception.code ??
+      exception.code ?? 
+      exception.error.statusCode ??
       HttpStatus.INTERNAL_SERVER_ERROR;
     const message =
       exception.response?.data?.message ??
       exception.response?.message ??
       exception?.error?.meta?.cause ??
+      exception?.error?.message ??
       exception?.message ??
       'Internal server error';
-    return { httpStatus, message, error: ResponseMessages.errorMessages.serverError };
+    const error =
+    exception?.error?.error ??
+    ResponseMessages.errorMessages.serverError;
+    return { httpStatus, message, error };
   }
 }

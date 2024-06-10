@@ -25,7 +25,7 @@ import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interface
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 import { UserActivityService } from '@credebl/user-activity';
-import { RecordType } from '@prisma/client';
+// import { RecordType } from '@prisma/client';
 
 @Injectable()
 export class ConnectionService {
@@ -772,16 +772,57 @@ export class ConnectionService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteConnectionRecords(orgId: string, userId: string): Promise<any> {
+  async deleteConnectionRecords(orgId: string): Promise<any> {
     try {
       const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
-      
-      const deletedConnectionData = {
-        deletedProofRecordsCount : deleteConnections?.deleteResult?.count
-      }; 
+      // console.log('deleteConnections456::::', deleteConnections);
 
-      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.CONNECTION, deletedConnectionData);
+      if (0 === deleteConnections?.count) {
+        throw new NotFoundException('Connection records not found');
+     }
+
+     const startStatusConnections = [];
+      const completedConnections = [];
+      const abandonedConnections = [];
+      const invitationSentStatusConnections = [];
+      const invitationReceivedStatusConnections = [];
+      const requestSentStatusConnections = [];
+      const declinedStatusConnections = [];
+      const requestReceivedStatusConnections = [];
+      const responseSentStatusConnections = [];
+      const responseReceivedStatusConnections = [];
+  
+      deleteConnections.getConnectionRecords.forEach(record => {
+        if ('complete' === record.state) {
+          completedConnections.push(record);
+        } else if ('abandoned' === record.state) {
+          abandonedConnections.push(record);
+        } else if ('start' === record.state) {
+          startStatusConnections.push(record);
+        } else if ('invitation-sent' === record.state) {
+          invitationSentStatusConnections.push(record);
+        } else if ('invitation-received' === record.state) {
+          invitationReceivedStatusConnections.push(record);
+        } else if ('request-sent' === record.state) {
+          requestSentStatusConnections.push(record);
+        } else if ('decliend' === record.state) {
+          declinedStatusConnections.push(record);
+        } else if ('request-received' === record.state) {
+          requestReceivedStatusConnections.push(record);
+        } else if ('response-sent' === record.state) {
+          responseSentStatusConnections.push(record);
+        } else if ('response-received' === record.state) {
+          responseReceivedStatusConnections.push(record);
+        }
+      });
+      
+      // const deletedConnectionData = {
+      //   deletedProofRecordsCount : deleteConnections?.count
+      // }; 
+
+      // await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.CONNECTION, deletedConnectionData);
       return deleteConnections;
+
     } catch (error) {
       this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

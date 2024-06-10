@@ -92,8 +92,8 @@ export class ConnectionController {
 
   @MessagePattern({ cmd: 'delete-connection-records' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteConnectionRecords(payload: {orgId: string, userId: string}): Promise<any> {  
-    const { orgId, userId } = payload;
-    return this.connectionService.deleteConnectionRecords(orgId, userId);
+  async deleteConnectionRecords(payload: {orgId: string}): Promise<any> {  
+    const { orgId } = payload;
+    return this.connectionService.deleteConnectionRecords(orgId);
   }
 }

@@ -318,10 +318,22 @@ export class ConnectionRepository {
         if (0 < referencedTables.length) {
           throw new ConflictException(`Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`);
         }
+        
+        const getConnectionRecords = await prisma.connections.findMany(
+          { 
+            where: { 
+              orgId 
+            }
+          });
 
-        const deleteConnectionRecords = await prisma.connections.deleteMany({ where: { orgId } });
+        const deleteConnectionRecords = await prisma.connections.deleteMany(
+          { 
+            where: { 
+              orgId 
+            }
+          });
 
-        return deleteConnectionRecords;
+        return {getConnectionRecords, deleteConnectionRecords };
       });
     } catch (error) {
       this.logger.error(`Error in deleting connection records: ${error.message}`);

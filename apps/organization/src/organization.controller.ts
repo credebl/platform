@@ -6,9 +6,9 @@ import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IDeleteOrganization, IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
 import { organisation } from '@prisma/client';
-import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization } from '@credebl/common/interfaces/organization.interface';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 

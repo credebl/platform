@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { agent_invitations, org_agents, platform_config, shortening_url } from '@prisma/client';
 import { IConnectionSearchCriteria, ICreateConnection, OrgAgent } from './interfaces/connection.interfaces';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IConnectionsListCount } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionsListCount, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { SortValue } from '@credebl/enum/enum';
 // import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
@@ -301,8 +301,7 @@ export class ConnectionRepository {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteConnectionRecordsByOrgId(orgId: string): Promise<any> {
+  async deleteConnectionRecordsByOrgId(orgId: string): Promise<IDeletedConnectionsRecord> {
     const tablesToCheck = ['credentials', 'presentations'];
 
     try {
@@ -323,6 +322,15 @@ export class ConnectionRepository {
           { 
             where: { 
               orgId 
+            },
+            select: {
+              createDateTime: true,
+              createdBy: true,
+              connectionId: true,
+              theirLabel: true,
+              state: true,
+              orgId: true
+          
             }
           });
 

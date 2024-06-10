@@ -11,7 +11,7 @@ import {
   IReceiveInvitationByUrlOrg,
   IReceiveInvitationResponse
 } from './interfaces/connection.interfaces';
-import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 
@@ -91,8 +91,7 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'delete-connection-records' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteConnectionRecords(payload: {orgId: string}): Promise<any> {  
+  async deleteConnectionRecords(payload: {orgId: string}): Promise<IDeletedConnectionsRecord> {  
     const { orgId } = payload;
     return this.connectionService.deleteConnectionRecords(orgId);
   }

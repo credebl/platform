@@ -4,7 +4,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
-import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { QuestionDto } from './dtos/question-answer.dto';
 
@@ -131,8 +131,7 @@ export class ConnectionService extends BaseService {
     return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteConnectionRecords(orgId: string, userId: string): Promise<any> {
+  async deleteConnectionRecords(orgId: string, userId: string): Promise<IDeletedConnectionsRecord> {
     const payload = { orgId, userId };
     return this.sendNatsMessage(this.connectionServiceProxy, 'delete-connection-records', payload);
   }

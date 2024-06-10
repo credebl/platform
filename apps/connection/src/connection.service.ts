@@ -18,10 +18,10 @@ import {
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { ConnectionStatus, OrgAgentType } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 import { UserActivityService } from '@credebl/user-activity';
@@ -771,61 +771,43 @@ export class ConnectionService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteConnectionRecords(orgId: string): Promise<any> {
+  async deleteConnectionRecords(orgId: string): Promise<IDeletedConnectionsRecord> {
     try {
-      const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
-      // console.log('deleteConnections456::::', deleteConnections);
+        const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
 
-      if (0 === deleteConnections?.count) {
-        throw new NotFoundException('Connection records not found');
-     }
-
-     const startStatusConnections = [];
-      const completedConnections = [];
-      const abandonedConnections = [];
-      const invitationSentStatusConnections = [];
-      const invitationReceivedStatusConnections = [];
-      const requestSentStatusConnections = [];
-      const declinedStatusConnections = [];
-      const requestReceivedStatusConnections = [];
-      const responseSentStatusConnections = [];
-      const responseReceivedStatusConnections = [];
-  
-      deleteConnections.getConnectionRecords.forEach(record => {
-        if ('complete' === record.state) {
-          completedConnections.push(record);
-        } else if ('abandoned' === record.state) {
-          abandonedConnections.push(record);
-        } else if ('start' === record.state) {
-          startStatusConnections.push(record);
-        } else if ('invitation-sent' === record.state) {
-          invitationSentStatusConnections.push(record);
-        } else if ('invitation-received' === record.state) {
-          invitationReceivedStatusConnections.push(record);
-        } else if ('request-sent' === record.state) {
-          requestSentStatusConnections.push(record);
-        } else if ('decliend' === record.state) {
-          declinedStatusConnections.push(record);
-        } else if ('request-received' === record.state) {
-          requestReceivedStatusConnections.push(record);
-        } else if ('response-sent' === record.state) {
-          responseSentStatusConnections.push(record);
-        } else if ('response-received' === record.state) {
-          responseReceivedStatusConnections.push(record);
+        if (0 === deleteConnections?.deleteConnectionRecords?.count) {
+            throw new NotFoundException('Connection records not found');
         }
-      });
-      
-      // const deletedConnectionData = {
-      //   deletedProofRecordsCount : deleteConnections?.count
-      // }; 
 
-      // await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.CONNECTION, deletedConnectionData);
-      return deleteConnections;
+        const statusCounts = {
+            [ConnectionStatus.start]: 0,
+            [ConnectionStatus.complete]: 0,
+            [ConnectionStatus.abandoned]: 0,
+            [ConnectionStatus.invitationSent]: 0,
+            [ConnectionStatus.invitationReceived]: 0,
+            [ConnectionStatus.requestSent]: 0,
+            [ConnectionStatus.declined]: 0,
+            [ConnectionStatus.requestReceived]: 0,
+            [ConnectionStatus.responseSent]: 0,
+            [ConnectionStatus.responseReceived]: 0
+        };
+
+        await Promise.all(deleteConnections.getConnectionRecords.map(async (record) => {
+            statusCounts[record.state]++;
+        }));
+
+        // const deletedConnectionData = {
+        //     deletedProofRecordsCount: deleteConnections?.deleteConnectionRecords?.count,
+        //     deletedRecordsStatusCount: statusCounts
+        // };
+
+        // await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.CONNECTION, deletedConnectionData);
+        return deleteConnections;
 
     } catch (error) {
-      this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+        this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
     }
-  }
+}
+
 }

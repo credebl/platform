@@ -24,6 +24,8 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
+import { UserActivityService } from '@credebl/user-activity';
+import { RecordType } from '@prisma/client';
 
 @Injectable()
 export class ConnectionService {
@@ -31,6 +33,7 @@ export class ConnectionService {
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
     private readonly connectionRepository: ConnectionRepository,
+    private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
@@ -764,6 +767,23 @@ export class ConnectionService {
         statusCode: error?.status?.code
       });
     } else {
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteConnectionRecords(orgId: string, userId: string): Promise<any> {
+    try {
+      const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
+      
+      const deletedConnectionData = {
+        deletedProofRecordsCount : deleteConnections?.deleteResult?.count
+      }; 
+
+      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.CONNECTION, deletedConnectionData);
+      return deleteConnections;
+    } catch (error) {
+      this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

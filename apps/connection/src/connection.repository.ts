@@ -300,4 +300,25 @@ export class ConnectionRepository {
       throw error;
     }
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteConnectionRecordsByOrgId(orgId: string): Promise<any> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {  
+
+        const recordsToDelete = await this.prisma.connections.findMany({
+          where: { orgId }
+        });
+
+        const deleteResult = await prisma.connections.deleteMany({
+          where: { orgId }
+        });
+        
+        return { deleteResult, recordsToDelete};
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting connection records: ${error.message}`);    
+      throw error;
+    }
+  } 
 }

@@ -128,8 +128,8 @@ export class VerificationService extends BaseService {
         }
       }
 
-      async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
+      async deleteVerificationRecords(orgId: string, userId: string): Promise<IVerificationRecords> {
         const payload = { orgId, userId };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-record', payload);
+        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-records', payload);
     }
 }

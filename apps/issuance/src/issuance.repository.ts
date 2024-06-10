@@ -573,4 +573,26 @@ export class IssuanceRepository {
       throw error;
     }
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteIssuanceRecordsByOrgId(orgId: string): Promise<any> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {  
+
+        const recordsToDelete = await this.prisma.credentials.findMany({
+          where: { orgId }
+        });
+
+        const deleteResult = await prisma.credentials.deleteMany({
+          where: { orgId }
+        });
+        
+        return { deleteResult, recordsToDelete};
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting issuance records: ${error.message}`);    
+      throw error;
+    }
+  } 
+
 }

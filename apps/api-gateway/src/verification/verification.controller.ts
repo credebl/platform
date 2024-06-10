@@ -342,12 +342,12 @@ export class VerificationController {
 @ApiBearerAuth()
 @Roles(OrgRoles.OWNER)
 @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-async deleteOrganizationInvitation(
+async deleteVerificationRecordsByOrgId(
   @Param(
     'orgId',
     new ParseUUIDPipe({
       exceptionFactory: (): Error => {
-        throw new BadRequestException(`Invalid format for orgId`);
+        throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
       }
     })
   )
@@ -355,7 +355,7 @@ async deleteOrganizationInvitation(
   @User() user: IUserRequest,
   @Res() res: Response
 ): Promise<Response> {
-  await this.verificationService.deleteVerificationRecord(orgId, user?.['id']);
+  await this.verificationService.deleteVerificationRecords(orgId, user?.['id']);
   const finalResponse: IResponse = {
     statusCode: HttpStatus.OK,
     message: ResponseMessages.verification.success.deleteVerificationRecord

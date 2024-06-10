@@ -916,7 +916,7 @@ export class VerificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
+  async deleteVerificationRecords(orgId: string, userId: string): Promise<IVerificationRecords> {
     try {
       const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
       

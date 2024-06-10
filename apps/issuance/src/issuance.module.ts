@@ -14,6 +14,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { BulkIssuanceProcessor } from './issuance.processor';
 import { AwsService } from '@credebl/aws';
+import { UserActivityService } from '@credebl/user-activity';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 @Module({
   imports: [
@@ -38,6 +40,6 @@ import { AwsService } from '@credebl/aws';
     })
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService]
+  providers: [IssuanceService, IssuanceRepository, PrismaService, UserActivityService, UserActivityRepository, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService]
 })
 export class IssuanceModule { }

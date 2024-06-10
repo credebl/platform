@@ -10,6 +10,8 @@ import { ConnectionService } from 'apps/connection/src/connection.service';
 import { ConnectionRepository } from 'apps/connection/src/connection.repository';
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { UserActivityService } from '@credebl/user-activity/user-activity.service';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     AgentServiceService,
     AgentServiceRepository,
     PrismaService,
+    UserActivityService,
+    UserActivityRepository,
     Logger,
     ConnectionService,
     ConnectionRepository

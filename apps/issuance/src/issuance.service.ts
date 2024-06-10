@@ -29,9 +29,10 @@ import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import { IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { agent_invitations, organisation } from '@prisma/client';
+import { RecordType, agent_invitations, organisation } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { UserActivityService } from '@credebl/user-activity';
 
 
 @Injectable()
@@ -47,6 +48,7 @@ export class IssuanceService {
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
+    private readonly userActivityService: UserActivityService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
@@ -1407,5 +1409,21 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteIssuanceRecords(orgId: string, userId: string): Promise<any> {
+    try {
+      const deleteCredentialsRecords = await this.issuanceRepository.deleteIssuanceRecordsByOrgId(orgId);
+      
+      const deletedIssuanceData = {
+        deletedProofRecordsCount : deleteCredentialsRecords?.deleteResult?.count
+      }; 
+
+      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.ISSUANCE_RECORD, deletedIssuanceData);
+      return deleteCredentialsRecords;
+    } catch (error) {
+      this.logger.error(`[deleteIssuanceRecords] - error in deleting issuance records: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 }
 

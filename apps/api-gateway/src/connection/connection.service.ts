@@ -130,4 +130,10 @@ export class ConnectionService extends BaseService {
     const payload = { user, createOutOfBandConnectionInvitation };
     return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteConnectionRecords(orgId: string, userId: string): Promise<any> {
+    const payload = { orgId, userId };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'delete-connection-records', payload);
+  }
 }

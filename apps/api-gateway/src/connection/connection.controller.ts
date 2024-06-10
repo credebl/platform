@@ -1,6 +1,6 @@
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject, ParseUUIDPipe, BadRequestException, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
@@ -332,4 +332,32 @@ export class ConnectionController {
     } 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+  @Delete('/:orgId/connections')
+  @ApiOperation({ summary: 'Delete connection record', description: 'Delete connections by orgId' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async deleteConnectionsByOrgId(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @User() user: IUserRequest,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.connectionService.deleteConnectionRecords(orgId, user?.['id']);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.connection.success.deleteConnectionRecord
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
 }

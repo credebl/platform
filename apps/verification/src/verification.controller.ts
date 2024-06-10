@@ -73,9 +73,9 @@ export class VerificationController {
     return this.verificationService.getVerifiedProofdetails(proofId, orgId);
   }
 
-  @MessagePattern({ cmd: 'delete-verification-record' })
-  async deleteVerificationRecord(payload: {orgId: string, userId: string}): Promise<IVerificationRecords> {  
+  @MessagePattern({ cmd: 'delete-verification-records' })
+  async deleteVerificationRecords(payload: {orgId: string, userId: string}): Promise<IVerificationRecords> {  
     const { orgId, userId } = payload;
-    return this.verificationService.deleteVerificationRecord(orgId, userId);
+    return this.verificationService.deleteVerificationRecords(orgId, userId);
   }
 }

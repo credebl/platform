@@ -19,7 +19,8 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
-  ParseUUIDPipe
+  ParseUUIDPipe,
+  Delete
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -740,5 +741,32 @@ issueCredentialDto.type = 'Issuance';
       
     }
     return res.status(HttpStatus.CREATED).json(finalResponse);
-    }   
+    }  
+    
+    @Delete('/:orgId/issuance-records')
+    @ApiOperation({ summary: 'Delete issuance record', description: 'Delete issuance records by orgId' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiBearerAuth()
+    @Roles(OrgRoles.OWNER)
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    async deleteIssuanceRecordsByOrgId(
+      @Param(
+        'orgId',
+        new ParseUUIDPipe({
+          exceptionFactory: (): Error => {
+            throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+          }
+        })
+      )
+      orgId: string,
+      @User() user: IUserRequest,
+      @Res() res: Response
+    ): Promise<Response> {
+      await this.issueCredentialService.deleteIssuanceRecords(orgId, user?.['id']);
+      const finalResponse: IResponse = {
+        statusCode: HttpStatus.OK,
+        message: ResponseMessages.issuance.success.deleteIssuanceRecord
+      };
+      return res.status(HttpStatus.OK).json(finalResponse);
+    }
 }

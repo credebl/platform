@@ -158,4 +158,9 @@ export class IssuanceService extends BaseService {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async deleteIssuanceRecords(orgId: string, userId: string): Promise<any> {
+        const payload = { orgId, userId };
+        return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
+    }
 }

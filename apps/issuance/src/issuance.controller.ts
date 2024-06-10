@@ -91,4 +91,11 @@ export class IssuanceController {
   async retryeBulkCredentials(payload: { fileId: string, orgId: string, clientId: string }): Promise<string> {
     return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientId);
   }
+
+  @MessagePattern({ cmd: 'delete-issuance-records' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteIssuanceRecords(payload: {orgId: string, userId: string}): Promise<any> {  
+    const { orgId, userId } = payload;
+    return this.issuanceService.deleteIssuanceRecords(orgId, userId);
+  }
 }

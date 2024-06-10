@@ -118,6 +118,7 @@ export enum CommonConstants {
   URL_SHAGENT_SEND_QUESTION = '/multi-tenancy/question-answer/question/#/@',
   URL_SHAGENT_SEND_ANSWER = '/multi-tenancy/question-answer/answer/#/@',
   URL_SHAGENT_QUESTION_ANSWER_RECORD = '/multi-tenancy/question-answer/#',
+  URL_SHAGENT_DELETE_SUB_WALLET = '/multi-tenancy/#',
   
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',

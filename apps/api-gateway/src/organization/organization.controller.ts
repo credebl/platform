@@ -515,7 +515,7 @@ export class OrganizationController {
    */
   @Delete('/:orgId')
   @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
-  @ApiResponse({ status: HttpStatus.ACCEPTED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Roles(OrgRoles.OWNER)

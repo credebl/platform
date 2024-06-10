@@ -26,14 +26,20 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { Invitation, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IDeleteOrganization } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
 import { AwsService } from '@credebl/aws';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import {
+  IOrgCredentials,
+  IOrganization,
+  IOrganizationInvitations,
+  IOrganizationDashboard,
+  IDeleteOrganization
+} from '@credebl/common/interfaces/organization.interface';
 
 import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';

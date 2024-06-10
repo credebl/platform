@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, org_agents, platform_config, shortening_url } from '@prisma/client';
@@ -303,22 +303,29 @@ export class ConnectionRepository {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async deleteConnectionRecordsByOrgId(orgId: string): Promise<any> {
+    const tablesToCheck = ['credentials', 'presentations'];
+
     try {
-      return await this.prisma.$transaction(async (prisma) => {  
+      return await this.prisma.$transaction(async (prisma) => {
+        const referenceCounts = await Promise.all(
+          tablesToCheck.map((table) => prisma[table].count({ where: { orgId } }))
+        );
 
-        const recordsToDelete = await this.prisma.connections.findMany({
-          where: { orgId }
-        });
+        const referencedTables = referenceCounts
+          .map((count, index) => (0 < count ? tablesToCheck[index] : null))
+          .filter(Boolean);
 
-        const deleteResult = await prisma.connections.deleteMany({
-          where: { orgId }
-        });
-        
-        return { deleteResult, recordsToDelete};
+        if (0 < referencedTables.length) {
+          throw new ConflictException(`Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`);
+        }
+
+        const deleteConnectionRecords = await prisma.connections.deleteMany({ where: { orgId } });
+
+        return deleteConnectionRecords;
       });
     } catch (error) {
-      this.logger.error(`Error in deleting connection records: ${error.message}`);    
+      this.logger.error(`Error in deleting connection records: ${error.message}`);
       throw error;
     }
-  } 
+  }
 }

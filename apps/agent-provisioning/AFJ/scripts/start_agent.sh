@@ -145,14 +145,14 @@ cat <<EOF >${CONFIG_FILE}
   "inboundTransport": [
     {
       "transport": "$PROTOCOL",
-      "port": "$INBOUND_PORT"
+      "port": $INBOUND_PORT
     }
   ],
   "outboundTransport": [
     "$PROTOCOL"
   ],
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
-  "adminPort": "$ADMIN_PORT",
+  "adminPort": $ADMIN_PORT,
   "tenancy": $TENANT,
   "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
 }

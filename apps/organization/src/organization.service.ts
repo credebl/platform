@@ -40,7 +40,7 @@ import {
   IOrganizationInvitations,
   IOrganizationDashboard,
   IDeleteOrganization,
-  IOrgReferencesCount
+  IOrgActivityCount
 } from '@credebl/common/interfaces/organization.interface';
 
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
@@ -1264,7 +1264,7 @@ export class OrganizationService {
   }
 
 
-  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgReferencesCount> {
+  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgActivityCount> {
     try {
       const [
         verificationRecordsCount,

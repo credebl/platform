@@ -93,7 +93,7 @@ export interface IOrganizationDashboard {
     clientId: string;
     clientSecret: string;
   }
-  export interface IOrgReferencesCount {
+  export interface IOrgActivityCount {
     verificationRecordsCount: number;
     issuanceRecordsCount: number;
     connectionRecordsCount: number;

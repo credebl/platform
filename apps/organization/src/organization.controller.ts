@@ -5,7 +5,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
-import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization, IOrgReferencesCount } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
 import { organisation, user } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
@@ -207,7 +207,7 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'get-organization-activity-count' })
-  async getOrganizationActivityCount(payload: { orgId: string; userId: string }): Promise<IOrgReferencesCount> {
+  async getOrganizationActivityCount(payload: { orgId: string; userId: string }): Promise<IOrgActivityCount> {
     return this.organizationService.getOrganizationActivityCount(payload.orgId, payload.userId);
   }
 

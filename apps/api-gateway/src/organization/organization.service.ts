@@ -9,7 +9,7 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { organisation, user } from '@prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
-import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard, IDeleteOrganization, IOrgReferencesCount } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
@@ -140,7 +140,7 @@ export class OrganizationService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'get-organization-dashboard', payload);
   }
 
-  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgReferencesCount> {
+  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgActivityCount> {
     const payload = { orgId, userId };
     return this.sendNatsMessage(this.serviceProxy, 'get-organization-activity-count', payload);
   }

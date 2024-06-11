@@ -484,4 +484,29 @@ export class AgentServiceRepository {
       throw error;
     }
   }
+
+  async deleteOrgAgentByOrg(orgId: string): Promise<{orgDid: Prisma.BatchPayload;
+    agentInvitation: Prisma.BatchPayload;
+    // eslint-disable-next-line camelcase
+    deleteOrgAgent: org_agents;
+    }> {
+    try {
+        return await this.prisma.$transaction(async (prisma) => {
+            // Concurrently delete related records
+            const [orgDid, agentInvitation] = await Promise.all([
+                prisma.org_dids.deleteMany({ where: { orgId } }),
+                prisma.agent_invitations.deleteMany({ where: { orgId } })
+            ]);
+
+            // Delete the organization agent
+            const deleteOrgAgent = await prisma.org_agents.delete({ where: { orgId } });
+
+            return {orgDid, agentInvitation, deleteOrgAgent};
+        });
+    } catch (error) {
+        this.logger.error(`[deleteOrgAgentByOrg] - Error deleting org agent record: ${error.message}`);
+        throw error;
+    }
+}
+
 }

@@ -119,7 +119,8 @@ export const ResponseMessages = {
             invalidClient: 'Invalid client credentials',
             primaryDid: 'This DID is already set to primary DID',
             didNotFound: 'DID does not exist in organiation',
-            MaximumOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.'
+            MaximumOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.',
+            organizationEcosystemValidate: 'This organization is an ecosystem lead or ecosystem owner.'
         }
     },
 
@@ -210,7 +211,8 @@ export const ResponseMessages = {
             ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
             getWebhookUrl:'Webhook Url fetched successfully',
-            createKeys:'Key-pair created successfully'
+            createKeys:'Key-pair created successfully',
+            walletDelete: 'The wallet has been deleted.'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -249,7 +251,8 @@ export const ResponseMessages = {
             failedAgentType: 'Agent endpoint is required',
             failedApiKey: 'Failed to encrypt API key',
             failedOrganization: 'Failed to fetch organization agent type details',
-            promiseReject: 'One or more promises were rejected.'
+            promiseReject: 'One or more promises were rejected.',
+            orgAgentNotFound: 'Org agent type not found'
         }
     },
     connection: {
@@ -318,7 +321,8 @@ export const ResponseMessages = {
             create: 'Presentation of proof received successfully.',
             verifiedProofDetails: 'Proof presentation details fetched successfully.',
             send: 'Proof request send successfully.',
-            verified: 'Proof presentation verified successfully.'
+            verified: 'Proof presentation verified successfully.',
+            deleteVerificationRecord: 'Verification records deleted'
         },
         error: {
             notFound: 'Organization agent not found',
@@ -332,7 +336,8 @@ export const ResponseMessages = {
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             batchEmailSend: 'Unable to send email in batches',
-            emailSend: 'Unable to send email to the user'
+            emailSend: 'Unable to send email to the user',
+            verificationRecordsNotFound: 'Verification records not found'
         }
     },
     ecosystem: {

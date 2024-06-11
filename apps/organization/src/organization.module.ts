@@ -35,7 +35,7 @@ import { AwsService } from '@credebl/aws';
   providers: [
     OrganizationService, OrganizationRepository, PrismaService,
      Logger, OrgRolesService, UserOrgRolesService, OrgRolesRepository, UserActivityRepository,
-      UserOrgRolesRepository, UserRepository, UserActivityService,
+     UserActivityRepository, UserOrgRolesRepository, UserRepository, UserActivityService,
       ClientRegistrationService,
       KeycloakUrlService,
       AwsService

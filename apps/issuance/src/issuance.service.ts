@@ -1108,7 +1108,7 @@ const limit = pLimit(MAX_CONCURRENT_OPERATIONS);
 const startTime = Date.now(); // Start timing the entire process
 
 const batches = await this.splitIntoBatches(parsedData, BATCH_SIZE);
-this.logger.log("batches:::::::::", batches);
+// this.logger.log("batches:::::::::", batches);
 this.logger.log("Total number of batches:", batches.length);
 
 for (const [index, batch] of batches.entries()) {

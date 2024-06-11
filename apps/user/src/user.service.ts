@@ -1199,7 +1199,7 @@ export class UserService {
 
   async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
     try {
-      return this.userRepository.updateOrgDeletedActivity(orgId, userId, deletedBy, recordType, userEmail, txnMetadata);
+      return await this.userRepository.updateOrgDeletedActivity(orgId, userId, deletedBy, recordType, userEmail, txnMetadata);
     } catch (error) {
       this.logger.error(`In updateOrgDeletedActivity : ${JSON.stringify(error)}`);
       throw error;

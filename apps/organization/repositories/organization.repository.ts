@@ -72,6 +72,10 @@ export class OrganizationRepository {
           website: createOrgDto.website,
           orgSlug: createOrgDto.orgSlug,
           publicProfile: false,
+          registrationNumber:createOrgDto.registrationNumber,
+          country:createOrgDto.country,
+          city:createOrgDto.city,
+          state:createOrgDto.state,
           createdBy: createOrgDto.createdBy,
           lastChangedBy: createOrgDto.lastChangedBy
         }

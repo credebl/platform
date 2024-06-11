@@ -25,7 +25,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { Invitation, transition } from '@credebl/enum/enum';
+import { Invitation, RecordType, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -46,6 +46,7 @@ import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dt
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { toNumber } from '@credebl/common/cast.helper';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -59,8 +60,10 @@ export class OrganizationService {
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private readonly clientRegistrationService: ClientRegistrationService
-  ) { }
+    private readonly clientRegistrationService: ClientRegistrationService,
+    private readonly userActivityRepository: UserActivityRepository
+  ) {}
+  
 
   /**
    *
@@ -1291,14 +1294,40 @@ export class OrganizationService {
     }
   }
 
-  async deleteOrganization(orgId: string): Promise<IDeleteOrganization> {
+  async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     try {
-      const deleteOrg = await this.organizationRepository.deleteOrg(orgId);
-      return deleteOrg;
-      
+        const { deletedUserActivity, deletedUserOrgRole, deleteOrg } = await this.organizationRepository.deleteOrg(orgId);
+
+        this.logger.log(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
+        this.logger.log(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
+        this.logger.log(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`);
+
+        const deletions = [
+            { records: deletedUserActivity.count, tableName: 'user_activity' },
+            { records: deletedUserOrgRole.count, tableName: 'user_org_roles' },
+            { records: deleteOrg ? 1 : 0, tableName: 'organization' }
+        ];
+
+        const logDeletionActivity = async (records, tableName): Promise<void> => {
+            if (records) {
+                const txnMetadata = {
+                    deletedRecordsCount: records,
+                    deletedRecordInTable: tableName
+                };
+                const recordType = RecordType.ORGANIZATION;
+                await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
+            }
+        };
+
+        for (const { records, tableName } of deletions) {
+            await logDeletionActivity(records, tableName);
+        }
+
+        return deleteOrg;
+        
     } catch (error) {
-      this.logger.error(`delete organization: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+        this.logger.error(`delete organization: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
     }
   }
 

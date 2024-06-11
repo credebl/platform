@@ -41,14 +41,17 @@ import {
   IUserCredentials, 
    IUserInformation,
     IUsersProfile,
-    IUserResetPassword
+    IUserResetPassword,
+    IPuppeteerOption,
+    IShareDegreeCertificateRes,
+    IUserDeletedActivity
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { EcosystemConfigSettings, Invitation, UserCertificateId } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, Invitation, RecordType, UserCertificateId } from '@credebl/enum/enum';
 import { WinnerTemplate } from '../templates/winner-template';
 import { ParticipantTemplate } from '../templates/participant-template';
 import { ArbiterTemplate } from '../templates/arbiter-template';
@@ -1191,6 +1194,15 @@ export class UserService {
     } catch (error) {
       this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
+    try {
+      return this.userRepository.updateOrgDeletedActivity(orgId, userId, deletedBy, recordType, userEmail, txnMetadata);
+    } catch (error) {
+      this.logger.error(`In updateOrgDeletedActivity : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 }

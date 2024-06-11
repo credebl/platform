@@ -1,6 +1,4 @@
-import { ICheckUserDetails, PlatformSettings, ShareUserCertificate, UpdateUserProfile, IUserCredentials, IUsersProfile, IUserInformation, IUserSignIn, IUserResetPassword} from '../interfaces/user.interface';
-import {IOrgUsers, Payload} from '../interfaces/user.interface';
-
+import { IOrgUsers, Payload, ICheckUserDetails, PlatformSettings, IShareUserCertificate, UpdateUserProfile, IUsersProfile, IUserInformation, IUserSignIn, IUserCredentials, IUserResetPassword, IUserDeletedActivity} from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
@@ -209,6 +207,11 @@ export class UserController {
   @MessagePattern({ cmd: 'fetch-platform-settings' })
   async getPlatformEcosystemSettings(): Promise<object> {
     return this.userService.getPlatformEcosystemSettings();
+  }
+
+  @MessagePattern({ cmd: 'org-deleted-activity' })
+  async updateOrgDeletedActivity(payload: { orgId, userId, deletedBy, recordType, userEmail, txnMetadata }): Promise<IUserDeletedActivity> {
+    return this.userService.updateOrgDeletedActivity(payload.orgId, payload.userId, payload.deletedBy, payload.recordType, payload.userEmail, payload.txnMetadata);
   }
 
 }

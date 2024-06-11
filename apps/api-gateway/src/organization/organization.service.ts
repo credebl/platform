@@ -6,7 +6,7 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { organisation } from '@prisma/client';
+import { organisation, user } from '@prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard, IDeleteOrganization } from '@credebl/common/interfaces/organization.interface';
@@ -203,9 +203,10 @@ export class OrganizationService extends BaseService {
   }
 
   async deleteOrganization(
-    orgId: string
+    orgId: string,
+    user: user
   ): Promise<IDeleteOrganization> {
-    const payload = { orgId };
+    const payload = { orgId, user };
 
     return this.sendNats(this.serviceProxy, 'delete-organization', payload);
   }

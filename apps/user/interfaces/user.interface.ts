@@ -1,3 +1,5 @@
+import { Prisma, RecordType } from "@prisma/client";
+
 export interface IUsersProfile {
   id: string;
   username?: string;
@@ -206,4 +208,14 @@ export interface IIssueCertificate {
 export  interface IPuppeteerOption{
   width: number;
   height: number;
+}
+
+export interface IUserDeletedActivity {
+  id: string;
+  userId: string;
+  orgId: string;
+  recordType: RecordType;
+  txnMetadata: Prisma.JsonValue;
+  deletedBy: string;
+  deleteDateTime: Date;
 }

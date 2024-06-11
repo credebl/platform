@@ -515,22 +515,24 @@ model ledgerConfig {
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
 }
+
 model user_org_delete_activity {
-  id                  String       @id @default(uuid()) @db.Uuid
-  userId              String       @unique @db.Uuid
-  orgId               String       @unique @db.Uuid
-  recordType          RecordType
-  txnMetadata         Json         
-  deletedBy           String       @db.Uuid
-  deleteDateTime      DateTime     @default(now()) @db.Timestamptz(6)
+  id             String     @id @default(uuid()) @db.Uuid
+  userEmail      String
+  userId         String     @db.Uuid
+  orgId          String     @db.Uuid
+  recordType     RecordType
+  txnMetadata    Json
+  deletedBy      String     @db.Uuid
+  deleteDateTime DateTime   @default(now()) @db.Timestamptz(6)
 }
 
 enum RecordType {
-    VERIFICATION_RECORD
-    ISSUANCE_RECORD
-    CONNECTION
-    ECOSYSTEM_MEMBER
-    ORGANIZATION
-    WALLET
-    INVITATION
-  }
+  VERIFICATION_RECORD
+  ISSUANCE_RECORD
+  CONNECTION
+  ECOSYSTEM_MEMBER
+  ORGANIZATION
+  WALLET
+  INVITATION
+}

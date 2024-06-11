@@ -91,8 +91,8 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'delete-connection-records' })
-  async deleteConnectionRecords(payload: {orgId: string}): Promise<IDeletedConnectionsRecord> {  
-    const { orgId } = payload;
-    return this.connectionService.deleteConnectionRecords(orgId);
+  async deleteConnectionRecords(payload: {orgId: string, userId: string}): Promise<IDeletedConnectionsRecord> {  
+    const { orgId, userId } = payload;
+    return this.connectionService.deleteConnectionRecords(orgId, userId);
   }
 }

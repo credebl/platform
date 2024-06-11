@@ -25,7 +25,7 @@ import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 import { UserActivityService } from '@credebl/user-activity';
-// import { RecordType } from '@prisma/client';
+import { RecordType } from '@prisma/client';
 
 @Injectable()
 export class ConnectionService {
@@ -771,7 +771,7 @@ export class ConnectionService {
     }
   }
 
-  async deleteConnectionRecords(orgId: string): Promise<IDeletedConnectionsRecord> {
+  async deleteConnectionRecords(orgId: string, userId: string): Promise<IDeletedConnectionsRecord> {
     try {
         const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
 
@@ -796,12 +796,12 @@ export class ConnectionService {
             statusCounts[record.state]++;
         }));
 
-        // const deletedConnectionData = {
-        //     deletedProofRecordsCount: deleteConnections?.deleteConnectionRecords?.count,
-        //     deletedRecordsStatusCount: statusCounts
-        // };
+        const deletedConnectionData = {
+            deletedProofRecordsCount: deleteConnections?.deleteConnectionRecords?.count,
+            deletedRecordsStatusCount: statusCounts
+        };
 
-        // await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.CONNECTION, deletedConnectionData);
+        await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.CONNECTION, deletedConnectionData);
         return deleteConnections;
 
     } catch (error) {

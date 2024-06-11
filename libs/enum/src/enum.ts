@@ -139,13 +139,3 @@ export enum IssueCredentialType {
 export enum TemplateIdentifier {
     EMAIL_COLUMN = 'email_identifier'
 }
-
-export enum RecordType {
-    VERIFICATION_RECORD = 'VERIFICATION_RECORD',
-    ISSUANCE_RECORD = 'ISSUANCE_RECORD',
-    CONNECTION = 'CONNECTION',
-    ECOSYSTEM_MEMBER = 'ECOSYSTEM_MEMBER',
-    ORGANIZATION = 'ORGANIZATION',
-    WALLET = 'WALLET',
-    INVITATION = 'INVITATION',
-  }

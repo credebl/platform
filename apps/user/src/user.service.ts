@@ -26,7 +26,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-import { user } from '@prisma/client';
+import { RecordType, user } from '@prisma/client';
 import {
   Attribute,
   ICheckUserDetails,
@@ -51,7 +51,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { EcosystemConfigSettings, Invitation, RecordType, UserCertificateId } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, Invitation, UserCertificateId } from '@credebl/enum/enum';
 import { WinnerTemplate } from '../templates/winner-template';
 import { ParticipantTemplate } from '../templates/participant-template';
 import { ArbiterTemplate } from '../templates/arbiter-template';

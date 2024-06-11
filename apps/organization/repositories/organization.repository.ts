@@ -302,6 +302,20 @@ export class OrganizationRepository {
     }
   }
 
+
+  async getOrgInvitationsCount(orgId: string): Promise<number> {
+    try {
+      return this.prisma.org_invitations.count({
+        where: {
+          orgId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   async getOrgInvitationsPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<IOrganizationInvitations> {
     try {
       const result = await this.prisma.$transaction([

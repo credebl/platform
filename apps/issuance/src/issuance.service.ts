@@ -1101,7 +1101,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
 //------------------------------------------------ Remove code after use -----------------------------------
 const BATCH_SIZE = 100;
-const MAX_CONCURRENT_OPERATIONS = 50;
+const MAX_CONCURRENT_OPERATIONS = 60; //Initial 50
 const limit = pLimit(MAX_CONCURRENT_OPERATIONS);
 
 const startTime = Date.now(); // Start timing the entire process

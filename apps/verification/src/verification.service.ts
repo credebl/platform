@@ -6,7 +6,7 @@ import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresen
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { RecordType, agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
-import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
+import { AutoAccept, OrgAgentType, ProofState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -920,8 +920,29 @@ export class VerificationService {
     try {
       const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
       
+      if (0 === deleteProofRecords?.deleteResult?.count) {
+        throw new NotFoundException(ResponseMessages.verification.error.verificationRecordsNotFound);
+    }
+
+    const statusCounts = {
+        [ProofState.ProposalSent]: 0,
+        [ProofState.ProposalReceived]: 0,
+        [ProofState.RequestSent]: 0,
+        [ProofState.RequestReceived]: 0,
+        [ProofState.PresentationReceived]: 0,
+        [ProofState.PresentationSent]: 0,
+        [ProofState.Done]: 0,
+        [ProofState.Declined]: 0,
+        [ProofState.Abandoned]: 0
+    };
+
+    await Promise.all(deleteProofRecords.recordsToDelete.map(async (record) => {
+        statusCounts[record.state]++;
+    }));
+
       const deletedVerificationData = {
-        deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count
+        deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count,
+        deletedRecordsStatusCount : statusCounts
       }; 
 
       await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.VERIFICATION_RECORD, deletedVerificationData);

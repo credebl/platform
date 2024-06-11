@@ -25,6 +25,7 @@ import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
 import { SortValue } from '@credebl/enum/enum';
+import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -574,13 +575,20 @@ export class IssuanceRepository {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteIssuanceRecordsByOrgId(orgId: string): Promise<any> {
+  async deleteIssuanceRecordsByOrgId(orgId: string): Promise<IDeletedIssuanceRecords> {
     try {
       return await this.prisma.$transaction(async (prisma) => {  
 
         const recordsToDelete = await this.prisma.credentials.findMany({
-          where: { orgId }
+          where: { orgId },
+          select: {
+            createDateTime: true,
+            createdBy: true,
+            connectionId: true,
+            schemaId: true,
+            state: true,
+            orgId: true       
+          }
         });
 
         const deleteResult = await prisma.credentials.deleteMany({

@@ -140,7 +140,7 @@ export enum TemplateIdentifier {
     EMAIL_COLUMN = 'email_identifier'
 }
 
-export enum ConnectionStatus {
+export enum ConnectionState {
     start = 'start',
     invitationSent = 'invitation-sent',
     invitationReceived = 'invitation-received',
@@ -152,3 +152,30 @@ export enum ConnectionStatus {
     complete = 'completed',
     abandoned = 'abandoned'
 }
+
+export enum IssueCredentialState {
+    proposalSent = 'proposal-sent',
+    proposalReceived = 'proposal-received',
+    offerSent = 'offer-sent',
+    offerReceived = 'offer-received',
+    declined = 'decliend',
+    requestSent = 'request-sent',
+    requestReceived = 'request-received',
+    credentialIssued = 'credential-issued',
+    credentialReceived = 'credential-received',
+    done = 'done',
+    abandoned = 'abandoned'
+}
+
+export enum ProofState {
+    ProposalSent = 'proposal-sent',
+    ProposalReceived = 'proposal-received',
+    RequestSent = 'request-sent',
+    RequestReceived = 'request-received',
+    PresentationSent = 'presentation-sent',
+    PresentationReceived = 'presentation-received',
+    Declined = 'declined',
+    Abandoned = 'abandoned',
+    Done = 'done'
+}
+

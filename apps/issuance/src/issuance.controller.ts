@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { IClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
-import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 
 @Controller()
@@ -93,8 +93,7 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'delete-issuance-records' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteIssuanceRecords(payload: {orgId: string, userId: string}): Promise<any> {  
+  async deleteIssuanceRecords(payload: {orgId: string, userId: string}): Promise<IDeletedIssuanceRecords> {  
     const { orgId, userId } = payload;
     return this.issuanceService.deleteIssuanceRecords(orgId, userId);
   }

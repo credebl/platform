@@ -269,7 +269,8 @@ export const ResponseMessages = {
             exists: 'Connection is already exist',
             connectionNotFound: 'Connection not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
-            agentUrlNotFound: 'agent url not found'
+            agentUrlNotFound: 'agent url not found',
+            connectionRecordNotFound: 'Connection records not found'
         }
     },
     issuance: {
@@ -314,7 +315,8 @@ export const ResponseMessages = {
             invalidCredentialType:'invalid credential type',
             missingRequestId: 'Param requestId is missing from the request.',
             cachedData: 'Cached data does not exist',
-            cachedfileData: 'Cached file data does not exist'
+            cachedfileData: 'Cached file data does not exist',
+            issuanceRecordsNotFound: 'Issuance records not found'
         }
     },
     verification: {

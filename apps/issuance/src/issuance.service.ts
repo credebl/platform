@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
-import { OrgAgentType, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
+import { IssueCredentialState, OrgAgentType, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -27,7 +27,7 @@ import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
+import { IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { RecordType, agent_invitations, organisation } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
@@ -1409,17 +1409,39 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteIssuanceRecords(orgId: string, userId: string): Promise<any> {
+  async deleteIssuanceRecords(orgId: string, userId: string): Promise<IDeletedIssuanceRecords> {
     try {
-      const deleteCredentialsRecords = await this.issuanceRepository.deleteIssuanceRecordsByOrgId(orgId);
+      const deletedCredentialsRecords = await this.issuanceRepository.deleteIssuanceRecordsByOrgId(orgId);
       
+      if (0 === deletedCredentialsRecords?.deleteResult?.count) {
+        throw new NotFoundException(ResponseMessages.issuance.error.issuanceRecordsNotFound);
+    }
+
+    const statusCounts = {
+        [IssueCredentialState.requestSent]: 0,
+        [IssueCredentialState.requestReceived]: 0,
+        [IssueCredentialState.proposalSent]: 0,
+        [IssueCredentialState.proposalReceived]: 0,
+        [IssueCredentialState.offerSent]: 0,
+        [IssueCredentialState.offerReceived]: 0,
+        [IssueCredentialState.done]: 0,
+        [IssueCredentialState.declined]: 0,
+        [IssueCredentialState.credentialReceived]: 0,
+        [IssueCredentialState.credentialIssued]: 0,
+        [IssueCredentialState.abandoned]: 0
+    };
+
+    await Promise.all(deletedCredentialsRecords?.recordsToDelete?.map(async (record) => {
+        statusCounts[record.state]++;
+    }));
+
       const deletedIssuanceData = {
-        deletedProofRecordsCount : deleteCredentialsRecords?.deleteResult?.count
+        deletedProofRecordsCount : deletedCredentialsRecords?.deleteResult?.count,
+        deletedRecordsStatusCount: statusCounts
       }; 
 
       await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.ISSUANCE_RECORD, deletedIssuanceData);
-      return deleteCredentialsRecords;
+      return deletedCredentialsRecords;
     } catch (error) {
       this.logger.error(`[deleteIssuanceRecords] - error in deleting issuance records: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

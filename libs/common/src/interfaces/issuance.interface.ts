@@ -27,3 +27,12 @@ export interface IIssuedCredential {
     orgDid: string;
     orgId: string;
   }
+  
+  interface IDeletedIssuanceRecordsCount {
+    count: number;
+  }
+
+  export interface IDeletedIssuanceRecords {
+    deleteResult: IDeletedIssuanceRecordsCount;
+    recordsToDelete: IIssuedCredentialResponse[];
+  }

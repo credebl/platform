@@ -5,7 +5,7 @@ import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails, TemplateDetails } from './dtos/issuance.dto';
 import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITemplateFormat, IssueCredentialType, UploadedFileDetails } from './interfaces';
-import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 
 @Injectable()
@@ -158,8 +158,7 @@ export class IssuanceService extends BaseService {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async deleteIssuanceRecords(orgId: string, userId: string): Promise<any> {
+    async deleteIssuanceRecords(orgId: string, userId: string): Promise<IDeletedIssuanceRecords> {
         const payload = { orgId, userId };
         return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
     }

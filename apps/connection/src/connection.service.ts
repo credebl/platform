@@ -18,7 +18,7 @@ import {
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { ConnectionStatus, OrgAgentType } from '@credebl/enum/enum';
+import { ConnectionState, OrgAgentType } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
@@ -776,20 +776,20 @@ export class ConnectionService {
         const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
 
         if (0 === deleteConnections?.deleteConnectionRecords?.count) {
-            throw new NotFoundException('Connection records not found');
+            throw new NotFoundException(ResponseMessages.connection.error.connectionRecordNotFound);
         }
 
         const statusCounts = {
-            [ConnectionStatus.start]: 0,
-            [ConnectionStatus.complete]: 0,
-            [ConnectionStatus.abandoned]: 0,
-            [ConnectionStatus.invitationSent]: 0,
-            [ConnectionStatus.invitationReceived]: 0,
-            [ConnectionStatus.requestSent]: 0,
-            [ConnectionStatus.declined]: 0,
-            [ConnectionStatus.requestReceived]: 0,
-            [ConnectionStatus.responseSent]: 0,
-            [ConnectionStatus.responseReceived]: 0
+            [ConnectionState.start]: 0,
+            [ConnectionState.complete]: 0,
+            [ConnectionState.abandoned]: 0,
+            [ConnectionState.invitationSent]: 0,
+            [ConnectionState.invitationReceived]: 0,
+            [ConnectionState.requestSent]: 0,
+            [ConnectionState.declined]: 0,
+            [ConnectionState.requestReceived]: 0,
+            [ConnectionState.responseSent]: 0,
+            [ConnectionState.responseReceived]: 0
         };
 
         await Promise.all(deleteConnections.getConnectionRecords.map(async (record) => {

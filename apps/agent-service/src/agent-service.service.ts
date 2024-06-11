@@ -8,6 +8,7 @@ import {
   BadRequestException,
   ConflictException,
   HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -1693,7 +1694,7 @@ export class AgentServiceService {
         })
         .then(async (response) => response);
 
-      if (deleteWallet.status === 204) {
+      if (deleteWallet.status === HttpStatus.NO_CONTENT) {
         const {orgDid, agentInvitation, deleteOrgAgent} = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
 
         this.logger.log(`orgDid :::: ${JSON.stringify(orgDid)}`);

@@ -212,7 +212,7 @@ export const ResponseMessages = {
             webhookUrlRegister:'Webhook Url registered successfully',
             getWebhookUrl:'Webhook Url fetched successfully',
             createKeys:'Key-pair created successfully',
-            walletDelete: 'Wallet is deleted'
+            walletDelete: 'The wallet has been deleted.'
         },
         error: {
             exists: 'An agent name is already exist',

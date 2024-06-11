@@ -55,9 +55,9 @@ import {
   IAgentConfigure,
   OrgDid
 } from './interface/agent-service.interface';
-import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, RecordType } from '@credebl/enum/enum';
+import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
-import { Prisma, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
+import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
 import { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';

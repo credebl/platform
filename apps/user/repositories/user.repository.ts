@@ -9,13 +9,15 @@ import {
   IUserCredentials,
   ISendVerificationEmail,
   IUsersProfile,
-  IUserInformation, 
-  IVerifyUserEmail
+  IUserInformation,
+  IVerifyUserEmail,
+  IUserDeletedActivity
 } from '../interfaces/user.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { schema, token, user } from '@prisma/client';
+import { RecordType } from '@credebl/enum/enum';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -36,7 +38,7 @@ export class UserRepository {
    * @param userEmailVerification
    * @returns user's email
    */
-  async createUser(userEmailVerification:ISendVerificationEmail, verifyCode: string): Promise<user> {
+  async createUser(userEmailVerification: ISendVerificationEmail, verifyCode: string): Promise<user> {
     try {
       const saveResponse = await this.prisma.user.upsert({
         where: {
@@ -76,7 +78,7 @@ export class UserRepository {
       });
     } catch (error) {
       this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
-      throw new error;
+      throw new error();
     }
   }
 
@@ -203,9 +205,9 @@ export class UserRepository {
   }
 
   /**
-   * 
-   * @param id 
-   * @returns 
+   *
+   * @param id
+   * @returns
    */
   async getUserByKeycloakId(id: string): Promise<object> {
     try {
@@ -243,7 +245,6 @@ export class UserRepository {
     }
   }
 
-
   async findUserByEmail(email: string): Promise<object> {
     const queryOptions: UserQueryOptions = {
       email
@@ -275,13 +276,13 @@ export class UserRepository {
         keycloakUserId: true,
         isEmailVerified: true,
         userOrgRoles: {
-          select:{
+          select: {
             id: true,
-            userId:true,
-            orgRoleId:true,
-            orgId:true,
+            userId: true,
+            orgRoleId: true,
+            orgId: true,
             orgRole: {
-              select:{
+              select: {
                 id: true,
                 name: true,
                 description: true
@@ -292,7 +293,7 @@ export class UserRepository {
                 id: true,
                 name: true,
                 description: true,
-                orgSlug:true,
+                orgSlug: true,
                 logoUrl: true,
                 website: true,
                 publicProfile: true
@@ -329,13 +330,13 @@ export class UserRepository {
         isEmailVerified: true,
         publicProfile: true,
         userOrgRoles: {
-          select:{
+          select: {
             id: true,
-            userId:true,
-            orgRoleId:true,
-            orgId:true,
+            userId: true,
+            orgRoleId: true,
+            orgId: true,
             orgRole: {
-              select:{
+              select: {
                 id: true,
                 name: true,
                 description: true
@@ -346,7 +347,7 @@ export class UserRepository {
                 id: true,
                 name: true,
                 description: true,
-                orgSlug:true,
+                orgSlug: true,
                 logoUrl: true,
                 website: true,
                 publicProfile: true
@@ -364,10 +365,7 @@ export class UserRepository {
    * @returns Updates organization details
    */
   // eslint-disable-next-line camelcase
-  async updateUserDetails(
-    id: string, 
-    keycloakId: string
-    ): Promise<user> {
+  async updateUserDetails(id: string, keycloakId: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
@@ -465,7 +463,7 @@ export class UserRepository {
                       agentSpinUpStatus: true,
                       agentsTypeId: true,
                       createDateTime: true,
-                      orgAgentTypeId:true
+                      orgAgentTypeId: true
                     }
                   }
                 }
@@ -620,10 +618,10 @@ export class UserRepository {
   }
 
   /**
-   * 
-   * @param userId 
-   * @param token 
-   * @param expireTime 
+   *
+   * @param userId
+   * @param token
+   * @param expireTime
    * @returns token details
    */
   async createTokenForResetPassword(userId: string, token: string, expireTime: Date): Promise<token> {
@@ -643,9 +641,9 @@ export class UserRepository {
   }
 
   /**
-   * 
-   * @param userId 
-   * @param token 
+   *
+   * @param userId
+   * @param token
    * @returns reset password token details
    */
   async getResetPasswordTokenDetails(userId: string, token: string): Promise<token> {
@@ -664,8 +662,8 @@ export class UserRepository {
   }
 
   /**
-   * 
-   * @param id 
+   *
+   * @param id
    * @returns token delete records
    */
   async deleteResetPasswordToken(id: string): Promise<token> {
@@ -758,6 +756,25 @@ export class UserRepository {
     } catch (error) {
       this.logger.error(`error in getEcosystemSettings: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
+    }
+  }
+
+  async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
+    try {
+      const orgDeletedActivity = await this.prisma.user_org_delete_activity.create({
+        data: {
+          orgId,
+          userEmail,
+          deletedBy,
+          recordType,
+          txnMetadata,
+          userId
+        }
+      });
+      return orgDeletedActivity;
+    } catch (error) {
+      this.logger.error(`Error in updateOrgDeletedActivity: ${error} `);
+      throw error;
     }
   }
 }

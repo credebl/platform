@@ -1105,6 +1105,7 @@ this.logger.log("BATCH_SIZE:", BATCH_SIZE);
 const MAX_CONCURRENT_OPERATIONS = 50; //Initial 50
 this.logger.log("MAX_CONCURRENT_OPERATIONS:", MAX_CONCURRENT_OPERATIONS);
 const limit = pLimit(MAX_CONCURRENT_OPERATIONS);
+this.logger.log("limit:", limit);
 
 const startTime = Date.now(); // Start timing the entire process
 

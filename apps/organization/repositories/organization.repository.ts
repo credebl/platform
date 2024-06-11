@@ -733,7 +733,11 @@ export class OrganizationRepository {
     }
   }
 
-  async deleteOrg(id: string): Promise<IDeleteOrganization> {
+  async deleteOrg(id: string):Promise<{
+    deletedUserActivity: Prisma.BatchPayload;
+    deletedUserOrgRole: Prisma.BatchPayload;
+    deleteOrg: IDeleteOrganization
+  }> {
     const tablesToCheck = [
         'org_invitations',
         'org_agents',
@@ -776,15 +780,15 @@ export class OrganizationRepository {
             }
 
             // User activity delete by orgId
-            await prisma.user_activity.deleteMany({ where: { orgId: id } });
+            const deletedUserActivity = await prisma.user_activity.deleteMany({ where: { orgId: id } });
 
             // User org role delete by orgId
-            await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
+            const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
 
             // If no references are found, delete the organization
             const deleteOrg = await prisma.organisation.delete({ where: { id } });
 
-            return deleteOrg;
+            return {deletedUserActivity, deletedUserOrgRole, deleteOrg};
         });
     } catch (error) {
         this.logger.error(`Error in deleteOrg: ${error}`);

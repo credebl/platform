@@ -26,7 +26,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-import { user } from '@prisma/client';
+import { RecordType, user } from '@prisma/client';
 import {
   Attribute,
   ICheckUserDetails,
@@ -40,7 +40,8 @@ import {
     IUsersProfile,
     IUserResetPassword,
     IPuppeteerOption,
-    IShareDegreeCertificateRes
+    IShareDegreeCertificateRes,
+    IUserDeletedActivity
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -1141,6 +1142,15 @@ export class UserService {
     } catch (error) {
       this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
+    try {
+      return await this.userRepository.updateOrgDeletedActivity(orgId, userId, deletedBy, recordType, userEmail, txnMetadata);
+    } catch (error) {
+      this.logger.error(`In updateOrgDeletedActivity : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 }

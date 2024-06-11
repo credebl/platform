@@ -1100,7 +1100,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
 
 //------------------------------------------------ Remove code after use -----------------------------------
-const BATCH_SIZE = 200; //Initial 50
+const BATCH_SIZE = 50; //Initial 50
 this.logger.log("BATCH_SIZE:", BATCH_SIZE);
 const MAX_CONCURRENT_OPERATIONS = 60; //Initial 50
 this.logger.log("MAX_CONCURRENT_OPERATIONS:", MAX_CONCURRENT_OPERATIONS);

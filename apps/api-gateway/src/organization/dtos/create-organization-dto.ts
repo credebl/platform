@@ -47,23 +47,27 @@ export class CreateOrganizationDto {
   @IsString({ message: 'logo must be in string format.' })
   logo?: string = '';
 
-  @ApiProperty({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'registrationNumber must be in string format.' })
   registrationNumber?: string;
 
-  @ApiProperty({ example: '' })
-  @IsNotEmpty()
-  @IsString()
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'country must be in string format.' })
   country?: string;
 
-  @ApiProperty({ example: '' })
-  @IsString()
+  @ApiPropertyOptional()
   @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'state must be in string format.' })
   state?: string;
 
-  @ApiProperty({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'city must be in string format.' })
   city?: string;
 }

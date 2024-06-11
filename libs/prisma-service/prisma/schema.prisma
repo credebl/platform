@@ -520,7 +520,7 @@ model ledgerConfig {
 
 model user_org_delete_activity {
   id             String     @id @default(uuid()) @db.Uuid
-  userEmail      String
+  userEmail      String     @default("")
   userId         String     @db.Uuid
   orgId          String     @db.Uuid
   recordType     RecordType

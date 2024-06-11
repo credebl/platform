@@ -35,7 +35,8 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
     UserActivityRepository,
     Logger,
     ConnectionService,
-    ConnectionRepository
+    ConnectionRepository,
+    UserActivityRepository
   ],
   exports: [AgentServiceService, AgentServiceRepository, AgentServiceModule]
 })

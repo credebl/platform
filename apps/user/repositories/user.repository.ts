@@ -16,8 +16,7 @@ import {
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { schema, token, user } from '@prisma/client';
-import { RecordType } from '@credebl/enum/enum';
+import { RecordType, schema, token, user } from '@prisma/client';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model

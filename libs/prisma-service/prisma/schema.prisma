@@ -105,6 +105,10 @@ model organisation {
   idpId                 String?                 @db.VarChar(500)
   clientId              String?                 @db.VarChar(500)
   clientSecret          String?                 @db.VarChar(500)
+  registrationNumber    String?                 @db.VarChar(100)
+  country               String?                 @db.VarChar(100)
+  city                  String?                 @db.VarChar(100)
+  state                 String?                  @db.VarChar(100)
   connections           connections[]
   credentials           credentials[]
   org_agents            org_agents[]

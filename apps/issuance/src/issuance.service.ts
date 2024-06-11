@@ -697,6 +697,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
+        //Remove after test ------------------------------
+
         // const isEmailSent = await sendEmail(this.emailData);  
         const isEmailSent = true;      
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);

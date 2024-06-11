@@ -4,6 +4,7 @@ import { IClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIs
 import { IssuanceService } from './issuance.service';
 import { IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
+import { user } from '@prisma/client';
 
 @Controller()
 export class IssuanceController {
@@ -93,8 +94,8 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'delete-issuance-records' })
-  async deleteIssuanceRecords(payload: {orgId: string, userId: string}): Promise<IDeletedIssuanceRecords> {  
-    const { orgId, userId } = payload;
-    return this.issuanceService.deleteIssuanceRecords(orgId, userId);
+  async deleteIssuanceRecords(payload: {orgId: string, user: user}): Promise<IDeletedIssuanceRecords> {  
+    const { orgId, user } = payload;
+    return this.issuanceService.deleteIssuanceRecords(orgId, user);
   }
 }

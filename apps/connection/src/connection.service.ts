@@ -25,7 +25,8 @@ import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 import { UserActivityService } from '@credebl/user-activity';
-import { RecordType } from '@prisma/client';
+import { RecordType, user } from '@prisma/client';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 @Injectable()
 export class ConnectionService {
@@ -34,6 +35,7 @@ export class ConnectionService {
     @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
     private readonly connectionRepository: ConnectionRepository,
     private readonly userActivityService: UserActivityService,
+    private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
@@ -771,7 +773,7 @@ export class ConnectionService {
     }
   }
 
-  async deleteConnectionRecords(orgId: string, userId: string): Promise<IDeletedConnectionsRecord> {
+  async deleteConnectionRecords(orgId: string, user: user): Promise<IDeletedConnectionsRecord> {
     try {
         const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
 
@@ -801,7 +803,8 @@ export class ConnectionService {
             deletedRecordsStatusCount: statusCounts
         };
 
-        await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.CONNECTION, deletedConnectionData);
+        await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedConnectionData, RecordType.VERIFICATION_RECORD);
+
         return deleteConnections;
 
     } catch (error) {

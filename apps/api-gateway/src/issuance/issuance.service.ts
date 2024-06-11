@@ -7,6 +7,7 @@ import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, O
 import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITemplateFormat, IssueCredentialType, UploadedFileDetails } from './interfaces';
 import { IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -158,8 +159,8 @@ export class IssuanceService extends BaseService {
         }
     }
 
-    async deleteIssuanceRecords(orgId: string, userId: string): Promise<IDeletedIssuanceRecords> {
-        const payload = { orgId, userId };
+    async deleteIssuanceRecords(orgId: string, user: user): Promise<IDeletedIssuanceRecords> {
+        const payload = { orgId, user };
         return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
     }
 }

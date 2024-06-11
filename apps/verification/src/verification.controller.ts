@@ -3,7 +3,7 @@ import { VerificationService } from './verification.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { IProofPresentation, IProofPresentationData, IProofRequests, IRequestProof, ISendProofRequestPayload } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { presentations } from '@prisma/client';
+import { presentations, user } from '@prisma/client';
 import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 
 @Controller()
@@ -74,8 +74,8 @@ export class VerificationController {
   }
 
   @MessagePattern({ cmd: 'delete-verification-records' })
-  async deleteVerificationRecords(payload: {orgId: string, userId: string}): Promise<IVerificationRecords> {  
-    const { orgId, userId } = payload;
-    return this.verificationService.deleteVerificationRecords(orgId, userId);
+  async deleteVerificationRecords(payload: {orgId: string, user: user}): Promise<IVerificationRecords> {  
+    const { orgId, user } = payload;
+    return this.verificationService.deleteVerificationRecords(orgId, user);
   }
 }

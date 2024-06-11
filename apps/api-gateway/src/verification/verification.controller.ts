@@ -33,7 +33,8 @@ import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { ProofRequestType, SortFields } from './enum/verification.enum';
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { user } from '@prisma/client';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('verifications')
@@ -352,10 +353,10 @@ async deleteVerificationRecordsByOrgId(
     })
   )
   orgId: string,
-  @User() user: IUserRequest,
+  @User() user: user,
   @Res() res: Response
 ): Promise<Response> {
-  await this.verificationService.deleteVerificationRecords(orgId, user?.['id']);
+  await this.verificationService.deleteVerificationRecords(orgId, user);
   const finalResponse: IResponse = {
     statusCode: HttpStatus.OK,
     message: ResponseMessages.verification.success.deleteVerificationRecord

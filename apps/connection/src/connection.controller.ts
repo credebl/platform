@@ -14,6 +14,7 @@ import {
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
+import { user } from '@prisma/client';
 
 @Controller()
 export class ConnectionController {
@@ -91,8 +92,8 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'delete-connection-records' })
-  async deleteConnectionRecords(payload: {orgId: string, userId: string}): Promise<IDeletedConnectionsRecord> {  
-    const { orgId, userId } = payload;
-    return this.connectionService.deleteConnectionRecords(orgId, userId);
+  async deleteConnectionRecords(payload: {orgId: string, user: user}): Promise<IDeletedConnectionsRecord> {  
+    const { orgId, user } = payload;
+    return this.connectionService.deleteConnectionRecords(orgId, user);
   }
 }

@@ -7,6 +7,7 @@ import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { QuestionDto } from './dtos/question-answer.dto';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class ConnectionService extends BaseService {
@@ -131,8 +132,8 @@ export class ConnectionService extends BaseService {
     return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);
   }
 
-  async deleteConnectionRecords(orgId: string, userId: string): Promise<IDeletedConnectionsRecord> {
-    const payload = { orgId, userId };
+  async deleteConnectionRecords(orgId: string, user: user): Promise<IDeletedConnectionsRecord> {
+    const payload = { orgId, user };
     return this.sendNatsMessage(this.connectionServiceProxy, 'delete-connection-records', payload);
   }
 }

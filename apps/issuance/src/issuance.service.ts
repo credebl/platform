@@ -29,10 +29,11 @@ import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import { IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { RecordType, agent_invitations, organisation } from '@prisma/client';
+import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { UserActivityService } from '@credebl/user-activity';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 
 @Injectable()
@@ -49,6 +50,7 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     private readonly userActivityService: UserActivityService,
+    private readonly userActivityRepository: UserActivityRepository,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
@@ -1409,7 +1411,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  async deleteIssuanceRecords(orgId: string, userId: string): Promise<IDeletedIssuanceRecords> {
+  async deleteIssuanceRecords(orgId: string, user: user): Promise<IDeletedIssuanceRecords> {
     try {
       const deletedCredentialsRecords = await this.issuanceRepository.deleteIssuanceRecordsByOrgId(orgId);
       
@@ -1440,7 +1442,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         deletedRecordsStatusCount: statusCounts
       }; 
 
-      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.ISSUANCE_RECORD, deletedIssuanceData);
+      await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedIssuanceData, RecordType.ISSUANCE_RECORD);
+
       return deletedCredentialsRecords;
     } catch (error) {
       this.logger.error(`[deleteIssuanceRecords] - error in deleting issuance records: ${JSON.stringify(error)}`);

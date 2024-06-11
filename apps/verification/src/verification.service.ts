@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { RecordType, agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
+import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
 import { AutoAccept, OrgAgentType, ProofState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
@@ -18,6 +18,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
 import { UserActivityService } from '@credebl/user-activity';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 @Injectable()
 export class VerificationService {
@@ -29,6 +30,7 @@ export class VerificationService {
     private readonly verificationRepository: VerificationRepository,
     private readonly outOfBandVerification: OutOfBandVerification,
     private readonly userActivityService: UserActivityService,
+    private readonly userActivityRepository: UserActivityRepository,
     private readonly emailData: EmailDto,
     @Inject(CACHE_MANAGER) private cacheService: Cache
 
@@ -916,7 +918,7 @@ export class VerificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async deleteVerificationRecords(orgId: string, userId: string): Promise<IVerificationRecords> {
+  async deleteVerificationRecords(orgId: string, user: user): Promise<IVerificationRecords> {
     try {
       const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
       
@@ -945,7 +947,8 @@ export class VerificationService {
         deletedRecordsStatusCount : statusCounts
       }; 
 
-      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.VERIFICATION_RECORD, deletedVerificationData);
+      await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedVerificationData, RecordType.VERIFICATION_RECORD);
+
       return deleteProofRecords;
     } catch (error) {
       this.logger.error(`[deleteVerificationRecords] - error in deleting verification records: ${JSON.stringify(error)}`);

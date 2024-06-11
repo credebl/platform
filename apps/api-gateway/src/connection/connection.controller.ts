@@ -21,6 +21,8 @@ import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.inter
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { ClientProxy} from '@nestjs/microservices';
 import { QuestionAnswerWebhookDto, QuestionDto} from './dtos/question-answer.dto';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { user } from '@prisma/client';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -349,10 +351,10 @@ export class ConnectionController {
       })
     )
     orgId: string,
-    @User() user: IUserRequest,
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.connectionService.deleteConnectionRecords(orgId, user?.['id']);
+    await this.connectionService.deleteConnectionRecords(orgId, user);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.connection.success.deleteConnectionRecord

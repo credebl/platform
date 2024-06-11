@@ -62,7 +62,7 @@ import { AwsService } from '@credebl/aws';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
 import { RpcException } from '@nestjs/microservices';
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
@@ -759,10 +759,10 @@ issueCredentialDto.type = 'Issuance';
         })
       )
       orgId: string,
-      @User() user: IUserRequest,
+      @User() user: user,
       @Res() res: Response
     ): Promise<Response> {
-      await this.issueCredentialService.deleteIssuanceRecords(orgId, user?.['id']);
+      await this.issueCredentialService.deleteIssuanceRecords(orgId, user);
       const finalResponse: IResponse = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.issuance.success.deleteIssuanceRecord

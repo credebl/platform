@@ -13,8 +13,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     return throwError(() => new RpcException({ message, statusCode: httpStatus, error }));
   }
 
-  private getExceptionDetails(exception): { httpStatus: number, message: string, error: string } {
-    switch (exception.error.name) {
+  private getExceptionDetails(exception): { httpStatus: number; message: string; error: string } {
+    const exceptionName = exception?.error?.name || exception?.name;
+    switch (exceptionName) {
       case 'HttpException':
         return this.handleHttpException(exception);
       case 'RpcException':
@@ -28,9 +29,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
   }
 
-  private handleHttpException(exception): { httpStatus: number, message: string, error: string } {
+  private handleHttpException(exception): { httpStatus: number; message: string; error: string } {
     this.logger.error(`It's HttpException`);
-    const httpStatus = exception.getStatus() || HttpStatus.BAD_REQUEST;
+    const httpStatus = exception?.getStatus() || HttpStatus.BAD_REQUEST;
     const message = exception?.getResponse() || exception.message;
     return { httpStatus, message, error: ResponseMessages.errorMessages.serverError };
   }
@@ -40,16 +41,21 @@ export class HttpExceptionFilter implements ExceptionFilter {
     throw exception.getError();
   }
 
-  private handlePrismaClientKnownRequestError(exception): { httpStatus: number, message: string, error: string } {
+  private handlePrismaClientKnownRequestError(exception): { httpStatus: number; message: string; error: string } {
     this.logger.error(`It's PrismaClientKnownRequestError`);
-    const errorCode = exception.error.code;
-    const message = exception?.error?.meta?.message ?? exception?.error?.meta?.cause ?? exception?.message;
+    const errorCode = exception?.error?.code ?? exception?.code;
+    const message =
+      exception?.error?.meta?.message ?? exception?.error?.meta?.cause ?? exception?.message ?? exception?.meta;
 
     switch (errorCode) {
       case 'P2002': // Unique constraint failed on the {constraint}
       case 'P2010': // Raw query failed. Code: {code}. Message: {message}
       case 'P2011': // Null constraint violation on the {constraint}
-        return { httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, message, error: ResponseMessages.errorMessages.serverError };
+        return {
+          httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
+          message,
+          error: ResponseMessages.errorMessages.serverError
+        };
       case 'P2000': // The provided value for the column is too long for the column's type. Column: {column_name}
       case 'P2005': // The value {field_value} stored in the database for the field {field_name} is invalid for the field's type
       case 'P2006': // The provided value {field_value} for {model_name} field {field_name} is not valid
@@ -65,36 +71,37 @@ export class HttpExceptionFilter implements ExceptionFilter {
       case 'P2023': // Inconsistent column data: {message}
         return { httpStatus: HttpStatus.BAD_REQUEST, message, error: ResponseMessages.errorMessages.badRequest };
       default:
-        return { httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, message, error: ResponseMessages.errorMessages.serverError };
+        return {
+          httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
+          message,
+          error: ResponseMessages.errorMessages.serverError
+        };
     }
   }
 
-  private handlePrismaClientValidationError(exception): { httpStatus: number, message: string, error: string } {
+  private handlePrismaClientValidationError(exception): { httpStatus: number; message: string; error: string } {
     this.logger.error(`It's PrismaClientValidationError`);
     const httpStatus = HttpStatus.BAD_REQUEST;
-    const message = exception?.meta?.message ?? exception?.error?.meta?.cause ?? exception?.message ?? exception?.response?.message;
+    const message =
+      exception?.meta?.message ?? exception?.error?.meta?.cause ?? exception?.message ?? exception?.response?.message;
     return { httpStatus, message, error: ResponseMessages.errorMessages.badRequest };
   }
 
-  private handleUnknownException(exception): { httpStatus: number, message: string, error: string } {
+  private handleUnknownException(exception): { httpStatus: number; message: string; error: string } {
     this.logger.error(`It's an Unknown Exception`);
     const httpStatus =
-      exception.response?.status ??
-      exception.response?.statusCode ??
-      exception?.error?.meta?.cause ??
-      exception.code ?? 
-      exception.error.statusCode ??
+      exception?.response?.status ??
+      exception?.response?.statusCode ??
+      exception?.error?.statusCode ??
       HttpStatus.INTERNAL_SERVER_ERROR;
     const message =
-      exception.response?.data?.message ??
-      exception.response?.message ??
+      exception?.response?.data?.message ??
+      exception?.response?.message ??
       exception?.error?.meta?.cause ??
       exception?.error?.message ??
       exception?.message ??
       'Internal server error';
-    const error =
-    exception?.error?.error ??
-    ResponseMessages.errorMessages.serverError;
+    const error = exception?.error?.error ?? ResponseMessages.errorMessages.serverError;
     return { httpStatus, message, error };
   }
 }

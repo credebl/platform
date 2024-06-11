@@ -545,10 +545,11 @@ export class OrganizationController {
   @Roles(OrgRoles.OWNER)
   async deleteOrganization(
     @Param('orgId') orgId: string, 
+    @User() user: user,
     @Res() res: Response
     ): Promise<Response> {
 
-    await this.organizationService.deleteOrganization(orgId);
+    await this.organizationService.deleteOrganization(orgId, user);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,

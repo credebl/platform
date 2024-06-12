@@ -121,4 +121,12 @@ export class KeycloakUrlService {
     return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${idp}`;
   }
 
+  async GetClient(
+    realm: string,
+    clientId: string
+  ):Promise<string> {
+
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients?clientId=${clientId}`;
+  }
+
 }

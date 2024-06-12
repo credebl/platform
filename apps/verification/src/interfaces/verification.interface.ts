@@ -231,4 +231,5 @@ export interface IProofRequestSearchCriteria {
 
 export interface IInvitation{
     invitationUrl?: string;
+    deepLinkURL?: string;
 }

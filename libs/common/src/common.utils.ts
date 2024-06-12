@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
 /* eslint-disable camelcase */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export function paginator<T>(
@@ -41,4 +43,10 @@ export function orderValues(key, order = 'asc') {
     }
     return 'desc' === order ? comparison * -1 : comparison;
   };
+}
+
+
+export function convertUrlToDeeplinkUrl(url: string): string {
+  const deepLinkUrl = (process.env.DEEPLINK_DOMAIN as string).concat(url);
+  return deepLinkUrl;
 }

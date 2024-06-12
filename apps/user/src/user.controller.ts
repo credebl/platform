@@ -209,4 +209,9 @@ export class UserController {
     return this.userService.updateOrgDeletedActivity(payload.orgId, payload.userId, payload.deletedBy, payload.recordType, payload.userEmail, payload.txnMetadata);
   }
 
+  @MessagePattern({ cmd: 'get-user-keycloak-id' })
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
+    return this.userService.getUserKeycloakIdByEmail(userEmails);
+  }
+
 }

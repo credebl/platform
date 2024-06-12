@@ -6,7 +6,7 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization } from '../interfaces/organization.interface';
+import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, OrgInvitation } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -732,10 +732,10 @@ export class OrganizationRepository {
   async deleteOrg(id: string):Promise<{
     deletedUserActivity: Prisma.BatchPayload;
     deletedUserOrgRole: Prisma.BatchPayload;
+    deletedOrgInvitations: Prisma.BatchPayload;
     deleteOrg: IDeleteOrganization
   }> {
     const tablesToCheck = [
-        'org_invitations',
         'org_agents',
         'org_dids',
         'agent_invitations',
@@ -781,17 +781,19 @@ export class OrganizationRepository {
             // User org role delete by orgId
             const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
 
+            // org invitations delete by orgId
+            const deletedOrgInvitations = await prisma.org_invitations.deleteMany({ where: { orgId: id } });
+
             // If no references are found, delete the organization
             const deleteOrg = await prisma.organisation.delete({ where: { id } });
 
-            return {deletedUserActivity, deletedUserOrgRole, deleteOrg};
+            return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deleteOrg};
         });
     } catch (error) {
         this.logger.error(`Error in deleteOrg: ${error}`);
         throw error;
     }
   }
-
 
   /**
    *
@@ -904,5 +906,16 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
   }
  }
 
-
+ async getOrgInvitationsByOrg(orgId: string): Promise<OrgInvitation[]> {
+  try {
+    return this.prisma.org_invitations.findMany({
+      where: {
+        orgId
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getOrgInvitations] - get organization invitations: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
 }

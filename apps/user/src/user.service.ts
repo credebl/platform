@@ -1205,4 +1205,15 @@ export class UserService {
       throw error;
     }
   }
+
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
+    try {
+     
+      const getkeycloakUserIds = await this.userRepository.getUserKeycloak(userEmails);
+      return getkeycloakUserIds;
+    } catch (error) {
+      this.logger.error(`In getUserKeycloakIdByEmail : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

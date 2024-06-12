@@ -536,7 +536,7 @@ export class EcosystemController {
       @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
       @User() user: user,
       @Res() res: Response
-    ): Promise<Response> {
+    ): Promise<Response> {  
   
       addOrganizationsDto.ecosystemId = ecosystemId;
       addOrganizationsDto.orgId = orgId;
@@ -669,6 +669,29 @@ export class EcosystemController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction,
       data: response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/:ecosystemId/:orgId/ecosystem-members')
+  @ApiOperation({ summary: 'Delete ecosystem members', description: 'Delete ecosystem members' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.OWNER)
+  @ApiBearerAuth()
+  async deleteEcosystemMembers(
+    @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }}), TrimStringParamPipe) ecosystemId: string,    
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
+    @Res() res: Response,
+    @User() user: user
+  ): Promise<Response> {
+
+    const deletedEcosystemMembers = await this.ecosystemService.deleteEcosystemMembers(orgId, ecosystemId, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.ecosystemMembersDeleted,
+      data: deletedEcosystemMembers
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

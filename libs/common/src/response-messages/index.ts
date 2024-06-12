@@ -365,7 +365,8 @@ export const ResponseMessages = {
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
             fetchMembers: 'Ecosystem members fetched successfully',
             allschema: 'Schema details fetched successfully',
-            AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
+            AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
+            ecosystemMembersDeleted: 'Ecosystem members deleted'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

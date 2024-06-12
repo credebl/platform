@@ -16,6 +16,7 @@ import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
 import { schemaRequestType } from '@credebl/enum/enum';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -130,6 +131,7 @@ export class EcosystemService extends BaseService {
     const payload = { invitationId };
     return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
   }
+
   async acceptRejectEcosystemInvitaion(
     acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
     userEmail: string
@@ -205,4 +207,11 @@ export class EcosystemService extends BaseService {
     const payload = { ecosystemId, endorsementId, orgId };
     return this.sendNatsMessage(this.serviceProxy, 'decline-endorsement-transaction', payload);
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteEcosystemMembers(orgId: string, ecosystemId: string, user: user): Promise<any> {
+    const payload = { orgId, ecosystemId, user };
+    return this.sendNats(this.serviceProxy, 'delete-ecosystem-members', payload);
+  }
+
 }

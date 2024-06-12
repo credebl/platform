@@ -2015,4 +2015,22 @@ export class EcosystemService {
       );
     }
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteEcosystemMembers(orgId: string, ecosystemId: string): Promise<any> {
+    try {
+      const getEcosystemLeadDetails = await this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId);
+      const getEcosystemLeadOrg = getEcosystemLeadDetails?.orgId;
+      const getEcosystemMembers = await this.ecosystemRepository.getEcosystemMembers(ecosystemId); 
+
+      const membersToDelete = getEcosystemMembers.filter(member => member.orgId !== getEcosystemLeadOrg);
+      const memberOrgs = membersToDelete.map(member => member.orgId);
+      const deletedEcosystemMembers =  await this.ecosystemRepository.deleteEcosystemMembers(memberOrgs, ecosystemId);
+      return deletedEcosystemMembers;
+    } catch (error) {
+      this.logger.error(`In delete ecosystem members: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 }

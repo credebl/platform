@@ -8,14 +8,11 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-// import { ClientDetails, FileUploadData, ICredentialAttributesInterface, ImportFileDetails, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails } from '../interfaces/issuance.interfaces';
-import { CredentialOffer, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, IIssuance, IIssueData, IPattern, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer } from '../interfaces/issuance.interfaces';
-import { OrgAgentType } from '@credebl/enum/enum';
-// import { platform_config } from '@prisma/client';
+import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { OrgAgentType, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { join } from 'path';
 import { parse } from 'json2csv';
 import { checkIfFileOrDirectoryExists, createFile } from '../../api-gateway/src/helper-files/file-operation.helper';
@@ -23,21 +20,25 @@ import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { orderValues, paginator } from '@credebl/common/common.utils';
+import { convertUrlToDeepLinkUrl, orderValues, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { agent_invitations, organisation } from '@prisma/client';
+import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
+import { sendEmail } from '@credebl/common/send-grid-helper-file';
 
 
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
+  private counter = 0;
+  private processedJobsCounters: Record<string, number> = {};
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
@@ -50,87 +51,93 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
-    async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
-
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
     try {
       const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
 
-      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-        credentialDefinitionId
-      );
+      if (payload.credentialType === IssueCredentialType.INDY) {
+        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
+        if (schemaResponse?.attributes) {
+          const schemaResponseError = [];
+          const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
 
-      if (schemaResponse?.attributes) {
-        const schemaResponseError = [];
-        const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
-    
-        attributesArray.forEach((attribute) => {
+          attributesArray.forEach((attribute) => {
             if (attribute.attributeName && attribute.isRequired) {
-    
-                credentialData.forEach((credential, i) => {
-                  credential.attributes.forEach((attr) => {
-                        if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                            schemaResponseError.push(
-                                `Attribute ${attribute.attributeName} is required at position ${i + 1}`
-                            );
-                        }
-                    });
+              credentialData.forEach((credential, i) => {
+                credential.attributes.forEach((attr) => {
+                  if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+                    schemaResponseError.push(`Attribute ${attribute.attributeName} is required at position ${i + 1}`);
+                  }
                 });
+              });
             }
-        });
-    
-        if (0 < schemaResponseError.length) {
+          });
+
+          if (0 < schemaResponseError.length) {
             throw new BadRequestException(schemaResponseError);
+          }
         }
-    }
+      }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-
       const { agentEndPoint } = agentDetails;
 
       const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
       if (!orgAgentType) {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
       }
 
       const issuanceMethodLabel = 'create-offer';
-
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
-      const issuancePromises: Promise<ICreateOfferResponse>[] = [];
+      const issuancePromises = credentialData.map(async (credentials) => {
+        const { connectionId, attributes, credential, options } = credentials;
+        let issueData;
 
-      for (const credentials of credentialData) {
-        const { connectionId, attributes } = credentials;
-        const issueData: IIssueData = {
-          protocolVersion: 'v1',
-          connectionId,
-          credentialFormats: {
-            indy: {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              attributes: (attributes).map(({ isRequired, ...rest }) => rest),
-              credentialDefinitionId
-  
-            }
-          },
-          autoAcceptCredential: payload.autoAcceptCredential || 'always',
-          comment
-        };
+        if (payload.credentialType === IssueCredentialType.INDY) {
+          issueData = {
+            protocolVersion: payload.protocolVersion || 'v1',
+            connectionId,
+            credentialFormats: {
+              indy: {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                attributes: attributes.map(({ isRequired, ...rest }) => rest),
+                credentialDefinitionId
+              }
+            },
+            autoAcceptCredential: payload.autoAcceptCredential || 'always',
+            comment
+          };
+        } else if (payload.credentialType === IssueCredentialType.JSONLD) {
+          issueData = {
+            protocolVersion: payload.protocolVersion || 'v2',
+            connectionId,
+            credentialFormats: {
+              jsonld: {
+                credential,
+                options
+              }
+            },
+            autoAcceptCredential: payload.autoAcceptCredential || 'always',
+            comment: comment || ''
+          };
+        }
 
         await this.delay(500);
-        const credentialCreateOfferDetails = this._sendCredentialCreateOffer(issueData, url, orgId);
-        issuancePromises.push(credentialCreateOfferDetails);
-      }
+        return this._sendCredentialCreateOffer(issueData, url, orgId);
+      });
 
       const results = await Promise.allSettled(issuancePromises);
       return results;
-
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
+
       if (errorStack) {
         throw new RpcException({
           error: errorStack?.message ? errorStack?.message : errorStack,
@@ -177,12 +184,12 @@ export class IssuanceService {
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      let recipientKey: string | undefined;
+      let invitationDid: string | undefined;
       if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.issuanceRepository.getRecipientKeyByOrgId(orgId);
+        const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
          if (data && 0 < data.length) {
           const [firstElement] = data;
-          recipientKey = firstElement?.recipientKey ?? undefined;
+          invitationDid = firstElement?.invitationDid ?? undefined;
       }
       }
       const { agentEndPoint, organisation } = agentDetails;
@@ -216,7 +223,7 @@ export class IssuanceService {
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
           comment: comment || '',
-          recipientKey:recipientKey || undefined
+          invitationDid:invitationDid || undefined
         };
 
       }
@@ -237,7 +244,7 @@ export class IssuanceService {
           imageUrl: organisation?.logoUrl || payload?.imageUrl || undefined,
           label: organisation?.name,
           comment: comment || '',
-          recipientKey:recipientKey || undefined
+          invitationDid:invitationDid || undefined
         };
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
@@ -245,8 +252,11 @@ export class IssuanceService {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
+        // Add deepLinkURL param to response
+        const deepLinkURL = convertUrlToDeepLinkUrl(url);
+        credentialCreateOfferDetails.response['deepLinkURL'] = deepLinkURL;
       }
-      return credentialCreateOfferDetails;
+      return credentialCreateOfferDetails.response;
     } catch (error) {
       this.logger.error(`[storeIssuanceObjectReturnUrl] - error in create credentials : ${JSON.stringify(error)}`);
 
@@ -451,8 +461,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       emailId,
       credentialType
     } = outOfBandCredential;
-
-    if (IssueCredentialType.INDY === credentialType) {
+    if (IssueCredentialType.INDY === credentialType) {  
       const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
         credentialDefinitionId
       );
@@ -496,14 +505,12 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
         }
       }
     }
-
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
     const { organisation } = agentDetails;
     if (!agentDetails) {
       throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
     }
-
     const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
 
     const issuanceMethodLabel = 'create-offer-oob';
@@ -518,7 +525,6 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     if (!organizationDetails) {
       throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
     }
-
     const errors = [];
     let credentialOfferResponse;
     const arraycredentialOfferResponse = [];
@@ -575,7 +581,6 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       credentialOfferResponse = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
       return credentialOfferResponse;    
     }
-  
   } catch (error) {
     this.logger.error(
       `[outOfBoundCredentialOffer] - error in create out-of-band credentials: ${JSON.stringify(error)}`
@@ -617,7 +622,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     orgId,
     organizationDetails
   } = sendEmailCredentialOffer;
-
   const iterationNo = index + 1;
   try {
     let outOfBandIssuancePayload;
@@ -670,6 +674,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
+    const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
@@ -682,10 +687,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
           return false;
         }
-        this.emailData.emailFrom = platformConfigData.emailFrom;
-        this.emailData.emailTo = emailId;
+        this.emailData.emailFrom = platformConfigData?.emailFrom;
+        this.emailData.emailTo = iterator?.emailId ?? emailId;
         this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, shortenUrl);
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL);
         this.emailData.emailAttachments = [
           {
             filename: 'qrcode.png',
@@ -694,8 +699,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        const isEmailSent = await sendEmail(this.emailData);
-        this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}`);
+        const isEmailSent = await sendEmail(this.emailData);        
+        this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
+        this.counter++;
         if (!isEmailSent) {
           errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
           return false;
@@ -803,16 +809,40 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  async exportSchemaToCSV(credentialDefinitionId: string): Promise<object> {
+  async downloadBulkIssuanceCSVTemplate(templateDetails: TemplateDetailsInterface): Promise<object> {
     try {
-      const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+      let schemaResponse: SchemaDetails;
+      let fileName: string;
 
+      const {schemaType, templateId} = templateDetails;
+
+      if (!templateId) {
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.invalidtemplateId);
+      }
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      if (schemaType === SchemaType.INDY) {
+         schemaResponse = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+         if (!schemaResponse) {
+          throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
+        }
+         fileName = `${schemaResponse.tag}-${timestamp}.csv`;
+
+      } else if (schemaType === SchemaType.W3C_Schema) {
+        const schemDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+        const {attributes, schemaLedgerId, name} = schemDetails;
+        schemaResponse = { attributes, schemaLedgerId, name };
+        if (!schemaResponse) {
+          throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
+        }
+         fileName = `${schemaResponse.name}-${timestamp}.csv`;
+      }   
       const jsonData = [];
       const attributesArray = JSON.parse(schemaResponse.attributes);
-
+      
       // Extract the 'attributeName' values from the objects and store them in an array
       const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
-      attributeNameArray.unshift('email');
+      attributeNameArray.unshift(TemplateIdentifier.EMAIL_COLUMN);
 
       const [csvData, csvFields] = [jsonData, attributeNameArray];
 
@@ -825,12 +855,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       const filePath = join(process.cwd(), `uploadedFiles/exports`);
 
-      const timestamp = Math.floor(Date.now() / 1000);
-      const fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       await createFile(filePath, fileName, csv);
       const fullFilePath = join(process.cwd(), `uploadedFiles/exports/${fileName}`);
-
+      this.logger.log('fullFilePath::::::::', fullFilePath); //remove after user
       if (!checkIfFileOrDirectoryExists(fullFilePath)) {
         throw new NotFoundException(ResponseMessages.bulkIssuance.error.PathNotFound);
       }
@@ -842,16 +870,41 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         fileName
       };
     } catch (error) {
-      throw new Error('An error occurred during CSV export.');
+      throw new Error(ResponseMessages.bulkIssuance.error.exportFile);
     }
   }
 
 
-  async importAndPreviewDataForIssuance(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
+  async uploadCSVTemplate(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
     try {
+      let credentialDetails;
+      const credentialPayload: ICredentialPayload = {
+        schemaLedgerId: '',
+        credentialDefinitionId: '',
+        fileData: {},
+        fileName: '',
+        credentialType: '',
+        schemaName: '' 
+      };
+      const {fileName, templateId, type} = importFileDetails;
+  
+      if (type === SchemaType.W3C_Schema) {
+        credentialDetails =
+        await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+        credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
+        credentialPayload.credentialDefinitionId = SchemaType.W3C_Schema;
+        credentialPayload.credentialType = SchemaType.W3C_Schema;
+        credentialPayload.schemaName = credentialDetails.name;
+        
+      } else if (type === SchemaType.INDY) {
 
-      const credDefResponse =
-        await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
+        credentialDetails =
+        await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+        credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
+        credentialPayload.credentialDefinitionId = credentialDetails.credentialDefinitionId;
+        credentialPayload.credentialType = SchemaType.INDY;
+        credentialPayload.schemaName = credentialDetails.schemaName;
+      }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
       const csvData: string = getFileDetails.Body.toString();
@@ -864,55 +917,38 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       });
 
       if (0 >= parsedData.data.length) {
-        throw new BadRequestException(`File data is empty`);
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyFile);
       }
 
       if (0 >= parsedData.meta.fields.length) {
-        throw new BadRequestException(`File header is empty`);
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyheader);
       }
-
-      // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-      const validateEmail = (email) => {
-        // Regular expression for a simple email validation
-        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-        return emailRegex.test(email);
-      };
-
-      // Extract and validate emails
-      const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email));
-
-      // Output invalid emails
+      const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email_identifier));
       if (0 < invalidEmails.length) {
-        throw new BadRequestException(`Invalid emails found in the chosen file`);
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.invalidEmails);
       }
-
       const fileData: string[][] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
 
-      const attributesArray = JSON.parse(credDefResponse.attributes);
+      const attributesArray = JSON.parse(credentialDetails.attributes);
 
       // Extract the 'attributeName' values from the objects and store them in an array
       const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
-
       if (0 >= attributeNameArray.length) {
         throw new BadRequestException(
-          `Attributes are empty for credential definition ${importFileDetails.credDefId}`
+          `Attributes are empty for credential definition ${templateId}`
         );
       }
 
       await this.validateFileHeaders(fileHeader, attributeNameArray);
       await this.validateFileData(fileData, attributesArray, fileHeader);
 
-      const resData = {
-        schemaLedgerId: credDefResponse.schemaLedgerId,
-        credentialDefinitionId: importFileDetails.credDefId,
-        fileData: parsedData,
-        fileName: importFileDetails.fileName
-      };
-
+      
+      credentialPayload.fileData = parsedData;
+      credentialPayload.fileName = fileName;
       const newCacheKey = uuidv4();
 
-      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(resData), 60000);
+      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 60000);
 
       return newCacheKey;
 
@@ -1013,61 +1049,63 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   }
 
   async issueBulkCredential(requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails): Promise<string> {
-    const fileUpload: {
-      lastChangedDateTime: Date;
-      name?: string;
-      upload_type: string;
-      status: string;
-      orgId: string | number;
-      createDateTime: Date;
-    } = {
+    if ('' === requestId.trim()) {
+      throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
+    }
+    // let credentialType : SchemaType;
+
+    const fileUpload: FileUpload = {
+      lastChangedDateTime: null,
       upload_type: '',
       status: '',
       orgId: '',
-      createDateTime: undefined,
-      lastChangedDateTime: undefined
+      createDateTime: null
     };
-    let respFileUpload;
-    if ('' === requestId.trim()) {
-      throw new BadRequestException(
-        `Param 'requestId' is missing from the request.`
-      );
-    }
-
+    let csvFileDetail;
     try {
+
       let cachedData = await this.cacheManager.get(requestId);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
-
+       //for demo UI
       if (cachedData && clientDetails?.isSelectiveIssuance) {
         await this.cacheManager.del(requestId);
-        await this.importAndPreviewDataForIssuance(reqPayload, requestId);
-        //  await this.cacheManager.set(requestId, reqPayload);
+        await this.uploadCSVTemplate(reqPayload, requestId);
         cachedData = await this.cacheManager.get(requestId);
       }
+
       const parsedData = JSON.parse(cachedData as string).fileData.data;
-      const parsedPrimeDetails = JSON.parse(cachedData as string);
+
+      if (!parsedData) {
+        throw new BadRequestException(ResponseMessages.issuance.error.cachedData);
+      }
+
+      const parsedFileDetails = JSON.parse(cachedData as string);
+
+      if (!parsedFileDetails) {
+        throw new BadRequestException(ResponseMessages.issuance.error.cachedfileData);
+      }
 
       fileUpload.upload_type = FileUploadType.Issuance;
       fileUpload.status = FileUploadStatus.started;
       fileUpload.orgId = orgId;
       fileUpload.createDateTime = new Date();
-
-      if (parsedPrimeDetails && parsedPrimeDetails.fileName) {
-        fileUpload.name = parsedPrimeDetails.fileName;
-      }
-
-      respFileUpload = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
+      fileUpload.name = parsedFileDetails.fileName;
+      fileUpload.credentialType = parsedFileDetails.credentialType;
+      
+      csvFileDetail = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
       const saveFileDetailsPromises = parsedData.map(async (element) => {
         const credentialPayload = {
           credential_data: element,
-          schemaId: parsedPrimeDetails.schemaLedgerId,
-          credDefId: parsedPrimeDetails.credentialDefinitionId,
+          schemaId: parsedFileDetails.schemaLedgerId,
+          schemaName: parsedFileDetails.schemaName,
+          credDefId: parsedFileDetails.credentialDefinitionId,
           state: false,
           isError: false,
-          fileUploadId: respFileUpload.id
+          fileUploadId: csvFileDetail.id,
+          credentialType: parsedFileDetails.credentialType
         };
         return this.issuanceRepository.saveFileDetails(credentialPayload, clientDetails.userId);
       });
@@ -1075,48 +1113,53 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       // Wait for all saveFileDetails operations to complete
       await Promise.all(saveFileDetailsPromises);
 
-      // Now fetch the file details
-      const respFile = await this.issuanceRepository.getFileDetails(respFileUpload.id);
-      if (!respFile) {
+      const bulkpayload = await this.issuanceRepository.getFileDetails(csvFileDetail.id);
+      if (!bulkpayload) {
         throw new BadRequestException(ResponseMessages.issuance.error.fileData);
       }
-      for (const element of respFile) {
-        try {
-          const payload = {
-            data: element.credential_data,
-            fileUploadId: element.fileUploadId,
-            clientId: clientDetails.clientId,
+      const uniqueJobId = uuidv4();
+      const queueJobsArrayPromises = bulkpayload.map(async (item) => ({
+          data: {
+            id: item.id,
+            jobId: uniqueJobId,
             cacheId: requestId,
-            credentialDefinitionId: element.credDefId,
-            schemaLedgerId: element.schemaId,
-            isRetry: false,
+            clientId: clientDetails.clientId,
+            referenceId: item.referenceId,
+            fileUploadId: item.fileUploadId,
+            schemaLedgerId: item.schemaId,
+            credentialDefinitionId: item.credDefId,
+            status: item.status,
+            credential_data: item.credential_data,
             orgId,
-            id: element.id,
-            isLastData: respFile.indexOf(element) === respFile.length - 1
-          };
+            credentialType: item.credential_type,
+            totalJobs: bulkpayload.length,
+            isRetry: false,
+            isLastData: false
+          }
+        }));
 
-          await this.delay(500); // Wait for 0.5 secends
-          this.processIssuanceData(payload);
+      const queueJobsArray = await Promise.all(queueJobsArrayPromises);
+        try {
+         await this.bulkIssuanceQueue.addBulk(queueJobsArray);
         } catch (error) {
           this.logger.error(`Error processing issuance data: ${error}`);
         }
-      }
 
-      return 'Process initiated for bulk issuance';
+      return ResponseMessages.issuance.success.bulkProcess;
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;
       this.logger.error(`error in issueBulkCredential : ${error}`);
       throw new RpcException(error.response);
     } finally {
-      if (respFileUpload !== undefined && respFileUpload.id !== undefined) {
+      if (csvFileDetail !== undefined && csvFileDetail.id !== undefined) {
         fileUpload.lastChangedDateTime = new Date();
-        await this.issuanceRepository.updateFileUploadDetails(respFileUpload.id, fileUpload);
+        await this.issuanceRepository.updateFileUploadDetails(csvFileDetail.id, fileUpload);
       }
     }
   }
 
   async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<string> {
-    let respFile;
+    let bulkpayloadRetry;
 
     try {
 
@@ -1124,46 +1167,54 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       if (!fileDetails) {
         throw new BadRequestException(ResponseMessages.issuance.error.retry);
       }
-      respFile = await this.issuanceRepository.getFailedCredentials(fileId);
-
-      if (0 === respFile.length) {
+      bulkpayloadRetry = await this.issuanceRepository.getFailedCredentials(fileId);
+      if (0 === bulkpayloadRetry.length) {
         const errorMessage = ResponseMessages.bulkIssuance.error.fileDetailsNotFound;
         throw new BadRequestException(`${errorMessage}`);
       }
-
-      for (const element of respFile) {
-        try {
-          const payload = {
-            data: element.credential_data,
-            fileUploadId: element.fileUploadId,
-            clientId,
-            credentialDefinitionId: element.credDefId,
-            schemaLedgerId: element.schemaId,
-            orgId,
-            id: element.id,
-            isRetry: true,
-            isLastData: respFile.indexOf(element) === respFile.length - 1
-          };
-
-          await this.delay(500); // Wait for 0.5 secends
-          this.processIssuanceData(payload);
-          if (0 === respFile.length) {
-            return FileUploadStatus.completed;
-          }
-        } catch (error) {
-          // Handle errors if needed
-          this.logger.error(`Error processing issuance data: ${error}`);
+      const uniqueJobId = uuidv4();
+      const queueJobsArrayPromises = bulkpayloadRetry.map(async (item) => ({
+        data: {
+          id: item.id,
+          jobId: uniqueJobId,
+          clientId,
+          referenceId: item.referenceId,
+          fileUploadId: item.fileUploadId,
+          schemaLedgerId: item.schemaId,
+          credentialDefinitionId: item.credDefId,
+          status: item.status,
+          credential_data: item.credential_data,
+          orgId,
+          credentialType: item.credential_type,
+          totalJobs: bulkpayloadRetry.length,
+          isRetry: true,
+          isLastData: false
         }
-      }
-
-      return 'Process reinitiated for bulk issuance';
+      }));
+      const queueJobsArray = await Promise.all(queueJobsArrayPromises);
+      try {
+        await this.bulkIssuanceQueue.addBulk(queueJobsArray);
+       } catch (error) {
+         this.logger.error(`Error processing issuance data: ${error}`);
+       }
+     
+      return ResponseMessages.bulkIssuance.success.reinitiated;
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
-  async processIssuanceData(jobDetails) {
+  
+  async processIssuanceData(jobDetails: IQueuePayload): Promise<void> {
+    const {jobId, totalJobs} = jobDetails;
+    if (!this.processedJobsCounters[jobId]) {
+      this.processedJobsCounters[jobId] = 0;
+    }
+    this.processedJobsCounters[jobId] += 1;
+    if (this.processedJobsCounters[jobId] === totalJobs) {
+      jobDetails.isLastData = true;
+      delete this.processedJobsCounters[jobId];
+    }
 
     const socket = await io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,
@@ -1172,7 +1223,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       autoConnect: true,
       transports: ['websocket']
     });
-
     const fileUploadData: FileUploadData = {
       fileUpload: '',
       fileRow: '',
@@ -1188,32 +1238,45 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     fileUploadData.fileRow = JSON.stringify(jobDetails);
     fileUploadData.isError = false;
     fileUploadData.createDateTime = new Date();
-    fileUploadData.referenceId = jobDetails.data.email;
+    fileUploadData.referenceId = jobDetails.credential_data.email_identifier;
     fileUploadData.jobId = jobDetails.id;
     const { orgId } = jobDetails;
 
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-    // eslint-disable-next-line camelcase
-
-    const { organisation } = agentDetails;
+  
+    const { organisation, orgDid } = agentDetails;
     let isErrorOccurred = false;
     try {
+      let oobIssuancepayload;
+      if (jobDetails.credentialType === SchemaType.INDY) {
+        oobIssuancepayload = {
+          credentialDefinitionId: jobDetails.credentialDefinitionId,
+          orgId: jobDetails.orgId,
+          label: organisation?.name,
+          attributes: [],
+          emailId: jobDetails?.credential_data?.email_identifier,
+          credentialType: IssueCredentialType.INDY
+        };
+        for (const key in jobDetails?.credential_data) {
 
-      const oobIssuancepayload = {
-        credentialDefinitionId: jobDetails.credentialDefinitionId,
-        orgId: jobDetails.orgId,
-        label: organisation?.name,
-        attributes: [],
-        emailId: jobDetails.data.email,
-        credentialType: IssueCredentialType.INDY
-      };
-
-      for (const key in jobDetails.data) {
-        if (jobDetails.data.hasOwnProperty(key) && 'email' !== key) {
-          const value = jobDetails.data[key];
-          oobIssuancepayload.attributes.push({ name: key, value });
+          if (jobDetails.credential_data.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
+            const value = jobDetails?.credential_data[key];
+            oobIssuancepayload.attributes.push({ name: key, value });
+          }
         }
+      } else if (jobDetails.credentialType === SchemaType.W3C_Schema) {
+      const schemaDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(jobDetails.schemaLedgerId);
+      const {name, schemaLedgerId} = schemaDetails;
+     const  JsonldCredentialDetails: IJsonldCredential = {
+        schemaName : name,
+        schemaLedgerId,
+        credentialData: jobDetails.credential_data,
+        orgDid,
+        orgId
+      };
+      oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails);
       }
+    
 
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload
@@ -1273,7 +1336,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   ): Promise<void> {
     try {
       const fileSchemaHeader: string[] = fileHeader.slice();
-            if ('email' === fileHeader[0]) {
+            if (TemplateIdentifier.EMAIL_COLUMN === fileHeader[0]) {
                 fileSchemaHeader.splice(0, 1);
       } else {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emailColumn

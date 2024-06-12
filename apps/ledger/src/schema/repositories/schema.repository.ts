@@ -17,7 +17,6 @@ export class SchemaRepository {
     try {
       if (schemaResult.schema.schemaName) {
         const schema = await this.schemaExists(schemaResult.schema.schemaName, schemaResult.schema.schemaVersion);
-
         const schemaLength = 0;
         if (schema.length !== schemaLength) {
           throw new ConflictException(ResponseMessages.schema.error.exists, {
@@ -34,9 +33,10 @@ export class SchemaRepository {
             issuerId: schemaResult.issuerId,
             createdBy: schemaResult.createdBy,
             lastChangedBy: schemaResult.changedBy,
-            publisherDid: schemaResult.issuerId.split(':')[4],
+            publisherDid: schemaResult.issuerId.split(':')[4] || schemaResult.issuerId,
             orgId: schemaResult.orgId,
-            ledgerId: schemaResult.ledgerId
+            ledgerId: schemaResult.ledgerId,
+            type: schemaResult.type
           }
         });
         return saveResult;

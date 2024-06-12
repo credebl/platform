@@ -9,10 +9,12 @@ import {
   file_upload,
   org_agents,
   organisation,
-  platform_config
+  platform_config,
+  schema
 } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import {
+  FileUpload,
   FileUploadData,
   IssueCredentialWebhookPayload,
   OrgAgent,
@@ -71,19 +73,18 @@ export class IssuanceRepository {
     }
   }
 
-
-  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
+  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({
         where: {
           orgId
         },
         orderBy: {
-          createDateTime: 'asc' 
+          createDateTime: 'asc'
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getRecipientKey in issuance repository: ${error.message}`);
+      this.logger.error(`Error in getInvitationDid in issuance repository: ${error.message}`);
       throw error;
     }
   }
@@ -128,7 +129,7 @@ export class IssuanceRepository {
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
-     
+
       const issuedCredentialsCount = await this.prisma.credentials.count({
         where: {
           orgId,
@@ -157,7 +158,7 @@ export class IssuanceRepository {
       let organisationId: string;
       const { issueCredentialDto, id } = payload;
 
-      if (issueCredentialDto?.contextCorrelationId) {
+      if ('default' !== issueCredentialDto?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(issueCredentialDto?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
@@ -168,15 +169,15 @@ export class IssuanceRepository {
 
       if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId) {
         schemaId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId;
-      } 
-    
+      }
+
       let credDefId = '';
       if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId) {
         credDefId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId;
       }
 
       const credentialDetails = await this.prisma.credentials.upsert({
-        where: { 
+        where: {
           threadId: issueCredentialDto?.threadId
         },
         update: {
@@ -241,16 +242,13 @@ export class IssuanceRepository {
           credentialDefinitionId
         }
       });
-
+      
       if (!credentialDefinitionDetails) {
         throw new NotFoundException(`Credential definition not found for ID: ${credentialDefinitionId}`);
       }
 
-      const schemaDetails = await this.prisma.schema.findFirst({
-        where: {
-          schemaLedgerId: credentialDefinitionDetails.schemaLedgerId
-        }
-      });
+      const schemaDetails = await this.getSchemaDetailsBySchemaIdentifier(credentialDefinitionDetails.schemaLedgerId);
+       
 
       if (!schemaDetails) {
         throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
@@ -260,7 +258,8 @@ export class IssuanceRepository {
         credentialDefinitionId: credentialDefinitionDetails.credentialDefinitionId,
         tag: credentialDefinitionDetails.tag,
         schemaLedgerId: schemaDetails.schemaLedgerId,
-        attributes: schemaDetails.attributes
+        attributes: schemaDetails.attributes,
+        schemaName: schemaDetails.name
       };
 
       return credentialDefRes;
@@ -270,9 +269,20 @@ export class IssuanceRepository {
     }
   }
 
-  async saveFileUploadDetails(fileUploadPayload, userId: string): Promise<file_upload> {
+ 
+  async getSchemaDetailsBySchemaIdentifier (schemaIdentifier: string): Promise <schema> {
+
+    const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+      where: {
+        schemaLedgerId: schemaIdentifier
+      }
+    });
+    return schemaDetails;
+  }
+
+  async saveFileUploadDetails(fileUploadPayload: FileUpload, userId: string): Promise<file_upload> {
     try {
-      const { name, status, upload_type, orgId } = fileUploadPayload;
+      const { name, status, upload_type, orgId, credentialType } = fileUploadPayload;
       return this.prisma.file_upload.create({
         data: {
           name: String(name),
@@ -280,7 +290,8 @@ export class IssuanceRepository {
           status,
           upload_type,
           createdBy: userId,
-          lastChangedBy: userId
+          lastChangedBy: userId,
+          credential_type: credentialType
         }
       });
     } catch (error) {
@@ -472,7 +483,7 @@ export class IssuanceRepository {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
   async saveFileDetails(fileData, userId: string) {
     try {
-      const { credential_data, schemaId, credDefId, status, isError, fileUploadId } = fileData;
+      const { credential_data, schemaId, credDefId, status, isError, fileUploadId, credentialType } = fileData;
       return this.prisma.file_data.create({
         data: {
           credential_data,
@@ -482,7 +493,8 @@ export class IssuanceRepository {
           fileUploadId,
           isError,
           createdBy: userId,
-          lastChangedBy: userId
+          lastChangedBy: userId,
+          credential_type: credentialType
         }
       });
     } catch (error) {

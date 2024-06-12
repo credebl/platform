@@ -47,3 +47,10 @@ export interface GetSchemaAgentRedirection {
 export interface GetSchemaFromTenantPayload {
     schemaId: string;
 }
+
+export interface ISchemaInfo {
+    schemaUrl: string;
+    did: string;
+    schemaId: string;
+    schemaTxnHash: string;
+  }

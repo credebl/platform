@@ -62,7 +62,8 @@ export const ResponseMessages = {
             resetPasswordLink: 'Unable to create reset password token',
             invalidResetLink: 'Invalid or expired reset password link',
             invalidAccessToken: 'Authentication failed',
-            invalidRefreshToken: 'Invalid refreshToken provided'
+            invalidRefreshToken: 'Invalid refreshToken provided',
+            userOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.'
         }
     },
     organisation: {
@@ -117,7 +118,9 @@ export const ResponseMessages = {
             orgDoesNotMatch: 'Organization does not match',
             invalidClient: 'Invalid client credentials',
             primaryDid: 'This DID is already set to primary DID',
-            didNotFound: 'DID does not exist in organiation'
+            didNotFound: 'DID does not exist in organiation',
+            MaximumOrgsLimit:'Limit reached: You can be associated with or create maximum 10 organizations.',
+            organizationEcosystemValidate: 'This organization is an ecosystem lead or ecosystem owner.'
         }
     },
 
@@ -168,21 +171,26 @@ export const ResponseMessages = {
             agentDetailsNotFound: 'Agent details not found',
             failedFetchSchema: 'Failed to fetch schema data',
             atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
-            schemaBuilder: 'Error while creating schema JSON`'
+            schemaBuilder: 'Error while creating schema JSON',
+            W3CSchemaNotFOund: 'Error while resolving W3C schema',
+            storeW3CSchema: 'Error while storing W3C schema'
         }
     },
     credentialDefinition: {
         success: {
             fetch: 'Credential definition fetched successfully.',
-            create: 'Credential definition created successfully.'
+            create: 'Credential definition created successfully.',
+            template: 'Credential template fetched successfully.'
         },
         error: {
             NotFound: 'No credential definitions found.',
             NotSaved: 'Error in saving credential definition.',
             Conflict: 'Credential definition already exists',
             schemaIdNotFound: 'SchemaLedgerId not found',
+            isRequired: 'Credential definition Id is required',
             OrgDidNotFound: 'OrgDid not found',
-            credDefIdNotFound: 'Credential Definition Id not found'
+            credDefIdNotFound: 'Credential Definition Id not found',
+            InvalidSchemaType: 'Invalid schema type or not supported yet'
         }
     },
     ledger: {
@@ -203,7 +211,8 @@ export const ResponseMessages = {
             ledgerConfig: 'Ledger config details fetched successfully.',
             webhookUrlRegister:'Webhook Url registered successfully',
             getWebhookUrl:'Webhook Url fetched successfully',
-            createKeys:'Key-pair created successfully'
+            createKeys:'Key-pair created successfully',
+            walletDelete: 'The wallet has been deleted.'
         },
         error: {
             exists: 'An agent name is already exist',
@@ -235,7 +244,15 @@ export const ResponseMessages = {
             invalidTenantIdIdFormat:'Invalid tenantId format',
             requiredTenantId:'Tenant Id is required',
             createDid:'Error while creating DID',
-            storeDid: 'Error while storing DID'
+            didAlreadyExist:'DID already exist',
+            storeDid: 'Error while storing DID',
+            agentSpinupError: 'Agent endpoint unreachable',
+            agentEndpointRequired: 'Agent endpoint is required',
+            failedAgentType: 'Agent endpoint is required',
+            failedApiKey: 'Failed to encrypt API key',
+            failedOrganization: 'Failed to fetch organization agent type details',
+            promiseReject: 'One or more promises were rejected.',
+            orgAgentNotFound: 'Org agent type not found'
         }
     },
     connection: {
@@ -262,7 +279,8 @@ export const ResponseMessages = {
             importCSV: 'File imported successfully',
             previewCSV: 'File details fetched successfully',
             bulkIssuance: 'Issuance process started. It will take some time',
-            notFound: 'Schema records not found'
+            notFound: 'Schema records not found',
+            bulkProcess: 'Process initiated for bulk issuance'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -290,7 +308,11 @@ export const ResponseMessages = {
             orgAgentTypeNotFound: 'Organization agent type not found',
             credentialNotPresent: 'credential is required',
             optionsNotPresent:'options are required',
-            invalidCredentialType:'invalid credential type'
+            attributesAreRequired: 'attributes are required',
+            invalidCredentialType:'invalid credential type',
+            missingRequestId: 'Param requestId is missing from the request.',
+            cachedData: 'Cached data does not exist',
+            cachedfileData: 'Cached file data does not exist'
         }
     },
     verification: {
@@ -299,7 +321,8 @@ export const ResponseMessages = {
             create: 'Presentation of proof received successfully.',
             verifiedProofDetails: 'Proof presentation details fetched successfully.',
             send: 'Proof request send successfully.',
-            verified: 'Proof presentation verified successfully.'
+            verified: 'Proof presentation verified successfully.',
+            deleteVerificationRecord: 'Verification records deleted'
         },
         error: {
             notFound: 'Organization agent not found',
@@ -313,13 +336,15 @@ export const ResponseMessages = {
             invitationNotFound: 'Invitation not found',
             platformConfigNotFound: 'Platform config not found',
             batchEmailSend: 'Unable to send email in batches',
-            emailSend: 'Unable to send email to the user'
+            emailSend: 'Unable to send email to the user',
+            verificationRecordsNotFound: 'Verification records not found'
         }
     },
     ecosystem: {
             success: {
             create: 'Ecosystem created successfully',
             update: 'Ecosystem details updated successfully',
+            add: 'Organization added successfully',
             delete: 'Ecosystem invitations deleted successfully',
             fetch: 'Ecosystem fetched successfully',
             getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
@@ -340,6 +365,11 @@ export const ResponseMessages = {
         },
         error: {
             notCreated: 'Error while creating ecosystem',
+            agentNotSpunUp: 'Agent is not spun up for this organization',
+            userNotHaveAccess: 'You do not have access',
+            orgAlreadyExists: 'Organization is already exists in ecosystem',
+            unableToAdd: 'Unable to add organization',
+            partiallyAdded: 'Organization(s) are partially added',
             orgNotExist: 'Organization does not exist',
             orgDidNotExist: 'Organization did does not exist',
             exists: 'An ecosystem name is already exist',
@@ -351,6 +381,7 @@ export const ResponseMessages = {
             orgsNotUpdate: 'Ecosystem Orgs not updated',
             ecosystemNotEnabled: 'Ecosystem service is not enabled',
             sumbitTransaction: 'Error while submitting transaction',
+            signTransactionNotApplicable: 'Signing transaction for w3c schema is not aapllicable',
             requestSchemaTransaction: 'Error while request schema transaction',
             requestCredDefTransaction: 'Error while submitting transaction',
             notFound: 'Organization not found',
@@ -364,6 +395,7 @@ export const ResponseMessages = {
             signRequestError: 'Error while signing the transaction',
             updateTransactionError: 'Error while update the transaction',
             schemaAlreadyExist: 'Schema name and schema version already exist',
+            schemaNameAlreadyExist: 'Schema name already exist',
             credDefAlreadyExist: 'Credential definition already exist',
             saveSchema: 'Error while storing the schema details',
             saveCredDef: 'Error while storing the credential-definition details',
@@ -371,6 +403,9 @@ export const ResponseMessages = {
             invalidEcosystemId: 'Invalid ecosystem Id',
             invalidTransaction: 'Transaction does not exist',
             transactionSubmitted: 'Transaction already submitted',
+            transactionAlreadySigned: 'Transaction already signed',
+            transactionNotSigned: 'Transaction request is not signed',
+            transactionNotRequested: 'Transaction is not requested',
             invalidAgentUrl: 'Invalid agent url',
             EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
             OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
@@ -385,14 +420,21 @@ export const ResponseMessages = {
     },
     bulkIssuance: {
         success: {
-            create: 'Issuance process successfully'
+            create: 'Issuance process initiated successfully',
+            reinitiated: 'Process reinitiated for bulk issuance'
         },
         error: {
             PathNotFound: 'Path to export data not found.',
-            emailColumn: '1st column of the file should always be email.',
+            invalidtemplateId: 'Invalid template id.',
+            invalidIdentifier: 'Invalid Identifier',
+            exportFile: 'An error occurred during CSV export.',
+            emailColumn: '1st column of the file should always be email_identifier.',
             attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
             mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
-            fileDetailsNotFound: 'File details not found.'
+            fileDetailsNotFound: 'File details not found.',
+            emptyFile: 'File data is empty',
+            emptyheader: 'File header is empty',
+            invalidEmails: 'Invalid emails found in the chosen file'
         }
     },
     errorMessages: {

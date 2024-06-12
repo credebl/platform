@@ -6,14 +6,15 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { organisation } from '@prisma/client';
+import { organisation, user } from '@prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
-import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard, IDeleteOrganization } from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 
 @Injectable()
@@ -79,8 +80,8 @@ export class OrganizationService extends BaseService {
    * @returns Organizations details
    */
 
-  async getOrganizations(paginationDto: PaginationDto, userId: string): Promise<IGetOrganization> {
-    const payload = { userId, ...paginationDto };
+  async getOrganizations(organizationDto: GetAllOrganizationsDto, userId: string): Promise<IGetOrganization> {
+    const payload = { userId, ...organizationDto };
     const fetchOrgs = await this.sendNatsMessage(this.serviceProxy, 'get-organizations', payload);
     return fetchOrgs;
   }
@@ -202,9 +203,10 @@ export class OrganizationService extends BaseService {
   }
 
   async deleteOrganization(
-    orgId: string
-  ): Promise<boolean> {
-    const payload = { orgId };
+    orgId: string,
+    user: user
+  ): Promise<IDeleteOrganization> {
+    const payload = { orgId, user };
 
     return this.sendNatsMessage(this.serviceProxy, 'delete-organization', payload);
   }

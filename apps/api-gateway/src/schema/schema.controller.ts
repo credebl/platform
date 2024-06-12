@@ -19,7 +19,7 @@ import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateSchemaDto, CreateW3CSchemaDto } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
+import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -141,10 +141,9 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+  async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto,  @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
 
-    const schemaDetails = await this.appService.createW3CSchema(schemaPayload, orgId);
-
+    const schemaDetails = await this.appService.createW3CSchema(schemaPayload, orgId, user.id);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.schema.success.create,

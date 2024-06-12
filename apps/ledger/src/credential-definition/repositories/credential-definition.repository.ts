@@ -1,12 +1,13 @@
 /* eslint-disable camelcase */
-import { CredDefPayload, GetAllCredDefsDto } from '../interfaces/create-credential-definition.interface';
+import { CredDefPayload, GetAllCredDefsDto, IPlatformCredDefs } from '../interfaces/create-credential-definition.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
-import { ICredDefData } from '@credebl/common/interfaces/cred-def.interface';
+import { ICredDefData, IPlatformCredDefDetails } from '@credebl/common/interfaces/cred-def.interface';
 import { SortValue } from '@credebl/enum/enum';
+import { ISchemaResponse } from '../interfaces';
 
 @Injectable()
 export class CredentialDefinitionRepository {
@@ -57,6 +58,51 @@ export class CredentialDefinitionRepository {
         }
     }
 
+    async getAllPlatformCredDefsDetails(credDefsPayload: IPlatformCredDefs): Promise<IPlatformCredDefDetails> {
+        try {
+            const { ledgerId, search, sortBy, sortField, pageNumber, pageSize } = credDefsPayload || {};
+          const credDefResult = await this.prisma.credential_definition.findMany({
+            where: {
+                schema: {
+                    ledgerId
+                },
+              OR: [
+                { tag: { contains: search, mode: 'insensitive' } },
+                { credentialDefinitionId: { contains: search, mode: 'insensitive' } },
+                { schemaLedgerId: { contains: search, mode: 'insensitive' } }
+      ]
+            },
+            select: {
+                createDateTime: true,
+                tag: true,
+                schemaId: true,
+                orgId: true,
+                schemaLedgerId: true,
+                createdBy: true,
+                credentialDefinitionId: true,
+                revocable: true
+        },
+            orderBy: {
+              [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
+            },
+            take: Number(pageSize),
+            skip: (pageNumber - 1) * pageSize
+          });
+    
+          const credDefCount = await this.prisma.credential_definition.count({
+            where: {
+                schema: {
+                    ledgerId
+                }
+            }
+          });
+          return { credDefCount, credDefResult };
+        } catch (error) {
+          this.logger.error(`Error in getting credential definitions: ${error}`);
+          throw error;
+        }
+      }
+    
     async getByAttribute(schema: string, tag: string): Promise<credential_definition> {
         try {
             const response = await this.prisma.credential_definition.findFirst({ where: { schemaLedgerId: schema, tag: { contains: tag, mode: 'insensitive' } } });
@@ -224,6 +270,28 @@ export class CredentialDefinitionRepository {
             throw error;
         }
     }
+
+    async getAllSchemaByOrgIdAndType(orgId: string, schemaType: string): Promise<ISchemaResponse[]> {
+        try { 
+            return await this.prisma.schema.findMany({
+                where: {
+                    orgId,
+                    type: schemaType 
+                },
+                select: {
+                    name: true,
+                    version: true,
+                    schemaLedgerId: true,
+                    orgId: true,
+                    attributes: true
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[getAllSchemaByOrgIdAndType] - error: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+    
     
     async getOrgAgentType(orgAgentId: string): Promise<string> {
         try {

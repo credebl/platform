@@ -23,6 +23,7 @@ export enum endorsementTransactionStatus {
 
 export enum endorsementTransactionType {
     SCHEMA = 'schema',
+    W3C_SCHEMA = 'w3c Schema',
     CREDENTIAL_DEFINITION = 'credential-definition',
     SIGN = 'sign',
     SUBMIT = 'submit'

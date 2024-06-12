@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest } from '../interfaces/issuance.interfaces';
+import { IClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
 import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
@@ -43,18 +43,19 @@ export class IssuanceController {
     return this.issuanceService.outOfBandCredentialOffer(outOfBandCredentialDto);
   }
 
-  @MessagePattern({ cmd: 'export-schema-to-csv-by-credDefId' })
-  async exportSchemaToCSV(payload: {
-    credentialDefinitionId: string
+  @MessagePattern({ cmd: 'download-csv-template-for-bulk-operation' })
+  async downloadBulkIssuanceCSVTemplate(payload: {
+    orgId: string, templateDetails: TemplateDetailsInterface
   }): Promise<object> {
-    return this.issuanceService.exportSchemaToCSV(payload.credentialDefinitionId);
+    const {templateDetails} = payload;
+    return this.issuanceService.downloadBulkIssuanceCSVTemplate(templateDetails);
   }
 
-  @MessagePattern({ cmd: 'import-and-preview-data-for-issuance' })
-  async importCSV(payload: {
+  @MessagePattern({ cmd: 'upload-csv-template' })
+  async uploadCSVTemplate(payload: {
     importFileDetails: ImportFileDetails
   }): Promise<string> {
-    return this.issuanceService.importAndPreviewDataForIssuance(payload.importFileDetails);
+    return this.issuanceService.uploadCSVTemplate(payload.importFileDetails);
   }
 
   @MessagePattern({ cmd: 'preview-csv-details' })

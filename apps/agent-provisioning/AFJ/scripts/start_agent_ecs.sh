@@ -18,11 +18,12 @@ TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 INBOUND_ENDPOINT=${16}
-AGENT_HOST=${17}
-AWS_ACCOUNT_ID=${18}
-S3_BUCKET_ARN=${19}
-CLUSTER_NAME=${20}
-TESKDEFINITION_FAMILY=${21}
+SCHEMA_FILE_SERVER_URL=${17}
+AGENT_HOST=${18}
+AWS_ACCOUNT_ID=${19}
+S3_BUCKET_ARN=${20}
+CLUSTER_NAME=${21}
+TESKDEFINITION_FAMILY=${22}
 
 DESIRED_COUNT=1
 
@@ -93,15 +94,17 @@ echo "AGENT SPIN-UP STARTED"
 # Define a regular expression pattern for IP address
 IP_REGEX="^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$"
 
-# Check if the input is a domain
-if echo "$INBOUND_ENDPOINT" | grep -qP "^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"; then
+# Check if INBOUND_ENDPOINT is a domain or IP address
+if [[ $INBOUND_ENDPOINT =~ ^https?://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
   echo "INBOUND_ENDPOINT is a domain: $INBOUND_ENDPOINT"
-  AGENT_ENDPOINT=$INBOUND_ENDPOINT
+  # Extracting the domain name without the protocol
+  AGENT_ENDPOINT=$(echo "$INBOUND_ENDPOINT" | sed 's/^https\?:\/\///')
 else
   # Check if the input is an IP address
   if [[ $INBOUND_ENDPOINT =~ $IP_REGEX ]]; then
     echo "INBOUND_ENDPOINT is an IP address: $INBOUND_ENDPOINT"
-    AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
+    # Adding the protocol to the IP address
+    AGENT_ENDPOINT="${PROTOCOL}://${INBOUND_ENDPOINT}:${INBOUND_PORT}"
   else
     echo "Invalid input for INBOUND_ENDPOINT: $INBOUND_ENDPOINT"
   fi
@@ -138,7 +141,8 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   ],
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
   "adminPort": $ADMIN_PORT,
-  "tenancy": $TENANT
+  "tenancy": $TENANT,
+  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
 }
 EOF
 # scp ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json ${AGENT_HOST}:/home/ec2-user/config/

@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/array-type */
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
 
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType } from '@credebl/enum/enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { SortValue } from '../../enum';
 import { trim } from '@credebl/common/cast.helper';
@@ -17,7 +17,7 @@ class Issuer {
   @Type(() => String) 
   id:string | { id?: string };
 }
-class Credential {
+export class Credential {
     @ApiProperty()
     @IsNotEmpty({ message: 'context  is required' })
     @IsCredentialJsonLdContext()
@@ -125,12 +125,12 @@ export class Attribute {
 
 }
 export class CredentialsIssuanceDto {
-    @ValidateIf((obj) => obj.credentialType === IssueCredentialType.INDY)
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Credential definition Id is required' })
     @IsString({ message: 'Credential definition id should be string' })
     @Transform(({ value }) => value.trim())
-    credentialDefinitionId: string;
+    @IsOptional()
+    credentialDefinitionId?: string;
 
     @ApiProperty({ example: 'string' })
     @IsNotEmpty({ message: 'Please provide valid comment' })
@@ -515,4 +515,25 @@ export class ClientDetails {
 
     userId?: string;
     
+}
+
+export class TemplateDetails {
+  @ApiProperty({ required: true, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
+  @IsOptional()
+  @IsString({ message: 'templateId should be string' })
+  @IsNotEmpty({ message: 'Template Id is required' })
+  @Transform(({ value }) => trim(value))
+  templateId: string = '';
+
+  @ApiProperty({ enum: SchemaType, required: true })
+  @IsEnum(SchemaType, { message: 'Schema type should be a valid' })
+  schemaType: SchemaType;
+}
+
+export class FileUploadDetails extends TemplateDetails {
+  
+  @ApiProperty({ required: false, example: 'CSV file' })
+  @IsOptional()
+  @IsString({ message: 'fileName should be string' })
+  fileName: string;
 }

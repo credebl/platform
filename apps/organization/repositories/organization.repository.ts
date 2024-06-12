@@ -1,19 +1,19 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable camelcase */
 
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization } from '../interfaces/organization.interface';
+import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { IOrganizationInvitations, IOrganization, IOrganizationDashboard} from '@credebl/common/interfaces/organization.interface';
+import { IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization} from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
 export class OrganizationRepository {
@@ -72,6 +72,10 @@ export class OrganizationRepository {
           website: createOrgDto.website,
           orgSlug: createOrgDto.orgSlug,
           publicProfile: false,
+          registrationNumber:createOrgDto.registrationNumber,
+          country:createOrgDto.country,
+          city:createOrgDto.city,
+          state:createOrgDto.state,
           createdBy: createOrgDto.createdBy,
           lastChangedBy: createOrgDto.lastChangedBy
         }
@@ -387,6 +391,11 @@ export class OrganizationRepository {
               name: true
             }
           },
+          userOrgRoles: {
+            select: {
+              orgRole: true
+            }
+          },
           org_agents: {
             select: {
               id: true,
@@ -551,14 +560,24 @@ export class OrganizationRepository {
     queryObject: object,
     filterOptions: object,
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
+    role?: string,
+    userId?: string
   ): Promise<IGetOrganization> {
     try {
       const sortByName = SortValue.DESC;
       const result = await this.prisma.$transaction([
         this.prisma.organisation.findMany({
           where: {
-            ...queryObject
+            ...queryObject,
+            userOrgRoles: {
+              some: {
+                orgRole: {
+                  name: role
+                },
+                userId
+              }
+            }
           },
           select: {
             id: true,
@@ -566,7 +585,19 @@ export class OrganizationRepository {
             description: true,
             logoUrl: true,
             orgSlug: true,
+            createDateTime: true,
+            ecosystemOrgs: {
+              select: {
+                ecosystemId: true
+              }
+            },
             userOrgRoles: {
+              where: {
+                orgRole: {
+                  name: role
+                },
+                ...filterOptions
+              },
               select: {
                 id: true,
                 orgRole: {
@@ -576,27 +607,29 @@ export class OrganizationRepository {
                     description: true
                   }
                 }
-              },
-              where: {
-                ...filterOptions
-                // Additional filtering conditions if needed
               }
             }
           },
           take: pageSize,
           skip: (pageNumber - 1) * pageSize,
           orderBy: {
-            name: sortByName
-            
+            createDateTime: sortByName
           }
         }),
         this.prisma.organisation.count({
           where: {
-            ...queryObject
+            ...queryObject,
+            userOrgRoles: {
+              some: {
+                orgRole: {
+                  name: role
+                },
+                userId
+              }
+            }
           }
         })
       ]);
-
       const organizations = result[0];
       const totalCount = result[1];
       const totalPages = Math.ceil(totalCount / pageSize);
@@ -608,6 +641,16 @@ export class OrganizationRepository {
     }
   }
 
+  async userOrganizationCount(userId: string): Promise<number> {
+    const getOrgCount = await this.prisma.organisation.count({
+      where: {
+        userOrgRoles: {
+          some: { userId }
+        }
+      }
+    });
+    return getOrgCount;
+  }
   /**
   *
   * @param name
@@ -690,28 +733,66 @@ export class OrganizationRepository {
     }
   }
 
-  async deleteOrg(id: string): Promise<boolean> {
+  async deleteOrg(id: string):Promise<{
+    deletedUserActivity: Prisma.BatchPayload;
+    deletedUserOrgRole: Prisma.BatchPayload;
+    deleteOrg: IDeleteOrganization
+  }> {
+    const tablesToCheck = [
+        'org_invitations',
+        'org_agents',
+        'org_dids',
+        'agent_invitations',
+        'connections',
+        'credentials',
+        'presentations',
+        'ecosystem_invitations',
+        'ecosystem_orgs',
+        'file_upload',
+        'notification'
+    ];
+
     try {
-      await Promise.all([
-        this.prisma.user_activity.deleteMany({ where: { orgId: id } }),
-        this.prisma.user_org_roles.deleteMany({ where: { orgId: id } }),
-        this.prisma.org_invitations.deleteMany({ where: { orgId: id } }),
-        this.prisma.schema.deleteMany({ where: { orgId: id } }),
-        this.prisma.credential_definition.deleteMany({ where: { orgId: id } }),
-        this.prisma.agent_invitations.deleteMany({ where: { orgId: id } }),
-        this.prisma.org_agents.deleteMany({ where: { orgId: id } }),
-        this.prisma.connections.deleteMany({ where: { orgId: id } }),
-        this.prisma.credentials.deleteMany({ where: { orgId: id } }),
-        this.prisma.presentations.deleteMany({ where: { orgId: id } }),
-        this.prisma.ecosystem_invitations.deleteMany({ where: { orgId: `${id}` } }),
-        this.prisma.file_upload.deleteMany({ where: { orgId: `${id}` } }),
-        this.prisma.ecosystem_orgs.deleteMany({ where: { orgId: `${id}` } }),
-        this.prisma.organisation.deleteMany({ where: { id } })
-      ]);
-      return true;
+        return await this.prisma.$transaction(async (prisma) => {
+            // Check for references in all tables in parallel
+            const referenceCounts = await Promise.all(
+                tablesToCheck.map(table => prisma[table].count({ where: { orgId: id } }))
+            );
+
+            referenceCounts.forEach((count, index) => {
+                if (0 < count) {
+                    throw new ConflictException(`Organization ID ${id} is referenced in the table ${tablesToCheck[index]}`);
+                }
+            });
+
+            // Check if the organization is an ecosystem lead
+            const isEcosystemLead = await prisma.ecosystem_orgs.findMany({
+                where: {
+                    orgId: id,
+                    ecosystemRole: {
+                        name: { in: ['Ecosystem Lead', 'Ecosystem Owner'] }
+                    }
+                }
+            });
+
+            if (0 < isEcosystemLead.length) {
+                throw new ConflictException(ResponseMessages.organisation.error.organizationEcosystemValidate);
+            }
+
+            // User activity delete by orgId
+            const deletedUserActivity = await prisma.user_activity.deleteMany({ where: { orgId: id } });
+
+            // User org role delete by orgId
+            const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
+
+            // If no references are found, delete the organization
+            const deleteOrg = await prisma.organisation.delete({ where: { id } });
+
+            return {deletedUserActivity, deletedUserOrgRole, deleteOrg};
+        });
     } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw error;
+        this.logger.error(`Error in deleteOrg: ${error}`);
+        throw error;
     }
   }
 
@@ -755,8 +836,9 @@ export class OrganizationRepository {
     }
   }
 
-  async setOrgsPrimaryDid(primaryDid:string, orgId:string, id:string): Promise<string> {
+  async setOrgsPrimaryDid(primaryDidDetails: IPrimaryDidDetails): Promise<string> {
     try {
+      const {did, didDocument, id, orgId} = primaryDidDetails;
       await this.prisma.$transaction([
         this.prisma.org_dids.update({
           where: {
@@ -766,13 +848,13 @@ export class OrganizationRepository {
              isPrimaryDid: true
          }
          }),
-
           this.prisma.org_agents.update({
             where: {
                orgId
             },
            data: {
-               orgDid: primaryDid
+               orgDid: did,
+               didDocument
            }
        })   
         ]);
@@ -782,6 +864,19 @@ export class OrganizationRepository {
         throw error;
     }
 }
+
+async getDidDetailsByDid(did:string): Promise<IDidDetails> {
+  try {
+    return this.prisma.org_dids.findFirstOrThrow({
+      where: {
+        did
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getDidDetailsByDid] - get DID details: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
 
  async getPerviousPrimaryDid(orgId:string): Promise<IDidDetails> {
   try {

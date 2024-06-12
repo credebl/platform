@@ -5,13 +5,27 @@ export interface AttributeValue {
   displayName: string;
 }
 
-export interface RequestSchemaEndorsement {
+export interface IW3CSchemaAttributesValue {
+  title: string;
+  type: string;
+}
+
+export interface IRequestSchemaEndorsement {
   orgId: string;
   userId?: string;
   name: string;
   version: string;
   attributes: AttributeValue[];
   endorse?: boolean;
+}
+
+export interface IRequestW3CSchemaEndorsement {
+  orgId: string;
+  userId?: string;
+  schemaName: string;
+  did: string;
+  schemaAttributes: IW3CSchemaAttributesValue[];
+  description: string;
 }
 
 export interface RequestCredDeffEndorsement {
@@ -134,6 +148,7 @@ export interface SaveSchema {
   publisherDid: string;
   orgId: string;
   ledgerId: string;
+  type?: string;
 }
 
 export interface saveCredDef {
@@ -256,7 +271,7 @@ export interface IEcosystemInvitation {
   totalPages: number;
 }
 
-export interface TransactionPayload {
+export interface ITransactionData {
   endorsementId: string;
   ecosystemId: string;
   ecosystemLeadAgentEndPoint?: string;
@@ -368,4 +383,37 @@ export interface IEcosystemList {
   pageNumber: number;
   pageSize: number;
   search: string;
+}
+
+export interface IEcosystemLeadOrgs {
+  organizationIds: string[];
+  ecosystemId: string;
+  orgId: string;
+  userId: string;
+}
+
+export interface IEcosystemOrgs {
+  orgId: string,
+  ecosystemId: string,
+  ecosystemRoleId: string,
+  status: string,
+  deploymentMode: string,
+  createdBy: string,
+  lastChangedBy: string
+}
+export interface IEcosystemOrgsData extends IEcosystemOrgs {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+}
+
+export interface IEcosystemOrgDetails {
+  count: Prisma.BatchPayload;
+  ecosystemOrgs: IEcosystemOrgsData[];
+}
+
+
+export interface IEcosystemEndorsementFlag {
+  autoEndorsement: boolean;
 }

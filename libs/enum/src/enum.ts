@@ -13,6 +13,13 @@ export enum SortFields {
     ISSUER_ID = 'issuerId'
 }
 
+export enum CredDefSortFields {
+    CREATED_DATE_TIME = 'createDateTime',
+    TAG = 'tag',
+    LEDGER_ID = 'schemaLedgerId',
+    CRED_DEF_ID= 'credentialDefinitionId'
+}
+
 export enum AgentType {
     AFJ = 'AFJ',
     ACAPY = 'ACAPY'
@@ -70,6 +77,11 @@ export enum EndorserTransactionType {
     CREDENTIAL_DEFINITION = 'credential-definition',
 }
 
+export enum schemaRequestType {
+    W3C = 'w3c',
+    INDY = 'indy'
+}
+
 export enum OrgAgentType {
     DEDICATED = 'DEDICATED',
     SHARED = 'SHARED'
@@ -113,3 +125,17 @@ const transitionMap: { [key in Invitation]: Invitation[] } = {
 };
 
 export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));
+
+export enum SchemaType {
+    INDY = 'indy',
+    W3C_Schema = 'w3c'
+}
+
+export enum IssueCredentialType {
+    JSONLD = 'jsonld',
+    INDY = 'indy'
+}
+
+export enum TemplateIdentifier {
+    EMAIL_COLUMN = 'email_identifier'
+}

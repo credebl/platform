@@ -16,6 +16,7 @@ import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 
 @ApiBearerAuth()
@@ -59,7 +60,7 @@ export class CredentialDefinitionController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   async getCredentialDefinitionBySchemaId(
-    @Param('schemaId') schemaId: string,
+    @Param('schemaId', TrimStringParamPipe) schemaId: string,
     @Res() res: Response
   ): Promise<Response> {
     
@@ -96,27 +97,6 @@ export class CredentialDefinitionController {
       data: credentialsDefinitionDetails
     };
     return res.status(HttpStatus.OK).json(credDefResponse);
-  }
-
-  @Get('/orgs/:orgId/bulk/cred-defs')
-  @ApiOperation({
-    summary: 'Fetch all credential definitions for bulk opeartion',
-    description: 'Retrieve all credential definitions for bulk operation'
-  })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async getAllCredDefAndSchemaForBulkOperation(
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
-    @Res() res: Response
-  ): Promise<Response> {
-    const credentialsDefinitionDetails = await this.credentialDefinitionService.getAllCredDefAndSchemaForBulkOperation(orgId);
-    const credDefResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.credentialDefinition.success.fetch,
-      data: credentialsDefinitionDetails
-    };
-    return res.status(HttpStatus.CREATED).json(credDefResponse);
   }
 
   @Post('/orgs/:orgId/cred-defs')

@@ -7,8 +7,8 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
-import { organisation } from '@prisma/client';
-import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { organisation, user } from '@prisma/client';
+import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization } from '@credebl/common/interfaces/organization.interface';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 
@@ -79,8 +79,22 @@ export class OrganizationController {
   async getOrganizations(
     @Body() payload: { userId: string} & Payload
   ): Promise<IGetOrganization> {
-    const { userId, pageNumber, pageSize, search } = payload;
-    return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search);
+    const { userId, pageNumber, pageSize, search, role } = payload;
+    return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search, role);
+  }
+  /**
+   * Description: get organization count
+   * @param
+   * @returns Get created organization details
+   */
+  @MessagePattern({ cmd: 'get-organizations-count' })
+  async countTotalOrgs(
+    @Body() payload: { userId: string}
+  ): Promise<number> {
+    
+    const { userId } = payload;
+    
+    return this.organizationService.countTotalOrgs(userId);
   }
 
   /**
@@ -213,8 +227,8 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'delete-organization' })
-  async deleteOrganization(payload: { orgId: string }): Promise<boolean> {
-    return this.organizationService.deleteOrganization(payload.orgId);
+  async deleteOrganization(payload: { orgId: string, user: user }): Promise<IDeleteOrganization> {
+    return this.organizationService.deleteOrganization(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'delete-org-client-credentials' })

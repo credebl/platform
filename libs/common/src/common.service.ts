@@ -102,7 +102,20 @@ export class CommonService {
           data.data
         );
     } catch (error) {
-      this.logger.error(`ERROR in GET : ${JSON.stringify(error.response.data)}`);
+      this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`);
+      if (
+        error.message
+          .toString()
+          .includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)
+      ) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            error: error.message
+          },
+          HttpStatus.NOT_FOUND
+        );
+      }
       if (
         error
           .toString()
@@ -219,13 +232,13 @@ export class CommonService {
     }
   }
 
-  async httpDelete(url: string, config?: unknown): Promise<object> {
+  async httpDelete(url: string, config?: unknown) {
     try {
       return await this.httpService
         .delete(url, config)
         .toPromise()
         .then((data) => {
-          return data.data;
+          return data;
         });
     } catch (error) {
       this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);
@@ -379,5 +392,4 @@ export class CommonService {
       throw new BadRequestException('Invalid Credentials');
     }
   }
-
 }

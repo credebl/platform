@@ -77,3 +77,19 @@ export interface IOrganizationDashboard {
     logoUrl: string;
   }
   
+  export interface IDeleteOrganization {
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    name: string;
+    description: string;
+    orgSlug: string;
+    logoUrl: string;
+    website: string;
+    publicProfile: boolean;
+    idpId: string;
+    clientId: string;
+    clientSecret: string;
+  }

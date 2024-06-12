@@ -49,7 +49,7 @@ export class ConnectionRepository {
     connectionInvitation: string,
     agentId: string,
     orgId: string,
-    recipientKey: string
+    invitationDid: string
     // eslint-disable-next-line camelcase
   ): Promise<agent_invitations> {
     try {
@@ -59,7 +59,7 @@ export class ConnectionRepository {
           agentId,
           connectionInvitation,
           multiUse: true,
-          recipientKey
+          invitationDid
         }
       });
       return agentDetails;
@@ -99,11 +99,10 @@ export class ConnectionRepository {
   // eslint-disable-next-line camelcase
   async saveConnectionWebhook(payload: ICreateConnection): Promise<object> {
     try {
-
-      let organisationId: string;
+      let organisationId;
       const { connectionDto, orgId } = payload;
 
-      if (connectionDto?.contextCorrelationId) {
+      if ('default' !== connectionDto?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganization(connectionDto?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
@@ -266,20 +265,20 @@ export class ConnectionRepository {
           connectionId: true
         },
         orderBy: {
-          [connectionSearchCriteria.sortField]: SortValue.ASC === connectionSearchCriteria.sortBy ? 'asc' : 'desc' 
+          [connectionSearchCriteria.sortField]: SortValue.ASC === connectionSearchCriteria.sortBy ? 'asc' : 'desc'
         },
         take: Number(connectionSearchCriteria.pageSize),
         skip: (connectionSearchCriteria.pageNumber - 1) * connectionSearchCriteria.pageSize
       });
       const connectionCount = await this.prisma.connections.count({
-          where: {
-            orgId,
-            OR: [
-              { theirLabel: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } },
-              { connectionId: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } }
-            ]
-          }
-        });
+        where: {
+          orgId,
+          OR: [
+            { theirLabel: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } },
+            { connectionId: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } }
+          ]
+        }
+      });
 
       return { connectionCount, connectionsList };
     } catch (error) {

@@ -1,6 +1,6 @@
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CommonService } from '@credebl/common';
-import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, UseFilters, Post, Body, Res, HttpStatus, Query, Delete, ParseUUIDPipe, BadRequestException, ValidationPipe, UsePipes } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import  IResponse from '@credebl/common/interfaces/response.interface';
@@ -25,6 +25,7 @@ import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
+import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 
 @UseFilters(CustomExceptionFilter)
@@ -215,27 +216,9 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
-  @ApiQuery({
-    name: 'pageNumber',
-    example: '1',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    example: '10',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'search',
-    example: '',
-    type: String,
-    required: false
-  })
-  async getOrganizations(@Query() paginationDto: PaginationDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  async getOrganizations(@Query() organizationDto: GetAllOrganizationsDto, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
-    const getOrganizations = await this.organizationService.getOrganizations(paginationDto, reqUser.id);
+    const getOrganizations = await this.organizationService.getOrganizations(organizationDto, reqUser.id);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -325,7 +308,7 @@ export class OrganizationController {
   */
 
    @Get('/:orgId/dids')
-   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.MEMBER)
    @ApiBearerAuth()
    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -370,18 +353,17 @@ export class OrganizationController {
  * @returns success message
  */
 
-  @Post('/:orgId/primary-did')
+  @Put('/:orgId/primary-did')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiOperation({ summary: 'Set primary DID', description: 'Set primary DID for an organization' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async setPrimaryDid(@Param('orgId') orgId: string, @Body() primaryDidPayload: PrimaryDid, @Res() res: Response): Promise<Response> {
-    const orgData = await this.organizationService.setPrimaryDid(primaryDidPayload, orgId);
+    await this.organizationService.setPrimaryDid(primaryDidPayload, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.primaryDid,
-      data: orgData
+      message: ResponseMessages.organisation.success.primaryDid
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -516,8 +498,12 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiParam({
+    name: 'orgId'
+  })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
-  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId') orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+  @UsePipes(new ValidationPipe())
+  async updateOrganization(@Body() updateOrgDto: UpdateOrganizationDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
 
     updateOrgDto.orgId = orgId;
     await this.organizationService.updateOrganization(updateOrgDto, reqUser.id, orgId);
@@ -530,27 +516,27 @@ export class OrganizationController {
   }
 
   /**
-   * @returns Boolean
+   * @returns Organization
    */
-  //Todo
   @Delete('/:orgId')
   @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
-  @ApiExcludeEndpoint()
-  @ApiResponse({ status: HttpStatus.ACCEPTED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.OWNER)
   async deleteOrganization(
     @Param('orgId') orgId: string, 
+    @User() user: user,
     @Res() res: Response
     ): Promise<Response> {
 
-    await this.organizationService.deleteOrganization(orgId);
+    await this.organizationService.deleteOrganization(orgId, user);
 
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.ACCEPTED,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.delete
     };
-    return res.status(HttpStatus.ACCEPTED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Delete('/:orgId/client_credentials')

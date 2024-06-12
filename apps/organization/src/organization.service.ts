@@ -1,6 +1,6 @@
 /* eslint-disable prefer-destructuring */
 // eslint-disable-next-line camelcase
-import { org_invitations, organisation, user } from '@prisma/client';
+import { RecordType, org_invitations, organisation, user } from '@prisma/client';
 import {
   Injectable,
   Logger,
@@ -26,10 +26,9 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { Invitation, OrgAgentType, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList } from '../interfaces/organization.interface';
+import { Invitation, transition } from '@credebl/enum/enum';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
-import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
@@ -39,12 +38,15 @@ import {
   IOrgCredentials,
   IOrganization,
   IOrganizationInvitations,
-  IOrganizationDashboard
+  IOrganizationDashboard,
+  IDeleteOrganization
 } from '@credebl/common/interfaces/organization.interface';
 
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { toNumber } from '@credebl/common/cast.helper';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -58,8 +60,10 @@ export class OrganizationService {
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private readonly clientRegistrationService: ClientRegistrationService
+    private readonly clientRegistrationService: ClientRegistrationService,
+    private readonly userActivityRepository: UserActivityRepository
   ) {}
+  
 
   /**
    *
@@ -74,6 +78,12 @@ export class OrganizationService {
     keycloakUserId: string
   ): Promise<organisation> {
     try {
+      const userOrgCount = await this.organizationRepository.userOrganizationCount(userId); 
+  
+      if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
+       throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+      }
+
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
 
       if (organizationExist) {
@@ -99,6 +109,7 @@ export class OrganizationService {
         createOrgDto.logo = '';
       }
 
+      
       const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
 
       // To return selective object data
@@ -176,24 +187,35 @@ export class OrganizationService {
         throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
       }
 
+      //check user DID exist in the organization's did list
       const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
       const isDidMatch = organizationDidList.some(item => item.did === did);
 
       if (!isDidMatch) {
         throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
       }
+      const didDetails = await this.organizationRepository.getDidDetailsByDid(did);
 
+      if (!didDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+      const primaryDidDetails: IPrimaryDidDetails = {
+        did,
+        orgId,
+        id,
+        didDocument: didDetails.didDocument
+      };
+
+      
       const getExistingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
-
-      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(did, orgId, id);
-
-
+      
      if (!getExistingPrimaryDid) {
        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
      }
 
       const setPriviousDidFalse = await this.organizationRepository.setPreviousDidFlase(getExistingPrimaryDid.id);
       
+      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
 
       await Promise.all([setPrimaryDid, getExistingPrimaryDid, setPriviousDidFalse]);
 
@@ -480,12 +502,14 @@ export class OrganizationService {
     logoUrl: string,
     orgId: string
   ): Promise<ICreateConnectionUrl> {
-    const pattern = { cmd: 'create-connection' };
+    const pattern = { cmd: 'create-connection-invitation' };
 
     const payload = {
-      orgName,
-      logoUrl,
-      orgId
+      createOutOfBandConnectionInvitation: {
+        orgName,
+        logoUrl,
+        orgId
+      }
     };
     const connectionInvitationData = await this.organizationServiceProxy
       .send(pattern, payload)
@@ -503,6 +527,20 @@ export class OrganizationService {
 
     return connectionInvitationData;
   }
+
+  async countTotalOrgs(
+    userId: string
+    
+   ): Promise<number> {
+    try {
+      
+      const getOrgs = await this.organizationRepository.userOrganizationCount(userId);
+      return getOrgs;
+    } catch (error) {
+      this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
   
   /**
    * @returns Get created organizations details
@@ -512,14 +550,15 @@ export class OrganizationService {
     userId: string,
     pageNumber: number,
     pageSize: number,
-    search: string
+    search: string,
+    role?: string
   ): Promise<IGetOrganization> {
     try {
       const query = {
         userOrgRoles: {
           some: { userId }
         },
-        OR: [
+          OR: [
           { name: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } }
         ]
@@ -529,7 +568,7 @@ export class OrganizationService {
         userId
       };
 
-      const getOrgs = await this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize);
+      const getOrgs = await this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize, role, userId);
       return getOrgs;
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
@@ -1038,6 +1077,13 @@ export class OrganizationService {
       const { orgId, status, invitationId, userId, keycloakUserId, email } = payload;
       const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
 
+      if (Invitation.ACCEPTED === payload.status) {
+        const userOrgCount = await this.organizationRepository.userOrganizationCount(userId);
+
+        if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
+          throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+        }
+      }
       if (!invitation || (invitation && invitation.email !== email)) {
         throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
       }
@@ -1255,38 +1301,40 @@ export class OrganizationService {
     }
   }
 
-  async deleteOrganization(orgId: string): Promise<boolean> {
+  async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     try {
-      const getAgent = await this.organizationRepository.getAgentEndPoint(orgId);
-      // const apiKey = await this._getOrgAgentApiKey(orgId);
-      let apiKey: string = await this.cacheService.get(CommonConstants.CACHE_APIKEY_KEY);
-      if (!apiKey || null === apiKey || undefined === apiKey) {
-        apiKey = await this._getOrgAgentApiKey(orgId);
-      }
-      let url;
-      if (getAgent.orgAgentTypeId === OrgAgentType.DEDICATED) {
-        url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
-      } else if (getAgent.orgAgentTypeId === OrgAgentType.SHARED) {
-        url = `${getAgent.agentEndPoint}${CommonConstants.URL_DELETE_SHARED_WALLET}`.replace('#', getAgent.tenantId);
-      }
+        const { deletedUserActivity, deletedUserOrgRole, deleteOrg } = await this.organizationRepository.deleteOrg(orgId);
 
-      const payload = {
-        url,
-        apiKey
-      };
+        this.logger.log(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
+        this.logger.log(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
+        this.logger.log(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`);
 
-      const deleteWallet = await this._deleteWallet(payload);
-      if (deleteWallet) {
-        const orgDelete = await this.organizationRepository.deleteOrg(orgId);
-        if (false === orgDelete) {
-          throw new NotFoundException(ResponseMessages.organisation.error.deleteOrg);
+        const deletions = [
+            { records: deletedUserActivity.count, tableName: 'user_activity' },
+            { records: deletedUserOrgRole.count, tableName: 'user_org_roles' },
+            { records: deleteOrg ? 1 : 0, tableName: 'organization' }
+        ];
+
+        const logDeletionActivity = async (records, tableName): Promise<void> => {
+            if (records) {
+                const txnMetadata = {
+                    deletedRecordsCount: records,
+                    deletedRecordInTable: tableName
+                };
+                const recordType = RecordType.ORGANIZATION;
+                await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
+            }
+        };
+
+        for (const { records, tableName } of deletions) {
+            await logDeletionActivity(records, tableName);
         }
-      }
 
-      return true;
+        return deleteOrg;
+        
     } catch (error) {
-      this.logger.error(`delete organization: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+        this.logger.error(`delete organization: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
     }
   }
 

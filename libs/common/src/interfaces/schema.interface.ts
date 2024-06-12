@@ -20,7 +20,15 @@ export interface ISchemasWithPagination extends IPaginationDetails{
   export interface ISchemaDetails extends IPaginationDetails{
     data: ISchema[];
   }
-  
+
+  export interface IW3CSchema {
+    response: {
+      did: string,
+      schemaId: string,
+      schemaTxnHash: string,
+      resourceTxnHash: string
+    }
+  }
   interface ISchema {
     createDateTime: Date;
     createdBy: string;
@@ -58,3 +66,26 @@ export interface ISchemasWithPagination extends IPaginationDetails{
   export interface INetworkUrl {
     networkUrl: string;
   }
+
+  export interface ISchemaFields {
+    name?: string;
+    schemaName?: string;
+    attributes?: IIndySchemaAttributesValue[];
+    schemaAttributes?: IW3CSchemaAttributesValue[];
+    endorse?: boolean;
+    version?: string;
+    did?: string;
+    description?: string;
+  }
+
+  interface IIndySchemaAttributesValue {
+    attributeName: string;
+    schemaDataType: string;
+    displayName: string;
+  }
+  
+  interface IW3CSchemaAttributesValue {
+    title: string;
+    type: string;
+  }
+  

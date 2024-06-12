@@ -143,6 +143,7 @@ export interface Payload {
   pageNumber: number;
   pageSize: number;
   search: string;
+  role?: string;
 }
 
 export interface IDidList {
@@ -169,4 +170,9 @@ export interface IDidDetails {
   did: string;
   didDocument: Prisma.JsonValue;
   orgAgentId: string;
+}
+
+export interface IPrimaryDidDetails extends IPrimaryDid {
+  id: string,
+  didDocument: Prisma.JsonValue
 }

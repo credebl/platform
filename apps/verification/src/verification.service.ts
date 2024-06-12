@@ -2,11 +2,11 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation} from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { RecordType, agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
+import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -15,8 +15,10 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
+import { UserActivityService } from '@credebl/user-activity';
+import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
 
 @Injectable()
 export class VerificationService {
@@ -27,6 +29,7 @@ export class VerificationService {
     @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
     private readonly verificationRepository: VerificationRepository,
     private readonly outOfBandVerification: OutOfBandVerification,
+    private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
     @Inject(CACHE_MANAGER) private cacheService: Cache
 
@@ -84,7 +87,7 @@ export class VerificationService {
 
       return proofPresentationsResponse;
     } catch (error) {
-
+                    
       this.logger.error(
         `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
       );
@@ -169,50 +172,9 @@ export class VerificationService {
    * @param orgId 
    * @returns Requested proof presentation details
    */
-  async sendProofRequest(requestProof: IRequestProof): Promise<string> {
+  async sendProofRequest(requestProof: ISendProofRequestPayload): Promise<string> {
     try {
       const comment = requestProof.comment ? requestProof.comment : '';
-
-      let proofRequestPayload: ISendProofRequestPayload = {
-        protocolVersion: '',
-        comment: '',
-        connectionId: '',
-        proofFormats: {
-          indy: {
-            name: '',
-            requested_attributes: {},
-            requested_predicates: {},
-            version: ''
-          }
-        },
-        autoAcceptProof: '',
-        label: '',
-        goalCode: '',
-        parentThreadId: '',
-        willConfirm: false
-      };
-
-      const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
-
-      proofRequestPayload = {
-        protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
-        comment,
-        connectionId: requestProof.connectionId,
-        proofFormats: {
-          indy: {
-            name: 'Proof Request',
-            version: '1.0',
-            // eslint-disable-next-line camelcase
-            requested_attributes: requestedAttributes,
-            // eslint-disable-next-line camelcase
-            requested_predicates: requestedPredicates
-          }
-        },
-        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : 'never',
-        goalCode: requestProof.goalCode || undefined,
-        parentThreadId: requestProof.parentThreadId || undefined,
-        willConfirm: requestProof.willConfirm || undefined
-      };
 
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
 
@@ -220,7 +182,47 @@ export class VerificationService {
       const verificationMethodLabel = 'request-proof';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
       
-      const payload = { orgId: requestProof.orgId, url, proofRequestPayload };
+      const payload: IProofRequestPayload = {
+        orgId: requestProof.orgId,
+        url,
+        proofRequestPayload: {}
+      };
+
+      const proofRequestPayload = {
+        comment,
+        connectionId: requestProof.connectionId,
+        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.Never,
+        goalCode: requestProof.goalCode || undefined,
+        parentThreadId: requestProof.parentThreadId || undefined,
+        willConfirm: requestProof.willConfirm || undefined
+      };
+
+      if (requestProof.type === ProofRequestType.INDY) {
+        const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof as IRequestProof);
+        payload.proofRequestPayload = {
+          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
+          proofFormats: {
+            indy: {
+              name: 'Proof Request',
+              version: '1.0',
+              requested_attributes: requestedAttributes,
+              requested_predicates: requestedPredicates
+            }
+          },
+          ...proofRequestPayload
+        };
+
+      } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE) {
+        payload.proofRequestPayload = {
+          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v2',
+          proofFormats: {
+            presentationExchange: {
+              presentationDefinition: requestProof.presentationDefinition
+            }
+        },
+        ...proofRequestPayload
+      };
+    }
 
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;
@@ -349,22 +351,22 @@ export class VerificationService {
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
       const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
-      let recipientKey: string | undefined;
+      let invitationDid: string | undefined;
       if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.verificationRepository.getRecipientKeyByOrgId(user.orgId);
+        const data: agent_invitations[] = await this.verificationRepository.getInvitationDidByOrgId(user.orgId);
          if (data && 0 < data.length) {
           const [firstElement] = data;
-          recipientKey = firstElement?.recipientKey ?? undefined;
+          invitationDid = firstElement?.invitationDid ?? undefined;
       }
       }
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
+      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
 
       
       let payload: IProofRequestPayload;
 
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
-        updateOutOfBandRequestProof.recipientKey = recipientKey || undefined;
+        updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
         payload   = {
         orgId: user.orgId,
         url,
@@ -378,6 +380,7 @@ export class VerificationService {
           orgId: user.orgId,
           url,
           proofRequestPayload: {
+            goalCode: outOfBandRequestProof.goalCode,
             protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
             comment:outOfBandRequestProof.comment,
             label,
@@ -391,7 +394,7 @@ export class VerificationService {
               }
             },
             autoAcceptProof:outOfBandRequestProof.autoAcceptProof,
-            recipientKey:recipientKey || undefined
+            invitationDid:invitationDid || undefined
           }
         };  
       }
@@ -407,6 +410,7 @@ export class VerificationService {
           this.logger.log('shortenedUrl', shortenedUrl);
           if (shortenedUrl) {
             presentationProof.invitationUrl = shortenedUrl;
+            presentationProof.deepLinkURL = convertUrlToDeepLinkUrl(shortenedUrl);
           }
         }
         if (!presentationProof) {
@@ -478,6 +482,7 @@ export class VerificationService {
     // Currently have shortenedUrl to store only for 30 days
     const persist: boolean = false;
     const shortenedUrl = await this.storeVerificationObjectAndReturnUrl(invitationUrl, persist);
+    const deepLinkURL = convertUrlToDeepLinkUrl(shortenedUrl);
     const qrCodeOptions: QRCode.QRCodeToDataURLOptions = { type: 'image/png' };
     const outOfBandVerificationQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
 
@@ -490,7 +495,7 @@ export class VerificationService {
     this.emailData.emailFrom = platformConfigData.emailFrom;
     this.emailData.emailTo = email;
     this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials`;
-    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, shortenedUrl);
+    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, deepLinkURL);
     this.emailData.emailAttachments = [
       {
         filename: 'qrcode.png',
@@ -683,6 +688,7 @@ export class VerificationService {
     }
   }
 
+  // TODO: This function is only for anoncreds indy
   async getVerifiedProofdetails(proofId: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
@@ -912,4 +918,20 @@ export class VerificationService {
   async delay(ms: number): Promise<unknown> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-}          
+
+  async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
+    try {
+      const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
+      
+      const deletedVerificationData = {
+        deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count
+      }; 
+
+      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.VERIFICATION_RECORD, deletedVerificationData);
+      return deleteProofRecords;
+    } catch (error) {
+      this.logger.error(`[deleteVerificationRecords] - error in deleting verification records: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+}             

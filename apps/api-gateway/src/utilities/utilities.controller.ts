@@ -1,5 +1,5 @@
-import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { Controller, UseFilters, Post, Body, Res, HttpStatus, Param } from '@nestjs/common';
+import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { Controller, UseFilters, Post, Body, Res, HttpStatus, Param, UseGuards } from '@nestjs/common';
 import  IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -9,6 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 import { UtilitiesService } from './utilities.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('utilities')
@@ -36,6 +37,8 @@ export class UtilitiesController {
   }
 
   @Post('/store-object/:persist')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Store an object and return a short url to it', description: 'Create a short url representing the object' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async storeObject(@Body() storeObjectDto: StoreObjectDto, @Param('persist') persist: boolean, @Res() res: Response): Promise<Response> {

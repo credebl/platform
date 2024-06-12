@@ -532,7 +532,7 @@ export class EcosystemController {
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
     async addOrganizationsInEcosystem(
       @Body() addOrganizationsDto: AddOrganizationsDto,
-      @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }})) ecosystemId: string,
+      @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }}), TrimStringParamPipe) ecosystemId: string,
       @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
       @User() user: user,
       @Res() res: Response
@@ -681,17 +681,17 @@ export class EcosystemController {
   @Roles(OrgRoles.OWNER)
   @ApiBearerAuth()
   async deleteEcosystemMembers(
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
     @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }}), TrimStringParamPipe) ecosystemId: string,    
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
     @Res() res: Response,
     @User() user: user
   ): Promise<Response> {
 
-    const deletedEcosystemMembers = await this.ecosystemService.deleteEcosystemMembers(orgId, ecosystemId, user);
+    await this.ecosystemService.deleteEcosystemMembers(orgId, ecosystemId, user);
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.ecosystemMembersDeleted,
-      data: deletedEcosystemMembers
+      message: ResponseMessages.ecosystem.success.ecosystemMembersDeleted
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

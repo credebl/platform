@@ -7,6 +7,7 @@ import { EcosystemRepository } from './ecosystem.repository';
 import { PrismaService } from '@credebl/prisma-service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 @Module({
   imports: [
@@ -22,6 +23,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     CacheModule.register()
   ],
   controllers: [EcosystemController],
-  providers: [EcosystemService, PrismaService, Logger, EcosystemRepository]
+  providers: [EcosystemService, UserActivityRepository, PrismaService, Logger, EcosystemRepository]
 })
 export class EcosystemModule { }

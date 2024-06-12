@@ -420,7 +420,8 @@ export const ResponseMessages = {
             invalidMessage: 'Invalid transaction details. Missing "message" property.',
             invalidTransactionMessage: 'Invalid transaction details',
             ecosystemRoleNotMatch: 'Ecosystem role not match',
-            orgEcoIdRequired: 'OrgId & EcosystemId is required'
+            orgEcoIdRequired: 'OrgId & EcosystemId is required',
+            ecosystemMembersNotExists: 'Ecosystem members does not exists'
         }
     },
     bulkIssuance: {

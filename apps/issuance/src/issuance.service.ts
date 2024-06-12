@@ -1437,9 +1437,13 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         statusCounts[record.state]++;
     }));
 
+    const filteredStatusCounts = Object.fromEntries(
+      Object.entries(statusCounts).filter(entry => 0 < entry[1])
+    );
+
       const deletedIssuanceData = {
         deletedProofRecordsCount : deletedCredentialsRecords?.deleteResult?.count,
-        deletedRecordsStatusCount: statusCounts
+        deletedRecordsStatusCount: filteredStatusCounts
       }; 
 
       await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedIssuanceData, RecordType.ISSUANCE_RECORD);

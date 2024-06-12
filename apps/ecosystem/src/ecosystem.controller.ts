@@ -11,7 +11,7 @@ import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsem
 import { IEcosystemDashboard, RequestCredDeffEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs, IRequestSchemaEndorsement, IRequestW3CSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { schemaRequestType } from '@credebl/enum/enum';
-import { user } from '@prisma/client';
+import { Prisma, user } from '@prisma/client';
 // eslint-disable-next-line camelcase
 
 @Controller()
@@ -232,8 +232,8 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'delete-ecosystem-members' })
-  async deleteEcosystemMembers(payload: { orgId: string, ecosystemId: string, user: user }): Promise<object> {
-    const { orgId, ecosystemId } = payload;
-    return this.ecosystemService.deleteEcosystemMembers(orgId, ecosystemId);
+  async deleteEcosystemMembers(payload: { orgId; string, ecosystemId: string, user: user}): Promise<Prisma.BatchPayload> {
+    const { orgId, ecosystemId, user } = payload;
+    return this.ecosystemService.deleteEcosystemMembers(orgId, ecosystemId, user);
   }
 }

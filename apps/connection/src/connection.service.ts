@@ -798,12 +798,16 @@ export class ConnectionService {
             statusCounts[record.state]++;
         }));
 
+        const filteredStatusCounts = Object.fromEntries(
+          Object.entries(statusCounts).filter(entry => 0 < entry[1])
+        );
+        
         const deletedConnectionData = {
             deletedProofRecordsCount: deleteConnections?.deleteConnectionRecords?.count,
-            deletedRecordsStatusCount: statusCounts
+            deletedRecordsStatusCount: filteredStatusCounts
         };
-
-        await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedConnectionData, RecordType.VERIFICATION_RECORD);
+    
+        await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedConnectionData, RecordType.CONNECTION);
 
         return deleteConnections;
 

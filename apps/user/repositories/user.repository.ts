@@ -776,4 +776,25 @@ export class UserRepository {
       throw error;
     }
   }
+
+  async getUserDetailsByUserId(userIds: string[]): Promise<{
+    email: string;
+  }[]> {
+    try {
+      const getUserDetails = await this.prisma.user.findMany({
+        where: {
+          id: {
+            in: userIds
+          }
+        },
+        select: {
+          email: true
+        }
+      });
+      return getUserDetails;
+    } catch (error) {
+      this.logger.error(`Error in getting user details: ${error} `);
+      throw error;
+    }
+  }
 }

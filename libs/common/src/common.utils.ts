@@ -46,7 +46,7 @@ export function orderValues(key, order = 'asc') {
 }
 
 
-export function convertUrlToDeeplinkUrl(url: string): string {
+export function convertUrlToDeepLinkUrl(url: string): string {
   const deepLinkUrl = (process.env.DEEPLINK_DOMAIN as string).concat(url);
   return deepLinkUrl;
 }

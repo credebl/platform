@@ -1,6 +1,6 @@
 export class OutOfBandVerification {
 
-    public outOfBandVerification(email: string, orgName: string, shortenedUrl: string): string {
+    public outOfBandVerification(email: string, orgName: string, deeplLinkURL: string): string {
         try {
             return `<!DOCTYPE html>
       <html lang="en">
@@ -33,7 +33,7 @@ export class OutOfBandVerification {
                           <li>Tap the <b>"Send Proof"</b>  button in ${process.env.MOBILE_APP} to share you credential data.</li>
                       </ul>
                       <div style="text-align: center; padding-bottom: 20px;">
-                      <a clicktracking=off href="${shortenedUrl}"
+                      <a clicktracking=off href="${deeplLinkURL}"
                           style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
                           Share Credential
                       </a>

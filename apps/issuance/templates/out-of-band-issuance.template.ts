@@ -1,5 +1,5 @@
 export class OutOfBandIssuance {
-  public outOfBandIssuance(email: string, orgName: string, agentEndPoint: string): string {
+  public outOfBandIssuance(email: string, orgName: string, deepLinkURL: string): string {
     try {
       return `<!DOCTYPE html>
       <html lang="en">
@@ -35,7 +35,7 @@ export class OutOfBandIssuance {
                           <li>Check <b>"Credentials"</b> tab in ${process.env.MOBILE_APP} to view the issued credential.</li>
                       </ul>
                       <div style="text-align: center; padding-bottom: 20px;">
-                      <a clicktracking=off href="${agentEndPoint}"
+                      <a clicktracking=off href="${deepLinkURL}"
                           style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
                           Accept Credential
                       </a>

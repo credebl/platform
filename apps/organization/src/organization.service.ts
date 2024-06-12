@@ -1300,55 +1300,81 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
+  
   async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     try {
-
-      const token = await this.clientRegistrationService.getManagementToken();
-
-      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
-      
+      // Fetch token and organization details in parallel
+      const [token, organizationDetails] = await Promise.all([
+        this.clientRegistrationService.getManagementToken(),
+        this.organizationRepository.getOrganizationDetails(orgId)
+      ]);
+  
       if (!organizationDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
-      } 
+      }
+  
+      const organizationInvitationDetails = await this.organizationRepository.getOrgInvitationsByOrg(orgId);
+      const userEmails = organizationInvitationDetails.map(userData => userData?.email);
+  
+      this.logger.debug(`userEmails ::: ${JSON.stringify(userEmails)}`);
+      // Fetch Keycloak IDs only if there are emails to process
+      const keycloakUserIds = 0 < userEmails.length
+        ? (await this.getUserKeycloakIdByEmail(userEmails)).response
+        : [];
+  
+      this.logger.log('Keycloak User Ids');
 
-      const data = await this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, user.keycloakUserId);
+      // Delete user client roles in parallel
+      const deleteUserRolesPromises = keycloakUserIds.map(keycloakUserId => this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
+      );
+      deleteUserRolesPromises.push(
+        this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, user?.keycloakUserId)
+      );
+  
+      this.logger.debug(`deleteUserRolesPromises ::: ${JSON.stringify(deleteUserRolesPromises)}`);
 
-      if (!data) {
+      const deleteUserRolesResults = await Promise.allSettled(deleteUserRolesPromises);
+  
+      // Check for failures in deleting user roles
+      const deletionFailures = deleteUserRolesResults.filter(result => 'rejected' === result?.status);
+      
+      if (0 < deletionFailures.length) {
+        this.logger.error(`deletionFailures ::: ${JSON.stringify(deletionFailures)}`);
         throw new NotFoundException(ResponseMessages.organisation.error.orgDataNotFoundInkeycloak);
       }
-
-      const { deletedUserActivity, deletedUserOrgRole, deleteOrg } = await this.organizationRepository.deleteOrg(orgId);
-
-        this.logger.log(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
-        this.logger.log(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
-        this.logger.log(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`);
-
-        const deletions = [
-            { records: deletedUserActivity.count, tableName: 'user_activity' },
-            { records: deletedUserOrgRole.count, tableName: 'user_org_roles' },
-            { records: deleteOrg ? 1 : 0, tableName: 'organization' }
-        ];
-
-      const logDeletionActivity = async (records, tableName): Promise<void> => {
-            if (records) {
-                const txnMetadata = {
-                    deletedRecordsCount: records,
-                    deletedRecordInTable: tableName
-                };
-                const recordType = RecordType.ORGANIZATION;
-                await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
-            }
-        };
-
-        for (const { records, tableName } of deletions) {
-            await logDeletionActivity(records, tableName);
+  
+      // Delete organization data
+      const { deletedUserActivity, deletedUserOrgRole, deleteOrg, deletedOrgInvitations } = await this.organizationRepository.deleteOrg(orgId);
+  
+      this.logger.debug(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
+      this.logger.debug(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
+      this.logger.debug(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`);
+      this.logger.debug(`deletedOrgInvitations ::: ${JSON.stringify(deletedOrgInvitations)}`);
+  
+      const deletions = [
+        { records: deletedUserActivity.count, tableName: 'user_activity' },
+        { records: deletedUserOrgRole.count, tableName: 'user_org_roles' },
+        { records: deletedOrgInvitations.count, tableName: 'org_invitations' },
+        { records: deleteOrg ? 1 : 0, tableName: 'organization' }
+      ];
+  
+      // Log deletion activities in parallel
+      await Promise.all(deletions.map(async ({ records, tableName }) => {
+        if (records) {
+          const txnMetadata = {
+            deletedRecordsCount: records,
+            deletedRecordInTable: tableName
+          };
+          const recordType = RecordType.ORGANIZATION;
+          await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
         }
-        return deleteOrg;
-        
+      }));
+  
+      return deleteOrg;
+  
     } catch (error) {
-        this.logger.error(`delete organization: ${JSON.stringify(error)}`);
-        throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`delete organization: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
     }
   }
 
@@ -1374,6 +1400,39 @@ export class OrganizationService {
             {
               status: error.statusCode,
               error: error.message
+            },
+            error.error
+          );
+        });
+    } catch (error) {
+      this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<{
+    response;
+  }> {
+    try {
+      const pattern = {
+        cmd: 'get-user-keycloak-id'
+      };
+
+      return this.organizationServiceProxy
+        .send<string>(pattern, userEmails)
+        .pipe(
+          map((response) => ({
+            response
+          }))
+        )
+        .toPromise()
+        .catch((error) => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error?.error?.statusCode,
+              error: error?.error?.error,
+              message: error?.error?.message ?? error?.message
             },
             error.error
           );

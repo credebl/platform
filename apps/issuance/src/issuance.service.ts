@@ -20,7 +20,7 @@ import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { convertUrlToDeeplinkUrl, orderValues, paginator } from '@credebl/common/common.utils';
+import { convertUrlToDeepLinkUrl, orderValues, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
@@ -249,7 +249,7 @@ export class IssuanceService {
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
         // Add deepLinkURL param to response
-        const deepLinkURL = convertUrlToDeeplinkUrl(url);
+        const deepLinkURL = convertUrlToDeepLinkUrl(url);
         credentialCreateOfferDetails.response['deepLinkURL'] = deepLinkURL;
       }
       return credentialCreateOfferDetails.response;
@@ -670,7 +670,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
-    const deeplLinkURL = convertUrlToDeeplinkUrl(shortenUrl);
+    const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));

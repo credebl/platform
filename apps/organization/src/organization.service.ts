@@ -1296,7 +1296,22 @@ export class OrganizationService {
 
   async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     try {
-        const { deletedUserActivity, deletedUserOrgRole, deleteOrg } = await this.organizationRepository.deleteOrg(orgId);
+
+      const token = await this.clientRegistrationService.getManagementToken();
+
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+      
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      } 
+
+      const data = await this.clientRegistrationService.deleteUserClientRoles(organizationDetails.idpId, token, user.keycloakUserId);
+
+      if (!data) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgDataNotFoundInkeycloak);
+      }
+
+      const { deletedUserActivity, deletedUserOrgRole, deleteOrg } = await this.organizationRepository.deleteOrg(orgId);
 
         this.logger.log(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
         this.logger.log(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
@@ -1308,7 +1323,7 @@ export class OrganizationService {
             { records: deleteOrg ? 1 : 0, tableName: 'organization' }
         ];
 
-        const logDeletionActivity = async (records, tableName): Promise<void> => {
+      const logDeletionActivity = async (records, tableName): Promise<void> => {
             if (records) {
                 const txnMetadata = {
                     deletedRecordsCount: records,
@@ -1322,7 +1337,6 @@ export class OrganizationService {
         for (const { records, tableName } of deletions) {
             await logDeletionActivity(records, tableName);
         }
-
         return deleteOrg;
         
     } catch (error) {

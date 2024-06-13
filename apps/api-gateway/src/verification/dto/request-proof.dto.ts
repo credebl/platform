@@ -338,8 +338,7 @@ export class SendProofRequestPayload {
     comment: string;
 
     @ApiProperty({
-        'example': [
-            {
+        'example': {
                 indy: {
                     name: 'Verify national identity',
                     version: '1.0',
@@ -358,7 +357,6 @@ export class SendProofRequestPayload {
                     requested_predicates: {}
                 }
             }
-        ]
     })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid proofFormat' })

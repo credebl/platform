@@ -275,6 +275,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
+            partiallyOfferCreated: 'Credential offer created partially',
             createOOB: 'Out-of-band credentials offer created successfully',
             fetch: 'Issued Credential details fetched successfully',
             importCSV: 'File imported successfully',

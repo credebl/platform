@@ -9,6 +9,21 @@ export class OutOfBandVerification {
           <title></title>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style type="text/css">
+            /* Mobile Styles */
+            @media only screen and (max-width: 600px) {
+                .desktop-button {
+                    display: none !important;
+                }
+            }
+    
+            /* Desktop Styles */
+            @media only screen and (min-width: 601px) {
+                .mobile-button {
+                    display: none !important;
+                }
+            }
+        </style>
       </head>
       
       <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
@@ -34,8 +49,14 @@ export class OutOfBandVerification {
                       </ul>
                       <div style="text-align: center; padding-bottom: 20px;">
                       <a clicktracking=off href="${deeplLinkURL}"
+                          class="mobile-button"
                           style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
                           Share Credential
+                      </a>
+                      <a clicktracking=off href="${process.env.MOBILE_APP_DOWNLOAD_URL}"
+                          class="desktop-button"
+                          style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
+                          Download App
                       </a>
                   </div>
                   

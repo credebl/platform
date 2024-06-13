@@ -86,8 +86,8 @@ export const ResponseMessages = {
             deleteCredentials:'Organization client credentials deleted',
             orgDids: 'Organization DIDs fetched successfully',
             primaryDid: 'Primary DID updated successfully',
-            didDetails: 'DID Details updated sucessfully'
-
+            didDetails: 'DID Details updated sucessfully',
+            getOrganizationActivity: 'Organization activity count fetched successfully'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -274,6 +274,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
+            partiallyOfferCreated: 'Credential offer created partially',
             createOOB: 'Out-of-band credentials offer created successfully',
             fetch: 'Issued Credential details fetched successfully',
             importCSV: 'File imported successfully',

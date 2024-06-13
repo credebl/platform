@@ -139,3 +139,8 @@ export enum IssueCredentialType {
 export enum TemplateIdentifier {
     EMAIL_COLUMN = 'email_identifier'
 }
+
+export enum PromiseResult {
+    REJECTED = 'rejected',
+    FULFILLED = 'fulfilled'
+}

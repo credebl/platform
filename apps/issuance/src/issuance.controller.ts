@@ -1,8 +1,8 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { IClientDetails, ICreateOfferResponse, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { IClientDetails, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
-import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 
 @Controller()
@@ -16,10 +16,8 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<string> {
-
-    const { orgId, user, credentialDefinitionId, comment, connectionId, attributes, autoAcceptCredential } = payload;
-    return this.issuanceService.sendCredentialCreateOffer(orgId, user, credentialDefinitionId, comment, connectionId, attributes, autoAcceptCredential);
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
+    return this.issuanceService.sendCredentialCreateOffer(payload);
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })

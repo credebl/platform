@@ -504,7 +504,7 @@ export class SchemaService extends BaseService {
           const { type, title } = schemaAttributeJson[key];
           const schemaDataType = type;
           const displayName = title;
-          const isRequired = false;
+          const isRequired = true;
           extractedData.push({ 'attributeName': title, schemaDataType, displayName, isRequired });
       }
   }

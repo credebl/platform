@@ -9,6 +9,12 @@ import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuan
 export class IssuanceController {
   constructor(private readonly issuanceService: IssuanceService) { }
 
+  @MessagePattern({ cmd: 'get-issuance-records' })
+  async getIssuanceRecordsByOrgId(payload: { orgId: string, userId: string }): Promise<number> {
+    const { orgId } = payload;
+    return this.issuanceService.getIssuanceRecords(orgId);
+  }
+
   @MessagePattern({ cmd: 'send-credential-create-offer' })
   async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
     return this.issuanceService.sendCredentialCreateOffer(payload);

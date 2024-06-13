@@ -89,6 +89,18 @@ export class ConnectionService {
     }
   }
 
+  async getConnectionRecords(orgId: string): Promise<number> {
+    try {
+      return await this.connectionRepository.getConnectionRecordsCount(orgId);
+    } catch (error) {
+                    
+      this.logger.error(
+        `[getConnectionRecords ] [NATS call]- error in get connection records count : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   /**
    * Description: Fetch connection invitaion by referenceId
    * @param referenceId

@@ -93,6 +93,19 @@ export class VerificationService {
     }
   }
 
+  async getVerificationRecords(orgId: string): Promise<number> {
+    try {
+      return await this.verificationRepository.getVerificationRecordsCount(orgId);
+    } catch (error) {
+                    
+      this.logger.error(
+        `[getVerificationRecords ] [NATS call]- error in get verification records count : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+
   /**
    * Consume agent API for get all proof presentations
    * @param payload 

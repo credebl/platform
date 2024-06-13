@@ -21,6 +21,12 @@ export class VerificationController {
     return this.verificationService.getProofPresentations(user, orgId, proofRequestsSearchCriteria);
   }
 
+  @MessagePattern({ cmd: 'get-verification-records' })
+  async getVerificationRecordsByOrgId(payload: { orgId: string, userId: string }): Promise<number> {
+    const { orgId } = payload;
+    return this.verificationService.getVerificationRecords(orgId);
+  }
+
   /**
    * Get proof presentation by proofId
    * @param orgId 

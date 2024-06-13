@@ -89,6 +89,22 @@ export class ConnectionRepository {
     }
   }
 
+
+  async getConnectionRecordsCount(orgId: string): Promise<number> {
+    try {
+      const connectionRecordsCount = await this.prisma.connections.count({
+        where: {
+          orgId
+        }
+      });
+      return connectionRecordsCount;
+    } catch (error) {
+      this.logger.error(`[get connection records by org Id] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+
   /**
    * Description: Save connection details
    * @param connectionInvitation

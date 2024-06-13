@@ -63,6 +63,12 @@ export class ConnectionController {
     return this.connectionService.getConnectionsById(user, connectionId, orgId);
   }
 
+  @MessagePattern({ cmd: 'get-connection-records' })
+  async getConnectionRecordsByOrgId(payload: { orgId: string, userId: string }): Promise<number> {
+    const { orgId } = payload;
+    return this.connectionService.getConnectionRecords(orgId);
+  }
+
   @MessagePattern({ cmd: 'receive-invitation-url' })
   async receiveInvitationUrl(payload: IReceiveInvitationByUrlOrg): Promise<IReceiveInvitationResponse> {
     const { user, receiveInvitationUrl, orgId } = payload;

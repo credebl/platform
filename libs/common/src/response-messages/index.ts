@@ -86,8 +86,8 @@ export const ResponseMessages = {
             deleteCredentials:'Organization client credentials deleted',
             orgDids: 'Organization DIDs fetched successfully',
             primaryDid: 'Primary DID updated successfully',
-            didDetails: 'DID Details updated sucessfully'
-
+            didDetails: 'DID Details updated sucessfully',
+            getOrganizationActivity: 'Organization activity count fetched successfully'
         },
         error: {
             exists: 'An organization name is already exist',

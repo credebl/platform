@@ -126,6 +126,12 @@ export class EcosystemController {
     return this.ecosystemService.acceptRejectEcosystemInvitations(payload.acceptRejectInvitation, payload.userEmail);
   }
 
+  @MessagePattern({ cmd: 'get-ecosystem-records' })
+  async getEcosystemsByOrgId(payload: { orgId: string, userId: string }): Promise<number> {
+    const { orgId } = payload;
+    return this.ecosystemService.getEcosystems(orgId);
+  }
+
   @MessagePattern({ cmd: 'get-sent-invitations-ecosystemId' })
   async getInvitationsByOrgId(@Body() payload: FetchInvitationsPayload): Promise<IEcosystemInvitation> {
     return this.ecosystemService.getInvitationsByEcosystemId(payload);

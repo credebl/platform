@@ -38,7 +38,8 @@ import {
   IOrganization,
   IOrganizationInvitations,
   IOrganizationDashboard,
-  IDeleteOrganization
+  IDeleteOrganization,
+  IOrgActivityCount
 } from '@credebl/common/interfaces/organization.interface';
 
 import { IOrganizationInvitations } from '@credebl/common/interfaces/organizations.interface';
@@ -1252,6 +1253,131 @@ export class OrganizationService {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+
+  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgActivityCount> {
+    try {
+      const [
+        verificationRecordsCount,
+        issuanceRecordsCount,
+        connectionRecordsCount,
+        orgInvitationsCount, 
+        orgUsers,
+        orgEcosystemsCount
+      ] = await Promise.all([
+        this._getVerificationRecordsCount(orgId, userId),
+        this._getIssuanceRecordsCount(orgId, userId),
+        this._getConnectionRecordsCount(orgId, userId),
+        this.organizationRepository.getOrgInvitationsCount(orgId),
+        this.organizationRepository.getOrgDashboard(orgId),
+        this._getEcosystemsCount(orgId, userId)
+      ]);
+
+      const orgUsersCount = orgUsers?.['usersCount'];
+
+      return {verificationRecordsCount, issuanceRecordsCount, connectionRecordsCount, orgUsersCount, orgEcosystemsCount, orgInvitationsCount};
+    } catch (error) {
+      this.logger.error(`In fetch organization references count : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async _getEcosystemsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-ecosystem-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const ecosystemsCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return ecosystemsCount;
+  }
+
+  async _getConnectionRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-connection-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const connectionsCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return connectionsCount;
+  }
+
+
+  async _getIssuanceRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-issuance-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const issuanceCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return issuanceCount;
+  }
+
+  async _getVerificationRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-verification-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const verificationCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return verificationCount;
   }
 
   async getOrgPofile(orgId: string): Promise<organisation> {

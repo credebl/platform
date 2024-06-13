@@ -1153,4 +1153,15 @@ export class UserService {
       throw error;
     }
   }
+
+  async getUserDetails(userIds: string[]): Promise<string[]> {
+    try {
+      const getUserDetails = await this.userRepository.getUserDetailsByUserId(userIds);
+      const getUserEmails = getUserDetails?.map(user => user.email);
+      return getUserEmails;
+    } catch (error) {
+      this.logger.error(`In get user details bu user Id : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

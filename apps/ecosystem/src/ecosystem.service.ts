@@ -59,6 +59,8 @@ import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../i
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import {
+  Prisma,
+  RecordType,
   // eslint-disable-next-line camelcase
   credential_definition,
   // eslint-disable-next-line camelcase
@@ -76,12 +78,15 @@ import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { W3CSchemaPayload } from 'apps/ledger/src/schema/interfaces/schema-payload.interface';
 import { OrgRoles } from 'libs/org-roles/enums';
+import { DeleteEcosystemMemberTemplate } from '../templates/DeleteEcosystemMemberTemplate';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 @Injectable()
 export class EcosystemService {
   constructor(
     @Inject('NATS_CLIENT') private readonly ecosystemServiceProxy: ClientProxy,
     private readonly ecosystemRepository: EcosystemRepository,
+    private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
     private readonly prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheService: Cache
@@ -2015,4 +2020,103 @@ export class EcosystemService {
       );
     }
   }
+
+  async sendMailToEcosystemMembers(
+    email: string,
+    orgName: string,
+    ecosystemName: string
+  ): Promise<boolean> {
+    const platformConfigData = await this.prisma.platform_config.findMany();
+
+    const urlEmailTemplate = new DeleteEcosystemMemberTemplate();
+    const emailData = new EmailDto();
+    emailData.emailFrom = platformConfigData[0].emailFrom;
+    emailData.emailTo = email;
+    emailData.emailSubject = `Removal of “${orgName}” from ${ecosystemName}`;
+
+    emailData.emailHtml = urlEmailTemplate.sendDeleteMemberEmailTemplate(
+      email,
+      orgName,
+      ecosystemName
+    );
+
+    const isEmailSent = await sendEmail(emailData);
+
+    return isEmailSent;
+  }
+
+    async _getUsersDetails(userIds: string[]): Promise<string[]> {
+      const pattern = { cmd: 'get-user-details-by-userId' };
+      const payload = { userIds };
+  
+      const userData = await this.ecosystemServiceProxy
+        .send(pattern, payload)
+        .toPromise()
+        .catch((error) => {
+          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error.status,
+              error: error.message
+            },
+            error.status
+          );
+        });
+      return userData;
+    }  
+
+
+  async deleteEcosystemMembers(orgId: string, ecosystemId: string, user: user): Promise<Prisma.BatchPayload> {
+    try {
+      const [
+        getEcosystemLeadDetails,
+        getEcosystemDetails,
+        getEcosystemMembers
+      ] = await Promise.all([
+        this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId),
+        this.ecosystemRepository.getEcosystemDetails(ecosystemId),        
+        this.ecosystemRepository.getEcosystemMembers(ecosystemId)
+      ]);
+
+      const getEcosystemLeadOrg = getEcosystemLeadDetails?.orgId;
+
+      const membersToDelete = getEcosystemMembers.filter(member => member?.orgId !== getEcosystemLeadOrg);
+
+      const memberOrgs = membersToDelete.map(member => member?.orgId);
+      
+      const getOrgNames = await this.ecosystemRepository.getOrgName(memberOrgs);
+
+      const membersUserIds = membersToDelete
+      .filter(member => member?.createdBy !== getEcosystemDetails.createdBy)
+      .map(member => member?.createdBy);
+
+
+      const getMembersEmailIds = await this._getUsersDetails(membersUserIds);
+
+      const deletedEcosystemMembers =  await this.ecosystemRepository.deleteEcosystemMembers(memberOrgs, ecosystemId);
+
+      if (0 === deletedEcosystemMembers?.count) {
+          throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemMembersNotExists);
+      }
+      await this.ecosystemRepository.deleteEcosystemInvitations(ecosystemId);
+
+      for (let i = 0; i < getMembersEmailIds.length; i++) {
+        const emailId = getMembersEmailIds[i];
+        const orgName = getOrgNames[i].name;
+        await this.sendMailToEcosystemMembers(emailId, orgName, getEcosystemDetails?.name);
+      }      
+
+      const deletedEcosystemMembersData = {
+          deletedEcosystemMembersCount: deletedEcosystemMembers?.count
+      };
+
+      await this.userActivityRepository._orgDeletedActivity(getEcosystemLeadOrg, user, deletedEcosystemMembersData, RecordType.ECOSYSTEM_MEMBER);
+
+      return deletedEcosystemMembers;
+    } catch (error) {
+      this.logger.error(`In delete ecosystem members: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 }

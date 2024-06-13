@@ -1,5 +1,4 @@
-import { Inject } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
@@ -16,6 +15,7 @@ import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
 import { schemaRequestType } from '@credebl/enum/enum';
+import { Prisma, user } from '@prisma/client';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -130,6 +130,7 @@ export class EcosystemService extends BaseService {
     const payload = { invitationId };
     return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
   }
+
   async acceptRejectEcosystemInvitaion(
     acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
     userEmail: string
@@ -205,4 +206,10 @@ export class EcosystemService extends BaseService {
     const payload = { ecosystemId, endorsementId, orgId };
     return this.sendNatsMessage(this.serviceProxy, 'decline-endorsement-transaction', payload);
   }
+
+  async deleteEcosystemMembers(orgId: string, ecosystemId: string, user: user): Promise<Prisma.BatchPayload> {
+    const payload = { orgId, ecosystemId, user };
+    return this.sendNats(this.serviceProxy, 'delete-ecosystem-members', payload);
+  }
+
 }

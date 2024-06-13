@@ -209,4 +209,9 @@ export class UserController {
     return this.userService.updateOrgDeletedActivity(payload.orgId, payload.userId, payload.deletedBy, payload.recordType, payload.userEmail, payload.txnMetadata);
   }
 
+  @MessagePattern({ cmd: 'get-user-details-by-userId' })
+  async getUserDetailsByUserId(payload: { userIds: string[] }): Promise<string[]> {
+    const { userIds } = payload;
+    return this.userService.getUserDetails(userIds);
+  }
 }

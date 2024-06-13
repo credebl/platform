@@ -694,7 +694,6 @@ export class EcosystemRepository {
       
   }
 
-
   async getEndorsementsWithPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
       const result = await this.prisma.$transaction([
@@ -1351,4 +1350,101 @@ export class EcosystemRepository {
       throw error;
     }
   }
+
+  // eslint-disable-next-line camelcase
+  async getEcosystemMembers(ecosystemId: string): Promise<ecosystem_orgs[]> {
+    try {
+
+      const getEcosystemMemberOrgs = await this.prisma.ecosystem_orgs.findMany({
+        where: {
+          ecosystemId
+        }
+      });
+
+      return getEcosystemMemberOrgs;
+    } catch (error) {
+      this.logger.error(`[getting ecosystem members] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOrgName(orgIds: string[]): Promise<{
+    name: string;
+  }[]> {
+    try {
+
+      const orgName = await this.prisma.organisation.findMany({
+        where: {
+          id: {
+            in: orgIds
+          }
+        },
+        select: {
+          name: true
+        }
+      });
+
+      return orgName;
+    } catch (error) {
+      this.logger.error(`Error in getting organization names: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemLeadOrgDetails(orgId: string): Promise<{
+    name: string;
+  }> {
+    try {
+
+      const orgName = await this.prisma.organisation.findUnique({
+        where: {
+          id: orgId
+        },
+        select: {
+          name: true
+        }
+      });
+
+      return orgName;
+    } catch (error) {
+      this.logger.error(`Error in getting organization names: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteEcosystemInvitations(ecosystemId: string): Promise<Prisma.BatchPayload> {
+    try {
+
+      const deletedEcosystemInvitations = await this.prisma.ecosystem_invitations.deleteMany({
+        where: {
+          ecosystemId
+        }
+      });
+
+      return deletedEcosystemInvitations;
+    } catch (error) {
+      this.logger.error(`Error in deleting ecosystem invitations: ${error.message}`);
+      throw error;
+    }
+  }
+
+    async deleteEcosystemMembers(orgIds: string[], ecosystemId: string): Promise<Prisma.BatchPayload> {
+    try {
+
+      const deletedMembers = await this.prisma.ecosystem_orgs.deleteMany({
+        where: {
+          orgId: {
+            in: orgIds
+          },
+          ecosystemId
+        }
+      });
+
+      return deletedMembers;
+    } catch (error) {
+      this.logger.error(`Error in deleting ecosystem organizations: ${error.message}`);
+      throw error;
+    }
+  }
+  
 }

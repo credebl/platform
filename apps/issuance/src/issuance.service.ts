@@ -51,6 +51,18 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
+  async getIssuanceRecords(orgId: string): Promise<number> {
+    try {
+      return await this.issuanceRepository.getIssuanceRecordsCount(orgId);
+    } catch (error) {
+                    
+      this.logger.error(
+        `[getIssuanceRecords ] [NATS call]- error in get issuance records count : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
     try {
       const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};

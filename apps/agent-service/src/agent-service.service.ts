@@ -1120,7 +1120,7 @@ export class AgentServiceService {
       await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId, storeDidDetails.didDocument);
     }
 
-    if (method === DidMethod.INDY) {
+    if (network) {
       const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(network);
       await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
     }

@@ -32,7 +32,7 @@ import { ICredentialOfferResponse, IIssuedCredential, IJsonldCredential } from '
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { agent_invitations, organisation } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
-// import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import * as pLimit from 'p-limit';
 
 
@@ -755,10 +755,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        //Remove after test ------------------------------
-
-        // const isEmailSent = await sendEmail(this.emailData);  
-        const isEmailSent = true;      
+        const isEmailSent = await sendEmail(this.emailData);       
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
         this.counter++;
         if (!isEmailSent) {

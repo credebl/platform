@@ -122,6 +122,24 @@ export class EcosystemRepository {
     }
   }
 
+  async getEcosystemsCount(orgId: string): Promise<number> {
+    try {
+      const ecosystemsCount = await this.prisma.ecosystem.count({
+        where: {
+          ecosystemOrgs: {
+            some: {
+              orgId
+            }
+          }
+        }
+      });
+      return ecosystemsCount;
+    } catch (error) {
+      this.logger.error(`[get all ecosystems by org Id] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async checkOrgExists(orgId: string): Promise<organisation> {
     try {
       const isOrgExists = await this.prisma.organisation.findUnique({

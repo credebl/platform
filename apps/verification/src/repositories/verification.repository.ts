@@ -103,6 +103,20 @@ export class VerificationRepository {
     }
   }
 
+  async getVerificationRecordsCount(orgId: string): Promise<number> {
+    try {
+      const verificationRecordsCount = await this.prisma.presentations.count({
+        where: {
+          orgId
+        }
+      });
+      return verificationRecordsCount;
+    } catch (error) {
+      this.logger.error(`[get verification records by org Id] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async storeProofPresentation(payload: IProofPresentation): Promise<presentations> {
     try {
       let organisationId: string;

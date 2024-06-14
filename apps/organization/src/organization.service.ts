@@ -39,7 +39,8 @@ import {
   IOrganization,
   IOrganizationInvitations,
   IOrganizationDashboard,
-  IDeleteOrganization
+  IDeleteOrganization,
+  IOrgActivityCount
 } from '@credebl/common/interfaces/organization.interface';
 
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
@@ -1262,6 +1263,131 @@ export class OrganizationService {
     }
   }
 
+
+  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgActivityCount> {
+    try {
+      const [
+        verificationRecordsCount,
+        issuanceRecordsCount,
+        connectionRecordsCount,
+        orgInvitationsCount, 
+        orgUsers,
+        orgEcosystemsCount
+      ] = await Promise.all([
+        this._getVerificationRecordsCount(orgId, userId),
+        this._getIssuanceRecordsCount(orgId, userId),
+        this._getConnectionRecordsCount(orgId, userId),
+        this.organizationRepository.getOrgInvitationsCount(orgId),
+        this.organizationRepository.getOrgDashboard(orgId),
+        this._getEcosystemsCount(orgId, userId)
+      ]);
+
+      const orgUsersCount = orgUsers?.['usersCount'];
+
+      return {verificationRecordsCount, issuanceRecordsCount, connectionRecordsCount, orgUsersCount, orgEcosystemsCount, orgInvitationsCount};
+    } catch (error) {
+      this.logger.error(`In fetch organization references count : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async _getEcosystemsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-ecosystem-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const ecosystemsCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return ecosystemsCount;
+  }
+
+  async _getConnectionRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-connection-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const connectionsCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return connectionsCount;
+  }
+
+
+  async _getIssuanceRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-issuance-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const issuanceCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return issuanceCount;
+  }
+
+  async _getVerificationRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-verification-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const verificationCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return verificationCount;
+  }
+
   async getOrgPofile(orgId: string): Promise<organisation> {
     try {
       const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
@@ -1300,41 +1426,81 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
+  
   async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     try {
-        const { deletedUserActivity, deletedUserOrgRole, deleteOrg } = await this.organizationRepository.deleteOrg(orgId);
+      // Fetch token and organization details in parallel
+      const [token, organizationDetails] = await Promise.all([
+        this.clientRegistrationService.getManagementToken(),
+        this.organizationRepository.getOrganizationDetails(orgId)
+      ]);
+  
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+  
+      const organizationInvitationDetails = await this.organizationRepository.getOrgInvitationsByOrg(orgId);
+      const userEmails = organizationInvitationDetails.map(userData => userData?.email);
+  
+      this.logger.debug(`userEmails ::: ${JSON.stringify(userEmails)}`);
+      // Fetch Keycloak IDs only if there are emails to process
+      const keycloakUserIds = 0 < userEmails.length
+        ? (await this.getUserKeycloakIdByEmail(userEmails)).response
+        : [];
+  
+      this.logger.log('Keycloak User Ids');
 
-        this.logger.log(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
-        this.logger.log(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
-        this.logger.log(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`);
+      // Delete user client roles in parallel
+      const deleteUserRolesPromises = keycloakUserIds.map(keycloakUserId => this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
+      );
+      deleteUserRolesPromises.push(
+        this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, user?.keycloakUserId)
+      );
+  
+      this.logger.debug(`deleteUserRolesPromises ::: ${JSON.stringify(deleteUserRolesPromises)}`);
 
-        const deletions = [
-            { records: deletedUserActivity.count, tableName: 'user_activity' },
-            { records: deletedUserOrgRole.count, tableName: 'user_org_roles' },
-            { records: deleteOrg ? 1 : 0, tableName: 'organization' }
-        ];
-
-        const logDeletionActivity = async (records, tableName): Promise<void> => {
-            if (records) {
-                const txnMetadata = {
-                    deletedRecordsCount: records,
-                    deletedRecordInTable: tableName
-                };
-                const recordType = RecordType.ORGANIZATION;
-                await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
-            }
-        };
-
-        for (const { records, tableName } of deletions) {
-            await logDeletionActivity(records, tableName);
+      const deleteUserRolesResults = await Promise.allSettled(deleteUserRolesPromises);
+  
+      // Check for failures in deleting user roles
+      const deletionFailures = deleteUserRolesResults.filter(result => 'rejected' === result?.status);
+      
+      if (0 < deletionFailures.length) {
+        this.logger.error(`deletionFailures ::: ${JSON.stringify(deletionFailures)}`);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgDataNotFoundInkeycloak);
+      }
+  
+      // Delete organization data
+      const { deletedUserActivity, deletedUserOrgRole, deleteOrg, deletedOrgInvitations } = await this.organizationRepository.deleteOrg(orgId);
+  
+      this.logger.debug(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
+      this.logger.debug(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
+      this.logger.debug(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`);
+      this.logger.debug(`deletedOrgInvitations ::: ${JSON.stringify(deletedOrgInvitations)}`);
+  
+      const deletions = [
+        { records: deletedUserActivity.count, tableName: 'user_activity' },
+        { records: deletedUserOrgRole.count, tableName: 'user_org_roles' },
+        { records: deletedOrgInvitations.count, tableName: 'org_invitations' },
+        { records: deleteOrg ? 1 : 0, tableName: 'organization' }
+      ];
+  
+      // Log deletion activities in parallel
+      await Promise.all(deletions.map(async ({ records, tableName }) => {
+        if (records) {
+          const txnMetadata = {
+            deletedRecordsCount: records,
+            deletedRecordInTable: tableName
+          };
+          const recordType = RecordType.ORGANIZATION;
+          await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
         }
-
-        return deleteOrg;
-        
+      }));
+  
+      return deleteOrg;
+  
     } catch (error) {
-        this.logger.error(`delete organization: ${JSON.stringify(error)}`);
-        throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`delete organization: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
     }
   }
 
@@ -1366,6 +1532,38 @@ export class OrganizationService {
         });
     } catch (error) {
       this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<{
+    response;
+  }> {
+    try {
+      const pattern = {
+        cmd: 'get-user-keycloak-id'
+      };
+
+      return this.organizationServiceProxy
+        .send<string>(pattern, userEmails)
+        .pipe(
+          map((response: string) => ({
+            response
+          }))
+        )
+        .toPromise()
+        .catch((error) => {
+          this.logger.error(`getUserKeycloakIdByEmail catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error?.statusCode,
+              error: error?.message
+            },
+            error.error
+          );
+        });
+    } catch (error) {
+      this.logger.error(`[getUserKeycloakIdByEmail] - error in get keycloak id by email : ${JSON.stringify(error)}`);
       throw error;
     }
   }

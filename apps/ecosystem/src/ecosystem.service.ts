@@ -164,6 +164,19 @@ export class EcosystemService {
     return orgData;
   }
 
+
+  async getEcosystems(orgId: string): Promise<number> {
+    try {
+      return await this.ecosystemRepository.getEcosystemsCount(orgId);
+    } catch (error) {
+                    
+      this.logger.error(
+        `[getEcosystemsCount ] [NATS call]- error in get ecosystems count : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   /**
    *
    * @param editEcosystemDto

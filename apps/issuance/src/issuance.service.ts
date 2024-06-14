@@ -144,9 +144,9 @@ export class IssuanceService {
       const processedResults = results.map((result) => {
         if (PromiseResult.REJECTED === result.status) {
           return {
-            statusCode: result?.reason?.status?.statusCode,
+            statusCode: result?.reason?.status?.message?.statusCode,
             message: result?.reason?.status?.message?.error?.message,
-            error: result?.reason?.status?.error
+            error: ResponseMessages.errorMessages.serverError
           };
         } else if (PromiseResult.FULFILLED === result.status) {
           return {

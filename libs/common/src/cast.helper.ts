@@ -91,7 +91,7 @@ export const IsNotSQLInjection =
           // Check if the value contains any common SQL injection keywords
           const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', 'WHERE', 'AND', 'OR'];
           for (const keyword of sqlKeywords) {
-            if (value.includes(keyword)) {
+            if (value?.includes(keyword)) {
               return false; // Value contains a SQL injection keyword
             }
           }

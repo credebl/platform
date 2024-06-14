@@ -176,3 +176,17 @@ export interface IPrimaryDidDetails extends IPrimaryDid {
   id: string,
   didDocument: Prisma.JsonValue
 }
+
+export interface OrgInvitation {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  userId: string;
+  orgId: string;
+  status: string;
+  orgRoles: string[];
+  email: string;
+}

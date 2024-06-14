@@ -35,16 +35,6 @@ export class AddUserDetailsDto {
     @IsOptional()
     @IsBoolean({ message: 'isPasskey should be boolean' })
     isPasskey?: boolean;
-
-    @ApiProperty({ example: '6d69e2e1-a021-4ea5-a1bc-d8b40989d6fb' })
-    @IsOptional()
-    @IsString({ message: 'clientId should be string' })
-    clientId?: string;
-
-    @ApiProperty({ example: 'xxxx-xxxxx-xxxxx' })
-    @IsOptional()
-    @IsString({ message: 'clientSecret should be string' })
-    clientSecret?: string;
 }
 
 export class AddPasskeyDetailsDto {

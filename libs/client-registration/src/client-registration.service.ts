@@ -1,5 +1,6 @@
 
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
@@ -175,15 +176,14 @@ export class ClientRegistrationService {
   async getManagementToken(clientId?: string, clientSecret?: string) {
     try {
       const payload = new ClientCredentialTokenPayloadDto();
-      if (clientId && clientSecret) {
-        payload.client_id = clientId;
-        payload.client_secret = clientSecret;
-      } else {
-        payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
-        payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
-        }
-        const mgmtTokenResponse = await this.getToken(payload);
-        return mgmtTokenResponse.access_token;
+      if (!clientId && !clientSecret) {
+        throw new BadRequestException(`Client ID and client secret are missing`);
+      } 
+
+      payload.client_id = clientId;
+      payload.client_secret = clientSecret;
+      const mgmtTokenResponse = await this.getToken(payload);
+      return mgmtTokenResponse.access_token;
     } catch (error) {
       this.logger.error(`Error in getManagementToken: ${JSON.stringify(error)}`);
 
@@ -745,15 +745,12 @@ export class ClientRegistrationService {
   async getUserToken(email: string, password: string, clientId?: string, clientSecret?: string) {
     try {
       const payload = new userTokenPayloadDto();
-      if (clientId && clientSecret) {
-
-        payload.client_id = clientId;
-        payload.client_secret = clientSecret;
-      } else {
-        payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
-        payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
-      }
-
+      if (!clientId && !clientSecret) {
+        throw new BadRequestException(`Client ID and client secret are missing`);
+      } 
+      
+      payload.client_id = clientId;
+      payload.client_secret = clientSecret;
       payload.username = email;
       payload.password = password;
 
@@ -792,15 +789,13 @@ export class ClientRegistrationService {
   async getAccessToken(refreshToken: string, clientId?: string, clientSecret?: string) {
     try {
       const payload = new accessTokenPayloadDto();
-      if (clientId && clientSecret) {
+      if (!clientId && !clientSecret) {
+        throw new BadRequestException(`Client ID and client secret are missing`);
+      } 
 
-        payload.client_id = clientId;
-        payload.client_secret = clientSecret;
-      } else {
-        payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
-        payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
-      }
-
+      payload.client_id = clientId;
+      payload.client_secret = clientSecret;
+        
       payload.grant_type = 'refresh_token';
       payload.refresh_token = refreshToken;
 
@@ -881,5 +876,24 @@ export class ClientRegistrationService {
     }
   }
 
+  async getClientRedirectUrl(
+    clientId: string,
+    token: string
+  ) {
 
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const redirectUrls = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetClientURL(realmName, clientId),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `redirectUrls ${JSON.stringify(
+        redirectUrls
+      )}`
+    );
+
+    return redirectUrls;  
+  }
 }

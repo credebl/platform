@@ -57,6 +57,8 @@ export interface ISendVerificationEmail {
     firstName: string;
     lastName: string;
     isPasskey: boolean;
+    clientId: string;
+    clientSecret: string;
   }
   
   export interface AddPasskeyDetails {

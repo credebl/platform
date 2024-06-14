@@ -61,7 +61,7 @@ import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 import { toNumber } from '@credebl/common/cast.helper';
@@ -263,7 +263,7 @@ export class UserService {
     }
   }
 
-  async createUserForToken(userInfo: IUserInformation): Promise<string> {
+  async createUserForToken(userInfo: IUserInformation): Promise<ISignUpUserResponse> {
     try {
       const { email } = userInfo;
       if (!userInfo.email) {
@@ -340,7 +340,7 @@ export class UserService {
       const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
 
-      return ResponseMessages.user.success.signUpUser;
+      return { userId: userDetails?.id };
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

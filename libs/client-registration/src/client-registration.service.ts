@@ -172,13 +172,18 @@ export class ClientRegistrationService {
     }
   }
 
-  async getManagementToken() {
+  async getManagementToken(clientId?: string, clientSecret?: string) {
     try {
       const payload = new ClientCredentialTokenPayloadDto();
-      payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
-      payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
-      const mgmtTokenResponse = await this.getToken(payload);
-      return mgmtTokenResponse.access_token;
+      if (clientId && clientSecret) {
+        payload.client_id = clientId;
+        payload.client_secret = clientSecret;
+      } else {
+        payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
+        payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
+        }
+        const mgmtTokenResponse = await this.getToken(payload);
+        return mgmtTokenResponse.access_token;
     } catch (error) {
       this.logger.error(`Error in getManagementToken: ${JSON.stringify(error)}`);
 
@@ -200,7 +205,6 @@ export class ClientRegistrationService {
           mgmtTokenResponse
         )}`
       );
-      //return mgmtTokenResponse;
       return mgmtTokenResponse;
     } catch (error) {
 
@@ -740,11 +744,18 @@ export class ClientRegistrationService {
   }
 
 
-  async getUserToken(email: string, password: string) {
+  async getUserToken(email: string, password: string, clientId?: string, clientSecret?: string) {
     try {
       const payload = new userTokenPayloadDto();
-      payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
-      payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
+      if (clientId && clientSecret) {
+
+        payload.client_id = clientId;
+        payload.client_secret = clientSecret;
+      } else {
+        payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
+        payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
+      }
+
       payload.username = email;
       payload.password = password;
 
@@ -780,13 +791,20 @@ export class ClientRegistrationService {
     }
   }
 
-  async getAccessToken(refreshToken: string) {
+  async getAccessToken(refreshToken: string, clientId?: string, clientSecret?: string) {
     try {
       const payload = new accessTokenPayloadDto();
+      if (clientId && clientSecret) {
+
+        payload.client_id = clientId;
+        payload.client_secret = clientSecret;
+      } else {
+        payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
+        payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
+      }
+
       payload.grant_type = 'refresh_token';
-      payload.client_id = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
       payload.refresh_token = refreshToken;
-      payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
 
       if (
         'refresh_token' !== payload.grant_type ||

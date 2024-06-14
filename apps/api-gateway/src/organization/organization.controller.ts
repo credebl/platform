@@ -106,9 +106,9 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getOrgRoles(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response): Promise<Response> {
+  async getOrgRoles(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: user, @Res() res: Response): Promise<Response> {
 
-    const orgRoles = await this.organizationService.getOrgRoles(orgId.trim());
+    const orgRoles = await this.organizationService.getOrgRoles(orgId.trim(), user);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -559,9 +559,9 @@ export class OrganizationController {
   @ApiBearerAuth()
   @ApiExcludeEndpoint()
   @UseGuards(AuthGuard('jwt'))
-  async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+  async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() user: user): Promise<Response> {
 
-    const deleteResponse = await this.organizationService.deleteOrgClientCredentials(orgId);
+    const deleteResponse = await this.organizationService.deleteOrgClientCredentials(orgId, user);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.ACCEPTED,

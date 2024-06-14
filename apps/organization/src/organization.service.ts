@@ -247,7 +247,8 @@ export class OrganizationService {
 
       if (organizationDetails.idpId) {
 
-        const token = await this.clientRegistrationService.getManagementToken();
+        const userDetails = await this.organizationRepository.getUser(userId);
+        const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
 
         generatedClientSecret = await this.clientRegistrationService.generateClientSecret(organizationDetails.idpId, token);
 
@@ -312,7 +313,8 @@ export class OrganizationService {
     userId: string,
     shouldUpdateRole: boolean
   ): Promise<IOrgCredentials> {
-    const token = await this.clientRegistrationService.getManagementToken();
+    const userDetails = await this.organizationRepository.getUser(userId);
+    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
     const orgDetails = await this.clientRegistrationService.createClient(orgName, orgId, token);
 
     const orgRolesList = [OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER];
@@ -361,6 +363,8 @@ export class OrganizationService {
       return orgDetails;
   }
 
+  async deleteClientCredentials(orgId: string, user: user): Promise<string> {
+    const token = await this.clientRegistrationService.getManagementToken(user.clientId, user.clientSecret);
 
   async deleteClientCredentials(orgId: string): Promise<string> {
       const token = await this.clientRegistrationService.getManagementToken();
@@ -696,8 +700,7 @@ export class OrganizationService {
    * @returns organization roles
    */
 
-
-  async getOrgRoles(orgId: string): Promise<IClientRoles[]> {
+  async getOrgRoles(orgId: string, user: user): Promise<IClientRoles[]> {
     try {
 
       if (!orgId) {
@@ -714,7 +717,7 @@ export class OrganizationService {
         return this.orgRoleService.getOrgRoles();
       }
 
-      const token = await this.clientRegistrationService.getManagementToken();
+      const token = await this.clientRegistrationService.getManagementToken(user.clientId, user.clientSecret);
 
       return this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
     } catch (error) {
@@ -811,7 +814,8 @@ export class OrganizationService {
     ): Promise<void> {
     const { invitations, orgId } = bulkInvitationDto;
 
-    const token = await this.clientRegistrationService.getManagementToken();
+    const userDetails = await this.organizationRepository.getUser(userId);
+    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
     const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
     const orgRoles = await this.orgRoleService.getOrgRoles();
 
@@ -1026,7 +1030,8 @@ export class OrganizationService {
     orgId: string,
     status: string
   ): Promise<void> {
-    const token = await this.clientRegistrationService.getManagementToken();
+    const userDetails = await this.organizationRepository.getUser(userId);
+    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
       const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
 
       const orgRoles = await this.orgRoleService.getOrgRolesByIds(invitation.orgRoles);
@@ -1130,7 +1135,8 @@ export class OrganizationService {
     userId: string,
     orgId: string
   ): Promise<boolean> {
-    const token = await this.clientRegistrationService.getManagementToken();
+    const userDetails = await this.organizationRepository.getUser(userId);
+    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
     const clientRolesList = await this.clientRegistrationService.getAllClientRoles(
       idpId,
       token
@@ -1626,7 +1632,8 @@ export class OrganizationService {
 
           const usersToRegisterList = userOrgRoles.filter(userOrgRole => null !== userOrgRole.user.keycloakUserId);
           
-            const token = await this.clientRegistrationService.getManagementToken();
+            const userDetails = await this.organizationRepository.getUser(orgObj.ownerId);
+            const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
             const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
 
             const deletedUserDetails: string[] = [];

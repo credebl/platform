@@ -113,8 +113,11 @@ export class UserService {
       userEmailVerification.username = uniqueUsername;
       const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
 
+      const token = await this.clientRegistrationService.getManagementToken(resUser.clientId, resUser.clientSecret);
+      const getClientData = await this.clientRegistrationService.getClientRedirectUrl(resUser.clientId, token);
       try {
-        await this.sendEmailForVerification(email, resUser.verificationCode);
+        const [redirectUrl] = getClientData[0].redirectUris;
+        await this.sendEmailForVerification(email, resUser.verificationCode, redirectUrl);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -156,7 +159,7 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(email: string, verificationCode: string): Promise<boolean> {
+  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -166,7 +169,7 @@ export class UserService {
       emailData.emailTo = email;
       emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Verify your email to activate your account`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode);
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
@@ -241,7 +244,7 @@ export class UserService {
 
       let keycloakDetails = null;
 
-      const token = await this.clientRegistrationService.getManagementToken(userInfo.clientId, userInfo.clientSecret);
+      const token = await this.clientRegistrationService.getManagementToken(checkUserDetails.clientId, checkUserDetails.clientSecret);
       if (userInfo.isPasskey) {
         const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
@@ -270,8 +273,7 @@ export class UserService {
       }
 
       await this.userRepository.updateUserDetails(userDetails.id,
-        keycloakDetails.keycloakUserId.toString(),
-        userInfo.clientId, userInfo.clientSecret
+        keycloakDetails.keycloakUserId.toString()
       );
 
       const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token);
@@ -515,9 +517,7 @@ export class UserService {
         } else {          
           const keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, authToken);
           await this.userRepository.updateUserDetails(userData.id,
-            keycloakDetails.keycloakUserId.toString(),
-            userData.clientId, 
-            userData.clientSecret
+            keycloakDetails.keycloakUserId.toString()
           );
         }
 
@@ -583,9 +583,7 @@ export class UserService {
           } else {
             keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
             await this.userRepository.updateUserDetails(userData.id,
-              keycloakDetails.keycloakUserId.toString(),
-              userData.clientId, 
-              userData.clientSecret
+              keycloakDetails.keycloakUserId.toString()
             );
             await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
           }

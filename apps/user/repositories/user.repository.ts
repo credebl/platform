@@ -48,6 +48,8 @@ export class UserRepository {
           username: userEmailVerification.username,
           email: userEmailVerification.email,
           verificationCode: verifyCode.toString(),
+          clientId: userEmailVerification.clientId,
+          clientSecret: userEmailVerification.clientSecret,
           publicProfile: true
         },
         update: {
@@ -365,7 +367,7 @@ export class UserRepository {
    * @returns Updates organization details
    */
   // eslint-disable-next-line camelcase
-  async updateUserDetails(id: string, keycloakId: string, clientId: string, clientSecret: string): Promise<user> {
+  async updateUserDetails(id: string, keycloakId: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
@@ -373,9 +375,7 @@ export class UserRepository {
         },
         data: {
           isEmailVerified: true,
-          keycloakUserId: keycloakId,
-          clientId,
-          clientSecret
+          keycloakUserId: keycloakId
         }
       });
       return updateUserDetails;

@@ -49,6 +49,8 @@ interface IUserOrgRole {
 export interface ISendVerificationEmail {
     email: string;
     username?: string;
+    clientId?: string;
+    clientSecret?: string;
   }
   
   export interface IUserInformation {
@@ -57,8 +59,6 @@ export interface ISendVerificationEmail {
     firstName: string;
     lastName: string;
     isPasskey: boolean;
-    clientId: string;
-    clientSecret: string;
   }
   
   export interface AddPasskeyDetails {

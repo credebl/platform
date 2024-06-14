@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 
 import { ApiProperty } from '@nestjs/swagger';
@@ -12,4 +12,12 @@ export class UserEmailVerificationDto {
     @MaxLength(256, { message: 'Email must be at most 256 character.' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     email: string;
+
+    @ApiProperty({ example: 'xxxx-xxxx-xxxx' })
+    @IsString({ message: 'clientId should be string' })
+    clientId: string;
+
+    @ApiProperty({ example: 'xxxx-xxxxx-xxxxx' })
+    @IsString({ message: 'clientSecret should be string' })
+    clientSecret: string;
 }

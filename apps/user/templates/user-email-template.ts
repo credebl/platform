@@ -1,10 +1,10 @@
 import * as url from 'url';
 export class URLUserEmailTemplate {
-  public getUserURLTemplate(email: string, verificationCode: string): string {
-    const endpoint = `${process.env.FRONT_END_URL}`;
+  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string): string {
+    // const endpoint = `${process.env.FRONT_END_URL}`;
 
     const apiUrl = url.parse(
-      `${endpoint}/verify-email-success?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
+      `${redirectUrl}/verify-email-success?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
     );
     
     const validUrl = apiUrl.href.replace('/:', ':');

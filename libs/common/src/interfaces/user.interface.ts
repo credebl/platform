@@ -12,6 +12,8 @@ export interface ISignInUser {
       }
       export interface ISendVerificationEmail {
         email: string;
+        clientId?: string;
+        clientSecret?: string;
         username?: string;
       }
       

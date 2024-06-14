@@ -793,13 +793,10 @@ export class OrganizationRepository {
                 throw new ConflictException(ResponseMessages.organisation.error.organizationEcosystemValidate);
             }
 
-            // User activity delete by orgId
             const deletedUserActivity = await prisma.user_activity.deleteMany({ where: { orgId: id } });
 
-            // User org role delete by orgId
             const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
 
-            // org invitations delete by orgId
             const deletedOrgInvitations = await prisma.org_invitations.deleteMany({ where: { orgId: id } });
 
             // If no references are found, delete the organization
@@ -932,7 +929,7 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
       }
     });
   } catch (error) {
-      this.logger.error(`[getOrgInvitations] - get organization invitations: ${JSON.stringify(error)}`);
+      this.logger.error(`[getOrgInvitationsByOrg] - get organization invitations: ${JSON.stringify(error)}`);
       throw error;
   }
  }

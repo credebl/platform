@@ -3,7 +3,7 @@
 
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
+import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, OrgInvitation } from '../interfaces/organization.interface';
@@ -379,6 +379,19 @@ export class OrganizationRepository {
       };
 
       return this.getOrgInvitationsPagination(query, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new error;
+    }
+  }
+
+  async getUser(id: string): Promise<user> {
+    try {
+      const getUserById = await this.prisma.user.findUnique({ 
+        where:{
+          id
+      }});
+      return getUserById;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new error;

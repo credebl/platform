@@ -62,6 +62,7 @@ import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 import { toNumber } from '@credebl/common/cast.helper';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class UserService {
@@ -240,8 +241,7 @@ export class UserService {
 
       let keycloakDetails = null;
 
-      const token = await this.clientRegistrationService.getManagementToken();
-
+      const token = await this.clientRegistrationService.getManagementToken(userInfo.clientId, userInfo.clientSecret);
       if (userInfo.isPasskey) {
         const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
@@ -270,7 +270,8 @@ export class UserService {
       }
 
       await this.userRepository.updateUserDetails(userDetails.id,
-        keycloakDetails.keycloakUserId.toString()
+        keycloakDetails.keycloakUserId.toString(),
+        userInfo.clientId, userInfo.clientSecret
       );
 
       const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token);
@@ -380,7 +381,9 @@ export class UserService {
 
     try {
         try {
-          const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken);
+          const data = jwt.decode(refreshToken);
+          const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
+          const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken, userByKeycloakId?.['clientId'], userByKeycloakId?.['clientSecret']);
           return tokenResponse;
         } catch (error) {
           throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
@@ -504,14 +507,17 @@ export class UserService {
       const decryptedPassword = await this.commonService.decryptPassword(password);
       try {    
         
-        const authToken = await this.clientRegistrationService.getManagementToken();  
+
+        const authToken = await this.clientRegistrationService.getManagementToken(userData.clientId, userData.clientSecret);  
         userData.password = decryptedPassword;
         if (userData.keycloakUserId) {
           await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
         } else {          
           const keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, authToken);
           await this.userRepository.updateUserDetails(userData.id,
-            keycloakDetails.keycloakUserId.toString()
+            keycloakDetails.keycloakUserId.toString(),
+            userData.clientId, 
+            userData.clientSecret
           );
         }
 
@@ -567,7 +573,7 @@ export class UserService {
         userData.password = newDecryptedPassword;
         try {    
           let keycloakDetails = null;    
-          const token = await this.clientRegistrationService.getManagementToken();  
+          const token = await this.clientRegistrationService.getManagementToken(userData.clientId, userData.clientSecret);  
 
           if (userData.keycloakUserId) {
 
@@ -577,7 +583,9 @@ export class UserService {
           } else {
             keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
             await this.userRepository.updateUserDetails(userData.id,
-              keycloakDetails.keycloakUserId.toString()
+              keycloakDetails.keycloakUserId.toString(),
+              userData.clientId, 
+              userData.clientSecret
             );
             await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
           }
@@ -605,7 +613,7 @@ export class UserService {
       if (userData.keycloakUserId) {
 
         try {
-          const tokenResponse = await this.clientRegistrationService.getUserToken(email, password);
+          const tokenResponse = await this.clientRegistrationService.getUserToken(email, password, userData.clientId, userData.clientSecret);
           tokenResponse.isRegisteredToSupabase = false;
           return tokenResponse;
         } catch (error) {

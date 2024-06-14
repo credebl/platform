@@ -26,7 +26,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-import { user } from '@prisma/client';
+import { RecordType, user } from '@prisma/client';
 import {
   Attribute,
   ICheckUserDetails,
@@ -40,7 +40,8 @@ import {
     IUsersProfile,
     IUserResetPassword,
     IPuppeteerOption,
-    IShareDegreeCertificateRes
+    IShareDegreeCertificateRes,
+    IUserDeletedActivity
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -57,7 +58,7 @@ import { AwsService } from '@credebl/aws';
 import puppeteer from 'puppeteer';
 import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 import { toNumber } from '@credebl/common/cast.helper';
@@ -211,7 +212,7 @@ export class UserService {
     }
   }
 
-  async createUserForToken(userInfo: IUserInformation): Promise<string> {
+  async createUserForToken(userInfo: IUserInformation): Promise<ISignUpUserResponse> {
     try {
       const { email } = userInfo;
       if (!userInfo.email) {
@@ -288,7 +289,7 @@ export class UserService {
       const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
 
-      return ResponseMessages.user.success.signUpUser;
+      return { userId: userDetails?.id };
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -1141,6 +1142,26 @@ export class UserService {
     } catch (error) {
       this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
+    try {
+      return await this.userRepository.updateOrgDeletedActivity(orgId, userId, deletedBy, recordType, userEmail, txnMetadata);
+    } catch (error) {
+      this.logger.error(`In updateOrgDeletedActivity : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
+    try {
+     
+      const getkeycloakUserIds = await this.userRepository.getUserKeycloak(userEmails);
+      return getkeycloakUserIds;
+    } catch (error) {
+      this.logger.error(`In getUserKeycloakIdByEmail : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 }

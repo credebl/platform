@@ -6,10 +6,10 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { organisation } from '@prisma/client';
+import { organisation, user } from '@prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
-import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
@@ -140,6 +140,11 @@ export class OrganizationService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'get-organization-dashboard', payload);
   }
 
+  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgActivityCount> {
+    const payload = { orgId, userId };
+    return this.sendNatsMessage(this.serviceProxy, 'get-organization-activity-count', payload);
+  }
+
   /**
    *
    * @param
@@ -203,9 +208,10 @@ export class OrganizationService extends BaseService {
   }
 
   async deleteOrganization(
-    orgId: string
-  ): Promise<boolean> {
-    const payload = { orgId };
+    orgId: string,
+    user: user
+  ): Promise<IDeleteOrganization> {
+    const payload = { orgId, user };
 
     return this.sendNatsMessage(this.serviceProxy, 'delete-organization', payload);
   }

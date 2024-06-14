@@ -12,7 +12,8 @@ import {
   Res,
   Get,
   UseFilters,
-  Param
+  Param,
+  Delete
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -277,7 +278,7 @@ export class AgentController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async agentconfigure(
+  async agentConfigure(
     @Param('orgId') orgId: string,
     @Body() agentConfigureDto: AgentConfigureDto,
     @User() user: user,
@@ -295,5 +296,28 @@ export class AgentController {
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Delete('/orgs/:orgId/agents/wallet')
+  @ApiOperation({
+    summary: 'Delete wallet',
+    description: 'Delete agent wallet by organization.'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async deleteWallet(
+    @Param('orgId') orgId: string,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.agentService.deleteWallet(orgId, user);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.agent.success.walletDelete
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

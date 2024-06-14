@@ -3,10 +3,9 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client';
-import { IProofPresentation } from '../interfaces/verification.interface';
-import { IProofRequestSearchCriteria } from '../interfaces/verification.interface';
+import { IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IProofPresentationsListCount } from '@credebl/common/interfaces/verification.interface';
+import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { SortValue } from '@credebl/enum/enum';
 
 @Injectable()
@@ -100,6 +99,20 @@ export class VerificationRepository {
       return { proofRequestsCount, proofRequestsList };
     } catch (error) {
       this.logger.error(`[getAllProofRequests] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getVerificationRecordsCount(orgId: string): Promise<number> {
+    try {
+      const verificationRecordsCount = await this.prisma.presentations.count({
+        where: {
+          orgId
+        }
+      });
+      return verificationRecordsCount;
+    } catch (error) {
+      this.logger.error(`[get verification records by org Id] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -202,4 +215,25 @@ export class VerificationRepository {
       throw error;
     }
   }
+
+  async deleteVerificationRecordsByOrgId(orgId: string): Promise<IVerificationRecords> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {  
+
+        const recordsToDelete = await this.prisma.presentations.findMany({
+          where: { orgId }
+        });
+
+        const deleteResult = await prisma.presentations.deleteMany({
+          where: { orgId }
+        });
+        
+        return { deleteResult, recordsToDelete};
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting verification records: ${error.message}`);    
+      throw error;
+    }
+  } 
+
 }

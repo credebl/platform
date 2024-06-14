@@ -177,6 +177,25 @@ export class OrganizationController {
 
   }
 
+  @Get('/activity-count/:orgId')
+  @ApiOperation({ summary: 'Get organization references count', description: 'Get organization references count by org Id' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  async getOrganizationActivityCount(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+
+    const getOrganization = await this.organizationService.getOrganizationActivityCount(orgId, reqUser.id);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getOrganizationActivity,
+      data: getOrganization
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
   @Get('/:orgId/invitations')
   @ApiOperation({ summary: 'Get all invitations', description: 'Get all invitations' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -516,27 +535,27 @@ export class OrganizationController {
   }
 
   /**
-   * @returns Boolean
+   * @returns Organization
    */
-  //Todo
   @Delete('/:orgId')
   @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
-  @ApiExcludeEndpoint()
-  @ApiResponse({ status: HttpStatus.ACCEPTED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.OWNER)
   async deleteOrganization(
     @Param('orgId') orgId: string, 
+    @User() user: user,
     @Res() res: Response
     ): Promise<Response> {
 
-    await this.organizationService.deleteOrganization(orgId);
+    await this.organizationService.deleteOrganization(orgId, user);
 
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.ACCEPTED,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.delete
     };
-    return res.status(HttpStatus.ACCEPTED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Delete('/:orgId/client_credentials')

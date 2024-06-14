@@ -1,14 +1,12 @@
-import { Controller, Logger } from '@nestjs/common';
-
+import { Controller, Logger, Body } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { OrganizationService } from './organization.service';
-import { Body } from '@nestjs/common';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
-import { organisation } from '@prisma/client';
-import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
+import { organisation, user } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 
@@ -208,6 +206,11 @@ export class OrganizationController {
     return this.organizationService.getOrgDashboard(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'get-organization-activity-count' })
+  async getOrganizationActivityCount(payload: { orgId: string; userId: string }): Promise<IOrgActivityCount> {
+    return this.organizationService.getOrganizationActivityCount(payload.orgId, payload.userId);
+  }
+
 /**
  * @returns organization profile details
  */
@@ -227,8 +230,8 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'delete-organization' })
-  async deleteOrganization(payload: { orgId: string }): Promise<boolean> {
-    return this.organizationService.deleteOrganization(payload.orgId);
+  async deleteOrganization(payload: { orgId: string, user: user }): Promise<IDeleteOrganization> {
+    return this.organizationService.deleteOrganization(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'delete-org-client-credentials' })

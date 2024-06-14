@@ -105,6 +105,10 @@ model organisation {
   idpId                 String?                 @db.VarChar(500)
   clientId              String?                 @db.VarChar(500)
   clientSecret          String?                 @db.VarChar(500)
+  registrationNumber    String?                 @db.VarChar(100)
+  country               String?                 @db.VarChar(100)
+  city                  String?                 @db.VarChar(100)
+  state                 String?                  @db.VarChar(100)
   connections           connections[]
   credentials           credentials[]
   org_agents            org_agents[]
@@ -516,4 +520,25 @@ model ledgerConfig {
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
+}
+
+model user_org_delete_activity {
+  id             String     @id @default(uuid()) @db.Uuid
+  userEmail      String     @default("")
+  userId         String     @db.Uuid
+  orgId          String     @db.Uuid
+  recordType     RecordType
+  txnMetadata    Json
+  deletedBy      String     @db.Uuid
+  deleteDateTime DateTime   @default(now()) @db.Timestamptz(6)
+}
+
+enum RecordType {
+  VERIFICATION_RECORD
+  ISSUANCE_RECORD
+  CONNECTION
+  ECOSYSTEM_MEMBER
+  ORGANIZATION
+  WALLET
+  INVITATION
 }

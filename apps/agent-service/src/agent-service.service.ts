@@ -8,6 +8,7 @@ import {
   BadRequestException,
   ConflictException,
   HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -51,11 +52,12 @@ import {
   IStoreAgent,
   AgentHealthData,
   IAgentStore,
-  IAgentConfigure
+  IAgentConfigure,
+  OrgDid
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
-import { ledgers, org_agents, organisation, platform_config } from '@prisma/client';
+import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
 import { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';
@@ -71,6 +73,7 @@ import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnect
 import { ledgerName } from '@credebl/common/cast.helper';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import * as CryptoJS from 'crypto-js';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 @Injectable()
 @WebSocketGateway()
@@ -82,7 +85,8 @@ export class AgentServiceService {
     private readonly commonService: CommonService,
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly userActivityRepository: UserActivityRepository
   ) {}
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {
@@ -121,7 +125,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.network ? agentSpinupDto.network : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -931,73 +935,37 @@ export class AgentServiceService {
   async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
     try {
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
+      const url = this.constructUrl(agentDetails, getOrgAgentType);
+
       if (createDidPayload.method === DidMethod.POLYGON) {
         createDidPayload.endpoint = agentDetails.agentEndPoint;
       }
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      let url;
-      if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
-        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-      } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
-        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
-      }
 
       const { isPrimaryDid, ...payload } = createDidPayload;
-
+      const didDetails = await this.getDidDetails(url, payload, getApiKey);
       const getDidByOrg = await this.agentServiceRepository.getOrgDid(orgId);
 
-      
-      const didDetails = await this.commonService.httpPost(url, payload, {
-        headers: { authorization: getApiKey }
-      });
-      
-      if (!didDetails || Object.keys(didDetails).length === 0) {
-        throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      
-      
-      const didExist = getDidByOrg.some((orgDidExist) => orgDidExist.did === didDetails.did);
-      if (didExist) {
-        throw new ConflictException(ResponseMessages.agent.error.didAlreadyExist, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      
+      await this.checkDidExistence(getDidByOrg, didDetails);
+
       if (isPrimaryDid) {
-        getDidByOrg.map(async () => {
-          await this.agentServiceRepository.updateIsPrimaryDid(orgId, false);
-        });
+        await this.updateAllDidsToNonPrimary(orgId, getDidByOrg);
       }
-      
+
       const createdDidDetails = {
         orgId,
-        did: didDetails.did,
-        didDocument: didDetails.didDocument || didDetails.didDoc,
+        did: didDetails?.['did'] ?? didDetails?.['didState']?.['did'],
+        didDocument: didDetails?.['didDocument'] ?? didDetails?.['didDoc'] ?? didDetails?.['didState']?.['didDocument'],
         isPrimaryDid,
         orgAgentId: agentDetails.id,
         userId: user.id
       };
-
-      const storeDidDetails = await this.agentServiceRepository.storeDidDetails(createdDidDetails);
-
-      if (!storeDidDetails) {
-        throw new InternalServerErrorException(ResponseMessages.agent.error.storeDid, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      if (isPrimaryDid && storeDidDetails.did) {
-        await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId);
-      }
+      const storeDidDetails = await this.storeDid(createdDidDetails);
 
       if (isPrimaryDid) {
-        const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(createDidPayload.network);
-        await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
+        await this.setPrimaryDidAndLedger(orgId, storeDidDetails, createDidPayload.network, createDidPayload.method);
       }
 
       return storeDidDetails;
@@ -1012,6 +980,71 @@ export class AgentServiceService {
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
+    }
+  }
+
+  private constructUrl(agentDetails, getOrgAgentType): string {
+    if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
+      return `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
+    } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
+      return `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
+    }
+  }
+
+  private async getDidDetails(url, payload, apiKey): Promise<object> {
+    const didDetails = await this.commonService.httpPost(url, payload, {
+      headers: { authorization: apiKey }
+    });
+
+    if (!didDetails || Object.keys(didDetails).length === 0) {
+      throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.serverError
+      });
+    }
+
+    return didDetails;
+  }
+
+  private checkDidExistence(getDidByOrg, didDetails): void {
+    const didExist = getDidByOrg.some((orgDidExist) => orgDidExist.did === didDetails.did);
+    if (didExist) {
+      throw new ConflictException(ResponseMessages.agent.error.didAlreadyExist, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.serverError
+      });
+    }
+  }
+
+  private async updateAllDidsToNonPrimary(orgId, getDidByOrg): Promise<void> {
+    await Promise.all(
+      getDidByOrg.map(async () => {
+        await this.agentServiceRepository.updateIsPrimaryDid(orgId, false);
+      })
+    );
+  }
+
+  private async storeDid(createdDidDetails): Promise<OrgDid> {
+    const storeDidDetails = await this.agentServiceRepository.storeDidDetails(createdDidDetails);
+
+    if (!storeDidDetails) {
+      throw new InternalServerErrorException(ResponseMessages.agent.error.storeDid, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.serverError
+      });
+    }
+
+    return storeDidDetails;
+  }
+
+  private async setPrimaryDidAndLedger(orgId, storeDidDetails, network, method): Promise<void> {
+    if (storeDidDetails.did && storeDidDetails.didDocument) {
+      await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId, storeDidDetails.didDocument);
+    }
+
+    if (network) {
+      const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(network);
+      await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
     }
   }
 
@@ -1600,15 +1633,76 @@ export class AgentServiceService {
     }
   }
 
-  async deleteWallet(url: string, apiKey: string): Promise<object> {
+  async deleteWallet(orgId: string, user: user): Promise<object> {
     try {
+      // Retrieve the API key and agent information
+      const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
+        this.getOrgAgentApiKey(orgId),
+        this.agentServiceRepository.getAgentApiKey(orgId)
+      ]);
+
+      if (getApiKeyResult.status === 'rejected') {
+        throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
+      }
+
+      if (orgAgentResult.status === 'rejected') {
+        throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
+      }
+
+      const getApiKey = getApiKeyResult?.value;
+      const orgAgent = orgAgentResult?.value;
+
+      const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
+
+      if (!orgAgentTypeResult) {
+        throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
+      }
+
+      // Determine the URL based on the agent type
+      const url =
+        orgAgentTypeResult.agent === OrgAgentType.SHARED
+          ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
+          : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
+
+      // Make the HTTP DELETE request
       const deleteWallet = await this.commonService
-        .httpDelete(url, { headers: { authorization: apiKey } })
+        .httpDelete(url, {
+          headers: { authorization: getApiKey }
+        })
         .then(async (response) => response);
-      return deleteWallet;
+
+      if (deleteWallet.status === HttpStatus.NO_CONTENT) {
+        const {orgDid, agentInvitation, deleteOrgAgent} = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
+
+        this.logger.log(`orgDid :::: ${JSON.stringify(orgDid)}`);
+        this.logger.log(`agentInvitation :::: ${JSON.stringify(agentInvitation)}`);
+        this.logger.log(`deleteOrgAgent :::: ${JSON.stringify(deleteOrgAgent)}`);
+
+        const deletions = [
+          { records: orgDid.count, tableName: 'org_dids' },
+          { records: agentInvitation.count, tableName: 'agent_invitations' },
+          { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
+        ];
+
+        const logDeletionActivity = async (records, tableName): Promise<void> => {
+          if (records) {
+            const txnMetadata = {
+              deletedRecordsCount: records,
+              deletedRecordInTable: tableName
+            };
+            const recordType = RecordType.WALLET;
+            await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
+          }
+        };
+
+        for (const { records, tableName } of deletions) {
+          await logDeletionActivity(records, tableName);
+        }
+        return deleteOrgAgent;
+      }
     } catch (error) {
-      this.logger.error(`Error in delete wallet in agent service : ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

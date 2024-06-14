@@ -34,12 +34,6 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
       exceptionResponse = exception as unknown as ExceptionResponse;
     }
 
-    if (exception?.['error']) {
-      exceptionResponse = exception?.['error'];
-    } else {
-      exceptionResponse = exception as unknown as ExceptionResponse;
-    }
-
     errorResponse = {
       statusCode: exceptionResponse.statusCode ? exceptionResponse.statusCode : status,
       message: exceptionResponse.message

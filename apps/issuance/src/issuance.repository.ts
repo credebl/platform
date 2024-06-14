@@ -60,6 +60,20 @@ export class IssuanceRepository {
     }
   }
 
+  async getIssuanceRecordsCount(orgId: string): Promise<number> {
+    try {
+      const issuanceRecordsCount = await this.prisma.credentials.count({
+        where: {
+          orgId
+        }
+      });
+      return issuanceRecordsCount;
+    } catch (error) {
+      this.logger.error(`[get issuance records by org Id] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async getOrganizationByTenantId(tenantId: string): Promise<org_agents> {
     try {
       return this.prisma.org_agents.findFirst({

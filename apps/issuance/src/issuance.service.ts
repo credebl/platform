@@ -1333,17 +1333,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       fileUploadData.error = JSON.stringify(error.error) ? JSON.stringify(error.error) : JSON.stringify(error);
       fileUploadData.detailError = `${JSON.stringify(error)}`;
       if (!isErrorOccurred) {
-        // const socket = await io(`${process.env.SOCKET_HOST}`, {
-        //   reconnection: true,
-        //   reconnectionDelay: 5000,
-        //   reconnectionAttempts: Infinity,
-        //   autoConnect: true,
-        //   transports: ['websocket']
-        // });
         isErrorOccurred = true;
-        // socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId, error });
       }
-
     }
     await this.issuanceRepository.updateFileUploadData(fileUploadData);
 

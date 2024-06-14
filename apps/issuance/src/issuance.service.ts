@@ -1,7 +1,7 @@
 /* eslint-disable no-useless-catch */
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { BadRequestException, ConflictException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
-import { OrgAgentType, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
+import { OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -20,14 +20,14 @@ import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { orderValues, paginator } from '@credebl/common/common.utils';
+import { convertUrlToDeepLinkUrl, orderValues, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { agent_invitations, organisation } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
@@ -51,7 +51,19 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
+  async getIssuanceRecords(orgId: string): Promise<number> {
+    try {
+      return await this.issuanceRepository.getIssuanceRecordsCount(orgId);
+    } catch (error) {
+                    
+      this.logger.error(
+        `[getIssuanceRecords ] [NATS call]- error in get issuance records count : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
     try {
       const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
 
@@ -133,7 +145,49 @@ export class IssuanceService {
       });
 
       const results = await Promise.allSettled(issuancePromises);
-      return results;
+
+      const processedResults = results.map((result) => {
+        if (PromiseResult.REJECTED === result.status) {
+          return {
+            statusCode: result?.reason?.status?.message?.statusCode,
+            message: result?.reason?.status?.message?.error?.message,
+            error: ResponseMessages.errorMessages.serverError
+          };
+        } else if (PromiseResult.FULFILLED === result.status) {
+          return {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.issuance.success.create,
+            data: result.value
+          };
+        }
+        return null;
+      });
+
+      const allSuccessful = processedResults.every((result) => result?.statusCode === HttpStatus.CREATED);
+      const allFailed = processedResults.every((result) => result?.statusCode !== HttpStatus.CREATED);
+
+      let finalStatusCode: HttpStatus;
+      let finalMessage: string;
+
+      if (allSuccessful) {
+        finalStatusCode = HttpStatus.CREATED;
+        finalMessage = ResponseMessages.issuance.success.create;
+      } else if (allFailed) {
+        finalStatusCode = HttpStatus.BAD_REQUEST;
+        finalMessage = ResponseMessages.issuance.error.unableToCreateOffer;
+      } else {
+        finalStatusCode = HttpStatus.PARTIAL_CONTENT;
+        finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
+      }
+
+      const finalResult = {
+        statusCode: finalStatusCode,
+        message: finalMessage,
+        data: processedResults
+      };
+
+      return finalResult;
+      
     } catch (error) {
       this.logger.error(`[sendCredentialCreateOffer] - error in create credentials : ${JSON.stringify(error)}`);
       const errorStack = error?.status?.message?.error?.reason || error?.status?.message?.error;
@@ -252,6 +306,9 @@ export class IssuanceService {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
         credentialCreateOfferDetails.response['invitationUrl'] = url;
+        // Add deepLinkURL param to response
+        const deepLinkURL = convertUrlToDeepLinkUrl(url);
+        credentialCreateOfferDetails.response['deepLinkURL'] = deepLinkURL;
       }
       return credentialCreateOfferDetails.response;
     } catch (error) {
@@ -584,10 +641,10 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     );
     if (0 < error?.length) {
       const errorStack = error?.map((item) => {
-        const { message, statusCode, error } = item?.error || item?.response || {};
+        const { statusCode, message, error } = item?.error || item?.response || {};
         return {
-          message,
           statusCode,
+          message,
           error
         };
       });
@@ -671,6 +728,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
+    const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
@@ -686,7 +744,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         this.emailData.emailFrom = platformConfigData?.emailFrom;
         this.emailData.emailTo = iterator?.emailId ?? emailId;
         this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, shortenUrl);
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL);
         this.emailData.emailAttachments = [
           {
             filename: 'qrcode.png',

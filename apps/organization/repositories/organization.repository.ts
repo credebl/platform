@@ -72,6 +72,10 @@ export class OrganizationRepository {
           website: createOrgDto.website,
           orgSlug: createOrgDto.orgSlug,
           publicProfile: false,
+          registrationNumber:createOrgDto.registrationNumber,
+          country:createOrgDto.country,
+          city:createOrgDto.city,
+          state:createOrgDto.state,
           createdBy: createOrgDto.createdBy,
           lastChangedBy: createOrgDto.lastChangedBy
         }
@@ -294,6 +298,20 @@ export class OrganizationRepository {
         },
         include: {
           organisation: true
+        }
+      });
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  async getOrgInvitationsCount(orgId: string): Promise<number> {
+    try {
+      return this.prisma.org_invitations.count({
+        where: {
+          orgId
         }
       });
     } catch (error) {

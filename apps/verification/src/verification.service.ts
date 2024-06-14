@@ -18,6 +18,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
 import { UserActivityService } from '@credebl/user-activity';
+import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
 
 @Injectable()
 export class VerificationService {
@@ -93,6 +94,19 @@ export class VerificationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async getVerificationRecords(orgId: string): Promise<number> {
+    try {
+      return await this.verificationRepository.getVerificationRecordsCount(orgId);
+    } catch (error) {
+                    
+      this.logger.error(
+        `[getVerificationRecords ] [NATS call]- error in get verification records count : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 
   /**
    * Consume agent API for get all proof presentations
@@ -409,6 +423,7 @@ export class VerificationService {
           this.logger.log('shortenedUrl', shortenedUrl);
           if (shortenedUrl) {
             presentationProof.invitationUrl = shortenedUrl;
+            presentationProof.deepLinkURL = convertUrlToDeepLinkUrl(shortenedUrl);
           }
         }
         if (!presentationProof) {
@@ -480,6 +495,7 @@ export class VerificationService {
     // Currently have shortenedUrl to store only for 30 days
     const persist: boolean = false;
     const shortenedUrl = await this.storeVerificationObjectAndReturnUrl(invitationUrl, persist);
+    const deepLinkURL = convertUrlToDeepLinkUrl(shortenedUrl);
     const qrCodeOptions: QRCode.QRCodeToDataURLOptions = { type: 'image/png' };
     const outOfBandVerificationQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
 
@@ -492,7 +508,7 @@ export class VerificationService {
     this.emailData.emailFrom = platformConfigData.emailFrom;
     this.emailData.emailTo = email;
     this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials`;
-    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, shortenedUrl);
+    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, deepLinkURL);
     this.emailData.emailAttachments = [
       {
         filename: 'qrcode.png',

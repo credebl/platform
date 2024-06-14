@@ -21,6 +21,7 @@ export enum CredDefSortFields {
 }
 
 export enum AgentType {
+    // TODO: Change to Credo
     AFJ = 'AFJ',
     ACAPY = 'ACAPY'
 }

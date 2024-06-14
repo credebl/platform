@@ -9,7 +9,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { OrgAgentType, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -1051,11 +1051,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   }
 
   async issueBulkCredential(requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails): Promise<string> {
-    if ('' === requestId.trim()) {
+    if (!requestId) {
       throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
     }
-    // let credentialType : SchemaType;
-
     const fileUpload: FileUpload = {
       lastChangedDateTime: null,
       upload_type: '',
@@ -1064,8 +1062,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       createDateTime: null
     };
     let csvFileDetail;
-    try {
 
+    try {
       let cachedData = await this.cacheManager.get(requestId);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
@@ -1078,11 +1076,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
-
       if (!parsedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cachedData);
       }
-
       const parsedFileDetails = JSON.parse(cachedData as string);
 
       if (!parsedFileDetails) {
@@ -1099,72 +1095,19 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       csvFileDetail = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
 
-//------------------------------------------------ Remove code after use -----------------------------------
-const BATCH_SIZE = 100; //Initial 100
-this.logger.log("BATCH_SIZE:", BATCH_SIZE);
-const MAX_CONCURRENT_OPERATIONS = 30; //Initial 50
-this.logger.log("MAX_CONCURRENT_OPERATIONS:", MAX_CONCURRENT_OPERATIONS);
-const limit = pLimit(MAX_CONCURRENT_OPERATIONS);
+    const bulkPayloadObject: IBulkPayloadObject = {
+     parsedData,
+     parsedFileDetails,
+     userId: clientDetails.userId,
+     fileUploadId: csvFileDetail.id
+     };
 
-const startTime = Date.now(); // Start timing the entire process
+      const storeBulkPayload = await this._storeBulkPayloadInBatch(bulkPayloadObject);
 
-const batches = await this.splitIntoBatches(parsedData, BATCH_SIZE);
-// this.logger.log("batches:::::::::", batches);
-this.logger.log("Total number of batches:", batches.length);
+      if (!storeBulkPayload) {
+        throw new BadRequestException(ResponseMessages.issuance.error.storeBulkData);
+      }
 
-for (const [index, batch] of batches.entries()) {
-
-  const batchStartTime = Date.now(); // Start timing the current batch
-
-  // Create an array of limited promises for the current batch
-  const saveFileDetailsPromises = batch.map(element => limit(() => {
-      const credentialPayload = {
-        credential_data: element,
-        schemaId: parsedFileDetails.schemaLedgerId,
-        schemaName: parsedFileDetails.schemaName,
-        credDefId: parsedFileDetails.credentialDefinitionId,
-        state: false,
-        isError: false,
-        fileUploadId: csvFileDetail.id,
-        credentialType: parsedFileDetails.credentialType
-      };
-      return this.issuanceRepository.saveFileDetails(credentialPayload, clientDetails.userId);
-    })
-  );
-
-  this.logger.log(`Processing batch ${index + 1} with ${batch.length} elements...`);
-
-  // Wait for all operations in the current batch to complete before moving to the next batch
-  await Promise.all(saveFileDetailsPromises);
-
-  const batchEndTime = Date.now(); // End timing the current batch
-  this.logger.log(`Batch ${index + 1} processed in ${(batchEndTime - batchStartTime)} milliseconds.`);
-}
-
-const endTime = Date.now(); // End timing the entire process
-this.logger.log(`Total processing time: ${(endTime - startTime)} milliseconds.`);
-
-
-//------------------------------------------------ Remove code after use --------------------------------------------------------
-
-      // Uncomment code after user
-      // const saveFileDetailsPromises = await parsedData.map(async (element) => {
-      //   const credentialPayload = {
-      //     credential_data: element,
-      //     schemaId: parsedFileDetails.schemaLedgerId,
-      //     schemaName: parsedFileDetails.schemaName,
-      //     credDefId: parsedFileDetails.credentialDefinitionId,
-      //     state: false,
-      //     isError: false,
-      //     fileUploadId: csvFileDetail.id,
-      //     credentialType: parsedFileDetails.credentialType
-      //   };
-      //   return this.issuanceRepository.saveFileDetails(credentialPayload, clientDetails.userId);
-      // });
-
-      // // Wait for all saveFileDetails operations to complete
-      // await Promise.all(saveFileDetailsPromises);
-      const startTimeToFetch = Date.now(); 
       const bulkpayload = await this.issuanceRepository.getFileDetails(csvFileDetail.id);
       if (!bulkpayload) {
         throw new BadRequestException(ResponseMessages.issuance.error.fileData);
@@ -1190,16 +1133,12 @@ this.logger.log(`Total processing time: ${(endTime - startTime)} milliseconds.`)
           }
         }));
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const queueJobsArray = await Promise.all(queueJobsArrayPromises);
-      const endTimeToFetch = Date.now(); 
         try {
-          this.logger.log(`Total processing time for feching the file: ${(endTimeToFetch - startTimeToFetch)} milliseconds.`);
-        //  await this.bulkIssuanceQueue.addBulk(queueJobsArray);
+         await this.bulkIssuanceQueue.addBulk(queueJobsArray);
         } catch (error) {
           this.logger.error(`Error processing issuance data: ${error}`);
         }
-
       return ResponseMessages.issuance.success.bulkProcess;
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;
@@ -1215,9 +1154,7 @@ this.logger.log(`Total processing time: ${(endTime - startTime)} milliseconds.`)
 
   async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<string> {
     let bulkpayloadRetry;
-
     try {
-
       const fileDetails = await this.issuanceRepository.getFileDetailsById(fileId);
       if (!fileDetails) {
         throw new BadRequestException(ResponseMessages.issuance.error.retry);
@@ -1479,6 +1416,56 @@ this.logger.log(`Total processing time: ${(endTime - startTime)} milliseconds.`)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.issuanceServiceProxy.send<any>(pattern, payload).toPromise();
       return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
+  async _storeBulkPayloadInBatch(bulkPayloadObject: IBulkPayloadObject): Promise<boolean> {
+    try {
+      const {parsedFileDetails, parsedData, fileUploadId, userId} = bulkPayloadObject;
+      
+      const limit = pLimit(CommonConstants.MAX_CONCURRENT_OPERATIONS);
+      const startTime = Date.now(); // Start timing the entire process
+      const batches = await this.splitIntoBatches(parsedData, CommonConstants.BATCH_SIZE);
+      this.logger.log("Total number of batches:", batches.length);
+      
+      for (const [index, batch] of batches.entries()) {
+      
+        const batchStartTime = Date.now(); // Start timing the current batch
+      
+        // Create an array of limited promises for the current batch
+        const saveFileDetailsPromises = batch.map(element => limit(() => {
+            const credentialPayload = {
+              credential_data: element,
+              schemaId: parsedFileDetails.schemaLedgerId,
+              schemaName: parsedFileDetails.schemaName,
+              credDefId: parsedFileDetails.credentialDefinitionId,
+              state: false,
+              isError: false,
+              fileUploadId,
+              credentialType: parsedFileDetails.credentialType
+            };
+            return this.issuanceRepository.saveFileDetails(credentialPayload, userId);
+          })
+        );
+      
+        this.logger.log(`Processing batch ${index + 1} with ${batch.length} elements...`);
+      
+        // Wait for all operations in the current batch to complete before moving to the next batch
+        await Promise.all(saveFileDetailsPromises);
+      
+        const batchEndTime = Date.now(); // End timing the current batch
+        this.logger.log(`Batch ${index + 1} processed in ${(batchEndTime - batchStartTime)} milliseconds.`);
+      }
+      
+      const endTime = Date.now(); // End timing the entire process
+      this.logger.log(`Total processing time: ${(endTime - startTime)} milliseconds.`);
+      return true;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException({

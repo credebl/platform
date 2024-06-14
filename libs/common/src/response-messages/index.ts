@@ -312,7 +312,8 @@ export const ResponseMessages = {
             invalidCredentialType:'invalid credential type',
             missingRequestId: 'Param requestId is missing from the request.',
             cachedData: 'Cached data does not exist',
-            cachedfileData: 'Cached file data does not exist'
+            cachedfileData: 'Cached file data does not exist',
+            storeBulkData: 'Error while storing the bulk deata'
         }
     },
     verification: {

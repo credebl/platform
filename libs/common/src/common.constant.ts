@@ -323,7 +323,11 @@ export enum CommonConstants {
  //CacheInfo
 CACHE_SHARED_APIKEY_KEY = "dedicatedApiKey",
 CACHE_APIKEY_KEY = "sharedApiKey",
-CACHE_TTL_SECONDS = 604800
+CACHE_TTL_SECONDS = 604800,
+
+// Bulk-issuance
+BATCH_SIZE = 100,
+MAX_CONCURRENT_OPERATIONS = 50,
 }
 
 export const postgresqlErrorCodes = [];

@@ -307,14 +307,16 @@ export class ClientRegistrationService {
     idpId: string,
     token: string,
     userId: string
-  ): Promise<string> {
+  ): Promise<boolean> {
 
     const realmName = process.env.KEYCLOAK_REALM;
 
     const createClientRolesResponse = await this.commonService.httpDelete(
       await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId, idpId),
       this.getAuthHeader(token)
-    );
+    )
+    .then((data) => data?.data)
+    .catch((error) => error);
     
     this.logger.debug(
       `deleteUserClientRoles ${JSON.stringify(
@@ -322,7 +324,7 @@ export class ClientRegistrationService {
       )}`
     );
 
-    return 'User client role is deleted';  
+    return true;  
   }
 
   async createUserHolderRole(

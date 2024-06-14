@@ -45,4 +45,7 @@ export interface ISignInUser {
         id: string;
         email: string;
       }    
-        
+
+export interface ISignUpUserResponse {
+  userId: string
+}

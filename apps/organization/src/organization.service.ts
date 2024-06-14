@@ -1547,24 +1547,23 @@ export class OrganizationService {
       return this.organizationServiceProxy
         .send<string>(pattern, userEmails)
         .pipe(
-          map((response) => ({
+          map((response: string) => ({
             response
           }))
         )
         .toPromise()
         .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          this.logger.error(`getUserKeycloakIdByEmail catch: ${JSON.stringify(error)}`);
           throw new HttpException(
             {
-              status: error?.error?.statusCode,
-              error: error?.error?.error,
-              message: error?.error?.message ?? error?.message
+              status: error?.statusCode,
+              error: error?.message
             },
             error.error
           );
         });
     } catch (error) {
-      this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
+      this.logger.error(`[getUserKeycloakIdByEmail] - error in get keycloak id by email : ${JSON.stringify(error)}`);
       throw error;
     }
   }

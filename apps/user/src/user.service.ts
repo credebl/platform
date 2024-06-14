@@ -41,7 +41,8 @@ import {
     IUserResetPassword,
     IPuppeteerOption,
     IShareDegreeCertificateRes,
-    IUserDeletedActivity
+    IUserDeletedActivity,
+    IUserDataResponse
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -212,7 +213,7 @@ export class UserService {
     }
   }
 
-  async createUserForToken(userInfo: IUserInformation): Promise<string> {
+  async createUserForToken(userInfo: IUserInformation): Promise<IUserDataResponse> {
     try {
       const { email } = userInfo;
       if (!userInfo.email) {
@@ -289,7 +290,7 @@ export class UserService {
       const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
 
-      return ResponseMessages.user.success.signUpUser;
+      return { userId: userDetails?.id };
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

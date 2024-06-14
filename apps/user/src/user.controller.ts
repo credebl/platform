@@ -1,4 +1,4 @@
-import { IOrgUsers, Payload, ICheckUserDetails, PlatformSettings, IShareUserCertificate, UpdateUserProfile, IUsersProfile, IUserInformation, IUserSignIn, IUserCredentials, IUserResetPassword, IUserDeletedActivity} from '../interfaces/user.interface';
+import { IOrgUsers, Payload, ICheckUserDetails, PlatformSettings, IShareUserCertificate, UpdateUserProfile, IUsersProfile, IUserInformation, IUserSignIn, IUserCredentials, IUserResetPassword, IUserDeletedActivity, IUserDataResponse} from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
@@ -175,7 +175,7 @@ export class UserController {
   * @returns User's registration status
   */
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<string> {
+  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<IUserDataResponse> {
     return this.userService.createUserForToken(payload.userInfo);
   }
 

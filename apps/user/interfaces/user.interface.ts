@@ -213,3 +213,7 @@ export interface IUserDeletedActivity {
   deletedBy: string;
   deleteDateTime: Date;
 }
+
+export interface IUserDataResponse {
+  userId: string;
+}

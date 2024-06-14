@@ -77,15 +77,17 @@ export class AuthzController {
   /**
   *
   * @Body userInfo
-  * @returns User's registration status
+  * @returns User's registration status and user details
   */
   @Post('/signup')
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
   async addUserDetails(@Body() userInfo: AddUserDetailsDto, @Res() res: Response): Promise<Response> {
-      await this.authzService.addUserDetails(userInfo);
+      const userData = await this.authzService.addUserDetails(userInfo);
       const finalResponse = {
         statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.create
+        message: ResponseMessages.user.success.create,
+        data: userData
       };
     return res.status(HttpStatus.CREATED).json(finalResponse);
 

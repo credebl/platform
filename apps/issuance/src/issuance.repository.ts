@@ -594,7 +594,7 @@ export class IssuanceRepository {
       const tablesToCheck = ['presentations'];
 
       const referenceCounts = await Promise.all(
-        tablesToCheck.map((table) => prisma[table].count({ where: { orgId } }))
+        tablesToCheck.map((table) => this.prisma[table].count({ where: { orgId } }))
       );
 
       const referencedTables = referenceCounts

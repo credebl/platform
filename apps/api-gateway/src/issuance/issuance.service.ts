@@ -158,8 +158,8 @@ export class IssuanceService extends BaseService {
         }
     }
 
-    async deleteIssuanceRecords(orgId: string, user: user): Promise<IDeletedIssuanceRecords> {
-        const payload = { orgId, user };
+    async deleteIssuanceRecords(orgId: string, userDetails: user): Promise<IDeletedIssuanceRecords> {
+        const payload = { orgId, userDetails };
         return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
     }
 

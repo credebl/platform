@@ -100,8 +100,8 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'delete-issuance-records' })
-  async deleteIssuanceRecords(payload: {orgId: string, user: user}): Promise<IDeletedIssuanceRecords> {  
-    const { orgId, user } = payload;
-    return this.issuanceService.deleteIssuanceRecords(orgId, user);
+  async deleteIssuanceRecords(payload: {orgId: string, userDetails: user}): Promise<IDeletedIssuanceRecords> {  
+    const { orgId, userDetails } = payload;
+    return this.issuanceService.deleteIssuanceRecords(orgId, userDetails);
   }
 }

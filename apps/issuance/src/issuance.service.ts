@@ -1467,10 +1467,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  async deleteIssuanceRecords(orgId: string, user: user): Promise<IDeletedIssuanceRecords> {
+  async deleteIssuanceRecords(orgId: string, userDetails: user): Promise<IDeletedIssuanceRecords> {
     try {
       const deletedCredentialsRecords = await this.issuanceRepository.deleteIssuanceRecordsByOrgId(orgId);
-
+      
       if (0 === deletedCredentialsRecords?.deleteResult?.count) {
         throw new NotFoundException(ResponseMessages.issuance.error.issuanceRecordsNotFound);
     }
@@ -1498,11 +1498,11 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     );
 
       const deletedIssuanceData = {
-        deletedProofRecordsCount : deletedCredentialsRecords?.deleteResult?.count,
+        deletedCredentialsRecordsCount : deletedCredentialsRecords?.deleteResult?.count,
         deletedRecordsStatusCount: filteredStatusCounts
       }; 
 
-      await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedIssuanceData, RecordType.ISSUANCE_RECORD);
+      await this.userActivityRepository._orgDeletedActivity(orgId, userDetails, deletedIssuanceData, RecordType.ISSUANCE_RECORD);
 
       return deletedCredentialsRecords;
     } catch (error) {
@@ -1511,4 +1511,3 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 }
-

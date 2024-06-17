@@ -18,19 +18,21 @@ import {
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { OrgAgentType, ConnectionProcessState } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
-
+import { RecordType, user } from '@prisma/client';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 @Injectable()
 export class ConnectionService {
   constructor(
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
     private readonly connectionRepository: ConnectionRepository,
+    private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
@@ -775,4 +777,48 @@ export class ConnectionService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async deleteConnectionRecords(orgId: string, user: user): Promise<IDeletedConnectionsRecord> {
+    try {
+        const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
+
+        if (0 === deleteConnections?.deleteConnectionRecords?.count) {
+            throw new NotFoundException(ResponseMessages.connection.error.connectionRecordNotFound);
+        }
+
+        const statusCounts = {
+            [ConnectionProcessState.START]: 0,
+            [ConnectionProcessState.COMPLETE]: 0,
+            [ConnectionProcessState.ABANDONED]: 0,
+            [ConnectionProcessState.INVITATION_SENT]: 0,
+            [ConnectionProcessState.INVITATION_RECEIVED]: 0,
+            [ConnectionProcessState.REQUEST_SENT]: 0,
+            [ConnectionProcessState.DECLIEND]: 0,
+            [ConnectionProcessState.REQUEST_RECEIVED]: 0,
+            [ConnectionProcessState.RESPONSE_SENT]: 0,
+            [ConnectionProcessState.RESPONSE_RECEIVED]: 0
+        };
+
+        await Promise.all(deleteConnections.getConnectionRecords.map(async (record) => {
+            statusCounts[record.state]++;
+        }));
+
+        const filteredStatusCounts = Object.fromEntries(
+          Object.entries(statusCounts).filter(entry => 0 < entry[1])
+        );
+
+        const deletedConnectionData = {
+            deletedConnectionsRecordsCount: deleteConnections?.deleteConnectionRecords?.count,
+            deletedRecordsStatusCount: filteredStatusCounts
+        };
+
+        await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedConnectionData, RecordType.CONNECTION);
+
+        return deleteConnections;
+
+    } catch (error) {
+        this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
+    }
+}
 }

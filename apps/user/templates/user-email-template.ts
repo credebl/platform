@@ -1,13 +1,18 @@
 import * as url from 'url';
 export class URLUserEmailTemplate {
-  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string): string {
+  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string): string {
     // const endpoint = `${process.env.FRONT_END_URL}`;
 
-    const apiUrl = url.parse(
-      `${redirectUrl}/verify-email-success?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
-    );
-    
-    const validUrl = apiUrl.href.replace('/:', ':');
+    let validUrl;
+    if (clientId === process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID) {
+      const apiUrl = url.parse(
+        `${redirectUrl}/verify-email-success?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
+      );
+      
+      validUrl = apiUrl.href.replace('/:', ':');
+    } else {
+      validUrl = redirectUrl;
+    }
 
     try {
       return `<!DOCTYPE html>

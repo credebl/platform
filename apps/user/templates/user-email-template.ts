@@ -11,7 +11,7 @@ export class URLUserEmailTemplate {
       
       validUrl = apiUrl.href.replace('/:', ':');
     } else {
-      validUrl = redirectUrl;
+      validUrl = `${redirectUrl}?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`;
     }
 
     try {

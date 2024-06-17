@@ -33,3 +33,9 @@ export interface IConnectionsListCount {
     recipientKey?:string;
 }
   
+export interface IDeletedConnectionsRecord {
+  getConnectionRecords: IConnectionItem[];
+  deleteConnectionRecords: {
+      count: number;
+  };
+}

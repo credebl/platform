@@ -34,3 +34,9 @@ export interface IConnectionsListCount {
     invitationDid?: string
 }
   
+export interface IDeletedConnectionsRecord {
+  getConnectionRecords: IConnectionItem[];
+  deleteConnectionRecords: {
+      count: number;
+  };
+}

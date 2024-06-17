@@ -11,10 +11,10 @@ import {
   IReceiveInvitationByUrlOrg,
   IReceiveInvitationResponse
 } from './interfaces/connection.interfaces';
-import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
-
+import { user } from '@prisma/client';
 @Controller()
 export class ConnectionController {
   constructor(private readonly connectionService: ConnectionService) {}
@@ -94,5 +94,11 @@ export class ConnectionController {
   @MessagePattern({ cmd: 'create-connection-invitation' })
   async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<object> {
     return this.connectionService.createConnectionInvitation(payload);
+  }
+
+  @MessagePattern({ cmd: 'delete-connection-records' })
+  async deleteConnectionRecords(payload: {orgId: string, userDetails: user}): Promise<IDeletedConnectionsRecord> {  
+    const { orgId, userDetails } = payload;
+    return this.connectionService.deleteConnectionRecords(orgId, userDetails);
   }
 }

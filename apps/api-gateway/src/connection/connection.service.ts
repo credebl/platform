@@ -4,10 +4,10 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
-import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { QuestionDto } from './dtos/question-answer.dto';
-
+import { user } from '@prisma/client';
 @Injectable()
 export class ConnectionService extends BaseService {
   constructor(@Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy) {
@@ -155,5 +155,10 @@ export class ConnectionService extends BaseService {
   ): Promise<IReceiveInvitationRes> {
     const payload = { user, createOutOfBandConnectionInvitation };
     return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);
+  }
+
+  async deleteConnectionRecords(orgId: string, userDetails: user): Promise<IDeletedConnectionsRecord> {
+    const payload = { orgId, userDetails };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'delete-connection-records', payload);
   }
 }

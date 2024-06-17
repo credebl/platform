@@ -263,13 +263,15 @@ export const ResponseMessages = {
             fetchConnection: 'Connection details fetched successfully',
             fetch: 'Connections details fetched successfully',
             questionAnswerRecord: 'Question Answer record fetched successfully',
-            questionSend:'Question sent successfully'
+            questionSend:'Question sent successfully',
+            deleteConnectionRecord: 'Connection records deleted'
         },
         error: {
             exists: 'Connection is already exist',
             connectionNotFound: 'Connection not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
-            agentUrlNotFound: 'agent url not found'
+            agentUrlNotFound: 'agent url not found',
+            connectionRecordNotFound: 'Connection records not found'
         }
     },
     issuance: {

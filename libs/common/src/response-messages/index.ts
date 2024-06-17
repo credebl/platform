@@ -35,6 +35,7 @@ export const ResponseMessages = {
             notUpdateEcosystemSettings: 'Unable to update ecosystem config settings',
             verificationAlreadySent: 'The verification link has already been sent to your email address',
             emailSend: 'Unable to send email to the user',
+            redirectUrlNotFound: 'Redirect URL not found',
             invalidEmailUrl: 'Invalid verification code or EmailId!',
             verifiedEmail: 'Email already verified',
             notFound: 'User not found',

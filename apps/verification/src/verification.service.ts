@@ -5,8 +5,8 @@ import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { RecordType, agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
-import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
+import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
+import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -19,6 +19,7 @@ import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords
 import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
 import { UserActivityService } from '@credebl/user-activity';
 import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 @Injectable()
 export class VerificationService {
@@ -28,6 +29,7 @@ export class VerificationService {
   constructor(
     @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
     private readonly verificationRepository: VerificationRepository,
+    private readonly userActivityRepository: UserActivityRepository,
     private readonly outOfBandVerification: OutOfBandVerification,
     private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
@@ -932,16 +934,42 @@ export class VerificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
+  async deleteVerificationRecords(orgId: string, user: user): Promise<IVerificationRecords> {
     try {
       const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
-      
+
+      if (0 === deleteProofRecords?.deleteResult?.count) {
+        throw new NotFoundException(ResponseMessages.verification.error.verificationRecordsNotFound);
+    }
+
+    const statusCounts = {
+        [VerificationProcessState.ProposalSent]: 0,
+        [VerificationProcessState.ProposalReceived]: 0,
+        [VerificationProcessState.RequestSent]: 0,
+        [VerificationProcessState.RequestReceived]: 0,
+        [VerificationProcessState.PresentationReceived]: 0,
+        [VerificationProcessState.PresentationSent]: 0,
+        [VerificationProcessState.Done]: 0,
+        [VerificationProcessState.Declined]: 0,
+        [VerificationProcessState.Abandoned]: 0
+    };
+
+    await Promise.all(deleteProofRecords.recordsToDelete.map(async (record) => {
+        statusCounts[record.state]++;
+    }));
+
+    const filteredStatusCounts = Object.fromEntries(
+      Object.entries(statusCounts).filter(entry => 0 < entry[1])
+    );
+
       const deletedVerificationData = {
-        deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count
+        deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count,
+        deletedRecordsStatusCount : filteredStatusCounts
       }; 
 
-      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.VERIFICATION_RECORD, deletedVerificationData);
-      return deleteProofRecords;
+      await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedVerificationData, RecordType.VERIFICATION_RECORD);
+
+      return deleteProofRecords;    
     } catch (error) {
       this.logger.error(`[deleteVerificationRecords] - error in deleting verification records: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

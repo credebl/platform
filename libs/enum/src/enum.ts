@@ -145,3 +145,15 @@ export enum PromiseResult {
     REJECTED = 'rejected',
     FULFILLED = 'fulfilled'
 }
+
+export enum VerificationProcessState {
+    ProposalSent = 'proposal-sent',
+    ProposalReceived = 'proposal-received',
+    RequestSent = 'request-sent',
+    RequestReceived = 'request-received',
+    PresentationSent = 'presentation-sent',
+    PresentationReceived = 'presentation-received',
+    Declined = 'declined',
+    Abandoned = 'abandoned',
+    Done = 'done'
+}

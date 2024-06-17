@@ -147,13 +147,13 @@ export enum PromiseResult {
 }
 
 export enum VerificationProcessState {
-    ProposalSent = 'proposal-sent',
-    ProposalReceived = 'proposal-received',
-    RequestSent = 'request-sent',
-    RequestReceived = 'request-received',
-    PresentationSent = 'presentation-sent',
-    PresentationReceived = 'presentation-received',
-    Declined = 'declined',
-    Abandoned = 'abandoned',
-    Done = 'done'
+    PROPOSAL_SENT = 'proposal-sent',
+    PROPOSAL_RECEIVED = 'proposal-received',
+    REQUEST_SENT = 'request-sent',
+    REQUEST_RECEIVED = 'request-received',
+    PRESENTATION_SENT = 'presentation-sent',
+    PRESENTATION_RECEIVED = 'presentation-received',
+    DECLIEND = 'declined',
+    ABANDONED = 'abandoned',
+    DONE = 'done'
 }

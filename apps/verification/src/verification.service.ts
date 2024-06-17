@@ -934,7 +934,7 @@ export class VerificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async deleteVerificationRecords(orgId: string, user: user): Promise<IVerificationRecords> {
+  async deleteVerificationRecords(orgId: string, userDetails: user): Promise<IVerificationRecords> {
     try {
       const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
 
@@ -943,15 +943,15 @@ export class VerificationService {
     }
 
     const statusCounts = {
-        [VerificationProcessState.ProposalSent]: 0,
-        [VerificationProcessState.ProposalReceived]: 0,
-        [VerificationProcessState.RequestSent]: 0,
-        [VerificationProcessState.RequestReceived]: 0,
-        [VerificationProcessState.PresentationReceived]: 0,
-        [VerificationProcessState.PresentationSent]: 0,
-        [VerificationProcessState.Done]: 0,
-        [VerificationProcessState.Declined]: 0,
-        [VerificationProcessState.Abandoned]: 0
+        [VerificationProcessState.PROPOSAL_SENT]: 0,
+        [VerificationProcessState.PROPOSAL_RECEIVED]: 0,
+        [VerificationProcessState.REQUEST_SENT]: 0,
+        [VerificationProcessState.REQUEST_RECEIVED]: 0,
+        [VerificationProcessState.PRESENTATION_RECEIVED]: 0,
+        [VerificationProcessState.PRESENTATION_SENT]: 0,
+        [VerificationProcessState.DONE]: 0,
+        [VerificationProcessState.DECLIEND]: 0,
+        [VerificationProcessState.ABANDONED]: 0
     };
 
     await Promise.all(deleteProofRecords.recordsToDelete.map(async (record) => {
@@ -967,7 +967,7 @@ export class VerificationService {
         deletedRecordsStatusCount : filteredStatusCounts
       }; 
 
-      await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedVerificationData, RecordType.VERIFICATION_RECORD);
+      await this.userActivityRepository._orgDeletedActivity(orgId, userDetails, deletedVerificationData, RecordType.VERIFICATION_RECORD);
 
       return deleteProofRecords;    
     } catch (error) {

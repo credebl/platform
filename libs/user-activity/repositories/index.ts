@@ -2,7 +2,7 @@
 import { HttpException, Inject, Injectable, Logger } from '@nestjs/common';
 import { IUsersActivity} from '../interface';
 import { PrismaService } from '@credebl/prisma-service';
-import { RecordType, user, user_activity, user_org_delete_activity } from '@prisma/client';
+import { RecordType, user, user_activity } from '@prisma/client';
 import { map } from 'rxjs';
 import { ClientProxy } from '@nestjs/microservices';
 
@@ -22,19 +22,6 @@ export class UserActivityRepository {
                 details,
                 createdBy: userId,
                 lastChangedBy: userId
-            }
-        });
-    }
-
-    async deletedActivity(userId: string, orgId: string, recordType: RecordType, txnMetadata:object, userEmail?: string): Promise<user_org_delete_activity> {
-        return this.prisma.user_org_delete_activity.create({
-            data: {
-                userId,
-                orgId,
-                recordType,
-                txnMetadata,
-                deletedBy: userId,
-                userEmail
             }
         });
     }

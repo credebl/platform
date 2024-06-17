@@ -173,7 +173,7 @@ export class ClientRegistrationService {
     }
   }
 
-  async getManagementToken(clientId?: string, clientSecret?: string) {
+  async getManagementToken(clientId: string, clientSecret: string) {
     try {
       const payload = new ClientCredentialTokenPayloadDto();
       if (!clientId && !clientSecret) {
@@ -744,7 +744,7 @@ export class ClientRegistrationService {
   }
 
 
-  async getUserToken(email: string, password: string, clientId?: string, clientSecret?: string) {
+  async getUserToken(email: string, password: string, clientId: string, clientSecret: string) {
     try {
       const payload = new userTokenPayloadDto();
       if (!clientId && !clientSecret) {
@@ -788,7 +788,7 @@ export class ClientRegistrationService {
     }
   }
 
-  async getAccessToken(refreshToken: string, clientId?: string, clientSecret?: string) {
+  async getAccessToken(refreshToken: string, clientId: string, clientSecret: string) {
     try {
       const payload = new accessTokenPayloadDto();
       if (!clientId && !clientSecret) {

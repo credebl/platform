@@ -116,7 +116,12 @@ export class UserService {
       const token = await this.clientRegistrationService.getManagementToken(resUser.clientId, resUser.clientSecret);
       const getClientData = await this.clientRegistrationService.getClientRedirectUrl(resUser.clientId, token);
       try {
-        const [redirectUrl] = getClientData[0].redirectUris;
+        const [redirectUrl] = getClientData[0]?.redirectUris;
+        
+        if (!redirectUrl) {
+          throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
+        }
+
         await this.sendEmailForVerification(email, resUser.verificationCode, redirectUrl);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);

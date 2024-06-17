@@ -1437,7 +1437,7 @@ export class OrganizationService {
     try {
       // Fetch token and organization details in parallel
       const [token, organizationDetails] = await Promise.all([
-        this.clientRegistrationService.getManagementToken(),
+        this.clientRegistrationService.getManagementToken(user.clientId, user.clientSecret),
         this.organizationRepository.getOrganizationDetails(orgId)
       ]);
   

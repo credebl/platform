@@ -86,8 +86,8 @@ export const ResponseMessages = {
             deleteCredentials:'Organization client credentials deleted',
             orgDids: 'Organization DIDs fetched successfully',
             primaryDid: 'Primary DID updated successfully',
-            didDetails: 'DID Details updated sucessfully'
-
+            didDetails: 'DID Details updated sucessfully',
+            getOrganizationActivity: 'Organization activity count fetched successfully'
         },
         error: {
             exists: 'An organization name is already exist',
@@ -104,6 +104,7 @@ export const ResponseMessages = {
             deleteOrgInvitation: 'Organization does not have access to delete this invitation',
             notFound: 'Organization agent not found',
             orgNotFound: 'Organization not found',
+            orgDataNotFoundInkeycloak: 'Organization not found in keycloak',
             orgNotMatch: 'Organization does not have access',
             invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
             credentialsNotUpdate: 'Unable to update organization credentials',
@@ -274,6 +275,7 @@ export const ResponseMessages = {
     issuance: {
         success: {
             create: 'Credentials offer created successfully',
+            partiallyOfferCreated: 'Credential offer created partially',
             createOOB: 'Out-of-band credentials offer created successfully',
             fetch: 'Issued Credential details fetched successfully',
             importCSV: 'File imported successfully',

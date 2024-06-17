@@ -6,7 +6,7 @@ import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { user } from '@prisma/client';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse } from '@credebl/common/interfaces/user.interface';
+import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Controller()
@@ -175,7 +175,7 @@ export class UserController {
   * @returns User's registration status
   */
   @MessagePattern({ cmd: 'add-user' })
-  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<string> {
+  async addUserDetailsInKeyCloak(payload: { userInfo: IUserInformation }): Promise<ISignUpUserResponse> {
     return this.userService.createUserForToken(payload.userInfo);
   }
 
@@ -214,4 +214,10 @@ export class UserController {
     const { userIds } = payload;
     return this.userService.getUserDetails(userIds);
   }
+
+  @MessagePattern({ cmd: 'get-user-keycloak-id' })
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
+    return this.userService.getUserKeycloakIdByEmail(userEmails);
+  }
+
 }

@@ -797,4 +797,31 @@ export class UserRepository {
       throw error;
     }
   }
+
+  async getUserKeycloak(userEmails: string[]): Promise<string[]> {
+    try {
+      const users = await this.prisma.user.findMany({
+        where: {
+            email: {
+                in: userEmails
+            }
+        },
+        select: {
+            email: true,
+            keycloakUserId: true
+        }
+    });
+
+    // Create a map for quick lookup of keycloakUserId by email
+    const userMap = new Map(users.map(user => [user.email, user.keycloakUserId]));
+
+    // Collect the keycloakUserIds in the order of input emails
+    const keycloakUserIds = userEmails.map(email => userMap.get(email) || null);
+
+    return keycloakUserIds;
+    } catch (error) {
+      this.logger.error(`Error in getUserKeycloak: ${error} `);
+      throw error;
+    }
+  }
 }

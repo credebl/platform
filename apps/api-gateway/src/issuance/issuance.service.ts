@@ -5,9 +5,9 @@ import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails, TemplateDetails } from './dtos/issuance.dto';
 import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITemplateFormat, IssueCredentialType, UploadedFileDetails } from './interfaces';
-import { ICredentialOfferResponse, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
-
+import { user } from '@prisma/client';
 @Injectable()
 export class IssuanceService extends BaseService {
 
@@ -156,6 +156,11 @@ export class IssuanceService extends BaseService {
 
             throw error;
         }
+    }
+
+    async deleteIssuanceRecords(orgId: string, user: user): Promise<IDeletedIssuanceRecords> {
+        const payload = { orgId, user };
+        return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
     }
 
 }

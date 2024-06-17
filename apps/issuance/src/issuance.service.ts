@@ -9,7 +9,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
-import { OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
+import { IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -27,11 +27,12 @@ import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { ICredentialOfferResponse, IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { agent_invitations, organisation } from '@prisma/client';
+import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
 
 
 @Injectable()
@@ -43,6 +44,7 @@ export class IssuanceService {
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
+    private readonly userActivityRepository: UserActivityRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
@@ -1465,5 +1467,48 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
+  async deleteIssuanceRecords(orgId: string, user: user): Promise<IDeletedIssuanceRecords> {
+    try {
+      const deletedCredentialsRecords = await this.issuanceRepository.deleteIssuanceRecordsByOrgId(orgId);
+
+      if (0 === deletedCredentialsRecords?.deleteResult?.count) {
+        throw new NotFoundException(ResponseMessages.issuance.error.issuanceRecordsNotFound);
+    }
+
+    const statusCounts = {
+        [IssuanceProcessState.REQUEST_SENT]: 0,
+        [IssuanceProcessState.REQUEST_RECEIVED]: 0,
+        [IssuanceProcessState.PROPOSAL_SENT]: 0,
+        [IssuanceProcessState.PROPOSAL_RECEIVED]: 0,
+        [IssuanceProcessState.OFFER_SENT]: 0,
+        [IssuanceProcessState.OFFER_RECEIVED]: 0,
+        [IssuanceProcessState.DONE]: 0,
+        [IssuanceProcessState.DECLIEND]: 0,
+        [IssuanceProcessState.CREDENTIAL_RECEIVED]: 0,
+        [IssuanceProcessState.CREDENTIAL_ISSUED]: 0,
+        [IssuanceProcessState.ABANDONED]: 0
+    };
+
+    await Promise.all(deletedCredentialsRecords?.recordsToDelete?.map(async (record) => {
+        statusCounts[record.state]++;
+    }));
+
+    const filteredStatusCounts = Object.fromEntries(
+      Object.entries(statusCounts).filter(entry => 0 < entry[1])
+    );
+
+      const deletedIssuanceData = {
+        deletedProofRecordsCount : deletedCredentialsRecords?.deleteResult?.count,
+        deletedRecordsStatusCount: filteredStatusCounts
+      }; 
+
+      await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedIssuanceData, RecordType.ISSUANCE_RECORD);
+
+      return deletedCredentialsRecords;
+    } catch (error) {
+      this.logger.error(`[deleteIssuanceRecords] - error in deleting issuance records: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 }
 

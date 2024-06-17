@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import {
@@ -25,6 +25,7 @@ import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
 import { SortValue } from '@credebl/enum/enum';
+import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -587,4 +588,46 @@ export class IssuanceRepository {
       throw error;
     }
   }
+
+  async deleteIssuanceRecordsByOrgId(orgId: string): Promise<IDeletedIssuanceRecords> {
+    try {
+      const tablesToCheck = ['presentations'];
+
+      const referenceCounts = await Promise.all(
+        tablesToCheck.map((table) => prisma[table].count({ where: { orgId } }))
+      );
+
+      const referencedTables = referenceCounts
+        .map((count, index) => (0 < count ? tablesToCheck[index] : null))
+        .filter(Boolean);
+
+      if (0 < referencedTables.length) {
+        throw new ConflictException(`Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`);
+      }
+
+      return await this.prisma.$transaction(async (prisma) => {  
+
+        const recordsToDelete = await this.prisma.credentials.findMany({
+          where: { orgId },
+          select: {
+            createDateTime: true,
+            createdBy: true,
+            connectionId: true,
+            schemaId: true,
+            state: true,
+            orgId: true       
+          }
+        });
+
+        const deleteResult = await prisma.credentials.deleteMany({
+          where: { orgId }
+        });
+
+        return { deleteResult, recordsToDelete};
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting issuance records: ${error.message}`);    
+      throw error;
+    }
+  } 
 }

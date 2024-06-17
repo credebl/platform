@@ -358,13 +358,13 @@ export const ResponseMessages = {
             submit: 'Endorsement request submitted to ledger',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
+            deleteEcosystems: 'Ecosystem(s) deleted',
             fetchEndorsors: 'Endorser transactions fetched successfully',
             DeclineEndorsementTransaction: 'Endorsement request declined',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
             fetchMembers: 'Ecosystem members fetched successfully',
             allschema: 'Schema details fetched successfully',
-            AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
-            ecosystemMembersDeleted: 'Ecosystem members deleted'
+            AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
         },
         error: {
             notCreated: 'Error while creating ecosystem',

@@ -1369,6 +1369,34 @@ export class EcosystemRepository {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getEcosystemsByOrgId(orgId: string): Promise<any> {
+    try {
+
+      const ecosystemsDetails = await this.prisma.ecosystem.findMany({
+        where: {
+          ecosystemOrgs: {
+            some: {
+              orgId
+            }
+          }
+          
+        },
+        include: {
+          ecosystemOrgs: {
+            include: {
+              ecosystemRole: true
+            }
+          }
+        }
+      });
+      return ecosystemsDetails;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystems: ${error.message}`);
+      throw error;
+    }
+  }
+
   // eslint-disable-next-line camelcase
   async getEcosystemMembers(ecosystemId: string): Promise<ecosystem_orgs[]> {
     try {
@@ -1465,4 +1493,38 @@ export class EcosystemRepository {
     }
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteEcosystems(orgId: string): Promise<any> {
+    try {
+
+      return await this.prisma.$transaction(async (prisma) => {  
+
+      const deletedEcosystems = await prisma.ecosystem.deleteMany({
+        where: {
+          ecosystemOrgs: {
+            some: {
+              orgId
+            }
+          }
+          
+        }
+      });
+
+      const deleteEndorsementTransactions = await prisma.endorsement_transaction.deleteMany({
+        where: {
+          ecosystemOrgs: {
+            orgId
+          }
+          }
+        }
+      );
+
+      return {deletedEcosystems, deleteEndorsementTransactions};
+    });
+
+    } catch (error) {
+      this.logger.error(`Error in deleting ecosystems: ${error.message}`);
+      throw error;
+    }
+  }
 }

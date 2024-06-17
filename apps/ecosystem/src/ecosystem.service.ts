@@ -59,7 +59,6 @@ import { GetAllSchemaList, GetEndorsementsPayload, ISchemasResponse } from '../i
 import { CommonConstants } from '@credebl/common/common.constant';
 // eslint-disable-next-line camelcase
 import {
-  Prisma,
   RecordType,
   // eslint-disable-next-line camelcase
   credential_definition,
@@ -2079,57 +2078,99 @@ export class EcosystemService {
     }  
 
 
-  async deleteEcosystemMembers(orgId: string, ecosystemId: string, user: user): Promise<Prisma.BatchPayload> {
-    try {
-      const [
-        getEcosystemLeadDetails,
-        getEcosystemDetails,
-        getEcosystemMembers
-      ] = await Promise.all([
-        this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId),
-        this.ecosystemRepository.getEcosystemDetails(ecosystemId),        
-        this.ecosystemRepository.getEcosystemMembers(ecosystemId)
-      ]);
+  // async deleteEcosystems(orgId: string, user: user): Promise<Prisma.BatchPayload> {
+  //   try {
+  //     const [
+  //       getEcosystemLeadDetails,
+  //       getEcosystemDetails,
+  //       getEcosystemMembers
+  //     ] = await Promise.all([
+  //       this.ecosystemRepository.getEcosystemLeadDetails(ecosystemId),
+  //       this.ecosystemRepository.getEcosystemDetails(ecosystemId),        
+  //       this.ecosystemRepository.getEcosystemMembers(ecosystemId)
+  //     ]);
 
-      const getEcosystemLeadOrg = getEcosystemLeadDetails?.orgId;
+  //     const getEcosystemLeadOrg = getEcosystemLeadDetails?.orgId;
 
-      const membersToDelete = getEcosystemMembers.filter(member => member?.orgId !== getEcosystemLeadOrg);
+  //     const membersToDelete = getEcosystemMembers.filter(member => member?.orgId !== getEcosystemLeadOrg);
 
-      const memberOrgs = membersToDelete.map(member => member?.orgId);
+  //     const memberOrgs = membersToDelete.map(member => member?.orgId);
       
-      const getOrgNames = await this.ecosystemRepository.getOrgName(memberOrgs);
+  //     const getOrgNames = await this.ecosystemRepository.getOrgName(memberOrgs);
 
-      const membersUserIds = membersToDelete
-      .filter(member => member?.createdBy !== getEcosystemDetails.createdBy)
-      .map(member => member?.createdBy);
+  //     const membersUserIds = membersToDelete
+  //     .filter(member => member?.createdBy !== getEcosystemDetails.createdBy)
+  //     .map(member => member?.createdBy);
 
 
-      const getMembersEmailIds = await this._getUsersDetails(membersUserIds);
+  //     const getMembersEmailIds = await this._getUsersDetails(membersUserIds);
 
-      const deletedEcosystemMembers =  await this.ecosystemRepository.deleteEcosystemMembers(memberOrgs, ecosystemId);
+  //     const deletedEcosystemMembers =  await this.ecosystemRepository.deleteEcosystemMembers(memberOrgs, ecosystemId);
 
-      if (0 === deletedEcosystemMembers?.count) {
-          throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemMembersNotExists);
+  //     if (0 === deletedEcosystemMembers?.count) {
+  //         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemMembersNotExists);
+  //     }
+  //     await this.ecosystemRepository.deleteEcosystemInvitations(ecosystemId);
+
+  //     for (let i = 0; i < getMembersEmailIds.length; i++) {
+  //       const emailId = getMembersEmailIds[i];
+  //       const orgName = getOrgNames[i].name;
+  //       await this.sendMailToEcosystemMembers(emailId, orgName, getEcosystemDetails?.name);
+  //     }      
+
+  //     const deletedEcosystemMembersData = {
+  //         deletedEcosystemMembersCount: deletedEcosystemMembers?.count
+  //     };
+
+  //     await this.userActivityRepository._orgDeletedActivity(getEcosystemLeadOrg, user, deletedEcosystemMembersData, RecordType.ECOSYSTEM_MEMBER);
+
+  //     return deletedEcosystemMembers;
+  //   } catch (error) {
+  //     this.logger.error(`In delete ecosystem members: ${JSON.stringify(error)}`);
+  //     throw new RpcException(error.response ? error.response : error);
+  //   }
+  // }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteEcosystems(orgId: string, userDetails: user): Promise<any> {
+    try {
+      const getEcosystems = await this.ecosystemRepository.getEcosystemsByOrgId(orgId);
+      
+      const ecosystemLeadRoleOrgs = [];
+      const ecosystemMemberRoleOrgs = [];
+  
+      getEcosystems.forEach(ecosystem => {
+        ecosystem.ecosystemOrgs.forEach(org => {
+          if ('Ecosystem Lead' === org?.ecosystemRole?.name) {
+            ecosystemLeadRoleOrgs.push(org);
+          } else if ('Ecosystem Member' === org?.ecosystemRole?.name) {
+            ecosystemMemberRoleOrgs.push(org);
+          }
+        });
+      });
+
+      const getEcosystemLeadRoleOrgsIds = ecosystemLeadRoleOrgs?.map(org => org?.orgId);
+      const getEcosystemMemberRoleOrgIds = ecosystemMemberRoleOrgs?.map(org => org?.orgId);
+
+      if (getEcosystemLeadRoleOrgsIds?.includes(orgId)) {
+          throw new BadRequestException('You cannot delete this organization, because this organization is the ecosystem lead');
       }
-      await this.ecosystemRepository.deleteEcosystemInvitations(ecosystemId);
 
-      for (let i = 0; i < getMembersEmailIds.length; i++) {
-        const emailId = getMembersEmailIds[i];
-        const orgName = getOrgNames[i].name;
-        await this.sendMailToEcosystemMembers(emailId, orgName, getEcosystemDetails?.name);
-      }      
+      let deleteEcosystems;
+      if (getEcosystemMemberRoleOrgIds?.includes(orgId)) {
+        deleteEcosystems = await this.ecosystemRepository.deleteEcosystems(orgId);
+      }
 
-      const deletedEcosystemMembersData = {
-          deletedEcosystemMembersCount: deletedEcosystemMembers?.count
+      const deletedEcosystemsData = {
+          deletedEcosystemMembersCount: deleteEcosystems?.count
       };
 
-      await this.userActivityRepository._orgDeletedActivity(getEcosystemLeadOrg, user, deletedEcosystemMembersData, RecordType.ECOSYSTEM_MEMBER);
+      await this.userActivityRepository._orgDeletedActivity(orgId, userDetails, deletedEcosystemsData, RecordType.ECOSYSTEM_MEMBER);
 
-      return deletedEcosystemMembers;
+      return getEcosystems;
     } catch (error) {
-      this.logger.error(`In delete ecosystem members: ${JSON.stringify(error)}`);
+      this.logger.error(`In delete ecosystems: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
 }

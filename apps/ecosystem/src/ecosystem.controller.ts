@@ -237,9 +237,9 @@ export class EcosystemController {
     return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
   }
 
-  @MessagePattern({ cmd: 'delete-ecosystem-members' })
-  async deleteEcosystemMembers(payload: { orgId; string, ecosystemId: string, user: user}): Promise<Prisma.BatchPayload> {
-    const { orgId, ecosystemId, user } = payload;
-    return this.ecosystemService.deleteEcosystemMembers(orgId, ecosystemId, user);
+  @MessagePattern({ cmd: 'delete-ecosystems' })
+  async deleteEcosystemMembers(payload: { orgId: string, userDetails: user}): Promise<Prisma.BatchPayload> {
+    const { orgId, userDetails } = payload;
+    return this.ecosystemService.deleteEcosystems(orgId, userDetails);
   }
 }

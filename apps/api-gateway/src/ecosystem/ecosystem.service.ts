@@ -207,9 +207,9 @@ export class EcosystemService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'decline-endorsement-transaction', payload);
   }
 
-  async deleteEcosystemMembers(orgId: string, ecosystemId: string, user: user): Promise<Prisma.BatchPayload> {
-    const payload = { orgId, ecosystemId, user };
-    return this.sendNats(this.serviceProxy, 'delete-ecosystem-members', payload);
+  async deleteEcosystems(orgId: string, userDetails: user): Promise<Prisma.BatchPayload> {
+    const payload = { orgId, userDetails };
+    return this.sendNats(this.serviceProxy, 'delete-ecosystems', payload);
   }
 
 }

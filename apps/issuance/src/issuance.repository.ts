@@ -24,7 +24,7 @@ import {
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
-import { SortValue } from '@credebl/enum/enum';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
 import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
 @Injectable()
 export class IssuanceRepository {
@@ -591,7 +591,7 @@ export class IssuanceRepository {
 
   async deleteIssuanceRecordsByOrgId(orgId: string): Promise<IDeletedIssuanceRecords> {
     try {
-      const tablesToCheck = ['presentations'];
+      const tablesToCheck = [`${PrismaTables.PRESENTATIONS}`];
 
       const referenceCounts = await Promise.all(
         tablesToCheck.map((table) => this.prisma[table].count({ where: { orgId } }))

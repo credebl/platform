@@ -25,7 +25,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidMethod, Invitation, transition } from '@credebl/enum/enum';
+import { DidMethod, Invitation, Ledgers, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -230,6 +230,11 @@ export class OrganizationService {
       let network;
       if (null !== nameSpace) {
         network = await this.organizationRepository.getNetworkByNameSpace(nameSpace);
+      } else {
+        network = await this.organizationRepository.getLedger(Ledgers.NA);
+        if (!network) {
+          throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound);
+        }
       }
 
       const primaryDidDetails: IPrimaryDidDetails = {
@@ -241,7 +246,6 @@ export class OrganizationService {
       };
 
       const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
-
 
       await Promise.all([setPrimaryDid, existingPrimaryDid, priviousDidFalse]);
 

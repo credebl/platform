@@ -6,7 +6,7 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation } from '../interfaces/organization.interface';
+import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -973,4 +973,18 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
       throw error;
   }
  }
+
+ async getLedger(name: string): Promise<ILedgerDetails> {
+  try {
+    const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
+      where: {
+       name
+      }
+    });
+    return ledgerData;
+  } catch (error) {
+    this.logger.error(`[getLedger] - get ledger details: ${JSON.stringify(error)}`);
+    throw error;
+  }
+}
 }

@@ -249,6 +249,7 @@ export const ResponseMessages = {
             networkMismatch:'The network is mismatched.',
             didAlreadyExist:'DID already exist',
             storeDid: 'Error while storing DID',
+            noLedgerFound: 'No ledger data not found.',
             agentSpinupError: 'Agent endpoint unreachable',
             agentEndpointRequired: 'Agent endpoint is required',
             failedAgentType: 'Agent endpoint is required',

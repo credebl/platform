@@ -134,6 +134,15 @@
       "networkString": "testnet",
       "nymTxnEndpoint": "",
       "indyNamespace": "polygon:testnet"
+    },
+    {
+      "name": "NA",
+      "networkType": "",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "",
+      "nymTxnEndpoint": "",
+      "indyNamespace": ""
     }
   ],
   "endorseData": [

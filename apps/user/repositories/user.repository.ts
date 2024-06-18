@@ -47,6 +47,8 @@ export class UserRepository {
           username: userEmailVerification.username,
           email: userEmailVerification.email,
           verificationCode: verifyCode.toString(),
+          clientId: userEmailVerification.clientId,
+          clientSecret: userEmailVerification.clientSecret,
           publicProfile: true
         },
         update: {

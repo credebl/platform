@@ -218,3 +218,18 @@ export interface IGetDids {
   didDocument: Prisma.JsonValue;
   orgAgentId: string;
 }
+
+export interface ILedgerDetails {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  name: string;
+  networkType: string;
+  poolConfig: string;
+  isActive: boolean;
+  networkString: string;
+  nymTxnEndpoint: string;
+  indyNamespace: string;
+  networkUrl: string;
+
+}

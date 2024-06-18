@@ -1054,7 +1054,11 @@ export class AgentServiceService {
       const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(network);
       await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
     } else {
-      await this.agentServiceRepository.updateLedgerId(orgId, null);
+      const noLedgerData = await this.agentServiceRepository.getLedger(Ledgers.NA);
+      if (!noLedgerData) {
+        throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound);
+      }
+      await this.agentServiceRepository.updateLedgerId(orgId, noLedgerData?.id);
     }
   }
 

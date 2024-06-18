@@ -50,6 +50,7 @@ export enum Ledgers {
     Indicio_Testnet = 'Indicio Testnet',
     Indicio_Demonet = 'Indicio Demonet',
     Indicio_Mainnet = 'Indicio Mainnet',
+    NA = 'NA'
 }
 
 export enum Invitation {

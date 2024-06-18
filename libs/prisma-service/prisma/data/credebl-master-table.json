@@ -135,6 +135,15 @@
       "registerDIDEndpoint": "",
       "registerDIDPayload": "",
       "indyNamespace": "polygon:testnet"
+    },
+    {
+      "name": "NA",
+      "networkType": "",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "",
+      "nymTxnEndpoint": "",
+      "indyNamespace": ""
     }
   ],
   "endorseData": [

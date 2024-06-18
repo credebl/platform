@@ -149,6 +149,7 @@ export enum PromiseResult {
 export enum PrismaTables {
     PRESENTATIONS = 'presentations',
     CREDENTIALS = 'credentials',
+    ECOSYSTEM_ORGS = 'ecosystem_orgs'
 }
 
 export enum IssuanceProcessState {

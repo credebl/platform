@@ -10,6 +10,7 @@ import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GetAllSchemaList, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { SortValue } from '@credebl/enum/enum';
+import { IEcosystemDataDeletionResults } from '@credebl/common/interfaces/ecosystem.interface';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -1397,33 +1398,13 @@ export class EcosystemRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
-  async getEcosystemMembers(ecosystemId: string): Promise<ecosystem_orgs[]> {
-    try {
-
-      const getEcosystemMemberOrgs = await this.prisma.ecosystem_orgs.findMany({
-        where: {
-          ecosystemId
-        }
-      });
-
-      return getEcosystemMemberOrgs;
-    } catch (error) {
-      this.logger.error(`[getting ecosystem members] - error: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  async getOrgName(orgIds: string[]): Promise<{
+  async getOrgName(orgId: string): Promise<{
     name: string;
-  }[]> {
+  }> {
     try {
-
-      const orgName = await this.prisma.organisation.findMany({
+      const orgName = await this.prisma.organisation.findUnique({
         where: {
-          id: {
-            in: orgIds
-          }
+          id: orgId
         },
         select: {
           name: true
@@ -1441,7 +1422,6 @@ export class EcosystemRepository {
     name: string;
   }> {
     try {
-
       const orgName = await this.prisma.organisation.findUnique({
         where: {
           id: orgId
@@ -1458,12 +1438,11 @@ export class EcosystemRepository {
     }
   }
 
-  async deleteEcosystemInvitations(ecosystemId: string): Promise<Prisma.BatchPayload> {
+  async deleteEcosystemInvitations(orgId: string): Promise<Prisma.BatchPayload> {
     try {
-
       const deletedEcosystemInvitations = await this.prisma.ecosystem_invitations.deleteMany({
         where: {
-          ecosystemId
+          orgId
         }
       });
 
@@ -1474,54 +1453,47 @@ export class EcosystemRepository {
     }
   }
 
-    async deleteEcosystemMembers(orgIds: string[], ecosystemId: string): Promise<Prisma.BatchPayload> {
+  async deleteEcosystems(orgId: string): Promise<IEcosystemDataDeletionResults> {
     try {
+      return await this.prisma.$transaction(async (prisma) => {
+        const deletedEcosystemUsers = await prisma.ecosystem_users.deleteMany({
+          where: {
+            ecosystem: {
+              ecosystemOrgs: {
+                some: {
+                  orgId
+                }
+              }
+            }
+          }
+        });
 
-      const deletedMembers = await this.prisma.ecosystem_orgs.deleteMany({
-        where: {
-          orgId: {
-            in: orgIds
-          },
-          ecosystemId
-        }
-      });
-
-      return deletedMembers;
-    } catch (error) {
-      this.logger.error(`Error in deleting ecosystem organizations: ${error.message}`);
-      throw error;
-    }
-  }
-  
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteEcosystems(orgId: string): Promise<any> {
-    try {
-
-      return await this.prisma.$transaction(async (prisma) => {  
-
-      const deletedEcosystems = await prisma.ecosystem.deleteMany({
-        where: {
-          ecosystemOrgs: {
-            some: {
+        const deleteEndorsementTransactions = await prisma.endorsement_transaction.deleteMany({
+          where: {
+            ecosystemOrgs: {
               orgId
             }
           }
-          
-        }
-      });
+        });
 
-      const deleteEndorsementTransactions = await prisma.endorsement_transaction.deleteMany({
-        where: {
-          ecosystemOrgs: {
+        const deletedEcosystemOrgs = await prisma.ecosystem_orgs.deleteMany({
+          where: {
             orgId
           }
+        });
+
+        const deletedEcosystems = await prisma.ecosystem.deleteMany({
+          where: {
+            ecosystemOrgs: {
+              some: {
+                orgId
+              }
+            }
           }
-        }
-      );
+        });
 
-      return {deletedEcosystems, deleteEndorsementTransactions};
-    });
-
+        return { deletedEcosystemUsers, deleteEndorsementTransactions, deletedEcosystemOrgs, deletedEcosystems };
+      });
     } catch (error) {
       this.logger.error(`Error in deleting ecosystems: ${error.message}`);
       throw error;

@@ -9,9 +9,9 @@ import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { IEcosystemDashboard, RequestCredDeffEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs, IRequestSchemaEndorsement, IRequestW3CSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
-import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDataDeletionResults, IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { schemaRequestType } from '@credebl/enum/enum';
-import { Prisma, user } from '@prisma/client';
+import { user } from '@prisma/client';
 // eslint-disable-next-line camelcase
 
 @Controller()
@@ -238,7 +238,7 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'delete-ecosystems' })
-  async deleteEcosystemMembers(payload: { orgId: string, userDetails: user}): Promise<Prisma.BatchPayload> {
+  async deleteEcosystems(payload: { orgId: string, userDetails: user}): Promise<IEcosystemDataDeletionResults> {
     const { orgId, userDetails } = payload;
     return this.ecosystemService.deleteEcosystems(orgId, userDetails);
   }

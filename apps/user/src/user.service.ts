@@ -1154,11 +1154,11 @@ export class UserService {
     }
   }
 
-  async getUserDetails(userIds: string[]): Promise<string[]> {
+  async getUserDetails(userId: string): Promise<string> {
     try {
-      const getUserDetails = await this.userRepository.getUserDetailsByUserId(userIds);
-      const getUserEmails = getUserDetails?.map(user => user.email);
-      return getUserEmails;
+      const getUserDetails = await this.userRepository.getUserDetailsByUserId(userId);
+      const userEmail = getUserDetails.email;
+      return userEmail;
     } catch (error) {
       this.logger.error(`In get user details bu user Id : ${JSON.stringify(error)}`);
       throw error;

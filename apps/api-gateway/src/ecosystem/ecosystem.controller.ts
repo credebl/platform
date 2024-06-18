@@ -689,7 +689,7 @@ export class EcosystemController {
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.deleteEcosystems
+      message: ResponseMessages.ecosystem.success.deleteEcosystemMember
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

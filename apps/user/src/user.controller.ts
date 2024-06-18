@@ -210,9 +210,9 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-user-details-by-userId' })
-  async getUserDetailsByUserId(payload: { userIds: string[] }): Promise<string[]> {
-    const { userIds } = payload;
-    return this.userService.getUserDetails(userIds);
+  async getUserDetailsByUserId(payload: { userId: string }): Promise<string> {
+    const { userId } = payload;
+    return this.userService.getUserDetails(userId);
   }
 
   @MessagePattern({ cmd: 'get-user-keycloak-id' })

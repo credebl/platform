@@ -12,10 +12,10 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDataDeletionResults, IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
 import { schemaRequestType } from '@credebl/enum/enum';
-import { Prisma, user } from '@prisma/client';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -207,7 +207,7 @@ export class EcosystemService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'decline-endorsement-transaction', payload);
   }
 
-  async deleteEcosystems(orgId: string, userDetails: user): Promise<Prisma.BatchPayload> {
+  async deleteEcosystems(orgId: string, userDetails: user): Promise<IEcosystemDataDeletionResults> {
     const payload = { orgId, userDetails };
     return this.sendNats(this.serviceProxy, 'delete-ecosystems', payload);
   }

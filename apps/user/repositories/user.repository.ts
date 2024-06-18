@@ -777,15 +777,13 @@ export class UserRepository {
     }
   }
 
-  async getUserDetailsByUserId(userIds: string[]): Promise<{
+  async getUserDetailsByUserId(userId: string): Promise<{
     email: string;
-  }[]> {
+  }> {
     try {
-      const getUserDetails = await this.prisma.user.findMany({
+      const getUserDetails = await this.prisma.user.findUnique({
         where: {
-          id: {
-            in: userIds
-          }
+            id: userId
         },
         select: {
           email: true

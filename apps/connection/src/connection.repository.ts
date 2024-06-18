@@ -5,7 +5,7 @@ import { agent_invitations, org_agents, platform_config, shortening_url } from '
 import { IConnectionSearchCriteria, ICreateConnection, OrgAgent } from './interfaces/connection.interfaces';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IConnectionsListCount, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
-import { SortValue } from '@credebl/enum/enum';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
 // import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
 export class ConnectionRepository {
@@ -318,7 +318,7 @@ export class ConnectionRepository {
   }
 
   async deleteConnectionRecordsByOrgId(orgId: string): Promise<IDeletedConnectionsRecord> {
-    const tablesToCheck = ['credentials', 'presentations'];
+    const tablesToCheck = [`${PrismaTables.CREDENTIALS}`, `${PrismaTables.PRESENTATIONS}`];
 
     try {
       return await this.prisma.$transaction(async (prisma) => {

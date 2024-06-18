@@ -146,6 +146,11 @@ export enum PromiseResult {
     FULFILLED = 'fulfilled'
 }
 
+export enum PrismaTables {
+    PRESENTATIONS = 'presentations',
+    CREDENTIALS = 'credentials',
+}
+
 export enum IssuanceProcessState {
     PROPOSAL_SENT = 'proposal-sent',
     PROPOSAL_RECEIVED = 'proposal-received',
@@ -170,4 +175,17 @@ export enum VerificationProcessState {
     DECLIEND = 'declined',
     ABANDONED = 'abandoned',
     DONE = 'done'
+}
+
+export enum ConnectionProcessState {
+    START = 'start',
+    INVITATION_SENT = 'invitation-sent',
+    INVITATION_RECEIVED = 'invitation-received',
+    REQUEST_SENT = 'request-sent',
+    DECLIEND = 'decliend',
+    REQUEST_RECEIVED = 'request-received',
+    RESPONSE_SENT = 'response-sent',
+    RESPONSE_RECEIVED = 'response-received',
+    COMPLETE = 'completed',
+    ABANDONED = 'abandoned'
 }

@@ -146,6 +146,11 @@ export enum PromiseResult {
     FULFILLED = 'fulfilled'
 }
 
+export enum PrismaTables {
+    PRESENTATIONS = 'presentations',
+    CREDENTIALS = 'credentials',
+}
+
 export enum VerificationProcessState {
     PROPOSAL_SENT = 'proposal-sent',
     PROPOSAL_RECEIVED = 'proposal-received',

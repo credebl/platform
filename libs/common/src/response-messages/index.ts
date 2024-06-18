@@ -284,7 +284,8 @@ export const ResponseMessages = {
             previewCSV: 'File details fetched sucessfully',
             bulkIssuance: 'Issuance process started. It will take some time',
             notFound: 'Schema records not found',
-            bulkProcess: 'Process initiated for bulk issuance'
+            bulkProcess: 'Process initiated for bulk issuance',
+            deleteIssuanceRecords: 'Issuance records deleted'
         },
         error: {
             exists: 'Credentials is already exist',
@@ -316,7 +317,8 @@ export const ResponseMessages = {
             invalidCredentialType:'invalid credential type',
             missingRequestId: 'Param requestId is missing from the request.',
             cachedData: 'Cached data does not exist',
-            cachedfileData: 'Cached file data does not exist'
+            cachedfileData: 'Cached file data does not exist',
+            issuanceRecordsNotFound: 'Issuance records not found'
         }
     },
     verification: {

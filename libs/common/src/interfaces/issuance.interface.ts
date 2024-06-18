@@ -71,3 +71,11 @@ export interface IIssuedCredential {
     contextCorrelationId?: string;
     }
   
+    interface IDeletedIssuanceRecordsCount {
+      count: number;
+    }
+  
+    export interface IDeletedIssuanceRecords {
+      deleteResult: IDeletedIssuanceRecordsCount;
+      recordsToDelete: IIssuedCredentialResponse[];
+    }

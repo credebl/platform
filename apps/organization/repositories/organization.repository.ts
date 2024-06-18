@@ -6,7 +6,7 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { GetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, LedgerNameSpace, OrgInvitation } from '../interfaces/organization.interface';
+import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -919,7 +919,7 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
   }
  }
 
- async getDids(orgId:string): Promise<GetDids[]> {
+ async getDids(orgId:string): Promise<IGetDids[]> {
   try {
     return this.prisma.org_dids.findMany({
       where: {
@@ -961,7 +961,7 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
   }
  }
 
- async getNetworkByNameSpace(nameSpace: string): Promise<LedgerNameSpace> {
+ async getNetworkByNameSpace(nameSpace: string): Promise<ILedgerNameSpace> {
   try {
     return this.prisma.ledgers.findFirstOrThrow({
       where: {

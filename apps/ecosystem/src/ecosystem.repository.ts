@@ -4,7 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Prisma, credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, org_roles, organisation, platform_config, schema, user_org_roles } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, IEcosystemInvitation, IEcosystemOrgs, IEcosystemOrgsData, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, IEcosystemData, IEcosystemInvitation, IEcosystemOrgs, IEcosystemOrgsData, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -1370,8 +1370,7 @@ export class EcosystemRepository {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getEcosystemsByOrgId(orgId: string): Promise<any> {
+  async getEcosystemsByOrgId(orgId: string): Promise<IEcosystemData[]> {
     try {
 
       const ecosystemsDetails = await this.prisma.ecosystem.findMany({
@@ -1391,6 +1390,7 @@ export class EcosystemRepository {
           }
         }
       });
+      
       return ecosystemsDetails;
     } catch (error) {
       this.logger.error(`Error in getting ecosystems: ${error.message}`);

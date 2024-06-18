@@ -192,7 +192,7 @@ export interface OrgInvitation {
   email: string;
 }
 
-export interface LedgerNameSpace {
+export interface ILedgerNameSpace {
     id: string;
     createDateTime: Date;
     lastChangedDateTime: Date;
@@ -206,7 +206,7 @@ export interface LedgerNameSpace {
     networkUrl: string;
 }
 
-export interface GetDids {
+export interface IGetDids {
   id: string;
   createDateTime: Date;
   createdBy: string;

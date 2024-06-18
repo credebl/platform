@@ -148,7 +148,7 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
 export class TrimStringParamPipe implements PipeTransform {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
   transform(value: string) {
-    return plainToClass(String, value.trim());
+    return plainToClass(String, value?.trim());
   }
 }
 

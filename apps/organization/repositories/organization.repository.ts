@@ -6,7 +6,7 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, OrgInvitation } from '../interfaces/organization.interface';
+import { GetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, LedgerNameSpace, OrgInvitation } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -864,7 +864,7 @@ export class OrganizationRepository {
 
   async setOrgsPrimaryDid(primaryDidDetails: IPrimaryDidDetails): Promise<string> {
     try {
-      const {did, didDocument, id, orgId} = primaryDidDetails;
+      const {did, didDocument, id, orgId, networkId} = primaryDidDetails;
       await this.prisma.$transaction([
         this.prisma.org_dids.update({
           where: {
@@ -880,7 +880,8 @@ export class OrganizationRepository {
             },
            data: {
                orgDid: did,
-               didDocument
+               didDocument,
+               ledgerId: networkId
            }
        })   
         ]);
@@ -918,6 +919,19 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
   }
  }
 
+ async getDids(orgId:string): Promise<GetDids[]> {
+  try {
+    return this.prisma.org_dids.findMany({
+      where: {
+        orgId
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getDids] - get all DIDs: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
+
  async setPreviousDidFlase(id:string): Promise<IDidDetails> {
   try {
     return this.prisma.org_dids.update({
@@ -943,6 +957,19 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
     });
   } catch (error) {
       this.logger.error(`[getOrgInvitationsByOrg] - get organization invitations: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
+
+ async getNetworkByNameSpace(nameSpace: string): Promise<LedgerNameSpace> {
+  try {
+    return this.prisma.ledgers.findFirstOrThrow({
+      where: {
+        indyNamespace: nameSpace
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getNetworkByIndyNameSpace] - get network by namespace: ${JSON.stringify(error)}`);
       throw error;
   }
  }

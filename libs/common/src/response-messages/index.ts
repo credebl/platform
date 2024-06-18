@@ -246,6 +246,7 @@ export const ResponseMessages = {
             invalidTenantIdIdFormat:'Invalid tenantId format',
             requiredTenantId:'Tenant Id is required',
             createDid:'Error while creating DID',
+            networkMismatch:'The network is mismatched.',
             didAlreadyExist:'DID already exist',
             storeDid: 'Error while storing DID',
             agentSpinupError: 'Agent endpoint unreachable',

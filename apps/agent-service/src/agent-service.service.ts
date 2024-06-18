@@ -1018,6 +1018,14 @@ export class AgentServiceService {
   async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
     try {
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+
+      if (createDidPayload?.network) {
+        const getNameSpace = await this.agentServiceRepository.getLedgerByNameSpace(createDidPayload?.network);
+        if (agentDetails.ledgerId !== getNameSpace.id) {
+          throw new BadRequestException(ResponseMessages.agent.error.networkMismatch);
+        }
+      }
+
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
 
@@ -1128,6 +1136,8 @@ export class AgentServiceService {
     if (network) {
       const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(network);
       await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
+    } else {
+      await this.agentServiceRepository.updateLedgerId(orgId, null);
     }
   }
 

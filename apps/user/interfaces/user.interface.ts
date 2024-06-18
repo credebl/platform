@@ -49,6 +49,8 @@ interface IUserOrgRole {
 export interface ISendVerificationEmail {
     email: string;
     username?: string;
+    clientId?: string;
+    clientSecret?: string;
   }
   
   export interface IUserInformation {

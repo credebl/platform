@@ -201,24 +201,25 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
       }
       
-      const getAllDids = await this.organizationRepository.getDids(orgId);
-      const ifIsNotPrimaryDid = getAllDids.every(orgDids => false === orgDids.isPrimaryDid);
+      const dids = await this.organizationRepository.getDids(orgId);
+      const noPrimaryDid = dids.every(orgDids => false === orgDids.isPrimaryDid);
 
-      let getExistingPrimaryDid;
-      let setPriviousDidFalse;
-      if (!ifIsNotPrimaryDid) {
-        getExistingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
+      let existingPrimaryDid;
+      let priviousDidFalse;
+      if (!noPrimaryDid) {
+        existingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
         
-        if (!getExistingPrimaryDid) {
+        if (!existingPrimaryDid) {
           throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
         }
   
-        setPriviousDidFalse = await this.organizationRepository.setPreviousDidFlase(getExistingPrimaryDid.id);
+        priviousDidFalse = await this.organizationRepository.setPreviousDidFlase(existingPrimaryDid.id);
       } 
 
       const didParts = did.split(':');
       let nameSpace: string | null = null;
         
+      // This condition will handle the multi-ledger support
       if (DidMethod.INDY === didParts[1]) {
         nameSpace = `${didParts[2]}:${didParts[3]}`;
       } else if (DidMethod.POLYGON === didParts[1]) {
@@ -243,7 +244,7 @@ export class OrganizationService {
       const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
 
 
-      await Promise.all([setPrimaryDid, getExistingPrimaryDid, setPriviousDidFalse]);
+      await Promise.all([setPrimaryDid, existingPrimaryDid, priviousDidFalse]);
 
 
       return ResponseMessages.organisation.success.primaryDid;

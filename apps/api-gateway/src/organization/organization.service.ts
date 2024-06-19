@@ -239,4 +239,12 @@ export class OrganizationService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'authenticate-client-credentials', clientCredentialsDto);
   }
 
+  async deleteOrganizationInvitations(
+    orgId: string, 
+    user: user
+  ): Promise<object> {
+    const payload = {orgId, user};
+    return this.sendNatsMessage(this.serviceProxy, 'delete-organizations-invitations', payload);
+  }
+
 }

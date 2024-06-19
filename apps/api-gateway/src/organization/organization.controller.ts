@@ -604,5 +604,25 @@ export class OrganizationController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
+  @Delete('/:orgId/invitations/')
+  @ApiOperation({ summary: 'Delete organization invitations', description: 'Delete organization invitations' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async deleteOrganizationInvitations(
+    @Param('orgId') orgId: string,
+    @User() user: user, 
+    @Res() res: Response
+    ): Promise<Response> {
+      
+    await this.organizationService.deleteOrganizationInvitations(orgId, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.orgInvitationDeleted
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 }
 

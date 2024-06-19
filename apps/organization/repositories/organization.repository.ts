@@ -987,4 +987,18 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
     throw error;
   }
 }
+
+// async deleteOrganizationInvitations(orgId: string) {
+//   try {
+//     const deleteOrgInvitations = await this.prisma.org_invitations.deleteMany({
+//       where: {
+//        orgId
+//       }
+//     });
+//     return deleteOrgInvitations;
+//   } catch (error) {
+//     this.logger.error(`[getLedger] - get ledger details: ${JSON.stringify(error)}`);
+//     throw error;
+//   }
+// }
 }

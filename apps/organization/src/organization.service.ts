@@ -1788,4 +1788,18 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  /**
+   *
+   * @param orgId
+   * @returns fetch organization invitations
+   */
+  // async deleteOrganizationInvitations(orgId: string, user: string): Promise<IDidList[]> {
+  //   try {
+  //     return await this.organizationRepository.getAllOrganizationDid(orgId);
+  //   } catch (error) {
+  //     this.logger.error(`delete organization invitations: ${JSON.stringify(error)}`);
+  //     throw new RpcException(error.response ? error.response : error);
+  //   }
+  // }
 }

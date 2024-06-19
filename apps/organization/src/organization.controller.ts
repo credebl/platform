@@ -248,4 +248,9 @@ export class OrganizationController {
   async clientLoginCredentails(payload: { clientId: string; clientSecret: string;}): Promise<IAccessTokenData> {
     return this.organizationService.clientLoginCredentails(payload);
   }
+
+  // @MessagePattern({ cmd: 'delete-organizations-invitations' })
+  // async deleteOrganizationInvitations(payload: { orgId: string; user: user; }) {
+  //   return this.organizationService.deleteOrganizationInvitations(payload.orgId, payload.user);
+  // }
 }

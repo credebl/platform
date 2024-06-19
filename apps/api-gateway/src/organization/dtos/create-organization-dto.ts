@@ -15,7 +15,7 @@ export class CreateOrganizationDto {
   @IsNotSQLInjection({ message: 'Organization name is required.' })
   name: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @Transform(({ value }) => trim(value))
   @IsNotEmpty({ message: 'Description is required.' })
   @MinLength(2, { message: 'Description must be at least 2 characters.' })

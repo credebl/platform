@@ -229,6 +229,11 @@ export class OrganizationController {
     return this.organizationService.fetchOrgCredentials(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'get-organization-details' })
+  async getOrgData(payload: { orgId: string; }): Promise<organisation> {
+    return this.organizationService.getOrgDetails(payload.orgId);
+  }
+  
   @MessagePattern({ cmd: 'delete-organization' })
   async deleteOrganization(payload: { orgId: string, user: user }): Promise<IDeleteOrganization> {
     return this.organizationService.deleteOrganization(payload.orgId, payload.user);

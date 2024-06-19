@@ -1,5 +1,4 @@
-import { Inject } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
@@ -13,9 +12,10 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDataDeletionResults, IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
 import { schemaRequestType } from '@credebl/enum/enum';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -130,6 +130,7 @@ export class EcosystemService extends BaseService {
     const payload = { invitationId };
     return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
   }
+
   async acceptRejectEcosystemInvitaion(
     acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
     userEmail: string
@@ -205,4 +206,10 @@ export class EcosystemService extends BaseService {
     const payload = { ecosystemId, endorsementId, orgId };
     return this.sendNatsMessage(this.serviceProxy, 'decline-endorsement-transaction', payload);
   }
+
+  async deleteEcosystemAsMember(orgId: string, userDetails: user): Promise<IEcosystemDataDeletionResults> {
+    const payload = { orgId, userDetails };
+    return this.sendNats(this.serviceProxy, 'delete-ecosystems-as-member', payload);
+  }
+
 }

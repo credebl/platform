@@ -606,9 +606,9 @@ export class IssuanceRepository {
       
         if (1 === referencedTables.length) {
           if (referencedTables.includes(`${PrismaTables.PRESENTATIONS}`)) {
-            errorMessage += `${ResponseMessages.verification.error.removeVerificationData}`;
+            errorMessage += `, ${ResponseMessages.verification.error.removeVerificationData}`;
           } else if (referencedTables.includes(`${PrismaTables.ECOSYSTEM_ORGS}`)) {
-            errorMessage += `${ResponseMessages.ecosystem.error.removeEcosystemData}`;
+            errorMessage += `, ${ResponseMessages.ecosystem.error.removeEcosystemData}`;
           }
         } else if (2 === referencedTables.length) {
           errorMessage += ', first you have to remove verification data and ecosystem data';

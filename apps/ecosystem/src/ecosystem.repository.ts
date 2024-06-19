@@ -495,11 +495,12 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async getEcosystemRole(name: string): Promise<ecosystem_roles> {
     try {
-      return this.prisma.ecosystem_roles.findFirst({
+      const getEcosytemRoles = this.prisma.ecosystem_roles.findFirst({
         where: {
           name
         }
       });
+      return getEcosytemRoles;
     } catch (error) {
       this.logger.error(`getEcosystemRole: ${JSON.stringify(error)}`);
       throw error;

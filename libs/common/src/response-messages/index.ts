@@ -347,7 +347,7 @@ export const ResponseMessages = {
             batchEmailSend: 'Unable to send email in batches',
             emailSend: 'Unable to send email to the user',
             verificationRecordsNotFound: 'Verification records does not exists',
-            removeVerificationData: ', first you have to remove verification data'
+            removeVerificationData: 'First you have to remove verification data'
         }
     },
     ecosystem: {
@@ -430,7 +430,7 @@ export const ResponseMessages = {
             ecosystemMembersNotExists: 'Ecosystem members does not exists',
             notAbleToDeleteEcosystem: 'You cannot delete the ecosystem, because you are the ecosystem lead',
             ecosystemNotExists: 'Ecosystem does not exists',
-            removeEcosystemData: ', first you have to remove ecosystem data'
+            removeEcosystemData: 'First you have to remove ecosystem data'
         }
     },
     bulkIssuance: {

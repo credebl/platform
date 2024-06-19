@@ -1815,6 +1815,7 @@ export class AgentServiceService {
       return schemaRequest;
     } catch (error) {
       this.logger.error(`Error in createW3CSchema request in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

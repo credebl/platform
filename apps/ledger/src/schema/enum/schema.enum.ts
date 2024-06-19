@@ -13,3 +13,7 @@ export enum SortFields {
 export enum W3CSchemaVersion {
     W3C_SCHEMA_VERSION = 'draft-07'
 }
+
+export enum JSONSchemaType {
+        POLYGON_W3C = 'polygon-w3c'
+}

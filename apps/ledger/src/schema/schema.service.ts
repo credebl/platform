@@ -22,7 +22,8 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
-import { W3CSchemaVersion } from './enum/schema.enum';
+import { JSONSchemaType, W3CSchemaVersion } from './enum/schema.enum';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -248,6 +249,8 @@ export class SchemaService extends BaseService {
 
   async createW3CSchema(orgId:string, schemaPayload: SchemaPayload, user: string): Promise<string> {
     try {
+      schemaPayload.jsonSchemaType = JSONSchemaType.POLYGON_W3C; // This value should from user
+      let createSchema;
       const isSchemaExist = await this.schemaRepository.schemaExists(schemaPayload.schemaName, W3CSchemaVersion.W3C_SCHEMA_VERSION);
       if (0 !== isSchemaExist.length) {
         throw new ConflictException(ResponseMessages.schema.error.exists);
@@ -285,14 +288,23 @@ export class SchemaService extends BaseService {
         did,
         schemaName
       };
-
       const W3cSchemaPayload = {
         url,
         orgId,
         schemaRequestPayload: agentSchemaPayload
       };
-      const createSchema = await this._createW3CSchema(W3cSchemaPayload);
-     const storeW3CSchema = await this.storeW3CSchemas(createSchema.response, user, orgId);
+      if (schemaPayload.jsonSchemaType === JSONSchemaType.POLYGON_W3C) {
+        const createSchemaPayload = await this._createW3CSchema(W3cSchemaPayload);
+        createSchema = createSchemaPayload.response;
+      } else {
+        const createSchemaPayload = await this._createW3CledgerAgnostic(schemaObject);
+        createSchema = createSchemaPayload.data;
+        createSchema.did = did;
+        createSchema.schemaUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${createSchemaPayload.schemaId}`;
+        
+      }
+     
+     const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId);
 
      if (!storeW3CSchema) {
       throw new ConflictException(ResponseMessages.schema.error.storeW3CSchema, {
@@ -301,10 +313,10 @@ export class SchemaService extends BaseService {
       });
      }
       
-      return createSchema.response;
+      return createSchema;
     } catch (error) {
       this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ?? error);
     }
   }
 
@@ -335,7 +347,7 @@ export class SchemaService extends BaseService {
    
      const schemaNameObject = {}; 
      schemaNameObject[schemaName] = {
-     "const": schemaName
+     'const': schemaName
      };
      const date = new Date().toISOString();
      
@@ -492,15 +504,11 @@ export class SchemaService extends BaseService {
     return W3CSchema;
   }
   
-   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-   private async storeW3CSchemas(schemaDetails, user, orgId) {
-
+   private async storeW3CSchemas(schemaDetails, user, orgId): Promise <schema> {
     const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
-
     const schemaRequest = await this.commonService
     .httpGet(schemaServerUrl)
     .then(async (response) => response);
-  
     if (!schemaRequest) {
       throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
         cause: new Error(),
@@ -509,7 +517,6 @@ export class SchemaService extends BaseService {
     }
   const schemaAttributeJson = schemaRequest.definitions.credentialSubject.properties;
   const extractedData = [];
-  
   for (const key in schemaAttributeJson) {
       if (2 < Object.keys(schemaAttributeJson[key]).length) {
           const { type, title } = schemaAttributeJson[key];
@@ -520,7 +527,7 @@ export class SchemaService extends BaseService {
       }
   }
   const indyNamespace = schemaDetails?.did.includes(':testnet:') ? 'polygon:testnet' : 'polygon';
-  const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
+  const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace); // Need to handle this for web and key
 
     const storeSchemaDetails = {
         schema: {
@@ -586,11 +593,43 @@ export class SchemaService extends BaseService {
         ).toPromise()
         .catch(error => {
           this.logger.error(`Error in creating W3C schema : ${JSON.stringify(error)}`);
-          throw new Error(error.error ? error.error.message : error.message);
+          throw new HttpException(
+            {
+              status: error.error.code,  
+              error: error.message,
+              message: error.error.message.error.message
+            }, error.error);
         });
       return W3CSchemaResponse;  
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  async _createW3CledgerAgnostic(payload) {
+    const schemaResourceId = uuidv4();
+
+    const schemaPayload = JSON.stringify({
+      schemaId: `${schemaResourceId}`,
+      schema: payload
+    });
+
+    try {
+      const jsonldSchemaResponse = await this.commonService.httpPost(
+        `${process.env.SCHEMA_FILE_SERVER_URL}`,
+        schemaPayload,
+        {
+          headers: {
+            authorization: `Bearer ${process.env.SCHEMA_FILE_SERVER_TOKEN}`,
+            'Content-Type': 'application/json' // Added to specify JSON content type
+          }
+        }
+      );
+  
+      return jsonldSchemaResponse;
+    } catch (error) {
+      this.logger.error('Error creating W3C ledger agnostic schema:', error);
+      throw new Error(`Failed to create W3C ledger agnostic schema: ${error.message}`);
+    }
+  }
 
   async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
     

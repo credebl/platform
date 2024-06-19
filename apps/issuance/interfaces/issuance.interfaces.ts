@@ -316,3 +316,14 @@ export interface IQueuePayload{
   isRetry: boolean;
   isLastData: boolean;
 }
+
+export interface ISchemaAttributes {
+  attributeName: string;
+  schemaDataType: string;
+  displayName: string;
+  isRequired: boolean;
+}
+
+export interface IIssuanceAttributes {
+  [key: string]: string;
+}

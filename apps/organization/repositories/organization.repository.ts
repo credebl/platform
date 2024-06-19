@@ -8,7 +8,7 @@ import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
-import { Invitation, SortValue } from '@credebl/enum/enum';
+import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
@@ -767,16 +767,16 @@ export class OrganizationRepository {
     deleteOrg: IDeleteOrganization
   }> {
     const tablesToCheck = [
-        'org_agents',
-        'org_dids',
-        'agent_invitations',
-        'connections',
-        'credentials',
-        'presentations',
-        'ecosystem_invitations',
-        'ecosystem_orgs',
-        'file_upload',
-        'notification'
+        `${PrismaTables.ORG_AGENTS}`,
+        `${PrismaTables.ORG_DIDS}`,
+        `${PrismaTables.AGENT_INVITATIONS}`,
+        `${PrismaTables.CONNECTIONS}`,
+        `${PrismaTables.CREDENTIALS}`,
+        `${PrismaTables.PRESENTATIONS}`,
+        `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
+        `${PrismaTables.ECOSYSTEM_ORGS}`,
+        `${PrismaTables.FILE_UPLOAD}`,
+        `${PrismaTables.NOTIFICATION}`
     ];
 
     try {
@@ -811,6 +811,16 @@ export class OrganizationRepository {
             const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
 
             const deletedOrgInvitations = await prisma.org_invitations.deleteMany({ where: { orgId: id } });
+
+            await this.prisma.schema.updateMany({
+              where: { orgId: id },
+              data: { orgId: null }
+            });
+        
+            await this.prisma.credential_definition.updateMany({
+              where: { orgId: id },
+              data: { orgId: null }
+            });
 
             // If no references are found, delete the organization
             const deleteOrg = await prisma.organisation.delete({ where: { id } });

@@ -13,7 +13,8 @@ import {
   Get,
   UseFilters,
   Param,
-  Delete
+  Delete,
+  ParseUUIDPipe
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -43,7 +44,7 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { validateDid } from '@credebl/common/did.validator';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
-import { AgentSpinupValidator } from '@credebl/common/cast.helper';
+import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 
 const seedLength = 32;
@@ -307,7 +308,7 @@ export class AgentController {
   @Roles(OrgRoles.OWNER)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async deleteWallet(
-    @Param('orgId') orgId: string,
+    @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {

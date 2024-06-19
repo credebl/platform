@@ -27,6 +27,7 @@ import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -544,7 +545,7 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'))
   @Roles(OrgRoles.OWNER)
   async deleteOrganization(
-    @Param('orgId') orgId: string, 
+    @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
     @User() user: user,
     @Res() res: Response
     ): Promise<Response> {

@@ -13,7 +13,8 @@ import {
   Get,
   UseFilters,
   Param,
-  Delete
+  Delete,
+  ParseUUIDPipe
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -307,7 +308,7 @@ export class AgentController {
   @Roles(OrgRoles.OWNER)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async deleteWallet(
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {

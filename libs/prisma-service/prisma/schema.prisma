@@ -108,7 +108,7 @@ model organisation {
   registrationNumber    String?                 @db.VarChar(100)
   country               String?                 @db.VarChar(100)
   city                  String?                 @db.VarChar(100)
-  state                 String?                  @db.VarChar(100)
+  state                 String?                 @db.VarChar(100)
   connections           connections[]
   credentials           credentials[]
   org_agents            org_agents[]
@@ -267,8 +267,8 @@ model schema {
   schemaLedgerId        String                  @db.VarChar
   publisherDid          String                  @db.VarChar
   issuerId              String                  @db.VarChar
-  orgId                 String                  @db.Uuid
-  organisation          organisation            @relation(fields: [orgId], references: [id])
+  orgId                 String?                 @db.Uuid
+  organisation          organisation?           @relation(fields: [orgId], references: [id], onDelete: SetNull)
   ledgers               ledgers?                @relation(fields: [ledgerId], references: [id])
   ledgerId              String?                 @db.Uuid
   type                  String?                 @db.VarChar
@@ -286,7 +286,7 @@ model credential_definition {
   schemaLedgerId         String        @db.VarChar
   schemaId               String        @db.Uuid
   revocable              Boolean       @default(false)
-  organisation           organisation? @relation(fields: [orgId], references: [id])
+  organisation           organisation? @relation(fields: [orgId], references: [id], onDelete: SetNull)
   orgId                  String?       @db.Uuid
   schema                 schema        @relation(fields: [schemaId], references: [id])
 }

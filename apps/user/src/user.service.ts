@@ -1217,6 +1217,17 @@ export class UserService {
     }
   }
 
+  async getUserDetails(userId: string): Promise<string> {
+    try {
+      const getUserDetails = await this.userRepository.getUserDetailsByUserId(userId);
+      const userEmail = getUserDetails.email;
+      return userEmail;
+    } catch (error) {
+      this.logger.error(`In get user details by user Id : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
     try {
      

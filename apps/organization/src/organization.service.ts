@@ -1447,6 +1447,15 @@ export class OrganizationService {
     }
   }
 
+  async getOrgDetails(orgId: string): Promise<organisation> {
+    try {
+      const orgDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+      return orgDetails;
+    } catch (error) {
+      this.logger.error(`in getting organization details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 
   async getOrgOwner(orgId: string): Promise<IOrganization> {
     try {

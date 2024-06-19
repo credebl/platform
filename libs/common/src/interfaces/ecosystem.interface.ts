@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 interface EcosystemRole {
     id: string;
     name: string;
@@ -50,4 +52,10 @@ interface Ecosystem {
     createdBy: string;
     type?: string;
   }
-    
+  
+  export interface IEcosystemDataDeletionResults {
+    deletedEcosystemUsers: Prisma.BatchPayload;
+    deleteEndorsementTransactions: Prisma.BatchPayload;
+    deletedEcosystemOrgs: Prisma.BatchPayload;
+    deletedEcosystems: Prisma.BatchPayload;
+  }

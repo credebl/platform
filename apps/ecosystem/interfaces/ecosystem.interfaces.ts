@@ -413,7 +413,40 @@ export interface IEcosystemOrgDetails {
   ecosystemOrgs: IEcosystemOrgsData[];
 }
 
-
 export interface IEcosystemEndorsementFlag {
   autoEndorsement: boolean;
+}
+
+
+interface IEcosystemRole {
+  id: string;
+  name: string;
+  description: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+}
+
+interface IEcosystemMemberOrgs extends IEcosystemOrgs{
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+  ecosystemRole: IEcosystemRole;
+}
+
+export interface IEcosystemData {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: Prisma.JsonValue;
+  ecosystemOrgs: IEcosystemMemberOrgs[];
 }

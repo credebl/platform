@@ -592,7 +592,7 @@ export class IssuanceRepository {
 
   async deleteIssuanceRecordsByOrgId(orgId: string): Promise<IDeletedIssuanceRecords> {
     try {
-      const tablesToCheck = [`${PrismaTables.PRESENTATIONS}`];
+      const tablesToCheck = [`${PrismaTables.PRESENTATIONS}`, `${PrismaTables.ECOSYSTEM_ORGS}`];
 
       const referenceCounts = await Promise.all(
         tablesToCheck.map((table) => this.prisma[table].count({ where: { orgId } }))
@@ -603,7 +603,19 @@ export class IssuanceRepository {
         .filter(Boolean);
 
       if (0 < referencedTables.length) {
-        throw new ConflictException(`Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`);
+        let errorMessage = `Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`;
+      
+        if (1 === referencedTables.length) {
+          if (referencedTables.includes(`${PrismaTables.PRESENTATIONS}`)) {
+            errorMessage += `, ${ResponseMessages.verification.error.removeVerificationData}`;
+          } else if (referencedTables.includes(`${PrismaTables.ECOSYSTEM_ORGS}`)) {
+            errorMessage += `, ${ResponseMessages.ecosystem.error.removeEcosystemData}`;
+          }
+        } else if (2 === referencedTables.length) {
+          errorMessage += ', first you have to remove verification data and ecosystem data';
+        }
+      
+        throw new ConflictException(errorMessage);
       }
 
       return await this.prisma.$transaction(async (prisma) => {  

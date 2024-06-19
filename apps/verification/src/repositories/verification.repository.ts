@@ -1,12 +1,12 @@
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { PrismaService } from '@credebl/prisma-service';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client';
 import { IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
-import { SortValue } from '@credebl/enum/enum';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
 
 @Injectable()
 export class VerificationRepository {
@@ -218,6 +218,20 @@ export class VerificationRepository {
 
   async deleteVerificationRecordsByOrgId(orgId: string): Promise<IVerificationRecords> {
     try {
+      const tablesToCheck = [`${PrismaTables.ECOSYSTEM_ORGS}`];
+
+      const referenceCounts = await Promise.all(
+        tablesToCheck.map((table) => this.prisma[table].count({ where: { orgId } }))
+      );
+
+      const referencedTables = referenceCounts
+        .map((count, index) => (0 < count ? tablesToCheck[index] : null))
+        .filter(Boolean);
+
+      if (0 < referencedTables.length) {
+        throw new ConflictException(`Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}, first you have to remove ecosystem data`);
+      }
+
       return await this.prisma.$transaction(async (prisma) => {  
 
         const recordsToDelete = await this.prisma.presentations.findMany({

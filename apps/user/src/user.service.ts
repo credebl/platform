@@ -439,7 +439,7 @@ export class UserService {
 
     try {
         try {
-          const data = jwt.decode(refreshToken);
+          const data = jwt.decode(refreshToken) as jwt.JwtPayload;
           const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
           const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken, userByKeycloakId?.['clientId'], userByKeycloakId?.['clientSecret']);
           return tokenResponse;

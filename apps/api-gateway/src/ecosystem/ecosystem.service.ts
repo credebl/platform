@@ -207,9 +207,9 @@ export class EcosystemService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'decline-endorsement-transaction', payload);
   }
 
-  async deleteEcosystems(orgId: string, userDetails: user): Promise<IEcosystemDataDeletionResults> {
+  async deleteEcosystemAsMember(orgId: string, userDetails: user): Promise<IEcosystemDataDeletionResults> {
     const payload = { orgId, userDetails };
-    return this.sendNats(this.serviceProxy, 'delete-ecosystems', payload);
+    return this.sendNats(this.serviceProxy, 'delete-ecosystems-as-member', payload);
   }
 
 }

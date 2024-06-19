@@ -679,13 +679,13 @@ export class EcosystemController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER)
   @ApiBearerAuth()
-  async deleteEcosystems(
+  async deleteEcosystemAsMember(
     @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
     @Res() res: Response,
     @User() user: user
   ): Promise<Response> {
 
-    await this.ecosystemService.deleteEcosystems(orgId, user);
+    await this.ecosystemService.deleteEcosystemAsMember(orgId, user);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,

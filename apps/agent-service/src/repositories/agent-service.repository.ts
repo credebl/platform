@@ -2,7 +2,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { Prisma, ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace, OrgDid } from '../interface/agent-service.interface';
+import { ICreateOrgAgent, ILedgers, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace, OrgDid } from '../interface/agent-service.interface';
 import { AgentType } from '@credebl/enum/enum';
 
 @Injectable()
@@ -508,5 +508,19 @@ export class AgentServiceRepository {
         throw error;
     }
 }
+
+    async getLedger(name: string): Promise<ILedgers> {
+        try {
+          const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
+            where: {
+             name
+            }
+          });
+          return ledgerData;
+        } catch (error) {
+          this.logger.error(`[getLedger] - get org ledger: ${JSON.stringify(error)}`);
+          throw error;
+        }
+      }
 
 }

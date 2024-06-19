@@ -26,7 +26,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { Invitation, transition } from '@credebl/enum/enum';
+import { DidMethod, Invitation, Ledgers, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -200,25 +200,55 @@ export class OrganizationService {
       if (!didDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
       }
+      
+      const dids = await this.organizationRepository.getDids(orgId);
+      const noPrimaryDid = dids.every(orgDids => false === orgDids.isPrimaryDid);
+
+      let existingPrimaryDid;
+      let priviousDidFalse;
+      if (!noPrimaryDid) {
+        existingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
+        
+        if (!existingPrimaryDid) {
+          throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+        }
+  
+        priviousDidFalse = await this.organizationRepository.setPreviousDidFlase(existingPrimaryDid.id);
+      } 
+
+      const didParts = did.split(':');
+      let nameSpace: string | null = null;
+        
+      // This condition will handle the multi-ledger support
+      if (DidMethod.INDY === didParts[1]) {
+        nameSpace = `${didParts[2]}:${didParts[3]}`;
+      } else if (DidMethod.POLYGON === didParts[1]) {
+        nameSpace = `${didParts[1]}:${didParts[2]}`;
+      } else {
+        nameSpace = null;
+      }
+
+      let network;
+      if (null !== nameSpace) {
+        network = await this.organizationRepository.getNetworkByNameSpace(nameSpace);
+      } else {
+        network = await this.organizationRepository.getLedger(Ledgers.Not_Applicable);
+        if (!network) {
+          throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound);
+        }
+      }
+
       const primaryDidDetails: IPrimaryDidDetails = {
         did,
         orgId,
         id,
-        didDocument: didDetails.didDocument
+        didDocument: didDetails.didDocument,
+        networkId: network?.id ?? null
       };
 
-      
-      const getExistingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
-      
-     if (!getExistingPrimaryDid) {
-       throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
-     }
-
-      const setPriviousDidFalse = await this.organizationRepository.setPreviousDidFlase(getExistingPrimaryDid.id);
-      
       const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
 
-      await Promise.all([setPrimaryDid, getExistingPrimaryDid, setPriviousDidFalse]);
+      await Promise.all([setPrimaryDid, existingPrimaryDid, priviousDidFalse]);
 
 
       return ResponseMessages.organisation.success.primaryDid;

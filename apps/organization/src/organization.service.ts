@@ -231,7 +231,7 @@ export class OrganizationService {
       if (null !== nameSpace) {
         network = await this.organizationRepository.getNetworkByNameSpace(nameSpace);
       } else {
-        network = await this.organizationRepository.getLedger(Ledgers.NA);
+        network = await this.organizationRepository.getLedger(Ledgers.Not_Applicable);
         if (!network) {
           throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound);
         }

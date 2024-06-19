@@ -1132,7 +1132,7 @@ export class AgentServiceService {
       const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(network);
       await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
     } else {
-      const noLedgerData = await this.agentServiceRepository.getLedger(Ledgers.NA);
+      const noLedgerData = await this.agentServiceRepository.getLedger(Ledgers.Not_Applicable);
       if (!noLedgerData) {
         throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound);
       }

@@ -395,7 +395,8 @@ export class OrganizationService {
   }
 
   async deleteClientCredentials(orgId: string, user: user): Promise<string> {
-    const token = await this.clientRegistrationService.getManagementToken(user.clientId, user.clientSecret);
+    const getUser = await this.organizationRepository.getUser(user?.id);
+    const token = await this.clientRegistrationService.getManagementToken(getUser.clientId, getUser.clientSecret);
 
     const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
 
@@ -755,7 +756,8 @@ export class OrganizationService {
         return this.orgRoleService.getOrgRoles();
       }
 
-      const token = await this.clientRegistrationService.getManagementToken(user.clientId, user.clientSecret);
+      const getUser = await this.organizationRepository.getUser(user?.id);
+      const token = await this.clientRegistrationService.getManagementToken(getUser?.clientId, getUser?.clientSecret);
 
       return this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
     } catch (error) {
@@ -1475,9 +1477,10 @@ export class OrganizationService {
   
   async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     try {
+      const getUser = await this.organizationRepository.getUser(user?.id);
       // Fetch token and organization details in parallel
       const [token, organizationDetails] = await Promise.all([
-        this.clientRegistrationService.getManagementToken(user.clientId, user.clientSecret),
+        this.clientRegistrationService.getManagementToken(getUser?.clientId, getUser?.clientSecret),
         this.organizationRepository.getOrganizationDetails(orgId)
       ]);
   

@@ -532,11 +532,11 @@ export class EcosystemController {
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
     async addOrganizationsInEcosystem(
       @Body() addOrganizationsDto: AddOrganizationsDto,
-      @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }})) ecosystemId: string,
+      @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }}), TrimStringParamPipe) ecosystemId: string,
       @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
       @User() user: user,
       @Res() res: Response
-    ): Promise<Response> {
+    ): Promise<Response> {  
   
       addOrganizationsDto.ecosystemId = ecosystemId;
       addOrganizationsDto.orgId = orgId;
@@ -669,6 +669,27 @@ export class EcosystemController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction,
       data: response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/:orgId/ecosystems')
+  @ApiOperation({ summary: 'Delete ecosystems', description: 'Delete ecosystems by orgId' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER)
+  @ApiBearerAuth()
+  async deleteEcosystemAsMember(
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+    @Res() res: Response,
+    @User() user: user
+  ): Promise<Response> {
+
+    await this.ecosystemService.deleteEcosystemAsMember(orgId, user);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.deleteEcosystemMember
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

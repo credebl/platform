@@ -1171,7 +1171,7 @@ export class UserService {
       const userEmail = getUserDetails.email;
       return userEmail;
     } catch (error) {
-      this.logger.error(`In get user details bu user Id : ${JSON.stringify(error)}`);
+      this.logger.error(`In get user details by user Id : ${JSON.stringify(error)}`);
       throw error;
     }
   }

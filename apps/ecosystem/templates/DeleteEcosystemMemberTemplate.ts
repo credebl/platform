@@ -27,7 +27,7 @@ export class DeleteEcosystemMemberTemplate {
                   Hello ${email},
               </p>
               <p>
-              We would like to inform you that the organization“${orgName}”, has removed their participation from the "${ecosystemName}" ecsosystem on CREDEBL.
+              We would like to inform you that the organization“${orgName}”, has removed their participation as a member from the "${ecosystemName}" ecsosystem on CREDEBL.
 
               <hr style="border-top:1px solid #e8e8e8" />
               <footer style="padding-top: 10px;">

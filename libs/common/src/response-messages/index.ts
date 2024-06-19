@@ -344,7 +344,8 @@ export const ResponseMessages = {
             platformConfigNotFound: 'Platform config not found',
             batchEmailSend: 'Unable to send email in batches',
             emailSend: 'Unable to send email to the user',
-            verificationRecordsNotFound: 'Verification records does not exists'
+            verificationRecordsNotFound: 'Verification records does not exists',
+            removeVerificationData: ', first you have to remove verification data'
         }
     },
     ecosystem: {
@@ -426,7 +427,8 @@ export const ResponseMessages = {
             orgEcoIdRequired: 'OrgId & EcosystemId is required',
             ecosystemMembersNotExists: 'Ecosystem members does not exists',
             notAbleToDeleteEcosystem: 'You cannot delete the ecosystem, because you are the ecosystem lead',
-            ecosystemNotExists: 'Ecosystem does not exists'
+            ecosystemNotExists: 'Ecosystem does not exists',
+            removeEcosystemData: ', first you have to remove ecosystem data'
         }
     },
     bulkIssuance: {

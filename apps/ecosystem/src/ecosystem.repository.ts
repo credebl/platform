@@ -1418,26 +1418,6 @@ export class EcosystemRepository {
     }
   }
 
-  async getEcosystemLeadOrgDetails(orgId: string): Promise<{
-    name: string;
-  }> {
-    try {
-      const orgName = await this.prisma.organisation.findUnique({
-        where: {
-          id: orgId
-        },
-        select: {
-          name: true
-        }
-      });
-
-      return orgName;
-    } catch (error) {
-      this.logger.error(`Error in getting organization names: ${error.message}`);
-      throw error;
-    }
-  }
-
   async deleteEcosystemInvitations(orgId: string): Promise<Prisma.BatchPayload> {
     try {
       const deletedEcosystemInvitations = await this.prisma.ecosystem_invitations.deleteMany({

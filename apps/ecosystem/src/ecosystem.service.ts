@@ -79,6 +79,7 @@ import { W3CSchemaPayload } from 'apps/ledger/src/schema/interfaces/schema-paylo
 import { OrgRoles } from 'libs/org-roles/enums';
 import { DeleteEcosystemMemberTemplate } from '../templates/DeleteEcosystemMemberTemplate';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { IOrgData } from '@credebl/common/interfaces/organization.interface';
 
 @Injectable()
 export class EcosystemService {
@@ -2049,6 +2050,25 @@ export class EcosystemService {
     return isEmailSent;
   }
 
+  async _getOrgData(orgId: string): Promise<IOrgData> {
+    const pattern = { cmd: 'get-organization-details' };
+    const payload = { orgId };
+    const orgData = await this.ecosystemServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+    return orgData;
+  }
+
   async _getUsersDetails(userId: string): Promise<string> {
     const pattern = { cmd: 'get-user-details-by-userId' };
     const payload = { userId };
@@ -2118,13 +2138,13 @@ export class EcosystemService {
 
       const getLeadEmailId = await this._getUsersDetails(getLeadUserId);
 
-      const getOrgName = await this.ecosystemRepository.getOrgName(orgId);
+      const getOrgName = await this._getOrgData(orgId);
 
       let deleteEcosystems;
       if (getEcosystemMemberRoleOrgIds?.includes(orgId)) {
         deleteEcosystems = await this.ecosystemRepository.deleteEcosystems(orgId);
         await this.ecosystemRepository.deleteEcosystemInvitations(orgId);
-        await this.sendMailToEcosystemMembers(getLeadEmailId, getOrgName?.name, getEcosystemDetails?.name);
+        await this.sendMailToEcosystemMembers(getLeadEmailId, getOrgName?.['name'], getEcosystemDetails?.name);
       }
 
       const ecosystemDataCount = {

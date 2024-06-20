@@ -1,5 +1,6 @@
 import { NATSReconnects } from '@credebl/enum/enum';
 import { Authenticator, nkeyAuthenticator } from 'nats';
+import { CommonConstants } from './common.constant';
 
 export const getNatsOptions = (
   nkeySeed?: string, serviceName?: string
@@ -13,16 +14,25 @@ export const getNatsOptions = (
   const baseOptions = {
     servers: `${process.env.NATS_URL}`.split(','),
     maxReconnectAttempts: NATSReconnects.maxReconnectAttempts,
-    reconnectTimeWait: NATSReconnects.reconnectTimeWait
+    reconnectTimeWait: NATSReconnects.reconnectTimeWait,
+    queue: `${CommonConstants.API_GATEWAY_SERVICE}`
   };
 
   if (nkeySeed) {
     return {
       ...baseOptions,
-      authenticator: nkeyAuthenticator(new TextEncoder().encode(nkeySeed)),
-      queue: serviceName
+      authenticator: nkeyAuthenticator(new TextEncoder().encode(nkeySeed))
+      // queue: `${CommonConstants.API_GATEWAY_SERVICE}`
     };
-  }
+  } 
+  // else if (nkeySeed && serviceName) {
+  //   return {
+  //     ...baseOptions,
+  //     authenticator: nkeyAuthenticator(new TextEncoder().encode(nkeySeed)),
+  //     queue: serviceName
+  //   };
+
+  // }
 
   return baseOptions;
 };

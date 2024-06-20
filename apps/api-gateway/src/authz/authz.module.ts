@@ -19,6 +19,7 @@ import { VerificationService } from '../verification/verification.service';
 import { EcosystemService } from '../ecosystem/ecosystem.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { OrganizationService } from '../organization/organization.service';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { OrganizationService } from '../organization/organization.service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED, CommonConstants.AUTH_SERVICE)
       },
       CommonModule
     ]),

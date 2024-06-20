@@ -11,13 +11,14 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { CacheModule } from '@nestjs/cache-manager';
 import { UserActivityService } from '@credebl/user-activity';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { CommonConstants } from '@credebl/common/common.constant';
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED)
+        options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED, CommonConstants.VERIFICATION_SERVICE)
 
       }
     ]),

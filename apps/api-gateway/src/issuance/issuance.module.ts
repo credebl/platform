@@ -7,6 +7,7 @@ import { HttpModule } from '@nestjs/axios';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
 import { AwsService } from '@credebl/aws';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { AwsService } from '@credebl/aws';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED, CommonConstants.ISSUANCE_SERVICE)
       }
     ])
   ],

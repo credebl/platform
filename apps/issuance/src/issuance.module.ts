@@ -15,6 +15,7 @@ import * as redisStore from 'cache-manager-redis-store';
 import { BulkIssuanceProcessor } from './issuance.processor';
 import { AwsService } from '@credebl/aws';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.ISSUANCE_NKEY_SEED)
+        options: getNatsOptions(process.env.ISSUANCE_NKEY_SEED, CommonConstants.ISSUANCE_SERVICE)
       }
     ]),
     CommonModule,

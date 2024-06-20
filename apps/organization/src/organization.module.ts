@@ -19,13 +19,14 @@ import { ClientRegistrationService } from '@credebl/client-registration';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 
 import { AwsService } from '@credebl/aws';
+import { CommonConstants } from '@credebl/common/common.constant';
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.ORGANIZATION_NKEY_SEED)
+        options: getNatsOptions(process.env.ORGANIZATION_NKEY_SEED, CommonConstants.ORGANIZATION_SERVICE)
       }
     ]),
     CommonModule,

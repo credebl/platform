@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { SchemaController } from './schema.controller';
 import { SchemaService } from './schema.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED, CommonConstants.SCHEMA_SERVICE)
 
       }
     ])

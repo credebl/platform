@@ -3,6 +3,7 @@ import { ConnectionController } from './connection.controller';
 import { ConnectionService } from './connection.service';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
     imports: [
@@ -11,7 +12,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
             {
                 name: 'NATS_CLIENT',
                 transport: Transport.NATS,
-                options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+                options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED, CommonConstants.CONNECTION_SERVICE)
               }
         ])
     ],

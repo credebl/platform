@@ -2128,6 +2128,7 @@ export class EcosystemService {
       const getOrgName = await this._getOrgData(orgId);
 
       let deleteEcosystems;
+      
       if (getEcosystemMemberRoleOrgIds?.includes(orgId)) {
         deleteEcosystems = await this.ecosystemRepository.deleteMemberOrgFromEcosystem(orgId);
         await this.ecosystemRepository.deleteEcosystemInvitations(orgId);

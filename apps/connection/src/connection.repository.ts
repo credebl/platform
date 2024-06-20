@@ -6,6 +6,7 @@ import { IConnectionSearchCriteria, ICreateConnection, OrgAgent } from './interf
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IConnectionsListCount, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { ResponseMessages } from '@credebl/common/response-messages';
 // import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
 export class ConnectionRepository {
@@ -331,9 +332,21 @@ export class ConnectionRepository {
           .filter(Boolean);
 
         if (0 < referencedTables.length) {
-          throw new ConflictException(`Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`);
+          let errorMessage = `Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`;
+        
+          if (1 === referencedTables.length) {
+            if (referencedTables.includes(`${PrismaTables.PRESENTATIONS}`)) {
+              errorMessage += `, ${ResponseMessages.verification.error.removeVerificationData}`;
+            } else if (referencedTables.includes(`${PrismaTables.CREDENTIALS}`)) {
+              errorMessage += `, ${ResponseMessages.issuance.error.removeIssuanceData}`;
+            }
+          } else if (2 === referencedTables.length) {
+            errorMessage += `, ${ResponseMessages.connection.error.removeConnectionReferences}`;
+          }
+        
+          throw new ConflictException(errorMessage);
         }
-
+  
         const getConnectionRecords = await prisma.connections.findMany(
           { 
             where: { 

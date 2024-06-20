@@ -123,6 +123,7 @@ model organisation {
   ecosystemOrgs         ecosystem_orgs[]
 }
 
+
 model org_invitations {
   id                  String       @id @default(uuid()) @db.Uuid
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
@@ -541,4 +542,40 @@ enum RecordType {
   ORGANIZATION
   WALLET
   INVITATION
+}
+
+model countries {
+  id              Int       @id @default(autoincrement())          @map("id")  
+  name            String    @db.VarChar(100)                       @map("name")
+  states          states[]                                         
+  cities          cities[]  
+  organisation    organisation[]                               
+  @@map("countries")
+}
+
+model states {
+  id              Int       @id @default(autoincrement())              @map("id")           
+  name            String    @db.VarChar(255)                           @map("name")
+  countryId       Int                                                 @map("country_id")
+  countryCode     String    @db.Char(2)                                @map("country_code")
+  countries       countries @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  cities          cities[]
+  organisation    organisation[]                               
+
+  @@map("states")
+}
+model cities {
+  id          Int       @id @default(autoincrement())           @map("id")
+  name        String    @db.VarChar(255)                       @map("name")
+  stateId     Int                                               @map("state_id")
+  stateCode   String    @db.VarChar(255)                        @map("state_code")
+  countryId   Int                                               @map("country_id")
+  countryCode String    @db.Char(2)                             @map("country_code")
+  state       states    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  country     countries @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  organisation  organisation[]                               
+
+  @@index([stateId], name: "cities_stateId_idx")
+  @@index([countryId], name: "cities_countryId_idx")
+  @@map("cities")
 }

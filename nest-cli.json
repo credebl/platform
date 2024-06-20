@@ -286,6 +286,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/notification/tsconfig.app.json"
       }
+    },
+    "geo-location": {
+      "type": "application",
+      "root": "apps/geo-location",
+      "entryFile": "main",
+      "sourceRoot": "apps/geo-location/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/geo-location/tsconfig.app.json"
+      }
     }
   }
 }

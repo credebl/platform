@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
@@ -53,21 +53,24 @@ export class CreateOrganizationDto {
   @IsString({ message: 'registrationNumber must be in string format.' })
   registrationNumber?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'country must be in string format.' })
-  country?: string;
+  @ApiProperty({ example: 'IN' })
+  @IsNotEmpty({ message: 'country is required' })
+  @MinLength(2, { message: 'country must be at least 2 characters' })
+  @MaxLength(50, { message: 'country must be at most 50 characters' })
+  @IsNumber()
+  countryId?: number;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'state must be in string format.' })
-  state?: string;
+  @ApiProperty({ example: 'MH' })
+  @IsNotEmpty({ message: 'state is required' })
+  @MinLength(2, { message: 'state must be at least 2 characters' })
+  @MaxLength(50, { message: 'state must be at most 50 characters' })
+  @IsNumber()
+  stateId?: number;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'city must be in string format.' })
-  city?: string;
+  @ApiProperty({ example: 'Mumbai' })
+  @IsNotEmpty({ message: 'city is required' })
+  @MinLength(2, { message: 'city must be at least 2 characters' })
+  @MaxLength(50, { message: 'city must be at most 50 characters' })
+  @IsNumber()
+  cityId?: number;
 }

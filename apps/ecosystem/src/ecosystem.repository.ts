@@ -4,12 +4,13 @@ import { PrismaService } from '@credebl/prisma-service';
 import { Prisma, credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, org_roles, organisation, platform_config, schema, user_org_roles } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, IEcosystemInvitation, IEcosystemOrgs, IEcosystemOrgsData, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, IEcosystemData, IEcosystemInvitation, IEcosystemOrgs, IEcosystemOrgsData, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GetAllSchemaList, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { SortValue } from '@credebl/enum/enum';
+import { IEcosystemDataDeletionResults } from '@credebl/common/interfaces/ecosystem.interface';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -494,11 +495,12 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async getEcosystemRole(name: string): Promise<ecosystem_roles> {
     try {
-      return this.prisma.ecosystem_roles.findFirst({
+      const getEcosytemRoles = this.prisma.ecosystem_roles.findFirst({
         where: {
           name
         }
       });
+      return getEcosytemRoles;
     } catch (error) {
       this.logger.error(`getEcosystemRole: ${JSON.stringify(error)}`);
       throw error;
@@ -711,7 +713,6 @@ export class EcosystemRepository {
       });
       
   }
-
 
   async getEndorsementsWithPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
@@ -1366,6 +1367,116 @@ export class EcosystemRepository {
       return agent;
     } catch (error) {
       this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemsByOrgId(orgId: string): Promise<IEcosystemData[]> {
+    try {
+
+      const ecosystemsDetails = await this.prisma.ecosystem.findMany({
+        where: {
+          ecosystemOrgs: {
+            some: {
+              orgId
+            }
+          }
+          
+        },
+        include: {
+          ecosystemOrgs: {
+            include: {
+              ecosystemRole: true
+            }
+          }
+        }
+      });
+      
+      return ecosystemsDetails;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystems: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getOrgName(orgId: string): Promise<{
+    name: string;
+  }> {
+    try {
+      const orgName = await this.prisma.organisation.findUnique({
+        where: {
+          id: orgId
+        },
+        select: {
+          name: true
+        }
+      });
+
+      return orgName;
+    } catch (error) {
+      this.logger.error(`Error in getting organization names: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteEcosystemInvitations(orgId: string): Promise<Prisma.BatchPayload> {
+    try {
+      const deletedEcosystemInvitations = await this.prisma.ecosystem_invitations.deleteMany({
+        where: {
+          orgId
+        }
+      });
+
+      return deletedEcosystemInvitations;
+    } catch (error) {
+      this.logger.error(`Error in deleting ecosystem invitations: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteEcosystemAsMember(orgId: string): Promise<IEcosystemDataDeletionResults> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+        const deletedEcosystemUsers = await prisma.ecosystem_users.deleteMany({
+          where: {
+            ecosystem: {
+              ecosystemOrgs: {
+                some: {
+                  orgId
+                }
+              }
+            }
+          }
+        });
+
+        const deleteEndorsementTransactions = await prisma.endorsement_transaction.deleteMany({
+          where: {
+            ecosystemOrgs: {
+              orgId
+            }
+          }
+        });
+
+        const deletedEcosystemOrgs = await prisma.ecosystem_orgs.deleteMany({
+          where: {
+            orgId
+          }
+        });
+
+        const deletedEcosystems = await prisma.ecosystem.deleteMany({
+          where: {
+            ecosystemOrgs: {
+              some: {
+                orgId
+              }
+            }
+          }
+        });
+
+        return { deletedEcosystemUsers, deleteEndorsementTransactions, deletedEcosystemOrgs, deletedEcosystems };
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting ecosystems: ${error.message}`);
       throw error;
     }
   }

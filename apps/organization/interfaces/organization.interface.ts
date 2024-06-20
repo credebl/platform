@@ -233,3 +233,14 @@ export interface ILedgerDetails {
   networkUrl: string;
 
 }
+
+export interface IOrgRoleDetails {
+  id: string;
+  name: string;
+  description: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+}

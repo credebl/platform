@@ -221,3 +221,9 @@ export interface IUserDeletedActivity {
   deletedBy: string;
   deleteDateTime: Date;
 }
+
+export interface UserKeycloakId {
+  id: string;
+  keycloakUserId: string;
+  email: string;
+}

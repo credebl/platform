@@ -673,7 +673,7 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Delete('/:orgId/memberOrg')
+  @Delete('/:orgId/member-org')
   @ApiOperation({ summary: 'Delete organization from ecosystem as a ecosystem member', description: 'Delete organization from ecosystem as a ecosystem meber' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

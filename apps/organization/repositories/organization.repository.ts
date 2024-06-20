@@ -6,7 +6,7 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails } from '../interfaces/organization.interface';
+import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails, IOrgRoleDetails } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
@@ -827,6 +827,7 @@ export class OrganizationRepository {
 
             return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deleteOrg};
         });
+        // return result;
     } catch (error) {
         this.logger.error(`Error in deleteOrg: ${error}`);
         throw error;
@@ -994,6 +995,43 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
     return ledgerData;
   } catch (error) {
     this.logger.error(`[getLedger] - get ledger details: ${JSON.stringify(error)}`);
+    throw error;
+  }
+}
+
+async getOrgRole(id: string[]): Promise<IOrgRoleDetails[]> {
+  try {
+    const orgRoleData = await this.prisma.org_roles.findMany({
+      where: {
+        id: {
+            in: id
+        }
+    }
+    });
+    return orgRoleData;
+  } catch (error) {
+    this.logger.error(`[getOrgRole] - get org role details: ${JSON.stringify(error)}`);
+    throw error;
+  }
+}
+
+async getUserOrgRole(userId: string, orgId: string): Promise<string[]> {
+  try {
+    const userOrgRoleDetails = await this.prisma.user_org_roles.findMany({
+      where: {
+        userId,
+        orgId
+    },
+    select:{
+      orgRoleId: true
+    }
+    });
+     // Map the result to an array of orgRoleId
+     const orgRoleIds = userOrgRoleDetails.map(role => role.orgRoleId);
+
+     return orgRoleIds;
+  } catch (error) {
+    this.logger.error(`[getUserOrgRole] - get user org role details: ${JSON.stringify(error)}`);
     throw error;
   }
 }

@@ -48,6 +48,7 @@ import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { toNumber } from '@credebl/common/cast.helper';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -1489,21 +1490,22 @@ export class OrganizationService {
       }
   
       const organizationInvitationDetails = await this.organizationRepository.getOrgInvitationsByOrg(orgId);
-      const userEmails = organizationInvitationDetails.map(userData => userData?.email);
-  
-      this.logger.debug(`userEmails ::: ${JSON.stringify(userEmails)}`);
+        
+      const arrayEmail = organizationInvitationDetails.map(userData => userData.email);
+      this.logger.debug(`arrayEmail ::: ${JSON.stringify(arrayEmail)}`);
+      
       // Fetch Keycloak IDs only if there are emails to process
-      const keycloakUserIds = 0 < userEmails.length
-        ? (await this.getUserKeycloakIdByEmail(userEmails)).response
+      const keycloakUserIds = 0 < arrayEmail.length
+        ? (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map(user => user.keycloakUserId)
         : [];
-  
+      
       this.logger.log('Keycloak User Ids');
 
       // Delete user client roles in parallel
       const deleteUserRolesPromises = keycloakUserIds.map(keycloakUserId => this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
       );
       deleteUserRolesPromises.push(
-        this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, user?.keycloakUserId)
+        this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, getUser?.keycloakUserId)
       );
   
       this.logger.debug(`deleteUserRolesPromises ::: ${JSON.stringify(deleteUserRolesPromises)}`);
@@ -1518,6 +1520,22 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.orgDataNotFoundInkeycloak);
       }
   
+      const userIds = (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map(user => user.id);
+      userIds.map(async (userId) => {
+        const userOrgRoleIds = await this.organizationRepository.getUserOrgRole(userId, orgId);
+        this.logger.debug(`userOrgRoleIds ::::: ${JSON.stringify(userOrgRoleIds)}`);
+
+        const userDetails = await this.organizationRepository.getUser(userId);
+        this.logger.debug(`userDetails ::::: ${JSON.stringify(userDetails)}`);
+
+        const orgRoles = await this.organizationRepository.getOrgRole(userOrgRoleIds);
+        this.logger.debug(`orgRoles ::::: ${JSON.stringify(orgRoles)}`);
+        
+        const orgRoleNames = orgRoles.map(orgRoleName => orgRoleName.name);
+        const sendEmail = await this.sendEmailForOrgInvitationsMember(userDetails?.email, organizationDetails?.name, orgRoleNames);
+        this.logger.log(`email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(orgRoleNames)}, sendEmail: ${sendEmail}`);
+      });
+      
       // Delete organization data
       const { deletedUserActivity, deletedUserOrgRole, deleteOrg, deletedOrgInvitations } = await this.organizationRepository.deleteOrg(orgId);
   
@@ -1551,6 +1569,27 @@ export class OrganizationService {
       this.logger.error(`delete organization: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
+  }
+   
+
+  async sendEmailForOrgInvitationsMember(email: string, orgName: string, orgRole: string[]): Promise<boolean> {
+    const platformConfigData = await this.prisma.platform_config.findMany();
+    const urlEmailTemplate = new DeleteOrgInvitationsEmail();
+    const emailData = new EmailDto();
+    emailData.emailFrom = platformConfigData[0].emailFrom;
+    emailData.emailTo = email;
+    emailData.emailSubject = `Removal of participation of “${orgName}”`;
+
+    emailData.emailHtml = await urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(
+      email,
+      orgName,
+      orgRole
+    );
+
+    //Email is sent to user for the verification through emailData
+    const isEmailSent = await sendEmail(emailData);
+
+    return isEmailSent;
   }
 
   async _deleteWallet(payload: IOrgAgent): Promise<{

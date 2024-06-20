@@ -2088,7 +2088,7 @@ export class EcosystemService {
     return userData;
   }
 
-  async deleteEcosystemAsMember(
+  async deleteOrgFromEcosystem(
     orgId: string,
     userDetails: user
   ): Promise<IEcosystemDataDeletionResults> {
@@ -2142,7 +2142,7 @@ export class EcosystemService {
 
       let deleteEcosystems;
       if (getEcosystemMemberRoleOrgIds?.includes(orgId)) {
-        deleteEcosystems = await this.ecosystemRepository.deleteEcosystemAsMember(orgId);
+        deleteEcosystems = await this.ecosystemRepository.deleteMemberOrgFromEcosystem(orgId);
         await this.ecosystemRepository.deleteEcosystemInvitations(orgId);
         await this.sendMailToEcosystemMembers(getLeadEmailId, getOrgName?.['name'], getEcosystemDetails?.name);
       }

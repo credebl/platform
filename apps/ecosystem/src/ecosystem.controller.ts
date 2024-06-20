@@ -237,9 +237,9 @@ export class EcosystemController {
     return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
   }
 
-  @MessagePattern({ cmd: 'delete-ecosystems-as-member' })
-  async deleteEcosystemAsMember(payload: { orgId: string, userDetails: user}): Promise<IEcosystemDataDeletionResults> {
+  @MessagePattern({ cmd: 'delete-org-from-ecosystem' })
+  async deleteOrgFromEcosystem(payload: { orgId: string, userDetails: user}): Promise<IEcosystemDataDeletionResults> {
     const { orgId, userDetails } = payload;
-    return this.ecosystemService.deleteEcosystemAsMember(orgId, userDetails);
+    return this.ecosystemService.deleteOrgFromEcosystem(orgId, userDetails);
   }
 }

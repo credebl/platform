@@ -938,8 +938,10 @@ export class AgentServiceService {
 
       if (createDidPayload?.network) {
         const getNameSpace = await this.agentServiceRepository.getLedgerByNameSpace(createDidPayload?.network);
-        if (agentDetails.ledgerId !== getNameSpace.id) {
-          throw new BadRequestException(ResponseMessages.agent.error.networkMismatch);
+        if (agentDetails.ledgerId !== null) {
+          if (agentDetails.ledgerId !== getNameSpace.id) {
+            throw new BadRequestException(ResponseMessages.agent.error.networkMismatch);
+          }
         }
       }
 

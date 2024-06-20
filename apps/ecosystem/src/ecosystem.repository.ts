@@ -1434,7 +1434,7 @@ export class EcosystemRepository {
     }
   }
 
-  async deleteEcosystemAsMember(orgId: string): Promise<IEcosystemDataDeletionResults> {
+  async deleteMemberOrgFromEcosystem(orgId: string): Promise<IEcosystemDataDeletionResults> {
     try {
       return await this.prisma.$transaction(async (prisma) => {
         const deletedEcosystemUsers = await prisma.ecosystem_users.deleteMany({

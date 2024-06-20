@@ -274,7 +274,8 @@ export const ResponseMessages = {
             connectionNotFound: 'Connection not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
             agentUrlNotFound: 'agent url not found',
-            connectionRecordNotFound: 'Connection records does not exists'
+            connectionRecordNotFound: 'Connection records does not exists',
+            removeConnectionReferences: 'First you have to remove credentials data and verification data'
         }
     },
     issuance: {
@@ -321,7 +322,8 @@ export const ResponseMessages = {
             missingRequestId: 'Param requestId is missing from the request.',
             cachedData: 'Cached data does not exist',
             cachedfileData: 'Cached file data does not exist',
-            issuanceRecordsNotFound: 'Issuance records does not exists'
+            issuanceRecordsNotFound: 'Issuance records does not exists',
+            removeIssuanceData: 'First you have to remove issuance data'
         }
     },
     verification: {
@@ -429,8 +431,7 @@ export const ResponseMessages = {
             orgEcoIdRequired: 'OrgId & EcosystemId is required',
             ecosystemMembersNotExists: 'Ecosystem members does not exists',
             notAbleToDeleteEcosystem: 'You cannot delete the ecosystem, because you are the ecosystem lead',
-            ecosystemNotExists: 'Ecosystem does not exists',
-            removeEcosystemData: 'First you have to remove ecosystem data'
+            ecosystemNotExists: 'Ecosystem does not exists'
         }
     },
     bulkIssuance: {

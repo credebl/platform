@@ -73,9 +73,9 @@ export class OrganizationRepository {
           orgSlug: createOrgDto.orgSlug,
           publicProfile: false,
           registrationNumber:createOrgDto.registrationNumber,
-          country:createOrgDto.country,
-          city:createOrgDto.city,
-          state:createOrgDto.state,
+          countryId:createOrgDto.countryId,
+          cityId:createOrgDto.cityId,
+          stateId:createOrgDto.stateId,
           createdBy: createOrgDto.createdBy,
           lastChangedBy: createOrgDto.lastChangedBy
         }

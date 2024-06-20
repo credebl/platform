@@ -668,19 +668,19 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Delete('/:orgId/ecosystems')
-  @ApiOperation({ summary: 'Delete ecosystems', description: 'Delete ecosystems by orgId' })
+  @Delete('/:orgId/member-org')
+  @ApiOperation({ summary: 'Delete organization from ecosystem as a ecosystem member', description: 'Delete organization from ecosystem as a ecosystem meber' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER)
   @ApiBearerAuth()
-  async deleteEcosystemAsMember(
+  async deleteOrgFromEcosystem(
     @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
     @Res() res: Response,
     @User() user: user
   ): Promise<Response> {
 
-    await this.ecosystemService.deleteEcosystemAsMember(orgId, user);
+    await this.ecosystemService.deleteOrgFromEcosystem(orgId, user);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,

@@ -106,9 +106,12 @@ model organisation {
   clientId              String?                 @db.VarChar(500)
   clientSecret          String?                 @db.VarChar(500)
   registrationNumber    String?                 @db.VarChar(100)
-  country               String?                 @db.VarChar(100)
-  city                  String?                 @db.VarChar(100)
-  state                 String?                 @db.VarChar(100)
+  countryId             Int?                    
+  countries             countries?              @relation(fields:[countryId],references:[id])
+  stateId               Int?                    
+  states                states?                 @relation(fields:[stateId],references:[id])
+  cityId                Int?                    
+  cities                cities?                 @relation(fields:[cityId],references:[id])
   connections           connections[]
   credentials           credentials[]
   org_agents            org_agents[]

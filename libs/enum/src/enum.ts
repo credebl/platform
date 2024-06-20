@@ -1,5 +1,5 @@
 export enum NATSReconnects {
-    maxReconnectAttempts = (10 * 60) / 5, // 110 minutes with a reconnection attempt every 5 seconds
+    maxReconnectAttempts = (10 * 60) / 5, // 10 minutes with a reconnection attempt every 5 seconds
     reconnectTimeWait = 5000 // 5 second delay between reconnection attempts
 }
 

@@ -2,12 +2,13 @@ import { NATSReconnects } from '@credebl/enum/enum';
 import { Authenticator, nkeyAuthenticator } from 'nats';
 
 export const getNatsOptions = (
-  nkeySeed?: string
+  nkeySeed?: string, serviceName?: string
 ): {
   servers: string[];
   authenticator?: Authenticator;
   maxReconnectAttempts: NATSReconnects;
   reconnectTimeWait: NATSReconnects;
+  queue?: string;
 } => {
   const baseOptions = {
     servers: `${process.env.NATS_URL}`.split(','),
@@ -18,7 +19,8 @@ export const getNatsOptions = (
   if (nkeySeed) {
     return {
       ...baseOptions,
-      authenticator: nkeyAuthenticator(new TextEncoder().encode(nkeySeed))
+      authenticator: nkeyAuthenticator(new TextEncoder().encode(nkeySeed)),
+      queue: serviceName
     };
   }
 

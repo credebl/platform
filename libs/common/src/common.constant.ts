@@ -323,7 +323,22 @@ export enum CommonConstants {
  //CacheInfo
 CACHE_SHARED_APIKEY_KEY = "dedicatedApiKey",
 CACHE_APIKEY_KEY = "sharedApiKey",
-CACHE_TTL_SECONDS = 604800
+CACHE_TTL_SECONDS = 604800,
+
+// MICROSERVICES NAMES
+API_GATEWAY_SERVICE = 'api-gateway',
+ORGANIZATION_SERVICE = 'organization',
+USER_SERVICE = 'user',
+UTILITY_SERVICE = 'utilitites',
+CONNECTION_SERVICE = 'connection',
+LEDGER_SERVICE = 'ledger',
+AGENT_SERVICE = 'agent-service',
+AGENT_PROVISIONING = 'agent-provisioning',
+ISSUANCE_SERVICE = 'issuance',
+VERIFICATION_SERVICE = 'verification',
+ECOSYSTEM_SERVICE = 'ecosystem',
+WEBHOOK_SERVICE = 'webhook',
+NOTIFICATION_SERVICE = 'notification'
 }
 
 export const postgresqlErrorCodes = [];

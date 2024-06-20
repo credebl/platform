@@ -4,6 +4,7 @@ import { Logger } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { VerificationModule } from './verification.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 const logger = new Logger();
 
@@ -11,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(VerificationModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED)
+    options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED, CommonConstants.VERIFICATION_SERVICE)
 
   });
 

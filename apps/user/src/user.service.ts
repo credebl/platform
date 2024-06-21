@@ -41,7 +41,8 @@ import {
     IUserResetPassword,
     IPuppeteerOption,
     IShareDegreeCertificateRes,
-    IUserDeletedActivity
+    IUserDeletedActivity,
+    UserKeycloakId
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -1176,7 +1177,7 @@ export class UserService {
     }
   }
 
-  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<UserKeycloakId[]> {
     try {
      
       const getkeycloakUserIds = await this.userRepository.getUserKeycloak(userEmails);

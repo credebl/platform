@@ -47,6 +47,8 @@ export class UserRepository {
           username: userEmailVerification.username,
           email: userEmailVerification.email,
           verificationCode: verifyCode.toString(),
+          clientId: userEmailVerification.clientId,
+          clientSecret: userEmailVerification.clientSecret,
           publicProfile: true
         },
         update: {
@@ -773,6 +775,25 @@ export class UserRepository {
       return orgDeletedActivity;
     } catch (error) {
       this.logger.error(`Error in updateOrgDeletedActivity: ${error} `);
+      throw error;
+    }
+  }
+
+  async getUserDetailsByUserId(userId: string): Promise<{
+    email: string;
+  }> {
+    try {
+      const getUserDetails = await this.prisma.user.findUnique({
+        where: {
+            id: userId
+        },
+        select: {
+          email: true
+        }
+      });
+      return getUserDetails;
+    } catch (error) {
+      this.logger.error(`Error in getting user details: ${error} `);
       throw error;
     }
   }

@@ -146,8 +146,8 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'get-org-roles' })
-  async getOrgRoles(payload: {orgId: string}): Promise<IClientRoles[]> {
-    return this.organizationService.getOrgRoles(payload.orgId);
+  async getOrgRoles(payload: {orgId: string, user: user}): Promise<IClientRoles[]> {
+    return this.organizationService.getOrgRoles(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'register-orgs-users-map' })
@@ -229,14 +229,19 @@ export class OrganizationController {
     return this.organizationService.fetchOrgCredentials(payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'get-organization-details' })
+  async getOrgData(payload: { orgId: string; }): Promise<organisation> {
+    return this.organizationService.getOrgDetails(payload.orgId);
+  }
+  
   @MessagePattern({ cmd: 'delete-organization' })
   async deleteOrganization(payload: { orgId: string, user: user }): Promise<IDeleteOrganization> {
     return this.organizationService.deleteOrganization(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'delete-org-client-credentials' })
-  async deleteOrganizationCredentials(payload: { orgId: string }): Promise<string> {
-    return this.organizationService.deleteClientCredentials(payload.orgId);
+  async deleteOrganizationCredentials(payload: { orgId: string, user: user }): Promise<string> {
+    return this.organizationService.deleteClientCredentials(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'delete-organization-invitation' })

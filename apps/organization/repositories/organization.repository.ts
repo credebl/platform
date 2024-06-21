@@ -3,12 +3,12 @@
 
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, agent_invitations, org_agents, org_invitations, user_org_roles } from '@prisma/client';
+import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, OrgInvitation } from '../interfaces/organization.interface';
+import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
-import { Invitation, SortValue } from '@credebl/enum/enum';
+import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
@@ -385,6 +385,19 @@ export class OrganizationRepository {
     }
   }
 
+  async getUser(id: string): Promise<user> {
+    try {
+      const getUserById = await this.prisma.user.findUnique({ 
+        where:{
+          id
+      }});
+      return getUserById;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new error;
+    }
+  }
+
   async getOrganization(queryObject: object): Promise<IGetOrgById> {
     try {
       return this.prisma.organisation.findFirst({
@@ -754,16 +767,16 @@ export class OrganizationRepository {
     deleteOrg: IDeleteOrganization
   }> {
     const tablesToCheck = [
-        'org_agents',
-        'org_dids',
-        'agent_invitations',
-        'connections',
-        'credentials',
-        'presentations',
-        'ecosystem_invitations',
-        'ecosystem_orgs',
-        'file_upload',
-        'notification'
+        `${PrismaTables.ORG_AGENTS}`,
+        `${PrismaTables.ORG_DIDS}`,
+        `${PrismaTables.AGENT_INVITATIONS}`,
+        `${PrismaTables.CONNECTIONS}`,
+        `${PrismaTables.CREDENTIALS}`,
+        `${PrismaTables.PRESENTATIONS}`,
+        `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
+        `${PrismaTables.ECOSYSTEM_ORGS}`,
+        `${PrismaTables.FILE_UPLOAD}`,
+        `${PrismaTables.NOTIFICATION}`
     ];
 
     try {
@@ -798,6 +811,16 @@ export class OrganizationRepository {
             const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
 
             const deletedOrgInvitations = await prisma.org_invitations.deleteMany({ where: { orgId: id } });
+
+            await this.prisma.schema.updateMany({
+              where: { orgId: id },
+              data: { orgId: null }
+            });
+        
+            await this.prisma.credential_definition.updateMany({
+              where: { orgId: id },
+              data: { orgId: null }
+            });
 
             // If no references are found, delete the organization
             const deleteOrg = await prisma.organisation.delete({ where: { id } });
@@ -851,7 +874,7 @@ export class OrganizationRepository {
 
   async setOrgsPrimaryDid(primaryDidDetails: IPrimaryDidDetails): Promise<string> {
     try {
-      const {did, didDocument, id, orgId} = primaryDidDetails;
+      const {did, didDocument, id, orgId, networkId} = primaryDidDetails;
       await this.prisma.$transaction([
         this.prisma.org_dids.update({
           where: {
@@ -867,7 +890,8 @@ export class OrganizationRepository {
             },
            data: {
                orgDid: did,
-               didDocument
+               didDocument,
+               ledgerId: networkId
            }
        })   
         ]);
@@ -905,6 +929,19 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
   }
  }
 
+ async getDids(orgId:string): Promise<IGetDids[]> {
+  try {
+    return this.prisma.org_dids.findMany({
+      where: {
+        orgId
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getDids] - get all DIDs: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
+
  async setPreviousDidFlase(id:string): Promise<IDidDetails> {
   try {
     return this.prisma.org_dids.update({
@@ -933,4 +970,31 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
       throw error;
   }
  }
+
+ async getNetworkByNameSpace(nameSpace: string): Promise<ILedgerNameSpace> {
+  try {
+    return this.prisma.ledgers.findFirstOrThrow({
+      where: {
+        indyNamespace: nameSpace
+      }
+    });
+  } catch (error) {
+      this.logger.error(`[getNetworkByIndyNameSpace] - get network by namespace: ${JSON.stringify(error)}`);
+      throw error;
+  }
+ }
+
+ async getLedger(name: string): Promise<ILedgerDetails> {
+  try {
+    const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
+      where: {
+       name
+      }
+    });
+    return ledgerData;
+  } catch (error) {
+    this.logger.error(`[getLedger] - get ledger details: ${JSON.stringify(error)}`);
+    throw error;
+  }
+}
 }

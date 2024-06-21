@@ -547,7 +547,7 @@ enum RecordType {
 
 model countries {
   id              Int       @id @default(autoincrement())          @map("id")  
-  name            String    @db.VarChar(100)                       @map("name")
+  name            String                                           @map("name")
   states          states[]                                         
   cities          cities[]  
   organisation    organisation[]                               
@@ -556,9 +556,9 @@ model countries {
 
 model states {
   id              Int       @id @default(autoincrement())              @map("id")           
-  name            String    @db.VarChar(255)                           @map("name")
-  countryId       Int                                                 @map("country_id")
-  countryCode     String    @db.Char(2)                                @map("country_code")
+  name            String                                               @map("name")
+  countryId       Int                                                  @map("country_id")
+  countryCode     String                                               @map("country_code")
   countries       countries @relation(fields: [countryId], references: [id], onDelete: Cascade)
   cities          cities[]
   organisation    organisation[]                               
@@ -567,11 +567,11 @@ model states {
 }
 model cities {
   id          Int       @id @default(autoincrement())           @map("id")
-  name        String    @db.VarChar(255)                       @map("name")
+  name        String                                            @map("name")
   stateId     Int                                               @map("state_id")
-  stateCode   String    @db.VarChar(255)                        @map("state_code")
+  stateCode   String                                            @map("state_code")
   countryId   Int                                               @map("country_id")
-  countryCode String    @db.Char(2)                             @map("country_code")
+  countryCode String                                            @map("country_code")
   state       states    @relation(fields: [stateId], references: [id], onDelete: Cascade)
   country     countries @relation(fields: [countryId], references: [id], onDelete: Cascade)
   organisation  organisation[]                               

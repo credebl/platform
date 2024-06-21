@@ -74,6 +74,7 @@ import { ledgerName } from '@credebl/common/cast.helper';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import * as CryptoJS from 'crypto-js';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { PrismaService } from '@credebl/prisma-service';
 
 @Injectable()
 @WebSocketGateway()
@@ -82,6 +83,7 @@ export class AgentServiceService {
 
   constructor(
     private readonly agentServiceRepository: AgentServiceRepository,
+    private readonly prisma: PrismaService,
     private readonly commonService: CommonService,
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
@@ -1729,76 +1731,77 @@ export class AgentServiceService {
 
   async deleteWallet(orgId: string, user: user): Promise<object> {
     try {
-      // Retrieve the API key and agent information
-      const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
-        this.getOrgAgentApiKey(orgId),
-        this.agentServiceRepository.getAgentApiKey(orgId)
-      ]);
+        // Retrieve the API key and agent information
+        const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
+            this.getOrgAgentApiKey(orgId),
+            this.agentServiceRepository.getAgentApiKey(orgId)
+        ]);
 
-      if (getApiKeyResult.status === 'rejected') {
-        throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
-      }
-
-      if (orgAgentResult.status === 'rejected') {
-        throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
-      }
-
-      const getApiKey = getApiKeyResult?.value;
-      const orgAgent = orgAgentResult?.value;
-
-      const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
-
-      if (!orgAgentTypeResult) {
-        throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
-      }
-
-      // Determine the URL based on the agent type
-      const url =
-        orgAgentTypeResult.agent === OrgAgentType.SHARED
-          ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
-          : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
-
-      // Make the HTTP DELETE request
-      const deleteWallet = await this.commonService
-        .httpDelete(url, {
-          headers: { authorization: getApiKey }
-        })
-        .then(async (response) => response);
-
-      if (deleteWallet.status === HttpStatus.NO_CONTENT) {
-        const {orgDid, agentInvitation, deleteOrgAgent} = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
-
-        this.logger.log(`orgDid :::: ${JSON.stringify(orgDid)}`);
-        this.logger.log(`agentInvitation :::: ${JSON.stringify(agentInvitation)}`);
-        this.logger.log(`deleteOrgAgent :::: ${JSON.stringify(deleteOrgAgent)}`);
-
-        const deletions = [
-          { records: orgDid.count, tableName: 'org_dids' },
-          { records: agentInvitation.count, tableName: 'agent_invitations' },
-          { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
-        ];
-
-        const logDeletionActivity = async (records, tableName): Promise<void> => {
-          if (records) {
-            const txnMetadata = {
-              deletedRecordsCount: records,
-              deletedRecordInTable: tableName
-            };
-            const recordType = RecordType.WALLET;
-            await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
-          }
-        };
-
-        for (const { records, tableName } of deletions) {
-          await logDeletionActivity(records, tableName);
+        if (getApiKeyResult.status === 'rejected') {
+            throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
         }
-        return deleteOrgAgent;
-      }
+
+        if (orgAgentResult.status === 'rejected') {
+            throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
+        }
+
+        const getApiKey = getApiKeyResult?.value;
+        const orgAgent = orgAgentResult?.value;
+
+        const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
+
+        if (!orgAgentTypeResult) {
+            throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
+        }
+
+        // Determine the URL based on the agent type
+        const url =
+            orgAgentTypeResult.agent === OrgAgentType.SHARED
+                ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
+                : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
+
+        // Perform the deletion in a transaction
+        return await this.prisma.$transaction(async (prisma) => {
+            // Delete org agent and related records
+            const { orgDid, agentInvitation, deleteOrgAgent } = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
+
+            // Make the HTTP DELETE request
+            const deleteWallet = await this.commonService.httpDelete(url, {
+                headers: { authorization: getApiKey }
+            });
+
+            if (deleteWallet.status !== HttpStatus.NO_CONTENT) {
+                throw new InternalServerErrorException(ResponseMessages.agent.error.walletNotDeleted);
+            }
+
+            const deletions = [
+                { records: orgDid.count, tableName: 'org_dids' },
+                { records: agentInvitation.count, tableName: 'agent_invitations' },
+                { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
+            ];
+
+            const logDeletionActivity = async (records, tableName): Promise<void> => {
+                if (records) {
+                    const txnMetadata = {
+                        deletedRecordsCount: records,
+                        deletedRecordInTable: tableName
+                    };
+                    const recordType = RecordType.WALLET;
+                    await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
+                }
+            };
+
+            for (const { records, tableName } of deletions) {
+                await logDeletionActivity(records, tableName);
+            }
+
+            return deleteOrgAgent;
+        });
     } catch (error) {
-      this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
-      throw new RpcException(error.response ? error.response : error);
+        this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
+        throw new RpcException(error.response ? error.response : error);
     }
-  }
+}
 
   async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, orgId: string): Promise<string> {
     try {

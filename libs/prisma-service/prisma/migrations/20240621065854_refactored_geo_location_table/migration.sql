@@ -1,0 +1,11 @@
+-- AlterTable
+ALTER TABLE "cities" ALTER COLUMN "name" SET DATA TYPE TEXT,
+ALTER COLUMN "state_code" SET DATA TYPE TEXT,
+ALTER COLUMN "country_code" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "countries" ALTER COLUMN "name" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "states" ALTER COLUMN "name" SET DATA TYPE TEXT,
+ALTER COLUMN "country_code" SET DATA TYPE TEXT;

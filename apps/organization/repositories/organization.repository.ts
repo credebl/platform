@@ -764,6 +764,7 @@ export class OrganizationRepository {
     deletedUserActivity: Prisma.BatchPayload;
     deletedUserOrgRole: Prisma.BatchPayload;
     deletedOrgInvitations: Prisma.BatchPayload;
+    deletedNotification: Prisma.BatchPayload;
     deleteOrg: IDeleteOrganization
   }> {
     const tablesToCheck = [
@@ -775,8 +776,7 @@ export class OrganizationRepository {
         `${PrismaTables.PRESENTATIONS}`,
         `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
         `${PrismaTables.ECOSYSTEM_ORGS}`,
-        `${PrismaTables.FILE_UPLOAD}`,
-        `${PrismaTables.NOTIFICATION}`
+        `${PrismaTables.FILE_UPLOAD}`
     ];
 
     try {
@@ -806,6 +806,8 @@ export class OrganizationRepository {
                 throw new ConflictException(ResponseMessages.organisation.error.organizationEcosystemValidate);
             }
 
+            const deletedNotification = await prisma.notification.deleteMany({ where: { orgId: id } });
+
             const deletedUserActivity = await prisma.user_activity.deleteMany({ where: { orgId: id } });
 
             const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
@@ -825,7 +827,7 @@ export class OrganizationRepository {
             // If no references are found, delete the organization
             const deleteOrg = await prisma.organisation.delete({ where: { id } });
 
-            return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deleteOrg};
+            return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deletedNotification, deleteOrg};
         });
         // return result;
     } catch (error) {

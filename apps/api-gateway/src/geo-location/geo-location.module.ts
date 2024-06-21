@@ -22,8 +22,8 @@ import { APP_GUARD } from '@nestjs/core';
       CommonModule
     ]),
     RateLimiterModule.register({
-      points: 2,
-      duration: 60,
+      points: 50,
+      duration: 1,
       keyPrefix: 'rateLimiter',
       errorMessage: 'Rate limit exceeded, please try again later.'
     })

@@ -151,8 +151,8 @@ export class OrganizationService extends BaseService {
    * @returns get organization roles
    */
 
-  async getOrgRoles(orgId: string): Promise<IClientRoles[]> {
-    const payload = {orgId};
+  async getOrgRoles(orgId: string, user: user): Promise<IClientRoles[]> {
+    const payload = {orgId, user};
     return this.sendNatsMessage(this.serviceProxy, 'get-org-roles', payload);
   }
 
@@ -217,9 +217,10 @@ export class OrganizationService extends BaseService {
   }
 
   async deleteOrgClientCredentials(
-    orgId: string
+    orgId: string,
+    user: user
   ): Promise<string> {
-    const payload = { orgId };
+    const payload = { orgId, user };
 
     return this.sendNatsMessage(this.serviceProxy, 'delete-org-client-credentials', payload);
   }

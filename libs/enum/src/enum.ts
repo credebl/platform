@@ -50,6 +50,7 @@ export enum Ledgers {
     Indicio_Testnet = 'Indicio Testnet',
     Indicio_Demonet = 'Indicio Demonet',
     Indicio_Mainnet = 'Indicio Mainnet',
+    Not_Applicable = 'NA'
 }
 
 export enum Invitation {
@@ -149,6 +150,28 @@ export enum PromiseResult {
 export enum PrismaTables {
     PRESENTATIONS = 'presentations',
     CREDENTIALS = 'credentials',
+    ECOSYSTEM_ORGS = 'ecosystem_orgs',
+    ORG_AGENTS = 'org_agents',
+    ORG_DIDS = 'org_dids',
+    AGENT_INVITATIONS = 'agent_invitations',
+    CONNECTIONS = 'connections',
+    ECOSYSTEM_INVITATIONS = 'ecosystem_invitations',
+    FILE_UPLOAD = 'file_upload',
+    NOTIFICATION = 'notification',
+}
+
+export enum IssuanceProcessState {
+    PROPOSAL_SENT = 'proposal-sent',
+    PROPOSAL_RECEIVED = 'proposal-received',
+    OFFER_SENT = 'offer-sent',
+    OFFER_RECEIVED = 'offer-received',
+    DECLIEND = 'decliend',
+    REQUEST_SENT = 'request-sent',
+    REQUEST_RECEIVED = 'request-received',
+    CREDENTIAL_ISSUED = 'credential-issued',
+    CREDENTIAL_RECEIVED = 'credential-received',
+    DONE = 'done',
+    ABANDONED = 'abandoned'
 }
 
 export enum IssuanceProcessState {

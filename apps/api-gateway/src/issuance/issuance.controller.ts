@@ -744,7 +744,7 @@ issueCredentialDto.type = 'Issuance';
     return res.status(HttpStatus.CREATED).json(finalResponse);
     }   
 
-    @Delete('/:orgId/issuance-records')
+    @Delete('/orgs/:orgId/issuance-records')
     @ApiOperation({ summary: 'Delete issuance record', description: 'Delete issuance records by orgId' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiBearerAuth()

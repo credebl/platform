@@ -189,3 +189,23 @@ export enum ConnectionProcessState {
     COMPLETE = 'completed',
     ABANDONED = 'abandoned'
 }
+
+export enum SchemaTypeEnum {
+    JSON = 'json',
+    INDY = 'indy'
+  }
+
+export enum W3CSchemaDataType {
+    NUMBER = 'number',
+    INTEGER = 'integer',
+    STRING = 'string'
+  }
+
+export enum JSONSchemaType {
+    POLYGON_W3C = 'polygon',
+    LEDGER_LESS = 'no_ledger'
+}
+
+export enum NetworkNamespace {
+    POLYGON_TESTNET = 'polygon:testnet'
+}

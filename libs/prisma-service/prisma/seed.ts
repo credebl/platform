@@ -213,27 +213,21 @@ const createLedger = async (): Promise<void> => {
     try {
       const { ledgerData } = JSON.parse(configData);
   
-      // Fetch existing ledgers from the database
       const existingLedgers = await prisma.ledgers.findMany();
   
       if (0 === existingLedgers.length) {
-        // If no records exist, insert all ledgerData
         const createLedger = await prisma.ledgers.createMany({
           data: ledgerData
         });
         logger.log('All ledgers inserted:', createLedger);
       } else {
-        // Update only if there are differences
         const updatesNeeded = [];
 
-        // Compare based on your unique identifier or a suitable comparison logic
         if (existingLedgers.length !== ledgerData.length) {
             updatesNeeded.push(ledgerData);
             if (0 < updatesNeeded.length) {
-              // Delete all existing records
               await prisma.ledgers.deleteMany();
         
-              // Insert new records from ledgerData
               const createLedger = await prisma.ledgers.createMany({
                 data: ledgerData
               });

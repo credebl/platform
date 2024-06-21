@@ -25,7 +25,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidMethod, Invitation, Ledgers, transition } from '@credebl/enum/enum';
+import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -1512,8 +1512,9 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.orgDataNotFoundInkeycloak);
       }
   
+      const deletedOrgInvitationInfo: { email?: string, orgName?: string, orgRoleNames?: string[] }[] = [];
       const userIds = (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map(user => user.id);
-      userIds.map(async (userId) => {
+      await Promise.all(userIds.map(async (userId) => {
         const userOrgRoleIds = await this.organizationRepository.getUserOrgRole(userId, orgId);
         this.logger.debug(`userOrgRoleIds ::::: ${JSON.stringify(userOrgRoleIds)}`);
 
@@ -1525,11 +1526,20 @@ export class OrganizationService {
         
         const orgRoleNames = orgRoles.map(orgRoleName => orgRoleName.name);
         const sendEmail = await this.sendEmailForOrgInvitationsMember(userDetails?.email, organizationDetails?.name, orgRoleNames);
+        const newInvitation = {
+          email: userDetails.email,
+          orgName: organizationDetails?.name,
+          orgRoleNames
+        };
+        
+        // Step 3: Push the data into the array
+        deletedOrgInvitationInfo.push(newInvitation);
+        
         this.logger.log(`email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(orgRoleNames)}, sendEmail: ${sendEmail}`);
-      });
+      }));
       
       // Delete organization data
-      const { deletedUserActivity, deletedUserOrgRole, deleteOrg, deletedOrgInvitations } = await this.organizationRepository.deleteOrg(orgId);
+      const { deletedUserActivity, deletedUserOrgRole, deleteOrg, deletedOrgInvitations, deletedNotification } = await this.organizationRepository.deleteOrg(orgId);
   
       this.logger.debug(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
       this.logger.debug(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
@@ -1537,19 +1547,29 @@ export class OrganizationService {
       this.logger.debug(`deletedOrgInvitations ::: ${JSON.stringify(deletedOrgInvitations)}`);
   
       const deletions = [
-        { records: deletedUserActivity.count, tableName: 'user_activity' },
-        { records: deletedUserOrgRole.count, tableName: 'user_org_roles' },
-        { records: deletedOrgInvitations.count, tableName: 'org_invitations' },
-        { records: deleteOrg ? 1 : 0, tableName: 'organization' }
+        { records: deletedUserActivity.count, tableName: `${PrismaTables.USER_ACTIVITY}` },
+        { records: deletedUserOrgRole.count, tableName: `${PrismaTables.USER_ORG_ROLES}` },
+        { records: deletedOrgInvitations.count, deletedOrgInvitationInfo, tableName: `${PrismaTables.ORG_INVITATIONS}` },
+        { records: deletedNotification.count, tableName: `${PrismaTables.NOTIFICATION}` },
+        { records: deleteOrg ? 1 : 0, tableName: `${PrismaTables.ORGANIZATION}` }
       ];
   
       // Log deletion activities in parallel
-      await Promise.all(deletions.map(async ({ records, tableName }) => {
+      await Promise.all(deletions.map(async ({ records, tableName, deletedOrgInvitationInfo }) => {
         if (records) {
-          const txnMetadata = {
+          const txnMetadata: {
+            deletedRecordsCount: number;
+            deletedRecordInTable: string;
+            deletedOrgInvitationInfo?: object[]
+          } = {
             deletedRecordsCount: records,
             deletedRecordInTable: tableName
           };
+          
+          if (deletedOrgInvitationInfo) {
+            txnMetadata.deletedOrgInvitationInfo = deletedOrgInvitationInfo;
+          }
+          
           const recordType = RecordType.ORGANIZATION;
           await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
         }

@@ -158,6 +158,10 @@ export enum PrismaTables {
     ECOSYSTEM_INVITATIONS = 'ecosystem_invitations',
     FILE_UPLOAD = 'file_upload',
     NOTIFICATION = 'notification',
+    USER_ACTIVITY = 'user_activity',
+    USER_ORG_ROLES = 'user_org_roles',
+    ORG_INVITATIONS = 'org_invitations',
+    ORGANIZATION = 'organization'
 }
 
 export enum IssuanceProcessState {

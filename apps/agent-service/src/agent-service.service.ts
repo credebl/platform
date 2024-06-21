@@ -975,7 +975,7 @@ export class AgentServiceService {
         userId: user.id
       };
       const storeDidDetails = await this.storeDid(createdDidDetails);
-      this.logger.debug('${storeDidDetails}::::', storeDidDetails);
+      this.logger.debug(`storeDidDetails:: ${storeDidDetails}`);
 
       if (isPrimaryDid) {
         await this.setPrimaryDidAndLedger(orgId, storeDidDetails, createDidPayload.network, createDidPayload.method);

@@ -332,7 +332,7 @@ export class ConnectionController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Delete('/:orgId/connections')
+  @Delete('/orgs/:orgId/connections')
   @ApiOperation({ summary: 'Delete connection record', description: 'Delete connections by orgId' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()

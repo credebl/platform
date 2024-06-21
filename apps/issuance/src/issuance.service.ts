@@ -1448,11 +1448,18 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
   async deleteIssuanceRecords(orgId: string, userDetails: user): Promise<IDeletedIssuanceRecords> {
     try {
+
+      const getFileUploadData = await this.issuanceRepository.getFileUploadDataByOrgId(orgId);
+
+      const getFileUploadIds = getFileUploadData.map(fileData => fileData.id);
+  
+      await this.issuanceRepository.deleteFileUploadData(getFileUploadIds, orgId);
+
       const deletedCredentialsRecords = await this.issuanceRepository.deleteIssuanceRecordsByOrgId(orgId);
       
       if (0 === deletedCredentialsRecords?.deleteResult?.count) {
         throw new NotFoundException(ResponseMessages.issuance.error.issuanceRecordsNotFound);
-    }
+      }
 
     const statusCounts = {
         [IssuanceProcessState.REQUEST_SENT]: 0,
@@ -1482,7 +1489,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }; 
 
       await this.userActivityRepository._orgDeletedActivity(orgId, userDetails, deletedIssuanceData, RecordType.ISSUANCE_RECORD);
-
+    
       return deletedCredentialsRecords;
     } catch (error) {
       this.logger.error(`[deleteIssuanceRecords] - error in deleting issuance records: ${JSON.stringify(error)}`);

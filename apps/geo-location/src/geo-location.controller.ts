@@ -13,12 +13,12 @@ export class GeoLocationController {
   }
 
   @MessagePattern({ cmd: 'get-all-states' })
-  async getStatesByCountryId(payload: { countryId: string }): Promise<StateInterface[]> {
-    return this.geoLocationService.getStatesByCountryId(payload);
+  async getStatesByCountryId(payload: { countryId: number }): Promise<StateInterface[]> {
+    return this.geoLocationService.getStatesByCountryId(payload.countryId);
   }
 
   @MessagePattern({ cmd: 'get-all-cities' })
-  async getCitiesByStateAndCountry(payload: { countryId: string; stateId: string }): Promise<CityInterface[]> {
-    return this.geoLocationService.getCitiesByStateAndCountry(payload);
+  async getCitiesByStateAndCountry(payload: { countryId: number; stateId: number }): Promise<CityInterface[]> {
+    return this.geoLocationService.getCitiesByStateAndCountry(payload.countryId, payload.stateId);
   }
 }

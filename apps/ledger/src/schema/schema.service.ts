@@ -16,7 +16,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
-import { JSONSchemaType, OrgAgentType, SchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
+import { JSONSchemaType, LedgerLessConstant, LedgerLessMethods, OrgAgentType, SchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemaDetails, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -517,6 +517,7 @@ export class SchemaService extends BaseService {
   }
   
    private async storeW3CSchemas(schemaDetails, user, orgId): Promise <schema> {
+    let ledgerDetails;
     const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
     const schemaRequest = await this.commonService
     .httpGet(schemaServerUrl)
@@ -539,10 +540,14 @@ export class SchemaService extends BaseService {
       }
   }
 
-  const indyNamespace = await networkNamespace(schemaDetails?.did);
+  const indyNamespace = await networkNamespace(schemaDetails?.did);  
+  if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
+    ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER);
+  } else {
+    ledgerDetails = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
+  }
 
-  const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
-  if (!getLedgerId) {
+  if (!ledgerDetails) {
     throw new NotFoundException(ResponseMessages.schema.error.networkNotFound, {
       cause: new Error(),
       description: ResponseMessages.errorMessages.notFound
@@ -561,7 +566,7 @@ export class SchemaService extends BaseService {
       changedBy: user,
       publisherDid: schemaDetails.did,
       orgId,
-      ledgerId: getLedgerId.id,
+      ledgerId: ledgerDetails.id,
       type: SchemaType.W3C_Schema
     };
     const saveResponse = await this.schemaRepository.saveSchema(

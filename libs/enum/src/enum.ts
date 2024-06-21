@@ -218,3 +218,12 @@ export enum JSONSchemaType {
 export enum NetworkNamespace {
     POLYGON_TESTNET = 'polygon:testnet'
 }
+
+export enum LedgerLessMethods {
+    WEB = 'web',
+    KEY = 'key'
+}
+
+export enum LedgerLessConstant {
+    NO_LEDGER = 'no_ledger',
+}

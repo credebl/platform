@@ -22,7 +22,7 @@ export class GeoLocationRepository {
       throw error;
     }
   }
-  async findStatesByCountryId(countryId: string): Promise<StateInterface[]> {
+  async findStatesByCountryId(countryId: number): Promise<StateInterface[]> {
     try {
       return await this.prisma.states.findMany({
         where: { countryId: Number(countryId) },
@@ -39,7 +39,7 @@ export class GeoLocationRepository {
     }
   }
 
-  async findCitiesByStateAndCountry(countryId: string, stateId: string): Promise<CityInterface[]> {
+  async findCitiesByStateAndCountry(countryId: number, stateId: number): Promise<CityInterface[]> {
     try {
       return await this.prisma.cities.findMany({
         where: {

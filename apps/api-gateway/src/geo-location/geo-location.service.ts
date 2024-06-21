@@ -24,7 +24,7 @@ export class GeoLocationService extends BaseService {
    * @param
    * @returns Get all states list by using countryId
    */
-  async getStatesByCountryId(countryId: string): Promise<StateInterface[]> {
+  async getStatesByCountryId(countryId: number): Promise<StateInterface[]> {
     const payload = { countryId };
     this.logger.log(`Finding cities for countryId= ${countryId},GeoLocationService::getCitiesByStateAndCountry`);
     return this.sendNatsMessage(this.serviceProxy, 'get-all-states', payload);
@@ -36,7 +36,7 @@ export class GeoLocationService extends BaseService {
    * @returns Get all cities list by using stateId and countryId
    */
 
-  async getCitiesByStateAndCountry(countryId: string, stateId: string): Promise<CityInterface[]> {
+  async getCitiesByStateAndCountry(countryId: number, stateId: number): Promise<CityInterface[]> {
     const payload = { countryId, stateId };
     this.logger.log(
       `Finding cities for stateId= ${stateId} and countryId= ${countryId},GeoLocationService::getCitiesByStateAndCountry`

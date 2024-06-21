@@ -20,9 +20,8 @@ export class GeoLocationService {
     }
   }
 
-  async getStatesByCountryId(payload: { countryId: string }): Promise<StateInterface[]> {
+  async getStatesByCountryId(countryId: number): Promise<StateInterface[]> {
     try {
-      const { countryId } = payload;
       this.logger.log(
         `Inside Service: finding all states for countryId= ${countryId},GeoLocationService::getStatesByCountryId`
       );
@@ -38,9 +37,8 @@ export class GeoLocationService {
     }
   }
 
-  async getCitiesByStateAndCountry(payload: { countryId: string; stateId: string }): Promise<CityInterface[]> {
+  async getCitiesByStateAndCountry(countryId: number, stateId: number): Promise<CityInterface[]> {
     try {
-      const { countryId, stateId } = payload;
       this.logger.log(
         `Inside Service: finding all cities for stateId= ${stateId} and countryId= ${countryId},GeoLocationService::getCitiesByStateAndCountry`
       );

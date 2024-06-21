@@ -224,6 +224,7 @@ export const ResponseMessages = {
             alreadySpinUp: 'Agent already spun up',
             agentUrl: 'Agent url not exist',
             apiKeyNotExist:'API key is not found',
+            walletNotDeleted:'Wallet is not deleted, Please check',
             seedChar: 'seed must be at most 32 characters',
             validWalletName: 'Please enter valid wallet name. It allows only alphanumeric values',
             platformConfiguration: 'Platform configuration is missing or invalid',

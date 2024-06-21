@@ -338,7 +338,7 @@ export class VerificationController {
 
 }
 
-@Delete('/:orgId/verification-records')
+@Delete('/orgs/:orgId/verification-records')
 @ApiOperation({ summary: 'Delete verification record', description: 'Delete verification records by orgId' })
 @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
 @ApiBearerAuth()

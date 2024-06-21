@@ -16,6 +16,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   FileUpload,
   FileUploadData,
+  IDeletedFileUploadRecords,
   IssueCredentialWebhookPayload,
   OrgAgent,
   PreviewRequest,
@@ -585,6 +586,47 @@ export class IssuanceRepository {
       });
     } catch (error) {
       this.logger.error(`[updateFileUploadStatus] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getFileUploadDataByOrgId(orgId: string): Promise<file_upload[]> {
+    try {
+      const fileDetails = await this.prisma.file_upload.findMany({
+        where: {
+          orgId
+        }
+      });
+      return fileDetails;
+    } catch (error) {
+      this.logger.error(`[getting file upload details] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteFileUploadData(fileUploadIds: string[], orgId: string): Promise<IDeletedFileUploadRecords> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+
+        const deleteFileDetails = await prisma.file_data.deleteMany({
+          where: {
+            fileUploadId: {
+              in: fileUploadIds
+            }
+          }
+        });
+
+        const deleteFileUploadDetails = await prisma.file_upload.deleteMany({
+          where: {
+            orgId
+          }
+        });
+
+        return { deleteFileDetails, deleteFileUploadDetails };
+
+      });
+    } catch (error) {
+      this.logger.error(`[Error in deleting file data] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

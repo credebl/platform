@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(VerificationModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED, CommonConstants.VERIFICATION_SERVICE)
+    options: getNatsOptions(CommonConstants.VERIFICATION_SERVICE, process.env.VERIFICATION_NKEY_SEED)
 
   });
 

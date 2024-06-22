@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(EcosystemModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.ECOSYSTEM_NKEY_SEED, CommonConstants.ECOSYSTEM_SERVICE)
+    options: getNatsOptions(CommonConstants.ECOSYSTEM_SERVICE, process.env.ECOSYSTEM_NKEY_SEED)
   });
 
   app.useGlobalFilters(new HttpExceptionFilter());

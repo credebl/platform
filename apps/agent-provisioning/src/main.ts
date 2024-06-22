@@ -11,7 +11,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AgentProvisioningModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.AGENT_PROVISIONING_NKEY_SEED, CommonConstants.AGENT_PROVISIONING)
+    options: getNatsOptions(CommonConstants.AGENT_PROVISIONING, process.env.AGENT_PROVISIONING_NKEY_SEED)
   });
   app.useGlobalFilters(new HttpExceptionFilter());
 

@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(NotificationModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.NOTIFICATION_NKEY_SEED, CommonConstants.NOTIFICATION_SERVICE)
+    options: getNatsOptions(CommonConstants.NOTIFICATION_SERVICE, process.env.NOTIFICATION_NKEY_SEED)
 
   });
 

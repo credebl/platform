@@ -17,7 +17,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.NOTIFICATION_NKEY_SEED, CommonConstants.NOTIFICATION_SERVICE)
+        options: getNatsOptions(CommonConstants.NOTIFICATION_SERVICE, process.env.NOTIFICATION_NKEY_SEED)
       }
     ]),
     CommonModule,

@@ -15,7 +15,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.LEDGER_NKEY_SEED, CommonConstants.LEDGER_SERVICE)
+        options: getNatsOptions(CommonConstants.LEDGER_SERVICE, process.env.LEDGER_NKEY_SEED)
 
       }
     ]),

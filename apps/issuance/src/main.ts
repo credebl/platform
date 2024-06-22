@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(IssuanceModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.ISSUANCE_NKEY_SEED, CommonConstants.ISSUANCE_SERVICE)
+    options: getNatsOptions(CommonConstants.ISSUANCE_SERVICE, process.env.ISSUANCE_NKEY_SEED)
 
   });
 

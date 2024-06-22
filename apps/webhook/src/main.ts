@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(WebhookModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.ISSUANCE_NKEY_SEED, CommonConstants.WEBHOOK_SERVICE)
+    options: getNatsOptions(CommonConstants.WEBHOOK_SERVICE, process.env.ISSUANCE_NKEY_SEED)
 
   });
 

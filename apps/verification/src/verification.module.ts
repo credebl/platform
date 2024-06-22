@@ -18,7 +18,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED, CommonConstants.VERIFICATION_SERVICE)
+        options: getNatsOptions(CommonConstants.VERIFICATION_SERVICE, process.env.VERIFICATION_NKEY_SEED)
 
       }
     ]),

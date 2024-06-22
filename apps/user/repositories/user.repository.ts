@@ -11,7 +11,8 @@ import {
   IUsersProfile,
   IUserInformation,
   IVerifyUserEmail,
-  IUserDeletedActivity
+  IUserDeletedActivity,
+  UserKeycloakId
 } from '../interfaces/user.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
@@ -779,30 +780,54 @@ export class UserRepository {
     }
   }
 
-  async getUserKeycloak(userEmails: string[]): Promise<string[]> {
+  async getUserDetailsByUserId(userId: string): Promise<{
+    email: string;
+  }> {
     try {
-      const users = await this.prisma.user.findMany({
+      const getUserDetails = await this.prisma.user.findUnique({
         where: {
-            email: {
-                in: userEmails
-            }
+            id: userId
         },
         select: {
-            email: true,
-            keycloakUserId: true
+          email: true
         }
-    });
-
-    // Create a map for quick lookup of keycloakUserId by email
-    const userMap = new Map(users.map(user => [user.email, user.keycloakUserId]));
-
-    // Collect the keycloakUserIds in the order of input emails
-    const keycloakUserIds = userEmails.map(email => userMap.get(email) || null);
-
-    return keycloakUserIds;
+      });
+      return getUserDetails;
     } catch (error) {
-      this.logger.error(`Error in getUserKeycloak: ${error} `);
+      this.logger.error(`Error in getting user details: ${error} `);
       throw error;
     }
   }
+
+  async getUserKeycloak(userEmails: string[]): Promise<UserKeycloakId[]> {
+    try {
+      const users = await this.prisma.user.findMany({
+        where: {
+          email: {
+            in: userEmails
+          }
+        },
+        select: {
+          email: true,
+          keycloakUserId: true,
+          id: true
+        }
+      });
+  
+      // Create a map for quick lookup of keycloakUserId, id, and email by email
+      const userMap = new Map(users.map(user => [user.email, { id: user.id, keycloakUserId: user.keycloakUserId, email: user.email }]));
+  
+      // Collect the keycloakUserId, id, and email in the order of input emails
+      const result = userEmails.map(email => {
+        const user = userMap.get(email);
+        return { id: user?.id || null, keycloakUserId: user?.keycloakUserId || null, email };
+      });
+  
+      return result;
+    } catch (error) {
+      this.logger.error(`Error in getUserKeycloak: ${error}`);
+      throw error;
+    }
+  }
+  
 }

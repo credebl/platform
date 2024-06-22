@@ -150,6 +150,18 @@ export enum PromiseResult {
 export enum PrismaTables {
     PRESENTATIONS = 'presentations',
     CREDENTIALS = 'credentials',
+    ECOSYSTEM_ORGS = 'ecosystem_orgs',
+    ORG_AGENTS = 'org_agents',
+    ORG_DIDS = 'org_dids',
+    AGENT_INVITATIONS = 'agent_invitations',
+    CONNECTIONS = 'connections',
+    ECOSYSTEM_INVITATIONS = 'ecosystem_invitations',
+    FILE_UPLOAD = 'file_upload',
+    NOTIFICATION = 'notification',
+    USER_ACTIVITY = 'user_activity',
+    USER_ORG_ROLES = 'user_org_roles',
+    ORG_INVITATIONS = 'org_invitations',
+    ORGANIZATION = 'organization'
 }
 
 export enum IssuanceProcessState {

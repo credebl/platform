@@ -224,6 +224,7 @@ export const ResponseMessages = {
             alreadySpinUp: 'Agent already spun up',
             agentUrl: 'Agent url not exist',
             apiKeyNotExist:'API key is not found',
+            walletNotDeleted:'Wallet is not deleted, Please check',
             seedChar: 'seed must be at most 32 characters',
             validWalletName: 'Please enter valid wallet name. It allows only alphanumeric values',
             platformConfiguration: 'Platform configuration is missing or invalid',
@@ -274,7 +275,8 @@ export const ResponseMessages = {
             connectionNotFound: 'Connection not found',
             agentEndPointNotFound: 'agentEndPoint Not Found',
             agentUrlNotFound: 'agent url not found',
-            connectionRecordNotFound: 'Connection records not found'
+            connectionRecordNotFound: 'Connection records does not exists',
+            removeConnectionReferences: 'First you have to remove credentials data and verification data'
         }
     },
     issuance: {
@@ -321,7 +323,8 @@ export const ResponseMessages = {
             missingRequestId: 'Param requestId is missing from the request.',
             cachedData: 'Cached data does not exist',
             cachedfileData: 'Cached file data does not exist',
-            issuanceRecordsNotFound: 'Issuance records not found'
+            issuanceRecordsNotFound: 'Issuance records does not exists',
+            removeIssuanceData: 'First you have to remove issuance data'
         }
     },
     verification: {
@@ -346,7 +349,8 @@ export const ResponseMessages = {
             platformConfigNotFound: 'Platform config not found',
             batchEmailSend: 'Unable to send email in batches',
             emailSend: 'Unable to send email to the user',
-            verificationRecordsNotFound: 'Verification records not found'
+            verificationRecordsNotFound: 'Verification records does not exists',
+            removeVerificationData: 'First you have to remove verification data'
         }
     },
     ecosystem: {
@@ -365,6 +369,7 @@ export const ResponseMessages = {
             submit: 'Endorsement request submitted to ledger',
             invitationReject: 'Ecosystem invitation rejected',
             invitationAccept: 'Ecosystem invitation accepted successfully',
+            deleteEcosystemMember: 'You are deleted as a ecosystem member',
             fetchEndorsors: 'Endorser transactions fetched successfully',
             DeclineEndorsementTransaction: 'Endorsement request declined',
             AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
@@ -424,7 +429,10 @@ export const ResponseMessages = {
             invalidMessage: 'Invalid transaction details. Missing "message" property.',
             invalidTransactionMessage: 'Invalid transaction details',
             ecosystemRoleNotMatch: 'Ecosystem role not match',
-            orgEcoIdRequired: 'OrgId & EcosystemId is required'
+            orgEcoIdRequired: 'OrgId & EcosystemId is required',
+            ecosystemMembersNotExists: 'Ecosystem members does not exists',
+            notAbleToDeleteEcosystem: 'You cannot delete the ecosystem, because you are the ecosystem lead',
+            ecosystemNotExists: 'Ecosystem does not exists'
         }
     },
     bulkIssuance: {

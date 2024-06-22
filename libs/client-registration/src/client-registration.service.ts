@@ -177,6 +177,7 @@ export class ClientRegistrationService {
     try {
       const payload = new ClientCredentialTokenPayloadDto();
       if (!clientId && !clientSecret) {
+        this.logger.error(`getManagementToken ::: Client ID and client secret are missing`);
         throw new BadRequestException(`Client ID and client secret are missing`);
       } 
 
@@ -748,6 +749,7 @@ export class ClientRegistrationService {
     try {
       const payload = new userTokenPayloadDto();
       if (!clientId && !clientSecret) {
+        this.logger.error(`getUserToken ::: Client ID and client secret are missing`);
         throw new BadRequestException(`Client ID and client secret are missing`);
       } 
       
@@ -792,6 +794,7 @@ export class ClientRegistrationService {
     try {
       const payload = new accessTokenPayloadDto();
       if (!clientId && !clientSecret) {
+        this.logger.error(`getAccessToken ::: Client ID and client secret are missing`);
         throw new BadRequestException(`Client ID and client secret are missing`);
       } 
 

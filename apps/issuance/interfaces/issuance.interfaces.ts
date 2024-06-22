@@ -1,7 +1,7 @@
 // eslint-disable-next-line camelcase
 import { AutoAccept, SchemaType } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { organisation } from '@prisma/client';
+import { Prisma, organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 
@@ -316,7 +316,6 @@ export interface IQueuePayload{
   isRetry: boolean;
   isLastData: boolean;
 }
-
 export interface ISchemaAttributes {
   attributeName: string;
   schemaDataType: string;
@@ -326,4 +325,8 @@ export interface ISchemaAttributes {
 
 export interface IIssuanceAttributes {
   [key: string]: string;
+}
+export interface IDeletedFileUploadRecords {
+  deleteFileDetails: Prisma.BatchPayload;
+  deleteFileUploadDetails: Prisma.BatchPayload;
 }

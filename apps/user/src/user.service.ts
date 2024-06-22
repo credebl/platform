@@ -41,7 +41,8 @@ import {
     IUserResetPassword,
     IPuppeteerOption,
     IShareDegreeCertificateRes,
-    IUserDeletedActivity
+    IUserDeletedActivity,
+    UserKeycloakId
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -388,7 +389,7 @@ export class UserService {
 
     try {
         try {
-          const data = jwt.decode(refreshToken);
+          const data = jwt.decode(refreshToken) as jwt.JwtPayload;
           const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
           const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken, userByKeycloakId?.['clientId'], userByKeycloakId?.['clientSecret']);
           return tokenResponse;
@@ -1165,7 +1166,18 @@ export class UserService {
     }
   }
 
-  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
+  async getUserDetails(userId: string): Promise<string> {
+    try {
+      const getUserDetails = await this.userRepository.getUserDetailsByUserId(userId);
+      const userEmail = getUserDetails.email;
+      return userEmail;
+    } catch (error) {
+      this.logger.error(`In get user details by user Id : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<UserKeycloakId[]> {
     try {
      
       const getkeycloakUserIds = await this.userRepository.getUserKeycloak(userEmails);

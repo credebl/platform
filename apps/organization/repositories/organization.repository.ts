@@ -6,9 +6,9 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails } from '../interfaces/organization.interface';
+import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails, IOrgRoleDetails } from '../interfaces/organization.interface';
 import { InternalServerErrorException } from '@nestjs/common';
-import { Invitation, SortValue } from '@credebl/enum/enum';
+import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { organisation } from '@prisma/client';
@@ -764,19 +764,19 @@ export class OrganizationRepository {
     deletedUserActivity: Prisma.BatchPayload;
     deletedUserOrgRole: Prisma.BatchPayload;
     deletedOrgInvitations: Prisma.BatchPayload;
+    deletedNotification: Prisma.BatchPayload;
     deleteOrg: IDeleteOrganization
   }> {
     const tablesToCheck = [
-        'org_agents',
-        'org_dids',
-        'agent_invitations',
-        'connections',
-        'credentials',
-        'presentations',
-        'ecosystem_invitations',
-        'ecosystem_orgs',
-        'file_upload',
-        'notification'
+        `${PrismaTables.ORG_AGENTS}`,
+        `${PrismaTables.ORG_DIDS}`,
+        `${PrismaTables.AGENT_INVITATIONS}`,
+        `${PrismaTables.CONNECTIONS}`,
+        `${PrismaTables.CREDENTIALS}`,
+        `${PrismaTables.PRESENTATIONS}`,
+        `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
+        `${PrismaTables.ECOSYSTEM_ORGS}`,
+        `${PrismaTables.FILE_UPLOAD}`
     ];
 
     try {
@@ -806,17 +806,30 @@ export class OrganizationRepository {
                 throw new ConflictException(ResponseMessages.organisation.error.organizationEcosystemValidate);
             }
 
+            const deletedNotification = await prisma.notification.deleteMany({ where: { orgId: id } });
+
             const deletedUserActivity = await prisma.user_activity.deleteMany({ where: { orgId: id } });
 
             const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
 
             const deletedOrgInvitations = await prisma.org_invitations.deleteMany({ where: { orgId: id } });
 
+            await this.prisma.schema.updateMany({
+              where: { orgId: id },
+              data: { orgId: null }
+            });
+        
+            await this.prisma.credential_definition.updateMany({
+              where: { orgId: id },
+              data: { orgId: null }
+            });
+
             // If no references are found, delete the organization
             const deleteOrg = await prisma.organisation.delete({ where: { id } });
 
-            return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deleteOrg};
+            return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deletedNotification, deleteOrg};
         });
+        // return result;
     } catch (error) {
         this.logger.error(`Error in deleteOrg: ${error}`);
         throw error;
@@ -984,6 +997,43 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
     return ledgerData;
   } catch (error) {
     this.logger.error(`[getLedger] - get ledger details: ${JSON.stringify(error)}`);
+    throw error;
+  }
+}
+
+async getOrgRole(id: string[]): Promise<IOrgRoleDetails[]> {
+  try {
+    const orgRoleData = await this.prisma.org_roles.findMany({
+      where: {
+        id: {
+            in: id
+        }
+    }
+    });
+    return orgRoleData;
+  } catch (error) {
+    this.logger.error(`[getOrgRole] - get org role details: ${JSON.stringify(error)}`);
+    throw error;
+  }
+}
+
+async getUserOrgRole(userId: string, orgId: string): Promise<string[]> {
+  try {
+    const userOrgRoleDetails = await this.prisma.user_org_roles.findMany({
+      where: {
+        userId,
+        orgId
+    },
+    select:{
+      orgRoleId: true
+    }
+    });
+     // Map the result to an array of orgRoleId
+     const orgRoleIds = userOrgRoleDetails.map(role => role.orgRoleId);
+
+     return orgRoleIds;
+  } catch (error) {
+    this.logger.error(`[getUserOrgRole] - get user org role details: ${JSON.stringify(error)}`);
     throw error;
   }
 }

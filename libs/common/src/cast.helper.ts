@@ -242,3 +242,19 @@ export function IsHostPortOrDomain(validationOptions?: ValidationOptions) {
     });
   };
 }
+
+export function checkDidLedgerAndNetwork(schemaType: string, did: string): boolean {
+
+  const cleanSchemaType = schemaType.trim().toLowerCase();
+  const cleanDid = did.trim().toLowerCase();
+  
+  if (JSONSchemaType.POLYGON_W3C === cleanSchemaType) {
+    return cleanDid.includes(JSONSchemaType.POLYGON_W3C);
+  }
+
+  if (JSONSchemaType.LEDGER_LESS === cleanSchemaType) {
+    return cleanDid.startsWith(ledgerLessDIDType.DID_KEY) || cleanDid.startsWith(ledgerLessDIDType.DID_WEB);
+  }
+
+  return false;
+}

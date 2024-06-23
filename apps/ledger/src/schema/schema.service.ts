@@ -25,6 +25,7 @@ import { CommonService } from '@credebl/common';
 import { W3CSchemaVersion } from './enum/schema.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { networkNamespace } from '@credebl/common/common.utils';
+import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -54,7 +55,6 @@ export class SchemaService extends BaseService {
           schema.schemaName,
           schema.schemaVersion
            );
-           
            if (0 !== schemaExists.length) {
              this.logger.error(ResponseMessages.schema.error.exists);
              throw new ConflictException(
@@ -273,6 +273,15 @@ export class SchemaService extends BaseService {
         });
       }
       const { agentEndPoint } = agentDetails;
+
+      const ledgerAndNetworkDetails = await checkDidLedgerAndNetwork(schemaPayload.schemaType, agentDetails.orgDid);
+      if (!ledgerAndNetworkDetails) {
+        throw new BadRequestException(ResponseMessages.schema.error.orgDidAndSchemaType, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.badRequest
+        });
+      }
+     
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
       let url;
@@ -540,7 +549,7 @@ export class SchemaService extends BaseService {
       }
   }
 
-  const indyNamespace = await networkNamespace(schemaDetails?.did);  
+  const indyNamespace = await networkNamespace(schemaDetails?.did); 
   if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
     ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER);
   } else {
@@ -643,7 +652,7 @@ export class SchemaService extends BaseService {
         {
           headers: {
             authorization: `Bearer ${process.env.SCHEMA_FILE_SERVER_TOKEN}`,
-            'Content-Type': 'application/json' // Added to specify JSON content type
+            'Content-Type': 'application/json'
           }
         }
       );

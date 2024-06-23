@@ -227,3 +227,8 @@ export enum LedgerLessMethods {
 export enum LedgerLessConstant {
     NO_LEDGER = 'no_ledger',
 }
+
+export enum ledgerLessDIDType {
+    DID_KEY = 'did:key',
+    DID_WEB = 'did:web'
+}

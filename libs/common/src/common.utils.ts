@@ -54,9 +54,9 @@ export function convertUrlToDeepLinkUrl(url: string): string {
 export const networkNamespace = (did):string => {
   // Split the DID into segments using the colon as a delimiter
   const segments = did.split(':');
-  const containsTestnet = segments.some(segment => segment.includes('testnet'));
+  const containsTestnet = segments.some(segment => segment.includes('polygon'));
   if (containsTestnet) {
-    return `${segments[0]}:${segments[1]}`;
+    return `${segments[1]}:${segments[2]}`;
   } else {
     return segments[1];
   }

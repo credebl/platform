@@ -177,7 +177,8 @@ export const ResponseMessages = {
             schemaUploading: 'Error while uploading schema JSON',
             W3CSchemaNotFOund: 'Error while resolving W3C schema',
             storeW3CSchema: 'Error while storing W3C schema',
-            networkNotFound: 'Error while fetching network'
+            networkNotFound: 'Error while fetching network',
+            orgDidAndSchemaType: 'Organization DID and schema type does not match'
         }
     },
     credentialDefinition: {

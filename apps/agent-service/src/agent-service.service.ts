@@ -1904,9 +1904,33 @@ export class AgentServiceService {
     const getApiKey = await this.getOrgAgentApiKey(orgId);
 
     const data = await this.commonService
-        .httpGet(url, { headers: { authorization: getApiKey } })
-        .then(async (response) => response)
-        .catch((error) => this.handleAgentSpinupStatusErrors(error));
+      .httpGet(url, { headers: { authorization: getApiKey } })
+      .then(async (response) => response)
+      .catch((error) => this.handleAgentSpinupStatusErrors(error));
+
+    return data;
+  }
+
+  async createW3CSchema(url: string, orgId: string, schemaRequestPayload): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const schemaRequest = await this.commonService
+        .httpPost(url, schemaRequestPayload, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return schemaRequest;
+    } catch (error) {
+      this.logger.error(`Error in createW3CSchema request in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async createConnectionInvitation(
+    url: string,
+    orgId: string,
+    connectionPayload: ICreateConnectionInvitation
+  ): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
 
       return data; 
   }

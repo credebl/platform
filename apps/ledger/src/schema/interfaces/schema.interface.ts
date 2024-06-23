@@ -1,3 +1,4 @@
+import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from '../dtos/user-role-org-perms.dto';
 
 export interface IUserRequestInterface {
@@ -64,4 +65,41 @@ export interface ISchemaData {
 export interface ISchemasWithCount {
   schemasCount: number;
   schemasResult: ISchemaData[];
+}
+interface IW3CAttributeValue {
+  attributeName: string;
+  schemaDataType: W3CSchemaDataType;
+  displayName: string;
+  isRequired: boolean;
+}
+
+interface IAttributeValue {
+  attributeName: string;
+  schemaDataType: string;
+  displayName: string;
+  isRequired: boolean;
+}
+
+export interface ICreateSchema {
+  schemaVersion?: string;
+  schemaName: string;
+  attributes: IAttributeValue[];
+  orgId?: string;  
+  orgDid?: string;
+}
+export interface ICreateW3CSchema {
+  attributes: IW3CAttributeValue[];
+  schemaName: string;
+  description: string;
+  schemaType: JSONSchemaType;
+}
+export interface IGenericSchema {
+  type: SchemaTypeEnum;
+  schemaPayload: ICreateSchema | ICreateW3CSchema;
+}
+
+export interface IschemaPayload {
+  schemaDetails: IGenericSchema,
+  user: IUserRequestInterface,
+  orgId: string
 }

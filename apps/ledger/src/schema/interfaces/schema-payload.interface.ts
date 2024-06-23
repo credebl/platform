@@ -78,6 +78,7 @@ export interface SchemaPayload {
     schemaName: string,
     did: string,
     description: string
+    jsonSchemaType?: string
   }
 
   export interface W3CSchemaAttributes {

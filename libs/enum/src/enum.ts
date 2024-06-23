@@ -189,3 +189,50 @@ export enum VerificationProcessState {
     ABANDONED = 'abandoned',
     DONE = 'done'
 }
+
+export enum ConnectionProcessState {
+    START = 'start',
+    INVITATION_SENT = 'invitation-sent',
+    INVITATION_RECEIVED = 'invitation-received',
+    REQUEST_SENT = 'request-sent',
+    DECLIEND = 'decliend',
+    REQUEST_RECEIVED = 'request-received',
+    RESPONSE_SENT = 'response-sent',
+    RESPONSE_RECEIVED = 'response-received',
+    COMPLETE = 'completed',
+    ABANDONED = 'abandoned'
+}
+
+export enum SchemaTypeEnum {
+    JSON = 'json',
+    INDY = 'indy'
+  }
+
+export enum W3CSchemaDataType {
+    NUMBER = 'number',
+    INTEGER = 'integer',
+    STRING = 'string'
+  }
+
+export enum JSONSchemaType {
+    POLYGON_W3C = 'polygon',
+    LEDGER_LESS = 'no_ledger'
+}
+
+export enum NetworkNamespace {
+    POLYGON_TESTNET = 'polygon:testnet'
+}
+
+export enum LedgerLessMethods {
+    WEB = 'web',
+    KEY = 'key'
+}
+
+export enum LedgerLessConstant {
+    NO_LEDGER = 'no_ledger',
+}
+
+export enum ledgerLessDIDType {
+    DID_KEY = 'did:key',
+    DID_WEB = 'did:web'
+}

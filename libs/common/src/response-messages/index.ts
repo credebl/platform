@@ -174,8 +174,11 @@ export const ResponseMessages = {
             failedFetchSchema: 'Failed to fetch schema data',
             atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
             schemaBuilder: 'Error while creating schema JSON',
+            schemaUploading: 'Error while uploading schema JSON',
             W3CSchemaNotFOund: 'Error while resolving W3C schema',
-            storeW3CSchema: 'Error while storing W3C schema'
+            storeW3CSchema: 'Error while storing W3C schema',
+            networkNotFound: 'Error while fetching network',
+            orgDidAndSchemaType: 'Organization DID and schema type does not match'
         }
     },
     credentialDefinition: {

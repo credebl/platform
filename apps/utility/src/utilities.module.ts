@@ -8,6 +8,7 @@ import { UtilitiesController } from './utilities.controller';
 import { UtilitiesService } from './utilities.service';
 import { UtilitiesRepository } from './utilities.repository';
 import { AwsService } from '@credebl/aws';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { AwsService } from '@credebl/aws';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.UTILITIES_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.UTILITY_SERVICE, process.env.UTILITIES_NKEY_SEED)
       }
     ]),
     CommonModule,

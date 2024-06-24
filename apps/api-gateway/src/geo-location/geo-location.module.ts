@@ -8,6 +8,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonModule } from '@credebl/common';
 import { RateLimiterModule, RateLimiterGuard } from 'nestjs-rate-limiter';
 import { APP_GUARD } from '@nestjs/core';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { APP_GUARD } from '@nestjs/core';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
       },
       CommonModule
     ]),

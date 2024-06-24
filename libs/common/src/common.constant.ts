@@ -343,7 +343,8 @@ ISSUANCE_SERVICE = 'issuance',
 VERIFICATION_SERVICE = 'verification',
 ECOSYSTEM_SERVICE = 'ecosystem',
 WEBHOOK_SERVICE = 'webhook',
-NOTIFICATION_SERVICE = 'notification'
+NOTIFICATION_SERVICE = 'notification',
+GEO_LOCATION_SERVICE = 'geo-location'
 }
 
 export const postgresqlErrorCodes = [];

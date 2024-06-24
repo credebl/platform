@@ -316,6 +316,16 @@ export interface IQueuePayload{
   isRetry: boolean;
   isLastData: boolean;
 }
+export interface ISchemaAttributes {
+  attributeName: string;
+  schemaDataType: string;
+  displayName: string;
+  isRequired: boolean;
+}
+
+export interface IIssuanceAttributes {
+  [key: string]: string;
+}
 export interface IDeletedFileUploadRecords {
   deleteFileDetails: Prisma.BatchPayload;
   deleteFileUploadDetails: Prisma.BatchPayload;

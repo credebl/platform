@@ -8,7 +8,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -33,6 +33,7 @@ import { RecordType, agent_invitations, organisation, user } from '@prisma/clien
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 
 @Injectable()
 export class IssuanceService {
@@ -59,6 +60,21 @@ export class IssuanceService {
       );
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes[]> {
+    const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
+    if (!schemaRequest) {
+      throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.notFound
+      });
+    } 
+
+      const getSchemaDetails = await this.issuanceRepository.getSchemaDetails(schemaUrl);
+      const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
+
+      return schemaAttributes;
   }
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
@@ -136,6 +152,15 @@ export class IssuanceService {
             autoAcceptCredential: payload.autoAcceptCredential || 'always',
             comment: comment || ''
           };
+          const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...filteredIssuanceAttributes } = payloadAttributes;
+
+          const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+
+          const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
+          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
         }
 
         await this.delay(500);
@@ -147,9 +172,9 @@ export class IssuanceService {
       const processedResults = results.map((result) => {
         if (PromiseResult.REJECTED === result.status) {
           return {
-            statusCode: result?.reason?.status?.message?.statusCode,
-            message: result?.reason?.status?.message?.error?.message,
-            error: ResponseMessages.errorMessages.serverError
+            statusCode: result?.reason?.status?.message?.statusCode || result?.reason?.response?.statusCode,
+            message: result?.reason?.status?.message?.error?.message || result?.reason?.response?.message,
+            error: result?.reason?.response?.error || ResponseMessages.errorMessages.serverError
           };
         } else if (PromiseResult.FULFILLED === result.status) {
           return {
@@ -299,6 +324,16 @@ export class IssuanceService {
           comment: comment || '',
           invitationDid:invitationDid || undefined
         };
+        const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...filteredIssuanceAttributes } = payloadAttributes;
+
+        const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+
+        const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
+        validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+        
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
       if (isShortenUrl) {
@@ -316,7 +351,7 @@ export class IssuanceService {
       const errorStack = error?.status?.message?.error;
       if (errorStack) {
         throw new RpcException({
-          message: errorStack?.reason ? errorStack?.reason : errorStack,
+          message: errorStack?.reason ? errorStack?.reason : errorStack?.message,
           statusCode: error?.status?.code
         });
 
@@ -716,6 +751,17 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         label: organisation?.name,
         imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
       };
+
+      const payloadAttributes = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, ...filteredIssuanceAttributes } = payloadAttributes;
+
+      const schemaServerUrl = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+
+      const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
+      validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+
     }
 
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
@@ -768,13 +814,18 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     if (errorStack) {
       errors.push(
         new RpcException({
-          error: `${errorStack?.error?.message} at position ${iterationNo}`,
           statusCode: errorStack?.statusCode,
-          message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`
+          message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`,
+          error: `${errorStack?.error?.message} at position ${iterationNo}`        })
+      );
+    }  else {
+      errors.push(
+        new RpcException({
+          statusCode: error?.response?.statusCode,
+          message: `${error?.response?.message} at position ${iterationNo}`,
+          error: error?.response?.error
         })
       );
-    } else {
-      errors.push(new InternalServerErrorException(`${error.message} at position ${iterationNo}`));
     }
     return false;
   }

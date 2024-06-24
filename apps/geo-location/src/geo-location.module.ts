@@ -7,6 +7,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { PrismaService } from '@credebl/prisma-service';
 import { GeoLocationRepository } from './geo-location.repository';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { GeoLocationRepository } from './geo-location.repository';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.GEOLOCATION_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.GEOLOCATION_NKEY_SEED)
       }
     ]),
     CommonModule,

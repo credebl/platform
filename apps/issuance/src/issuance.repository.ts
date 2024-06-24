@@ -251,6 +251,21 @@ export class IssuanceRepository {
     }
   }
 
+  async getSchemaDetails(schemaId: string): Promise<schema> {
+    try {
+      const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+        where: {
+          schemaLedgerId: schemaId
+        }
+      });
+
+      return schemaDetails;
+    } catch (error) {
+      this.logger.error(`Error in get schema details: ${error.message}`);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+  
   async getCredentialDefinitionDetails(credentialDefinitionId: string): Promise<SchemaDetails> {
     try {
       const credentialDefinitionDetails = await this.prisma.credential_definition.findFirst({

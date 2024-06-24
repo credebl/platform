@@ -35,7 +35,7 @@ import { GeoLocationModule } from './geo-location/geo-location.module';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
       }
     ]),
     AgentModule,

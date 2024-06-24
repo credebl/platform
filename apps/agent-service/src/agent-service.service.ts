@@ -1754,12 +1754,18 @@ export class AgentServiceService {
   async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
+      this.logger.log("orgAgentApiKey:", orgAgentApiKey);
+
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
+
+      this.logger.log("orgAgentId:", orgAgentId);
       let apiKey;
       if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
           CommonConstants.PLATFORM_ADMIN_ORG
         );
+        this.logger.log("platformAdminSpinnedUp:", platformAdminSpinnedUp);
+
         if (!platformAdminSpinnedUp) {
           throw new InternalServerErrorException('Agent not able to spin-up');
         }

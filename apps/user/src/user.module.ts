@@ -18,6 +18,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserService } from './user.service';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { AwsService } from '@credebl/aws';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { AwsService } from '@credebl/aws';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.USER_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.USER_NKEY_SEED)
       }
     ]),
     

@@ -1,4 +1,4 @@
-import { schemaRequestType } from '@credebl/enum/enum';
+import { JSONSchemaType, ledgerLessDIDType, schemaRequestType } from '@credebl/enum/enum';
 import { ISchemaFields } from './interfaces/schema.interface';
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
@@ -365,4 +365,20 @@ export function IsHostPortOrDomain(validationOptions?: ValidationOptions) {
       validator: IsHostPortOrDomainConstraint
     });
   };
+}
+
+export function checkDidLedgerAndNetwork(schemaType: string, did: string): boolean {
+
+  const cleanSchemaType = schemaType.trim().toLowerCase();
+  const cleanDid = did.trim().toLowerCase();
+  
+  if (JSONSchemaType.POLYGON_W3C === cleanSchemaType) {
+    return cleanDid.includes(JSONSchemaType.POLYGON_W3C);
+  }
+
+  if (JSONSchemaType.LEDGER_LESS === cleanSchemaType) {
+    return cleanDid.startsWith(ledgerLessDIDType.DID_KEY) || cleanDid.startsWith(ledgerLessDIDType.DID_WEB);
+  }
+
+  return false;
 }

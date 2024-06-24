@@ -1,3 +1,8 @@
+export enum NATSReconnects {
+    maxReconnectAttempts = (10 * 60) / 5, // 10 minutes with a reconnection attempt every 5 seconds
+    reconnectTimeWait = 5000 // 5 second delay between reconnection attempts
+}
+
 export enum SortValue {
     ASC = 'asc',
     DESC = 'desc'
@@ -201,4 +206,38 @@ export enum ConnectionProcessState {
     RESPONSE_RECEIVED = 'response-received',
     COMPLETE = 'completed',
     ABANDONED = 'abandoned'
+}
+
+export enum SchemaTypeEnum {
+    JSON = 'json',
+    INDY = 'indy'
+  }
+
+export enum W3CSchemaDataType {
+    NUMBER = 'number',
+    INTEGER = 'integer',
+    STRING = 'string'
+  }
+
+export enum JSONSchemaType {
+    POLYGON_W3C = 'polygon',
+    LEDGER_LESS = 'no_ledger'
+}
+
+export enum NetworkNamespace {
+    POLYGON_TESTNET = 'polygon:testnet'
+}
+
+export enum LedgerLessMethods {
+    WEB = 'web',
+    KEY = 'key'
+}
+
+export enum LedgerLessConstant {
+    NO_LEDGER = 'no_ledger',
+}
+
+export enum ledgerLessDIDType {
+    DID_KEY = 'did:key',
+    DID_WEB = 'did:web'
 }

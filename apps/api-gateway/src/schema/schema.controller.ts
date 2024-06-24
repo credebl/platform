@@ -1,7 +1,7 @@
 import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param, ParseUUIDPipe } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
-import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery, ApiExtraModels, ApiBody, getSchemaPath } from '@nestjs/swagger';
 import { SchemaService } from './schema.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -17,7 +17,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CreateSchemaDto, CreateW3CSchemaDto } from '../dtos/create-schema.dto';
+import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
 
@@ -133,42 +133,22 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Post('/:orgId/polygon-w3c/schemas')
-  @ApiOperation({
-    summary: 'Create and sends a W3C-schema to the ledger.',
-    description: 'Create and sends a W3C-schema to the ledger.'
-  })
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto,  @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
-
-    const schemaDetails = await this.appService.createW3CSchema(schemaPayload, orgId, user.id);
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.schema.success.create,
-      data: schemaDetails
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
+  
   @Post('/:orgId/schemas')
   @ApiOperation({
-    summary: 'Create and sends a schema to the ledger.',
-    description: 'Create and sends a schema to the ledger.'
-  })
+    summary: 'Create and register various types of schemas.',
+    description: 'Enables the creation and registration of schemas across different systems: the Indy ledger, the Polygon blockchain network, and W3C ledger-less standards.'
+  }
+  )
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
-
-    schema.orgId = orgId;
-    const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
-
+  async createSchema(@Res() res: Response, @Body() schemaDetails: GenericSchemaDTO, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+  const schemaResponse = await this.appService.createSchema(schemaDetails, user, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.schema.success.create,
-      data: schemaDetails
+      data: schemaResponse
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

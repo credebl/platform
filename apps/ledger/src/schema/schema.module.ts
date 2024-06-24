@@ -8,13 +8,14 @@ import { SchemaService } from './schema.service';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from '@credebl/prisma-service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { CommonConstants } from '@credebl/common/common.constant';
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.SCHEMA_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.SCHEMA_SERVICE, process.env.SCHEMA_NKEY_SEED)
       }
     ]),
 

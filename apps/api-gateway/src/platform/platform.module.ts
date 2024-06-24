@@ -4,6 +4,7 @@ import { PlatformService } from './platform.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.PLATFORM_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
       }
     ])
   ],

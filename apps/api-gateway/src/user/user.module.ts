@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { AwsService } from '@credebl/aws';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { AwsService } from '@credebl/aws';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
 
       }
     ])

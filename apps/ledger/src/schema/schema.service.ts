@@ -5,7 +5,8 @@ import {
   Inject,
   ConflictException,
   Injectable,
-  NotAcceptableException, NotFoundException
+  NotAcceptableException, NotFoundException,
+  ForbiddenException
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
@@ -667,34 +668,49 @@ export class SchemaService extends BaseService {
   async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
     
     try {  
-      const { agentEndPoint } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-      const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
+      const [{agentEndPoint}, getAgentDetails, getSchemaDetails] = await Promise.all([
+        this.schemaRepository.getAgentDetailsByOrgId(orgId),
+        this.schemaRepository.getAgentType(orgId),
+        this.schemaRepository.getSchemaBySchemaId(schemaId)
+      ]);
+
+      if (!getSchemaDetails) {
+         throw new NotFoundException(ResponseMessages.schema.error.notFound);
+      }
+  
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
 
+      if (getSchemaDetails?.orgId !== orgId) {
+        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch);
+      }
 
       let schemaResponse;
-      if (OrgAgentType.DEDICATED === orgAgentType) {
-        const getSchemaPayload = {
-          schemaId,
-          orgId,
-          agentEndPoint,
-          agentType: OrgAgentType.DEDICATED
-        };
-        schemaResponse = await this._getSchemaById(getSchemaPayload);
-      } else if (OrgAgentType.SHARED === orgAgentType) {
-        const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-        const getSchemaPayload = {
-          tenantId,
-          method: 'getSchemaById',
-          payload: { schemaId },
-          agentType: OrgAgentType.SHARED,
-          agentEndPoint,
-          orgId
-        };
-        schemaResponse = await this._getSchemaById(getSchemaPayload);
+      if (getSchemaDetails?.type === SchemaType.INDY) {
+        if (OrgAgentType.DEDICATED === orgAgentType) {
+          const getSchemaPayload = {
+            schemaId,
+            orgId,
+            agentEndPoint,
+            agentType: OrgAgentType.DEDICATED
+          };
+          schemaResponse = await this._getSchemaById(getSchemaPayload);
+        } else if (OrgAgentType.SHARED === orgAgentType) {
+          const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
+          const getSchemaPayload = {
+            tenantId,
+            method: 'getSchemaById',
+            payload: { schemaId },
+            agentType: OrgAgentType.SHARED,
+            agentEndPoint,
+            orgId
+          };
+          schemaResponse = await this._getSchemaById(getSchemaPayload);
+        }
+        return schemaResponse.response;
+      } else if (getSchemaDetails?.type === SchemaType.W3C_Schema) {
+         return getSchemaDetails;
       }
-      return schemaResponse.response;
-
+     
     } catch (error) {
       this.logger.error(`Error in getting schema by id: ${error}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {

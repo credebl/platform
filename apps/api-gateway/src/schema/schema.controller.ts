@@ -20,6 +20,7 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -43,7 +44,7 @@ export class SchemaController {
   async getSchemaById(
     @Res() res: Response,
     @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
-    @Param('schemaId') schemaId: string
+    @Param('schemaId', TrimStringParamPipe) schemaId: string
   ): Promise<Response> {
 
     if (!schemaId) {

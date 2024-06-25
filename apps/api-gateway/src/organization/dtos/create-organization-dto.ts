@@ -53,21 +53,24 @@ export class CreateOrganizationDto {
   @IsString({ message: 'registrationNumber must be in string format.' })
   registrationNumber?: string;
 
-  @ApiProperty({ example: 'IN' })
+  @ApiPropertyOptional({ example: 'IN' })
+  @IsOptional()
   @IsNotEmpty({ message: 'country is required' })
   @MinLength(2, { message: 'country must be at least 2 characters' })
   @MaxLength(50, { message: 'country must be at most 50 characters' })
   @IsNumber()
   countryId?: number;
 
-  @ApiProperty({ example: 'MH' })
+  @ApiPropertyOptional({ example: 'MH' })
+  @IsOptional()
   @IsNotEmpty({ message: 'state is required' })
   @MinLength(2, { message: 'state must be at least 2 characters' })
   @MaxLength(50, { message: 'state must be at most 50 characters' })
   @IsNumber()
   stateId?: number;
 
-  @ApiProperty({ example: 'Mumbai' })
+  @ApiPropertyOptional({ example: 'Mumbai' })
+  @IsOptional()
   @IsNotEmpty({ message: 'city is required' })
   @MinLength(2, { message: 'city must be at least 2 characters' })
   @MaxLength(50, { message: 'city must be at most 50 characters' })

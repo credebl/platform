@@ -248,7 +248,7 @@ export class SchemaRepository {
 
   async getSchemaBySchemaId(schemaId: string): Promise<schema> {
     try {
-      return this.prisma.schema.findFirst({
+      return this.prisma.schema.findFirstOrThrow({
         where: {
           schemaLedgerId: schemaId
         }

@@ -92,7 +92,7 @@ export class UserService {
    */
   async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
-      const { email } = userEmailVerification;
+      const { email, brandLogoUrl, platformName } = userEmailVerification;
 
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
@@ -126,7 +126,7 @@ export class UserService {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
 
-        await this.sendEmailForVerification(email, resUser.verificationCode, redirectUrl, resUser.clientId);
+        await this.sendEmailForVerification(email, resUser.verificationCode, redirectUrl, resUser.clientId, brandLogoUrl, platformName);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -216,7 +216,7 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string): Promise<boolean> {
+  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -224,9 +224,10 @@ export class UserService {
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
       emailData.emailTo = email;
-      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Verify your email to activate your account`;
+      const platform = platformName || process.env.PLATFORM_NAME;
+      emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, clientId);
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, clientId, brandLogoUrl, platformName);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;

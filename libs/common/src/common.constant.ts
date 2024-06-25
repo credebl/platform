@@ -328,6 +328,26 @@ CACHE_TTL_SECONDS = 604800,
 // Bulk-issuance
 BATCH_SIZE = 100,
 MAX_CONCURRENT_OPERATIONS = 50,
+// MICROSERVICES NAMES
+API_GATEWAY_SERVICE = 'api-gateway',
+ORGANIZATION_SERVICE = 'organization',
+USER_SERVICE = 'user',
+AUTH_SERVICE = 'authz',
+FIDO_SERVICE = 'fido',
+UTILITY_SERVICE = 'utilitites',
+CONNECTION_SERVICE = 'connection',
+LEDGER_SERVICE = 'ledger',
+PLATFORM_SERVICE = 'platform',
+SCHEMA_SERVICE = 'schema',
+CREDENTIAL_DEFINITION_SERVICE = 'credential-definition',
+AGENT_SERVICE = 'agent-service',
+AGENT_PROVISIONING = 'agent-provisioning',
+ISSUANCE_SERVICE = 'issuance',
+VERIFICATION_SERVICE = 'verification',
+ECOSYSTEM_SERVICE = 'ecosystem',
+WEBHOOK_SERVICE = 'webhook',
+NOTIFICATION_SERVICE = 'notification',
+GEO_LOCATION_SERVICE = 'geo-location'
 }
 
 export const postgresqlErrorCodes = [];

@@ -9,8 +9,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
-import { OrgAgentType, SchemaType, TemplateIdentifier, PromiseResult } from '@credebl/enum/enum';
+import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier, IBulkPayloadObject} from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -28,12 +28,14 @@ import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { ICredentialOfferResponse, IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { agent_invitations, organisation } from '@prisma/client';
+import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import * as pLimit from 'p-limit';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 
 
 @Injectable()
@@ -45,6 +47,7 @@ export class IssuanceService {
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
+    private readonly userActivityRepository: UserActivityRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
@@ -63,6 +66,21 @@ export class IssuanceService {
       );
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes[]> {
+    const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
+    if (!schemaRequest) {
+      throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.notFound
+      });
+    } 
+
+      const getSchemaDetails = await this.issuanceRepository.getSchemaDetails(schemaUrl);
+      const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
+
+      return schemaAttributes;
   }
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
@@ -140,6 +158,15 @@ export class IssuanceService {
             autoAcceptCredential: payload.autoAcceptCredential || 'always',
             comment: comment || ''
           };
+          const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...filteredIssuanceAttributes } = payloadAttributes;
+
+          const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+
+          const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
+          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
         }
 
         await this.delay(500);
@@ -151,9 +178,9 @@ export class IssuanceService {
       const processedResults = results.map((result) => {
         if (PromiseResult.REJECTED === result.status) {
           return {
-            statusCode: result?.reason?.status?.message?.statusCode,
-            message: result?.reason?.status?.message?.error?.message,
-            error: ResponseMessages.errorMessages.serverError
+            statusCode: result?.reason?.status?.message?.statusCode || result?.reason?.response?.statusCode,
+            message: result?.reason?.status?.message?.error?.message || result?.reason?.response?.message,
+            error: result?.reason?.response?.error || ResponseMessages.errorMessages.serverError
           };
         } else if (PromiseResult.FULFILLED === result.status) {
           return {
@@ -302,6 +329,16 @@ export class IssuanceService {
           comment: comment || '',
           invitationDid:invitationDid || undefined
         };
+        const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...filteredIssuanceAttributes } = payloadAttributes;
+
+        const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+
+        const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
+        validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+        
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
       if (isShortenUrl) {
@@ -319,7 +356,7 @@ export class IssuanceService {
       const errorStack = error?.status?.message?.error;
       if (errorStack) {
         throw new RpcException({
-          message: errorStack?.reason ? errorStack?.reason : errorStack,
+          message: errorStack?.reason ? errorStack?.reason : errorStack?.message,
           statusCode: error?.status?.code
         });
 
@@ -719,6 +756,17 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         label: organisation?.name,
         imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
       };
+
+      const payloadAttributes = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.credentialSubject;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, ...filteredIssuanceAttributes } = payloadAttributes;
+
+      const schemaServerUrl = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+
+      const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
+      validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+
     }
 
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
@@ -771,15 +819,18 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     if (errorStack) {
       errors.push(
         new RpcException({
-          error: `${errorStack?.error?.message} at position ${iterationNo}`,
           statusCode: errorStack?.statusCode,
-          message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`
+          message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`,
+          error: `${errorStack?.error?.message} at position ${iterationNo}`        })
+      );
+    }  else {
+      errors.push(
+        new RpcException({
+          statusCode: error?.response?.statusCode,
+          message: `${error?.response?.message} at position ${iterationNo}`,
+          error: error?.response?.error
         })
       );
-      throw error;
-    } else {
-      errors.push(new InternalServerErrorException(`${error.message} at position ${iterationNo}`));
-      throw error;
     }
   }
 }
@@ -1521,5 +1572,56 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-}
+  async deleteIssuanceRecords(orgId: string, userDetails: user): Promise<IDeletedIssuanceRecords> {
+    try {
 
+      const getFileUploadData = await this.issuanceRepository.getFileUploadDataByOrgId(orgId);
+
+      const getFileUploadIds = getFileUploadData.map(fileData => fileData.id);
+  
+      await this.issuanceRepository.deleteFileUploadData(getFileUploadIds, orgId);
+
+      const deletedCredentialsRecords = await this.issuanceRepository.deleteIssuanceRecordsByOrgId(orgId);
+      
+      if (0 === deletedCredentialsRecords?.deleteResult?.count) {
+        throw new NotFoundException(ResponseMessages.issuance.error.issuanceRecordsNotFound);
+      }
+
+    const statusCounts = {
+        [IssuanceProcessState.REQUEST_SENT]: 0,
+        [IssuanceProcessState.REQUEST_RECEIVED]: 0,
+        [IssuanceProcessState.PROPOSAL_SENT]: 0,
+        [IssuanceProcessState.PROPOSAL_RECEIVED]: 0,
+        [IssuanceProcessState.OFFER_SENT]: 0,
+        [IssuanceProcessState.OFFER_RECEIVED]: 0,
+        [IssuanceProcessState.DONE]: 0,
+        [IssuanceProcessState.DECLIEND]: 0,
+        [IssuanceProcessState.CREDENTIAL_RECEIVED]: 0,
+        [IssuanceProcessState.CREDENTIAL_ISSUED]: 0,
+        [IssuanceProcessState.ABANDONED]: 0
+    };
+
+    await Promise.all(deletedCredentialsRecords?.recordsToDelete?.map(async (record) => {
+        statusCounts[record.state]++;
+    }));
+
+    const filteredStatusCounts = Object.fromEntries(
+      Object.entries(statusCounts).filter(entry => 0 < entry[1])
+    );
+
+      const deletedIssuanceData = {
+        deletedCredentialsRecordsCount : deletedCredentialsRecords?.deleteResult?.count,
+        deletedRecordsStatusCount: filteredStatusCounts
+      }; 
+
+      await this.userActivityRepository._orgDeletedActivity(orgId, userDetails, deletedIssuanceData, RecordType.ISSUANCE_RECORD);
+    
+      return deletedCredentialsRecords;
+    } catch (error) {
+      this.logger.error(`[deleteIssuanceRecords] - error in deleting issuance records: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  
+}

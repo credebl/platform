@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { UtilitiesModule } from './utilities.module';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 const logger = new Logger();
 
@@ -11,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(UtilitiesModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.UTILITIES_NKEY_SEED)
+    options: getNatsOptions(CommonConstants.UTILITY_SERVICE, process.env.UTILITIES_NKEY_SEED)
 
   });
   app.useGlobalFilters(new HttpExceptionFilter());

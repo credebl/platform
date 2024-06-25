@@ -1,13 +1,15 @@
-import * as url from 'url';
 export class URLUserEmailTemplate {
-  public getUserURLTemplate(email: string, verificationCode: string): string {
-    const endpoint = `${process.env.FRONT_END_URL}`;
+  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string): string {
 
-    const apiUrl = url.parse(
-      `${endpoint}/verify-email-success?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
+    const apiUrl = new URL(
+      clientId === process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID ? '/verify-email-success' : '',
+      redirectUrl
     );
-    
-    const validUrl = apiUrl.href.replace('/:', ':');
+
+    apiUrl.searchParams.append('verificationCode', verificationCode);
+    apiUrl.searchParams.append('email', encodeURIComponent(email));
+
+    const validUrl = apiUrl.href;
 
     try {
       return `<!DOCTYPE html>
@@ -59,7 +61,6 @@ export class URLUserEmailTemplate {
           </div>
       </body>
       </html>`;
-
     } catch (error) {}
   }
 }

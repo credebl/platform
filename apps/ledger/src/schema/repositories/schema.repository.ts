@@ -217,7 +217,7 @@ export class SchemaRepository {
           schemaLedgerId: true,
           createdBy: true,
           publisherDid: true,
-          orgId: true,
+          orgId: true,  // This field can be null
           issuerId: true
         },
         orderBy: {
@@ -232,7 +232,14 @@ export class SchemaRepository {
           ledgerId: payload.ledgerId
         }
       });
-      return { schemasCount, schemasResult };
+
+      // Handle null orgId in the response
+      const schemasWithDefaultOrgId = schemasResult.map(schema => ({
+        ...schema,
+        orgId: schema.orgId || null // Replace null orgId with 'N/A' or any default value
+      }));
+
+      return { schemasCount, schemasResult: schemasWithDefaultOrgId };
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
       throw error;

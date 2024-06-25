@@ -1,4 +1,4 @@
-import { IOrgUsers, Payload, ICheckUserDetails, PlatformSettings, IShareUserCertificate, UpdateUserProfile, IUsersProfile, IUserInformation, IUserSignIn, IUserCredentials, IUserResetPassword, IUserDeletedActivity} from '../interfaces/user.interface';
+import { IOrgUsers, Payload, ICheckUserDetails, PlatformSettings, IShareUserCertificate, UpdateUserProfile, IUsersProfile, IUserInformation, IUserSignIn, IUserCredentials, IUserResetPassword, IUserDeletedActivity, UserKeycloakId} from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
@@ -209,8 +209,14 @@ export class UserController {
     return this.userService.updateOrgDeletedActivity(payload.orgId, payload.userId, payload.deletedBy, payload.recordType, payload.userEmail, payload.txnMetadata);
   }
 
+  @MessagePattern({ cmd: 'get-user-details-by-userId' })
+  async getUserDetailsByUserId(payload: { userId: string }): Promise<string> {
+    const { userId } = payload;
+    return this.userService.getUserDetails(userId);
+  }
+
   @MessagePattern({ cmd: 'get-user-keycloak-id' })
-  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<UserKeycloakId[]> {
     return this.userService.getUserKeycloakIdByEmail(userEmails);
   }
 

@@ -88,7 +88,21 @@ export class SchemaRepository {
           createdBy: true,
           publisherDid: true,
           orgId: true,
-          issuerId: true
+          issuerId: true,
+          organisation: {
+            select:{
+              name: true,
+              userOrgRoles: {
+                select: {
+                  user: {
+                    select: {
+                      firstName: true
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         orderBy: {
           [payload.sortField]: SortValue.ASC === payload.sortBy ? SortValue.ASC : SortValue.DESC

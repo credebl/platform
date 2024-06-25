@@ -673,6 +673,10 @@ export class SchemaService extends BaseService {
         this.schemaRepository.getAgentType(orgId),
         this.schemaRepository.getSchemaBySchemaId(schemaId)
       ]);
+
+      if (!getSchemaDetails) {
+         throw new NotFoundException(ResponseMessages.schema.error.notFound);
+      }
   
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
 

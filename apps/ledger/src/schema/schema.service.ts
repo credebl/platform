@@ -763,8 +763,22 @@ export class SchemaService extends BaseService {
       
       const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);       
-        return {...schemaAttributeItem, attributes};
-      });
+        const firstName = schemaAttributeItem?.['organisation']?.userOrgRoles[0]?.user?.firstName;
+        
+        return { 
+          createDateTime: schemaAttributeItem.createDateTime,
+          name: schemaAttributeItem.name,
+          version: schemaAttributeItem.version,
+          attributes,
+          schemaLedgerId: schemaAttributeItem.schemaLedgerId,
+          createdBy: schemaAttributeItem.createdBy,
+          publisherDid: schemaAttributeItem.publisherDid,
+          orgId: schemaAttributeItem.orgId,
+          issuerId: schemaAttributeItem.issuerId,
+          organisationName: schemaAttributeItem?.['organisation'].name,
+          userName: firstName
+        };
+      });      
 
       const nextPage:number = Number(schemaSearchCriteria.pageNumber) + 1;      
 

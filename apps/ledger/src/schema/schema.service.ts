@@ -763,8 +763,17 @@ export class SchemaService extends BaseService {
       
       const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);       
-        return {...schemaAttributeItem, attributes};
-      });
+        const firstName = schemaAttributeItem?.['organisation']?.userOrgRoles[0]?.user?.firstName;
+        const orgName = schemaAttributeItem?.['organisation'].name;
+        delete schemaAttributeItem?.['organisation'];
+
+      return {
+        ...schemaAttributeItem, 
+        attributes,
+        organizationName: orgName,
+        userName: firstName
+      };
+      });      
 
       const nextPage:number = Number(schemaSearchCriteria.pageNumber) + 1;      
 

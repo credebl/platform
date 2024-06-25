@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json ./
+#COPY package-lock.json ./
 
 # Install dependencies
 RUN pnpm i
@@ -13,12 +14,10 @@ RUN pnpm i
 # Copy the rest of the application code
 COPY . .
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
 
-
-# Build the organization service
-RUN pnpm run build organization
-
+# Build the connection service
+RUN pnpm run build geo-location
 
 # Stage 2: Create the final image
 FROM node:18-alpine
@@ -27,12 +26,15 @@ RUN npm install -g pnpm
 WORKDIR /app
 
 # Copy the compiled code from the build stage
-COPY --from=build /app/dist/apps/organization/ ./dist/apps/organization/
+COPY --from=build /app/dist/apps/geo-location/ ./dist/apps/geo-location/
 
 # Copy the libs folder from the build stage
 COPY --from=build /app/libs/ ./libs/
 #COPY --from=build /app/package.json ./  
 COPY --from=build /app/node_modules  ./node_modules
 
+# Install production dependencies for the final image
+#RUN npm i --only=production
+
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/organization/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/geo-location/main.js"]

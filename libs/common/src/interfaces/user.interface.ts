@@ -15,6 +15,8 @@ export interface ISignInUser {
         clientId?: string;
         clientSecret?: string;
         username?: string;
+        brandLogoUrl?: string;
+        platformName?: string;
       }
       
       export  interface IUserInvitations {

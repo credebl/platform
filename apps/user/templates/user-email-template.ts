@@ -1,5 +1,5 @@
 export class URLUserEmailTemplate {
-  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string): string {
+  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName:string): string {
 
     const apiUrl = new URL(
       clientId === process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID ? '/verify-email-success' : '',
@@ -11,6 +11,9 @@ export class URLUserEmailTemplate {
 
     const validUrl = apiUrl.href;
 
+    const logoUrl = brandLogoUrl || process.env.BRAND_LOGO;
+    const platform = platformName || process.env.PLATFORM_NAME;
+    const poweredBy = platformName || process.env.POWERED_BY;
     try {
       return `<!DOCTYPE html>
       <html lang="en">
@@ -25,7 +28,7 @@ export class URLUserEmailTemplate {
           
           <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
           <div style="display: block; text-align:center;">
-                  <img src="${process.env.BRAND_LOGO}" alt="${process.env.PLATFORM_NAME} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+                  <img src="${logoUrl}" alt="${platform} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
               </div>
               
             <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
@@ -34,7 +37,7 @@ export class URLUserEmailTemplate {
                       Hello ${email},
                   </p>
                   <p>
-                  We are excited to welcome you to the ${process.env.PLATFORM_NAME} Platform. Your user account ${email} has been successfully created. 
+                  We are excited to welcome you to the ${platform} Platform. Your user account ${email} has been successfully created. 
                   </p><p>
                   To complete the verification process, please click on the "Verify" button or use the provided verification link below:
                    </p>
@@ -54,7 +57,7 @@ export class URLUserEmailTemplate {
 
                       </div>
                       <p style="margin-top: 6px;">
-                         © ${process.env.POWERED_BY}
+                         © ${poweredBy}
                       </p>
                   </footer>
               </div>

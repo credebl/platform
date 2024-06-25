@@ -25,7 +25,7 @@ COPY . .
 
 # Generate Prisma client
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
 RUN ls -R /app/apps/agent-provisioning/AFJ/
 
 # Build the user service

@@ -16,9 +16,8 @@ COPY . .
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
 RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
 
-# Build the ledger service
-RUN npm run build ledger
-
+# Build the connection service
+RUN pnpm run build geo-location
 
 # Stage 2: Create the final image
 FROM node:18-alpine
@@ -27,12 +26,15 @@ RUN npm install -g pnpm
 WORKDIR /app
 
 # Copy the compiled code from the build stage
-COPY --from=build /app/dist/apps/ledger/ ./dist/apps/ledger/
+COPY --from=build /app/dist/apps/geo-location/ ./dist/apps/geo-location/
 
 # Copy the libs folder from the build stage
 COPY --from=build /app/libs/ ./libs/
 #COPY --from=build /app/package.json ./  
 COPY --from=build /app/node_modules  ./node_modules
 
+# Install production dependencies for the final image
+#RUN npm i --only=production
+
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/ledger/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/geo-location/main.js"]

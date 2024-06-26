@@ -1021,7 +1021,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
         complete: (results) => results.data
       });
-      this.logger.log("parsedData:", parsedData);
+      
 
       if (0 >= parsedData.data.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyFile);
@@ -1031,7 +1031,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyheader);
       }
       const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email_identifier));
-      this.logger.log("invalidEmails:", invalidEmails);
+      
       if (0 < invalidEmails.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.invalidEmails);
       }
@@ -1040,11 +1040,11 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       this.logger.log("fileData:", fileData);
       this.logger.log('fileHeader:', fileHeader);
       const attributesArray = JSON.parse(credentialDetails.attributes);
-      this.logger.log('attributesArray:', attributesArray);
+      
 
       // Extract the 'attributeName' values from the objects and store them in an array
       const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
-      this.logger.log("attributeNameArray:", attributeNameArray);
+     
       if (0 >= attributeNameArray.length) {
         throw new BadRequestException(
           `Attributes are empty for credential definition ${templateId}`

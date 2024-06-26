@@ -995,7 +995,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         schemaName: '' 
       };
       const {fileName, templateId, type} = importFileDetails;
-  
+     this.logger.log("importFileDetails:", importFileDetails);
       if (type === SchemaType.W3C_Schema) {
         credentialDetails =
         await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
@@ -1005,16 +1005,18 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         credentialPayload.schemaName = credentialDetails.name;
         
       } else if (type === SchemaType.INDY) {
-
+        
         credentialDetails =
         await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
         credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
         credentialPayload.credentialDefinitionId = credentialDetails.credentialDefinitionId;
         credentialPayload.credentialType = SchemaType.INDY;
         credentialPayload.schemaName = credentialDetails.schemaName;
+        this.logger.log("credentialDetails:", credentialDetails);
       }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
+      this.logger.log("getFileDetails:", getFileDetails);
       const csvData: string = getFileDetails.Body.toString();
 
       const parsedData = paParse(csvData, {

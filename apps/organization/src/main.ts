@@ -5,6 +5,7 @@ import { OrganizationModule } from './organization.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 // import { nkeyAuthenticator } from 'nats';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 const logger = new Logger();
 
@@ -12,7 +13,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(OrganizationModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.ORGANIZATION_NKEY_SEED)
+    options: getNatsOptions(CommonConstants.ORGANIZATION_SERVICE, process.env.ORGANIZATION_NKEY_SEED)
 
   });
   app.useGlobalFilters(new HttpExceptionFilter());

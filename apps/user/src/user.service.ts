@@ -41,7 +41,8 @@ import {
     IUserResetPassword,
     IPuppeteerOption,
     IShareDegreeCertificateRes,
-    IUserDeletedActivity
+    IUserDeletedActivity,
+    UserKeycloakId
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -62,6 +63,7 @@ import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 import { toNumber } from '@credebl/common/cast.helper';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class UserService {
@@ -87,7 +89,7 @@ export class UserService {
    */
   async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
-      const { email } = userEmailVerification;
+      const { email, brandLogoUrl, platformName } = userEmailVerification;
 
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
@@ -112,8 +114,16 @@ export class UserService {
       userEmailVerification.username = uniqueUsername;
       const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
 
+      const token = await this.clientRegistrationService.getManagementToken(resUser.clientId, resUser.clientSecret);
+      const getClientData = await this.clientRegistrationService.getClientRedirectUrl(resUser.clientId, token);
       try {
-        await this.sendEmailForVerification(email, resUser.verificationCode);
+        const [redirectUrl] = getClientData[0]?.redirectUris || [];
+        
+        if (!redirectUrl) {
+          throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
+        }
+
+        await this.sendEmailForVerification(email, resUser.verificationCode, redirectUrl, resUser.clientId, brandLogoUrl, platformName);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -155,7 +165,7 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(email: string, verificationCode: string): Promise<boolean> {
+  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -163,9 +173,10 @@ export class UserService {
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
       emailData.emailTo = email;
-      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Verify your email to activate your account`;
+      const platform = platformName || process.env.PLATFORM_NAME;
+      emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode);
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, clientId, brandLogoUrl, platformName);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
@@ -240,8 +251,7 @@ export class UserService {
 
       let keycloakDetails = null;
 
-      const token = await this.clientRegistrationService.getManagementToken();
-
+      const token = await this.clientRegistrationService.getManagementToken(checkUserDetails.clientId, checkUserDetails.clientSecret);
       if (userInfo.isPasskey) {
         const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
@@ -380,7 +390,9 @@ export class UserService {
 
     try {
         try {
-          const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken);
+          const data = jwt.decode(refreshToken) as jwt.JwtPayload;
+          const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
+          const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken, userByKeycloakId?.['clientId'], userByKeycloakId?.['clientSecret']);
           return tokenResponse;
         } catch (error) {
           throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
@@ -504,7 +516,8 @@ export class UserService {
       const decryptedPassword = await this.commonService.decryptPassword(password);
       try {    
         
-        const authToken = await this.clientRegistrationService.getManagementToken();  
+
+        const authToken = await this.clientRegistrationService.getManagementToken(userData.clientId, userData.clientSecret);  
         userData.password = decryptedPassword;
         if (userData.keycloakUserId) {
           await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
@@ -567,7 +580,7 @@ export class UserService {
         userData.password = newDecryptedPassword;
         try {    
           let keycloakDetails = null;    
-          const token = await this.clientRegistrationService.getManagementToken();  
+          const token = await this.clientRegistrationService.getManagementToken(userData.clientId, userData.clientSecret);  
 
           if (userData.keycloakUserId) {
 
@@ -605,7 +618,7 @@ export class UserService {
       if (userData.keycloakUserId) {
 
         try {
-          const tokenResponse = await this.clientRegistrationService.getUserToken(email, password);
+          const tokenResponse = await this.clientRegistrationService.getUserToken(email, password, userData.clientId, userData.clientSecret);
           tokenResponse.isRegisteredToSupabase = false;
           return tokenResponse;
         } catch (error) {
@@ -1154,7 +1167,18 @@ export class UserService {
     }
   }
 
-  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<string[]> {
+  async getUserDetails(userId: string): Promise<string> {
+    try {
+      const getUserDetails = await this.userRepository.getUserDetailsByUserId(userId);
+      const userEmail = getUserDetails.email;
+      return userEmail;
+    } catch (error) {
+      this.logger.error(`In get user details by user Id : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<UserKeycloakId[]> {
     try {
      
       const getkeycloakUserIds = await this.userRepository.getUserKeycloak(userEmails);

@@ -1,3 +1,8 @@
+export enum NATSReconnects {
+    maxReconnectAttempts = (10 * 60) / 5, // 10 minutes with a reconnection attempt every 5 seconds
+    reconnectTimeWait = 5000 // 5 second delay between reconnection attempts
+}
+
 export enum SortValue {
     ASC = 'asc',
     DESC = 'desc'
@@ -50,6 +55,7 @@ export enum Ledgers {
     Indicio_Testnet = 'Indicio Testnet',
     Indicio_Demonet = 'Indicio Demonet',
     Indicio_Mainnet = 'Indicio Mainnet',
+    Not_Applicable = 'NA'
 }
 
 export enum Invitation {
@@ -144,4 +150,94 @@ export enum TemplateIdentifier {
 export enum PromiseResult {
     REJECTED = 'rejected',
     FULFILLED = 'fulfilled'
+}
+
+export enum PrismaTables {
+    PRESENTATIONS = 'presentations',
+    CREDENTIALS = 'credentials',
+    ECOSYSTEM_ORGS = 'ecosystem_orgs',
+    ORG_AGENTS = 'org_agents',
+    ORG_DIDS = 'org_dids',
+    AGENT_INVITATIONS = 'agent_invitations',
+    CONNECTIONS = 'connections',
+    ECOSYSTEM_INVITATIONS = 'ecosystem_invitations',
+    FILE_UPLOAD = 'file_upload',
+    NOTIFICATION = 'notification',
+    USER_ACTIVITY = 'user_activity',
+    USER_ORG_ROLES = 'user_org_roles',
+    ORG_INVITATIONS = 'org_invitations',
+    ORGANIZATION = 'organization'
+}
+
+export enum IssuanceProcessState {
+    PROPOSAL_SENT = 'proposal-sent',
+    PROPOSAL_RECEIVED = 'proposal-received',
+    OFFER_SENT = 'offer-sent',
+    OFFER_RECEIVED = 'offer-received',
+    DECLIEND = 'decliend',
+    REQUEST_SENT = 'request-sent',
+    REQUEST_RECEIVED = 'request-received',
+    CREDENTIAL_ISSUED = 'credential-issued',
+    CREDENTIAL_RECEIVED = 'credential-received',
+    DONE = 'done',
+    ABANDONED = 'abandoned'
+}
+
+export enum VerificationProcessState {
+    PROPOSAL_SENT = 'proposal-sent',
+    PROPOSAL_RECEIVED = 'proposal-received',
+    REQUEST_SENT = 'request-sent',
+    REQUEST_RECEIVED = 'request-received',
+    PRESENTATION_SENT = 'presentation-sent',
+    PRESENTATION_RECEIVED = 'presentation-received',
+    DECLIEND = 'declined',
+    ABANDONED = 'abandoned',
+    DONE = 'done'
+}
+
+export enum ConnectionProcessState {
+    START = 'start',
+    INVITATION_SENT = 'invitation-sent',
+    INVITATION_RECEIVED = 'invitation-received',
+    REQUEST_SENT = 'request-sent',
+    DECLIEND = 'decliend',
+    REQUEST_RECEIVED = 'request-received',
+    RESPONSE_SENT = 'response-sent',
+    RESPONSE_RECEIVED = 'response-received',
+    COMPLETE = 'completed',
+    ABANDONED = 'abandoned'
+}
+
+export enum SchemaTypeEnum {
+    JSON = 'json',
+    INDY = 'indy'
+  }
+
+export enum W3CSchemaDataType {
+    NUMBER = 'number',
+    INTEGER = 'integer',
+    STRING = 'string'
+  }
+
+export enum JSONSchemaType {
+    POLYGON_W3C = 'polygon',
+    LEDGER_LESS = 'no_ledger'
+}
+
+export enum NetworkNamespace {
+    POLYGON_TESTNET = 'polygon:testnet'
+}
+
+export enum LedgerLessMethods {
+    WEB = 'web',
+    KEY = 'key'
+}
+
+export enum LedgerLessConstant {
+    NO_LEDGER = 'no_ledger',
+}
+
+export enum ledgerLessDIDType {
+    DID_KEY = 'did:key',
+    DID_WEB = 'did:web'
 }

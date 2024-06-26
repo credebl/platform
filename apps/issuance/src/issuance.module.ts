@@ -14,6 +14,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { BulkIssuanceProcessor } from './issuance.processor';
 import { AwsService } from '@credebl/aws';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { AwsService } from '@credebl/aws';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.ISSUANCE_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.ISSUANCE_SERVICE, process.env.ISSUANCE_NKEY_SEED)
       }
     ]),
     CommonModule,
@@ -38,6 +40,6 @@ import { AwsService } from '@credebl/aws';
     })
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, IssuanceRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService]
+  providers: [IssuanceService, IssuanceRepository, UserActivityRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService]
 })
 export class IssuanceModule { }

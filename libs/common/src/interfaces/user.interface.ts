@@ -12,7 +12,11 @@ export interface ISignInUser {
       }
       export interface ISendVerificationEmail {
         email: string;
+        clientId?: string;
+        clientSecret?: string;
         username?: string;
+        brandLogoUrl?: string;
+        platformName?: string;
       }
       
       export  interface IUserInvitations {

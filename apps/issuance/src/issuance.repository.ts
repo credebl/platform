@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import {
@@ -16,6 +16,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   FileUpload,
   FileUploadData,
+  IDeletedFileUploadRecords,
   IssueCredentialWebhookPayload,
   OrgAgent,
   PreviewRequest,
@@ -24,7 +25,8 @@ import {
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
-import { SortValue } from '@credebl/enum/enum';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -249,6 +251,21 @@ export class IssuanceRepository {
     }
   }
 
+  async getSchemaDetails(schemaId: string): Promise<schema> {
+    try {
+      const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+        where: {
+          schemaLedgerId: schemaId
+        }
+      });
+
+      return schemaDetails;
+    } catch (error) {
+      this.logger.error(`Error in get schema details: ${error.message}`);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+  
   async getCredentialDefinitionDetails(credentialDefinitionId: string): Promise<SchemaDetails> {
     try {
       const credentialDefinitionDetails = await this.prisma.credential_definition.findFirst({
@@ -484,7 +501,8 @@ export class IssuanceRepository {
         return this.prisma.file_data.update({
           where: { id: jobId },
           data: {
-            credential_data: null
+            credential_data: null,
+            status: true
           }
         });
       }
@@ -587,4 +605,95 @@ export class IssuanceRepository {
       throw error;
     }
   }
+
+  async getFileUploadDataByOrgId(orgId: string): Promise<file_upload[]> {
+    try {
+      const fileDetails = await this.prisma.file_upload.findMany({
+        where: {
+          orgId
+        }
+      });
+      return fileDetails;
+    } catch (error) {
+      this.logger.error(`[getting file upload details] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteFileUploadData(fileUploadIds: string[], orgId: string): Promise<IDeletedFileUploadRecords> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+
+        const deleteFileDetails = await prisma.file_data.deleteMany({
+          where: {
+            fileUploadId: {
+              in: fileUploadIds
+            }
+          }
+        });
+
+        const deleteFileUploadDetails = await prisma.file_upload.deleteMany({
+          where: {
+            orgId
+          }
+        });
+
+        return { deleteFileDetails, deleteFileUploadDetails };
+
+      });
+    } catch (error) {
+      this.logger.error(`[Error in deleting file data] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteIssuanceRecordsByOrgId(orgId: string): Promise<IDeletedIssuanceRecords> {
+    try {
+      const tablesToCheck = [`${PrismaTables.PRESENTATIONS}`];
+
+      const referenceCounts = await Promise.all(
+        tablesToCheck.map((table) => this.prisma[table].count({ where: { orgId } }))
+      );
+
+      const referencedTables = referenceCounts
+        .map((count, index) => (0 < count ? tablesToCheck[index] : null))
+        .filter(Boolean);
+
+      if (0 < referencedTables.length) {
+        let errorMessage = `Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`;
+      
+        if (1 === referencedTables.length) {
+          if (referencedTables.includes(`${PrismaTables.PRESENTATIONS}`)) {
+            errorMessage += `, ${ResponseMessages.verification.error.removeVerificationData}`;
+          } 
+        }
+      
+        throw new ConflictException(errorMessage);
+      }
+
+      return await this.prisma.$transaction(async (prisma) => {  
+
+        const recordsToDelete = await this.prisma.credentials.findMany({
+          where: { orgId },
+          select: {
+            createDateTime: true,
+            createdBy: true,
+            connectionId: true,
+            schemaId: true,
+            state: true,
+            orgId: true       
+          }
+        });
+
+        const deleteResult = await prisma.credentials.deleteMany({
+          where: { orgId }
+        });
+
+        return { deleteResult, recordsToDelete};
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting issuance records: ${error.message}`);    
+      throw error;
+    }
+  } 
 }

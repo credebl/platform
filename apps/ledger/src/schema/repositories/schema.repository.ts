@@ -88,7 +88,21 @@ export class SchemaRepository {
           createdBy: true,
           publisherDid: true,
           orgId: true,
-          issuerId: true
+          issuerId: true,
+          organisation: {
+            select:{
+              name: true,
+              userOrgRoles: {
+                select: {
+                  user: {
+                    select: {
+                      firstName: true
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         orderBy: {
           [payload.sortField]: SortValue.ASC === payload.sortBy ? SortValue.ASC : SortValue.DESC
@@ -199,14 +213,16 @@ export class SchemaRepository {
 
   async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<IPlatformSchemas> {
     try {
+      const { ledgerId, schemaType, searchByText, sortField, sortBy, pageSize, pageNumber } = payload;
       const schemasResult = await this.prisma.schema.findMany({
         where: {
-          ledgerId: payload.ledgerId,
+          ledgerId,
+          type: schemaType,
           OR: [
-            { name: { contains: payload.searchByText, mode: 'insensitive' } },
-            { version: { contains: payload.searchByText, mode: 'insensitive' } },
-            { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } },
-            { issuerId: { contains: payload.searchByText, mode: 'insensitive' } }
+            { name: { contains: searchByText, mode: 'insensitive' } },
+            { version: { contains: searchByText, mode: 'insensitive' } },
+            { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } },
+            { issuerId: { contains: searchByText, mode: 'insensitive' } }
           ]
         },
         select: {
@@ -217,22 +233,31 @@ export class SchemaRepository {
           schemaLedgerId: true,
           createdBy: true,
           publisherDid: true,
-          orgId: true,
-          issuerId: true
+          orgId: true,  // This field can be null
+          issuerId: true,
+          type: true
         },
         orderBy: {
-          [payload.sortField]: SortValue.DESC === payload.sortBy ? SortValue.DESC : SortValue.ASC
+          [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
         },
-        take: Number(payload.pageSize),
-        skip: (payload.pageNumber - 1) * payload.pageSize
+        take: Number(pageSize),
+        skip: (pageNumber - 1) * pageSize
       });
 
       const schemasCount = await this.prisma.schema.count({
         where: {
-          ledgerId: payload.ledgerId
+          ledgerId,
+          type: schemaType
         }
       });
-      return { schemasCount, schemasResult };
+
+      // Handle null orgId in the response
+      const schemasWithDefaultOrgId = schemasResult.map(schema => ({
+        ...schema,
+        orgId: schema.orgId || null // Replace null orgId with 'N/A' or any default value
+      }));
+
+      return { schemasCount, schemasResult: schemasWithDefaultOrgId };
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
       throw error;

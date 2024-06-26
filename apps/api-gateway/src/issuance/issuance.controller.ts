@@ -292,12 +292,8 @@ async downloadBulkIssuanceCSVTemplate(
   ): Promise<object> {
       if (file) {
         const fileKey: string = uuidv4();
-        this.logger.log("file?.buffer:", file?.buffer);
         try {
-          this.logger.log("fileKey:", fileKey);
           await this.awsService.uploadCsvFile(fileKey, file?.buffer);
-          const temp = await this.awsService.getFile(fileKey);
-          this.logger.log("temp:", temp);
         } catch (error) {
 
           throw new RpcException(error.response ? error.response : error);
@@ -312,7 +308,6 @@ async downloadBulkIssuanceCSVTemplate(
         };
 
         const importCsvDetails = await this.issueCredentialService.uploadCSVTemplate(uploadedfileDetails);
-        this.logger.log("importCsvDetails:", importCsvDetails);
         const finalResponse: IResponseType = {
           statusCode: HttpStatus.CREATED,
           message: ResponseMessages.issuance.success.importCSV,

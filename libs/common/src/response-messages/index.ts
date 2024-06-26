@@ -329,6 +329,7 @@ export const ResponseMessages = {
             missingRequestId: 'Param requestId is missing from the request.',
             cachedData: 'Cached data does not exist',
             cachedfileData: 'Cached file data does not exist',
+            storeBulkData: 'Error while storing the bulk deata',
             issuanceRecordsNotFound: 'Issuance records does not exists',
             removeIssuanceData: 'First you have to remove issuance data'
         }

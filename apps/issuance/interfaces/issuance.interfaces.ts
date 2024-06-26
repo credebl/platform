@@ -316,6 +316,21 @@ export interface IQueuePayload{
   isRetry: boolean;
   isLastData: boolean;
 }
+
+interface FileDetails {
+  schemaLedgerId: string;
+  credentialDefinitionId: string;
+  fileData:object
+  fileName: string;
+  credentialType: string;
+  schemaName: string;
+}
+export interface IBulkPayloadObject {
+  parsedData?: unknown[],
+  parsedFileDetails?: FileDetails,
+  userId: string,
+  fileUploadId: string
+  };
 export interface ISchemaAttributes {
   attributeName: string;
   schemaDataType: string;

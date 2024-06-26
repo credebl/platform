@@ -471,6 +471,46 @@ export class IssuanceRepository {
       this.logger.error(`[getFileDetailsByFileId] - error: ${JSON.stringify(error)}`);
       throw error;
     }
+  }
+
+  async updateFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
+    try {
+      const { jobId, fileUpload, isError, referenceId, error, detailError } = fileUploadData;
+      if (jobId) {
+        return this.prisma.file_data.update({
+          where: { id: jobId },
+          data: {
+            detailError,
+            error,
+            isError,
+            referenceId,
+            fileUploadId: fileUpload
+          }
+        });
+      } else {
+        throw error;
+      }
+    } catch (error) {
+      this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+  async deleteFileDataByJobId(jobId: string): Promise<file_data> {
+    try {
+      if (jobId) {
+        return this.prisma.file_data.update({
+          where: { id: jobId },
+          data: {
+            credential_data: null,
+            status: true
+          }
+        });
+      }
+    } catch (error) {
+      this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
   async saveFileDetails(fileData, userId: string) {

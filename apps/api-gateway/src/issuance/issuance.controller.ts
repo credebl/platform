@@ -308,7 +308,6 @@ async downloadBulkIssuanceCSVTemplate(
         };
 
         const importCsvDetails = await this.issueCredentialService.uploadCSVTemplate(uploadedfileDetails);
-        this.logger.log("importCsvDetails:", importCsvDetails);
         const finalResponse: IResponseType = {
           statusCode: HttpStatus.CREATED,
           message: ResponseMessages.issuance.success.importCSV,

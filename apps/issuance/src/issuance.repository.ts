@@ -501,7 +501,8 @@ export class IssuanceRepository {
         return this.prisma.file_data.update({
           where: { id: jobId },
           data: {
-            credential_data: null
+            credential_data: null,
+            status: true
           }
         });
       }

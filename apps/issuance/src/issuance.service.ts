@@ -995,7 +995,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         schemaName: '' 
       };
       const {fileName, templateId, type} = importFileDetails;
-     this.logger.log("importFileDetails:", importFileDetails);
       if (type === SchemaType.W3C_Schema) {
         credentialDetails =
         await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
@@ -1012,13 +1011,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         credentialPayload.credentialDefinitionId = credentialDetails.credentialDefinitionId;
         credentialPayload.credentialType = SchemaType.INDY;
         credentialPayload.schemaName = credentialDetails.schemaName;
-        this.logger.log("credentialDetails:", credentialDetails);
       }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
-      this.logger.log("getFileDetails:", getFileDetails);
       const csvData: string = getFileDetails.Body.toString();
-      this.logger.log("csvData:", csvData);
       
 
       const parsedData = paParse(csvData, {
@@ -1027,7 +1023,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
         complete: (results) => results.data
       });
-      this.logger.log("parsedData:", parsedData);
+      
 
       if (0 >= parsedData.data.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyFile);
@@ -1037,39 +1033,32 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyheader);
       }
       const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email_identifier));
-      this.logger.log("invalidEmails:", invalidEmails);
+      
       if (0 < invalidEmails.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.invalidEmails);
       }
       const fileData: string[][] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
-      this.logger.log("fileData:", fileData);
-      this.logger.log('fileHeader:', fileHeader);
       const attributesArray = JSON.parse(credentialDetails.attributes);
-      this.logger.log('attributesArray:', attributesArray);
+      
 
       // Extract the 'attributeName' values from the objects and store them in an array
       const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
-      this.logger.log("attributeNameArray:", attributeNameArray);
+     
       if (0 >= attributeNameArray.length) {
         throw new BadRequestException(
           `Attributes are empty for credential definition ${templateId}`
         );
       }
 
-     const validateFileHeaders = await this.validateFileHeaders(fileHeader, attributeNameArray);
-      const validateFileData = await this.validateFileData(fileData, attributesArray, fileHeader);
-      this.logger.log("validateFileHeaders:", validateFileHeaders);
-      this.logger.log("validateFileData:", validateFileData);
-
+      await this.validateFileHeaders(fileHeader, attributeNameArray);
+      await this.validateFileData(fileData, attributesArray, fileHeader);
       
       credentialPayload.fileData = parsedData;
       credentialPayload.fileName = fileName;
       const newCacheKey = uuidv4();
 
-      const cacheManager = await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 60000);
-      this.logger.log("cacheManager:", cacheManager);
-      this.logger.log("newCacheKey:", newCacheKey);
+      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 60000);
       return newCacheKey;
 
     } catch (error) {

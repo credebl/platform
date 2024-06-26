@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 /* eslint-disable no-useless-catch */
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
@@ -8,8 +9,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
-import { IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier } from '@credebl/enum/enum';
+import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier} from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -32,6 +33,7 @@ import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuan
 import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 
@@ -798,7 +800,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        const isEmailSent = await sendEmail(this.emailData);        
+        const isEmailSent = await sendEmail(this.emailData);       
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
         this.counter++;
         if (!isEmailSent) {
@@ -827,7 +829,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         })
       );
     }
-    return false;
   }
 }
 
@@ -1135,11 +1136,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   }
 
   async issueBulkCredential(requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails): Promise<string> {
-    if ('' === requestId.trim()) {
+    if (!requestId) {
       throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
     }
-    // let credentialType : SchemaType;
-
     const fileUpload: FileUpload = {
       lastChangedDateTime: null,
       upload_type: '',
@@ -1148,8 +1147,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       createDateTime: null
     };
     let csvFileDetail;
-    try {
 
+    try {
       let cachedData = await this.cacheManager.get(requestId);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
@@ -1162,11 +1161,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
-
       if (!parsedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cachedData);
       }
-
       const parsedFileDetails = JSON.parse(cachedData as string);
 
       if (!parsedFileDetails) {
@@ -1182,22 +1179,19 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       
       csvFileDetail = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
-      const saveFileDetailsPromises = parsedData.map(async (element) => {
-        const credentialPayload = {
-          credential_data: element,
-          schemaId: parsedFileDetails.schemaLedgerId,
-          schemaName: parsedFileDetails.schemaName,
-          credDefId: parsedFileDetails.credentialDefinitionId,
-          state: false,
-          isError: false,
-          fileUploadId: csvFileDetail.id,
-          credentialType: parsedFileDetails.credentialType
-        };
-        return this.issuanceRepository.saveFileDetails(credentialPayload, clientDetails.userId);
-      });
 
-      // Wait for all saveFileDetails operations to complete
-      await Promise.all(saveFileDetailsPromises);
+    const bulkPayloadObject: IBulkPayloadObject = {
+     parsedData,
+     parsedFileDetails,
+     userId: clientDetails.userId,
+     fileUploadId: csvFileDetail.id
+     };
+
+      const storeBulkPayload = await this._storeBulkPayloadInBatch(bulkPayloadObject);
+
+      if (!storeBulkPayload) {
+        throw new BadRequestException(ResponseMessages.issuance.error.storeBulkData);
+      }
 
       const bulkpayload = await this.issuanceRepository.getFileDetails(csvFileDetail.id);
       if (!bulkpayload) {
@@ -1230,7 +1224,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         } catch (error) {
           this.logger.error(`Error processing issuance data: ${error}`);
         }
-
       return ResponseMessages.issuance.success.bulkProcess;
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;
@@ -1246,9 +1239,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
   async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<string> {
     let bulkpayloadRetry;
-
     try {
-
       const fileDetails = await this.issuanceRepository.getFileDetailsById(fileId);
       if (!fileDetails) {
         throw new BadRequestException(ResponseMessages.issuance.error.retry);
@@ -1291,7 +1282,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   }
 
   
-  async processIssuanceData(jobDetails: IQueuePayload): Promise<void> {
+  async processIssuanceData(jobDetails: IQueuePayload): Promise<boolean> {
     const {jobId, totalJobs} = jobDetails;
     if (!this.processedJobsCounters[jobId]) {
       this.processedJobsCounters[jobId] = 0;
@@ -1302,13 +1293,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       delete this.processedJobsCounters[jobId];
     }
 
-    const socket = await io(`${process.env.SOCKET_HOST}`, {
-      reconnection: true,
-      reconnectionDelay: 5000,
-      reconnectionAttempts: Infinity,
-      autoConnect: true,
-      transports: ['websocket']
-    });
     const fileUploadData: FileUploadData = {
       fileUpload: '',
       fileRow: '',
@@ -1380,14 +1364,19 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       fileUploadData.detailError = `${JSON.stringify(error)}`;
       if (!isErrorOccurred) {
         isErrorOccurred = true;
-        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId, error });
       }
-
     }
     await this.issuanceRepository.updateFileUploadData(fileUploadData);
 
     try {
       if (jobDetails.isLastData) {
+        const socket = await io(`${process.env.SOCKET_HOST}`, {
+          reconnection: true,
+          reconnectionDelay: 5000,
+          reconnectionAttempts: Infinity,
+          autoConnect: true,
+          transports: ['websocket']
+        });
         const errorCount = await this.issuanceRepository.countErrorsForFile(jobDetails.fileUploadId);
         const status =
           0 === errorCount ? FileUploadStatus.completed : FileUploadStatus.partially_completed;
@@ -1406,6 +1395,13 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }
     } catch (error) {
       this.logger.error(`Error in completing bulk issuance process: ${error}`);
+      const socket = await io(`${process.env.SOCKET_HOST}`, {
+        reconnection: true,
+        reconnectionDelay: 5000,
+        reconnectionAttempts: Infinity,
+        autoConnect: true,
+        transports: ['websocket']
+      });
       if (!isErrorOccurred) {
         isErrorOccurred = true;
         socket.emit('error-in-bulk-issuance-retry-process', { clientId: jobDetails.clientId, error });
@@ -1413,7 +1409,15 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       throw error;
 
     }
+  return true;
+  }
 
+  async splitIntoBatches<T>(array: T[], batchSize: number): Promise<T[][]> {
+    const batches = [];
+    for (let i = 0; i < array.length; i += batchSize) {
+      batches.push(array.slice(i, i + batchSize));
+    }
+    return batches;
   }
 
   async validateFileHeaders(
@@ -1497,6 +1501,56 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
+  async _storeBulkPayloadInBatch(bulkPayloadObject: IBulkPayloadObject): Promise<boolean> {
+    try {
+      const {parsedFileDetails, parsedData, fileUploadId, userId} = bulkPayloadObject;
+      
+      const limit = pLimit(CommonConstants.MAX_CONCURRENT_OPERATIONS);
+      const startTime = Date.now(); // Start timing the entire process
+      const batches = await this.splitIntoBatches(parsedData, CommonConstants.BATCH_SIZE);
+      this.logger.log("Total number of batches:", batches.length);
+      
+      for (const [index, batch] of batches.entries()) {
+      
+        const batchStartTime = Date.now(); // Start timing the current batch
+      
+        // Create an array of limited promises for the current batch
+        const saveFileDetailsPromises = batch.map(element => limit(() => {
+            const credentialPayload = {
+              credential_data: element,
+              schemaId: parsedFileDetails.schemaLedgerId,
+              schemaName: parsedFileDetails.schemaName,
+              credDefId: parsedFileDetails.credentialDefinitionId,
+              state: false,
+              isError: false,
+              fileUploadId,
+              credentialType: parsedFileDetails.credentialType
+            };
+            return this.issuanceRepository.saveFileDetails(credentialPayload, userId);
+          })
+        );
+      
+        this.logger.log(`Processing batch ${index + 1} with ${batch.length} elements...`);
+      
+        // Wait for all operations in the current batch to complete before moving to the next batch
+        await Promise.all(saveFileDetailsPromises);
+      
+        const batchEndTime = Date.now(); // End timing the current batch
+        this.logger.log(`Batch ${index + 1} processed in ${(batchEndTime - batchStartTime)} milliseconds.`);
+      }
+      
+      const endTime = Date.now(); // End timing the entire process
+      this.logger.log(`Total processing time: ${(endTime - startTime)} milliseconds.`);
+      return true;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException({
+        status: error.status,
+        error: error.message
+      }, error.status);
+    }
+  }
+
   async deleteIssuanceRecords(orgId: string, userDetails: user): Promise<IDeletedIssuanceRecords> {
     try {
 
@@ -1547,4 +1601,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  
 }

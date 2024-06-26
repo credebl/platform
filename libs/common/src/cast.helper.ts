@@ -181,10 +181,7 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
 
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
-      credentialSubject[key] = {
-        'type': typeof credentialData[key],
-        'title': credentialData[key]
-      };
+      credentialSubject[key] = credentialData[key];
     }
   }
 

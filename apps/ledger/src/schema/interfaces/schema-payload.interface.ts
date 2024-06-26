@@ -57,6 +57,7 @@ export interface ISchemaSearchCriteria {
     sortField: string;
     sortBy: string;
     searchByText?: string;
+    schemaType?: string;
     user?: IUserRequestInterface
     schemaId?: string;
     orgId?: string;

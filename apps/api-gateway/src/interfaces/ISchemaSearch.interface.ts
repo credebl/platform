@@ -7,6 +7,7 @@ export interface ISchemaSearchPayload {
     sortField: string;
     sortBy: string;
     searchByText?: string;
+    schemaType?: string;
     user?: IUserRequestInterface
 }
   

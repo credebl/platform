@@ -213,14 +213,16 @@ export class SchemaRepository {
 
   async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<IPlatformSchemas> {
     try {
+      const { ledgerId, schemaType, searchByText, sortField, sortBy, pageSize, pageNumber } = payload;
       const schemasResult = await this.prisma.schema.findMany({
         where: {
-          ledgerId: payload.ledgerId,
+          ledgerId,
+          type: schemaType,
           OR: [
-            { name: { contains: payload.searchByText, mode: 'insensitive' } },
-            { version: { contains: payload.searchByText, mode: 'insensitive' } },
-            { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } },
-            { issuerId: { contains: payload.searchByText, mode: 'insensitive' } }
+            { name: { contains: searchByText, mode: 'insensitive' } },
+            { version: { contains: searchByText, mode: 'insensitive' } },
+            { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } },
+            { issuerId: { contains: searchByText, mode: 'insensitive' } }
           ]
         },
         select: {
@@ -235,15 +237,16 @@ export class SchemaRepository {
           issuerId: true
         },
         orderBy: {
-          [payload.sortField]: SortValue.DESC === payload.sortBy ? SortValue.DESC : SortValue.ASC
+          [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
         },
-        take: Number(payload.pageSize),
-        skip: (payload.pageNumber - 1) * payload.pageSize
+        take: Number(pageSize),
+        skip: (pageNumber - 1) * pageSize
       });
 
       const schemasCount = await this.prisma.schema.count({
         where: {
-          ledgerId: payload.ledgerId
+          ledgerId,
+          type: schemaType
         }
       });
 

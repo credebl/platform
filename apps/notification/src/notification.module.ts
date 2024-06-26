@@ -8,7 +8,6 @@ import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
 import { PrismaService } from '@credebl/prisma-service';
 import { NotificationRepository } from './notification.repository';
-import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -17,7 +16,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.NOTIFICATION_SERVICE, process.env.NOTIFICATION_NKEY_SEED)
+        options: getNatsOptions(process.env.NOTIFICATION_NKEY_SEED)
       }
     ]),
     CommonModule,

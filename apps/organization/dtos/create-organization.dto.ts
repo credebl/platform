@@ -12,13 +12,13 @@ export class CreateOrganizationDto {
   lastChangedBy?:string;
   notificationWebhook?: string;
   registrationNumber?:string;
-  countryId?: number;
-  cityId?: number;
-  stateId?: number;
+  country?:string;
+  city?:string;
+  state?:string;
 }
 
 export class CreateUserRoleOrgDto {
-  orgRoleId: string;
-  userId: string;
-  organisationId: string;
+ orgRoleId: string;
+ userId: string;
+ organisationId: string;
 }

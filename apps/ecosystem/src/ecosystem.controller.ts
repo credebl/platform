@@ -9,9 +9,8 @@ import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { IEcosystemDashboard, RequestCredDeffEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs, IRequestSchemaEndorsement, IRequestW3CSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
-import { IEcosystemDataDeletionResults, IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { schemaRequestType } from '@credebl/enum/enum';
-import { user } from '@prisma/client';
 // eslint-disable-next-line camelcase
 
 @Controller()
@@ -235,11 +234,5 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'decline-endorsement-transaction' })
   async declineEndorsementRequestByLead(payload: { ecosystemId: string; endorsementId: string }): Promise<object> {
     return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
-  }
-
-  @MessagePattern({ cmd: 'delete-org-from-ecosystem' })
-  async deleteOrgFromEcosystem(payload: { orgId: string, userDetails: user}): Promise<IEcosystemDataDeletionResults> {
-    const { orgId, userDetails } = payload;
-    return this.ecosystemService.deleteOrgFromEcosystem(orgId, userDetails);
   }
 }

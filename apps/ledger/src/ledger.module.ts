@@ -7,7 +7,6 @@ import { CredentialDefinitionModule } from './credential-definition/credential-d
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { LedgerRepository } from './repositories/ledger.repository';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -15,7 +14,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.LEDGER_SERVICE, process.env.LEDGER_NKEY_SEED)
+        options: getNatsOptions(process.env.LEDGER_NKEY_SEED)
 
       }
     ]),

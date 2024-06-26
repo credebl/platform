@@ -2,9 +2,8 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { IClientDetails, IIssuance, IIssueCredentials, IIssueCredentialsDefinitions, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOffer, PreviewRequest, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { IssuanceService } from './issuance.service';
-import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { user } from '@prisma/client';
 
 @Controller()
 export class IssuanceController {
@@ -97,11 +96,5 @@ export class IssuanceController {
   @MessagePattern({ cmd: 'retry-bulk-credentials' })
   async retryeBulkCredentials(payload: { fileId: string, orgId: string, clientId: string }): Promise<string> {
     return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientId);
-  }
-
-  @MessagePattern({ cmd: 'delete-issuance-records' })
-  async deleteIssuanceRecords(payload: {orgId: string, userDetails: user}): Promise<IDeletedIssuanceRecords> {  
-    const { orgId, userDetails } = payload;
-    return this.issuanceService.deleteIssuanceRecords(orgId, userDetails);
   }
 }

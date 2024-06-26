@@ -7,7 +7,6 @@ import { ConfigModule } from '@nestjs/config';
 import { AgentController } from './agent-service.controller';
 import { AgentService } from './agent-service.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -17,7 +16,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.AGENT_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
 
       },
       CommonModule

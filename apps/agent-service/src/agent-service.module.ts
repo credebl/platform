@@ -11,7 +11,6 @@ import { ConnectionRepository } from 'apps/connection/src/connection.repository'
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -20,7 +19,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.AGENT_SERVICE, process.env.AGENT_SERVICE_NKEY_SEED)
+        options: getNatsOptions(process.env.AGENT_SERVICE_NKEY_SEED)
       }
     ]),
     CommonModule,

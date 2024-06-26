@@ -211,38 +211,33 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
 
 const createLedger = async (): Promise<void> => {
     try {
-      const { ledgerData } = JSON.parse(configData);
-  
-      const existingLedgers = await prisma.ledgers.findMany();
-  
-      if (0 === existingLedgers.length) {
-        const createLedger = await prisma.ledgers.createMany({
-          data: ledgerData
-        });
-        logger.log('All ledgers inserted:', createLedger);
-      } else {
-        const updatesNeeded = [];
+        const { ledgerData } = JSON.parse(configData);
 
-        if (existingLedgers.length !== ledgerData.length) {
-            updatesNeeded.push(ledgerData);
-            if (0 < updatesNeeded.length) {
-              await prisma.ledgers.deleteMany();
-        
-              const createLedger = await prisma.ledgers.createMany({
-                data: ledgerData
-              });
-              logger.log('Updated ledgers:', createLedger);
-            } else {
-              logger.log('No changes in ledger data');
+        const ledgerIndyNamespace = ledgerData.map(ledger => ledger.indyNamespace);
+        const existLedgerIndyNameSpace = await prisma.ledgers.findMany({
+            where: {
+                indyNamespace: {
+                    in: ledgerIndyNamespace
+                }
             }
+        });
+
+        if (0 === existLedgerIndyNameSpace.length) {
+
+            const createLedger = await prisma.ledgers.createMany({
+                data: ledgerData
+            });
+
+            logger.log(createLedger);
         } else {
-            logger.log('No changes in ledger data');
+            logger.log('Already seeding in ledgers');
         }
-      }
+
+
     } catch (e) {
-      logger.error('An error occurred seeding createLedger:', e);
+        logger.error('An error occurred seeding createLedger:', e);
     }
-  };
+};
 
 const createEcosystemRoles = async (): Promise<void> => {
     try {

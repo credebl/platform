@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
@@ -15,7 +15,7 @@ export class CreateOrganizationDto {
   @IsNotSQLInjection({ message: 'Organization name is required.' })
   name: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @Transform(({ value }) => trim(value))
   @IsNotEmpty({ message: 'Description is required.' })
   @MinLength(2, { message: 'Description must be at least 2 characters.' })
@@ -53,27 +53,21 @@ export class CreateOrganizationDto {
   @IsString({ message: 'registrationNumber must be in string format.' })
   registrationNumber?: string;
 
-  @ApiPropertyOptional({ example: 'IN' })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsNotEmpty({ message: 'country is required' })
-  @MinLength(2, { message: 'country must be at least 2 characters' })
-  @MaxLength(50, { message: 'country must be at most 50 characters' })
-  @IsNumber()
-  countryId?: number;
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'country must be in string format.' })
+  country?: string;
 
-  @ApiPropertyOptional({ example: 'MH' })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsNotEmpty({ message: 'state is required' })
-  @MinLength(2, { message: 'state must be at least 2 characters' })
-  @MaxLength(50, { message: 'state must be at most 50 characters' })
-  @IsNumber()
-  stateId?: number;
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'state must be in string format.' })
+  state?: string;
 
-  @ApiPropertyOptional({ example: 'Mumbai' })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsNotEmpty({ message: 'city is required' })
-  @MinLength(2, { message: 'city must be at least 2 characters' })
-  @MaxLength(50, { message: 'city must be at most 50 characters' })
-  @IsNumber()
-  cityId?: number;
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'city must be in string format.' })
+  city?: string;
 }

@@ -7,7 +7,6 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { AwsService } from '@credebl/aws';
-import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -17,7 +16,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
 
       }
     ])

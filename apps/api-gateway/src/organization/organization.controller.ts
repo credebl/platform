@@ -27,7 +27,6 @@ import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -107,9 +106,9 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getOrgRoles(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: user, @Res() res: Response): Promise<Response> {
+  async getOrgRoles(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response): Promise<Response> {
 
-    const orgRoles = await this.organizationService.getOrgRoles(orgId.trim(), user);
+    const orgRoles = await this.organizationService.getOrgRoles(orgId.trim());
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -542,10 +541,10 @@ export class OrganizationController {
   @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles(OrgRoles.OWNER)
   async deleteOrganization(
-    @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
+    @Param('orgId') orgId: string, 
     @User() user: user,
     @Res() res: Response
     ): Promise<Response> {
@@ -565,9 +564,9 @@ export class OrganizationController {
   @ApiBearerAuth()
   @ApiExcludeEndpoint()
   @UseGuards(AuthGuard('jwt'))
-  async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() user: user): Promise<Response> {
+  async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
 
-    const deleteResponse = await this.organizationService.deleteOrgClientCredentials(orgId, user);
+    const deleteResponse = await this.organizationService.deleteOrgClientCredentials(orgId);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.ACCEPTED,

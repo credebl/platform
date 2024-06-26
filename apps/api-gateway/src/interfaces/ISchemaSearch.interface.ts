@@ -1,4 +1,3 @@
-import { SchemaType } from '@credebl/enum/enum';
 import { IUserRequestInterface } from '../schema/interfaces';
 
 export interface ISchemaSearchPayload {
@@ -8,7 +7,6 @@ export interface ISchemaSearchPayload {
     sortField: string;
     sortBy: string;
     searchByText?: string;
-    schemaType?: SchemaType;
     user?: IUserRequestInterface
 }
   

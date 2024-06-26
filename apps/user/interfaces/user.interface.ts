@@ -49,8 +49,6 @@ interface IUserOrgRole {
 export interface ISendVerificationEmail {
     email: string;
     username?: string;
-    clientId?: string;
-    clientSecret?: string;
   }
   
   export interface IUserInformation {
@@ -214,10 +212,4 @@ export interface IUserDeletedActivity {
   txnMetadata: Prisma.JsonValue;
   deletedBy: string;
   deleteDateTime: Date;
-}
-
-export interface UserKeycloakId {
-  id: string;
-  keycloakUserId: string;
-  email: string;
 }

@@ -9,7 +9,6 @@ import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './int
 import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
 import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
-import { user } from '@prisma/client';
 
 
 @Injectable()
@@ -129,8 +128,8 @@ export class VerificationService extends BaseService {
         }
       }
 
-      async deleteVerificationRecords(orgId: string, userDetails: user): Promise<IVerificationRecords> {
-        const payload = { orgId, userDetails };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-records', payload);
+      async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
+        const payload = { orgId, userId };
+        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-record', payload);
     }
 }

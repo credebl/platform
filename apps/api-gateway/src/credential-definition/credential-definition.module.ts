@@ -4,7 +4,6 @@ import { Logger, Module } from '@nestjs/common';
 import { CredentialDefinitionController } from './credential-definition.controller';
 import { CredentialDefinitionService } from './credential-definition.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports:[
@@ -12,7 +11,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.CREDENTIAL_DEFINITION_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
       }
     ])
   ],

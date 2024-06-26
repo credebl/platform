@@ -9,7 +9,6 @@ import { OrganizationService } from './organization.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
 import { AwsService } from '@credebl/aws';
-import { CommonConstants } from '@credebl/common/common.constant';
 @Module({
   imports: [
     HttpModule,
@@ -18,7 +17,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.ORGANIZATION_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
 
       },
       CommonModule

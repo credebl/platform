@@ -1015,6 +1015,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
       this.logger.log("getFileDetails:", getFileDetails);
       const csvData: string = getFileDetails.Body.toString();
+      this.logger.log("csvData:", csvData);
+      
 
       const parsedData = paParse(csvData, {
         header: true,

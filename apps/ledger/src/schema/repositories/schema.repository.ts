@@ -234,7 +234,8 @@ export class SchemaRepository {
           createdBy: true,
           publisherDid: true,
           orgId: true,  // This field can be null
-          issuerId: true
+          issuerId: true,
+          type: true
         },
         orderBy: {
           [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC

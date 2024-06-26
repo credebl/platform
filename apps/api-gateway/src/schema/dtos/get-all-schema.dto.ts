@@ -123,11 +123,12 @@ export class GetAllSchemaByPlatformDto {
     sortByValue: string = SortValue.DESC;
 
     @ApiProperty({
+        type: SchemaType,
         required: false
     })
     @Transform(({ value }) => trim(value))
     @IsOptional()
     @IsEnum(SchemaType)
-    schemaType: string;
+    schemaType: SchemaType;
     
 }

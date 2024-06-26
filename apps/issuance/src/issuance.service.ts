@@ -982,11 +982,38 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
   async uploadCSVTemplate(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
     try {
-      
-      const credDefResponse =
-        await this.issuanceRepository.getCredentialDefinitionDetails(importFileDetails.credDefId);
+      let credentialDetails;
+      const credentialPayload: ICredentialPayload = {
+        schemaLedgerId: '',
+        credentialDefinitionId: '',
+        fileData: {},
+        fileName: '',
+        credentialType: '',
+        schemaName: '' 
+      };
+      const {fileName, templateId, type} = importFileDetails;
+     this.logger.log("importFileDetails:", importFileDetails);
+      if (type === SchemaType.W3C_Schema) {
+        credentialDetails =
+        await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+        credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
+        credentialPayload.credentialDefinitionId = SchemaType.W3C_Schema;
+        credentialPayload.credentialType = SchemaType.W3C_Schema;
+        credentialPayload.schemaName = credentialDetails.name;
+        
+      } else if (type === SchemaType.INDY) {
+        
+        credentialDetails =
+        await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+        credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
+        credentialPayload.credentialDefinitionId = credentialDetails.credentialDefinitionId;
+        credentialPayload.credentialType = SchemaType.INDY;
+        credentialPayload.schemaName = credentialDetails.schemaName;
+        this.logger.log("credentialDetails:", credentialDetails);
+      }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
+      this.logger.log("getFileDetails:", getFileDetails);
       const csvData: string = getFileDetails.Body.toString();
 
       const parsedData = paParse(csvData, {

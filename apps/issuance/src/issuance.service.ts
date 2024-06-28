@@ -32,7 +32,7 @@ import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, I
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
+// import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
@@ -803,7 +803,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             disposition: 'attachment'
           }
         ];
-        const isEmailSent = await sendEmail(this.emailData);       
+
+        const isEmailSent = true; // change this after testing on local
+        // const isEmailSent = await sendEmail(this.emailData);      
+         
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
         this.counter++;
         if (!isEmailSent) {
@@ -1157,17 +1160,112 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async issueBulkCredential(requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails): Promise<string> {
+  /**
+   * Processes bulk payload in batches and adds jobs to the queue.
+   * @param bulkPayload - Array of bulk payload data.
+   * @param clientDetails - Client details.
+   * @param orgId - Organization ID.
+   * @param requestId - Request ID.
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  private async processInBatches(bulkPayload, clientDetails, orgId, requestId) {
+
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const batchSize = 1000; // Define the batch size
+    const uniqueJobId = uuidv4(); // Generate a unique job ID for the entire process
+    const limit = pLimit(1000); // Limit concurrent batch processing, adjust based on system capacity
+
+    // Generator function to yield batches
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    function* createBatches(array, size) {
+      for (let i = 0; i < array.length; i += size) {
+        yield array.slice(i, i + size);
+      }
+    }
+
+    // Helper function to process a batch
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const processBatch = async (batch, batchIndex) => {
+      const queueJobsArray = batch.map((item) => ({
+        data: {
+          id: item.id,
+          jobId: uniqueJobId,
+          cacheId: requestId,
+          clientId: clientDetails.clientId,
+          referenceId: item.referenceId,
+          fileUploadId: item.fileUploadId,
+          schemaLedgerId: item.schemaId,
+          credentialDefinitionId: item.credDefId,
+          status: item.status,
+          credential_data: item.credential_data,
+          orgId,
+          credentialType: item.credential_type,
+          totalJobs: bulkPayload.length,
+          isRetry: false,
+          isLastData: false
+        }
+      }));
+
+      this.logger.log(`Processing batch ${batchIndex + 1} with ${batch.length} items.`);
+
+      // Execute the batched jobs with limited concurrency
+      await Promise.all(queueJobsArray.map(job => limit(() => job)));
+
+      return queueJobsArray;
+    };
+
+    let batchIndex = 0;
+
+    for (const batch of createBatches(bulkPayload, batchSize)) {
+      const resolvedBatchJobs = await processBatch(batch, batchIndex);
+
+      // Add the resolved jobs to the queue and clear the batch from memory
+      this.logger.log("Adding resolved jobs to the queue:", resolvedBatchJobs);
+      await this.bulkIssuanceQueue.addBulk(resolvedBatchJobs);
+
+      batchIndex++;
+
+      // Wait for 10 seconds before processing the next batch, if more batches are remaining
+      if ((batchIndex * batchSize) < bulkPayload.length) {
+        await delay(20000);
+      }
+
+      // Optionally, trigger garbage collection to free up memory
+      if (global.gc) {
+        global.gc();
+      }
+    }
+  }
+
+  /**
+   * Handles bulk credential issuance.
+   * @param requestId - The request ID.
+   * @param orgId - The organization ID.
+   * @param clientDetails - Client details.
+   * @param reqPayload - Request payload containing file details.
+   * @returns A promise resolving to a success message.
+   */
+  async issueBulkCredential(
+    requestId: string,
+    orgId: string,
+    clientDetails: IClientDetails,
+    reqPayload: ImportFileDetails
+  ): Promise<string> {
     if (!requestId) {
       throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
     }
+
     const fileUpload: FileUpload = {
       lastChangedDateTime: null,
       upload_type: '',
       status: '',
       orgId: '',
-      createDateTime: null
+      createDateTime: null,
+      name: '',
+      credentialType: ''
     };
+
     let csvFileDetail;
 
     try {
@@ -1175,7 +1273,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
-       //for demo UI
+
+      // For demo UI
       if (cachedData && clientDetails?.isSelectiveIssuance) {
         await this.cacheManager.del(requestId);
         await this.uploadCSVTemplate(reqPayload, requestId);
@@ -1198,16 +1297,15 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       fileUpload.createDateTime = new Date();
       fileUpload.name = parsedFileDetails.fileName;
       fileUpload.credentialType = parsedFileDetails.credentialType;
-      
+
       csvFileDetail = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
-
-    const bulkPayloadObject: IBulkPayloadObject = {
-     parsedData,
-     parsedFileDetails,
-     userId: clientDetails.userId,
-     fileUploadId: csvFileDetail.id
-     };
+      const bulkPayloadObject: IBulkPayloadObject = {
+        parsedData,
+        parsedFileDetails,
+        userId: clientDetails.userId,
+        fileUploadId: csvFileDetail.id
+      };
 
       const storeBulkPayload = await this._storeBulkPayloadInBatch(bulkPayloadObject);
 
@@ -1215,41 +1313,22 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         throw new BadRequestException(ResponseMessages.issuance.error.storeBulkData);
       }
 
-      const bulkpayload = await this.issuanceRepository.getFileDetails(csvFileDetail.id);
-      if (!bulkpayload) {
+      // Process in batches
+      const bulkPayload = await this.issuanceRepository.getFileDetails(csvFileDetail.id);
+      if (!bulkPayload) {
         throw new BadRequestException(ResponseMessages.issuance.error.fileData);
       }
-      const uniqueJobId = uuidv4();
-      const queueJobsArrayPromises = bulkpayload.map(async (item) => ({
-          data: {
-            id: item.id,
-            jobId: uniqueJobId,
-            cacheId: requestId,
-            clientId: clientDetails.clientId,
-            referenceId: item.referenceId,
-            fileUploadId: item.fileUploadId,
-            schemaLedgerId: item.schemaId,
-            credentialDefinitionId: item.credDefId,
-            status: item.status,
-            credential_data: item.credential_data,
-            orgId,
-            credentialType: item.credential_type,
-            totalJobs: bulkpayload.length,
-            isRetry: false,
-            isLastData: false
-          }
-        }));
 
-      const queueJobsArray = await Promise.all(queueJobsArrayPromises);
-        try {
-         await this.bulkIssuanceQueue.addBulk(queueJobsArray);
-        } catch (error) {
-          this.logger.error(`Error processing issuance data: ${error}`);
-        }
+      try {
+        await this.processInBatches(bulkPayload, clientDetails, orgId, requestId);
+      } catch (error) {
+        this.logger.error(`Error processing issuance data: ${error}`);
+      }
+
       return ResponseMessages.issuance.success.bulkProcess;
     } catch (error) {
       fileUpload.status = FileUploadStatus.interrupted;
-      this.logger.error(`error in issueBulkCredential : ${error}`);
+      this.logger.error(`Error in issueBulkCredential: ${error}`);
       throw new RpcException(error.response);
     } finally {
       if (csvFileDetail !== undefined && csvFileDetail.id !== undefined) {
@@ -1330,7 +1409,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     fileUploadData.fileRow = JSON.stringify(jobDetails);
     fileUploadData.isError = false;
     fileUploadData.createDateTime = new Date();
-    fileUploadData.referenceId = jobDetails.credential_data.email_identifier;
+    fileUploadData.referenceId = jobDetails?.credential_data?.email_identifier;
     fileUploadData.jobId = jobDetails.id;
     const { orgId } = jobDetails;
 

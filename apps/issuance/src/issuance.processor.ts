@@ -22,6 +22,6 @@ export class BulkIssuanceProcessor {
       `Processing job ${job.id} of type ${job.name} with data ${JSON.stringify(job.data)}...`
     );
 
-    // this.issuanceService.processIssuanceData(job.data);
+    this.issuanceService.processIssuanceData(job.data);
   }
 }

@@ -1162,19 +1162,19 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
   /**
    * Processes bulk payload in batches and adds jobs to the queue.
-   * @param bulkPayload - Array of bulk payload data.
-   * @param clientDetails - Client details.
-   * @param orgId - Organization ID.
-   * @param requestId - Request ID.
+   * @param bulkPayload
+   * @param clientDetails 
+   * @param orgId
+   * @param requestId
    */
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private async processInBatches(bulkPayload, clientDetails, orgId, requestId) {
 
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    const batchSize = 1000; // Define the batch size
-    const uniqueJobId = uuidv4(); // Generate a unique job ID for the entire process
-    const limit = pLimit(1000); // Limit concurrent batch processing, adjust based on system capacity
+    const batchSize = 1000;
+    const uniqueJobId = uuidv4();
+    const limit = pLimit(1000); //adjust based on system capacity
 
     // Generator function to yield batches
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -1226,9 +1226,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       batchIndex++;
 
-      // Wait for 10 seconds before processing the next batch, if more batches are remaining
+      // Wait for 60 seconds before processing the next batch, if more batches are remaining
       if ((batchIndex * batchSize) < bulkPayload.length) {
-        await delay(20000);
+        await delay(60000);
       }
 
       // Optionally, trigger garbage collection to free up memory

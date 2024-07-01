@@ -1172,7 +1172,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    const batchSize = 1000;
+    const batchSize = 2000; // initial 1000
     const uniqueJobId = uuidv4();
     const limit = pLimit(1000); //adjust based on system capacity
 
@@ -1228,7 +1228,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       // Wait for 60 seconds before processing the next batch, if more batches are remaining
       if ((batchIndex * batchSize) < bulkPayload.length) {
-        await delay(60000);
+        await delay(40000); //intially 60000
       }
 
       // Optionally, trigger garbage collection to free up memory

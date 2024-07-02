@@ -1167,11 +1167,11 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
    * @param orgId
    * @param requestId
    */
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private async processInBatches(bulkPayload, clientDetails, orgId, requestId) {
+ 
+  private async processInBatches(bulkPayload, clientDetails, orgId, requestId):Promise<void> {
 
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
     const batchSize = 2000; // initial 1000
     const uniqueJobId = uuidv4();
     const limit = pLimit(1000); //adjust based on system capacity
@@ -1185,8 +1185,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
 
     // Helper function to process a batch
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const processBatch = async (batch, batchIndex) => {
+    const processBatch = async (batch, batchIndex): Promise<[]> => {
       const queueJobsArray = batch.map((item) => ({
         data: {
           id: item.id,
@@ -1228,12 +1227,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       // Wait for 60 seconds before processing the next batch, if more batches are remaining
       if ((batchIndex * batchSize) < bulkPayload.length) {
-        await delay(40000); //intially 60000
-      }
-
-      // Optionally, trigger garbage collection to free up memory
-      if (global.gc) {
-        global.gc();
+        await delay(60000); //intially 60000
       }
     }
   }
@@ -1320,7 +1314,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }
 
       try {
-        await this.processInBatches(bulkPayload, clientDetails, orgId, requestId);
+         this.processInBatches(bulkPayload, clientDetails, orgId, requestId);
       } catch (error) {
         this.logger.error(`Error processing issuance data: ${error}`);
       }

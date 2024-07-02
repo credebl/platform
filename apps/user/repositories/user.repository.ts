@@ -299,7 +299,10 @@ export class UserRepository {
                 orgSlug: true,
                 logoUrl: true,
                 website: true,
-                publicProfile: true
+                publicProfile: true,
+                countryId: true,
+                stateId: true,
+                cityId: true
               }
             }
           }
@@ -353,7 +356,10 @@ export class UserRepository {
                 orgSlug: true,
                 logoUrl: true,
                 website: true,
-                publicProfile: true
+                publicProfile: true,
+                countryId: true,
+                stateId: true,
+                cityId: true
               }
             }
           }
@@ -790,7 +796,7 @@ isEmailVerified: true,
     try {
       const getUserDetails = await this.prisma.user.findUnique({
         where: {
-            id: userId
+          id: userId
         },
         select: {
           email: true
@@ -817,16 +823,16 @@ isEmailVerified: true,
           id: true
         }
       });
-  
+
       // Create a map for quick lookup of keycloakUserId, id, and email by email
       const userMap = new Map(users.map(user => [user.email, { id: user.id, keycloakUserId: user.keycloakUserId, email: user.email }]));
-  
+
       // Collect the keycloakUserId, id, and email in the order of input emails
       const result = userEmails.map(email => {
         const user = userMap.get(email);
         return { id: user?.id || null, keycloakUserId: user?.keycloakUserId || null, email };
       });
-  
+
       return result;
     } catch (error) {
       this.logger.error(`Error in getUserKeycloak: ${error}`);

@@ -87,48 +87,52 @@ export class UserService {
    * @param userEmailVerification
    * @returns
    */
+
   async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
-      const { email, brandLogoUrl, platformName } = userEmailVerification;
-
+      const { email, brandLogoUrl, platformName, clientId, clientSecret } = userEmailVerification;
+  
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
         const domain = email.split('@')[1];
-
         if (DISALLOWED_EMAIL_DOMAIN.includes(domain)) {
           throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
         }
       }
+  
       const userDetails = await this.userRepository.checkUserExist(email);
-
-      if (userDetails?.isEmailVerified) {
-        throw new ConflictException(ResponseMessages.user.error.exists);
+  
+      if (userDetails) {
+        if (userDetails.isEmailVerified) {
+          throw new ConflictException(ResponseMessages.user.error.exists);
+        } else {
+          throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
+        }
       }
-
-      if (userDetails && !userDetails.isEmailVerified) {
-        throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
-      }
-
+  
       const verifyCode = uuidv4();
-      const uniqueUsername = await this.createUsername(email, verifyCode);
-      userEmailVerification.username = uniqueUsername;
-      const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
-
-      const token = await this.clientRegistrationService.getManagementToken(resUser.clientId, resUser.clientSecret);
-      const getClientData = await this.clientRegistrationService.getClientRedirectUrl(resUser.clientId, token);
+      let sendVerificationMail: boolean;
+  
       try {
+        const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
+        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
-        
+  
         if (!redirectUrl) {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
-
-        await this.sendEmailForVerification(email, resUser.verificationCode, redirectUrl, resUser.clientId, brandLogoUrl, platformName);
+  
+        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
-
-      return resUser;
+  
+      if (sendVerificationMail) {
+        const uniqueUsername = await this.createUsername(email, verifyCode);
+        userEmailVerification.username = uniqueUsername;
+        const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
+        return resUser;
+      } 
     } catch (error) {
       this.logger.error(`In Create User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

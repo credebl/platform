@@ -260,10 +260,6 @@ export class SchemaService extends BaseService {
   async createW3CSchema(orgId:string, schemaPayload: ICreateW3CSchema, user: string): Promise<ISchemaData> {
     try {
       let createSchema;
-      const isSchemaExist = await this.schemaRepository.schemaExists(schemaPayload.schemaName, W3CSchemaVersion.W3C_SCHEMA_VERSION);
-      if (0 !== isSchemaExist.length) {
-        throw new ConflictException(ResponseMessages.schema.error.exists);
-      }
 
       const { description, attributes, schemaName} = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);

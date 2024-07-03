@@ -9,7 +9,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { BulkPayloadDetails, CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier} from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -826,6 +826,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`,
           error: `${errorStack?.error?.message} at position ${iterationNo}`        })
       );
+      throw error; // Check With other issuance flow
     }  else {
       errors.push(
         new RpcException({
@@ -834,6 +835,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           error: error?.response?.error
         })
       );
+      throw error;  // Check With other issuance flow
     }
   }
 }
@@ -1168,7 +1170,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
    * @param requestId
    */
  
-  private async processInBatches(bulkPayload, clientDetails, orgId, requestId):Promise<void> {
+  private async processInBatches(bulkPayload, bulkPayloadDetails: BulkPayloadDetails):Promise<void> {
+    
+  const {clientId, isRetry, orgId, requestId} = bulkPayloadDetails;
 
   const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -1191,7 +1195,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           id: item.id,
           jobId: uniqueJobId,
           cacheId: requestId,
-          clientId: clientDetails.clientId,
+          clientId,
           referenceId: item.referenceId,
           fileUploadId: item.fileUploadId,
           schemaLedgerId: item.schemaId,
@@ -1201,7 +1205,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           orgId,
           credentialType: item.credential_type,
           totalJobs: bulkPayload.length,
-          isRetry: false,
+          isRetry,
           isLastData: false
         }
       }));
@@ -1314,7 +1318,15 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }
 
       try {
-         this.processInBatches(bulkPayload, clientDetails, orgId, requestId);
+    
+        const bulkPayloadDetails: BulkPayloadDetails = {
+          clientId: clientDetails.clientId,
+          orgId,
+          requestId,
+          isRetry: false
+        };
+
+         this.processInBatches(bulkPayload, bulkPayloadDetails);
       } catch (error) {
         this.logger.error(`Error processing issuance data: ${error}`);
       }
@@ -1344,28 +1356,14 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         const errorMessage = ResponseMessages.bulkIssuance.error.fileDetailsNotFound;
         throw new BadRequestException(`${errorMessage}`);
       }
-      const uniqueJobId = uuidv4();
-      const queueJobsArrayPromises = bulkpayloadRetry.map(async (item) => ({
-        data: {
-          id: item.id,
-          jobId: uniqueJobId,
-          clientId,
-          referenceId: item.referenceId,
-          fileUploadId: item.fileUploadId,
-          schemaLedgerId: item.schemaId,
-          credentialDefinitionId: item.credDefId,
-          status: item.status,
-          credential_data: item.credential_data,
-          orgId,
-          credentialType: item.credential_type,
-          totalJobs: bulkpayloadRetry.length,
-          isRetry: true,
-          isLastData: false
-        }
-      }));
-      const queueJobsArray = await Promise.all(queueJobsArrayPromises);
+      
       try {
-        await this.bulkIssuanceQueue.addBulk(queueJobsArray);
+        const bulkPayloadDetails: BulkPayloadDetails = {
+          clientId,
+          orgId,
+          isRetry: true
+        };
+        this.processInBatches(bulkpayloadRetry, bulkPayloadDetails);
        } catch (error) {
          this.logger.error(`Error processing issuance data: ${error}`);
        }

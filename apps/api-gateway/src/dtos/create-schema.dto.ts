@@ -115,6 +115,8 @@ export class CreateW3CSchemaDto {
     @ValidateNested({each: true})
     @Type(() => W3CAttributeValue)
     @IsNotEmpty()
+    @ArrayMinSize(1)
+    @IsArray({ message: 'attributes must be an array' })
     attributes: W3CAttributeValue [];
 
     @ApiProperty()

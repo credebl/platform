@@ -47,4 +47,20 @@ export interface ISchemaResponse{
   attributes: string;
   schemaLedgerId: string;
   orgId: string;
+  createDateTime?: Date; 
+  createdBy?: string;
+  organisation?: Organisation;
+}
+
+interface UserDetails {
+  firstName: string;
+}
+
+interface UserOrgRole {
+  user: UserDetails;
+}
+
+interface Organisation {
+  name: string;
+  userOrgRoles: UserOrgRole[];
 }

@@ -323,7 +323,7 @@ export class SchemaService extends BaseService {
         createSchema.schemaUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${createSchemaPayload.data.schemaId}`;
       }
      
-     const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId);
+     const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId, attributes);
 
      if (!storeW3CSchema) {
       throw new BadRequestException(ResponseMessages.schema.error.storeW3CSchema, {
@@ -522,7 +522,7 @@ export class SchemaService extends BaseService {
     return W3CSchema;
   }
   
-   private async storeW3CSchemas(schemaDetails, user, orgId): Promise <schema> {
+   private async storeW3CSchemas(schemaDetails, user, orgId, attributes): Promise <schema> {
     let ledgerDetails;
     const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
     const schemaRequest = await this.commonService
@@ -534,18 +534,6 @@ export class SchemaService extends BaseService {
         description: ResponseMessages.errorMessages.notFound
       });
     }
-  const schemaAttributeJson = schemaRequest.definitions.credentialSubject.properties;
-  const extractedData = [];
-  for (const key in schemaAttributeJson) {
-      if (2 < Object.keys(schemaAttributeJson[key]).length) {
-          const { type, title } = schemaAttributeJson[key];
-          const schemaDataType = type;
-          const displayName = title;
-          const isRequired = true;
-          extractedData.push({ 'attributeName': title, schemaDataType, displayName, isRequired });
-      }
-  }
-
   const indyNamespace = await networkNamespace(schemaDetails?.did); 
   if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
     ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER);
@@ -563,7 +551,7 @@ export class SchemaService extends BaseService {
         schema: {
           schemaName: schemaRequest.title,
           schemaVersion: W3CSchemaVersion.W3C_SCHEMA_VERSION,
-          attributes:extractedData,
+          attributes,
           id: schemaDetails.schemaUrl
 
         },

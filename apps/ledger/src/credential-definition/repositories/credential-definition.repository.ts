@@ -6,7 +6,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
 import { ICredDefData, IPlatformCredDefDetails } from '@credebl/common/interfaces/cred-def.interface';
-import { SortValue } from '@credebl/enum/enum';
+import { SchemaType, SortValue } from '@credebl/enum/enum';
 import { ISchemaResponse } from '../interfaces';
 
 @Injectable()
@@ -235,7 +235,8 @@ export class CredentialDefinitionRepository {
                 where: {
                     schemaLedgerId: {
                         in: schemaLedgerIdArray
-                    }
+                    },
+                    type: SchemaType.INDY
                 },
                 select: {
                     name: true,
@@ -283,7 +284,23 @@ export class CredentialDefinitionRepository {
                     version: true,
                     schemaLedgerId: true,
                     orgId: true,
-                    attributes: true
+                    attributes: true,
+                    createDateTime: true,
+                    createdBy: true,
+                    organisation: {
+                        select:{
+                          name: true,
+                          userOrgRoles: {
+                            select: {
+                              user: {
+                                select: {
+                                  firstName: true
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
                 }
             });
         } catch (error) {

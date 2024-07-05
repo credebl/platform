@@ -112,6 +112,18 @@ export class SchemaDetails {
 }
 
 export class RequestW3CSchemaDto {
+
+  @ApiProperty()
+  @IsString({ message: 'schemaName must be a string' })
+  @Transform(({ value }) => value.trim())
+  @IsNotEmpty({ message: 'schemaName is required' })
+  schemaName: string;
+
+  @ApiProperty()
+  @IsString({ message: 'description must be a string' })
+  @IsNotEmpty({ message: 'description is required' })
+  description: string;
+
   @ApiProperty({
       type: [W3CSchemaAttributesValue],
       'example': [
@@ -128,17 +140,6 @@ export class RequestW3CSchemaDto {
   @IsNotEmpty()
   attributes: W3CSchemaAttributesValue [];
 
-  @ApiProperty()
-  @IsString({ message: 'schemaName must be a string' })
-  @Transform(({ value }) => value.trim())
-  @IsNotEmpty({ message: 'schemaName is required' })
-  schemaName: string;
-  
-  @ApiProperty()
-  @IsString({ message: 'description must be a string' })
-  @IsNotEmpty({ message: 'description is required' })
-  description: string;
-  
   @ApiProperty({
     description: 'The type of the schema',
     enum: JSONSchemaType,
@@ -151,6 +152,12 @@ export class RequestW3CSchemaDto {
 
 @ApiExtraModels(RequestIndySchemaDto, RequestW3CSchemaDto)
 export class RequestSchemaDto {
+
+  @ApiProperty()
+  @IsBoolean({ message: 'endorse property must be a boolean.' })
+  @IsNotEmpty({ message: 'endorse property is required' })
+  endorse?: boolean;
+
   @ApiProperty({
     description: 'The type of the schema',
     enum: SchemaTypeEnum,
@@ -159,12 +166,7 @@ export class RequestSchemaDto {
   @IsEnum(SchemaTypeEnum, { message: 'Type must be a valid schema type' })
   @IsNotEmpty({ message: 'Type is required' })
   type: SchemaTypeEnum;
-
-  @ApiProperty()
-  @IsBoolean({ message: 'endorse property must be a boolean.' })
-  @IsNotEmpty({ message: 'endorse property is required' })
-  endorse?: boolean;
-
+  
   @ApiProperty({
     type: Object,
     oneOf: [{ $ref: getSchemaPath(RequestIndySchemaDto) }, { $ref: getSchemaPath(RequestW3CSchemaDto) }]

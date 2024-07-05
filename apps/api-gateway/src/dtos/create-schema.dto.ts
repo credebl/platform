@@ -117,8 +117,6 @@ export class CreateW3CSchemaDto {
     @IsArray({ message: 'attributes must be an array' })
     @ArrayMinSize(1)
     @IsNotEmpty()
-    @ArrayMinSize(1)
-    @IsArray({ message: 'attributes must be an array' })
     attributes: W3CAttributeValue [];
 
     @ApiProperty()

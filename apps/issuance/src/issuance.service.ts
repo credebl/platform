@@ -1172,13 +1172,11 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
  
   private async processInBatches(bulkPayload, bulkPayloadDetails: BulkPayloadDetails):Promise<void> {
     
-  const {clientId, isRetry, orgId, requestId} = bulkPayloadDetails;
-
-  const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-    const batchSize = 2000; // initial 1000
+    const {clientId, isRetry, orgId, requestId} = bulkPayloadDetails;
+    const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
+    const batchSize = CommonConstants.ISSUANCE_BATCH_SIZE; // initial 1000
     const uniqueJobId = uuidv4();
-    const limit = pLimit(1000); //adjust based on system capacity
+    const limit = pLimit(CommonConstants.ISSUANCE_MAX_CONCURRENT_OPERATIONS);
 
     // Generator function to yield batches
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -1223,7 +1221,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     for (const batch of createBatches(bulkPayload, batchSize)) {
       const resolvedBatchJobs = await processBatch(batch, batchIndex);
 
-      // Add the resolved jobs to the queue and clear the batch from memory
       this.logger.log("Adding resolved jobs to the queue:", resolvedBatchJobs);
       await this.bulkIssuanceQueue.addBulk(resolvedBatchJobs);
 
@@ -1231,7 +1228,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       // Wait for 60 seconds before processing the next batch, if more batches are remaining
       if ((batchIndex * batchSize) < bulkPayload.length) {
-        await delay(60000); //intially 60000
+        await delay(CommonConstants.ISSUANCE_BATCH_DELAY);
       }
     }
   }
@@ -1599,13 +1596,13 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       const {parsedFileDetails, parsedData, fileUploadId, userId} = bulkPayloadObject;
       
       const limit = pLimit(CommonConstants.MAX_CONCURRENT_OPERATIONS);
-      const startTime = Date.now(); // Start timing the entire process
+      const startTime = Date.now();
       const batches = await this.splitIntoBatches(parsedData, CommonConstants.BATCH_SIZE);
       this.logger.log("Total number of batches:", batches.length);
       
       for (const [index, batch] of batches.entries()) {
       
-        const batchStartTime = Date.now(); // Start timing the current batch
+        const batchStartTime = Date.now(); 
       
         // Create an array of limited promises for the current batch
         const saveFileDetailsPromises = batch.map(element => limit(() => {
@@ -1632,7 +1629,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         this.logger.log(`Batch ${index + 1} processed in ${(batchEndTime - batchStartTime)} milliseconds.`);
       }
       
-      const endTime = Date.now(); // End timing the entire process
+      const endTime = Date.now();
       this.logger.log(`Total processing time: ${(endTime - startTime)} milliseconds.`);
       return true;
     } catch (error) {

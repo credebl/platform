@@ -353,7 +353,10 @@ export class IssuanceRepository {
       const errorCount = await this.prisma.file_data.count({
         where: {
           fileUploadId,
-          isError: true
+          OR: [
+            { isError: true },
+            { status: false }
+          ]
         }
       });
 
@@ -568,7 +571,10 @@ export class IssuanceRepository {
       return this.prisma.file_data.findMany({
         where: {
           fileUploadId: fileId,
-          isError: true
+          OR: [
+            { isError: true },
+            { status: false }
+          ]
         }
       });
     } catch (error) {

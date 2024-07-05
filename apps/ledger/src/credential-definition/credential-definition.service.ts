@@ -325,16 +325,18 @@ export class CredentialDefinitionService extends BaseService {
                 credDefSortBy: 'id'
             };
 
-            if (schemaType == SchemaType.W3C_Schema) {
+            if (schemaType === SchemaType.W3C_Schema) {
                 const schemaDetailList =  await this.credentialDefinitionRepository.getAllSchemaByOrgIdAndType(orgId, schemaType);
-                
                 const schemaResponse = await Promise.all(schemaDetailList.map(async (schemaDetails) => ({
                     schemaCredDefName: `${schemaDetails.name}-${schemaDetails.version}`,
                     schemaName: schemaDetails.name,
                     schemaVersion: schemaDetails.version,
                     schemaAttributes: schemaDetails.attributes,
                     type: SchemaType.W3C_Schema,
-                    schemaIdentifier: schemaDetails.schemaLedgerId
+                    schemaIdentifier: schemaDetails.schemaLedgerId,
+                    createDateTime: schemaDetails.createDateTime,
+                    organizationName: schemaDetails?.organisation?.name,
+                    userName: schemaDetails?.organisation?.userOrgRoles[0]?.user?.firstName
                 })));
                 
                 return schemaResponse;

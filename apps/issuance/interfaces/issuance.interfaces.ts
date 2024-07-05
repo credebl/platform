@@ -345,3 +345,10 @@ export interface IDeletedFileUploadRecords {
   deleteFileDetails: Prisma.BatchPayload;
   deleteFileUploadDetails: Prisma.BatchPayload;
 }
+
+export interface BulkPayloadDetails {
+  clientId: string,
+  orgId: string,
+  requestId?: string,
+  isRetry: boolean
+}

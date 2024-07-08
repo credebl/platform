@@ -107,7 +107,7 @@ export const ResponseMessages = {
           deleteOrg: 'Organization not found',
           deleteOrgInvitation: 'Organization does not have access to delete this invitation',
           notFound: 'Organization agent not found',
-          orgNotFound: 'Organization not found',
+          orgNotFound: 'Organization does not exists',
           orgDataNotFoundInkeycloak: 'Organization not found in keycloak',
           orgNotMatch: 'Organization does not have access',
           invitationStatusInvalid: 'Unable to delete invitation with accepted/rejected status',
@@ -263,7 +263,8 @@ export const ResponseMessages = {
             failedApiKey: 'Failed to encrypt API key',
             failedOrganization: 'Failed to fetch organization agent type details',
             promiseReject: 'One or more promises were rejected.',
-            orgAgentNotFound: 'Org agent type not found'
+            orgAgentNotFound: 'Org agent type not found',
+            walletDoesNotExists: 'Organization wallet does not exists'
         }
     },
     connection: {

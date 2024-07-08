@@ -208,11 +208,16 @@ export class OrganizationRepository {
 
   async getOrganizationDetails(orgId: string): Promise<organisation> {
     try {
-      return this.prisma.organisation.findFirstOrThrow({
+      if (!orgId) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+      const orgDetails = await this.prisma.organisation.findFirst({
         where: {
           id: orgId
         }
       });
+
+      return orgDetails;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -833,7 +838,7 @@ export class OrganizationRepository {
         // If no references are found, delete the organization
         const deleteOrg = await prisma.organisation.delete({ where: { id } });
 
-            return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deletedNotification, deleteOrg};
+          return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deletedNotification, deleteOrg};
       });
       // return result;
     } catch (error) {

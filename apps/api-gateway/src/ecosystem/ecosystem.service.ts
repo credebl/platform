@@ -7,14 +7,13 @@ import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invit
 import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
-import { RequestSchemaDto, RequestCredDefDto, RequestW3CSchemaDto } from './dtos/request-schema.dto';
+import { RequestSchemaDto, RequestCredDefDto} from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemDataDeletionResults, IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
-import { schemaRequestType } from '@credebl/enum/enum';
 import { user } from '@prisma/client';
 
 @Injectable()
@@ -165,12 +164,12 @@ export class EcosystemService extends BaseService {
   }
 
   async schemaEndorsementRequest(
-    requestSchemaPayload: RequestSchemaDto | RequestW3CSchemaDto,
+    requestSchemaPayload: RequestSchemaDto,
+    user: user,
     orgId: string,
-    ecosystemId: string,
-    schemaType: schemaRequestType = schemaRequestType.INDY
+    ecosystemId: string
   ): Promise<IEndorsementTransaction> {
-    const payload = { requestSchemaPayload, schemaType, orgId, ecosystemId };
+    const payload = { requestSchemaPayload, user, orgId, ecosystemId };
     return this.sendNatsMessage(this.serviceProxy, 'schema-endorsement-request', payload);
   }
 
@@ -188,8 +187,8 @@ export class EcosystemService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'sign-endorsement-transaction', payload);
   }
 
-  async submitTransaction(endorsementId: string, ecosystemId: string, orgId: string): Promise<object> {
-    const payload = { endorsementId, ecosystemId, orgId };
+  async submitTransaction(endorsementId: string, ecosystemId: string, orgId: string, user: user): Promise<object> {
+    const payload = { endorsementId, ecosystemId, orgId, user };
     return this.sendNatsMessage(this.serviceProxy, 'submit-endorsement-transaction', payload);
   }
 

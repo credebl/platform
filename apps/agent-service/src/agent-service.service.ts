@@ -55,7 +55,7 @@ import {
   IAgentConfigure,
   OrgDid
 } from './interface/agent-service.interface';
-import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
+import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -1737,11 +1737,15 @@ export class AgentServiceService {
             this.agentServiceRepository.getAgentApiKey(orgId)
         ]);
 
-        if (getApiKeyResult.status === 'rejected') {
+        if (orgAgentResult.status === PromiseResult.FULFILLED && !orgAgentResult.value) {
+          throw new NotFoundException(ResponseMessages.agent.error.walletDoesNotExists);
+      }
+
+        if (getApiKeyResult.status === PromiseResult.REJECTED) {
             throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
         }
 
-        if (orgAgentResult.status === 'rejected') {
+        if (orgAgentResult.status === PromiseResult.REJECTED) {
             throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
         }
 

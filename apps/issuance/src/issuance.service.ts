@@ -656,7 +656,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
           sendEmailCredentialOffer['iterator'] = iterator;
           sendEmailCredentialOffer['emailId'] = iterator.emailId;
           sendEmailCredentialOffer['index'] = index;
-      
+
           await this.delay(500); // Wait for 0.5 seconds
           const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
           
@@ -692,7 +692,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     } else {
       throw new RpcException(error.response ? error.response : error);
     }
-  }
+    }
 }
 
 async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialOffer): Promise<boolean> {
@@ -714,6 +714,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
+
     let outOfBandIssuancePayload;
     if (IssueCredentialType.INDY === credentialType) {
     
@@ -814,6 +815,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         return isEmailSent;
 
   } catch (error) {
+    const iterationNoMessage = ` at position ${iterationNo}`;
     this.logger.error('[OUT-OF-BAND CREATE OFFER - SEND EMAIL]::', JSON.stringify(error));
     const errorStack = error?.status?.message;
     if (errorStack) {
@@ -821,9 +823,12 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         new RpcException({
           statusCode: errorStack?.statusCode,
           message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`,
-          error: `${errorStack?.error?.message} at position ${iterationNo}`        })
+          error: `${errorStack?.error?.message} at position ${iterationNo}`       
+         })
       );
-      throw error; // Check With other issuance flow
+
+      error.status.message = `${error.status.message}${iterationNoMessage}`;
+        throw error;
     }  else {
       errors.push(
         new RpcException({
@@ -832,6 +837,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           error: error?.response?.error
         })
       );
+      error.response.message = `${error.response.message}${iterationNoMessage}`;
       throw error;  // Check With other issuance flow
     }
   }

@@ -208,6 +208,7 @@ export interface FileUpload {
   createDateTime?: Date | null,
   lastChangedDateTime?: Date | null,
   credentialType?: string,
+  schemaIdentifier?: string
 }
 
 export interface FileUploadData {

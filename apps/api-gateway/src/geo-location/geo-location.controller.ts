@@ -1,10 +1,13 @@
-import { Controller, Get, HttpStatus, Logger, Param, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Logger, Param, Res, UseFilters } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GeoLocationService } from './geo-location.service';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Response } from 'express';
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+
+@UseFilters(CustomExceptionFilter)
 @Controller('/')
 @ApiTags('geolocation')
 export class GeoLocationController {
@@ -23,7 +26,7 @@ export class GeoLocationController {
     const countriesDetails = await this.geolocationService.getAllCountries();
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.countriesVerificationCode,
+      message: ResponseMessages.geolocation.success.countriesVerificationCode,
       data: countriesDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -41,7 +44,7 @@ export class GeoLocationController {
     const statesDetails = await this.geolocationService.getStatesByCountryId(countryId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.stateVerificationCode,
+      message: ResponseMessages.geolocation.success.stateVerificationCode,
       data: statesDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -56,7 +59,7 @@ export class GeoLocationController {
     const citiesDetails = await this.geolocationService.getCitiesByStateAndCountry(countryId, stateId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.cityVerificationCode,
+      message: ResponseMessages.geolocation.success.cityVerificationCode,
       data: citiesDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);

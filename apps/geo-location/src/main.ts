@@ -16,6 +16,6 @@ async function bootstrap(): Promise<void> {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen();
-  logger.log('geo-location Microservice is listening to NATS ');
+  logger.log('Geolocation Microservice is listening to NATS ');
 }
 bootstrap();

@@ -21,7 +21,8 @@ import {
   BadRequestException,
   NotFoundException,
   ParseUUIDPipe,
-  Delete
+  Delete,
+  ValidationPipe
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -42,12 +43,16 @@ import IResponseType, { IResponse } from '@credebl/common/interfaces/response.in
 import { IssuanceService } from './issuance.service';
 import {
   ClientDetails,
+  CredentialQuery,
   FileParameter,
+  FileQuery,
   IssuanceDto,
   OOBCredentialDtoWithEmail,
   OOBIssueCredentialDto,
   PreviewFileDetails,
-  TemplateDetails
+  RequestIdQuery,
+  TemplateDetails,
+  TemplateQuery
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
@@ -204,7 +209,7 @@ export class IssuanceController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
-  @Post('/orgs/:orgId/credentials/bulk/template')
+@Post('/orgs/:orgId/credentials/bulk/template')
 @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
 @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
@@ -234,7 +239,7 @@ async downloadBulkIssuanceCSVTemplate(
     return res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json(error.error);
   }
 }
-
+  
   @Post('/orgs/:orgId/bulk/upload')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -275,21 +280,17 @@ async downloadBulkIssuanceCSVTemplate(
     required: true,
     description: 'The type of schema to be used'
   })
-  @ApiQuery({
-    name: 'templateId',
-    type: 'string',
-    required: false,
-    description: 'The ID of the template to be used'
-  })
   @UseInterceptors(FileInterceptor('file'))
   async uploadCSVTemplate(
     @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
-    @Query('schemaType') schemaType: SchemaType = SchemaType.INDY,
-    @Query('templateId') templateId: string,
+    @Query(new ValidationPipe({ transform: true })) query: TemplateQuery,
     @UploadedFile() file: Express.Multer.File,
     @Body() fileDetails: object,
-    @Res() res: Response
+    @Res() res: Response,
+    @Query('schemaType') schemaType: SchemaType = SchemaType.INDY
   ): Promise<object> {
+    const { templateId } = query;
+
       if (file) {
         const fileKey: string = uuidv4();
         try {
@@ -365,11 +366,13 @@ async downloadBulkIssuanceCSVTemplate(
     required: false
   })
   async previewFileDataForIssuance(
-    @Param('requestId') requestId: string,
     @Param('orgId') orgId: string,
+    @Query(new ValidationPipe({ transform: true })) query: RequestIdQuery,
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<object> {
+
+    const { requestId } = query;
     const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
@@ -421,11 +424,12 @@ async downloadBulkIssuanceCSVTemplate(
     @Res() res: Response,
     @Body() clientDetails: ClientDetails,
     @User() user: user,
-    @Query('credDefId') credentialDefinitionId?: string,
+    @Query(new ValidationPipe({ transform: true })) query: CredentialQuery,
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
 
+    const { credDefId } = query;
     clientDetails.userId = user.id;
     let reqPayload;
     // Need to update logic for University DEMO 
@@ -437,7 +441,7 @@ async downloadBulkIssuanceCSVTemplate(
         throw new RpcException(error.response ? error.response : error);
       }
       reqPayload = {
-        templateId: credentialDefinitionId,
+        templateId: credDefId,
         fileKey,
         fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
         type: fileDetails?.['type']
@@ -511,15 +515,12 @@ async downloadBulkIssuanceCSVTemplate(
   })
   async getFileDetailsByFileId(
     @Param('orgId') orgId: string,
-    @Param('fileId') fileId: string,
+    @Query(new ValidationPipe({ transform: true })) query: FileQuery,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
   ): Promise<object> {
-    const issuedFileDetails = await this.issueCredentialService.getFileDetailsByFileId(
-      orgId,
-      fileId,
-      fileParameter
-    );
+    const { fileId } = query;
+    const issuedFileDetails = await this.issueCredentialService.getFileDetailsByFileId(orgId, fileId, fileParameter);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,

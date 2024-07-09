@@ -25,7 +25,7 @@ import {
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
-import { PrismaTables, SchemaType, SortValue } from '@credebl/enum/enum';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
 import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
 @Injectable()
 export class IssuanceRepository {
@@ -403,8 +403,7 @@ export class IssuanceRepository {
             { upload_type: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } }
           ],
           schema: {
-            orgId,
-            type: SchemaType.W3C_Schema
+            orgId
           }
         },
         take: Number(getAllfileDetails?.pageSize),

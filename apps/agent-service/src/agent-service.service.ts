@@ -802,9 +802,14 @@ export class AgentServiceService {
     let agentProcess;
     let ledgerIdData = [];
     try {
-      if (payload.method !== DidMethod.KEY && payload.method !== DidMethod.WEB) {
+      let ledger;
         const { network } = payload;
-        const ledger = await ledgerName(network);
+        if (network) {
+          ledger = await ledgerName(network);
+        } else {
+          ledger = Ledgers.Not_Applicable;
+        }
+
         const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
         const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
         if (!isLedgerExist) {
@@ -813,10 +818,8 @@ export class AgentServiceService {
             description: ResponseMessages.errorMessages.notFound
           });
         }
-
         ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
-      }
-
+  
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
 
       // Create and stored agent details
@@ -859,7 +862,7 @@ export class AgentServiceService {
         orgAgentTypeId,
         tenantId: tenantDetails.walletResponseDetails['id'],
         walletName: payload.label,
-        ledgerId: ledgerIdData ? ledgerIdData.map((item) => item.id) : null,
+        ledgerId: ledgerIdData.map((item) => item.id),
         id: agentProcess?.id
       };
 

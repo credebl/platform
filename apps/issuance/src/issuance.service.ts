@@ -32,7 +32,7 @@ import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, I
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
-// import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
@@ -805,8 +805,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           }
         ];
 
-        const isEmailSent = true; // change this after testing on local
-        // const isEmailSent = await sendEmail(this.emailData);      
+        const isEmailSent = await sendEmail(this.emailData);      
          
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
         this.counter++;
@@ -1264,7 +1263,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       orgId: '',
       createDateTime: null,
       name: '',
-      credentialType: ''
+      credentialType: '',
+      schemaIdentifier: ''
     };
 
     let csvFileDetail;
@@ -1298,7 +1298,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       fileUpload.createDateTime = new Date();
       fileUpload.name = parsedFileDetails.fileName;
       fileUpload.credentialType = parsedFileDetails.credentialType;
-
+      fileUpload.schemaIdentifier = parsedFileDetails.schemaLedgerId;
+      
       csvFileDetail = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
       const bulkPayloadObject: IBulkPayloadObject = {

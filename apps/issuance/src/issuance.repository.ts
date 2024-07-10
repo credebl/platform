@@ -281,7 +281,7 @@ export class IssuanceRepository {
 
       const schemaDetails = await this.getSchemaDetailsBySchemaIdentifier(credentialDefinitionDetails.schemaLedgerId);
 
-
+      
       if (!schemaDetails) {
         throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
       }
@@ -353,10 +353,7 @@ export class IssuanceRepository {
       const errorCount = await this.prisma.file_data.count({
         where: {
           fileUploadId,
-          OR: [
-            { isError: true }, 
-            { status: false }
-          ]
+          OR: [{ isError: true }, { status: false }]
         }
       });
 
@@ -402,10 +399,7 @@ export class IssuanceRepository {
             { name: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
             { status: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
             { upload_type: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } }
-          ],
-          schema: {
-            orgId
-          }
+          ]
         },
         take: Number(getAllfileDetails?.pageSize),
         skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
@@ -591,10 +585,7 @@ export class IssuanceRepository {
       return this.prisma.file_data.findMany({
         where: {
           fileUploadId: fileId,
-          OR: [
-            { isError: true }, 
-            { status: false }
-          ]
+          OR: [{ isError: true }, { status: false }]
         }
       });
     } catch (error) {
@@ -649,7 +640,7 @@ export class IssuanceRepository {
   async deleteFileUploadData(fileUploadIds: string[], orgId: string): Promise<IDeletedFileUploadRecords> {
     try {
       return await this.prisma.$transaction(async (prisma) => {
-        
+
         const deleteFileDetails = await prisma.file_data.deleteMany({
           where: {
             fileUploadId: {
@@ -665,7 +656,7 @@ export class IssuanceRepository {
         });
 
         return { deleteFileDetails, deleteFileUploadDetails };
-      
+    
       });
     } catch (error) {
       this.logger.error(`[Error in deleting file data] - error: ${JSON.stringify(error)}`);

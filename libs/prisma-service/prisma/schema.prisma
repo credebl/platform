@@ -482,8 +482,8 @@ model file_upload {
   organisation        organisation? @relation(fields: [orgId], references: [id])
   orgId               String?       @db.Uuid
   credential_type     String?
-  schemaIdentifier    String        @db.VarChar
-  schema              schema        @relation(fields: [schemaIdentifier], references: [schemaLedgerId])
+  schemaIdentifier    String?        @db.VarChar
+  schema              schema?        @relation(fields: [schemaIdentifier], references: [schemaLedgerId])
 }
 
 model file_data {

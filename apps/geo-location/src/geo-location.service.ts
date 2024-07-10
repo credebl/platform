@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { CountryInterface, StateInterface, CityInterface } from '@credebl/common/interfaces/geolocation.interface';
 import { GeoLocationRepository } from './geo-location.repository';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class GeoLocationService {
@@ -28,12 +29,12 @@ export class GeoLocationService {
       const states = await this.geoLocationRepository.findStatesByCountryId(countryId);
 
       if (!states.length) {
-        throw new RpcException(`No states found for countryId: ${countryId}.Please provide valid countryId`);
+        throw new NotFoundException(ResponseMessages.geolocation.error.stateNotFound);
       }
       return states;
     } catch (error) {
       this.logger.error(`[getStatesByCountryId] - error in get states by countryId:: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -44,16 +45,14 @@ export class GeoLocationService {
       );
       const cities = await this.geoLocationRepository.findCitiesByStateAndCountry(countryId, stateId);
       if (!cities.length) {
-        throw new RpcException(
-          `No cities found for stateId ${stateId} and countryId ${countryId}.Please provide valid stateId and countryId`
-        );
+        throw new NotFoundException(ResponseMessages.geolocation.error.citiesNotFound);
       }
       return cities;
     } catch (error) {
       this.logger.error(
         `[getCitiesByStateAndCountry] - error in get cities by using countryId and stateId:: ${JSON.stringify(error)}`
       );
-      throw new RpcException(error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

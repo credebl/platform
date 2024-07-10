@@ -260,7 +260,7 @@ export class SchemaService extends BaseService {
   async createW3CSchema(orgId:string, schemaPayload: ICreateW3CSchema, user: string): Promise<ISchemaData> {
     try {
       let createSchema;
-
+      
       const { description, attributes, schemaName} = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {

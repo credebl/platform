@@ -453,10 +453,11 @@ export class EcosystemController {
     @Res() res: Response
   ): Promise<Response> {
     const transactionResponse = await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId, user);
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.submit,
-      data: transactionResponse
+      message: transactionResponse?.['responseMessage'],
+      data: transactionResponse?.['txnPayload']
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

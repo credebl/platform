@@ -22,7 +22,7 @@ import { EcosystemInviteTemplate } from '../templates/EcosystemInviteTemplate';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
-import { EcosystemConfigSettings, Invitation, JSONSchemaType, OrgAgentType, SchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, Invitation, LedgerLessConstant, OrgAgentType, SchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
 import {
   DeploymentModeType,
   EcosystemOrgStatus,
@@ -136,7 +136,7 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
       }
 
-      const ecosystemLedgers = orgDetails.org_agents.map((agent) => agent.ledgers.id);
+      const ecosystemLedgers = orgDetails.org_agents.map((agent) => agent.ledgers?.id);
 
       const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, ecosystemLedgers);
       if (!createEcosystem) {
@@ -1604,7 +1604,7 @@ export class EcosystemService {
     return this.ecosystemRepository.updateTransactionStatus(endorsementId, endorsementTransactionStatus.SUBMITED);
   }
 
-  async submitTransaction(transactionPayload: ITransactionData): Promise<object> {
+  async submitTransaction(transactionPayload: ITransactionData): Promise<{txnPayload: object, responseMessage: string}> {
     try {
       let txnPayload;
 
@@ -1624,13 +1624,19 @@ export class EcosystemService {
         throw new ConflictException(ResponseMessages.ecosystem.error.transactionSubmitted);
       }
 
+      const parsedRequestPayload = JSON.parse(endorsementPayload?.requestPayload);
+
+        const responseMessage = LedgerLessConstant.NO_LEDGER === parsedRequestPayload?.schemaType
+        ? ResponseMessages.ecosystem.success.submitNoLedgerSchema
+        : ResponseMessages.ecosystem.success.submit;
+  
       if (endorsementPayload?.type === endorsementTransactionType.W3C_SCHEMA) {
         txnPayload = await this.submitW3CTransaction(transactionPayload);
       } else {
         txnPayload = await this.submitIndyTransaction(transactionPayload);
       }
 
-      return txnPayload;
+      return { txnPayload, responseMessage };
     } catch (error) {
       this.logger.error(`In submit transaction: ${JSON.stringify(error)}`);
       if (error?.error) {
@@ -1773,11 +1779,11 @@ export class EcosystemService {
           schemaPayload: {
             schemaName: w3cEndorsementTransactionPayload?.requestBody?.['schemaName'],
             attributes: w3cEndorsementTransactionPayload?.requestBody?.['attributes'],
-            schemaType: JSONSchemaType.POLYGON_W3C,
+            schemaType: w3cEndorsementTransactionPayload?.requestBody?.['schemaType'],
             description: w3cEndorsementTransactionPayload?.requestBody?.['description']
           }
         },
-        orgId: transactionPayload?.orgId,
+        orgId: w3cEndorsementTransactionPayload?.['ecosystemOrgs']?.orgId,
         user: transactionPayload?.user
       };
 

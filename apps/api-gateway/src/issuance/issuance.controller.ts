@@ -346,7 +346,7 @@ async downloadBulkIssuanceCSVTemplate(
     required: false
   })
   @ApiQuery({
-    name: 'search',
+    name: 'searchByText',
     type: String,
     required: false
   })
@@ -355,26 +355,16 @@ async downloadBulkIssuanceCSVTemplate(
     type: Number,
     required: false
   })
-  @ApiQuery({
-    name: 'sortBy',
-    type: String,
-    required: false
-  })
-  @ApiQuery({
-    name: 'sortValue',
-    type: Number,
-    required: false
-  })
   async previewFileDataForIssuance(
     @Param('orgId') orgId: string,
     @Query(new ValidationPipe({ transform: true })) query: RequestIdQuery,
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
 
     const { requestId } = query;
     const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,
       data: previewCSVDetails
@@ -515,7 +505,7 @@ async downloadBulkIssuanceCSVTemplate(
   })
   async getFileDetailsByFileId(
     @Param('orgId') orgId: string,
-    @Query(new ValidationPipe({ transform: true })) query: FileQuery,
+    @Param(new ValidationPipe({ transform: true })) query: FileQuery,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
   ): Promise<object> {

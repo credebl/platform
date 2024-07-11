@@ -380,7 +380,8 @@ export class VerificationService {
 
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
-        updateOutOfBandRequestProof.recipientKey = recipientKey || undefined;
+        updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
+        updateOutOfBandRequestProof.imageUrl = getOrganization?.logoUrl || undefined;
         payload   = {
         orgId: user.orgId,
         url,
@@ -398,6 +399,7 @@ export class VerificationService {
             protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
             comment:outOfBandRequestProof.comment,
             label,
+            imageUrl: outOfBandRequestProof?.imageUrl,
             proofFormats: {
               presentationExchange: {
                 presentationDefinition: {

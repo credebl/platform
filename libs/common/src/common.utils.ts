@@ -7,17 +7,19 @@ export function paginator<T>(
   current_page: number,
   items_per_page: number
 ) {
-  const page = current_page || 1,
-    per_page = items_per_page || 10,
-    offset = (page - 1) * per_page,
-    paginatedItems = items.slice(offset).slice(0, items_per_page),
-    total_pages = Math.ceil(items.length / per_page);
+  const page: number = Number(current_page) || 1;
+  const per_page: number = Number(items_per_page) || 10;
+  const offset: number = (page - 1) * per_page;
+  const paginatedItems = items.slice(offset, offset + per_page);
+  const total_pages: number = Math.ceil(items.length / per_page);
 
+  const previousPage: number | null = 1 < page ? page - 1 : null;
+  const nextPage: number | null = page < total_pages ? page + 1 : null;
   return {
     page,
     pageSize: per_page,
-    previousPage: page - 1 ? page - 1 : null,
-    nextPage: total_pages > page ? page + 1 : null,
+    previousPage,
+    nextPage,
     totalItems: items.length,
     lastPage: total_pages,
     data: paginatedItems

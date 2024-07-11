@@ -1281,8 +1281,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       orgId: '',
       createDateTime: null,
       name: '',
-      credentialType: '',
-      schemaIdentifier: ''
+      credentialType: ''
     };
 
     let csvFileDetail;
@@ -1316,7 +1315,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       fileUpload.createDateTime = new Date();
       fileUpload.name = parsedFileDetails.fileName;
       fileUpload.credentialType = parsedFileDetails.credentialType;
-      fileUpload.schemaIdentifier = parsedFileDetails.schemaLedgerId;
       
       csvFileDetail = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 

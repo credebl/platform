@@ -207,8 +207,7 @@ export interface FileUpload {
   orgId?: string,
   createDateTime?: Date | null,
   lastChangedDateTime?: Date | null,
-  credentialType?: string,
-  schemaIdentifier?: string
+  credentialType?: string
 }
 
 export interface FileUploadData {

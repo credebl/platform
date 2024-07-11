@@ -360,7 +360,7 @@ async downloadBulkIssuanceCSVTemplate(
     @Query(new ValidationPipe({ transform: true })) query: RequestIdQuery,
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
-  ): Promise<object> {
+  ): Promise<Response> {
 
     const { requestId } = query;
     const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
@@ -505,7 +505,7 @@ async downloadBulkIssuanceCSVTemplate(
   })
   async getFileDetailsByFileId(
     @Param('orgId') orgId: string,
-    @Query(new ValidationPipe({ transform: true })) query: FileQuery,
+    @Param(new ValidationPipe({ transform: true })) query: FileQuery,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
   ): Promise<object> {

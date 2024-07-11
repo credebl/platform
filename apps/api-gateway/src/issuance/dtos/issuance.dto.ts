@@ -507,8 +507,7 @@ export class FileQuery {
 }
 
 export class RequestIdQuery {
-  @ApiPropertyOptional({ required: false })
-  @IsOptional()
+  @ApiProperty({ required: true })
   @IsString({ message: 'requestId should be string' })
   @IsNotEmpty({ message: 'requestId Id is required' })
   @Transform(({ value }) => trim(value))

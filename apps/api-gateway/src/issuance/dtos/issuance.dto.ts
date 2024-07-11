@@ -6,9 +6,8 @@ import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
 
-import { AutoAccept, SchemaType } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { SortValue } from '../../enum';
 import { trim } from '@credebl/common/cast.helper';
 
 class Issuer {
@@ -430,38 +429,20 @@ export class OOBCredentialDtoWithEmail {
     orgId: string;
 }
 
-
 export class PreviewFileDetails {
-    @ApiProperty({
-        required: false
-    })
-    @Transform(({ value }) => trim(value))
-    @IsOptional()
-    @IsEnum(SortFields)
-    sortField: string = SortFields.CREATED_DATE_TIME;
+  @ApiProperty({ required: false, example: '1' })
+  @IsOptional()
+  pageNumber: number = 1;
 
-    @ApiProperty({
-        enum: [SortValue.DESC, SortValue.ASC],
-        required: false
-    })
-    @Transform(({ value }) => trim(value))
-    @IsOptional()
-    @IsEnum(SortValue)
-    sortBy: string = SortValue.DESC;
+  @ApiProperty({ required: false, example: '10' })
+  @IsOptional()
+  pageSize: number = 10;
 
-    @ApiProperty({ required: false, example: '10' })
-    @IsOptional()
-    pageSize: number = 10;
-
-    @ApiProperty({ required: false, example: '1' })
-    @IsOptional()
-    pageNumber: number = 1;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Transform(({ value }) => trim(value))
-    @Type(() => String)
-    searchByText: string = '';
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @Type(() => String)
+  searchByText: string = '';
 }
 
 export class FileParameter {
@@ -563,8 +544,7 @@ export class FileQuery {
 }
 
 export class RequestIdQuery {
-  @ApiPropertyOptional({ required: false })
-  @IsOptional()
+  @ApiProperty({ required: true })
   @IsString({ message: 'requestId should be string' })
   @IsNotEmpty({ message: 'requestId Id is required' })
   @Transform(({ value }) => trim(value))

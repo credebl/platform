@@ -196,8 +196,8 @@ export interface PreviewRequest {
   pageNumber: number,
   pageSize: number,
   searchByText: string,
-  sortField: string,
-  sortBy: string
+  sortField?: string,
+  sortBy?: string
 }
 
 export interface FileUpload {

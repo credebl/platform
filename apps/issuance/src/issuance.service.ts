@@ -1088,7 +1088,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         if (!cachedData) {
           throw new NotFoundException(ResponseMessages.issuance.error.emptyFileData);
         }
-        if (cachedData === undefined || null === cachedData) {
+        if (cachedData === undefined || null) {
           throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
         }
         const parsedData = JSON.parse(cachedData as string).fileData.data;

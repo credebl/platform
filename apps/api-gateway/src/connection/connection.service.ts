@@ -6,7 +6,7 @@ import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDt
 import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
-import { QuestionDto } from './dtos/question-answer.dto';
+import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
 import { user } from '@prisma/client';
 @Injectable()
 export class ConnectionService extends BaseService {
@@ -19,6 +19,16 @@ export class ConnectionService extends BaseService {
   ): Promise<object> {
     try {
       return this.sendNatsMessage(this.connectionServiceProxy, 'send-question', questionDto);
+    } catch (error) {
+      throw new RpcException(error.response);
+    }
+  }
+
+  sendBasicMessage(
+    basicMessageDto: BasicMessageDto
+  ): Promise<object> {
+    try {
+      return this.sendNatsMessage(this.connectionServiceProxy, 'send-basic-message', basicMessageDto);
     } catch (error) {
       throw new RpcException(error.response);
     }

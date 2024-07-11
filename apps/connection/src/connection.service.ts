@@ -23,7 +23,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IQuestionPayload } from './interfaces/question-answer.interfaces';
+import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfaces';
 import { RecordType, user } from '@prisma/client';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 @Injectable()
@@ -824,5 +824,92 @@ export class ConnectionService {
         this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
         throw new RpcException(error.response ? error.response : error);
     }
-}
+  }
+
+  // WIP 
+  async sendBasicMesage(payload: IBasicMessage): Promise<object> {
+    const { content, orgId, connectionId } = payload;
+    try {
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+
+      const { agentEndPoint } = agentDetails;
+
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
+      }
+
+      const questionPayload = {
+        content
+      };
+
+      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const label = 'send-basic-message';
+      const url = await this.sendBasicMessageAgentUrl(
+        label,
+        orgAgentType,
+        agentEndPoint,
+        agentDetails?.tenantId,
+        connectionId
+      );
+
+      const sendBasicMessage = await this._sendBasicMessage(questionPayload, url, orgId);
+      return sendBasicMessage;
+    } catch (error) {
+      this.logger.error(`[sendQuestion] - error in sending question: ${error}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
+  async _sendBasicMessage(content: IBasicMessage, url: string, orgId: string): Promise<object> {
+    const pattern = { cmd: 'agent-send-basic-message' };
+    const payload = { content, url, orgId };
+    return this.natsCall(pattern, payload);
+  }
+
+  async sendBasicMessageAgentUrl(
+    label: string,
+    orgAgentType: string,
+    agentEndPoint: string,
+    tenantId?: string,
+    connectionId?: string
+  ): Promise<string> {
+    try {
+      let url;
+      switch (label) {
+        case 'send-basic-message': {
+          url =
+            orgAgentType === OrgAgentType.DEDICATED
+              ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
+              : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
+                  .replace('#', connectionId)
+                  .replace('@', tenantId)
+              : null;
+          break;
+        }
+
+        default: {
+          break;
+        }
+      }
+
+      if (!url) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
+      }
+
+      return url;
+    } catch (error) {
+      this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

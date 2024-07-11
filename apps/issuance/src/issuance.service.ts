@@ -21,7 +21,7 @@ import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { convertUrlToDeepLinkUrl, orderValues, paginator } from '@credebl/common/common.utils';
+import { convertUrlToDeepLinkUrl, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
@@ -1077,6 +1077,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
+
   async previewFileDataForIssuance(
     requestId: string,
     previewRequest: PreviewRequest
@@ -1087,13 +1088,23 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         if (!cachedData) {
           throw new NotFoundException(ResponseMessages.issuance.error.emptyFileData);
         }
-        if (cachedData === undefined || null) {
+        if (cachedData === undefined || null === cachedData) {
           throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
         }
         const parsedData = JSON.parse(cachedData as string).fileData.data;
-        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortField));
-        const finalData = paginator(parsedData, previewRequest.pageNumber, previewRequest.pageSize);
-
+  
+        // Apply search to the entire dataset if searchByText is provided
+        let filteredData = parsedData;
+        if (previewRequest.searchByText) {
+          const searchTerm = previewRequest.searchByText.toLowerCase();
+          filteredData = parsedData.filter(item => item.email_identifier.toLowerCase().includes(searchTerm) ||
+            item.name.toLowerCase().includes(searchTerm)
+          );
+        }
+  
+        // Apply pagination to the filtered data
+        const finalData = paginator(filteredData, previewRequest.pageNumber, previewRequest.pageSize);
+  
         return finalData;
       } else {
         throw new BadRequestException(ResponseMessages.issuance.error.previewFile);
@@ -1103,6 +1114,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       throw new RpcException(error.response);
     }
   }
+  
 
   async getFileDetailsByFileId(
     fileId: string,

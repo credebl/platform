@@ -501,7 +501,8 @@ export class FileUploadDetails extends TemplateDetails {
 }
 
 export class CredentialQuery {
-  @ApiProperty({ required: true, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
+  @ApiPropertyOptional({ required: false, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
+  @IsOptional()
   @IsString({ message: 'Cred def Id should be string' })
   @IsNotEmpty({ message: 'Cred def Id is required' })
   @Transform(({ value }) => trim(value))
@@ -524,7 +525,8 @@ export class FileQuery {
 }
 
 export class RequestIdQuery {
-  @ApiProperty({ required: true })
+  @ApiPropertyOptional({ required: false })
+  @IsOptional()
   @IsString({ message: 'requestId should be string' })
   @IsNotEmpty({ message: 'requestId Id is required' })
   @Transform(({ value }) => trim(value))

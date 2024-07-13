@@ -709,6 +709,16 @@ export class SchemaService extends BaseService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getSchemaDetails(templateIds: string[]): Promise<any> {   
+    try {  
+     const getSchemaData = await this.schemaRepository.getSchemasDetailsBySchemaIds(templateIds);
+     return getSchemaData;
+    } catch (error) {
+        throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async _getSchemaById(payload: GetSchemaAgentRedirection): Promise<{ response: string }> {
     try {
       const pattern = {

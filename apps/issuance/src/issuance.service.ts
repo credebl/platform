@@ -1159,6 +1159,19 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     try {
 
       const fileDetails = await this.issuanceRepository.getAllFileDetails(orgId, getAllfileDetails);
+
+      const templateIds = fileDetails?.fileList.map(file => file.templateId);
+
+      const getSchemaDetails = await this._getSchemaDetails(templateIds);
+
+      const fileListWithSchema = fileDetails?.fileList.map(file => {
+        const schemaDetail = getSchemaDetails?.find(schema => schema.schemaLedgerId === file.templateId);
+        return {
+          ...file,
+          schema: schemaDetail ? { name: schemaDetail.name, version: schemaDetail.version, schemaType: schemaDetail.type } : null
+        };
+      });
+
       const fileResponse = {
         totalItems: fileDetails.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
@@ -1166,7 +1179,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         nextPage: Number(getAllfileDetails.pageNumber) + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
         lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
-        data: fileDetails.fileList
+        data: fileListWithSchema
       };
 
       if (0 !== fileDetails.fileCount) {
@@ -1180,6 +1193,31 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       throw new RpcException(error.response);
     }
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async _getSchemaDetails(templateIds: string[]): Promise<any> {
+    const pattern = { cmd: 'get-schemas-details' };
+
+    const payload = {
+      templateIds
+    };
+    const schemaDetails = await this.issuanceServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return schemaDetails;
+  }
+
 
   async delay(ms): Promise<unknown> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -1304,7 +1342,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         throw new BadRequestException(ResponseMessages.issuance.error.cachedData);
       }
       const parsedFileDetails = JSON.parse(cachedData as string);
-
       if (!parsedFileDetails) {
         throw new BadRequestException(ResponseMessages.issuance.error.cachedfileData);
       }
@@ -1315,7 +1352,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       fileUpload.createDateTime = new Date();
       fileUpload.name = parsedFileDetails.fileName;
       fileUpload.credentialType = parsedFileDetails.credentialType;
-      
+      fileUpload.templateId = parsedFileDetails?.schemaLedgerId;
       csvFileDetail = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
       const bulkPayloadObject: IBulkPayloadObject = {

@@ -311,7 +311,7 @@ export class IssuanceRepository {
 
   async saveFileUploadDetails(fileUploadPayload: FileUpload, userId: string): Promise<file_upload> {
     try {
-      const { name, status, upload_type, orgId, credentialType } = fileUploadPayload;
+      const { name, status, upload_type, orgId, credentialType, templateId } = fileUploadPayload;
       return this.prisma.file_upload.create({
         data: {
           name: String(name),
@@ -320,7 +320,8 @@ export class IssuanceRepository {
           upload_type,
           createdBy: userId,
           lastChangedBy: userId,
-          credential_type: credentialType
+          credential_type: credentialType,
+          templateId
         }
       });
     } catch (error) {
@@ -379,6 +380,7 @@ export class IssuanceRepository {
       deletedAt: Date;
       failedRecords: number;
       totalRecords: number;
+      templateId: string;
     }[];
   }> {
     try {

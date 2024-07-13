@@ -26,6 +26,12 @@ export class SchemaController {
     return this.schemaService.createSchema(schemaDetails, user, orgId);
   }
 
+  @MessagePattern({ cmd: 'get-schemas-details' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getSchemasDetails(payload: {templateIds: string[]}): Promise<any> {
+    const { templateIds } = payload;
+    return this.schemaService.getSchemaDetails(templateIds);
+  }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })
   async getSchemaById(payload: ISchema): Promise<schema> {

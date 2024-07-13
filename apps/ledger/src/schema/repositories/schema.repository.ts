@@ -128,6 +128,22 @@ export class SchemaRepository {
     }
   }
 
+  async getSchemasDetailsBySchemaIds(templateIds: string[]): Promise<schema[]> {
+    try {
+      const schemasResult = await this.prisma.schema.findMany({
+        where: {
+          schemaLedgerId: {
+            in: templateIds
+          }
+        }
+      });
+      return schemasResult;
+    } catch (error) {
+      this.logger.error(`Error in getting agent DID: ${error}`);
+      throw error;
+    }
+  }
+
   async getAgentDetailsByOrgId(orgId: string): Promise<AgentDetails> {
     try {
       const schemasResult = await this.prisma.org_agents.findFirst({

@@ -709,8 +709,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getSchemaDetails(templateIds: string[]): Promise<any> {   
+  async getSchemaDetails(templateIds: string[]): Promise<schema[]> {   
     try {  
      const getSchemaData = await this.schemaRepository.getSchemasDetailsBySchemaIds(templateIds);
      return getSchemaData;

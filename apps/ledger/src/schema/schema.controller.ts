@@ -27,8 +27,7 @@ export class SchemaController {
   }
 
   @MessagePattern({ cmd: 'get-schemas-details' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getSchemasDetails(payload: {templateIds: string[]}): Promise<any> {
+  async getSchemasDetails(payload: {templateIds: string[]}): Promise<schema[]> {
     const { templateIds } = payload;
     return this.schemaService.getSchemaDetails(templateIds);
   }

@@ -36,6 +36,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
+import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 
 
 @Injectable()
@@ -1188,8 +1189,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async _getSchemaDetails(templateIds: string[]): Promise<any> {
+  async _getSchemaDetails(templateIds: string[]): Promise<ISchemaDetail[]> {
     const pattern = { cmd: 'get-schemas-details' };
 
     const payload = {
@@ -1208,7 +1208,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           error.status
         );
       });
-
     return schemaDetails;
   }
 

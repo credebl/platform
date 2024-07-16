@@ -1,5 +1,16 @@
 export class OutOfBandIssuance {
-  public outOfBandIssuance(email: string, orgName: string, deepLinkURL: string): string {
+  public outOfBandIssuance(
+    email: string,
+    orgName: string,
+    deepLinkURL: string,
+    platformName?: string,
+    organizationLogoUrl?: string
+  ): string {
+
+    const logoUrl = organizationLogoUrl || process.env.BRAND_LOGO;
+    const platform = platformName || process.env.PLATFORM_NAME;
+    const poweredBy = platformName || process.env.POWERED_BY;
+
     try {
       return `<!DOCTYPE html>
       <html lang="en">
@@ -28,7 +39,7 @@ export class OutOfBandIssuance {
       <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
           <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
               <div style="display: block; text-align:center;" >
-              <img src="${process.env.BRAND_LOGO}" alt="${process.env.PLATFORM_NAME} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+              <img src="${logoUrl}" alt="${platform} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
               </div>
               <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
               font-size: 15px; line-height: 24px;color: #00000;">
@@ -77,7 +88,7 @@ export class OutOfBandIssuance {
 
                   </div>
                   <p style="margin-top: 6px;">
-                     © ${process.env.POWERED_BY}
+                     © ${poweredBy}
                   </p>
                   </footer>
               </div>

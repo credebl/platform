@@ -6,10 +6,17 @@ export class OutOfBandIssuance {
     platformName?: string,
     organizationLogoUrl?: string
   ): string {
-
+    
     const logoUrl = organizationLogoUrl || process.env.BRAND_LOGO;
     const platform = platformName || process.env.PLATFORM_NAME;
     const poweredBy = platformName || process.env.POWERED_BY;
+
+    // eslint-disable-next-line no-console, no-useless-concat
+    console.log(`Inside OutOfBandIssuance :::` + `logoUrl is ${JSON.stringify(logoUrl)}`);
+    // eslint-disable-next-line no-console, no-useless-concat
+    console.log(`Inside OutOfBandIssuance :::` + `platform is ${JSON.stringify(platform)}`);
+    // eslint-disable-next-line no-console, no-useless-concat
+    console.log(`Inside OutOfBandIssuance :::` + `poweredBy is ${JSON.stringify(poweredBy)}`);
 
     try {
       return `<!DOCTYPE html>

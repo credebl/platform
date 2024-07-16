@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/array-type */
 
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum, IsObject} from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsEmail, ArrayMaxSize, ValidateNested, ArrayMinSize, IsBoolean, IsDefined, MaxLength, IsEnum, IsObject, IsUrl} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
+import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
 
 import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
@@ -458,6 +460,24 @@ export class ClientDetails {
     isSelectiveIssuance?: boolean = false;
 
     userId?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
+  @Transform(({ value }) => trim(value))
+  @IsOptional()
+  @IsUrl({
+    // eslint-disable-next-line camelcase 
+        require_protocol: true,
+    // eslint-disable-next-line camelcase
+      require_tld: true
+    },
+  { message: 'brandLogoUrl should be a valid URL' })
+  organizationLogoUrl?: string;
+
+  @ApiPropertyOptional({ example: 'MyPlatform' })
+  @Transform(({ value }) => trim(value))
+  @IsOptional()
+  @IsString({ message: 'platformName should be string' })
+  platformName?: string;
     
 }
 

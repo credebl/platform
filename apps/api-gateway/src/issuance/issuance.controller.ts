@@ -351,7 +351,7 @@ async downloadBulkIssuanceCSVTemplate(
   })
   async previewFileDataForIssuance(
     @Param('orgId') orgId: string,
-    @Query(new ValidationPipe({ transform: true })) query: RequestIdQuery,
+    @Param(new ValidationPipe({ transform: true })) query: RequestIdQuery,
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<Response> {

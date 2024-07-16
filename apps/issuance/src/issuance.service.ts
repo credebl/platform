@@ -541,7 +541,7 @@ export class IssuanceService {
     }
   }
 
-async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
+async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string): Promise<boolean> {
   try {
     const {
       credentialOffer,
@@ -635,6 +635,8 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       url: string;
       orgId: string;
       organizationDetails: organisation;
+      platformName?: string;
+      organizationLogoUrl?: string;
     } = {
       credentialType,
       protocolVersion,
@@ -649,7 +651,9 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       organizationDetails,
       iterator: undefined,
       emailId: emailId || '',
-      index: 0
+      index: 0,
+      platformName: platformName || null,
+      organizationLogoUrl: organizationLogoUrl || null
     };
 
     if (credentialOffer) {
@@ -712,11 +716,14 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     errors,
     url,
     orgId,
-    organizationDetails
+    organizationDetails,
+    platformName,
+    organizationLogoUrl
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
 
+    this.logger.log(`Payload1::::${JSON.stringify(sendEmailCredentialOffer)}`);
     let outOfBandIssuancePayload;
     if (IssueCredentialType.INDY === credentialType) {
     
@@ -737,6 +744,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         label: organisation?.name,
         imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
       };
+      this.logger.log(`Inside INDY Payload2::::${JSON.stringify(outOfBandIssuancePayload)}`);
     }
 
     if (IssueCredentialType.JSONLD === credentialType) {
@@ -771,15 +779,21 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
 
+    this.logger.log(`Inside Payload 3 ${JSON.stringify(credentialCreateOfferDetails)}`);
     if (!credentialCreateOfferDetails) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
       return false;
     }
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+
+    this.logger.log(`Inside payload 4 :::${JSON.stringify(invitationUrl)}`);
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
+    this.logger.log(`Inside payload :::${JSON.stringify(shortenUrl)}`);
+
     const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
+    this.logger.log(`Inside payload ::::${JSON.stringify(deeplLinkURL)}`);
     if (!invitationUrl) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
       return false;
@@ -787,14 +801,16 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         const qrCodeOptions = { type: 'image/png' };
         const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenUrl, qrCodeOptions);
         const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
+        this.logger.log(`Inside Payload 5 :::::${JSON.stringify(platformConfigData)}`);
         if (!platformConfigData) {
           errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
           return false;
         }
         this.emailData.emailFrom = platformConfigData?.emailFrom;
         this.emailData.emailTo = iterator?.emailId ?? emailId;
-        this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL);
+        const platform = platformName || process.env.PLATFORM_NAME;
+        this.emailData.emailSubject = `${platform} Platform: Issuance of Your Credential`;
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL, platformName, organizationLogoUrl);
         this.emailData.emailAttachments = [
           {
             filename: 'qrcode.png',
@@ -804,7 +820,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           }
         ];
 
-        const isEmailSent = await sendEmail(this.emailData);      
+        this.logger.log(`Inside email Data Payload 6 ${JSON.stringify(this.emailData)}`);
+
+        const isEmailSent = await sendEmail(this.emailData);   
          
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
         this.counter++;
@@ -1267,7 +1285,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           credentialType: item.credential_type,
           totalJobs: bulkPayload.length,
           isRetry,
-          isLastData: false
+          isLastData: false,
+          organizationLogoUrl: bulkPayloadDetails?.organizationLogoUrl,
+          platformName: bulkPayloadDetails?.platformName
         }
       }));
 
@@ -1382,7 +1402,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           clientId: clientDetails.clientId,
           orgId,
           requestId,
-          isRetry: false
+          isRetry: false,
+          organizationLogoUrl: clientDetails.organizationLogoUrl,
+          platformName: clientDetails.platformName
         };
 
          this.processInBatches(bulkPayload, bulkPayloadDetails);
@@ -1501,7 +1523,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     
 
       const oobCredentials = await this.outOfBandCredentialOffer(
-        oobIssuancepayload
+        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl
       );
 
       if (oobCredentials) {

@@ -418,7 +418,6 @@ async downloadBulkIssuanceCSVTemplate(
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
-  this.logger.log(`Inside to API-GATE-WAY::::::${JSON.stringify(clientDetails)}`);
     const { credDefId } = query;
     clientDetails.userId = user.id;
     let reqPayload;

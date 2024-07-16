@@ -722,7 +722,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   const iterationNo = index + 1;
   try {
 
-    this.logger.log(`Payload1::::${JSON.stringify(sendEmailCredentialOffer)}`);
+
     let outOfBandIssuancePayload;
     if (IssueCredentialType.INDY === credentialType) {
     
@@ -743,7 +743,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         label: organisation?.name,
         imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
       };
-      this.logger.log(`Inside INDY Payload2::::${JSON.stringify(outOfBandIssuancePayload)}`);
     }
 
     if (IssueCredentialType.JSONLD === credentialType) {
@@ -778,7 +777,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
 
-    this.logger.log(`Inside Payload 3 ${JSON.stringify(credentialCreateOfferDetails)}`);
     if (!credentialCreateOfferDetails) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
       return false;
@@ -786,13 +784,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
 
-    this.logger.log(`Inside payload 4 :::${JSON.stringify(invitationUrl)}`);
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
-    this.logger.log(`Inside payload :::${JSON.stringify(shortenUrl)}`);
 
     const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
-    this.logger.log(`Inside payload ::::${JSON.stringify(deeplLinkURL)}`);
     if (!invitationUrl) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
       return false;
@@ -819,7 +814,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           }
         ];
 
-        this.logger.log(`Inside email Data Payload 6 ${JSON.stringify(this.emailData)}`);
+        this.logger.log(`Inside sendEmailForCredentialOffer email data payload is::: ${JSON.stringify(this.emailData)}`);
 
         const isEmailSent = await sendEmail(this.emailData);   
          
@@ -1249,7 +1244,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
    */
  
   private async processInBatches(bulkPayload, bulkPayloadDetails: BulkPayloadDetails):Promise<void> {
-    this.logger.log(`Inside processInBatches :::${JSON.stringify(bulkPayloadDetails)}`);
     const {clientId, isRetry, orgId, requestId} = bulkPayloadDetails;
     const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
     const batchSize = CommonConstants.ISSUANCE_BATCH_SIZE; // initial 1000
@@ -1330,7 +1324,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     if (!requestId) {
       throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
     }
-    this.logger.log(`Inside issueBulkCredential::::${JSON.stringify(clientDetails)}`);
     const fileUpload: FileUpload = {
       lastChangedDateTime: null,
       upload_type: '',
@@ -1400,8 +1393,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           orgId,
           requestId,
           isRetry: false,
-          organizationLogoUrl: clientDetails.organizationLogoUrl,
-          platformName: clientDetails.platformName
+          organizationLogoUrl: clientDetails?.organizationLogoUrl,
+          platformName: clientDetails?.platformName
         };
 
          this.processInBatches(bulkPayload, bulkPayloadDetails);
@@ -1454,7 +1447,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
   
   async processIssuanceData(jobDetails: IQueuePayload): Promise<boolean> {
-    this.logger.log(`Inside processIssuanceData:::${JSON.stringify(jobDetails)}`);
     const {jobId, totalJobs} = jobDetails;
     if (!this.processedJobsCounters[jobId]) {
       this.processedJobsCounters[jobId] = 0;

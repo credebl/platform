@@ -543,7 +543,7 @@ export class IssuanceService {
     }
   }
 
-async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
+async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string): Promise<boolean> {
   try {
     const {
       credentialOffer,
@@ -637,6 +637,8 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       url: string;
       orgId: string;
       organizationDetails: organisation;
+      platformName?: string;
+      organizationLogoUrl?: string;
     } = {
       credentialType,
       protocolVersion,
@@ -651,7 +653,9 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       organizationDetails,
       iterator: undefined,
       emailId: emailId || '',
-      index: 0
+      index: 0,
+      platformName: platformName || null,
+      organizationLogoUrl: organizationLogoUrl || null
     };
 
     if (credentialOffer) {
@@ -714,10 +718,13 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     errors,
     url,
     orgId,
-    organizationDetails
+    organizationDetails,
+    platformName,
+    organizationLogoUrl
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
+
 
     let outOfBandIssuancePayload;
     if (IssueCredentialType.INDY === credentialType) {
@@ -779,7 +786,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
+
     const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {
@@ -795,8 +804,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         }
         this.emailData.emailFrom = platformConfigData?.emailFrom;
         this.emailData.emailTo = iterator?.emailId ?? emailId;
-        this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL);
+        const platform = platformName || process.env.PLATFORM_NAME;
+        this.emailData.emailSubject = `${platform} Platform: Issuance of Your Credential`;
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL, platformName, organizationLogoUrl);
         this.emailData.emailAttachments = [
           {
             filename: 'qrcode.png',
@@ -806,7 +816,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           }
         ];
 
-        const isEmailSent = await sendEmail(this.emailData);      
+
+        const isEmailSent = await sendEmail(this.emailData);   
          
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
         this.counter++;
@@ -1225,7 +1236,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
    */
  
   private async processInBatches(bulkPayload, bulkPayloadDetails: BulkPayloadDetails):Promise<void> {
-    
     const {clientId, isRetry, orgId, requestId} = bulkPayloadDetails;
     const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
     const batchSize = CommonConstants.ISSUANCE_BATCH_SIZE; // initial 1000
@@ -1258,7 +1268,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           credentialType: item.credential_type,
           totalJobs: bulkPayload.length,
           isRetry,
-          isLastData: false
+          isLastData: false,
+          organizationLogoUrl: bulkPayloadDetails?.organizationLogoUrl,
+          platformName: bulkPayloadDetails?.platformName
         }
       }));
 
@@ -1304,7 +1316,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     if (!requestId) {
       throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
     }
-
     const fileUpload: FileUpload = {
       lastChangedDateTime: null,
       upload_type: '',
@@ -1373,7 +1384,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           clientId: clientDetails.clientId,
           orgId,
           requestId,
-          isRetry: false
+          isRetry: false,
+          organizationLogoUrl: clientDetails?.organizationLogoUrl,
+          platformName: clientDetails?.platformName
         };
 
          this.processInBatches(bulkPayload, bulkPayloadDetails);
@@ -1492,7 +1505,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     
 
       const oobCredentials = await this.outOfBandCredentialOffer(
-        oobIssuancepayload
+        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl
       );
 
       if (oobCredentials) {

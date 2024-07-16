@@ -274,7 +274,8 @@ export const ResponseMessages = {
       fetch: 'Connections details fetched successfully',
       questionAnswerRecord: 'Question Answer record fetched successfully',
       questionSend: 'Question sent successfully',
-      deleteConnectionRecord: 'Connection records deleted'
+      deleteConnectionRecord: 'Connection records deleted',
+      basicMessage: 'Basic message sent successfully'
     },
     error: {
       exists: 'Connection is already exist',

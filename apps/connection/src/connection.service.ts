@@ -872,7 +872,8 @@ export class ConnectionService {
   async _sendBasicMessage(content: IBasicMessage, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-send-basic-message' };
     const payload = { content, url, orgId };
-    return this.natsCall(pattern, payload);
+    // eslint-disable-next-line no-return-await
+    return await this.natsCall(pattern, payload);
   }
 
   async sendBasicMessageAgentUrl(
@@ -905,7 +906,6 @@ export class ConnectionService {
       if (!url) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
       }
-
       return url;
     } catch (error) {
       this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);

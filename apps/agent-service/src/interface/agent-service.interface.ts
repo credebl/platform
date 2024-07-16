@@ -552,9 +552,6 @@ export interface IQuestionPayload {
 }
 export interface IBasicMessage {
   content: string;
-  orgId?: string;
-  connectionId?: string;
-  tenantId?: string;
 }
 interface Ledger {
   id: string;

@@ -262,8 +262,8 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-send-basic-message' })
-  async sendBasicMessage(payload: { url, orgId, questionPayload }): Promise<object> {
-    return this.agentServiceService.sendBasicMessage(payload.questionPayload, payload.url, payload.orgId);
+  async sendBasicMessage(payload: { url, orgId, content }): Promise<object> {
+    return this.agentServiceService.sendBasicMessage(payload.content, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-get-question-answer-record' })

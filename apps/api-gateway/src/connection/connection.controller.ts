@@ -380,7 +380,7 @@ export class ConnectionController {
         const basicMesgResponse = await this.connectionService.sendBasicMessage(basicMessageDto);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
-            message: ResponseMessages.connection.success.questionSend, // TODO
+            message: ResponseMessages.connection.success.basicMessage,
             data: basicMesgResponse
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);

@@ -1243,7 +1243,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
    */
  
   private async processInBatches(bulkPayload, bulkPayloadDetails: BulkPayloadDetails):Promise<void> {
-    
+    this.logger.log(`Inside processInBatches :::${JSON.stringify(bulkPayloadDetails)}`);
     const {clientId, isRetry, orgId, requestId} = bulkPayloadDetails;
     const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
     const batchSize = CommonConstants.ISSUANCE_BATCH_SIZE; // initial 1000
@@ -1324,7 +1324,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     if (!requestId) {
       throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
     }
-
+    this.logger.log(`Inside issueBulkCredential::::${JSON.stringify(clientDetails)}`);
     const fileUpload: FileUpload = {
       lastChangedDateTime: null,
       upload_type: '',
@@ -1448,6 +1448,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
   
   async processIssuanceData(jobDetails: IQueuePayload): Promise<boolean> {
+    this.logger.log(`Inside processIssuanceData:::${JSON.stringify(jobDetails)}`);
     const {jobId, totalJobs} = jobDetails;
     if (!this.processedJobsCounters[jobId]) {
       this.processedJobsCounters[jobId] = 0;

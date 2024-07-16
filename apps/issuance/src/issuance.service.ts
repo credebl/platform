@@ -795,7 +795,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         const qrCodeOptions = { type: 'image/png' };
         const outOfBandIssuanceQrCode = await QRCode.toDataURL(shortenUrl, qrCodeOptions);
         const platformConfigData = await this.issuanceRepository.getPlatformConfigDetails();
-        this.logger.log(`Inside Payload 5 :::::${JSON.stringify(platformConfigData)}`);
         if (!platformConfigData) {
           errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
           return false;
@@ -814,7 +813,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           }
         ];
 
-        this.logger.log(`Inside sendEmailForCredentialOffer email data payload is::: ${JSON.stringify(this.emailData)}`);
 
         const isEmailSent = await sendEmail(this.emailData);   
          

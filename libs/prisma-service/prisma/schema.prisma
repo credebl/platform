@@ -268,7 +268,7 @@ model schema {
   name                  String                  @db.VarChar
   version               String                  @db.VarChar
   attributes            String
-  schemaLedgerId        String                  @unique @db.VarChar
+  schemaLedgerId        String                  @db.VarChar
   publisherDid          String                  @db.VarChar
   issuerId              String                  @db.VarChar
   orgId                 String?                 @db.Uuid
@@ -277,7 +277,6 @@ model schema {
   ledgerId              String?                 @db.Uuid
   type                  String?                 @db.VarChar
   credential_definition credential_definition[]
-  file_upload           file_upload[]
 }
 
 model credential_definition {
@@ -483,8 +482,7 @@ model file_upload {
   organisation        organisation? @relation(fields: [orgId], references: [id])
   orgId               String?       @db.Uuid
   credential_type     String?
-  schemaIdentifier    String?        @db.VarChar
-  schema              schema?        @relation(fields: [schemaIdentifier], references: [schemaLedgerId])
+  templateId          String?       @db.VarChar 
 }
 
 model file_data {

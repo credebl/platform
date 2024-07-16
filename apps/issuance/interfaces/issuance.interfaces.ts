@@ -196,8 +196,8 @@ export interface PreviewRequest {
   pageNumber: number,
   pageSize: number,
   searchByText: string,
-  sortField: string,
-  sortBy: string
+  sortField?: string,
+  sortBy?: string
 }
 
 export interface FileUpload {
@@ -208,7 +208,7 @@ export interface FileUpload {
   createDateTime?: Date | null,
   lastChangedDateTime?: Date | null,
   credentialType?: string,
-  schemaIdentifier?: string
+  templateId?: string
 }
 
 export interface FileUploadData {

@@ -709,6 +709,15 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async getSchemaDetails(templateIds: string[]): Promise<schema[]> {   
+    try {  
+     const getSchemaData = await this.schemaRepository.getSchemasDetailsBySchemaIds(templateIds);
+     return getSchemaData;
+    } catch (error) {
+        throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async _getSchemaById(payload: GetSchemaAgentRedirection): Promise<{ response: string }> {
     try {
       const pattern = {

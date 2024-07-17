@@ -482,6 +482,7 @@ model file_upload {
   organisation        organisation? @relation(fields: [orgId], references: [id])
   orgId               String?       @db.Uuid
   credential_type     String?
+  templateId          String?       @db.VarChar 
 }
 
 model file_data {

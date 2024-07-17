@@ -55,7 +55,7 @@ import {
   IAgentConfigure,
   OrgDid
 } from './interface/agent-service.interface';
-import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
+import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -802,9 +802,14 @@ export class AgentServiceService {
     let agentProcess;
     let ledgerIdData = [];
     try {
-      if (payload.method !== DidMethod.KEY && payload.method !== DidMethod.WEB) {
+      let ledger;
         const { network } = payload;
-        const ledger = await ledgerName(network);
+        if (network) {
+          ledger = await ledgerName(network);
+        } else {
+          ledger = Ledgers.Not_Applicable;
+        }
+
         const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
         const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
         if (!isLedgerExist) {
@@ -813,10 +818,8 @@ export class AgentServiceService {
             description: ResponseMessages.errorMessages.notFound
           });
         }
-
         ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
-      }
-
+  
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
 
       // Create and stored agent details
@@ -859,7 +862,7 @@ export class AgentServiceService {
         orgAgentTypeId,
         tenantId: tenantDetails.walletResponseDetails['id'],
         walletName: payload.label,
-        ledgerId: ledgerIdData ? ledgerIdData.map((item) => item.id) : null,
+        ledgerId: ledgerIdData.map((item) => item.id),
         id: agentProcess?.id
       };
 
@@ -1659,11 +1662,15 @@ export class AgentServiceService {
             this.agentServiceRepository.getAgentApiKey(orgId)
         ]);
 
-        if (getApiKeyResult.status === 'rejected') {
+        if (orgAgentResult.status === PromiseResult.FULFILLED && !orgAgentResult.value) {
+          throw new NotFoundException(ResponseMessages.agent.error.walletDoesNotExists);
+      }
+
+        if (getApiKeyResult.status === PromiseResult.REJECTED) {
             throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
         }
 
-        if (orgAgentResult.status === 'rejected') {
+        if (orgAgentResult.status === PromiseResult.REJECTED) {
             throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
         }
 

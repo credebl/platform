@@ -5,7 +5,7 @@ import { ledgers, org_agents, org_agents_type, organisation, schema } from '@pri
 import { ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
-import { SortValue } from '@credebl/enum/enum';
+import { SchemaType, SortValue } from '@credebl/enum/enum';
 import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
@@ -51,6 +51,7 @@ export class SchemaRepository {
     try {
       return this.prisma.schema.findMany({
         where: {
+          type: SchemaType.INDY,
           name: {
             contains: schemaName,
             mode: 'insensitive'
@@ -124,6 +125,22 @@ export class SchemaRepository {
         cause: new Error(),
         description: error.message
       });
+    }
+  }
+
+  async getSchemasDetailsBySchemaIds(templateIds: string[]): Promise<schema[]> {
+    try {
+      const schemasResult = await this.prisma.schema.findMany({
+        where: {
+          schemaLedgerId: {
+            in: templateIds
+          }
+        }
+      });
+      return schemasResult;
+    } catch (error) {
+      this.logger.error(`Error in getting agent DID: ${error}`);
+      throw error;
     }
   }
 

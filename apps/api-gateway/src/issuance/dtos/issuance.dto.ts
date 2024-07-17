@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/array-type */
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, IsUrl, MaxLength, ValidateNested } from 'class-validator';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import { IssueCredentialType, JsonLdCredentialDetailCredentialStatusOptions, JsonLdCredentialDetailOptionsOptions, JsonObject } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
 
-import { AutoAccept, SchemaType } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { SortValue } from '../../enum';
 import { trim } from '@credebl/common/cast.helper';
 
 class Issuer {
@@ -430,38 +429,20 @@ export class OOBCredentialDtoWithEmail {
     orgId: string;
 }
 
-
 export class PreviewFileDetails {
-    @ApiProperty({
-        required: false
-    })
-    @Transform(({ value }) => trim(value))
-    @IsOptional()
-    @IsEnum(SortFields)
-    sortField: string = SortFields.CREATED_DATE_TIME;
+  @ApiProperty({ required: false, example: '1' })
+  @IsOptional()
+  pageNumber: number = 1;
 
-    @ApiProperty({
-        enum: [SortValue.DESC, SortValue.ASC],
-        required: false
-    })
-    @Transform(({ value }) => trim(value))
-    @IsOptional()
-    @IsEnum(SortValue)
-    sortBy: string = SortValue.DESC;
+  @ApiProperty({ required: false, example: '10' })
+  @IsOptional()
+  pageSize: number = 10;
 
-    @ApiProperty({ required: false, example: '10' })
-    @IsOptional()
-    pageSize: number = 10;
-
-    @ApiProperty({ required: false, example: '1' })
-    @IsOptional()
-    pageNumber: number = 1;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Transform(({ value }) => trim(value))
-    @Type(() => String)
-    searchByText: string = '';
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @Type(() => String)
+  searchByText: string = '';
 }
 
 export class FileParameter {
@@ -514,6 +495,24 @@ export class ClientDetails {
     isSelectiveIssuance?: boolean = false;
 
     userId?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
+  @Transform(({ value }) => trim(value))
+  @IsOptional()
+  @IsUrl({
+    // eslint-disable-next-line camelcase 
+        require_protocol: true,
+    // eslint-disable-next-line camelcase
+      require_tld: true
+    },
+  { message: 'brandLogoUrl should be a valid URL' })
+  organizationLogoUrl?: string;
+
+  @ApiPropertyOptional({ example: 'MyPlatform' })
+  @Transform(({ value }) => trim(value))
+  @IsOptional()
+  @IsString({ message: 'platformName should be string' })
+  platformName?: string;
     
 }
 
@@ -536,4 +535,37 @@ export class FileUploadDetails extends TemplateDetails {
   @IsOptional()
   @IsString({ message: 'fileName should be string' })
   fileName: string;
+}
+
+export class CredentialQuery {
+  @ApiPropertyOptional({ required: false, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
+  @IsOptional()
+  @IsString({ message: 'Cred def Id should be string' })
+  @IsNotEmpty({ message: 'Cred def Id is required' })
+  @Transform(({ value }) => trim(value))
+  credDefId?: string;  
+}
+
+export class TemplateQuery {
+  @ApiProperty({ required: true, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
+  @IsString({ message: 'templateId should be string' })
+  @IsNotEmpty({ message: 'Template Id is required' })
+  @Transform(({ value }) => trim(value))
+  templateId: string;
+}
+export class FileQuery {
+  @ApiProperty({ required: true })
+  @IsString({ message: 'fileId should be string' })
+  @IsNotEmpty({ message: 'fileId Id is required' })
+  @Transform(({ value }) => trim(value))
+  fileId: string;
+}
+
+export class RequestIdQuery {
+  @ApiPropertyOptional({ required: false })
+  @IsOptional()
+  @IsString({ message: 'requestId should be string' })
+  @IsNotEmpty({ message: 'requestId Id is required' })
+  @Transform(({ value }) => trim(value))
+  requestId: string;
 }

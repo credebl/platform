@@ -1,4 +1,4 @@
-import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiExtraModels, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse, getSchemaPath } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiExtraModels, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { EcosystemService } from './ecosystem.service';
 import { Controller, UseFilters, Put, Post, Get, Body, Param, UseGuards, Query, BadRequestException, Delete, HttpStatus, Res, ParseUUIDPipe } from '@nestjs/common';
 import { RequestCredDefDto, RequestSchemaDto, RequestW3CSchemaDto } from './dtos/request-schema.dto';
@@ -12,7 +12,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invitations.dto';
-import { EcosystemRoles, Invitation, schemaRequestType } from '@credebl/enum/enum';
+import { EcosystemRoles, Invitation } from '@credebl/enum/enum';
 import { User } from '../authz/decorators/user.decorator';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -28,7 +28,7 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
-import { TrimStringParamPipe, validateSchemaPayload } from '@credebl/common/cast.helper';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -312,24 +312,12 @@ export class EcosystemController {
   @ApiExtraModels(RequestSchemaDto, RequestW3CSchemaDto)
   @ApiOperation({ summary: 'Request new schema', description: 'Create request for new schema' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-  @ApiQuery({
-    name: 'schemaType',
-    enum: schemaRequestType
-  })
-  @ApiBody({
-    schema: {
-      oneOf: [
-        { $ref: getSchemaPath(RequestSchemaDto), description: 'Indy based schema' },
-        { $ref: getSchemaPath(RequestW3CSchemaDto), description: 'W3C based schema' }
-      ]
-    }
-  })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_OWNER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   async requestSchemaTransaction(
-    @Body() requestSchemaPayload: RequestSchemaDto | RequestW3CSchemaDto,
+    @Body() requestSchemaPayload: RequestSchemaDto,
     @Param(
       'orgId',
       new ParseUUIDPipe({
@@ -340,19 +328,14 @@ export class EcosystemController {
     ) orgId: string,   
     @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string,
     @Res() res: Response,
-    @User() user: user,
-    @Query('schemaType') schemaType: schemaRequestType = schemaRequestType.INDY
+    @User() user: user
   ): Promise<Response> {
-    requestSchemaPayload.userId = user.id;
-
-
-    validateSchemaPayload(requestSchemaPayload, schemaType);
 
     const createSchemaRequest = await this.ecosystemService.schemaEndorsementRequest(
       requestSchemaPayload,
+      user,
       orgId,
-      ecosystemId,
-      schemaType
+      ecosystemId
     );
 
     const finalResponse: IResponse = {
@@ -400,7 +383,7 @@ export class EcosystemController {
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
+  async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response, @User() user: user): Promise<Response> {
     requestCredDefPayload.userId = user.id;
     const createCredDefRequest: IEndorsementTransaction = await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
     const finalResponse: IResponse = {
@@ -466,13 +449,15 @@ export class EcosystemController {
       })
     )
     orgId: string,
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    const transactionResponse = await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId);
+    const transactionResponse = await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId, user);
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.submit,
-      data: transactionResponse
+      message: transactionResponse?.['responseMessage'],
+      data: transactionResponse?.['txnPayload']
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -674,7 +659,7 @@ export class EcosystemController {
   }
 
   @Delete('/:orgId/member-org')
-  @ApiOperation({ summary: 'Delete organization from ecosystem as a ecosystem member', description: 'Delete organization from ecosystem as a ecosystem meber' })
+  @ApiOperation({ summary: 'Delete organization from ecosystem as a ecosystem member', description: 'Delete organization from ecosystem as a ecosystem member' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER)

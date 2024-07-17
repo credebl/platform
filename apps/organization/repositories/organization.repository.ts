@@ -72,10 +72,10 @@ export class OrganizationRepository {
           website: createOrgDto.website,
           orgSlug: createOrgDto.orgSlug,
           publicProfile: false,
-          registrationNumber:createOrgDto.registrationNumber,
-          countryId:createOrgDto.countryId,
-          cityId:createOrgDto.cityId,
-          stateId:createOrgDto.stateId,
+          registrationNumber: createOrgDto.registrationNumber,
+          countryId: createOrgDto.countryId,
+          cityId: createOrgDto.cityId,
+          stateId: createOrgDto.stateId,
           createdBy: createOrgDto.createdBy,
           lastChangedBy: createOrgDto.lastChangedBy
         }
@@ -88,7 +88,7 @@ export class OrganizationRepository {
   }
 
   /**
-   *  
+   *
    * @Body updateOrgDt0
    * @returns update Organization
    */
@@ -120,7 +120,7 @@ export class OrganizationRepository {
       const response = await this.prisma.agent_invitations.findUnique({
         where: {
           id: orgId
-        }        
+        }
       });
       return response;
     } catch (error) {
@@ -131,17 +131,17 @@ export class OrganizationRepository {
 
   async updateConnectionInvitationDetails(orgId: string, connectionInvitation: string): Promise<Prisma.BatchPayload> {
     try {
-        const temp = await this.prisma.agent_invitations.updateMany({
+      const temp = await this.prisma.agent_invitations.updateMany({
           where: {orgId},
-          data: {
-            connectionInvitation
-          }
-        });
-        return temp;
+        data: {
+          connectionInvitation
+        }
+      });
+      return temp;
 
     } catch (error) {
-        this.logger.error(`Error in updating connection invitation details: ${JSON.stringify(error)}`);
-        throw error;
+      this.logger.error(`Error in updating connection invitation details: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -208,11 +208,16 @@ export class OrganizationRepository {
 
   async getOrganizationDetails(orgId: string): Promise<organisation> {
     try {
-      return this.prisma.organisation.findFirstOrThrow({
+      if (!orgId) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+      const orgDetails = await this.prisma.organisation.findFirst({
         where: {
           id: orgId
-        }        
+        }
       });
+
+      return orgDetails;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -387,7 +392,7 @@ export class OrganizationRepository {
 
   async getUser(id: string): Promise<user> {
     try {
-      const getUserById = await this.prisma.user.findUnique({ 
+      const getUserById = await this.prisma.user.findUnique({
         where:{
           id
       }});
@@ -412,6 +417,9 @@ export class OrganizationRepository {
           logoUrl: true,
           website: true,
           publicProfile: true,
+          cityId: true,
+          countryId: true,
+          stateId: true,
           schema: {
             select: {
               id: true,
@@ -472,13 +480,13 @@ export class OrganizationRepository {
 
       const usersCount = await this.prisma.user.count(
         {
-          where: {
-            userOrgRoles: {
-              some: {
-                orgId
-              }
+        where: {
+          userOrgRoles: {
+            some: {
+              orgId
             }
           }
+        }
         }
       );
 
@@ -613,6 +621,9 @@ export class OrganizationRepository {
             logoUrl: true,
             orgSlug: true,
             createDateTime: true,
+            countryId:true,
+            stateId: true,
+            cityId: true,
             ecosystemOrgs: {
               select: {
                 ecosystemId: true
@@ -712,10 +723,10 @@ export class OrganizationRepository {
   }
 
   async getCredDefByOrg(orgId: string): Promise<{
-    tag: string;
-    credentialDefinitionId: string;
-    schemaLedgerId: string;
-    revocable: boolean;
+      tag: string;
+      credentialDefinitionId: string;
+      schemaLedgerId: string;
+      revocable: boolean;
   }[]> {
     try {
       return this.prisma.credential_definition.findMany({
@@ -768,71 +779,71 @@ export class OrganizationRepository {
     deleteOrg: IDeleteOrganization
   }> {
     const tablesToCheck = [
-        `${PrismaTables.ORG_AGENTS}`,
-        `${PrismaTables.ORG_DIDS}`,
-        `${PrismaTables.AGENT_INVITATIONS}`,
-        `${PrismaTables.CONNECTIONS}`,
-        `${PrismaTables.CREDENTIALS}`,
-        `${PrismaTables.PRESENTATIONS}`,
-        `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
-        `${PrismaTables.ECOSYSTEM_ORGS}`,
-        `${PrismaTables.FILE_UPLOAD}`
+      `${PrismaTables.ORG_AGENTS}`,
+      `${PrismaTables.ORG_DIDS}`,
+      `${PrismaTables.AGENT_INVITATIONS}`,
+      `${PrismaTables.CONNECTIONS}`,
+      `${PrismaTables.CREDENTIALS}`,
+      `${PrismaTables.PRESENTATIONS}`,
+      `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
+      `${PrismaTables.ECOSYSTEM_ORGS}`,
+      `${PrismaTables.FILE_UPLOAD}`
     ];
 
     try {
-        return await this.prisma.$transaction(async (prisma) => {
-            // Check for references in all tables in parallel
-            const referenceCounts = await Promise.all(
+      return await this.prisma.$transaction(async (prisma) => {
+        // Check for references in all tables in parallel
+        const referenceCounts = await Promise.all(
                 tablesToCheck.map(table => prisma[table].count({ where: { orgId: id } }))
-            );
+        );
 
-            referenceCounts.forEach((count, index) => {
-                if (0 < count) {
-                    throw new ConflictException(`Organization ID ${id} is referenced in the table ${tablesToCheck[index]}`);
-                }
-            });
-
-            // Check if the organization is an ecosystem lead
-            const isEcosystemLead = await prisma.ecosystem_orgs.findMany({
-                where: {
-                    orgId: id,
-                    ecosystemRole: {
-                        name: { in: ['Ecosystem Lead', 'Ecosystem Owner'] }
-                    }
-                }
-            });
-
-            if (0 < isEcosystemLead.length) {
-                throw new ConflictException(ResponseMessages.organisation.error.organizationEcosystemValidate);
-            }
-
-            const deletedNotification = await prisma.notification.deleteMany({ where: { orgId: id } });
-
-            const deletedUserActivity = await prisma.user_activity.deleteMany({ where: { orgId: id } });
-
-            const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
-
-            const deletedOrgInvitations = await prisma.org_invitations.deleteMany({ where: { orgId: id } });
-
-            await this.prisma.schema.updateMany({
-              where: { orgId: id },
-              data: { orgId: null }
-            });
-        
-            await this.prisma.credential_definition.updateMany({
-              where: { orgId: id },
-              data: { orgId: null }
-            });
-
-            // If no references are found, delete the organization
-            const deleteOrg = await prisma.organisation.delete({ where: { id } });
-
-            return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deletedNotification, deleteOrg};
+        referenceCounts.forEach((count, index) => {
+          if (0 < count) {
+            throw new ConflictException(`Organization ID ${id} is referenced in the table ${tablesToCheck[index]}`);
+          }
         });
-        // return result;
+
+        // Check if the organization is an ecosystem lead
+        const isEcosystemLead = await prisma.ecosystem_orgs.findMany({
+          where: {
+            orgId: id,
+            ecosystemRole: {
+              name: { in: ['Ecosystem Lead', 'Ecosystem Owner'] }
+            }
+          }
+        });
+
+        if (0 < isEcosystemLead.length) {
+          throw new ConflictException(ResponseMessages.organisation.error.organizationEcosystemValidate);
+        }
+
+        const deletedNotification = await prisma.notification.deleteMany({ where: { orgId: id } });
+
+        const deletedUserActivity = await prisma.user_activity.deleteMany({ where: { orgId: id } });
+
+        const deletedUserOrgRole = await prisma.user_org_roles.deleteMany({ where: { orgId: id } });
+
+        const deletedOrgInvitations = await prisma.org_invitations.deleteMany({ where: { orgId: id } });
+
+        await this.prisma.schema.updateMany({
+          where: { orgId: id },
+          data: { orgId: null }
+        });
+
+        await this.prisma.credential_definition.updateMany({
+          where: { orgId: id },
+          data: { orgId: null }
+        });
+
+        // If no references are found, delete the organization
+        const deleteOrg = await prisma.organisation.delete({ where: { id } });
+
+          return {deletedUserActivity, deletedUserOrgRole, deletedOrgInvitations, deletedNotification, deleteOrg};
+      });
+      // return result;
     } catch (error) {
-        this.logger.error(`Error in deleteOrg: ${error}`);
-        throw error;
+      this.logger.error(`Error in deleteOrg: ${error}`);
+      throw error;
     }
   }
 
@@ -866,7 +877,7 @@ export class OrganizationRepository {
           createDateTime: true,
           did: true,
           lastChangedDateTime: true,
-          isPrimaryDid: true  
+          isPrimaryDid: true
         }
       });
     } catch (error) {
@@ -883,158 +894,158 @@ export class OrganizationRepository {
           where: {
             id
           },
-         data: {
-             isPrimaryDid: true
-         }
-         }),
-          this.prisma.org_agents.update({
-            where: {
-               orgId
-            },
-           data: {
-               orgDid: did,
-               didDocument,
-               ledgerId: networkId
-           }
-       })   
-        ]);
-       return ResponseMessages.organisation.success.didDetails;
+          data: {
+            isPrimaryDid: true
+          }
+        }),
+        this.prisma.org_agents.update({
+          where: {
+            orgId
+          },
+          data: {
+            orgDid: did,
+            didDocument,
+            ledgerId: networkId
+          }
+        })
+      ]);
+      return ResponseMessages.organisation.success.didDetails;
     } catch (error) {
-        this.logger.error(`[setOrgsPrimaryDid] - Update DID details: ${JSON.stringify(error)}`);
-        throw error;
+      this.logger.error(`[setOrgsPrimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+      throw error;
     }
-}
+  }
 
 async getDidDetailsByDid(did:string): Promise<IDidDetails> {
-  try {
-    return this.prisma.org_dids.findFirstOrThrow({
-      where: {
-        did
-      }
-    });
-  } catch (error) {
+    try {
+      return this.prisma.org_dids.findFirstOrThrow({
+        where: {
+          did
+        }
+      });
+    } catch (error) {
       this.logger.error(`[getDidDetailsByDid] - get DID details: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
 
  async getPerviousPrimaryDid(orgId:string): Promise<IDidDetails> {
-  try {
-    return this.prisma.org_dids.findFirstOrThrow({
-      where: {
-        orgId,
-        isPrimaryDid: true
-      }
-    });
-  } catch (error) {
+    try {
+      return this.prisma.org_dids.findFirstOrThrow({
+        where: {
+          orgId,
+          isPrimaryDid: true
+        }
+      });
+    } catch (error) {
       this.logger.error(`[getPerviousPrimaryDid] - get DID details: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
 
  async getDids(orgId:string): Promise<IGetDids[]> {
-  try {
-    return this.prisma.org_dids.findMany({
-      where: {
-        orgId
-      }
-    });
-  } catch (error) {
+    try {
+      return this.prisma.org_dids.findMany({
+        where: {
+          orgId
+        }
+      });
+    } catch (error) {
       this.logger.error(`[getDids] - get all DIDs: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
 
  async setPreviousDidFlase(id:string): Promise<IDidDetails> {
-  try {
-    return this.prisma.org_dids.update({
-      where: {
-        id
-      },
-      data: {
-        isPrimaryDid: false
-      }
-    });
-  } catch (error) {
+    try {
+      return this.prisma.org_dids.update({
+        where: {
+          id
+        },
+        data: {
+          isPrimaryDid: false
+        }
+      });
+    } catch (error) {
       this.logger.error(`[setPreviousDidFlase] - Update DID details: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
 
- async getOrgInvitationsByOrg(orgId: string): Promise<OrgInvitation[]> {
-  try {
-    return this.prisma.org_invitations.findMany({
-      where: {
-        orgId
-      }
-    });
-  } catch (error) {
+  async getOrgInvitationsByOrg(orgId: string): Promise<OrgInvitation[]> {
+    try {
+      return this.prisma.org_invitations.findMany({
+        where: {
+          orgId
+        }
+      });
+    } catch (error) {
       this.logger.error(`[getOrgInvitationsByOrg] - get organization invitations: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
 
- async getNetworkByNameSpace(nameSpace: string): Promise<ILedgerNameSpace> {
-  try {
-    return this.prisma.ledgers.findFirstOrThrow({
-      where: {
-        indyNamespace: nameSpace
-      }
-    });
-  } catch (error) {
+  async getNetworkByNameSpace(nameSpace: string): Promise<ILedgerNameSpace> {
+    try {
+      return this.prisma.ledgers.findFirstOrThrow({
+        where: {
+          indyNamespace: nameSpace
+        }
+      });
+    } catch (error) {
       this.logger.error(`[getNetworkByIndyNameSpace] - get network by namespace: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
 
- async getLedger(name: string): Promise<ILedgerDetails> {
-  try {
-    const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
-      where: {
-       name
-      }
-    });
-    return ledgerData;
-  } catch (error) {
-    this.logger.error(`[getLedger] - get ledger details: ${JSON.stringify(error)}`);
-    throw error;
-  }
-}
-
-async getOrgRole(id: string[]): Promise<IOrgRoleDetails[]> {
-  try {
-    const orgRoleData = await this.prisma.org_roles.findMany({
-      where: {
-        id: {
-            in: id
+  async getLedger(name: string): Promise<ILedgerDetails> {
+    try {
+      const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
+        where: {
+          name
         }
+      });
+      return ledgerData;
+    } catch (error) {
+      this.logger.error(`[getLedger] - get ledger details: ${JSON.stringify(error)}`);
+      throw error;
     }
-    });
-    return orgRoleData;
-  } catch (error) {
-    this.logger.error(`[getOrgRole] - get org role details: ${JSON.stringify(error)}`);
-    throw error;
   }
-}
 
-async getUserOrgRole(userId: string, orgId: string): Promise<string[]> {
-  try {
-    const userOrgRoleDetails = await this.prisma.user_org_roles.findMany({
-      where: {
-        userId,
-        orgId
-    },
-    select:{
-      orgRoleId: true
+  async getOrgRole(id: string[]): Promise<IOrgRoleDetails[]> {
+    try {
+      const orgRoleData = await this.prisma.org_roles.findMany({
+        where: {
+          id: {
+            in: id
+          }
+        }
+      });
+      return orgRoleData;
+    } catch (error) {
+      this.logger.error(`[getOrgRole] - get org role details: ${JSON.stringify(error)}`);
+      throw error;
     }
-    });
-     // Map the result to an array of orgRoleId
+  }
+
+  async getUserOrgRole(userId: string, orgId: string): Promise<string[]> {
+    try {
+      const userOrgRoleDetails = await this.prisma.user_org_roles.findMany({
+        where: {
+          userId,
+          orgId
+        },
+    select:{
+          orgRoleId: true
+        }
+      });
+      // Map the result to an array of orgRoleId
      const orgRoleIds = userOrgRoleDetails.map(role => role.orgRoleId);
 
-     return orgRoleIds;
-  } catch (error) {
-    this.logger.error(`[getUserOrgRole] - get user org role details: ${JSON.stringify(error)}`);
-    throw error;
+      return orgRoleIds;
+    } catch (error) {
+      this.logger.error(`[getUserOrgRole] - get user org role details: ${JSON.stringify(error)}`);
+      throw error;
+    }
   }
-}
 }

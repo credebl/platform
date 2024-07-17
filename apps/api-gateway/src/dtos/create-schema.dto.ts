@@ -6,20 +6,11 @@ import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 
   class W3CAttributeValue {
-
     @ApiProperty()
     @IsString()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'attributeName is required' })
     attributeName: string;
-
-    @ApiProperty({
-        description: 'The type of the schema',
-        enum: W3CSchemaDataType,
-        example: W3CSchemaDataType.STRING 
-      })
-    @IsEnum(W3CSchemaDataType, { message: 'Schema data type must be a valid type' })
-    schemaDataType: W3CSchemaDataType;
 
     @ApiProperty()
     @IsString()
@@ -27,11 +18,19 @@ import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum
     @IsNotEmpty({ message: 'displayName is required' })
     displayName: string;
 
+    @ApiProperty({
+      description: 'The type of the schema',
+      enum: W3CSchemaDataType,
+      example: W3CSchemaDataType.STRING
+    })
+    @IsEnum(W3CSchemaDataType, { message: 'Schema data type must be a valid type' })
+    schemaDataType: W3CSchemaDataType;
+
     @ApiProperty()
     @IsBoolean()
     @IsNotEmpty({ message: 'isRequired property is required' })
     isRequired: boolean;
-}
+  }
 class AttributeValue {
 
     @ApiProperty()
@@ -114,6 +113,8 @@ export class CreateW3CSchemaDto {
     })
     @ValidateNested({each: true})
     @Type(() => W3CAttributeValue)
+    @IsArray({ message: 'attributes must be an array' })
+    @ArrayMinSize(1)
     @IsNotEmpty()
     attributes: W3CAttributeValue [];
 

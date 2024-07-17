@@ -351,7 +351,7 @@ async downloadBulkIssuanceCSVTemplate(
   })
   async previewFileDataForIssuance(
     @Param('orgId') orgId: string,
-    @Query(new ValidationPipe({ transform: true })) query: RequestIdQuery,
+    @Param(new ValidationPipe({ transform: true })) query: RequestIdQuery,
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<Response> {
@@ -412,7 +412,6 @@ async downloadBulkIssuanceCSVTemplate(
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
-
     const { credDefId } = query;
     clientDetails.userId = user.id;
     let reqPayload;
@@ -538,7 +537,7 @@ async downloadBulkIssuanceCSVTemplate(
     const bulkIssuanceDetails = await this.issueCredentialService.retryBulkCredential(
       fileId,
       orgId,
-      clientDetails.clientId
+      clientDetails
     );
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

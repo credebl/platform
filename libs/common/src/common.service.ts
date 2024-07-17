@@ -392,4 +392,14 @@ export class CommonService {
       throw new BadRequestException('Invalid Credentials');
     }
   }
+   dataEncryption(data: string) {
+    // eslint-disable-next-line no-useless-catch
+    try {
+      const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(data), process.env.CRYPTO_PRIVATE_KEY).toString();
+
+      return encryptedToken;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

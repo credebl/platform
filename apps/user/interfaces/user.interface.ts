@@ -61,6 +61,7 @@ export interface IUserInformation {
   firstName: string;
   lastName: string;
   isPasskey: boolean;
+  isHolder?: boolean;
 }
 
 export interface AddPasskeyDetails {

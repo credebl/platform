@@ -101,4 +101,9 @@ export class UserService extends BaseService {
   async getPlatformSettings(): Promise<object> {
     return this.sendNatsMessage(this.serviceProxy, 'fetch-platform-settings', '');
   }
+
+  async getUserByUserIdInKeycloak(email: string): Promise<object> {
+    const payload = { email };
+    return this.sendNatsMessage(this.serviceProxy, 'get-user-info-by-user-email-keycloak', payload);
+  }
 }

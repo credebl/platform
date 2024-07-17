@@ -273,6 +273,14 @@ export enum CommonConstants {
   ALL_NON_ADMIN_USER = 3,
 
 
+  // Platform admin Details
+  PLATFORM_ADMIN_EMAIL='platform.admin@yopmail.com',
+  PLATFORM_ADMIN_ORG='Platform-admin',
+  PLATFORM_ADMIN_ORG_ROLE='platform_admin',
+  
+  USER_HOLDER_ROLE='holder',
+
+
   //onBoarding Type
   ONBOARDING_TYPE_ADMIN = 0,
   ONBOARDING_TYPE_EXTERNAL = 1,

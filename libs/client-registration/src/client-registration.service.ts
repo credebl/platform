@@ -99,7 +99,10 @@ export class ClientRegistrationService {
         impersonate: true,
         manage: true
       },
-      realmRoles: ['mb-user']
+      realmRoles: ['mb-user'],
+      attributes: {
+        ...(user.isHolder ? { userRole: `${CommonConstants.USER_HOLDER_ROLE}` } : {})
+      }
     };
 
     const registerUserResponse = await this.commonService.httpPost(
@@ -900,5 +903,26 @@ export class ClientRegistrationService {
     );
 
     return redirectUrls;  
+  }
+
+  async getUserInfoByUserId(
+    userId: string,
+    token: string
+  ) {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const userInfo = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetUserInfoURL(realmName, userId),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `userInfo ${JSON.stringify(
+        userInfo
+      )}`
+    );
+
+    return userInfo;  
   }
 }

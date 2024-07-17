@@ -26,6 +26,10 @@ export class OrgRolesGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
     const { user } = req;
   
+    if (user?.userRole && user?.userRole.includes('holder')) {
+      throw new ForbiddenException('This role is a holder.');
+    }
+
     req.params.orgId = req.params?.orgId ? req.params?.orgId?.trim() : '';
     req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
     req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';

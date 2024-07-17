@@ -1192,4 +1192,23 @@ export class UserService {
       throw error;
     }
   }
+
+  async getUserByUserIdInKeycloak(email: string): Promise<string> {
+    try {
+     
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+
+      const token = await this.clientRegistrationService.getManagementToken(userData?.clientId, userData?.clientSecret);
+      const getClientData = await this.clientRegistrationService.getUserInfoByUserId(userData?.keycloakUserId, token);
+
+      return getClientData;
+    } catch (error) {
+      this.logger.error(`In getUserByUserIdInKeycloak : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

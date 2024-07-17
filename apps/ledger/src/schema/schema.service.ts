@@ -549,7 +549,7 @@ export class SchemaService extends BaseService {
         schema: {
           schemaName: schemaRequest.title,
           schemaVersion: W3CSchemaVersion.W3C_SCHEMA_VERSION,
-          attributes:extractedData,
+          attributes,
           id: schemaDetails.schemaUrl
 
         },

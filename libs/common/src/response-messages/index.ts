@@ -186,14 +186,38 @@ export const ResponseMessages = {
             credDefIdNotFound: 'Credential Definition Id not found'
         }
     },
-    ledger: {
-        success: {
-            fetch: 'Ledger details retrieved successfully.',
-            fetchNetworkUrl: 'Network url retrieved successfully'
-        },
-        error: {
-            NotFound: 'No ledgers found.'
-        }
+    error: {
+      invalidSchemaId: 'Invalid schema Id provided.',
+      invalidData: 'Invalid data provided.',
+      nameNotEmpty: 'Schema name is required',
+      versionNotEmpty: 'Schema version is required',
+      invalidVersion: 'Invalid schema version provided.',
+      insufficientAttributes: 'Please provide at least one attribute.',
+      uniqueAttributesnames: 'Please provide unique attribute names',
+      uniqueAttributesDisplaynames: 'Please provide unique display names for attributes',
+      emptyData: 'Please provide data for creating schema.',
+      exists: 'Schema already exists',
+      notCreated: 'Schema not created',
+      notFound: 'Schema records not found',
+      schemaIdNotFound: 'SchemaLedgerId not found',
+      credentialDefinitionNotFound: 'No credential definition exist',
+      notStoredCredential: 'User credential not stored',
+      agentDetailsNotFound: 'Agent details not found',
+      failedFetchSchema: 'Failed to fetch schema data',
+      atLeastOneRequired: 'At least one of the attributes should have isReuired as `true`',
+      schemaBuilder: 'Error while creating schema JSON',
+      schemaUploading: 'Error while uploading schema JSON',
+      W3CSchemaNotFOund: 'Error while resolving W3C schema',
+      storeW3CSchema: 'Error while storing W3C schema',
+      networkNotFound: 'Error while fetching network',
+      orgDidAndSchemaType: 'Organization DID and schema type does not match'
+    }
+  },
+  credentialDefinition: {
+    success: {
+      fetch: 'Credential definition fetched successfully.',
+      create: 'Credential definition created successfully.',
+      template: 'Credential template fetched successfully.'
     },
     agent: {
         success: {

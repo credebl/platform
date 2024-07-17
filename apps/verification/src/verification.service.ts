@@ -417,6 +417,7 @@ export class VerificationService {
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
         updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
+        updateOutOfBandRequestProof.imageUrl = getOrganization?.logoUrl || undefined;
         payload   = {
         orgId: user.orgId,
         url,

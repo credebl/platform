@@ -621,6 +621,9 @@ export class OrganizationRepository {
             logoUrl: true,
             orgSlug: true,
             createDateTime: true,
+            countryId:true,
+            stateId: true,
+            cityId: true,
             ecosystemOrgs: {
               select: {
                 ecosystemId: true
@@ -874,7 +877,7 @@ export class OrganizationRepository {
           createDateTime: true,
           did: true,
           lastChangedDateTime: true,
-          isPrimaryDid: true  
+          isPrimaryDid: true
         }
       });
     } catch (error) {
@@ -907,53 +910,52 @@ export class OrganizationRepository {
         ]);
        return ResponseMessages.organisation.success.didDetails;
     } catch (error) {
-        this.logger.error(`[setOrgsPrimaryDid] - Update DID details: ${JSON.stringify(error)}`);
-        throw error;
+      this.logger.error(`[setOrgsPrimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+      throw error;
     }
-}
+  }
 
 async getDidDetailsByDid(did:string): Promise<IDidDetails> {
-  try {
-    return this.prisma.org_dids.findFirstOrThrow({
-      where: {
-        did
-      }
-    });
-  } catch (error) {
+    try {
+      return this.prisma.org_dids.findFirstOrThrow({
+        where: {
+          did
+        }
+      });
+    } catch (error) {
       this.logger.error(`[getDidDetailsByDid] - get DID details: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
 
  async getPerviousPrimaryDid(orgId:string): Promise<IDidDetails> {
-  try {
-    return this.prisma.org_dids.findFirstOrThrow({
-      where: {
-        orgId,
-        isPrimaryDid: true
-      }
-    });
-  } catch (error) {
+    try {
+      return this.prisma.org_dids.findFirstOrThrow({
+        where: {
+          orgId,
+          isPrimaryDid: true
+        }
+      });
+    } catch (error) {
       this.logger.error(`[getPerviousPrimaryDid] - get DID details: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
 
  async setPreviousDidFlase(id:string): Promise<IDidDetails> {
-  try {
-    return this.prisma.org_dids.update({
-      where: {
-        id
-      },
-      data: {
-        isPrimaryDid: false
-      }
-    });
-  } catch (error) {
+    try {
+      return this.prisma.org_dids.update({
+        where: {
+          id
+        },
+        data: {
+          isPrimaryDid: false
+        }
+      });
+    } catch (error) {
       this.logger.error(`[setPreviousDidFlase] - Update DID details: ${JSON.stringify(error)}`);
       throw error;
+    }
   }
- }
-
 
 }

@@ -95,8 +95,8 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'retry-bulk-credentials' })
-  async retryeBulkCredentials(payload: { fileId: string, orgId: string, clientId: string }): Promise<string> {
-    return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientId);
+  async retryeBulkCredentials(payload: { fileId: string, orgId: string, clientDetails: IClientDetails }): Promise<string> {
+    return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientDetails);
   }
 
   @MessagePattern({ cmd: 'delete-issuance-records' })

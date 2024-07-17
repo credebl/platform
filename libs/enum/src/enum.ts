@@ -241,3 +241,8 @@ export enum ledgerLessDIDType {
     DID_KEY = 'did:key',
     DID_WEB = 'did:web'
 }
+
+export enum CloudWalletType {
+    BASE_WALLET = 'CLOUD_BASE_WALLET',
+    SUB_WALLET = 'CLOUD_SUB_WALLET'
+  }

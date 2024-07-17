@@ -355,7 +355,8 @@ VERIFICATION_SERVICE = 'verification',
 ECOSYSTEM_SERVICE = 'ecosystem',
 WEBHOOK_SERVICE = 'webhook',
 NOTIFICATION_SERVICE = 'notification',
-GEO_LOCATION_SERVICE = 'geo-location'
+GEO_LOCATION_SERVICE = 'geo-location',
+CLOUD_WALLET_SERVICE = 'cloud-wallet'
 }
 
 export const postgresqlErrorCodes = [];

@@ -196,8 +196,8 @@ export interface PreviewRequest {
   pageNumber: number,
   pageSize: number,
   searchByText: string,
-  sortField: string,
-  sortBy: string
+  sortField?: string,
+  sortBy?: string
 }
 
 export interface FileUpload {
@@ -208,7 +208,7 @@ export interface FileUpload {
   createDateTime?: Date | null,
   lastChangedDateTime?: Date | null,
   credentialType?: string,
-  schemaIdentifier?: string
+  templateId?: string
 }
 
 export interface FileUploadData {
@@ -227,6 +227,8 @@ export interface IClientDetails {
   userId?: string;
   isSelectiveIssuance?: boolean;
   fileName?: string;
+  organizationLogoUrl?: string;
+  platformName?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
@@ -274,6 +276,8 @@ export interface SendEmailCredentialOffer {
   url: string;
   orgId: string; 
   organizationDetails: organisation;
+  platformName?: string,
+  organizationLogoUrl?: string;
 }
 
 export interface TemplateDetailsInterface {
@@ -316,6 +320,8 @@ export interface IQueuePayload{
   totalJobs: number;
   isRetry: boolean;
   isLastData: boolean;
+  organizationLogoUrl?: string;
+  platformName?: string;
 }
 
 interface FileDetails {
@@ -352,4 +358,6 @@ export interface BulkPayloadDetails {
   orgId: string,
   requestId?: string,
   isRetry: boolean
+  organizationLogoUrl?: string,
+  platformName?: string;
 }

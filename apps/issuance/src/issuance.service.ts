@@ -21,7 +21,7 @@ import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { convertUrlToDeepLinkUrl, orderValues, paginator } from '@credebl/common/common.utils';
+import { convertUrlToDeepLinkUrl, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
@@ -36,6 +36,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
+import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 
 
 @Injectable()
@@ -542,7 +543,7 @@ export class IssuanceService {
     }
   }
 
-async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload): Promise<boolean> {
+async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string): Promise<boolean> {
   try {
     const {
       credentialOffer,
@@ -636,6 +637,8 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       url: string;
       orgId: string;
       organizationDetails: organisation;
+      platformName?: string;
+      organizationLogoUrl?: string;
     } = {
       credentialType,
       protocolVersion,
@@ -650,7 +653,9 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       organizationDetails,
       iterator: undefined,
       emailId: emailId || '',
-      index: 0
+      index: 0,
+      platformName: platformName || null,
+      organizationLogoUrl: organizationLogoUrl || null
     };
 
     if (credentialOffer) {
@@ -659,7 +664,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
           sendEmailCredentialOffer['iterator'] = iterator;
           sendEmailCredentialOffer['emailId'] = iterator.emailId;
           sendEmailCredentialOffer['index'] = index;
-      
+
           await this.delay(500); // Wait for 0.5 seconds
           const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
           
@@ -695,7 +700,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     } else {
       throw new RpcException(error.response ? error.response : error);
     }
-  }
+    }
 }
 
 async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialOffer): Promise<boolean> {
@@ -713,10 +718,14 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     errors,
     url,
     orgId,
-    organizationDetails
+    organizationDetails,
+    platformName,
+    organizationLogoUrl
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
+
+
     let outOfBandIssuancePayload;
     if (IssueCredentialType.INDY === credentialType) {
     
@@ -777,7 +786,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
+
     const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {
@@ -793,8 +804,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         }
         this.emailData.emailFrom = platformConfigData?.emailFrom;
         this.emailData.emailTo = iterator?.emailId ?? emailId;
-        this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Issuance of Your Credential`;
-        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL);
+        const platform = platformName || process.env.PLATFORM_NAME;
+        this.emailData.emailSubject = `${platform} Platform: Issuance of Your Credential`;
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL, platformName, organizationLogoUrl);
         this.emailData.emailAttachments = [
           {
             filename: 'qrcode.png',
@@ -804,7 +816,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           }
         ];
 
-        const isEmailSent = await sendEmail(this.emailData);      
+
+        const isEmailSent = await sendEmail(this.emailData);   
          
         this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
         this.counter++;
@@ -816,6 +829,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         return isEmailSent;
 
   } catch (error) {
+    const iterationNoMessage = ` at position ${iterationNo}`;
     this.logger.error('[OUT-OF-BAND CREATE OFFER - SEND EMAIL]::', JSON.stringify(error));
     const errorStack = error?.status?.message;
     if (errorStack) {
@@ -823,9 +837,12 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         new RpcException({
           statusCode: errorStack?.statusCode,
           message: `${ResponseMessages.issuance.error.walletError} at position ${iterationNo}`,
-          error: `${errorStack?.error?.message} at position ${iterationNo}`        })
+          error: `${errorStack?.error?.message} at position ${iterationNo}`       
+         })
       );
-      throw error; // Check With other issuance flow
+
+      error.status.message = `${error.status.message}${iterationNoMessage}`;
+        throw error;
     }  else {
       errors.push(
         new RpcException({
@@ -834,6 +851,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           error: error?.response?.error
         })
       );
+      error.response.message = `${error.response.message}${iterationNoMessage}`;
       throw error;  // Check With other issuance flow
     }
   }
@@ -1071,6 +1089,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
+
   async previewFileDataForIssuance(
     requestId: string,
     previewRequest: PreviewRequest
@@ -1085,9 +1104,19 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           throw new BadRequestException(ResponseMessages.issuance.error.previewCachedData);
         }
         const parsedData = JSON.parse(cachedData as string).fileData.data;
-        parsedData.sort(orderValues(previewRequest.sortBy, previewRequest.sortField));
-        const finalData = paginator(parsedData, previewRequest.pageNumber, previewRequest.pageSize);
-
+  
+        // Apply search to the entire dataset if searchByText is provided
+        let filteredData = parsedData;
+        if (previewRequest.searchByText) {
+          const searchTerm = previewRequest.searchByText.toLowerCase();
+          filteredData = parsedData.filter(item => item.email_identifier.toLowerCase().includes(searchTerm) ||
+            item.name.toLowerCase().includes(searchTerm)
+          );
+        }
+  
+        // Apply pagination to the filtered data
+        const finalData = paginator(filteredData, previewRequest.pageNumber, previewRequest.pageSize);
+  
         return finalData;
       } else {
         throw new BadRequestException(ResponseMessages.issuance.error.previewFile);
@@ -1097,6 +1126,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       throw new RpcException(error.response);
     }
   }
+  
 
   async getFileDetailsByFileId(
     fileId: string,
@@ -1135,6 +1165,19 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     try {
 
       const fileDetails = await this.issuanceRepository.getAllFileDetails(orgId, getAllfileDetails);
+
+      const templateIds = fileDetails?.fileList.map(file => file.templateId);
+
+      const getSchemaDetails = await this._getSchemaDetails(templateIds);
+
+      const fileListWithSchema = fileDetails?.fileList.map(file => {
+        const schemaDetail = getSchemaDetails?.find(schema => schema.schemaLedgerId === file.templateId);
+        return {
+          ...file,
+          schema: schemaDetail ? { name: schemaDetail.name, version: schemaDetail.version, schemaType: schemaDetail.type } : null
+        };
+      });
+
       const fileResponse = {
         totalItems: fileDetails.fileCount,
         hasNextPage: getAllfileDetails.pageSize * getAllfileDetails.pageNumber < fileDetails.fileCount,
@@ -1142,7 +1185,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         nextPage: Number(getAllfileDetails.pageNumber) + 1,
         previousPage: getAllfileDetails.pageNumber - 1,
         lastPage: Math.ceil(fileDetails.fileCount / getAllfileDetails.pageSize),
-        data: fileDetails.fileList
+        data: fileListWithSchema
       };
 
       if (0 !== fileDetails.fileCount) {
@@ -1157,6 +1200,29 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
+  async _getSchemaDetails(templateIds: string[]): Promise<ISchemaDetail[]> {
+    const pattern = { cmd: 'get-schemas-details' };
+
+    const payload = {
+      templateIds
+    };
+    const schemaDetails = await this.issuanceServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+    return schemaDetails;
+  }
+
+
   async delay(ms): Promise<unknown> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -1170,7 +1236,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
    */
  
   private async processInBatches(bulkPayload, bulkPayloadDetails: BulkPayloadDetails):Promise<void> {
-    
     const {clientId, isRetry, orgId, requestId} = bulkPayloadDetails;
     const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
     const batchSize = CommonConstants.ISSUANCE_BATCH_SIZE; // initial 1000
@@ -1203,7 +1268,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           credentialType: item.credential_type,
           totalJobs: bulkPayload.length,
           isRetry,
-          isLastData: false
+          isLastData: false,
+          organizationLogoUrl: bulkPayloadDetails?.organizationLogoUrl,
+          platformName: bulkPayloadDetails?.platformName
         }
       }));
 
@@ -1249,7 +1316,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     if (!requestId) {
       throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
     }
-
     const fileUpload: FileUpload = {
       lastChangedDateTime: null,
       upload_type: '',
@@ -1257,8 +1323,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       orgId: '',
       createDateTime: null,
       name: '',
-      credentialType: '',
-      schemaIdentifier: ''
+      credentialType: ''
     };
 
     let csvFileDetail;
@@ -1281,7 +1346,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         throw new BadRequestException(ResponseMessages.issuance.error.cachedData);
       }
       const parsedFileDetails = JSON.parse(cachedData as string);
-
       if (!parsedFileDetails) {
         throw new BadRequestException(ResponseMessages.issuance.error.cachedfileData);
       }
@@ -1292,8 +1356,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       fileUpload.createDateTime = new Date();
       fileUpload.name = parsedFileDetails.fileName;
       fileUpload.credentialType = parsedFileDetails.credentialType;
-      fileUpload.schemaIdentifier = parsedFileDetails.schemaLedgerId;
-      
+      fileUpload.templateId = parsedFileDetails?.schemaLedgerId;
       csvFileDetail = await this.issuanceRepository.saveFileUploadDetails(fileUpload, clientDetails.userId);
 
       const bulkPayloadObject: IBulkPayloadObject = {
@@ -1321,7 +1384,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           clientId: clientDetails.clientId,
           orgId,
           requestId,
-          isRetry: false
+          isRetry: false,
+          organizationLogoUrl: clientDetails?.organizationLogoUrl,
+          platformName: clientDetails?.platformName
         };
 
          this.processInBatches(bulkPayload, bulkPayloadDetails);
@@ -1440,7 +1505,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     
 
       const oobCredentials = await this.outOfBandCredentialOffer(
-        oobIssuancepayload
+        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl
       );
 
       if (oobCredentials) {

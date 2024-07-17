@@ -280,7 +280,7 @@ export class IssuanceRepository {
 
       const schemaDetails = await this.getSchemaDetailsBySchemaIdentifier(credentialDefinitionDetails.schemaLedgerId);
 
-
+      
       if (!schemaDetails) {
         throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
       }
@@ -311,7 +311,7 @@ export class IssuanceRepository {
 
   async saveFileUploadDetails(fileUploadPayload: FileUpload, userId: string): Promise<file_upload> {
     try {
-      const { name, status, upload_type, orgId, credentialType, schemaIdentifier } = fileUploadPayload;
+      const { name, status, upload_type, orgId, credentialType, templateId } = fileUploadPayload;
       return this.prisma.file_upload.create({
         data: {
           name: String(name),
@@ -321,7 +321,7 @@ export class IssuanceRepository {
           createdBy: userId,
           lastChangedBy: userId,
           credential_type: credentialType,
-          schemaIdentifier
+          templateId
         }
       });
     } catch (error) {
@@ -352,10 +352,7 @@ export class IssuanceRepository {
       const errorCount = await this.prisma.file_data.count({
         where: {
           fileUploadId,
-          OR: [
-            { isError: true }, 
-            { status: false }
-          ]
+          OR: [{ isError: true }, { status: false }]
         }
       });
 
@@ -375,22 +372,15 @@ export class IssuanceRepository {
       name: string;
       status: string;
       upload_type: string;
+      orgId: string;
       createDateTime: Date;
       createdBy: string;
       lastChangedDateTime: Date;
       lastChangedBy: string;
       deletedAt: Date;
-      orgId: string;
-      credential_type: string;
-      schemaIdentifier: string;
-      schema: {
-        name: string;
-        version: string;
-        type: string;
-      };
       failedRecords: number;
       totalRecords: number;
-      successfulRecords: number;
+      templateId: string;
     }[];
   }> {
     try {
@@ -401,24 +391,12 @@ export class IssuanceRepository {
             { name: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
             { status: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } },
             { upload_type: { contains: getAllfileDetails?.searchByText, mode: 'insensitive' } }
-          ],
-          schema: {
-            orgId
-          }
+          ]
         },
         take: Number(getAllfileDetails?.pageSize),
         skip: (getAllfileDetails?.pageNumber - 1) * getAllfileDetails?.pageSize,
         orderBy: {
           createDateTime: 'desc' === getAllfileDetails.sortBy ? 'desc' : 'asc'
-        },
-        include: {
-          schema: {
-            select: {
-              name: true,
-              version: true,
-              type: true
-            }
-          }
         }
       });
 
@@ -590,10 +568,7 @@ export class IssuanceRepository {
       return this.prisma.file_data.findMany({
         where: {
           fileUploadId: fileId,
-          OR: [
-            { isError: true }, 
-            { status: false }
-          ]
+          OR: [{ isError: true }, { status: false }]
         }
       });
     } catch (error) {
@@ -648,7 +623,7 @@ export class IssuanceRepository {
   async deleteFileUploadData(fileUploadIds: string[], orgId: string): Promise<IDeletedFileUploadRecords> {
     try {
       return await this.prisma.$transaction(async (prisma) => {
-        
+
         const deleteFileDetails = await prisma.file_data.deleteMany({
           where: {
             fileUploadId: {
@@ -664,7 +639,7 @@ export class IssuanceRepository {
         });
 
         return { deleteFileDetails, deleteFileUploadDetails };
-      
+    
       });
     } catch (error) {
       this.logger.error(`[Error in deleting file data] - error: ${JSON.stringify(error)}`);

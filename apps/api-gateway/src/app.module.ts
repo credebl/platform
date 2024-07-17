@@ -55,7 +55,8 @@ import { GeoLocationModule } from './geo-location/geo-location.module';
     WebhookModule,
     NotificationModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
-    GeoLocationModule
+    GeoLocationModule,
+    CloudWalletModule
   ],
   controllers: [AppController],
   providers: [AppService]

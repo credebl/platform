@@ -225,4 +225,9 @@ export class UserController {
     return this.userService.getUserKeycloakIdByEmail(userEmails);
   }
 
+  @MessagePattern({ cmd: 'get-user-info-by-user-email-keycloak' })
+  async getUserByUserIdInKeycloak(payload: {email}): Promise<string> {
+    return this.userService.getUserByUserIdInKeycloak(payload.email);
+  }
+
 }

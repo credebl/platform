@@ -14,7 +14,7 @@ ClientsModule.register([
     {
       name: 'NATS_CLIENT',
       transport: Transport.NATS,
-      options: getNatsOptions(process.env.CONNECTION_NKEY_SEED)
+      options: getNatsOptions(process.env.CLOUD_WALLET_NKEY_SEED)
     }
   ]),
 

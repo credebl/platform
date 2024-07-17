@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(CloudWalletModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED)
+    options: getNatsOptions(CommonConstants.CLOUD_WALLET_SERVICE, process.env.CLOUD_WALLET_NKEY_SEED)
   });
 
   app.useGlobalFilters(new HttpExceptionFilter());

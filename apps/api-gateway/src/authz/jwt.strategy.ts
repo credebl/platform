@@ -56,6 +56,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     let userDetails = null;
 
+    const userInfo = await this.usersService.getUserByUserIdInKeycloak(payload.email);
     if (payload.hasOwnProperty('client_id')) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
       
@@ -85,6 +86,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     
     if (!userDetails) {
       throw new NotFoundException(ResponseMessages.user.error.notFound);
+    }
+
+    if (userInfo && userInfo?.['attributes'] && userInfo?.['attributes']?.userRole) {
+      userDetails['userRole'] = userInfo?.['attributes']?.userRole;
     }
 
     return {

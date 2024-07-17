@@ -230,5 +230,14 @@
         "did:web": "did:web"
     }
     }
+  ],
+
+  "userRoleData": [
+    {
+      "role": "HOLDER"
+    },
+    {
+      "role": "DEFAULT_USER"
+    }
   ]
 }

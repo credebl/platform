@@ -295,6 +295,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/geo-location/tsconfig.app.json"
       }
+    },
+    "cloud-wallet": {
+      "type": "application",
+      "root": "apps/cloud-wallet",
+      "entryFile": "main",
+      "sourceRoot": "apps/cloud-wallet/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/cloud-wallet/tsconfig.app.json"
+      }
     }
   }
 }

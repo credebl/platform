@@ -345,6 +345,34 @@ const createLedgerConfig = async (): Promise<void> => {
     }
 };
 
+const createUserRole = async (): Promise<void> => {
+    try {
+        const { userRoleData } = JSON.parse(configData);
+
+        const userRoleDetails = userRoleData.map(userRole => userRole.role);
+        const existUserRole = await prisma.user_role.findMany({
+            where: {
+                role: {
+                    in: userRoleDetails
+                }
+            }
+        });
+
+        if (0 === existUserRole.length) {
+            const userRole = await prisma.user_role.createMany({
+                data: userRoleData
+            });
+
+            logger.log(userRole);
+        } else {
+            logger.log('Already seeding in user role');
+        }
+
+
+    } catch (e) {
+        logger.error('An error occurred seeding user role:', e);
+    }
+};
 
 async function main(): Promise<void> {
 
@@ -359,6 +387,7 @@ async function main(): Promise<void> {
     await createEcosystemRoles();
     await createEcosystemConfig();
     await createLedgerConfig();
+    await createUserRole();
 }
 
 

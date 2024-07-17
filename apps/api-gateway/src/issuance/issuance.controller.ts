@@ -20,7 +20,9 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
-  ParseUUIDPipe
+  ParseUUIDPipe,
+  Delete,
+  ValidationPipe
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -411,7 +413,6 @@ async downloadBulkIssuanceCSVTemplate(
     @Param('orgId') orgId: string,
     @User() user: user,
     @Query(new ValidationPipe({ transform: true })) query: CredentialQuery,
-    @Res() res: Response,
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {

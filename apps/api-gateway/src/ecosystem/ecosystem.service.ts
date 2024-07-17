@@ -14,6 +14,7 @@ import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcos
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class EcosystemService extends BaseService {

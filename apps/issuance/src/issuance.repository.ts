@@ -298,6 +298,7 @@ export class IssuanceRepository {
       this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
       throw new InternalServerErrorException(error.message);
     }
+  }
 
   async getSchemaDetailsBySchemaIdentifier(schemaIdentifier: string): Promise<schema> {
     const schemaDetails = await this.prisma.schema.findFirstOrThrow({

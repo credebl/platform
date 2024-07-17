@@ -264,13 +264,9 @@ export class SchemaService extends BaseService {
 
   async createW3CSchema(orgId:string, schemaPayload: SchemaPayload, user: IUserRequestInterface): Promise<string> {
     try {
-      const isSchemaExist = await this.schemaRepository.schemaExists(schemaPayload.schemaName, W3CSchemaVersion.W3C_SCHEMA_VERSION);
-
-      if (0 !== isSchemaExist.length) {
-        throw new ConflictException(ResponseMessages.schema.error.exists);
-      }
-
-      const { description, did, schemaAttributes, schemaName} = schemaPayload;
+      let createSchema;
+      
+      const { description, attributes, schemaName} = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound, {
@@ -314,9 +310,25 @@ export class SchemaService extends BaseService {
         orgId,
         schemaRequestPayload: agentSchemaPayload
       };
-      const createSchema = await this._createW3CSchema(W3cSchemaPayload);
-      
-     const storeW3CSchema = await this.storeW3CSchemas(createSchema.response, user, orgId);
+      if (schemaPayload.schemaType === JSONSchemaType.POLYGON_W3C) {
+        const createSchemaPayload = await this._createW3CSchema(W3cSchemaPayload);
+        createSchema = createSchemaPayload.response;
+        createSchema.type = JSONSchemaType.POLYGON_W3C;
+      } else {
+        const createSchemaPayload = await this._createW3CledgerAgnostic(schemaObject);
+        if (!createSchemaPayload) {
+          throw new BadRequestException(ResponseMessages.schema.error.schemaUploading, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.badRequest
+          });
+        }
+        createSchema = createSchemaPayload.data;
+        createSchema.did = agentDetails.orgDid;
+        createSchema.type = JSONSchemaType.LEDGER_LESS;
+        createSchema.schemaUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${createSchemaPayload.data.schemaId}`;
+      }
+     
+     const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId, attributes);
 
      if (!storeW3CSchema) {
       throw new ConflictException(ResponseMessages.schema.error.storeW3CSchema, {
@@ -515,9 +527,8 @@ export class SchemaService extends BaseService {
     return W3CSchema;
   }
   
-   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-   private async storeW3CSchemas(schemaDetails, user, orgId) {
-
+   private async storeW3CSchemas(schemaDetails, user, orgId, attributes): Promise <schema> {
+    let ledgerDetails;
     const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
 
     const schemaRequest = await this.commonService
@@ -530,26 +541,24 @@ export class SchemaService extends BaseService {
         description: ResponseMessages.errorMessages.notFound
       });
     }
-  const schemaAttributeJson = schemaRequest.definitions.credentialSubject.properties;
-  const extractedData = [];
-  
-  for (const key in schemaAttributeJson) {
-      if (2 < Object.keys(schemaAttributeJson[key]).length) {
-          const { type, title } = schemaAttributeJson[key];
-          const schemaDataType = type;
-          const displayName = title;
-          const isRequired = false;
-          extractedData.push({ 'attributeName': title, schemaDataType, displayName, isRequired });
-      }
+  const indyNamespace = await networkNamespace(schemaDetails?.did); 
+  if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
+    ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER);
+  } else {
+    ledgerDetails = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
   }
-  const indyNamespace = schemaDetails?.did.includes(':testnet:') ? 'polygon:testnet' : 'polygon';
-  const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
 
+  if (!ledgerDetails) {
+    throw new NotFoundException(ResponseMessages.schema.error.networkNotFound, {
+      cause: new Error(),
+      description: ResponseMessages.errorMessages.notFound
+    });
+  }
     const storeSchemaDetails = {
         schema: {
           schemaName: schemaRequest.title,
           schemaVersion: W3CSchemaVersion.W3C_SCHEMA_VERSION,
-          attributes:extractedData,
+          attributes,
           id: schemaDetails.schemaUrl
 
         },

@@ -115,12 +115,10 @@ export class UserService {
   
       const verifyCode = uuidv4();
       let sendVerificationMail: boolean;
-
+  
       try {
-
         const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
         const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
-
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
   
         if (!redirectUrl) {
@@ -135,8 +133,6 @@ export class UserService {
       if (sendVerificationMail) {
         const uniqueUsername = await this.createUsername(email, verifyCode);
         userEmailVerification.username = uniqueUsername;
-        userEmailVerification.clientId = clientId;
-        userEmailVerification.clientSecret = clientSecret;
         const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
         return resUser;
       } 

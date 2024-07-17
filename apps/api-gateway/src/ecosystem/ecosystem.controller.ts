@@ -27,6 +27,7 @@ import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 
 @UseFilters(CustomExceptionFilter)

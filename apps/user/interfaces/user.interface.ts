@@ -1,4 +1,4 @@
-import { $Enums, Prisma, RecordType } from '@prisma/client';
+import { Prisma, RecordType } from '@prisma/client';
 
 export interface IUsersProfile {
   id: string;
@@ -61,7 +61,6 @@ export interface IUserInformation {
   firstName: string;
   lastName: string;
   isPasskey: boolean;
-  isHolder?: boolean;
 }
 
 export interface AddPasskeyDetails {
@@ -120,31 +119,31 @@ export interface IUserCredentials {
 export interface IOrgUsers {
     totalPages: number,
     users: OrgUser[]
-  }
+}
 
-  export interface IDidList {
-    id: string;
-    createDateTime: Date;
-    did: string;
-    lastChangedDateTime: Date;
-    isPrimaryDid: boolean;
-  }
+export interface IDidList {
+  id: string;
+  createDateTime: Date;
+  did: string;
+  lastChangedDateTime: Date;
+  isPrimaryDid: boolean;
+}
 
-  interface OrgUser {
-    id: string;
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    isEmailVerified: boolean;
-    userOrgRoles: UserOrgRoles[];
-  }
+interface OrgUser {
+  id: string;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  isEmailVerified: boolean;
+  userOrgRoles: UserOrgRoles[];
+}
 
-  interface UserOrgRoles {
-    id: string;
-    orgId: string;
-    orgRoleId: string;
-    orgRole: OrgRole;
+interface UserOrgRoles {
+  id: string;
+  orgId: string;
+  orgRoleId: string;
+  orgRole: OrgRole;
     organisation: Organization
 }
 interface OrgRole {

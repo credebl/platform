@@ -10,7 +10,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { BulkPayloadDetails, CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
-import { AutoAccept, IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier, W3CSchemaDataType} from '@credebl/enum/enum';
+import { IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier} from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -463,7 +463,7 @@ export class IssuanceService {
     }
   }
 
-async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string, prettyVc?: IPrettyVc): Promise<boolean> {
+async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string): Promise<boolean> {
   try {
     const {
       credentialOffer,
@@ -566,7 +566,6 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       organizationDetails: organisation;
       platformName?: string;
       organizationLogoUrl?: string;
-      prettyVc?: IPrettyVc;
     } = {
       credentialType,
       protocolVersion,
@@ -584,12 +583,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       emailId: emailId || '',
       index: 0,
       platformName: platformName || null,
-      organizationLogoUrl: organizationLogoUrl || null,
-      prettyVc: {
-        certificate: prettyVc?.certificate,
-        size: prettyVc?.size,
-        orientation: prettyVc?.orientation
-      }
+      organizationLogoUrl: organizationLogoUrl || null
     };
 
     if (credentialOffer) {
@@ -654,21 +648,11 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     orgId,
     organizationDetails,
     platformName,
-    organizationLogoUrl,
-    isReuseConnection
+    organizationLogoUrl
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
 
-
-    let invitationDid: string | undefined;
-    if (true === isReuseConnection) {
-      const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
-       if (data && 0 < data.length) {
-        const [firstElement] = data;
-        invitationDid = firstElement?.invitationDid ?? undefined;
-    }
-    }
 
     let outOfBandIssuancePayload;
     if (IssueCredentialType.INDY === credentialType) {
@@ -732,7 +716,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
+
     const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {
@@ -1243,10 +1229,7 @@ return newCacheKey;
           isRetry,
           isLastData: false,
           organizationLogoUrl: bulkPayloadDetails?.organizationLogoUrl,
-          platformName: bulkPayloadDetails?.platformName,
-          certificate: bulkPayloadDetails?.certificate,
-          size: bulkPayloadDetails?.size,
-          orientation: bulkPayloadDetails?.orientation
+          platformName: bulkPayloadDetails?.platformName
         }
       }));
 
@@ -1361,10 +1344,7 @@ return newCacheKey;
           requestId,
           isRetry: false,
           organizationLogoUrl: clientDetails?.organizationLogoUrl,
-          platformName: clientDetails?.platformName,
-          certificate: clientDetails?.certificate,
-          size: clientDetails?.size,
-          orientation: clientDetails?.orientation
+          platformName: clientDetails?.platformName
         };
 
          this.processInBatches(bulkPayload, bulkPayloadDetails);
@@ -1404,10 +1384,7 @@ return newCacheKey;
           orgId,
           isRetry: true,
           organizationLogoUrl: clientDetails?.organizationLogoUrl,
-          platformName: clientDetails?.platformName,
-          certificate: clientDetails?.certificate,
-          size: clientDetails?.size,
-          orientation: clientDetails?.orientation
+          platformName: clientDetails?.platformName
         };
         this.processInBatches(bulkpayloadRetry, bulkPayloadDetails);
        } catch (error) {
@@ -1496,7 +1473,9 @@ return newCacheKey;
       }
 
       const oobCredentials = await this.outOfBandCredentialOffer(
-        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl, prettyVc);
+        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl
+      );
+
       if (oobCredentials) {
         await this.issuanceRepository.deleteFileDataByJobId(jobDetails.id);
       }

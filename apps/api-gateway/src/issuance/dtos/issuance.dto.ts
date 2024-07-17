@@ -1,20 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  ArrayMaxSize,
-  ArrayMinSize,
-  IsArray,
-  IsBoolean,
-  IsDefined,
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsObject,
-  IsOptional,
-  IsString,
-  IsUrl,
-  MaxLength,
-  ValidateNested
-} from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDefined, IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, IsUrl, MaxLength, ValidateNested } from 'class-validator';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import {
   IssueCredentialType,
@@ -509,17 +494,6 @@ export class OOBCredentialDtoWithEmail {
   @IsOptional()
   credentialType: IssueCredentialType;
 
-  @ApiPropertyOptional({ default: true })
-  @IsOptional()
-  @IsNotEmpty({ message: 'please provide valid value for isReuseConnection' })
-  @IsBoolean({ message: 'isReuseConnection must be a boolean' })
-  isReuseConnection?: boolean;
-
-  imageUrl?: string;
-
-  orgId: string;
-}
-
 export class PreviewFileDetails {
   @ApiProperty({ required: false, example: '1' })
   @IsOptional()
@@ -585,20 +559,18 @@ export class ClientDetails {
   @Type(() => Boolean)
   isSelectiveIssuance?: boolean = false;
 
-  userId?: string;
+    userId?: string;
 
   @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
   @Transform(({ value }) => trim(value))
   @IsOptional()
-  @IsUrl(
-    {
-      // eslint-disable-next-line camelcase
-      require_protocol: true,
-      // eslint-disable-next-line camelcase
+  @IsUrl({
+    // eslint-disable-next-line camelcase 
+        require_protocol: true,
+    // eslint-disable-next-line camelcase
       require_tld: true
     },
-    { message: 'brandLogoUrl should be a valid URL' }
-  )
+  { message: 'brandLogoUrl should be a valid URL' })
   organizationLogoUrl?: string;
 
   @ApiPropertyOptional({ example: 'MyPlatform' })
@@ -606,24 +578,7 @@ export class ClientDetails {
   @IsOptional()
   @IsString({ message: 'platformName should be string' })
   platformName?: string;
-
-  @ApiPropertyOptional()
-  @Transform(({ value }) => trim(value))
-  @IsOptional()
-  @IsString({ message: 'Certificate should be string' })
-  certificate?: string;
-
-  @ApiPropertyOptional({ example: 'a4' })
-  @Transform(({ value }) => trim(value))
-  @IsOptional()
-  @IsString({ message: 'Size should be string' })
-  size?: string;
-
-  @ApiPropertyOptional({ example: 'landscape' })
-  @Transform(({ value }) => trim(value))
-  @IsOptional()
-  @IsString({ message: 'Orientation should be string' })
-  orientation?: string;
+    
 }
 
 export class TemplateDetails {
@@ -652,7 +607,7 @@ export class CredentialQuery {
   @IsString({ message: 'Cred def Id should be string' })
   @IsNotEmpty({ message: 'Cred def Id is required' })
   @Transform(({ value }) => trim(value))
-  credDefId?: string;
+  credDefId?: string;  
 }
 
 export class TemplateQuery {

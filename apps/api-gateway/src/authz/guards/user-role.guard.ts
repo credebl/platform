@@ -8,8 +8,12 @@ export class UserRoleGuard implements CanActivate {
 
     const { user } = request;
 
-    if (user?.userRole && user?.userRole.includes('holder')) {
-      throw new ForbiddenException('This role is a holder.');
+    if (!user?.userRole) {
+      throw new ForbiddenException('This role is not a holder.');
+    }
+    
+    if (!user?.userRole.includes('holder')) {
+      throw new ForbiddenException('This role is not a holder.');
     }
 
     return true;

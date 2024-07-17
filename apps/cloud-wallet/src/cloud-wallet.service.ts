@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
 import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICloudWalletDetails, ICreateCloudWallet, IStoredWalletDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
@@ -76,22 +76,7 @@ export class CloudWalletService {
      return storeCloudWalletDetails;
     } catch (error) {
       this.logger.error(`[createCloudWallet] - error in create cloud wallet: ${error}`);
-      this.handleError(error);
+      await this.commonService.handleError(error);
     }
-  }
-
-  handleError(error): Promise<void> {
-    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-      throw new RpcException({
-        message: error?.status?.message?.error?.reason
-          ? error?.status?.message?.error?.reason
-          : error?.status?.message?.error,
-        statusCode: error?.status?.code
-      });
-    } else {
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
- 
+  } 
 }

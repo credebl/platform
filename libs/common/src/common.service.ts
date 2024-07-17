@@ -18,6 +18,7 @@ import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
 import * as dotenv from 'dotenv';
+import { RpcException } from '@nestjs/microservices';
 dotenv.config();
 
 @Injectable()
@@ -400,6 +401,19 @@ export class CommonService {
       return encryptedToken;
     } catch (error) {
       throw error;
+    }
+  }
+
+  handleError(error): Promise<void> {
+    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      throw new RpcException({
+        message: error?.status?.message?.error?.reason
+          ? error?.status?.message?.error?.reason
+          : error?.status?.message?.error,
+        statusCode: error?.status?.code
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

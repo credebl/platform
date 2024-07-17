@@ -816,7 +816,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
+
     const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {

@@ -38,7 +38,7 @@ export class AddUserDetailsDto {
 
     @ApiPropertyOptional({ example: false })
     @IsOptional()
-    @IsBoolean({ message: 'holder should be boolean' })
+    @IsBoolean({ message: 'isHolder should be boolean' })
     isHolder?: boolean;
 }
 

@@ -122,8 +122,8 @@ export class IssuanceService extends BaseService {
         return this.sendNatsMessage(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }
 
-    async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<{ response: object }> {
-        const payload = { fileId, orgId, clientId };
+    async retryBulkCredential(fileId: string, orgId: string, clientDetails: ClientDetails): Promise<{ response: object }> {
+        const payload = { fileId, orgId, clientDetails };
         return this.sendNats(this.issuanceProxy, 'retry-bulk-credentials', payload);
     }
 

@@ -1416,7 +1416,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<string> {
+  async retryBulkCredential(fileId: string, orgId: string, clientDetails: IClientDetails): Promise<string> {
     let bulkpayloadRetry;
     try {
       const fileDetails = await this.issuanceRepository.getFileDetailsById(fileId);
@@ -1431,9 +1431,11 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       
       try {
         const bulkPayloadDetails: BulkPayloadDetails = {
-          clientId,
+          clientId : clientDetails.clientId,
           orgId,
-          isRetry: true
+          isRetry: true,
+          organizationLogoUrl: clientDetails?.organizationLogoUrl,
+          platformName: clientDetails?.platformName
         };
         this.processInBatches(bulkpayloadRetry, bulkPayloadDetails);
        } catch (error) {

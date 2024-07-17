@@ -546,7 +546,7 @@ async downloadBulkIssuanceCSVTemplate(
     const bulkIssuanceDetails = await this.issueCredentialService.retryBulkCredential(
       fileId,
       orgId,
-      clientDetails.clientId
+      clientDetails
     );
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

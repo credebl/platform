@@ -513,5 +513,15 @@ export const ResponseMessages = {
       stateNotFound: 'No states found for provided countryId.Please provide valid countryId',
       citiesNotFound: 'No cities found for provided stateId and countryId.Please provide valid stateId and countryId'
     }
+  },
+  cloudWallet: {
+    success: {
+      create: 'Cloud wallet created successfully'
+    },
+    error: {
+      baseWalletNotFound: 'Base wallet configuration not found',
+      createCloudWallet: 'Error while creating cloud wallet on agent',
+      encryptCloudWalletKey: 'Error while creating encrypting wallet key'
+    }
   }
 };

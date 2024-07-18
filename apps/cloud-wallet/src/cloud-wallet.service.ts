@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -9,6 +9,8 @@ import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CloudWalletType } from '@credebl/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { IConfigureCloudBaseWallet, IGetStoredWalletInfo } from '../interfaces/cloud-wallet.interface';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class CloudWalletService {
@@ -19,6 +21,42 @@ export class CloudWalletService {
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
+
+  async configureBaseWallet(cloudBaseWalletConfigure: IConfigureCloudBaseWallet, user: user): Promise<IGetStoredWalletInfo> {
+    const { agentEndpoint, apiKey, email, walletKey } = cloudBaseWalletConfigure;
+
+    try {
+        const getAgentDetails = await this.commonService.httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`);
+        if (!getAgentDetails?.isInitialized) {
+            throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
+        }
+
+        const existingWalletInfo = await this.cloudWalletRepository.getCloudWalletInfo(email);
+        if (existingWalletInfo) {
+            throw new ConflictException(ResponseMessages.cloudWallet.error.agentAlreadyExist);
+        }
+
+        const [encryptionWalletKey, encryptionApiKey] = await Promise.all([
+            this.commonService.dataEncryption(walletKey),
+            this.commonService.dataEncryption(apiKey)
+        ]);
+
+        const walletInfoToStore = {
+            agentEndpoint,
+            apiKey: encryptionApiKey,
+            email,
+            type: CloudWalletType.BASE_WALLET,
+            userId: user.id,
+            walletKey: encryptionWalletKey
+        };
+
+        const storedWalletInfo = await this.cloudWalletRepository.storeCloudWalletInfo(walletInfoToStore);
+        return storedWalletInfo;
+    } catch (error) {
+        await this.commonService.handleError(error);
+        throw error;
+    }
+  }
 
 
   /**

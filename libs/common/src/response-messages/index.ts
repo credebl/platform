@@ -517,12 +517,15 @@ export const ResponseMessages = {
   },
   cloudWallet: {
     success: {
-      create: 'Cloud wallet created successfully'
+      create: 'Cloud wallet created successfully',
+      configureBaseWallet: 'Successfully configure the base wallet.'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',
       createCloudWallet: 'Error while creating cloud wallet on agent',
-      encryptCloudWalletKey: 'Error while creating encrypting wallet key'
+      encryptCloudWalletKey: 'Error while creating encrypting wallet key',
+      notReachable: 'The agent endpoint is not reachable.',
+      agentAlreadyExist: 'Agent already exist.'
     }
   }
 };

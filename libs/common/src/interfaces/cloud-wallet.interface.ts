@@ -1,4 +1,5 @@
 import { CloudWalletType } from '@credebl/enum/enum';
+import { $Enums } from '@prisma/client';
 
 export class ICreateCloudWallet {
     label: string;
@@ -29,4 +30,12 @@ export interface IStoredWalletDetails {
   tenantId: string,
   label: string,
   lastChangedDateTime: Date
+}
+
+export interface IGetStoredWalletInfo {
+  email: string;
+  userId: string;
+  id: string;
+  type: $Enums.CloudWalletType;
+  agentEndpoint: string;
 }

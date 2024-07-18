@@ -11,7 +11,6 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { CloudBaseWalletConfigureDto } from './dtos/configure-base-wallet.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { UserRoleGuard } from '../authz/guards/user-role.guard';
 import { User } from '../authz/decorators/user.decorator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
@@ -39,7 +38,7 @@ export class CloudWalletController {
     @Post('/configure/base-wallet')
     @ApiOperation({ summary: 'Configure base wallet', description: 'Configure base wallet' })
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-    @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+    @UseGuards(AuthGuard('jwt'))
     async configureBaseWallet(
         @Res() res: Response,
         @Body() cloudBaseWalletConfigure: CloudBaseWalletConfigureDto,

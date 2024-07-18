@@ -107,4 +107,19 @@ export class CloudWalletRepository {
       throw error;
     }
   }
+
+  // eslint-disable-next-line camelcase
+  async getCloudSubWallet(userId: string): Promise<cloud_wallet_user_info> {
+    try {
+      const cloudSubWalletDetails = await this.prisma.cloud_wallet_user_info.findFirstOrThrow({
+        where: {
+          userId
+        }
+      });
+      return cloudSubWalletDetails;
+    } catch (error) {
+      this.logger.error(`Error in getCloudSubWallet: ${error}`);
+      throw error;
+    }
+  }
 }

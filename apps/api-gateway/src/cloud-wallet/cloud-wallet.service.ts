@@ -5,6 +5,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CloudBaseWalletConfigureDto } from './dtos/configure-base-wallet.dto';
 import { user } from '@prisma/client';
+import { AcceptProofRequestDto } from './dtos/accept-proof-request.dto';
 
 @Injectable()
 export class CloudWalletService extends BaseService {
@@ -18,6 +19,22 @@ export class CloudWalletService extends BaseService {
   ): Promise<IGetStoredWalletInfo> {
     const payload = {cloudBaseWalletConfigure, user};
     return this.sendNatsMessage(this.cloudWalletServiceProxy, 'configure-cloud-base-wallet', payload);
+  }
+
+  acceptProofRequest(
+    acceptProofRequest: AcceptProofRequestDto,
+    user: user
+  ): Promise<object> {
+    const payload = {acceptProofRequest, user};
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'accept-proof-request', payload);
+  }
+
+  getProofById(
+    proofId: string,
+    user: user
+  ): Promise<object> {
+    const payload = {proofId, user};
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'proof-by-proof-id', payload);
   }
 
   createCloudWallet(

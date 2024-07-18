@@ -29,3 +29,20 @@ export interface IGetStoredWalletInfo {
     type: $Enums.CloudWalletType;
     agentEndpoint: string;
 }
+
+export interface IAcceptProofRequest {
+    proofRecordId: string;
+    filterByPresentationPreview?: boolean;
+    filterByNonRevocationRequirements?: boolean;
+    comment?: string;
+}
+
+export interface IAcceptProofRequestPayload {
+    acceptProofRequest: IAcceptProofRequest
+    user: user
+}
+
+export interface IProofByProofId {
+    proofId: string
+    user: user
+}

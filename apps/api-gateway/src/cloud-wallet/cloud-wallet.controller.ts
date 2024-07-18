@@ -1,6 +1,6 @@
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Post, Logger, Body, HttpStatus, Res, UseFilters, UseGuards } from '@nestjs/common';
+import { Controller, Post, Logger, Body, HttpStatus, Res, UseFilters, UseGuards, Get, Param } from '@nestjs/common';
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -14,6 +14,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
+import { UserRoleGuard } from '../authz/guards/user-role.guard';
+import { AcceptProofRequestDto } from './dtos/accept-proof-request.dto';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -52,6 +54,57 @@ export class CloudWalletController {
             data: configureBaseWalletData
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+    /**
+        * Accept proof request 
+        * @param acceptProofRequest
+        * @param user 
+        * @param res 
+        * @returns sucess message
+    */
+    @Post('/proof/accept-request')
+    @ApiOperation({ summary: 'Accept proof request', description: 'Accept proof request' })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+    async acceptProofRequest(
+        @Res() res: Response,
+        @Body() acceptProofRequest: AcceptProofRequestDto,
+        @User() user: user
+    ): Promise<Response> {
+
+        const configureBaseWalletData = await this.cloudWalletService.acceptProofRequest(acceptProofRequest, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.cloudWallet.success.acceptProofRequest,
+            data: configureBaseWalletData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+    /**
+        * Get proof presentation by proof id
+        * @param proofId 
+        * @param res 
+        * @returns sucess message
+    */
+    @Get('/proof/:proofId')
+    @ApiOperation({ summary: 'Get proof presentation by Id', description: 'Get proof presentation by Id' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+    async getProofById(
+        @Param('proofId') proofId: string,
+        @Res() res: Response,
+        @User() user: user
+    ): Promise<Response> {
+
+        const getProofDetails = await this.cloudWalletService.getProofById(proofId, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.cloudWallet.success.getProofById,
+            data: getProofDetails
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
     }
 
      /**

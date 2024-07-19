@@ -109,8 +109,8 @@ export class CloudWalletService {
         const createConnectionDetails = await this.commonService.httpPost(url, connectionPayload, { headers: { authorization: decryptedApiKey } });       
         return createConnectionDetails;
     } catch (error) {
-        await this.commonService.handleError(error);
-        throw error;
+      await this.commonService.handleError(error);
+      throw error;
     }
   }
 

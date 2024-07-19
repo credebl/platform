@@ -19,6 +19,7 @@ import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
 import * as dotenv from 'dotenv';
 import { RpcException } from '@nestjs/microservices';
+import { ResponseMessages } from './response-messages';
 dotenv.config();
 
 @Injectable()
@@ -416,4 +417,23 @@ export class CommonService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+  
+async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {
+  if (!baseUrl || !apiKey) {
+    throw new BadRequestException(ResponseMessages.cloudWallet.error.agentDetails);
+  }
+  const url = `${baseUrl}${CommonConstants.URL_AGENT_GET_ENDPOINT}`;
+  try {
+    const agentHealthCheck = await this.httpGet(url, {
+      headers: { authorization: apiKey }
+    });
+    if (agentHealthCheck.isInitialized) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    throw new Error;
+  }
+}
+
 }

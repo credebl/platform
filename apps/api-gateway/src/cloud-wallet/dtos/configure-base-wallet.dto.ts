@@ -1,17 +1,9 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsHostPortOrDomain, trim } from '@credebl/common/cast.helper';
-import { Transform } from 'class-transformer';
+import { IsHostPortOrDomain } from '@credebl/common/cast.helper';
 
 export class CloudBaseWalletConfigureDto {
-  @ApiProperty({ example: 'awqx@getnada.com' })
-  @IsEmail({}, { message: 'Please provide a valid email' })
-  @IsNotEmpty({ message: 'Email is required' })
-  @IsString({ message: 'Email should be a string' })
-  @Transform(({ value }) => trim(value))
-  email: string;
-
   @ApiProperty({ example: 'xxx-xxxx-xxxx' })
   @IsString({ message: 'walletKey must be a string' })
   @IsNotEmpty({ message: 'please provide valid walletKey' })
@@ -27,4 +19,8 @@ export class CloudBaseWalletConfigureDto {
   @IsNotEmpty({ message: 'please provide valid agentEndpoint' })
   @IsHostPortOrDomain({ message: 'agentEndpoint must be a valid host:port or domain' })
   agentEndpoint: string;
+
+  userId: string;
+
+  email: string;
 }

@@ -2,9 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CloudWalletType } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
-import { cloud_wallet_user_info } from '@prisma/client';
-import { ICloudWalletDetails, IStoredWalletDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
-import { IGetStoredWalletInfo, IStoreWalletInfo } from '../interfaces/cloud-wallet.interface';
+import { cloud_wallet_user_info, user } from '@prisma/client';
+import { ICloudWalletDetails, IGetStoredWalletInfo, IStoredWalletDetails, IStoreWalletInfo } from '@credebl/common/interfaces/cloud-wallet.interface';
 
 
 @Injectable()
@@ -32,7 +31,7 @@ export class CloudWalletRepository {
   // eslint-disable-next-line camelcase
   async storeCloudWalletDetails(cloudWalletDetails: ICloudWalletDetails): Promise<IStoredWalletDetails> {
     try {
-      const {createdBy, label, lastChangedBy, tenantId, type, userId, agentApiKey, agentEndpoint, email, key, connectionImageUrl} = cloudWalletDetails;
+      const {label, lastChangedBy, tenantId, type, userId, agentApiKey, agentEndpoint, email, key, connectionImageUrl} = cloudWalletDetails;
 
       return await this.prisma.cloud_wallet_user_info.create({
         data: {
@@ -40,7 +39,7 @@ export class CloudWalletRepository {
           tenantId,
           email,
           type,
-          createdBy,
+          createdBy: userId,
           lastChangedBy,
           userId,
           agentEndpoint,
@@ -82,16 +81,17 @@ export class CloudWalletRepository {
 
   async storeCloudWalletInfo(cloudWalletInfoPayload: IStoreWalletInfo): Promise<IGetStoredWalletInfo> {
     try {
+      const { agentEndpoint, agentApiKey, email, type, userId, key, createdBy, lastChangedBy } = cloudWalletInfoPayload;
       const walletInfoData = await this.prisma.cloud_wallet_user_info.create({
         data: {
-          type: cloudWalletInfoPayload.type,
-          agentApiKey: cloudWalletInfoPayload.apiKey,
-          agentEndpoint: cloudWalletInfoPayload.agentEndpoint,
-          email: cloudWalletInfoPayload.email,
-          userId: cloudWalletInfoPayload.userId,
-          key: cloudWalletInfoPayload.walletKey,
-          createdBy: cloudWalletInfoPayload.userId,
-          lastChangedBy: cloudWalletInfoPayload.userId
+          type,
+          agentApiKey,
+          agentEndpoint,
+          email,
+          userId,
+          key,
+          createdBy,
+          lastChangedBy
         },
         select: {
           id: true,
@@ -104,6 +104,35 @@ export class CloudWalletRepository {
       return walletInfoData;
     } catch (error) {
       this.logger.error(`Error in storeCloudWalletInfo: ${error}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getCloudSubWallet(userId: string): Promise<cloud_wallet_user_info> {
+    try {
+      const cloudSubWalletDetails = await this.prisma.cloud_wallet_user_info.findFirstOrThrow({
+        where: {
+          userId
+        }
+      });
+      return cloudSubWalletDetails;
+    } catch (error) {
+      this.logger.error(`Error in getCloudSubWallet: ${error}`);
+      throw error;
+    }
+  }
+
+  async getUserInfo(email: string): Promise<user> {
+    try {
+      const userDetails = await this.prisma.user.findUnique({
+        where: {
+          email
+        }
+      });
+      return userDetails;
+    } catch (error) {
+      this.logger.error(`Error in getUserInfo: ${error}`);
       throw error;
     }
   }

@@ -16,6 +16,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { user } from '@prisma/client';
 import { UserRoleGuard } from '../authz/guards/user-role.guard';
 import { AcceptProofRequestDto } from './dtos/accept-proof-request.dto';
+import { IGetProofPresentation, IGetProofPresentationById } from '@credebl/common/interfaces/cloud-wallet.interface';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -47,7 +48,12 @@ export class CloudWalletController {
         @User() user: user
     ): Promise<Response> {
 
-        const configureBaseWalletData = await this.cloudWalletService.configureBaseWallet(cloudBaseWalletConfigure, user);
+        const { id, email } = user;
+
+        cloudBaseWalletConfigure.userId = id;
+        cloudBaseWalletConfigure.email = email;
+
+        const configureBaseWalletData = await this.cloudWalletService.configureBaseWallet(cloudBaseWalletConfigure);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.cloudWallet.success.configureBaseWallet,
@@ -72,33 +78,43 @@ export class CloudWalletController {
         @Body() acceptProofRequest: AcceptProofRequestDto,
         @User() user: user
     ): Promise<Response> {
+        const { id, email } = user;
+        acceptProofRequest.userId = id;
+        acceptProofRequest.email = email;
 
-        const configureBaseWalletData = await this.cloudWalletService.acceptProofRequest(acceptProofRequest, user);
+        const acceptProofRequestDetails = await this.cloudWalletService.acceptProofRequest(acceptProofRequest);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.cloudWallet.success.acceptProofRequest,
-            data: configureBaseWalletData
+            data: acceptProofRequestDetails
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
     /**
         * Get proof presentation by proof id
-        * @param proofId 
+        * @param proofRecordId 
         * @param res 
         * @returns sucess message
     */
-    @Get('/proofs/:proofId')
+    @Get('/proofs/:proofRecordId')
     @ApiOperation({ summary: 'Get proof presentation by Id', description: 'Get proof presentation by Id' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @UseGuards(AuthGuard('jwt'), UserRoleGuard)
     async getProofById(
-        @Param('proofId') proofId: string,
+        @Param('proofRecordId') proofRecordId: string,
         @Res() res: Response,
         @User() user: user
     ): Promise<Response> {
+        const { id, email } = user;
 
-        const getProofDetails = await this.cloudWalletService.getProofById(proofId, user);
+        const proofPresentationByIdPayload: IGetProofPresentationById = {
+            userId: id,
+            email,
+            proofRecordId
+        };
+
+        const getProofDetails = await this.cloudWalletService.getProofById(proofPresentationByIdPayload);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.cloudWallet.success.getProofById,
@@ -127,7 +143,15 @@ export class CloudWalletController {
         @Query('threadId') threadId?: string
     ): Promise<Response> {
 
-        const getProofDetails = await this.cloudWalletService.getProofPresentation(threadId, user);
+        const { id, email } = user;
+
+        const proofPresentationPayload: IGetProofPresentation = {
+            userId: id,
+            email,
+            threadId
+        };
+
+        const getProofDetails = await this.cloudWalletService.getProofPresentation(proofPresentationPayload);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
             message: ResponseMessages.cloudWallet.success.getProofPresentation,
@@ -145,14 +169,11 @@ export class CloudWalletController {
      @Post('/create-wallet')
      @ApiOperation({ summary: 'Create outbound out-of-band connection invitation', description: 'Create outbound out-of-band connection invitation' })
      @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-     @UseGuards(AuthGuard('jwt'), UserRoleGuard)
      async createCloudWallet(
          @Res() res: Response,
-         @Body() cloudWalletDetails: CreateCloudWalletDto,
-         @User() user: user
+         @Body() cloudWalletDetails: CreateCloudWalletDto
      ): Promise<Response> {
  
-        cloudWalletDetails.userId = user.id;
          const cloudWalletData = await this.cloudWalletService.createCloudWallet(cloudWalletDetails);
          const finalResponse: IResponse = {
              statusCode: HttpStatus.CREATED,

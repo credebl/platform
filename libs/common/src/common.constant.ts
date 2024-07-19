@@ -330,6 +330,9 @@ CACHE_SHARED_APIKEY_KEY = "dedicatedApiKey",
 CACHE_APIKEY_KEY = "sharedApiKey",
 CACHE_TTL_SECONDS = 604800,
 
+CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
+CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
+
 // Bulk-issuance
 BATCH_SIZE = 100,
 MAX_CONCURRENT_OPERATIONS = 50,

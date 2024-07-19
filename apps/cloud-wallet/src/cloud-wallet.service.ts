@@ -4,13 +4,11 @@ import { BadRequestException, ConflictException, Inject, Injectable, InternalSer
 import { ClientProxy } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { ICloudWalletDetails, ICreateCloudWallet, IStoredWalletDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICloudWalletDetails, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, CloudWallet, IStoreWalletInfo } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CloudWalletType } from '@credebl/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { IAcceptProofRequest, IConfigureCloudBaseWallet, IGetStoredWalletInfo } from '../interfaces/cloud-wallet.interface';
-import { user } from '@prisma/client';
 
 @Injectable()
 export class CloudWalletService {
@@ -24,11 +22,11 @@ export class CloudWalletService {
 
   /**
    * configure cloud base wallet
-   * @param cloudBaseWalletConfigure 
+   * @param configureBaseWalletPayload 
    * @returns cloud base wallet
    */
-  async configureBaseWallet(cloudBaseWalletConfigure: IConfigureCloudBaseWallet): Promise<IGetStoredWalletInfo> {
-    const { agentEndpoint, apiKey, email, walletKey } = cloudBaseWalletConfigure;
+  async configureBaseWallet(configureBaseWalletPayload: ICloudBaseWalletConfigure): Promise<IGetStoredWalletInfo> {
+    const { agentEndpoint, apiKey, email, walletKey, userId } = configureBaseWalletPayload;
 
     try {
         const getAgentInfo = await this.commonService.httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`);
@@ -46,18 +44,15 @@ export class CloudWalletService {
             this.commonService.dataEncryption(apiKey)
         ]);
 
-        const getUserInfo = await this.cloudWalletRepository.getUserInfo(email);
-        if (!getUserInfo) {
-          throw new NotFoundException(ResponseMessages.cloudWallet.error.platformAdminRecordNotFound);
-        }
-
-        const walletInfoToStore = {
+        const walletInfoToStore: IStoreWalletInfo = {
             agentEndpoint,
-            apiKey: encryptionApiKey,
+            agentApiKey: encryptionApiKey,
             email,
             type: CloudWalletType.BASE_WALLET,
-            userId: getUserInfo?.id,
-            walletKey: encryptionWalletKey
+            userId,
+            key: encryptionWalletKey,
+            createdBy: userId,
+            lastChangedBy: userId
         };
 
         const storedWalletInfo = await this.cloudWalletRepository.storeCloudWalletInfo(walletInfoToStore);
@@ -71,16 +66,18 @@ export class CloudWalletService {
   /**
    * Accept proof request
    * @param acceptProofRequest 
-   * @param user 
    * @returns proof presentation
    */
-  async acceptProofRequest(acceptProofRequest: IAcceptProofRequest, user: user): Promise<object> {
-    const { proofRecordId, comment, filterByNonRevocationRequirements, filterByPresentationPreview } = acceptProofRequest;
-
+  async acceptProofRequest(acceptProofRequest: IAcceptProofRequest): Promise<IProofRequestRes> {
+    const { proofRecordId, comment, filterByNonRevocationRequirements, filterByPresentationPreview, userId } = acceptProofRequest;
     try {
 
-        const cloudWalletDetails = await this._commonCloudWalletInfo(user);
-        const url = `${cloudWalletDetails?.['baseWalletDetails']?.agentEndpoint}${CommonConstants.URL_SHAGENT_ACCEPT_PROOF_REQUEST}`.replace('#', proofRecordId).replace('@', cloudWalletDetails?.['getTenant']?.tenantId);
+        const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+
+        const { tenantId } = getTenant;
+        const { agentEndpoint } = baseWalletDetails;
+
+        const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}${CommonConstants.CLOUD_WALLET_ACCEPT_PROOF_REQUEST}${tenantId}`;
         const proofAcceptRequestPayload = {
           comment, 
           filterByNonRevocationRequirements, 
@@ -88,7 +85,7 @@ export class CloudWalletService {
         };
 
 
-        const acceptProofRequest = await this.commonService.httpPost(url, proofAcceptRequestPayload, { headers: { authorization: cloudWalletDetails?.['decryptedApiKey'] } });       
+        const acceptProofRequest = await this.commonService.httpPost(url, proofAcceptRequestPayload, { headers: { authorization: decryptedApiKey } });       
         return acceptProofRequest;
     } catch (error) {
         await this.commonService.handleError(error);
@@ -98,18 +95,20 @@ export class CloudWalletService {
 
   /**
    * Get proof presentation by proof Id
-   * @param proofId 
-   * @param user 
+   * @param proofPrsentationByIdPayload 
    * @returns proof presentation
    */
-  async getProofById(proofId: string, user: user): Promise<object> {
+  async getProofById(proofPrsentationByIdPayload: IGetProofPresentationById): Promise<IProofRequestRes> {
     try {
+        const { proofRecordId, userId } = proofPrsentationByIdPayload;
+        const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
 
-        const cloudWalletDetails = await this._commonCloudWalletInfo(user);
-        const url = `${cloudWalletDetails?.['baseWalletDetails']?.agentEndpoint}${CommonConstants.URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID}`.replace('#', proofId).replace('@', cloudWalletDetails?.['getTenant']?.tenantId);
+        const { tenantId } = getTenant;
+        const { agentEndpoint } = baseWalletDetails;
 
+        const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}/${tenantId}`;
 
-        const getProofById = await this.commonService.httpGet(url, { headers: { authorization: cloudWalletDetails?.['decryptedApiKey'] } });       
+        const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });       
         return getProofById;
     } catch (error) {
         await this.commonService.handleError(error);
@@ -119,17 +118,21 @@ export class CloudWalletService {
 
   /**
    * Get proof presentation
-   * @param threadId 
-   * @param user 
+   * @param proofPresentationPayload 
    * @returns proof presentations
    */
-  async getProofPresentation(threadId: string, user: user): Promise<object> {
+  async getProofPresentation(proofPresentationPayload: IGetProofPresentation): Promise<IProofRequestRes[]> {
     try {
+        const { threadId, userId } = proofPresentationPayload;
 
-        const cloudWalletDetails = await this._commonCloudWalletInfo(user);
-        const url = `${cloudWalletDetails?.['baseWalletDetails']?.agentEndpoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}${threadId ? `?threadId=${threadId}` : ''}`.replace('#', cloudWalletDetails?.['getTenant']?.tenantId);
+        const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
 
-        const getProofById = await this.commonService.httpGet(url, { headers: { authorization: cloudWalletDetails?.['decryptedApiKey'] } });       
+        const { tenantId } = getTenant;
+        const { agentEndpoint } = baseWalletDetails;
+
+        const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${tenantId}${threadId ? `?threadId=${threadId}` : ''}`;
+
+        const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });       
         return getProofById;
     } catch (error) {
         await this.commonService.handleError(error);
@@ -137,7 +140,12 @@ export class CloudWalletService {
     }
   } 
 
-  async _commonCloudWalletInfo(user: user): Promise<object> {
+  /**
+   * common function for get cloud wallet
+   * @param userId 
+   * @returns cloud wallet info
+   */
+  async _commonCloudWalletInfo(userId: string): Promise<[CloudWallet, CloudWallet, unknown]> {
       const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET);
 
       if (!baseWalletDetails) {
@@ -149,7 +157,7 @@ export class CloudWalletService {
           throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
       }
 
-      const getTenant = await this.cloudWalletRepository.getCloudSubWallet(user?.id);
+      const getTenant = await this.cloudWalletRepository.getCloudSubWallet(userId);
 
       if (!getTenant) {
         throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound);
@@ -157,12 +165,7 @@ export class CloudWalletService {
 
       const decryptedApiKey = await this.commonService.decryptPassword(getTenant?.agentApiKey);
 
-      const walletConfigDetails = {
-        baseWalletDetails, 
-        getTenant, 
-        decryptedApiKey
-      };
-      return walletConfigDetails;
+      return [baseWalletDetails, getTenant, decryptedApiKey];
   }
 
   /**

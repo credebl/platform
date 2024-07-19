@@ -1,11 +1,8 @@
 
-import { ICreateCloudWallet, IGetStoredWalletInfo, IStoredWalletDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { Inject, Injectable} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { CloudBaseWalletConfigureDto } from './dtos/configure-base-wallet.dto';
-import { user } from '@prisma/client';
-import { AcceptProofRequestDto } from './dtos/accept-proof-request.dto';
 
 @Injectable()
 export class CloudWalletService extends BaseService {
@@ -14,35 +11,27 @@ export class CloudWalletService extends BaseService {
   }
 
   configureBaseWallet(
-    cloudBaseWalletConfigure: CloudBaseWalletConfigureDto,
-    user: user
+    cloudBaseWalletConfigure: ICloudBaseWalletConfigure
   ): Promise<IGetStoredWalletInfo> {
-    const payload = {cloudBaseWalletConfigure, user};
-    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'configure-cloud-base-wallet', payload);
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'configure-cloud-base-wallet', cloudBaseWalletConfigure);
   }
 
   acceptProofRequest(
-    acceptProofRequest: AcceptProofRequestDto,
-    user: user
-  ): Promise<object> {
-    const payload = {acceptProofRequest, user};
-    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'accept-proof-request-by-holder', payload);
+    acceptProofRequest: IAcceptProofRequest
+  ): Promise<IProofRequestRes> {
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'accept-proof-request-by-holder', acceptProofRequest);
   }
 
   getProofById(
-    proofId: string,
-    user: user
-  ): Promise<object> {
-    const payload = {proofId, user};
-    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-proof-by-proof-id-holder', payload);
+    proofPresentationByIdPayload: IGetProofPresentationById
+  ): Promise<IProofRequestRes> {
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-proof-by-proof-id-holder', proofPresentationByIdPayload);
   }
 
   getProofPresentation(
-    threadId: string,
-    user: user
-  ): Promise<object> {
-    const payload = {threadId, user};
-    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-proof-presentation-holder', payload);
+    proofPresentationPayload: IGetProofPresentation
+  ): Promise<IProofRequestRes[]> {
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-proof-presentation-holder', proofPresentationPayload);
   }
 
   createCloudWallet(

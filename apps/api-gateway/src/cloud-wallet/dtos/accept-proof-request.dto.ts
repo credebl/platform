@@ -22,4 +22,8 @@ export class AcceptProofRequestDto {
   @IsOptional()
   @IsString({ message: 'comment must be a string' })
   comment?: string;
+
+  userId: string;
+
+  email: string;
 }

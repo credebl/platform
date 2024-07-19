@@ -520,6 +520,7 @@ export const ResponseMessages = {
       create: 'Cloud wallet created successfully',
       configureBaseWallet: 'Successfully configure the base wallet.',
       acceptProofRequest: 'Proof request has been successfully accepted.',
+      createConnection: 'Connection created successfully.',
       getProofById: 'Proof presentation has been successfully received.',
       getProofPresentation: 'Proof presentations has been successfully received.'
     },

@@ -17,6 +17,7 @@ import { user } from '@prisma/client';
 import { UserRoleGuard } from '../authz/guards/user-role.guard';
 import { AcceptProofRequestDto } from './dtos/accept-proof-request.dto';
 import { IGetProofPresentation, IGetProofPresentationById } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { CreateConnectionDto } from './dtos/create-connection.dto';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -58,6 +59,28 @@ export class CloudWalletController {
             statusCode: HttpStatus.CREATED,
             message: ResponseMessages.cloudWallet.success.configureBaseWallet,
             data: configureBaseWalletData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+
+    @Post('/connections/invitation')
+    @ApiOperation({ summary: 'Create connection invitation', description: 'Create connection invitation' })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+    async createConnection(
+        @Res() res: Response,
+        @Body() createConnection: CreateConnectionDto,
+        @User() user: user
+    ): Promise<Response> {
+        const { id, email } = user;
+        createConnection.userId = id;
+        createConnection.email = email;
+
+        const createConnectionDetails = await this.cloudWalletService.createConnection(createConnection);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.cloudWallet.success.createConnection,
+            data: createConnectionDetails
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }

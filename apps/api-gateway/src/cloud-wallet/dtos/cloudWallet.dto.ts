@@ -124,7 +124,7 @@ export class ReceiveInvitationUrlDTO {
 
   export class CreateCloudWalletDidDto {
 
-    @ApiProperty({ example: '000000000000000000000000000Seed1' })
+    @ApiProperty({ example: '000000000000000000000000000Seed2' })
     @MaxLength(32, { message: 'seed must be at most 32 characters.' })
     @Transform(({ value }) => trim(value))
     @IsOptional()
@@ -141,19 +141,19 @@ export class ReceiveInvitationUrlDTO {
     @IsString({ message: 'key type be in string format.' })
     keyType: string;
 
-    @ApiProperty({ example: 'indy'})
+    @ApiProperty({ example: 'polygon'})
     @IsNotEmpty({ message: 'method is required' })
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'method must be in string format.' })
     method: string;
 
-    @ApiPropertyOptional({example: 'bcovrin:testnet'})
+    @ApiPropertyOptional({example: 'indicio:testnet'})
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'network must be in string format.' })
     network?: string;
 
-    @ApiPropertyOptional({example: 'www.github.com'})
+    @ApiPropertyOptional({example: 'www.google.com'})
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'domain must be in string format.' })
@@ -171,7 +171,7 @@ export class ReceiveInvitationUrlDTO {
     @Transform(({ value }) => trim(value))
     privatekey?: string;
 
-    @ApiPropertyOptional({example: 'http://localhost:6006/docs'})
+    @ApiPropertyOptional({example: 'http://localhost:4006/docs'})
     @IsOptional()
     @IsString({ message: 'endpoint must be in string format.' })
     endpoint?: string;
@@ -182,7 +182,7 @@ export class ReceiveInvitationUrlDTO {
     @IsString({ message: 'did must be in string format.' })
     did?: string;
 
-    @ApiPropertyOptional({example: 'did:indy:bcovrin:testnet:UEeW111G1tYo1nEkPwMcF'})
+    @ApiPropertyOptional({example: 'did:indy:indicio:testnet:UEeW111G1tYo1nEkPwMef'})
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'endorser did must be in string format.' })

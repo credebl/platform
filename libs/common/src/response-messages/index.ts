@@ -516,12 +516,19 @@ export const ResponseMessages = {
   },
   cloudWallet: {
     success: {
-      create: 'Cloud wallet created successfully'
+      create: 'Cloud wallet created successfully',
+      receive:'Received invitation successfully'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',
       createCloudWallet: 'Error while creating cloud wallet on agent',
-      encryptCloudWalletKey: 'Error while creating encrypting wallet key'
+      encryptCloudWalletKey: 'Error while creating encrypting wallet key',
+      userExist: 'Wallet already exist for the user',
+      walletNotExist: 'Wallet not exist for the user',
+      agentDetails: 'Invalid agent details',
+      agentNotRunning: 'Agent is not up and running',
+      receiveInvitation: 'Error while receiving invitation by url',
+      AcceptOffer: 'Error while  invitation by url'
     }
   }
 };

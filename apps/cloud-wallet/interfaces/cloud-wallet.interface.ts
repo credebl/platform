@@ -46,3 +46,8 @@ export interface IProofByProofId {
     proofId: string
     user: user
 }
+
+export interface IProofPresentation {
+    threadId: string
+    user: user
+}

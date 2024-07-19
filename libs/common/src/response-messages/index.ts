@@ -520,7 +520,8 @@ export const ResponseMessages = {
       create: 'Cloud wallet created successfully',
       configureBaseWallet: 'Successfully configure the base wallet.',
       acceptProofRequest: 'Proof request has been successfully accepted.',
-      getProofById: 'Proof presentation has been successfully received.'
+      getProofById: 'Proof presentation has been successfully received.',
+      getProofPresentation: 'Proof presentations has been successfully received.'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',
@@ -528,6 +529,7 @@ export const ResponseMessages = {
       encryptCloudWalletKey: 'Error while creating encrypting wallet key',
       notReachable: 'The agent endpoint is not reachable.',
       agentAlreadyExist: 'Agent already exist.',
+      platformAdminRecordNotFound: 'Platform admin reocrd not exist.',
       notFoundBaseWallet: 'The base wallet record is missing.',
       walletRecordNotFound: 'Wallet record not found.'
     }

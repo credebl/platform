@@ -26,7 +26,7 @@ export class CloudWalletService extends BaseService {
     user: user
   ): Promise<object> {
     const payload = {acceptProofRequest, user};
-    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'accept-proof-request', payload);
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'accept-proof-request-by-holder', payload);
   }
 
   getProofById(
@@ -34,7 +34,15 @@ export class CloudWalletService extends BaseService {
     user: user
   ): Promise<object> {
     const payload = {proofId, user};
-    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'proof-by-proof-id', payload);
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-proof-by-proof-id-holder', payload);
+  }
+
+  getProofPresentation(
+    threadId: string,
+    user: user
+  ): Promise<object> {
+    const payload = {threadId, user};
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-proof-presentation-holder', payload);
   }
 
   createCloudWallet(

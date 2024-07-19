@@ -22,12 +22,17 @@ export class CloudWalletService {
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
 
-  async configureBaseWallet(cloudBaseWalletConfigure: IConfigureCloudBaseWallet, user: user): Promise<IGetStoredWalletInfo> {
+  /**
+   * configure cloud base wallet
+   * @param cloudBaseWalletConfigure 
+   * @returns cloud base wallet
+   */
+  async configureBaseWallet(cloudBaseWalletConfigure: IConfigureCloudBaseWallet): Promise<IGetStoredWalletInfo> {
     const { agentEndpoint, apiKey, email, walletKey } = cloudBaseWalletConfigure;
 
     try {
-        const getAgentDetails = await this.commonService.httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`);
-        if (!getAgentDetails?.isInitialized) {
+        const getAgentInfo = await this.commonService.httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`);
+        if (!getAgentInfo?.isInitialized) {
             throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
         }
 
@@ -41,12 +46,17 @@ export class CloudWalletService {
             this.commonService.dataEncryption(apiKey)
         ]);
 
+        const getUserInfo = await this.cloudWalletRepository.getUserInfo(email);
+        if (!getUserInfo) {
+          throw new NotFoundException(ResponseMessages.cloudWallet.error.platformAdminRecordNotFound);
+        }
+
         const walletInfoToStore = {
             agentEndpoint,
             apiKey: encryptionApiKey,
             email,
             type: CloudWalletType.BASE_WALLET,
-            userId: user.id,
+            userId: getUserInfo?.id,
             walletKey: encryptionWalletKey
         };
 
@@ -58,38 +68,27 @@ export class CloudWalletService {
     }
   }
 
+  /**
+   * Accept proof request
+   * @param acceptProofRequest 
+   * @param user 
+   * @returns proof presentation
+   */
   async acceptProofRequest(acceptProofRequest: IAcceptProofRequest, user: user): Promise<object> {
     const { proofRecordId, comment, filterByNonRevocationRequirements, filterByPresentationPreview } = acceptProofRequest;
 
     try {
 
-        const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET);
-
-        if (!baseWalletDetails) {
-          throw new NotFoundException(ResponseMessages.cloudWallet.error.notFoundBaseWallet);
-        }
-
-        const getAgentDetails = await this.commonService.httpGet(`${baseWalletDetails?.agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`);
-        if (!getAgentDetails?.isInitialized) {
-            throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
-        }
-
-        const getTenant = await this.cloudWalletRepository.getCloudSubWallet(user?.id);
-
-        if (!getTenant) {
-          throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound);
-        }
-
-        const url = `${baseWalletDetails?.agentEndpoint}${CommonConstants.URL_SHAGENT_ACCEPT_PROOF_REQUEST}`.replace('#', proofRecordId).replace('@', getTenant?.tenantId);
+        const cloudWalletDetails = await this._commonCloudWalletInfo(user);
+        const url = `${cloudWalletDetails?.['baseWalletDetails']?.agentEndpoint}${CommonConstants.URL_SHAGENT_ACCEPT_PROOF_REQUEST}`.replace('#', proofRecordId).replace('@', cloudWalletDetails?.['getTenant']?.tenantId);
         const proofAcceptRequestPayload = {
           comment, 
           filterByNonRevocationRequirements, 
           filterByPresentationPreview
         };
 
-        const decryptedApiKey = await this.commonService.decryptPassword(getTenant?.agentApiKey);
 
-        const acceptProofRequest = await this.commonService.httpPost(url, proofAcceptRequestPayload, { headers: { authorization: decryptedApiKey } });       
+        const acceptProofRequest = await this.commonService.httpPost(url, proofAcceptRequestPayload, { headers: { authorization: cloudWalletDetails?.['decryptedApiKey'] } });       
         return acceptProofRequest;
     } catch (error) {
         await this.commonService.handleError(error);
@@ -97,36 +96,73 @@ export class CloudWalletService {
     }
   }
 
+  /**
+   * Get proof presentation by proof Id
+   * @param proofId 
+   * @param user 
+   * @returns proof presentation
+   */
   async getProofById(proofId: string, user: user): Promise<object> {
     try {
 
-        const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET);
+        const cloudWalletDetails = await this._commonCloudWalletInfo(user);
+        const url = `${cloudWalletDetails?.['baseWalletDetails']?.agentEndpoint}${CommonConstants.URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID}`.replace('#', proofId).replace('@', cloudWalletDetails?.['getTenant']?.tenantId);
 
-        if (!baseWalletDetails) {
-          throw new NotFoundException(ResponseMessages.cloudWallet.error.notFoundBaseWallet);
-        }
 
-        const getAgentDetails = await this.commonService.httpGet(`${baseWalletDetails?.agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`);
-        if (!getAgentDetails?.isInitialized) {
-            throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
-        }
-
-        const getTenant = await this.cloudWalletRepository.getCloudSubWallet(user?.id);
-
-        if (!getTenant) {
-          throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound);
-        }
-
-        const url = `${baseWalletDetails?.agentEndpoint}${CommonConstants.URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID}`.replace('#', proofId).replace('@', getTenant?.tenantId);
-
-        const decryptedApiKey = await this.commonService.decryptPassword(getTenant?.agentApiKey);
-
-        const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });       
+        const getProofById = await this.commonService.httpGet(url, { headers: { authorization: cloudWalletDetails?.['decryptedApiKey'] } });       
         return getProofById;
     } catch (error) {
         await this.commonService.handleError(error);
         throw error;
     }
+  }
+
+  /**
+   * Get proof presentation
+   * @param threadId 
+   * @param user 
+   * @returns proof presentations
+   */
+  async getProofPresentation(threadId: string, user: user): Promise<object> {
+    try {
+
+        const cloudWalletDetails = await this._commonCloudWalletInfo(user);
+        const url = `${cloudWalletDetails?.['baseWalletDetails']?.agentEndpoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}${threadId ? `?threadId=${threadId}` : ''}`.replace('#', cloudWalletDetails?.['getTenant']?.tenantId);
+
+        const getProofById = await this.commonService.httpGet(url, { headers: { authorization: cloudWalletDetails?.['decryptedApiKey'] } });       
+        return getProofById;
+    } catch (error) {
+        await this.commonService.handleError(error);
+        throw error;
+    }
+  } 
+
+  async _commonCloudWalletInfo(user: user): Promise<object> {
+      const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET);
+
+      if (!baseWalletDetails) {
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.notFoundBaseWallet);
+      }
+
+      const getAgentDetails = await this.commonService.httpGet(`${baseWalletDetails?.agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`);
+      if (!getAgentDetails?.isInitialized) {
+          throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
+      }
+
+      const getTenant = await this.cloudWalletRepository.getCloudSubWallet(user?.id);
+
+      if (!getTenant) {
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound);
+      }
+
+      const decryptedApiKey = await this.commonService.decryptPassword(getTenant?.agentApiKey);
+
+      const walletConfigDetails = {
+        baseWalletDetails, 
+        getTenant, 
+        decryptedApiKey
+      };
+      return walletConfigDetails;
   }
 
   /**

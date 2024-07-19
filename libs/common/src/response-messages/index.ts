@@ -51,6 +51,7 @@ export const ResponseMessages = {
       invalidKeycloakId: 'keycloakId is invalid',
       invalidEmail: 'Invalid Email Id!',
       adduser: 'Unable to add user details',
+      userRoleNotFound: 'User role not found',
       verifyEmail: 'The verification link has already been sent to your email address. please verify',
       emailNotVerified: 'The verification link has already been sent to your email address. please verify',
       userNotRegisterd: 'The user has not yet completed the registration process',
@@ -517,7 +518,11 @@ export const ResponseMessages = {
   cloudWallet: {
     success: {
       create: 'Cloud wallet created successfully',
-      receive:'Received invitation successfully'
+      receive:'Received invitation successfully',
+      configureBaseWallet: 'Successfully configure the base wallet.',
+      acceptProofRequest: 'Proof request has been successfully accepted.',
+      getProofById: 'Proof presentation has been successfully received.',
+      getProofPresentation: 'Proof presentations has been successfully received.'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',
@@ -528,7 +533,12 @@ export const ResponseMessages = {
       agentDetails: 'Invalid agent details',
       agentNotRunning: 'Agent is not up and running',
       receiveInvitation: 'Error while receiving invitation by url',
-      AcceptOffer: 'Error while  invitation by url'
+      AcceptOffer: 'Error while  invitation by url',
+      notReachable: 'The agent endpoint is not reachable.',
+      agentAlreadyExist: 'Agent already exist.',
+      platformAdminRecordNotFound: 'Platform admin reocrd not exist.',
+      notFoundBaseWallet: 'The base wallet record is missing.',
+      walletRecordNotFound: 'Wallet record not found.'
     }
   }
 };

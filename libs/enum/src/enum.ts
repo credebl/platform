@@ -245,4 +245,9 @@ export enum ledgerLessDIDType {
 export enum CloudWalletType {
     BASE_WALLET = 'CLOUD_BASE_WALLET',
     SUB_WALLET = 'CLOUD_SUB_WALLET'
-  }
+}
+
+export enum UserRole {
+    DEFAULT_USER = 'DEFAULT_USER',
+    HOLDER = 'HOLDER'
+}

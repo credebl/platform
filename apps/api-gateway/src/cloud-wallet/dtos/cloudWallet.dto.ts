@@ -16,5 +16,4 @@ export class CreateCloudWalletDto {
     @IsNotEmpty({ message: 'please provide valid image URL' })
     @IsNotSQLInjection({ message: 'Image URL is required.' })
     connectionImageUrl?: string;
-
 }

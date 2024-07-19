@@ -32,6 +32,44 @@ export interface IStoredWalletDetails {
   lastChangedDateTime: Date
 }
 
+export interface IReceiveInvitation {
+  alias?: string;
+  label?: string;
+  imageUrl?: string;
+  autoAcceptConnection?: boolean;
+  autoAcceptInvitation?: boolean;
+  reuseConnection?: boolean;
+  acceptInvitationTimeoutMs?: number;
+  ourDid?: string;
+  invitationUrl: string;
+  email?: string;
+  userId?: string;
+}
+
+export interface IAcceptOffer {
+  autoAcceptCredential?: string;
+  comment?: string;
+  credentialRecordId: string;
+  credentialFormats?: object;
+  email?: string;
+  userId?: string;
+}
+
+export interface ICreateCloudWalletDid {
+  seed?: string;
+  keyType: string;
+  method: string;
+  network?: string;
+  domain?: string;
+  role?: string;
+  privatekey?: string;
+  endpoint?: string;
+  did?: string;
+  endorserDid?: string;
+  isPrimaryDid: boolean;
+  email?: string;
+  userId?: string;
+}
 export interface IGetStoredWalletInfo {
   email: string;
   userId: string;
@@ -205,8 +243,8 @@ export interface ICreateConnection {
 }
 
 export interface Invitation {
-  "@type": string;
-  "@id": string;
+  '@type': string;
+  '@id': string;
   label: string;
   accept: string[];
   handshake_protocols: string[];

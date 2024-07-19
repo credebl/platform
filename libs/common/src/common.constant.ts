@@ -362,7 +362,12 @@ ECOSYSTEM_SERVICE = 'ecosystem',
 WEBHOOK_SERVICE = 'webhook',
 NOTIFICATION_SERVICE = 'notification',
 GEO_LOCATION_SERVICE = 'geo-location',
-CLOUD_WALLET_SERVICE = 'cloud-wallet'
+CLOUD_WALLET_SERVICE = 'cloud-wallet',
+
+//CLOUD WALLET
+RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
+ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
+SEED_LENGTH = 32
 }
 
 export const postgresqlErrorCodes = [];

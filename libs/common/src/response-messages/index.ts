@@ -518,6 +518,7 @@ export const ResponseMessages = {
   cloudWallet: {
     success: {
       create: 'Cloud wallet created successfully',
+      receive:'Received invitation successfully',
       configureBaseWallet: 'Successfully configure the base wallet.',
       acceptProofRequest: 'Proof request has been successfully accepted.',
       createConnection: 'Connection created successfully.',
@@ -528,6 +529,12 @@ export const ResponseMessages = {
       baseWalletNotFound: 'Base wallet configuration not found',
       createCloudWallet: 'Error while creating cloud wallet on agent',
       encryptCloudWalletKey: 'Error while creating encrypting wallet key',
+      userExist: 'Wallet already exist for the user',
+      walletNotExist: 'Wallet not exist for the user',
+      agentDetails: 'Invalid agent details',
+      agentNotRunning: 'Agent is not up and running',
+      receiveInvitation: 'Error while receiving invitation by url',
+      AcceptOffer: 'Error while  invitation by url',
       notReachable: 'The agent endpoint is not reachable.',
       agentAlreadyExist: 'Agent already exist.',
       platformAdminRecordNotFound: 'Platform admin reocrd not exist.',

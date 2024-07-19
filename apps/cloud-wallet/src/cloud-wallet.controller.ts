@@ -2,7 +2,7 @@
 import { Controller } from '@nestjs/common'; // Import the common service in the library
 import { CloudWalletService } from './cloud-wallet.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
-import { IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, ICreateConnection, IConnectionInvitationResponse } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IAcceptOffer, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, ICreateConnection, IConnectionInvitationResponse } from '@credebl/common/interfaces/cloud-wallet.interface';
 
 @Controller()
 export class CloudWalletController {
@@ -36,5 +36,20 @@ export class CloudWalletController {
   @MessagePattern({ cmd: 'create-cloud-wallet' })
   async createConnectionInvitation(cloudWalletDetails: ICreateCloudWallet): Promise<IStoredWalletDetails> {
     return this.cloudWalletService.createCloudWallet(cloudWalletDetails);
+  }
+
+  @MessagePattern({ cmd: 'receive-invitation-by-url' })
+  async receiveInvitationByUrl(ReceiveInvitationDetails: IReceiveInvitation): Promise<Response> {
+    return this.cloudWalletService.receiveInvitationByUrl(ReceiveInvitationDetails);
+  }
+
+  @MessagePattern({ cmd: 'accept-credential-offer' })
+  async acceptOffer(acceptOfferDetails: IAcceptOffer): Promise<Response> {
+    return this.cloudWalletService.acceptOffer(acceptOfferDetails);
+  }
+
+  @MessagePattern({ cmd: 'create-cloud-wallet-did' })
+  async createDid(createDidDetails: ICreateCloudWalletDid): Promise<Response> {
+    return this.cloudWalletService.createDid(createDidDetails);
   }
 }

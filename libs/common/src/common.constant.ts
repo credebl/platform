@@ -331,6 +331,7 @@ CACHE_APIKEY_KEY = "sharedApiKey",
 CACHE_TTL_SECONDS = 604800,
 
 CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
+CLOUD_WALLET_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation',
 CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
 
 // Bulk-issuance

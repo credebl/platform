@@ -2,7 +2,7 @@
 import { Controller } from '@nestjs/common'; // Import the common service in the library
 import { CloudWalletService } from './cloud-wallet.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
-import { IAcceptOffer, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IAcceptOffer, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, ICreateConnection, IConnectionInvitationResponse } from '@credebl/common/interfaces/cloud-wallet.interface';
 
 @Controller()
 export class CloudWalletController {
@@ -11,6 +11,11 @@ export class CloudWalletController {
   @MessagePattern({ cmd: 'configure-cloud-base-wallet' })
   async configureBaseWallet(configureBaseWalletPayload: ICloudBaseWalletConfigure): Promise<IGetStoredWalletInfo> {
     return this.cloudWalletService.configureBaseWallet(configureBaseWalletPayload);
+  }
+
+  @MessagePattern({ cmd: 'create-connection-by-holder' })
+  async createConnection(createConnection: ICreateConnection): Promise<IConnectionInvitationResponse> {
+    return this.cloudWalletService.createConnection(createConnection);
   }
 
   @MessagePattern({ cmd: 'accept-proof-request-by-holder' })

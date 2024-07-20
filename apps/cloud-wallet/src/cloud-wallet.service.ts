@@ -26,7 +26,9 @@ import {
   IGetStoredWalletInfo,
   IStoredWalletDetails,
   CloudWallet,
-  IStoreWalletInfo
+  IStoreWalletInfo,
+  ICreateConnection, 
+  IConnectionInvitationResponse
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -82,6 +84,30 @@ export class CloudWalletService {
 
       const storedWalletInfo = await this.cloudWalletRepository.storeCloudWalletInfo(walletInfoToStore);
       return storedWalletInfo;
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create connection
+   * @param createConnection 
+   * @returns connection details
+   */
+  async createConnection(createConnection: ICreateConnection): Promise<IConnectionInvitationResponse> {
+    try {
+
+      const { userId, ...connectionPayload } = createConnection;
+        const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+
+        const { tenantId } = getTenant;
+        const { agentEndpoint } = baseWalletDetails;
+
+        const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREATE_CONNECTION_INVITATION}/${tenantId}`;
+        
+        const createConnectionDetails = await this.commonService.httpPost(url, connectionPayload, { headers: { authorization: decryptedApiKey } });       
+        return createConnectionDetails;
     } catch (error) {
       await this.commonService.handleError(error);
       throw error;

@@ -186,14 +186,33 @@ export class ReceiveInvitationUrlDTO {
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'endorser did must be in string format.' })
-    endorserDid?: string;
-
-    @ApiProperty({example: false})
-    @ApiPropertyOptional()
-    @IsBoolean({ message: 'isPrimaryDid did must be true or false.' })
-    isPrimaryDid: boolean = false; 
+    endorserDid?: string; 
 
     email?: string;
     
     userId?: string;
+}
+
+export class CredentialListDto {
+  @ApiProperty({ required: false})
+  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  threadId: string;
+
+  @ApiProperty({ required: false})
+  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  connectionId: string;
+ 
+  @ApiProperty({ required: false})
+  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  state: string;
+
+  email?: string;
+    
+  userId?: string;
 }

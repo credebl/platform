@@ -522,7 +522,11 @@ export const ResponseMessages = {
       configureBaseWallet: 'Successfully configure the base wallet.',
       acceptProofRequest: 'Proof request has been successfully accepted.',
       getProofById: 'Proof presentation has been successfully received.',
-      getProofPresentation: 'Proof presentations has been successfully received.'
+      getProofPresentation: 'Proof presentations has been successfully received.',
+      didList: 'DID list fetched sucessfully',
+      connectionById: 'Connection record fetched successfully',
+      credentials: 'Credentials fetched successfully',
+      creddentialByRecordId: 'Credential fetched successfully'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',

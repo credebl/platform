@@ -332,6 +332,9 @@ CACHE_TTL_SECONDS = 604800,
 
 CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
 CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
+CLOUD_WALLET_DID_LIST = '/multi-tenancy/dids/',
+CLOUD_WALLET_CONNECTION_BY_ID = '/multi-tenancy/connections/',
+CLOUD_WALLET_CREDENTIAL = '/multi-tenancy/credentials',
 
 // Bulk-issuance
 BATCH_SIZE = 100,

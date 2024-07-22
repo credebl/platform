@@ -1,11 +1,14 @@
+import { IUserBasicDetails } from '@credebl/common/interfaces/user.interface';
+
 export class DeleteOrgInvitationsEmail {
 
     public sendDeleteOrgMemberEmailTemplate(
-        email: string,
+        userInfo: IUserBasicDetails,
         orgName: string,
         orgRoles: string[]
     ): string {
           
+    const { firstName, lastName } = userInfo;
     const orgRoleNames = 0 < orgRoles.length ? orgRoles.join(', ') : '';
     return `<!DOCTYPE html>
         <html lang="en">
@@ -25,7 +28,7 @@ export class DeleteOrgInvitationsEmail {
         <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
           font-size: 15px; line-height: 24px;color: #00000;">
               <p style="margin-top:0px">
-                  Hello ${email},
+                  Hello ${firstName} ${lastName},
               </p>
               <p>
               We would like to inform you that the organization “${orgName}” has removed their participation as a ${orgRoleNames} on CREDEBL.

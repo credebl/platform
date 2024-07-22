@@ -1,8 +1,9 @@
+import { IUserBasicDetails } from '@credebl/common/interfaces/user.interface';
 import * as url from 'url';
 export class URLUserResetPasswordTemplate {
-  public getUserResetPasswordTemplate(email: string, verificationCode: string): string {
+  public getUserResetPasswordTemplate(email: string, verificationCode: string, userInfo: IUserBasicDetails): string {
     const endpoint = `${process.env.FRONT_END_URL}`;
-
+    const { firstName, lastName } = userInfo;
     const apiUrl = url.parse(
       `${endpoint}/reset-password?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
     );
@@ -29,7 +30,7 @@ export class URLUserResetPasswordTemplate {
             <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
               font-size: 15px; line-height: 24px;color: #00000;">
                   <p style="margin-top:0px">
-                      Hello ${email},
+                      Hello ${firstName} ${lastName},
                   </p>
                   <p>
                   A password reset request has been received for your ${process.env.PLATFORM_NAME} platform account. To reset your password, please click on the following link:

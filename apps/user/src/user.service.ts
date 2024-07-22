@@ -179,7 +179,6 @@ export class UserService {
       emailData.emailTo = email;
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
-
       emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, clientId, brandLogoUrl, platformName);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
@@ -485,8 +484,8 @@ export class UserService {
       emailData.emailFrom = platformConfigData[0].emailFrom;
       emailData.emailTo = email;
       emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Important: Password Reset Request`;
-
-      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, verificationCode);
+      const userInfo = await this.commonService.getUserFirstNameLastName(email);
+      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, verificationCode, userInfo);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;

@@ -1,6 +1,8 @@
+import { IUserBasicDetails } from '@credebl/common/interfaces/user.interface';
+
 export class OutOfBandIssuance {
   public outOfBandIssuance(
-    email: string,
+    userInfo: IUserBasicDetails,
     orgName: string,
     deepLinkURL: string,
     platformName?: string,
@@ -11,6 +13,7 @@ export class OutOfBandIssuance {
     const platform = platformName || process.env.PLATFORM_NAME;
     const poweredBy = platformName || process.env.POWERED_BY;
 
+    const {firstName, lastName} = userInfo;
     try {
       return `<!DOCTYPE html>
       <html lang="en">
@@ -44,7 +47,7 @@ export class OutOfBandIssuance {
               <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
               font-size: 15px; line-height: 24px;color: #00000;">
                   <p style="margin-top:0px">
-                      Hello ${email},
+                      Hello ${firstName}, ${lastName},
                   </p>
                   <p>
                   <b>${orgName}</b> has initiated issuance of your digital credential to you.

@@ -969,8 +969,9 @@ export class OrganizationService {
     emailData.emailTo = email;
     emailData.emailSubject = `Invitation to join “${orgName}” on ${process.env.PLATFORM_NAME}`;
 
+    const userInfo = await this.commonService.getUserFirstNameLastName(email);
     emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(
-      email,
+      userInfo,
       orgName,
       orgRolesDetails,
       firstName,
@@ -1600,8 +1601,9 @@ export class OrganizationService {
     emailData.emailTo = email;
     emailData.emailSubject = `Removal of participation of “${orgName}”`;
 
+    const userInfo = await this.commonService.getUserFirstNameLastName(email);
     emailData.emailHtml = await urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(
-      email,
+      userInfo,
       orgName,
       orgRole
     );

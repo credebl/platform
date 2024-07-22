@@ -51,3 +51,8 @@ export interface ISignInUser {
 export interface ISignUpUserResponse {
   userId: string
 }
+
+export interface IUserBasicDetails {
+  firstName: string;
+  lastName: string;
+}

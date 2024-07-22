@@ -82,6 +82,7 @@ import { DeleteEcosystemMemberTemplate } from '../templates/DeleteEcosystemMembe
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { IOrgData } from '@credebl/common/interfaces/organization.interface';
 import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
+import { CommonService } from '@credebl/common';
 
 @Injectable()
 export class EcosystemService {
@@ -91,6 +92,7 @@ export class EcosystemService {
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
     private readonly prisma: PrismaService,
+    private readonly commonService: CommonService,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
 
@@ -758,6 +760,8 @@ export class EcosystemService {
   ): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
 
+    const userInfo = await this.commonService.getUserFirstNameLastName(email);
+
     const urlEmailTemplate = new EcosystemInviteTemplate();
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
@@ -765,7 +769,7 @@ export class EcosystemService {
     emailData.emailSubject = `Invitation to join an Ecosystem “${ecosystemName}” on ${process.env.PLATFORM_NAME}`;
 
     emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(
-      email,
+      userInfo,
       ecosystemName,
       firstName,
       orgName,
@@ -2077,13 +2081,15 @@ export class EcosystemService {
   async sendMailToEcosystemMembers(email: string, orgName: string, ecosystemName: string): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findMany();
 
+    const userInfo = await this.commonService.getUserFirstNameLastName(email);
+
     const urlEmailTemplate = new DeleteEcosystemMemberTemplate();
     const emailData = new EmailDto();
     emailData.emailFrom = platformConfigData[0].emailFrom;
     emailData.emailTo = email;
     emailData.emailSubject = `Removal of participation of “${orgName}” from ${ecosystemName}`;
 
-    emailData.emailHtml = urlEmailTemplate.sendDeleteMemberEmailTemplate(email, orgName, ecosystemName);
+    emailData.emailHtml = urlEmailTemplate.sendDeleteMemberEmailTemplate(userInfo, orgName, ecosystemName);
 
     const isEmailSent = await sendEmail(emailData);
 

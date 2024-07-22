@@ -20,6 +20,7 @@ import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verific
 import { UserActivityService } from '@credebl/user-activity';
 import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { CommonService } from '@credebl/common';
 
 @Injectable()
 export class VerificationService {
@@ -33,6 +34,7 @@ export class VerificationService {
     private readonly outOfBandVerification: OutOfBandVerification,
     private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
+    private readonly commonService: CommonService,
     @Inject(CACHE_MANAGER) private cacheService: Cache
 
   ) { }
@@ -509,10 +511,12 @@ export class VerificationService {
       throw new Error(ResponseMessages.verification.error.platformConfigNotFound);
     }
 
+    const userInfo = await this.commonService.getUserFirstNameLastName(email);
+
     this.emailData.emailFrom = platformConfigData.emailFrom;
     this.emailData.emailTo = email;
     this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials`;
-    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, deepLinkURL);
+    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(userInfo, organizationDetails.name, deepLinkURL);
     this.emailData.emailAttachments = [
       {
         filename: 'qrcode.png',

@@ -1,6 +1,9 @@
+import { IUserBasicDetails } from '@credebl/common/interfaces/user.interface';
+
 export class OutOfBandVerification {
 
-    public outOfBandVerification(email: string, orgName: string, deeplLinkURL: string): string {
+    public outOfBandVerification(userInfo: IUserBasicDetails, orgName: string, deeplLinkURL: string): string {
+        const {firstName, lastName} = userInfo;
         try {
             return `<!DOCTYPE html>
       <html lang="en">
@@ -34,7 +37,7 @@ export class OutOfBandVerification {
               <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
           font-size: 15px; line-height: 24px;color: #00000;">
                   <p style="margin-top:0px">
-                      Hello ${email},
+                      Hello ${firstName} ${lastName},
                   </p>
                   <p>
                   <b>${orgName}</b>  has requested verification of your digital credential. To share requested credential kindly follow below steps:

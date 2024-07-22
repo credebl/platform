@@ -802,11 +802,14 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           errors.push(new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound));
           return false;
         }
+
+        const userInfo = await this.commonService.getUserFirstNameLastName(emailId);
+
         this.emailData.emailFrom = platformConfigData?.emailFrom;
         this.emailData.emailTo = iterator?.emailId ?? emailId;
         const platform = platformName || process.env.PLATFORM_NAME;
         this.emailData.emailSubject = `${platform} Platform: Issuance of Your Credential`;
-        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL, platformName, organizationLogoUrl);
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(userInfo, organizationDetails.name, deeplLinkURL, platformName, organizationLogoUrl);
         this.emailData.emailAttachments = [
           {
             filename: 'qrcode.png',

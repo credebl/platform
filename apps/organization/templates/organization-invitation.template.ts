@@ -1,13 +1,16 @@
+import { IUserBasicDetails } from '@credebl/common/interfaces/user.interface';
+
 export class OrganizationInviteTemplate {
 
     public sendInviteEmailTemplate(
-        email: string,
+        userInfo: IUserBasicDetails, 
         orgName: string,
         orgRolesDetails: object[],
         firstName: string,
         isUserExist: boolean
     ): string {
 
+        const { lastName } = userInfo;
         const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/authentication/sign-in` : `${process.env.FRONT_END_URL}/authentication/sign-up`;
 
         const message = isUserExist 
@@ -38,7 +41,7 @@ export class OrganizationInviteTemplate {
         <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
           font-size: 15px; line-height: 24px;color: #00000;">
               <p style="margin-top:0px">
-                  Hello ${email},
+                  Hello ${firstName} ${lastName},
               </p>
               <p>
               ${firstName} has invited you to join “${orgName}” as a member.

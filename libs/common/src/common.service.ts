@@ -11,7 +11,8 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  Logger
+  Logger,
+  NotFoundException
 } from '@nestjs/common';
 
 import { CommonConstants } from './common.constant';
@@ -20,14 +21,18 @@ import { ResponseService } from '@credebl/response';
 import * as dotenv from 'dotenv';
 import { RpcException } from '@nestjs/microservices';
 import { ResponseMessages } from './response-messages';
+import { PrismaService } from '@credebl/prisma-service';
+import { IUserBasicDetails } from './interfaces/user.interface';
 dotenv.config();
 
 @Injectable()
 export class CommonService {
   private readonly logger = new Logger('CommonService');
   result: ResponseService = new ResponseService();
+  private readonly prisma = new PrismaService();
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService
+  ) { }
 
   async httpPost(url: string, payload?: any, apiKey?: any) {
     try {
@@ -436,4 +441,25 @@ async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {
   }
 }
 
+async getUserFirstNameLastName(email: string): Promise<IUserBasicDetails> {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const userInfo = await this.prisma.user.findUnique({
+      where:{
+        email
+      },
+      select:{
+        firstName: true, 
+        lastName: true
+      }
+    });
+
+    if (!userInfo) {
+      throw new NotFoundException(`User not found`);
+    }
+    return userInfo;
+  } catch (error) {
+    throw error;
+  }
+}
 }

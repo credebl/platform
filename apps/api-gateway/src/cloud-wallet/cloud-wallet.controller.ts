@@ -278,7 +278,7 @@ export class CloudWalletController {
    * @param orgId
    * @returns did
    */
-  @Post('/did/create-did')
+  @Post('/did')
   @ApiOperation({
     summary: 'Create new did',
     description: 'Create new did for cloud wallet'

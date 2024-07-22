@@ -213,3 +213,97 @@ export interface ICredentialDetails {
   email: string;
   credentialRecordId: string;
 }
+export interface Thread {
+  pthid: string;
+  thid: string;
+}
+
+export interface Message {
+  '@type': string;
+  '@id': string;
+  '~thread': Thread;
+  messageType: string;
+}
+
+export interface Data {
+  base64?: string;
+  json?: string;
+  links?: string[];
+  jws?: {
+    header: object;
+    signature: string;
+    protected: string;
+  };
+  sha256?: string;
+}
+
+export interface AppendedAttachment {
+  id: string;
+  description: string;
+  filename: string;
+  mimeType: string;
+  lastmodTime: string;
+  byteCount: number;
+  data: Data;
+}
+
+export interface ICreateConnection {
+  label: string;
+  alias: string;
+  imageUrl: string;
+  multiUseInvitation: boolean;
+  autoAcceptConnection: boolean;
+  goalCode: string;
+  goal: string;
+  handshake: boolean;
+  handshakeProtocols: string[];
+  messages: Message[];
+  appendedAttachments: AppendedAttachment[];
+  invitationDid: string;
+  recipientKey: string;
+  userId: string;
+  email: string;
+}
+
+export interface Invitation {
+  '@type': string;
+  '@id': string;
+  label: string;
+  accept: string[];
+  handshake_protocols: string[];
+  services: Service[];
+}
+
+export interface Service {
+  id: string;
+  type: string;
+  priority: number;
+  recipientKeys: string[];
+  routingKeys: string[];
+  serviceEndpoint: string;
+}
+
+export interface OutOfBandRecord {
+  _tags: Tags;
+  metadata: Record<string, object>;
+  id: string;
+  createdAt: string;
+  outOfBandInvitation: Invitation;
+  role: string;
+  state: string;
+  alias: string;
+  autoAcceptConnection: boolean;
+  reusable: boolean;
+  updatedAt: string;
+}
+
+export interface Tags {
+  recipientKeyFingerprints: string[];
+}
+
+export interface IConnectionInvitationResponse {
+  invitationUrl: string;
+  invitation: Invitation;
+  outOfBandRecord: OutOfBandRecord;
+  invitationDid: string;
+}

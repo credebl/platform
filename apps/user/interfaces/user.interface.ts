@@ -1,4 +1,4 @@
-import { Prisma, RecordType } from '@prisma/client';
+import { $Enums, Prisma, RecordType } from '@prisma/client';
 
 export interface IUsersProfile {
   id: string;
@@ -61,6 +61,7 @@ export interface IUserInformation {
   firstName: string;
   lastName: string;
   isPasskey: boolean;
+  isHolder?: boolean;
 }
 
 export interface AddPasskeyDetails {
@@ -222,4 +223,15 @@ export interface UserKeycloakId {
   id: string;
   keycloakUserId: string;
   email: string;
+}
+
+export interface UserRoleMapping {
+  id: string;
+  userId: string;
+  userRoleId: string;
+}
+
+export interface UserRoleDetails{
+  id: string;
+  role: $Enums.UserRole;
 }

@@ -1,5 +1,5 @@
 import { trim } from '@credebl/common/cast.helper';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
@@ -35,6 +35,11 @@ export class AddUserDetailsDto {
     @IsOptional()
     @IsBoolean({ message: 'isPasskey should be boolean' })
     isPasskey?: boolean;
+
+    @ApiPropertyOptional({ example: false })
+    @IsOptional()
+    @IsBoolean({ message: 'isHolder should be boolean' })
+    isHolder?: boolean;
 }
 
 export class AddPasskeyDetailsDto {

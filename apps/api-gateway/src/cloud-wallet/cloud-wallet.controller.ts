@@ -319,7 +319,7 @@ export class CloudWalletController {
         * @param res 
         * @returns DID list
     */
-   @Get('/dids')
+   @Get('/did')
    @ApiOperation({ summary: 'Get DID list by tenant Id', description: 'Get DID list by tenant Id' })
    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
    @UseGuards(AuthGuard('jwt'), UserRoleGuard)

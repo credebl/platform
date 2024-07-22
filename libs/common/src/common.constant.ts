@@ -331,6 +331,7 @@ CACHE_APIKEY_KEY = "sharedApiKey",
 CACHE_TTL_SECONDS = 604800,
 
 CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
+CLOUD_WALLET_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation',
 CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
 
 // Bulk-issuance
@@ -361,7 +362,12 @@ ECOSYSTEM_SERVICE = 'ecosystem',
 WEBHOOK_SERVICE = 'webhook',
 NOTIFICATION_SERVICE = 'notification',
 GEO_LOCATION_SERVICE = 'geo-location',
-CLOUD_WALLET_SERVICE = 'cloud-wallet'
+CLOUD_WALLET_SERVICE = 'cloud-wallet',
+
+//CLOUD WALLET
+RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
+ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
+SEED_LENGTH = 32
 }
 
 export const postgresqlErrorCodes = [];

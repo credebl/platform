@@ -28,6 +28,21 @@ export class CloudWalletRepository {
       throw error;
     }
   }
+
+  // eslint-disable-next-line camelcase
+  async checkUserExist(email: string): Promise<cloud_wallet_user_info> {
+    try {
+      const agentDetails = await this.prisma.cloud_wallet_user_info.findUnique({
+        where: {
+          email
+        }
+      });
+      return agentDetails;
+    } catch (error) {
+      this.logger.error(`Error in getCloudWalletBaseAgentDetails: ${error.message}`);
+      throw error;
+    }
+  }
   // eslint-disable-next-line camelcase
   async storeCloudWalletDetails(cloudWalletDetails: ICloudWalletDetails): Promise<IStoredWalletDetails> {
     try {

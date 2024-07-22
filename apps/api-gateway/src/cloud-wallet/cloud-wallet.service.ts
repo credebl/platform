@@ -1,5 +1,5 @@
 
-import { IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IAcceptOffer, ICreateCloudWallet, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, ICreateConnection, IConnectionInvitationResponse } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { Inject, Injectable} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
@@ -14,6 +14,12 @@ export class CloudWalletService extends BaseService {
     cloudBaseWalletConfigure: ICloudBaseWalletConfigure
   ): Promise<IGetStoredWalletInfo> {
     return this.sendNatsMessage(this.cloudWalletServiceProxy, 'configure-cloud-base-wallet', cloudBaseWalletConfigure);
+  }
+
+  createConnection(
+    createConnection: ICreateConnection
+  ): Promise<IConnectionInvitationResponse> {
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'create-connection-by-holder', createConnection);
   }
 
   acceptProofRequest(
@@ -40,5 +46,20 @@ export class CloudWalletService extends BaseService {
     return this.sendNatsMessage(this.cloudWalletServiceProxy, 'create-cloud-wallet', cloudWalletDetails);
   }
 
+  receiveInvitationByUrl(
+    ReceiveInvitationDetails: IReceiveInvitation
+  ): Promise<Response> {
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'receive-invitation-by-url', ReceiveInvitationDetails);
+  }
+
+  acceptOffer(
+    acceptOfferDetails: IAcceptOffer
+  ): Promise<Response> {
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'accept-credential-offer', acceptOfferDetails);
+  }
+
+   createDid(createDidDetails: ICreateCloudWalletDid): Promise<Response> {
+    return this.sendNatsMessage(this.cloudWalletServiceProxy, 'create-cloud-wallet-did', createDidDetails);
+}
 
 }

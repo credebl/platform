@@ -20,6 +20,7 @@ import { ResponseService } from '@credebl/response';
 import * as dotenv from 'dotenv';
 import { RpcException } from '@nestjs/microservices';
 import { ResponseMessages } from './response-messages';
+import { IOptionalParams } from './interfaces/interface';
 dotenv.config();
 
 @Injectable()
@@ -435,5 +436,48 @@ async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {
     throw new Error;
   }
 }
+
+async createDynamicUrl(urlOptions: IOptionalParams): Promise<string> {
+  try {
+    const { alias, myDid, outOfBandId, state, theirDid, theirLabel, connectionId, threadId } = urlOptions;
+    // Create the dynamic URL for Search Criteria
+    const criteriaParams = [];
+    
+    if (alias) {
+      criteriaParams.push(`alias=${alias}`);
+    }
+    if (myDid) {
+      criteriaParams.push(`myDid=${myDid}`);
+    }
+    if (outOfBandId) {
+      criteriaParams.push(`outOfBandId=${outOfBandId}`);
+    }
+    if (state) {
+      criteriaParams.push(`state=${state}`);
+    }
+    if (theirDid) {
+      criteriaParams.push(`theirDid=${theirDid}`);
+    }
+    if (theirLabel) {
+      criteriaParams.push(`theirLabel=${theirLabel}`);
+    }
+    if (threadId) {
+      criteriaParams.push(`threadId=${threadId}`);
+    }
+    if (connectionId) {
+      criteriaParams.push(`connectionId=${connectionId}`);
+    }
+
+    if (0 < criteriaParams.length) {
+      const url: string = `?${criteriaParams.join('&')}`;
+      return url;
+    }
+    
+    return '';
+  } catch (error) {
+    throw new Error(`Failed to create dynamic URL: ${error.message}`);
+  }
+}
+
 
 }

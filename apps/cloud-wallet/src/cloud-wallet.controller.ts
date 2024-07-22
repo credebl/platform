@@ -2,7 +2,7 @@
 import { Controller } from '@nestjs/common'; // Import the common service in the library
 import { CloudWalletService } from './cloud-wallet.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
-import { IAcceptOffer, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, ICreateConnection, IConnectionInvitationResponse } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IAcceptOffer, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, ICreateConnection, IConnectionInvitationResponse, IWalletDetailsForDidList, IConnectionDetailsById, ITenantDetail, ICredentialDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
 
 @Controller()
 export class CloudWalletController {
@@ -52,4 +52,25 @@ export class CloudWalletController {
   async createDid(createDidDetails: ICreateCloudWalletDid): Promise<Response> {
     return this.cloudWalletService.createDid(createDidDetails);
   }
+
+  @MessagePattern({ cmd: 'cloud-wallet-did-list' })
+  async getDidList(walletDetails: IWalletDetailsForDidList): Promise<Response> {
+    return this.cloudWalletService.getDidList(walletDetails);
+  }
+
+  @MessagePattern({ cmd: 'get-cloud-wallet-connection-by-id' })
+  async getconnectionById(connectionDetails: IConnectionDetailsById): Promise<Response> {
+    return this.cloudWalletService.getconnectionById(connectionDetails);
+  }
+
+  @MessagePattern({ cmd: 'wallet-credential-by-id' })
+  async getCredentialList(tenantDetails: ITenantDetail): Promise<Response> {
+    return this.cloudWalletService.getCredentialListById(tenantDetails);
+  }
+  
+  @MessagePattern({ cmd: 'wallet-credential-by-record-id' })
+  async getCredentialByCredentialRecordId(credentialDetails: ICredentialDetails): Promise<Response> {
+    return this.cloudWalletService.getCredentialByRecord(credentialDetails);
+  }
+  
 }

@@ -66,7 +66,6 @@ export interface ICreateCloudWalletDid {
   endpoint?: string;
   did?: string;
   endorserDid?: string;
-  isPrimaryDid: boolean;
   email?: string;
   userId?: string;
 }
@@ -190,6 +189,30 @@ export interface CloudWallet {
   connectionImageUrl: string;
 }
 
+export interface IWalletDetailsForDidList {
+  userId: string;
+  email: string;
+}
+
+export interface IConnectionDetailsById {
+  userId: string;
+  email: string;
+  connectionId: string;
+}
+
+export interface ITenantDetail {
+  userId?: string;
+  email?: string;
+  threadId?: string;
+  connectionId?: string;
+  state?: string;
+}
+
+export interface ICredentialDetails {
+  userId: string;
+  email: string;
+  credentialRecordId: string;
+}
 export interface Thread {
   pthid: string;
   thid: string;

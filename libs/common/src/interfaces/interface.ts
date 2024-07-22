@@ -12,3 +12,14 @@ export interface IAccessTokenData {
   token_type: string;
   scope: string;
 }  
+
+export interface IOptionalParams {
+  alias?: string;
+  myDid?: string;
+  outOfBandId?: string;
+  state?: string;
+  theirDid?: string;
+  theirLabel?: string;
+  threadId?: string;
+  connectionId?: string;
+}

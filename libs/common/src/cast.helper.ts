@@ -179,7 +179,7 @@ export const validateEmail = (email: string): boolean => {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
   const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
-  const credentialSubject = { 'id': 'did:key:kdfJmG7pi1MnrX4y4nkJe' };
+  const credentialSubject = { 'id': '' };
 
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {

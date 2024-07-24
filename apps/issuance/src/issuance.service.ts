@@ -1464,7 +1464,10 @@ return newCacheKey;
           orgId,
           isRetry: true,
           organizationLogoUrl: clientDetails?.organizationLogoUrl,
-          platformName: clientDetails?.platformName
+          platformName: clientDetails?.platformName,
+          certificate: clientDetails?.certificate,
+          size: clientDetails?.size,
+          orientation: clientDetails?.orientation
         };
         this.processInBatches(bulkpayloadRetry, bulkPayloadDetails);
        } catch (error) {

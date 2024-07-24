@@ -725,9 +725,10 @@ issueCredentialDto.type = 'Issuance';
         message: ResponseMessages.issuance.success.create,
         data: getCredentialDetails
       };    
-      const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId).catch(error => {
+      const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId, id).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
+
       if (webhookUrl) {
         
           await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto}).catch(error => {

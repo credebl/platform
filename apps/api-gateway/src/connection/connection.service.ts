@@ -95,9 +95,9 @@ export class ConnectionService extends BaseService {
     return this.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation', payload);
   }
 
-  async _getWebhookUrl(tenantId: string): Promise<string> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
     const pattern = { cmd: 'get-webhookurl' };
-    const payload = { tenantId };
+    const payload = { tenantId, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

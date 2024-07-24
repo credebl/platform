@@ -129,9 +129,9 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'retry-bulk-credentials', payload);
     }
 
-    async _getWebhookUrl(tenantId: string): Promise<string> {
+    async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
         const pattern = { cmd: 'get-webhookurl' };
-        const payload = { tenantId };
+        const payload = { tenantId, orgId };
 
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

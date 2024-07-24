@@ -14,8 +14,8 @@ export class WebhookController {
   }
 
   @MessagePattern({ cmd: 'get-webhookurl' })
-  async getWebhookUrl(payload: { tenantId: string }): Promise<IGetWebhookUrl> {
-    return this.webhookService.getWebhookUrl(payload.tenantId);
+  async getWebhookUrl(payload: { tenantId?: string, orgId: string}): Promise<IGetWebhookUrl> {
+    return this.webhookService.getWebhookUrl(payload?.tenantId, payload?.orgId);
   }
 
   @MessagePattern({ cmd: 'post-webhook-response-to-webhook-url' })

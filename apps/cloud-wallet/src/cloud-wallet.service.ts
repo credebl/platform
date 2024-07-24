@@ -27,6 +27,10 @@ import {
   IStoredWalletDetails,
   CloudWallet,
   IStoreWalletInfo,
+  IWalletDetailsForDidList,
+  IConnectionDetailsById,
+  ITenantDetail,
+  ICredentialDetails,
   ICreateConnection, 
   IConnectionInvitationResponse
 } from '@credebl/common/interfaces/cloud-wallet.interface';
@@ -428,6 +432,104 @@ export class CloudWalletService {
     } catch (error) {
       this.logger.error(`[createDid] - error in create DID: ${error}`);
       await this.commonService.handleError(error);
+    }
+  }
+
+  /**
+   * Get DID list by tenant id
+   * @param walletDetails
+   * @returns DID list
+   */
+  async getDidList(walletDetails: IWalletDetailsForDidList): Promise<Response> {
+    try {
+      const { userId } = walletDetails;
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+
+      const { tenantId } = getTenant;
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_DID_LIST}/${tenantId}}`;
+
+      const didList = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
+      return didList;
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get connection details by tenant id and connection id
+   * @param connectionDetails
+   * @returns Connection Details
+   */
+  async getconnectionById(connectionDetails: IConnectionDetailsById): Promise<Response> {
+    try {
+      const { userId, connectionId } = connectionDetails;
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+
+      const { tenantId } = getTenant;
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CONNECTION_BY_ID}/${tenantId}}/${connectionId}`;
+
+      const connectionDetailResponse = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
+      return connectionDetailResponse;
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get credential list by tenant id
+   * @param tenantDetails
+   * @returns Connection Details
+   */
+  async getCredentialListById(tenantDetails: ITenantDetail): Promise<Response> {
+    try {
+      const { userId, connectionId, state, threadId } = tenantDetails;
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const urlOptions = {
+        connectionId,
+        state,
+        threadId
+      };
+      const {tenantId} = getTenant;
+     const optionalParameter = await this.commonService.createDynamicUrl(urlOptions);
+  
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREDENTIAL}/${tenantId}${optionalParameter}`;
+
+      const credentialDetailResponse = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
+      return credentialDetailResponse;
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get credential by record id
+   * @param credentialDetails
+   * @returns Connection Details
+   */
+  async getCredentialByRecord(credentialDetails: ICredentialDetails): Promise<Response> {
+    try {
+      const { userId, credentialRecordId } = credentialDetails;
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+     
+      const {tenantId} = getTenant;
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREDENTIAL}/${credentialRecordId}${tenantId}`;
+
+      const credentialDetailResponse = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
+      return credentialDetailResponse;
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
     }
   }
 }

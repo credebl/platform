@@ -5,7 +5,7 @@ import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiRespons
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { CloudWalletService } from './cloud-wallet.service';
-import { AcceptOfferDto, CreateCloudWalletDidDto, CreateCloudWalletDto, ReceiveInvitationUrlDTO } from './dtos/cloudWallet.dto';
+import { AcceptOfferDto, CreateCloudWalletDidDto, CreateCloudWalletDto, CredentialListDto, ReceiveInvitationUrlDTO } from './dtos/cloudWallet.dto';
 import { Response } from 'express';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -18,7 +18,7 @@ import { validateDid } from '@credebl/common/did.validator';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { UserRoleGuard } from '../authz/guards/user-role.guard';
 import { AcceptProofRequestDto } from './dtos/accept-proof-request.dto';
-import { IGetProofPresentation, IGetProofPresentationById } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IConnectionDetailsById, ICredentialDetails, IGetProofPresentation, IGetProofPresentationById, IWalletDetailsForDidList } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { CreateConnectionDto } from './dtos/create-connection.dto';
 
 
@@ -278,7 +278,7 @@ export class CloudWalletController {
    * @param orgId
    * @returns did
    */
-  @Post('/create-did')
+  @Post('/did')
   @ApiOperation({
     summary: 'Create new did',
     description: 'Create new did for cloud wallet'
@@ -312,4 +312,129 @@ export class CloudWalletController {
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+   /**
+        * Get DID list by tenant id
+        * @param tenantId 
+        * @param res 
+        * @returns DID list
+    */
+   @Get('/did')
+   @ApiOperation({ summary: 'Get DID list by tenant Id', description: 'Get DID list by tenant Id' })
+   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+   @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+   async getDidList(
+       @Res() res: Response,
+       @User() user: user
+   ): Promise<Response> {
+       const { id, email } = user;
+
+       const walletDetails: IWalletDetailsForDidList = {
+           userId: id,
+           email
+       };
+
+       const didListDetails = await this.cloudWalletService.getDidList(walletDetails);
+       const finalResponse: IResponse = {
+           statusCode: HttpStatus.OK,
+           message: ResponseMessages.cloudWallet.success.didList,
+           data: didListDetails
+       };
+       return res.status(HttpStatus.OK).json(finalResponse);
+   }
+
+   /**
+        * Get connection list by tenant id and connection id
+        * @param tenantId 
+        * @param connectionId 
+        * @param res 
+        * @returns DID list
+    */
+   @Get('/connection/:connectionId')
+   @ApiOperation({ summary: 'Get connection by connection Id', description: 'Get connection by connection Id' })
+   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+   @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+   async getconnectionById(
+       @Param('connectionId') connectionId: string,
+       @Res() res: Response,
+       @User() user: user
+   ): Promise<Response> {
+       const { id, email } = user;
+
+       const connectionDetails: IConnectionDetailsById = {
+           userId: id,
+           email,
+           connectionId
+       };
+
+       const connectionDetailResponse = await this.cloudWalletService.getconnectionById(connectionDetails);
+       const finalResponse: IResponse = {
+           statusCode: HttpStatus.OK,
+           message: ResponseMessages.cloudWallet.success.connectionById,
+           data: connectionDetailResponse
+       };
+       return res.status(HttpStatus.OK).json(finalResponse);
+   }
+
+    /**
+        * Get credential list by tenant id
+        * @param credentialListQueryOptions 
+        * @param res 
+        * @returns Credential list
+    */
+    @Get('/credential')
+    @ApiOperation({ summary: 'Get credential list by tenant Id', description: 'Get credential list by tenant Id' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+    async getCredentialList(
+        @Query() credentialListQueryOptions: CredentialListDto,
+        @Res() res: Response,
+        @User() user: user
+    ): Promise<Response> {
+        const { id, email } = user;
+ 
+        credentialListQueryOptions.userId = id;
+        credentialListQueryOptions.email = email;
+ 
+        const connectionDetailResponse = await this.cloudWalletService.getCredentialList(credentialListQueryOptions);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.cloudWallet.success.credentials,
+            data: connectionDetailResponse
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
+    }
+
+    /**
+        * Get credential list by tenant id
+        * @param credentialListQueryOptions 
+        * @param res 
+        * @returns Credential list
+    */
+    @Get('/credential/:credentialRecordId')
+    @ApiOperation({ summary: 'Get credential by credential record Id', description: 'Get credential by credential record Id' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+    async getCredentialByCredentialRecordId(
+        @Param('credentialRecordId') credentialRecordId: string,
+        @Res() res: Response,
+        @User() user: user
+    ): Promise<Response> {
+        const { id, email } = user;
+ 
+        const credentialDetails: ICredentialDetails = {
+            userId: id,
+            email,
+            credentialRecordId
+        };
+
+        const connectionDetailResponse = await this.cloudWalletService.getCredentialByCredentialRecordId(credentialDetails);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.OK,
+            message: ResponseMessages.cloudWallet.success.creddentialByRecordId,
+            data: connectionDetailResponse
+        };
+        return res.status(HttpStatus.OK).json(finalResponse);
+    }
+
 }

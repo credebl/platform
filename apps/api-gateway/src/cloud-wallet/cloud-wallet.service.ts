@@ -1,5 +1,5 @@
 
-import { IAcceptOffer, ICreateCloudWallet, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, ICreateConnection, IConnectionInvitationResponse } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IAcceptOffer, ICreateCloudWallet, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, IWalletDetailsForDidList, IConnectionDetailsById, ITenantDetail, ICredentialDetails, ICreateConnection, IConnectionInvitationResponse } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { Inject, Injectable} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
@@ -62,4 +62,27 @@ export class CloudWalletService extends BaseService {
     return this.sendNatsMessage(this.cloudWalletServiceProxy, 'create-cloud-wallet-did', createDidDetails);
 }
 
+getDidList(
+  walletDetails: IWalletDetailsForDidList
+): Promise<IProofRequestRes[]> {
+  return this.sendNatsMessage(this.cloudWalletServiceProxy, 'cloud-wallet-did-list', walletDetails);
+}
+
+getconnectionById(
+  connectionDetails: IConnectionDetailsById
+): Promise<Response> {
+  return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-cloud-wallet-connection-by-id', connectionDetails);
+}
+
+getCredentialList(
+  tenantDetails: ITenantDetail
+): Promise<Response> {
+  return this.sendNatsMessage(this.cloudWalletServiceProxy, 'wallet-credential-by-id', tenantDetails);
+}
+
+getCredentialByCredentialRecordId(
+  credentialDetails: ICredentialDetails
+): Promise<Response> {
+  return this.sendNatsMessage(this.cloudWalletServiceProxy, 'wallet-credential-by-record-id', credentialDetails);
+}
 }

@@ -462,7 +462,7 @@ export class CloudWalletController {
         const connectionDetailResponse = await this.cloudWalletService.getCredentialByCredentialRecordId(credentialDetails);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.cloudWallet.success.creddentialByRecordId,
+            message: ResponseMessages.cloudWallet.success.credentialByRecordId,
             data: connectionDetailResponse
         };
         return res.status(HttpStatus.OK).json(finalResponse);

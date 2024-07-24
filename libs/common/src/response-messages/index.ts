@@ -528,7 +528,7 @@ export const ResponseMessages = {
       didList: 'DID list fetched sucessfully',
       connectionById: 'Connection record fetched successfully',
       credentials: 'Credentials fetched successfully',
-      creddentialByRecordId: 'Credential fetched successfully',
+      credentialByRecordId: 'Credential fetched successfully',
       connectionList: 'Connection list fetched successfully',
       basicMessageByConnectionId: 'Basic message fetched successfully'
     },

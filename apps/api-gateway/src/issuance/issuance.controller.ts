@@ -409,12 +409,12 @@ async downloadBulkIssuanceCSVTemplate(
   @UseInterceptors(FileInterceptor('file'))
 
   async issueBulkCredentials(
+    @Body() clientDetails: ClientDetails,
     @Param('requestId') requestId: string,
     @Param('orgId') orgId: string,
-    @Res() res: Response,
-    @Body() clientDetails: ClientDetails,
     @User() user: user,
     @Query(new ValidationPipe({ transform: true })) query: CredentialQuery,
+    @Res() res: Response,
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
@@ -435,7 +435,6 @@ async downloadBulkIssuanceCSVTemplate(
         fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
         type: fileDetails?.['type']
       };
-
     }
       const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails, reqPayload);
 
@@ -736,7 +735,7 @@ issueCredentialDto.type = 'Issuance';
       };    
       const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-      });
+      });      
       if (webhookUrl) {
         
           await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto}).catch(error => {

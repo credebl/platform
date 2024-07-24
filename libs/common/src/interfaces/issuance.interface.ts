@@ -79,3 +79,10 @@ export interface IIssuedCredential {
       deleteResult: IDeletedIssuanceRecordsCount;
       recordsToDelete: IIssuedCredentialResponse[];
     }
+
+    export interface IPrettyVc{
+      certificate: string;
+      size: string;
+      orientation: string;
+    }
+    

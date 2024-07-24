@@ -336,6 +336,7 @@ CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
 CLOUD_WALLET_DID_LIST = '/multi-tenancy/dids/',
 CLOUD_WALLET_CONNECTION_BY_ID = '/multi-tenancy/connections/',
 CLOUD_WALLET_CREDENTIAL = '/multi-tenancy/credentials',
+CLOUD_WALLET_BASIC_MESSAGE = '/multi-tenancy/basic-messages/',
 
 // Bulk-issuance
 BATCH_SIZE = 100,

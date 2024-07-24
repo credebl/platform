@@ -307,3 +307,26 @@ export interface IConnectionInvitationResponse {
   outOfBandRecord: OutOfBandRecord;
   invitationDid: string;
 }
+
+export interface GetAllCloudWalletConnections {
+  outOfBandId?: string;
+  alias?: string;
+  myDid?: string;
+  theirDid?: string;
+  theirLabel?: string;
+  email?: string;
+  userId?: string;
+}
+
+export interface IBasicMessage {
+  userId: string;
+  email: string;
+  connectionId: string;
+}
+
+export interface IBasicMessageDetails {
+  userId?: string;
+  email?: string;
+  content: string;
+  connectionId: string
+}

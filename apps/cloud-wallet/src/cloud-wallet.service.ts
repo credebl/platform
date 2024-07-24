@@ -105,9 +105,10 @@ export class CloudWalletService {
   async createConnection(createConnection: ICreateConnection): Promise<IConnectionInvitationResponse> {
     try {
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { userId, email, ...connectionPayload } = createConnection;
+      const { userId, ...connectionPayload } = createConnection;
         const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+
+        delete connectionPayload.email;
 
         const { tenantId } = getTenant;
         const { agentEndpoint } = baseWalletDetails;

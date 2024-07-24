@@ -116,8 +116,11 @@ export class UserService {
       const verifyCode = uuidv4();
       let sendVerificationMail: boolean;
   
+      const decryptClientId = await this.commonService.decryptPassword(clientId);
+      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
+
       try {
-        const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
+        const token = await this.clientRegistrationService.getManagementToken(decryptClientId, decryptClientSecret);
         const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
   

@@ -10,7 +10,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { BulkPayloadDetails, CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
-import { AutoAccept, IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier} from '@credebl/enum/enum';
+import { AutoAccept, IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier, W3CSchemaDataType} from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -783,7 +783,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
 
     }
-
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
 
     if (!credentialCreateOfferDetails) {
@@ -792,9 +791,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
-
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
-
     const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {
@@ -1082,12 +1079,12 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             if (!(attr?.attributeName in newRow)) {
               throw new BadRequestException(`Missing attribute ${attr?.attributeName} in CSV data`);
             }
-            if ('number' === attr.schemaDataType) {
+            if (W3CSchemaDataType.NUMBER === attr.schemaDataType) {
               newRow[attr?.attributeName] = Number(newRow[attr?.attributeName]);
               if (isNaN(newRow[attr.attributeName])) {
                 throw new BadRequestException(`Invalid data type for attribute ${attr?.attributeName}`);
               }
-            } else if ('string' === attr?.schemaDataType) {
+            } else if (W3CSchemaDataType.STRING === attr?.schemaDataType) {
               newRow[attr?.attributeName] = String(newRow[attr?.attributeName]);
             }
           });

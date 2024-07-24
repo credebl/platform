@@ -1102,6 +1102,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         errors: [],
         meta: parsedData.meta
       };
+
       await this.validateFileHeaders(fileHeader, attributeNameArray);
       await this.validateFileData(fileData, attributesArray, fileHeader);
 
@@ -1540,6 +1541,7 @@ return newCacheKey;
         credentialData: jobDetails.credential_data,
         orgDid,
         orgId
+
       };
 
       prettyVc = {

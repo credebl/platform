@@ -541,7 +541,7 @@ async downloadBulkIssuanceCSVTemplate(
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssuanceDetails.response
+      data: bulkIssuanceDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

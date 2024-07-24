@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
@@ -112,9 +112,7 @@ export class ReceiveInvitationUrlDTO {
     @IsString({ message: 'credentialRecordId must be a string' })
     credentialRecordId: string;
   
-    @ApiPropertyOptional({ type: Object, description: 'Credential formats' })
-    @Transform(({ value }) => trim(value))
-    @IsObject({ message: 'credentialFormats must be an object' })
+    @ApiProperty({ type: Object, description: 'Credential formats' })
     credentialFormats: object;
 
     email?: string;
@@ -215,4 +213,54 @@ export class CredentialListDto {
   email?: string;
     
   userId?: string;
+}
+
+export class GetAllCloudWalletConnectionsDto {
+  @ApiProperty({ required: false, example: 'e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
+  @IsNotEmpty()
+  @IsString()
+  @IsOptional()
+  outOfBandId: string;
+
+  @ApiProperty({ required: false, example: 'Test' })
+  @IsNotEmpty()
+  @IsString()
+  @IsOptional()
+  alias: string;
+
+  @ApiProperty({ required: false, example: 'did:example:e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
+  @IsNotEmpty()
+  @IsString()
+  @IsOptional()
+  myDid: string;
+
+  @ApiProperty({ required: false, example: 'did:example:e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
+  @IsNotEmpty()
+  @IsString()
+  @IsOptional()
+  theirDid: string;
+
+  @ApiProperty({ required: false, example: 'Bob' })
+  @IsNotEmpty()
+  @IsString()
+  @IsOptional()
+  theirLabel: string;
+
+  email?: string;
+    
+  userId?: string;
+}
+
+export class BasicMessageDTO {
+  @ApiProperty({ example: 'Message'})
+  @IsNotEmpty({ message: 'content is required' })
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'content should be in string format.' })
+  content: string;
+
+  email?: string;
+  
+  userId?: string;
+
+  connectionId: string;
 }

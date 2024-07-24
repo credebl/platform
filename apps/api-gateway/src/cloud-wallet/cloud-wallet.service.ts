@@ -1,5 +1,5 @@
 
-import { IAcceptOffer, ICreateCloudWallet, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, IWalletDetailsForDidList, IConnectionDetailsById, ITenantDetail, ICredentialDetails, ICreateConnection, IConnectionInvitationResponse } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { IAcceptOffer, ICreateCloudWallet, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, IWalletDetailsForDidList, IConnectionDetailsById, ITenantDetail, ICredentialDetails, ICreateConnection, IConnectionInvitationResponse, GetAllCloudWalletConnections, IBasicMessage, IBasicMessageDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { Inject, Injectable} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
@@ -73,6 +73,11 @@ getconnectionById(
 ): Promise<Response> {
   return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-cloud-wallet-connection-by-id', connectionDetails);
 }
+getAllconnectionById(
+  connectionDetails: GetAllCloudWalletConnections
+): Promise<Response> {
+  return this.sendNatsMessage(this.cloudWalletServiceProxy, 'get-all-cloud-wallet-connections-list-by-id', connectionDetails);
+}
 
 getCredentialList(
   tenantDetails: ITenantDetail
@@ -84,5 +89,17 @@ getCredentialByCredentialRecordId(
   credentialDetails: ICredentialDetails
 ): Promise<Response> {
   return this.sendNatsMessage(this.cloudWalletServiceProxy, 'wallet-credential-by-record-id', credentialDetails);
+}
+
+getBasicMessageByConnectionId(
+  connectionDetails: IBasicMessage
+): Promise<Response> {
+  return this.sendNatsMessage(this.cloudWalletServiceProxy, 'basic-message-list-by-connection-id', connectionDetails);
+}
+
+sendBasicMessage(
+  messageDetails: IBasicMessageDetails
+): Promise<Response> {
+  return this.sendNatsMessage(this.cloudWalletServiceProxy, 'send-basic-message', messageDetails);
 }
 }

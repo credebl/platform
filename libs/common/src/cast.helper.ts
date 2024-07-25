@@ -189,4 +189,95 @@ export class AgentSpinupValidator {
   public static validate(agentSpinupDto): void {
     this.validateWalletName(agentSpinupDto.walletName);
   }
+
+}
+
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+  return emailRegex.test(email);
+};
+
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential) => {
+  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
+  const credentialSubject = { 'id': 'did:key:kdfJmG7pi1MnrX4y4nkJe' };
+
+  for (const key in credentialData) {
+    if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
+      credentialSubject[key] = credentialData[key];
+    }
+  }
+
+  return {
+    credentialOffer: [
+      {
+        'emailId': `${credentialData.email_identifier}`,
+        'credential': {
+          '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
+          'type': [
+            'VerifiableCredential',
+            `${schemaName}`
+          ],
+          'issuer': {
+            'id': `${orgDid}`
+          },
+          'issuanceDate': new Date().toISOString(),
+          credentialSubject
+        },
+        'options': {
+          'proofType': 'Ed25519Signature2018',
+          'proofPurpose': 'assertionMethod'
+        }
+      }
+    ],
+    'comment': 'string',
+    'protocolVersion': 'v2',
+    'credentialType': 'jsonld',
+    orgId
+  };
+};
+
+
+@ValidatorConstraint({ name: 'isHostPortOrDomain', async: false })
+export class IsHostPortOrDomainConstraint implements ValidatorConstraintInterface {
+  validate(value: string): boolean {
+    // Regular expression for validating URL with host:port or domain
+    const hostPortRegex = /^(http:\/\/|https:\/\/)?(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):(?:\d{1,5})(\/[^\s]*)?$/;
+    const domainRegex = /^(http:\/\/|https:\/\/)?(?:localhost|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})(:\d{1,5})?(\/[^\s]*)?$/;
+
+    return hostPortRegex.test(value) || domainRegex.test(value);
+  }
+
+  defaultMessage(): string {
+    return 'Invalid host:port or domain format';
+  }
+}
+
+export function IsHostPortOrDomain(validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string): void {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsHostPortOrDomainConstraint
+    });
+  };
+}
+
+export function checkDidLedgerAndNetwork(schemaType: string, did: string): boolean {
+
+  const cleanSchemaType = schemaType.trim().toLowerCase();
+  const cleanDid = did.trim().toLowerCase();
+  
+  if (JSONSchemaType.POLYGON_W3C === cleanSchemaType) {
+    return cleanDid.includes(JSONSchemaType.POLYGON_W3C);
+  }
+
+  if (JSONSchemaType.LEDGER_LESS === cleanSchemaType) {
+    return cleanDid.startsWith(ledgerLessDIDType.DID_KEY) || cleanDid.startsWith(ledgerLessDIDType.DID_WEB);
+  }
+
+  return false;
 }

@@ -22,7 +22,6 @@ import * as dotenv from 'dotenv';
 import { RpcException } from '@nestjs/microservices';
 import { ResponseMessages } from './response-messages';
 import { IOptionalParams } from './interfaces/interface';
-import { OrgAgentType } from '@credebl/enum/enum';
 dotenv.config();
 
 @Injectable()
@@ -481,41 +480,5 @@ async createDynamicUrl(urlOptions: IOptionalParams): Promise<string> {
   }
 }
 
-async sendBasicMessageAgentUrl(
-  label: string,
-  orgAgentType: string,
-  agentEndPoint: string,
-  tenantId?: string,
-  connectionId?: string
-): Promise<string> {
-  try {
-    let url;
-    switch (label) {
-      case 'send-basic-message': {
-        url =
-          orgAgentType === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
-            : orgAgentType === OrgAgentType.SHARED
-            ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
-                .replace('#', connectionId)
-                .replace('@', tenantId)
-            : null;
-        break;
-      }
-
-      default: {
-        break;
-      }
-    }
-
-    if (!url) {
-      throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
-    }
-    return url;
-  } catch (error) {
-    this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
-    throw error;
-  }
-}
 
 }

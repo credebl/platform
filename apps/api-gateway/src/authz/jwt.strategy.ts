@@ -57,10 +57,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     let userDetails = null;
     let userInfo;
 
-    if (payload?.email) {
-      userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.email);
-    }
-    
+    const userInfo = await this.usersService.getUserByUserIdInKeycloak(payload.email);
     if (payload.hasOwnProperty('client_id')) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
       

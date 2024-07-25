@@ -12,6 +12,7 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common';
+import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
 
 @Injectable()
 export class WebhookService {
@@ -31,7 +32,6 @@ export class WebhookService {
       onRetry(e: { message: string }, attempt: number): void {
         logger.log(`Error:: ${e.message}`);
         logger.log(`Attempt:: ${attempt}`);
-       
       }
     };
   }
@@ -64,33 +64,21 @@ export class WebhookService {
     }
   }
 
- async getWebhookUrl(tenantId?: string, orgId?: string): Promise<IGetWebhookUrl> {
-  let webhookUrlInfo;
-  try {
-    if (orgId) {
-      webhookUrlInfo = await this.webhookRepository.getWebhookUrl(orgId);
+  async getWebhookUrl(getWebhook: IWebhookUrl): Promise<IGetWebhookUrl> {
+    let webhookUrlInfo;
+    try {
+      webhookUrlInfo = await this.webhookRepository.getWebhookUrl(getWebhook);
 
       if (!webhookUrlInfo) {
         throw new NotFoundException(ResponseMessages.webhook.error.notFound);
       }
 
       return webhookUrlInfo.webhookUrl;
-
-    } else if (tenantId) {
-
-      webhookUrlInfo = await this.webhookRepository.getWebhookUrl(tenantId);
-
-      if (!webhookUrlInfo) {
-        throw new NotFoundException(ResponseMessages.webhook.error.notFound);
-      }
-
-      return webhookUrlInfo.webhookUrl;
+    } catch (error) {
+      this.logger.error(`[getWebhookUrl] -  webhook url details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
-  } catch (error) {
-    this.logger.error(`[getWebhookUrl] -  webhook url details : ${JSON.stringify(error)}`);
-    throw new RpcException(error.response ? error.response : error);
   }
-}
 
   async webhookFunc(webhookUrl: string, data: object): Promise<Response> {
     try {

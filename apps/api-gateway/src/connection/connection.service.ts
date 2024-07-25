@@ -97,7 +97,10 @@ export class ConnectionService extends BaseService {
 
   async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
     const pattern = { cmd: 'get-webhookurl' };
-    const payload = { tenantId, orgId };
+
+    const getWebhook = { tenantId, orgId };
+    
+    const payload = { getWebhook };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

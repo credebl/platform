@@ -124,7 +124,7 @@ export class UserService {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
   
-        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName);
+        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, decryptClientId, brandLogoUrl, platformName);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }

@@ -118,14 +118,15 @@ export class UserService {
 
       try {
         const token = await this.clientRegistrationService.getManagementToken(decryptClientId, decryptClientSecret);
-        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
+        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(decryptClientId, token);
+
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
   
         if (!redirectUrl) {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
   
-        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName);
+        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, decryptClientId, brandLogoUrl, platformName);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -133,6 +134,8 @@ export class UserService {
       if (sendVerificationMail) {
         const uniqueUsername = await this.createUsername(email, verifyCode);
         userEmailVerification.username = uniqueUsername;
+        userEmailVerification.clientId = decryptClientId;
+        userEmailVerification.clientSecret = decryptClientSecret;
         const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
         return resUser;
       } 

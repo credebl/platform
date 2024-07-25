@@ -18,6 +18,9 @@ import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import { ResponseService } from '@credebl/response';
 import * as dotenv from 'dotenv';
+import { RpcException } from '@nestjs/microservices';
+import { ResponseMessages } from './response-messages';
+import { IOptionalParams } from './interfaces/interface';
 dotenv.config();
 
 @Injectable()
@@ -392,4 +395,89 @@ export class CommonService {
       throw new BadRequestException('Invalid Credentials');
     }
   }
+   dataEncryption(data: string) {
+    // eslint-disable-next-line no-useless-catch
+    try {
+      const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(data), process.env.CRYPTO_PRIVATE_KEY).toString();
+
+      return encryptedToken;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  handleError(error): Promise<void> {
+    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      throw new RpcException({
+        message: error?.status?.message?.error?.reason
+          ? error?.status?.message?.error?.reason
+          : error?.status?.message?.error,
+        statusCode: error?.status?.code
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+  
+async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {
+  if (!baseUrl || !apiKey) {
+    throw new BadRequestException(ResponseMessages.cloudWallet.error.agentDetails);
+  }
+  const url = `${baseUrl}${CommonConstants.URL_AGENT_GET_ENDPOINT}`;
+  try {
+    const agentHealthCheck = await this.httpGet(url, {
+      headers: { authorization: apiKey }
+    });
+    if (agentHealthCheck.isInitialized) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    throw new Error;
+  }
+}
+
+async createDynamicUrl(urlOptions: IOptionalParams): Promise<string> {
+  try {
+    const { alias, myDid, outOfBandId, state, theirDid, theirLabel, connectionId, threadId } = urlOptions;
+    // Create the dynamic URL for Search Criteria
+    const criteriaParams = [];
+    
+    if (alias) {
+      criteriaParams.push(`alias=${alias}`);
+    }
+    if (myDid) {
+      criteriaParams.push(`myDid=${myDid}`);
+    }
+    if (outOfBandId) {
+      criteriaParams.push(`outOfBandId=${outOfBandId}`);
+    }
+    if (state) {
+      criteriaParams.push(`state=${state}`);
+    }
+    if (theirDid) {
+      criteriaParams.push(`theirDid=${theirDid}`);
+    }
+    if (theirLabel) {
+      criteriaParams.push(`theirLabel=${theirLabel}`);
+    }
+    if (threadId) {
+      criteriaParams.push(`threadId=${threadId}`);
+    }
+    if (connectionId) {
+      criteriaParams.push(`connectionId=${connectionId}`);
+    }
+
+    if (0 < criteriaParams.length) {
+      const url: string = `?${criteriaParams.join('&')}`;
+      return url;
+    }
+    
+    return '';
+  } catch (error) {
+    throw new Error(`Failed to create dynamic URL: ${error.message}`);
+  }
+}
+
+
 }

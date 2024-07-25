@@ -12,12 +12,15 @@ import {
   IUserInformation,
   IVerifyUserEmail,
   IUserDeletedActivity,
-  UserKeycloakId
+  UserKeycloakId,
+  UserRoleMapping,
+  UserRoleDetails
 } from '../interfaces/user.interface';
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { RecordType, schema, token, user } from '@prisma/client';
+import { UserRole } from '@credebl/enum/enum';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -836,4 +839,32 @@ export class UserRepository {
     }
   }
   
+  async storeUserRole(userId: string, userRoleId: string): Promise<UserRoleMapping> {
+    try {
+      const userRoleMapping = await this.prisma.user_role_mapping.create({
+        data: {
+          userId,
+          userRoleId
+        }
+      });
+      return userRoleMapping;
+    } catch (error) {
+      this.logger.error(`Error in storeUserRole: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async getUserRole(role: UserRole): Promise<UserRoleDetails> {
+    try {
+      const getUserRole = await this.prisma.user_role.findFirstOrThrow({
+        where: {
+          role
+        }
+      });
+      return getUserRole;
+    } catch (error) {
+      this.logger.error(`Error in getUserRole: ${error.message} `);
+      throw error;
+    }
+  }
 }

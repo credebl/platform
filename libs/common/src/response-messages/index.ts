@@ -51,6 +51,7 @@ export const ResponseMessages = {
       invalidKeycloakId: 'keycloakId is invalid',
       invalidEmail: 'Invalid Email Id!',
       adduser: 'Unable to add user details',
+      userRoleNotFound: 'User role not found',
       verifyEmail: 'The verification link has already been sent to your email address. please verify',
       emailNotVerified: 'The verification link has already been sent to your email address. please verify',
       userNotRegisterd: 'The user has not yet completed the registration process',
@@ -512,6 +513,40 @@ export const ResponseMessages = {
     error: {
       stateNotFound: 'No states found for provided countryId.Please provide valid countryId',
       citiesNotFound: 'No cities found for provided stateId and countryId.Please provide valid stateId and countryId'
+    }
+  },
+  cloudWallet: {
+    success: {
+      create: 'Cloud wallet created successfully',
+      receive:'Received invitation successfully',
+      configureBaseWallet: 'Successfully configure the base wallet.',
+      acceptProofRequest: 'Proof request has been successfully accepted.',
+      createConnection: 'Connection created successfully.',
+      basicMessage: 'Basic message send successfully',
+      getProofById: 'Proof presentation has been successfully received.',
+      getProofPresentation: 'Proof presentations has been successfully received.',
+      didList: 'DID list fetched sucessfully',
+      connectionById: 'Connection record fetched successfully',
+      credentials: 'Credentials fetched successfully',
+      credentialByRecordId: 'Credential fetched successfully',
+      connectionList: 'Connection list fetched successfully',
+      basicMessageByConnectionId: 'Basic message fetched successfully'
+    },
+    error: {
+      baseWalletNotFound: 'Base wallet configuration not found',
+      createCloudWallet: 'Error while creating cloud wallet on agent',
+      encryptCloudWalletKey: 'Error while creating encrypting wallet key',
+      userExist: 'Wallet already exist for the user',
+      walletNotExist: 'Wallet not exist for the user',
+      agentDetails: 'Invalid agent details',
+      agentNotRunning: 'Agent is not up and running',
+      receiveInvitation: 'Error while receiving invitation by url',
+      AcceptOffer: 'Error while  invitation by url',
+      notReachable: 'The agent endpoint is not reachable.',
+      agentAlreadyExist: 'Agent already exist.',
+      platformAdminRecordNotFound: 'Platform admin reocrd not exist.',
+      notFoundBaseWallet: 'The base wallet record is missing.',
+      walletRecordNotFound: 'Wallet record not found.'
     }
   }
 };

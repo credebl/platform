@@ -1666,7 +1666,6 @@ export class AgentServiceService {
     orgId: string
   ): Promise<object> {
     try {
-      this.logger.log(`Agent url ${url}`);
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendOutOfbandCredentialOffer = await this.commonService
         .httpPost(url, outOfBandIssuancePayload, { headers: { authorization: getApiKey } })

@@ -770,6 +770,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
       };
 
+      this.logger.log(`outOfBandIssuancePayload ::: ${JSON.stringify(outOfBandIssuancePayload)}`);
       const payloadAttributes = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.credentialSubject;
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -56,6 +56,26 @@ class PrettyVc {
   @IsString({ message: 'orientation must be in string format.' })
   orientation: string;
 }
+
+class PrettyVc {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'Certificate must be in string format.' })
+  certificate: string;
+
+  @ApiPropertyOptional({example: 'a4'})
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'Size must be in string format.' })
+  size: string;
+
+  @ApiPropertyOptional({example: 'landscape'})
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'orientation must be in string format.' })
+  orientation: string;
+}
 export class Credential {
   @ApiProperty()
   @IsNotEmpty({ message: 'context  is required' })
@@ -542,8 +562,7 @@ export class ClientDetails {
 
   userId?: string;
 
-  @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
-  @Transform(({ value }) => trim(value))
+  @ApiProperty({ required: false, example: 'issue-data.csv' })
   @IsOptional()
   @IsUrl(
     {

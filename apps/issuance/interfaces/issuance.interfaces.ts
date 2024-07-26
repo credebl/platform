@@ -141,15 +141,6 @@ export interface ICredential{
   '@context':[];
   type: string[];
   prettyVc?: IPrettyVc;
-  issuer?: {
-    id: string;
-  };
-  issuanceDate?: string;
-  credentialSubject?: ICredentialSubject;
-}
-
-interface ICredentialSubject {
-  [key: string]: string;
 }
 
 export interface IOptions{ 
@@ -343,7 +334,6 @@ export interface IQueuePayload{
   certificate?: string;
   size?: string;
   orientation?: string;
-  isReuseConnection?: boolean;
 }
 
 interface FileDetails {

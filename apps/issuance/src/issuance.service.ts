@@ -1566,8 +1566,8 @@ return newCacheKey;
         schemaLedgerId,
         credentialData: jobDetails.credential_data,
         orgDid,
-        orgId,
-        isReuseConnection: true
+        orgId
+
       };
 
       prettyVc = {
@@ -1578,7 +1578,6 @@ return newCacheKey;
 
       oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc);
       }
-
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl, prettyVc);
       if (oobCredentials) {

@@ -16,6 +16,26 @@ class Issuer {
   @Type(() => String)
   id: string | { id?: string };
 }
+
+class PrettyVc {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'Certificate must be in string format.' })
+  certificate: string;
+
+  @ApiPropertyOptional({example: 'a4'})
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'Size must be in string format.' })
+  size: string;
+
+  @ApiPropertyOptional({example: 'landscape'})
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'orientation must be in string format.' })
+  orientation: string;
+}
 export class Credential {
     @ApiProperty()
     @IsNotEmpty({ message: 'context  is required' })
@@ -32,8 +52,7 @@ export class Credential {
     @Type(() => String)
     @IsOptional()
     id?:string;
-
-    
+   
     @ApiProperty()
     @ValidateNested({ each: true })
     @Type(() => Issuer)
@@ -45,6 +64,11 @@ export class Credential {
     @Type(() => String)
     issuanceDate:string;
    
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Type(() => PrettyVc)
+    prettyVc?: PrettyVc;
+
     @ApiProperty()
     @IsString({ message: 'expiration date should be string' })
     @IsNotEmpty({ message: 'expiration date  is required' })
@@ -52,10 +76,10 @@ export class Credential {
     @IsOptional()
     expirationDate?:string;
 
-     @ApiProperty()
-     @IsNotEmpty({ message: ' credential subject required' })
-     credentialSubject: SingleOrArray<JsonObject>;
-     [key: string]: unknown
+    @ApiProperty()
+    @IsNotEmpty({ message: ' credential subject required' })
+    credentialSubject: SingleOrArray<JsonObject>;
+    [key: string]: unknown
    
   }
 
@@ -573,8 +597,7 @@ export class ClientDetails {
 
   userId?: string;
 
-  @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
-  @Transform(({ value }) => trim(value))
+  @ApiProperty({ required: false, example: 'issue-data.csv' })
   @IsOptional()
   @IsUrl(
     {

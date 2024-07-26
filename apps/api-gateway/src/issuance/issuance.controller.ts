@@ -413,6 +413,7 @@ async downloadBulkIssuanceCSVTemplate(
     @Param('orgId') orgId: string,
     @User() user: user,
     @Query(new ValidationPipe({ transform: true })) query: CredentialQuery,
+    @Res() res: Response,
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
@@ -737,7 +738,7 @@ if (id && 'default' === issueCredentialDto.contextCorrelationId) {
       
       const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId, id).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-      });            
+      });      
       if (webhookUrl) {
         const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
 

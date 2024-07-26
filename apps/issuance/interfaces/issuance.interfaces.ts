@@ -141,15 +141,6 @@ export interface ICredential{
   '@context':[];
   type: string[];
   prettyVc?: IPrettyVc;
-  issuer?: {
-    id: string;
-  };
-  issuanceDate?: string;
-  credentialSubject?: ICredentialSubject;
-}
-
-interface ICredentialSubject {
-  [key: string]: string;
 }
 
 export interface IOptions{ 
@@ -242,6 +233,9 @@ export interface IClientDetails {
   fileName?: string;
   organizationLogoUrl?: string;
   platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
@@ -292,6 +286,7 @@ export interface SendEmailCredentialOffer {
   organizationDetails: organisation;
   platformName?: string,
   organizationLogoUrl?: string;
+  prettyVc?: IPrettyVc;
 }
 
 export interface TemplateDetailsInterface {
@@ -336,6 +331,9 @@ export interface IQueuePayload{
   isLastData: boolean;
   organizationLogoUrl?: string;
   platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }
 
 interface FileDetails {
@@ -368,10 +366,13 @@ export interface IDeletedFileUploadRecords {
 }
 
 export interface BulkPayloadDetails {
-  clientId: string,
-  orgId: string,
-  requestId?: string,
-  isRetry: boolean
-  organizationLogoUrl?: string,
+  clientId: string;
+  orgId: string;
+  requestId?: string;
+  isRetry: boolean;
+  organizationLogoUrl?: string;
   platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }

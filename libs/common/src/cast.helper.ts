@@ -12,6 +12,7 @@ import {
   registerDecorator
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
+import { IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
 
 interface ToNumberOptions {
   default?: number;
@@ -199,9 +200,9 @@ export const validateEmail = (email: string): boolean => {
 
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
-export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential) => {
+export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
   const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
-  const credentialSubject = { 'id': 'did:key:kdfJmG7pi1MnrX4y4nkJe' };
+  const credentialSubject = { };
 
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
@@ -223,7 +224,8 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
             'id': `${orgDid}`
           },
           'issuanceDate': new Date().toISOString(),
-          credentialSubject
+          credentialSubject,
+          prettyVc
         },
         'options': {
           'proofType': 'Ed25519Signature2018',

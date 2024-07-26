@@ -16,6 +16,26 @@ class Issuer {
   @Type(() => String) 
   id:string | { id?: string };
 }
+
+class PrettyVc {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'Certificate must be in string format.' })
+  certificate: string;
+
+  @ApiPropertyOptional({example: 'a4'})
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'Size must be in string format.' })
+  size: string;
+
+  @ApiPropertyOptional({example: 'landscape'})
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'orientation must be in string format.' })
+  orientation: string;
+}
 export class Credential {
     @ApiProperty()
     @IsNotEmpty({ message: 'context  is required' })
@@ -32,8 +52,7 @@ export class Credential {
     @Type(() => String)
     @IsOptional()
     id?:string;
-
-    
+   
     @ApiProperty()
     @ValidateNested({ each: true })
     @Type(() => Issuer)
@@ -45,6 +64,11 @@ export class Credential {
     @Type(() => String)
     issuanceDate:string;
    
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Type(() => PrettyVc)
+    prettyVc?: PrettyVc;
+
     @ApiProperty()
     @IsString({ message: 'expiration date should be string' })
     @IsNotEmpty({ message: 'expiration date  is required' })
@@ -52,10 +76,10 @@ export class Credential {
     @IsOptional()
     expirationDate?:string;
 
-     @ApiProperty()
-     @IsNotEmpty({ message: ' credential subject required' })
-     credentialSubject: SingleOrArray<JsonObject>;
-     [key: string]: unknown
+    @ApiProperty()
+    @IsNotEmpty({ message: ' credential subject required' })
+    credentialSubject: SingleOrArray<JsonObject>;
+    [key: string]: unknown
    
   }
 
@@ -388,9 +412,7 @@ export class OOBCredentialDtoWithEmail {
           'proofPurpose': 'assertionMethod'
         }
       }
-    ]
-    
- 
+    ] 
       })
     @IsNotEmpty({ message: 'Please provide valid attributes' })
     @IsArray({ message: 'attributes should be array' })
@@ -479,41 +501,58 @@ export class FileParameter {
 }
 
 export class ClientDetails {
-    @ApiProperty({ required: false, example: '68y647ayAv79879' })
-    @IsOptional()
-    @Type(() => String)
-    clientId = '';
-
-    @ApiProperty({ required: false, example: 'issue-data.csv' })
-    @IsOptional()
-    @Type(() => String)
-    fileName = '';
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @Type(() => Boolean)
-    isSelectiveIssuance?: boolean = false;
-
-    userId?: string;
-
-  @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
-  @Transform(({ value }) => trim(value))
+  @ApiProperty({ required: false, example: '68y647ayAv79879' })
   @IsOptional()
-  @IsUrl({
-    // eslint-disable-next-line camelcase 
-        require_protocol: true,
-    // eslint-disable-next-line camelcase
-      require_tld: true
-    },
-  { message: 'brandLogoUrl should be a valid URL' })
-  organizationLogoUrl?: string;
+  @Type(() => String)
+  clientId = '';
 
-  @ApiPropertyOptional({ example: 'MyPlatform' })
-  @Transform(({ value }) => trim(value))
+  @ApiProperty({ required: false, example: 'issue-data.csv' })
   @IsOptional()
-  @IsString({ message: 'platformName should be string' })
-  platformName?: string;
-    
+  @Type(() => String)
+  fileName = '';
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Type(() => Boolean)
+  isSelectiveIssuance?: boolean = false;
+
+  userId?: string;
+
+@ApiPropertyOptional({ example: 'https://example.com/logo.png' })
+@Transform(({ value }) => trim(value))
+@IsOptional()
+@IsUrl({
+  // eslint-disable-next-line camelcase 
+      require_protocol: true,
+  // eslint-disable-next-line camelcase
+    require_tld: true
+  },
+{ message: 'brandLogoUrl should be a valid URL' })
+organizationLogoUrl?: string;
+
+@ApiPropertyOptional({ example: 'MyPlatform' })
+@Transform(({ value }) => trim(value))
+@IsOptional()
+@IsString({ message: 'platformName should be string' })
+platformName?: string;
+
+@ApiPropertyOptional()
+@Transform(({ value }) => trim(value))
+@IsOptional()
+@IsString({ message: 'Certificate should be string' })
+certificate?: string;
+
+@ApiPropertyOptional({ example: 'a4' })
+@Transform(({ value }) => trim(value))
+@IsOptional()
+@IsString({ message: 'Size should be string' })
+size?: string;
+
+@ApiPropertyOptional({ example: 'landscape' })
+@Transform(({ value }) => trim(value))
+@IsOptional()
+@IsString({ message: 'Orientation should be string' })
+orientation?: string;
 }
 
 export class TemplateDetails {

@@ -10,7 +10,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { BulkPayloadDetails, CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
-import { IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier} from '@credebl/enum/enum';
+import { AutoAccept, IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier, W3CSchemaDataType} from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -28,7 +28,7 @@ import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential, IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
@@ -37,7 +37,6 @@ import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
-
 
 @Injectable()
 export class IssuanceService {
@@ -543,7 +542,7 @@ export class IssuanceService {
     }
   }
 
-async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string): Promise<boolean> {
+async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string, prettyVc?: IPrettyVc): Promise<boolean> {
   try {
     const {
       credentialOffer,
@@ -639,6 +638,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       organizationDetails: organisation;
       platformName?: string;
       organizationLogoUrl?: string;
+      prettyVc?: IPrettyVc;
     } = {
       credentialType,
       protocolVersion,
@@ -655,7 +655,12 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       emailId: emailId || '',
       index: 0,
       platformName: platformName || null,
-      organizationLogoUrl: organizationLogoUrl || null
+      organizationLogoUrl: organizationLogoUrl || null,
+      prettyVc: {
+        certificate: prettyVc?.certificate,
+        size: prettyVc?.size,
+        orientation: prettyVc?.orientation
+      }
     };
 
     if (credentialOffer) {
@@ -757,7 +762,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
             options: iterator.options
           }
         },
-        autoAcceptCredential: outOfBandCredential.autoAcceptCredential || 'always',
+        // For Educreds
+        autoAcceptCredential: AutoAccept.Always,
         comment,
         goalCode: outOfBandCredential.goalCode || undefined,
         parentThreadId: outOfBandCredential.parentThreadId || undefined,
@@ -777,7 +783,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
 
     }
-
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
 
     if (!credentialCreateOfferDetails) {
@@ -1014,21 +1019,17 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         fileData: {},
         fileName: '',
         credentialType: '',
-        schemaName: '' 
+        schemaName: ''
       };
-      const {fileName, templateId, type} = importFileDetails;
+      const { fileName, templateId, type } = importFileDetails;
       if (type === SchemaType.W3C_Schema) {
-        credentialDetails =
-        await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+        credentialDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
         credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
         credentialPayload.credentialDefinitionId = SchemaType.W3C_Schema;
         credentialPayload.credentialType = SchemaType.W3C_Schema;
         credentialPayload.schemaName = credentialDetails.name;
-        
       } else if (type === SchemaType.INDY) {
-        
-        credentialDetails =
-        await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+        credentialDetails = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
         credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
         credentialPayload.credentialDefinitionId = credentialDetails.credentialDefinitionId;
         credentialPayload.credentialType = SchemaType.INDY;
@@ -1036,8 +1037,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
+
       const csvData: string = getFileDetails.Body.toString();
-      
 
       const parsedData = paParse(csvData, {
         header: true,
@@ -1045,7 +1046,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
         complete: (results) => results.data
       });
-      
 
       if (0 >= parsedData.data.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyFile);
@@ -1055,35 +1055,64 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyheader);
       }
       const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email_identifier));
-      
+
       if (0 < invalidEmails.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.invalidEmails);
       }
+      
       const fileData: string[][] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
       const attributesArray = JSON.parse(credentialDetails.attributes);
-      
 
       // Extract the 'attributeName' values from the objects and store them in an array
-      const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
-     
+      const attributeNameArray = attributesArray.map((attribute) => attribute.attributeName);
       if (0 >= attributeNameArray.length) {
-        throw new BadRequestException(
-          `Attributes are empty for credential definition ${templateId}`
-        );
+        throw new BadRequestException(`Attributes are empty for credential definition ${templateId}`);
       }
+
+      let validatedData;
+
+      if (type === SchemaType.W3C_Schema) {
+        validatedData = parsedData.data.map((row) => {
+          const { email_identifier, ...rest } = row;
+          const newRow = { ...rest };
+  
+          attributesArray.forEach((attr) => {
+            if (!(attr?.attributeName in newRow)) {
+              throw new BadRequestException(`Missing attribute ${attr?.attributeName} in CSV data`);
+            }
+            if (W3CSchemaDataType.NUMBER === attr.schemaDataType) {
+              newRow[attr?.attributeName] = Number(newRow[attr?.attributeName]);
+              if (isNaN(newRow[attr.attributeName])) {
+                throw new BadRequestException(`Invalid data type for attribute ${attr?.attributeName}`);
+              }
+            } else if (W3CSchemaDataType.STRING === attr?.schemaDataType) {
+              newRow[attr?.attributeName] = String(newRow[attr?.attributeName]);
+            }
+          });
+  
+          return { email_identifier, ...newRow };
+        });
+      }
+
+      const finalFileData = {
+        data: validatedData,
+        errors: [],
+        meta: parsedData.meta
+      };
 
       await this.validateFileHeaders(fileHeader, attributeNameArray);
       await this.validateFileData(fileData, attributesArray, fileHeader);
-      
-      credentialPayload.fileData = parsedData;
+
+      credentialPayload.fileData = type === SchemaType.W3C_Schema ? finalFileData : parsedData;
       credentialPayload.fileName = fileName;
       const newCacheKey = uuidv4();
 
       await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 60000);
-      return newCacheKey;
+     
+return newCacheKey;
 
-    } catch (error) {
+} catch (error) {
       this.logger.error(`error in validating credentials : ${error.response}`);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -1270,7 +1299,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           isRetry,
           isLastData: false,
           organizationLogoUrl: bulkPayloadDetails?.organizationLogoUrl,
-          platformName: bulkPayloadDetails?.platformName
+          platformName: bulkPayloadDetails?.platformName,
+          certificate: bulkPayloadDetails?.certificate,
+          size: bulkPayloadDetails?.size,
+          orientation: bulkPayloadDetails?.orientation
         }
       }));
 
@@ -1386,7 +1418,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           requestId,
           isRetry: false,
           organizationLogoUrl: clientDetails?.organizationLogoUrl,
-          platformName: clientDetails?.platformName
+          platformName: clientDetails?.platformName,
+          certificate: clientDetails?.certificate,
+          size: clientDetails?.size,
+          orientation: clientDetails?.orientation
         };
 
          this.processInBatches(bulkPayload, bulkPayloadDetails);
@@ -1426,7 +1461,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           orgId,
           isRetry: true,
           organizationLogoUrl: clientDetails?.organizationLogoUrl,
-          platformName: clientDetails?.platformName
+          platformName: clientDetails?.platformName,
+          certificate: clientDetails?.certificate,
+          size: clientDetails?.size,
+          orientation: clientDetails?.orientation
         };
         this.processInBatches(bulkpayloadRetry, bulkPayloadDetails);
        } catch (error) {
@@ -1473,6 +1511,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
   
     const { organisation, orgDid } = agentDetails;
+    let prettyVc;
     let isErrorOccurred = false;
     try {
       let oobIssuancepayload;
@@ -1501,15 +1540,19 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         credentialData: jobDetails.credential_data,
         orgDid,
         orgId
+
       };
-      oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails);
+
+      prettyVc = {
+        certificate: jobDetails?.certificate,
+        size: jobDetails?.size,
+        orientation: jobDetails?.orientation
+      };
+
+      oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc);
       }
-    
-
       const oobCredentials = await this.outOfBandCredentialOffer(
-        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl
-      );
-
+        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl, prettyVc);
       if (oobCredentials) {
         await this.issuanceRepository.deleteFileDataByJobId(jobDetails.id);
       }

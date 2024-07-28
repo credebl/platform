@@ -4,6 +4,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { Prisma, organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
+import { IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
 
 export interface IAttributes {
   attributeName: string;
@@ -139,8 +140,10 @@ export interface ICredentialAttributesInterface {
 export interface ICredential{
   '@context':[];
   type: string[];
+  prettyVc?: IPrettyVc;
 }
-export interface IOptions{
+
+export interface IOptions{ 
   proofType:string;
   proofPurpose:string;
 }
@@ -229,6 +232,9 @@ export interface IClientDetails {
   fileName?: string;
   organizationLogoUrl?: string;
   platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
@@ -278,6 +284,7 @@ export interface SendEmailCredentialOffer {
   organizationDetails: organisation;
   platformName?: string,
   organizationLogoUrl?: string;
+  prettyVc?: IPrettyVc;
 }
 
 export interface TemplateDetailsInterface {
@@ -322,6 +329,9 @@ export interface IQueuePayload{
   isLastData: boolean;
   organizationLogoUrl?: string;
   platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }
 
 interface FileDetails {
@@ -354,10 +364,13 @@ export interface IDeletedFileUploadRecords {
 }
 
 export interface BulkPayloadDetails {
-  clientId: string,
-  orgId: string,
-  requestId?: string,
-  isRetry: boolean
-  organizationLogoUrl?: string,
+  clientId: string;
+  orgId: string;
+  requestId?: string;
+  isRetry: boolean;
+  organizationLogoUrl?: string;
   platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }

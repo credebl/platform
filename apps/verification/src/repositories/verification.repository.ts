@@ -153,7 +153,8 @@ export class VerificationRepository {
           state: proofPresentationPayload.state,
           threadId: proofPresentationPayload.threadId,
           isVerified: proofPresentationPayload.isVerified,
-          lastChangedBy: organisationId
+          lastChangedBy: organisationId,
+          connectionId: proofPresentationPayload.connectionId
         },
         create: {
           connectionId: proofPresentationPayload.connectionId,

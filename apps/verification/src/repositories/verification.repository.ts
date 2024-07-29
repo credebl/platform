@@ -162,8 +162,7 @@ export class VerificationRepository {
           threadId: proofPresentationPayload.threadId,
           isVerified: proofPresentationPayload.isVerified,
           lastChangedBy: organisationId,
-          connectionId: proofPresentationPayload.connectionId,
-          emailId: encryptEmailId
+          connectionId: proofPresentationPayload.connectionId
         },
         create: {
           connectionId: proofPresentationPayload.connectionId,

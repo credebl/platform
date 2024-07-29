@@ -734,6 +734,7 @@ export class VerificationService {
 
       const extractedDataArray: IProofPresentationDetails[] = [];
 
+      // For Presentation exchange format
       if (getProofPresentationById?.response?.request?.presentationExchange) {
         const requestedAttributesForPresentationExchangeFormat =
           getProofPresentationById?.response?.request?.presentationExchange?.presentation_definition
@@ -766,12 +767,12 @@ export class VerificationService {
         }
       }
 
+      // For Indy format
       if (getProofPresentationById?.response?.request?.indy) {
-
         const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;
         const requestedPredicates = getProofPresentationById?.response?.request?.indy?.requested_predicates;
         const revealedAttrs = getProofPresentationById?.response?.presentation?.indy?.requested_proof?.revealed_attrs;
-    
+
         if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
           for (const key in requestedAttributes) {
 

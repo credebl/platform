@@ -1,37 +1,41 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { AgentController } from './agent/agent.controller';
+import { ConfigModule } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AgentModule } from './agent-service/agent-service.module';
+import { AgentController } from './agent/agent.controller';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthzMiddleware } from './authz/authz.middleware';
 import { AuthzModule } from './authz/authz.module';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigModule } from '@nestjs/config';
 import { CredentialDefinitionModule } from './credential-definition/credential-definition.module';
 import { FidoModule } from './fido/fido.module';
 import { IssuanceModule } from './issuance/issuance.module';
 import { OrganizationModule } from './organization/organization.module';
 import { PlatformModule } from './platform/platform.module';
-import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
 import { RevocationModule } from './revocation/revocation.module';
 import { SchemaModule } from './schema/schema.module';
+import { VerificationModule } from './verification/verification.module';
 // import { commonNatsOptions } from 'libs/service/nats.options';
-import { UserModule } from './user/user.module';
-import { ConnectionModule } from './connection/connection.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { ContextModule } from '@credebl/context/contextModule';
+import { LoggerModule } from '@credebl/logger/logger.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
-import { WebhookModule } from './webhook/webhook.module';
-import { UtilitiesModule } from './utilities/utilities.module';
+import { ConnectionModule } from './connection/connection.module';
+import { EcosystemModule } from './ecosystem/ecosystem.module';
 import { NotificationModule } from './notification/notification.module';
 import { GeoLocationModule } from './geo-location/geo-location.module';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
+import { UserModule } from './user/user.module';
+import { UtilitiesModule } from './utilities/utilities.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ContextModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -54,6 +58,7 @@ import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
     UtilitiesModule,
     WebhookModule,
     NotificationModule,
+    ContextModule, LoggerModule, ConfigModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     GeoLocationModule,
     CloudWalletModule

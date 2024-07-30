@@ -23,6 +23,18 @@
       "@credebl/common/*": [
         "libs/common/src/*"
       ],
+      "@credebl/context": [
+        "libs/context/src"
+      ],
+      "@credebl/context/*": [
+        "libs/context/src/*"
+      ],
+      "@credebl/config": [
+        "libs/config/src"
+      ],
+      "@credebl/config/*": [
+        "libs/config/src/*"
+      ],
       "@credebl/push-notifications": [
         "libs/push-notifications/src"
       ],

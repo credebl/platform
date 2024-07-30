@@ -1,0 +1,176 @@
+import * as winston from 'winston';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogData, LogLevel } from '@credebl/logger/log';
+import Logger from '@credebl/logger/logger.interface';
+import * as Elasticsearch from 'winston-elasticsearch';
+import * as ecsFormat from '@elastic/ecs-winston-format';
+//const ecsFormat = require('@elastic/ecs-winston-format');
+
+export const WinstonLoggerTransportsKey = Symbol();
+
+// const esTransportOpts = {
+//   level: 'debug',
+//   clientOpts: {
+//     node: 'http://localhost:9200',
+//     auth: {
+//       username: `elastic`,
+//       password: `rinkal@1234`
+//     }
+//   }
+// };
+
+// const esTransport = new Elasticsearch.ElasticsearchTransport(esTransportOpts);
+
+let esTransport;
+if ('true' === process.env.ELK_LOG?.toLowerCase()) {
+  const esTransportOpts = {
+  level: `${process.env.LOG_LEVEL}`,
+  clientOpts: { node: `${process.env.ELK_LOG_PATH}`,
+  auth: {
+    username: `${process.env.ELK_USERNAME}`,
+    password: `${process.env.ELK_PASSWORD}`
+  }
+ }
+};
+esTransport = new Elasticsearch.ElasticsearchTransport(esTransportOpts);
+
+esTransport.on('error', (error) => {
+  console.error('Error caught in logger', error);
+});
+
+}
+
+
+@Injectable()
+export default class WinstonLogger implements Logger {
+  private logger: winston.Logger;
+
+  public constructor(
+    @Inject(WinstonLoggerTransportsKey) transports: winston.transport[]
+  ) {
+    transports.push(esTransport);
+   
+    // Create winston logger
+    this.logger = winston.createLogger(this.getLoggerFormatOptions(transports));
+    
+  }
+
+  private getLoggerFormatOptions(transports: winston.transport[]) : winston.LoggerOptions {
+    // Setting log levels for winston
+    const levels: any = {};
+    let cont = 0;
+    Object.values(LogLevel).forEach((level) => {
+      levels[level] = cont;
+      cont++;
+    });
+
+    return {
+      level: LogLevel.Debug,
+      levels,
+     // format: ecsFormat.ecsFormat({ convertReqRes: true }),
+       format: winston.format.combine(
+        ecsFormat.ecsFormat({ convertReqRes: true }),
+        // Add timestamp and format the date
+        // winston.format.timestamp({
+        //   format: 'DD/MM/YYYY, HH:mm:ss',
+        // }),
+        // Errors will be logged with stack trace
+        winston.format.errors({ stack: true }),
+        // Add custom Log fields to the log
+        winston.format((info, opts) => {
+          // Info contains an Error property
+          if (info.error && info.error instanceof Error) {
+            info.stack = info.error.stack;
+            info.error = undefined;
+          }
+
+          info.label = `${info.organization}.${info.context}.${info.app}`;
+
+          return info;
+        })(),
+        // Add custom fields to the data property
+        winston.format.metadata({
+          key: 'data',
+          fillExcept: ['timestamp', 'level', 'message']
+        }),
+        // Format the log as JSON
+        winston.format.json(),
+      ),
+      transports: [
+        ...('true' === process.env.CONSOLE_LOG?.toLowerCase() ? [new winston.transports.Console()] : []),
+        //Path to Elasticsearch
+        ...('true' === process.env.ELK_LOG?.toLowerCase() ? transports : []),
+      ],
+      exceptionHandlers: transports
+    };
+  }
+
+  public logByLevel(
+    level: LogLevel,
+    message: string | Error,
+    data?: LogData,
+    profile?: string
+  ) : void {
+    const logData = {
+      level: LogLevel.Info,
+      message: message instanceof Error ? message.message : message,
+      error: message instanceof Error ? message : undefined,
+      ...data
+    };
+
+    if (profile) {
+      this.logger.profile(profile, logData);
+    } else {
+      this.logger.log(logData);
+    }
+  }
+
+  public log(
+    message: string | Error,
+    data?: LogData,
+    profile?: string
+  ) : void {
+    const logData = {
+      level: LogLevel.Info,
+      message: message instanceof Error ? message.message : message,
+      error: message instanceof Error ? message : undefined,
+      ...data
+    };
+
+    if (profile) {
+      this.logger.profile(profile, logData);
+    } else {
+      this.logger.log(logData);
+    }
+  }
+
+  public debug(message: string, data?: LogData, profile?: string) : void {
+    this.logByLevel(LogLevel.Debug, message, data, profile);
+  }
+
+  public info(message: string, data?: LogData, profile?: string) : void {
+    this.logByLevel(LogLevel.Info, message, data, profile);
+  }
+
+  public warn(message: string | Error, data?: LogData, profile?: string) : void {
+    this.logByLevel(LogLevel.Warn, message, data, profile);
+  }
+
+  public error(message: string | Error, data?: LogData, profile?: string) : void {
+    this.logByLevel(LogLevel.Error, message, data, profile);
+  }
+
+  public fatal(message: string | Error, data?: LogData, profile?: string) : void {
+    this.logByLevel(LogLevel.Fatal, message, data, profile);
+  }
+
+  public emergency(message: string | Error, data?: LogData, profile?: string) : void {
+    this.logByLevel(LogLevel.Emergency, message, data, profile);
+  }
+
+  public startProfile(id: string) : void {
+    this.logger.profile(id);
+  }
+}
+
+

@@ -18,6 +18,7 @@ import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verific
 import { UserActivityService } from '@credebl/user-activity';
 import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class VerificationService {
@@ -53,6 +54,20 @@ export class VerificationService {
         orgId,
         proofRequestsSearchCriteria
       );
+      
+      const schemaIds = getProofRequestsList?.proofRequestsList?.map((schema) => schema?.schemaId).filter(Boolean);
+
+      const getSchemaDetails = await this._getSchemaAndOrganizationDetails(schemaIds);
+      
+      const proofDetails = getProofRequestsList.proofRequestsList.map((proofRequest) => {
+        const schemaDetail = getSchemaDetails.find((schema) => schema.schemaLedgerId === proofRequest.schemaId);
+
+        return {
+          ...proofRequest,
+          schemaName: schemaDetail ? schemaDetail?.name : '',
+          issuanceEntity: schemaDetail ? schemaDetail?.['organisation']?.name : ''
+        };
+      });
 
       if (0 === getProofRequestsList.proofRequestsCount) {
         throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
@@ -82,12 +97,12 @@ export class VerificationService {
         nextPage: Number(proofRequestsSearchCriteria.pageNumber) + 1,
         previousPage: proofRequestsSearchCriteria.pageNumber - 1,
         lastPage: Math.ceil(getProofRequestsList.proofRequestsCount / proofRequestsSearchCriteria.pageSize),
-        data: getProofRequestsList.proofRequestsList
+        data: proofDetails || getProofRequestsList?.proofRequestsList
       };
 
       return proofPresentationsResponse;
     } catch (error) {
-                    
+
       this.logger.error(
         `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
       );
@@ -95,11 +110,33 @@ export class VerificationService {
     }
   }
 
+  async _getSchemaAndOrganizationDetails(templateIds: string[]): Promise<ISchemaDetail[]> {
+    const pattern = { cmd: 'get-schemas-details' };
+
+    const payload = {
+      templateIds
+    };
+    const schemaAndOrgDetails = await this.verificationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+    return schemaAndOrgDetails;
+  }
+
   async getVerificationRecords(orgId: string): Promise<number> {
     try {
       return await this.verificationRepository.getVerificationRecordsCount(orgId);
     } catch (error) {
-                    
+
       this.logger.error(
         `[getVerificationRecords ] [NATS call]- error in get verification records count : ${JSON.stringify(error)}`
       );
@@ -375,7 +412,7 @@ export class VerificationService {
       }
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
 
-      
+
       let payload: IProofRequestPayload;
 
       if (ProofRequestType.INDY === type) {
@@ -390,7 +427,7 @@ export class VerificationService {
       }
       
       if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
-       
+
          payload = {
           orgId: user.orgId,
           url,
@@ -478,7 +515,7 @@ export class VerificationService {
       this.logger.error(accumulatedErrors);
       throw new Error(ResponseMessages.verification.error.emailSend);
     }
-     
+
   } catch (error) {
     this.logger.error('[sendEmailInBatches] - error in sending email in batches');
     throw new Error(ResponseMessages.verification.error.batchEmailSend);
@@ -596,7 +633,7 @@ export class VerificationService {
           }
 
           return [attributeReferent];
-        }));
+          }));
 
         return {
           requestedAttributes,
@@ -626,7 +663,7 @@ export class VerificationService {
     proofPresentationId?: string
   ): Promise<string> {
     try {
-
+      
 
       let url;
       switch (verificationMethodLabel) {
@@ -711,6 +748,7 @@ export class VerificationService {
       const verificationMethodLabel = 'get-verified-proof';
       let credDefId;
       let schemaId;
+      let certificate;
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
       const url = await this.getAgentUrl(
         verificationMethodLabel,
@@ -744,6 +782,11 @@ export class VerificationService {
           getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0]
             ?.credentialSubject;
 
+        if (getProofPresentationById?.response) {
+          certificate =
+            getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
+              ?.certificate;
+        }
         if (
           requestedAttributesForPresentationExchangeFormat &&
           Array.isArray(requestedAttributesForPresentationExchangeFormat)
@@ -758,7 +801,8 @@ export class VerificationService {
             if (attributeName && attributeValue !== undefined) {
               const extractedData: IProofPresentationDetails = {
                 [attributeName]: attributeValue,
-                schemaId: schemaId || null
+                schemaId: schemaId || null,
+                certificateTemplate: certificate
               };
 
               extractedDataArray.push(extractedData);
@@ -849,7 +893,7 @@ export class VerificationService {
         } else if (0 !== Object.keys(requestedPredicates).length) {
 
           for (const key in requestedPredicates) {
-            
+
             if (requestedPredicates.hasOwnProperty(key)) {
               const attribute = requestedPredicates[key];
               const attributeName = attribute?.name;
@@ -1017,12 +1061,12 @@ export class VerificationService {
 
     await Promise.all(deleteProofRecords.recordsToDelete.map(async (record) => {
         statusCounts[record.state]++;
-    }));
+        }));
 
-    const filteredStatusCounts = Object.fromEntries(
-      Object.entries(statusCounts).filter(entry => 0 < entry[1])
-    );
-
+        const filteredStatusCounts = Object.fromEntries(
+          Object.entries(statusCounts).filter(entry => 0 < entry[1])
+        );
+    
       const deletedVerificationData = {
         deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count,
         deletedRecordsStatusCount : filteredStatusCounts

@@ -130,6 +130,20 @@ export class VerificationRepository {
 
       const { proofPresentationPayload, orgId } = payload;
 
+      //For Educreds
+      if (proofPresentationPayload?.['proofData']?.presentation?.presentationExchange?.verifiableCredential) {
+
+        const emailId = proofPresentationPayload?.['proofData']?.presentation?.presentationExchange?.verifiableCredential[0].credentialSubject?.email; 
+        encryptEmailId = await this.commonService.dataEncryption(emailId);
+      } else {
+        encryptEmailId = 'Not Available';
+      }
+     
+      //For Educreds 
+      if (proofPresentationPayload?.['proofData']?.request?.presentationExchange) {
+        schemaId = proofPresentationPayload?.['proofData']?.request?.presentationExchange?.presentation_definition?.input_descriptors[0].schema[0].uri;
+      }
+
       if ('default' !== proofPresentationPayload?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(proofPresentationPayload?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;

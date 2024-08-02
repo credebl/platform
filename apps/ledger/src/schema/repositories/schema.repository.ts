@@ -135,6 +135,13 @@ export class SchemaRepository {
           schemaLedgerId: {
             in: templateIds
           }
+        },
+        include: {
+          organisation: {
+            select: {
+              name: true
+            }
+          }
         }
       });
       return schemasResult;

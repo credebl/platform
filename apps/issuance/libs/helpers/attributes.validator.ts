@@ -1,4 +1,3 @@
-import { W3CSchemaDataType } from '@credebl/enum/enum';
 import { BadRequestException } from '@nestjs/common';
 import { IIssuanceAttributes, ISchemaAttributes } from 'apps/issuance/interfaces/issuance.interfaces';
 
@@ -13,7 +12,7 @@ export function validateW3CSchemaAttributes(
   const schemaAttributesSet = new Set(schemaUrlAttributes.map((attr) => attr.attributeName));
 
   for (const schemaAttribute of schemaUrlAttributes) {
-    const { attributeName, schemaDataType, isRequired } = schemaAttribute;
+    const { attributeName, isRequired } = schemaAttribute;
     const attributeValue = filteredIssuanceAttributes[attributeName];
 
     if (isRequired && attributeValue === undefined) {
@@ -26,18 +25,6 @@ export function validateW3CSchemaAttributes(
       continue;
     }
 
-    if (attributeValue !== undefined) {
-      const actualType = typeof attributeValue;
-
-      // Check if the schemaDataType is 'datetime-local' and treat it as a string
-      if ((W3CSchemaDataType.DATE_TIME === schemaDataType && W3CSchemaDataType.STRING !== actualType) || 
-          (W3CSchemaDataType.DATE_TIME !== schemaDataType && actualType !== schemaDataType)) {
-
-        mismatchedAttributes.push(
-          `Attribute ${attributeName} has type ${actualType} but expected type ${schemaDataType}`
-        );
-      }
-    }
   }
 
   for (const attributeName in filteredIssuanceAttributes) {

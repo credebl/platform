@@ -1,4 +1,6 @@
+import { NotFoundException } from '@nestjs/common';
 import * as dotenv from 'dotenv';
+import { ResponseMessages } from './response-messages';
 dotenv.config();
 /* eslint-disable camelcase */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
@@ -49,7 +51,11 @@ export function orderValues(key, order = 'asc') {
 
 
 export function convertUrlToDeepLinkUrl(url: string): string {
-  const deepLinkUrl = (process.env.DEEPLINK_DOMAIN as string).concat(url);
+  const deepLinkDomain = process.env.DEEPLINK_DOMAIN
+  if(!deepLinkDomain) {
+    throw new NotFoundException(ResponseMessages.shorteningUrl.error.deepLinkDomainNotFound)
+  }
+  const deepLinkUrl = deepLinkDomain.concat(url);
   return deepLinkUrl;
 }
 

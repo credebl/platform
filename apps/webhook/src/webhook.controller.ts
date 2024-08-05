@@ -2,6 +2,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { WebhookService } from './webhook.service';
 import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/webhook.interfaces';
+import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
 
 @Controller()
 export class WebhookController {
@@ -14,8 +15,8 @@ export class WebhookController {
   }
 
   @MessagePattern({ cmd: 'get-webhookurl' })
-  async getWebhookUrl(payload: { tenantId: string }): Promise<IGetWebhookUrl> {
-    return this.webhookService.getWebhookUrl(payload.tenantId);
+  async getWebhookUrl(payload: { getWebhook: IWebhookUrl }): Promise<IGetWebhookUrl> {
+    return this.webhookService.getWebhookUrl(payload?.getWebhook);
   }
 
   @MessagePattern({ cmd: 'post-webhook-response-to-webhook-url' })

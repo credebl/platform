@@ -4,6 +4,7 @@ import { CloudWalletService } from './cloud-wallet.service';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
     imports: [
@@ -17,7 +18,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
         ])
     ],
     controllers: [CloudWalletController],
-    providers: [CloudWalletService]
+    providers: [CloudWalletService, NATSClient]
 })
 
 export class CloudWalletModule {

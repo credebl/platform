@@ -19,6 +19,8 @@ import * as morgan from 'morgan';
 import FileTransport from '@credebl/logger/transports/fileTransport';
 import { ConfigService } from '@credebl/config/config.service';
 import LoggerService from '@credebl/logger/logger.service';
+import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
 
 @Global()
 @Module({
@@ -57,7 +59,7 @@ import LoggerService from '@credebl/logger/logger.service';
 
         return transports;
       },
-      inject: [ConfigService]
+      inject: [ConfigService, MICRO_SERVICE_NAME]
     }
   ],
   exports: [LoggerKey, NestjsLoggerServiceAdapter],

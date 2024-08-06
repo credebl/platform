@@ -72,6 +72,7 @@ import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { SchemaType } from '@credebl/enum/enum';
+//import Logger, { LoggerKey } from '@credebl/logger/logger.interface';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -84,6 +85,7 @@ export class IssuanceController {
     private readonly awsService: AwsService
   ) { }
   private readonly logger = new Logger('IssuanceController');
+
 
   /**
    * @param orgId

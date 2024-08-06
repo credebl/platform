@@ -5,6 +5,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { GeoLocationModule } from './geo-location.module';
 import { CommonConstants } from '@credebl/common/common.constant';
+import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 
 const logger = new Logger();
 
@@ -13,6 +14,7 @@ async function bootstrap(): Promise<void> {
     transport: Transport.NATS,
     options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.GEOLOCATION_NKEY_SEED)
   });
+  app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen();

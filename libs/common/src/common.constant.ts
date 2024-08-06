@@ -374,6 +374,9 @@ ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
 SEED_LENGTH = 32
 }
 
+// Define a unique symbol for the microservice name token
+export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
+
 export const postgresqlErrorCodes = [];
 postgresqlErrorCodes['23503'] = 'foreign_key_violation';
 postgresqlErrorCodes['00000'] = 'successful_completion';

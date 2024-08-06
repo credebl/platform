@@ -1,15 +1,20 @@
-import { LogData } from '@credebl/logger/log';
+import { LogData, LogLevel } from '@credebl/logger/log';
 
 export const LoggerBaseKey = Symbol();
 export const LoggerKey = Symbol();
 
 export default interface Logger {
   log(
-    //level: LogLevel,
+    level: LogLevel,
     message: string | Error,
     data?: LogData,
     profile?: string,
   ): void;
+  // log(
+  //   message: string | Error,
+  //   data?: LogData,
+  //   profile?: string,
+  // ): void;
   debug(message: string, data?: LogData, profile?: string): void;
   info(message: string, data?: LogData, profile?: string): void;
   warn(message: string | Error, data?: LogData, profile?: string): void;

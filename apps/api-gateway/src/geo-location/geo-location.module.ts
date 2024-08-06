@@ -6,6 +6,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { RateLimiterModule, RateLimiterGuard } from 'nestjs-rate-limiter';
 import { APP_GUARD } from '@nestjs/core';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
     {
       provide: APP_GUARD,
       useClass: RateLimiterGuard
-    }
+    },
+    NATSClient
   ]
 })
 export class GeoLocationModule {}

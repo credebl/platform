@@ -73,6 +73,8 @@ import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.d
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { SchemaType } from '@credebl/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
+//import Logger, { LoggerKey } from '@credebl/logger/logger.interface';
+
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -84,6 +86,7 @@ export class IssuanceController {
     private readonly awsService: AwsService
   ) { }
   private readonly logger = new Logger('IssuanceController');
+
 
   /**
    * @param orgId

@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
-import { ConfigService } from '@credebl/config/config.service;
+import { ConfigService } from '@credebl/config/config.service';
 
 @Global()
 @Module({

@@ -15,8 +15,7 @@ export default class ConsoleTransport {
   public static createColorize() : winston.transports.ConsoleTransportInstance {
     return new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.printf((log) => {
-        
+        winston.format.printf((log) => {        
           const color = this.mapLogLevelColor(log.level as LogLevel);
           const prefix = `${log.data.label ? `[${log.data.label}]` : ''}`;
           return `${this.colorize(color, `${prefix}  -`)} ${log.data['@timestamp']}    ${
@@ -25,14 +24,14 @@ export default class ConsoleTransport {
               : ''
           } ${this.colorize(color, log.level.toUpperCase())} ${
             log.data.sourceClass
-              ? `${this.colorize(LogColors.cyan, `[${log.data.sourceClass}]`)}`
+              ? `${this.colorize(LogColors.yellow, `[${log.data.sourceClass}]`)}`
               : ''
           } ${this.colorize(
             color,
             `${log.message} - ${log.data.error ? log.data.error : ''}`
           )}${
             log.data.durationMs !== undefined
-              ? this.colorize(color, ` ++${log.data.durationMs}ms`)
+              ? this.colorize(color, ' \+' + log.data.durationMs + 'ms')
               : ''
           }${
             log.data.stack ? this.colorize(color, `  - ${log.data.stack}`) : ''

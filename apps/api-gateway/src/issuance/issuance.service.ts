@@ -8,12 +8,14 @@ import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITempla
 import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { user } from '@prisma/client';
+import { NATSClient } from 'libs/common/NATSClient';
 @Injectable()
 export class IssuanceService extends BaseService {
 
 
     constructor(
-        @Inject('NATS_CLIENT') private readonly issuanceProxy: ClientProxy
+        @Inject('NATS_CLIENT') private readonly issuanceProxy: ClientProxy,
+        private natsClient : NATSClient
     ) {
         super('IssuanceService');
     }
@@ -22,7 +24,7 @@ export class IssuanceService extends BaseService {
 
         const payload = { comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, credentialData: issueCredentialDto.credentialData, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType, user };
 
-        return this.sendNatsMessage(this.issuanceProxy, 'send-credential-create-offer', payload);
+        return this.natsClient.sendNatsMessage(this.issuanceProxy, 'send-credential-create-offer', payload);
     }
 
     sendCredentialOutOfBand(issueCredentialDto: OOBIssueCredentialDto): Promise<{
@@ -36,12 +38,12 @@ export class IssuanceService extends BaseService {
             payload = { credential: issueCredentialDto.credential, options: issueCredentialDto.options, comment: issueCredentialDto.comment, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, goalCode: issueCredentialDto.goalCode, parentThreadId: issueCredentialDto.parentThreadId, willConfirm: issueCredentialDto.willConfirm, label: issueCredentialDto.label, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType, isShortenUrl: issueCredentialDto.isShortenUrl, reuseConnection : issueCredentialDto.reuseConnection };
         }
 
-        return this.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
+        return this.natsClient.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
     }
 
     getIssueCredentials(issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams, user: IUserRequest, orgId: string): Promise<IIssuedCredential> {
         const payload = { issuedCredentialsSearchCriteria, user, orgId };
-        return this.sendNatsMessage(this.issuanceProxy, 'get-all-issued-credentials', payload);
+        return this.natsClient.sendNatsMessage(this.issuanceProxy, 'get-all-issued-credentials', payload);
     }
 
 
@@ -49,38 +51,38 @@ export class IssuanceService extends BaseService {
         response: object;
     }> {
         const payload = { user, credentialRecordId, orgId };
-        return this.sendNats(this.issuanceProxy, 'get-issued-credentials-by-credentialDefinitionId', payload);
+        return this.natsClient.sendNats(this.issuanceProxy, 'get-issued-credentials-by-credentialDefinitionId', payload);
     }
 
     getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: string): Promise<{
         response: object;
     }> {
         const payload = { issueCredentialDto, id };
-        return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
+        return this.natsClient.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
     }
 
     outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OOBCredentialDtoWithEmail): Promise<{
         response: object;
     }> {
         const payload = { user, outOfBandCredentialDto };
-        return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
+        return this.natsClient.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
     }
 
     getAllCredentialTemplates(orgId:string, schemaType:string): Promise<ITemplateFormat> {
         const payload = { orgId, schemaType};
-        return this.sendNatsMessage(this.issuanceProxy, 'get-all-credential-template-for-bulk-operation', payload);
+        return this.natsClient.sendNatsMessage(this.issuanceProxy, 'get-all-credential-template-for-bulk-operation', payload);
       }
 
     async downloadBulkIssuanceCSVTemplate(orgId: string, templateDetails: TemplateDetails
     ): Promise<FileExportResponse> {
         const payload = { orgId, templateDetails };
-        return (await this.sendNats(this.issuanceProxy, 'download-csv-template-for-bulk-operation', payload)).response;
+        return (await this.natsClient.sendNats(this.issuanceProxy, 'download-csv-template-for-bulk-operation', payload)).response;
     }
 
     async uploadCSVTemplate(importFileDetails: UploadedFileDetails
     ): Promise<{ response: object }> {
         const payload = { importFileDetails };
-        return this.sendNats(this.issuanceProxy, 'upload-csv-template', payload);
+        return this.natsClient.sendNats(this.issuanceProxy, 'upload-csv-template', payload);
     }
 
     async previewCSVDetails(requestId: string,
@@ -92,7 +94,7 @@ export class IssuanceService extends BaseService {
             orgId,
             previewFileDetails
         };
-        return this.sendNats(this.issuanceProxy, 'preview-csv-details', payload);
+        return this.natsClient.sendNats(this.issuanceProxy, 'preview-csv-details', payload);
     }
 
     async issuedFileDetails(
@@ -103,7 +105,7 @@ export class IssuanceService extends BaseService {
             orgId,
             fileParameter
         };
-        return this.sendNats(this.issuanceProxy, 'issued-file-details', payload);
+        return this.natsClient.sendNats(this.issuanceProxy, 'issued-file-details', payload);
     }
 
     async getFileDetailsByFileId(
@@ -116,17 +118,17 @@ export class IssuanceService extends BaseService {
             fileId,
             fileParameter
         };
-        return this.sendNats(this.issuanceProxy, 'issued-file-data', payload);
+        return this.natsClient.sendNats(this.issuanceProxy, 'issued-file-data', payload);
     }
 
     async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: IReqPayload): Promise<object> {
         const payload = { requestId, orgId, clientDetails, reqPayload };
-        return this.sendNatsMessage(this.issuanceProxy, 'issue-bulk-credentials', payload);
+        return this.natsClient.sendNatsMessage(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }
 
     async retryBulkCredential(fileId: string, orgId: string, clientDetails: ClientDetails): Promise<object> {
         const payload = { fileId, orgId, clientDetails };
-        return this.sendNatsMessage(this.issuanceProxy, 'retry-bulk-credentials', payload);
+        return this.natsClient.sendNatsMessage(this.issuanceProxy, 'retry-bulk-credentials', payload);
     }
 
     async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
@@ -160,7 +162,7 @@ export class IssuanceService extends BaseService {
 
     async deleteIssuanceRecords(orgId: string, userDetails: user): Promise<IDeletedIssuanceRecords> {
         const payload = { orgId, userDetails };
-        return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
+        return this.natsClient.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
     }
     async getFileDetailsAndFileDataByFileId(orgId: string, fileId: string): Promise<object> {
         const payload = {

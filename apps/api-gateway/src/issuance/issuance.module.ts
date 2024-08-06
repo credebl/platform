@@ -8,10 +8,12 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
     HttpModule,
+    //ContextModule, LoggerModule, PlatformConfig,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -21,6 +23,6 @@ import { CommonConstants } from '@credebl/common/common.constant';
     ])
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, ImageServiceService, CommonService, AwsService]
+  providers: [IssuanceService, ImageServiceService, CommonService, AwsService, NATSClient]
 })
 export class IssuanceModule { }

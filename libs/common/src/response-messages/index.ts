@@ -487,6 +487,9 @@ export const ResponseMessages = {
     success: {
       getshorteningUrl: 'Shortening Url fetched successfully',
       createShorteningUrl: 'Shortening Url created successfully'
+    },
+    error: {
+      deepLinkDomainNotFound: 'Deeplink Domain not found. Please make sure to add it in your environment variables'
     }
   },
   notification: {

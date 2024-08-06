@@ -11,7 +11,9 @@ export interface IProofPresentationsListCount {
     connectionId: string;
     state: string;
     orgId: string;
-    presentationId: string;  
+    presentationId: string; 
+    schemaId?: string; 
+    emailId?: string
   }
   export interface IProofPresentationList {
     totalItems: number;
@@ -27,8 +29,8 @@ export interface IProofPresentationsListCount {
     [key: string]: string;
     credDefId?: string;
     schemaId: string;
+    certificateTemplate?: string;
   }
-
   export interface IVerificationRecords {
     deleteResult: Prisma.BatchPayload;
     recordsToDelete: IRecords[]

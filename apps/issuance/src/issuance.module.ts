@@ -18,9 +18,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { LoggingInterceptor } from '@credebl/logger/logging.interceptor';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 
 @Module({
@@ -51,10 +49,6 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
   providers: [
     IssuanceService, IssuanceRepository, UserActivityRepository, PrismaService, 
     Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService, 
-    {
-      provide: APP_INTERCEPTOR,
-     useClass: LoggingInterceptor
-    },
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'IssuanceService' // Provide the name directly

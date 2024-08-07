@@ -13,10 +13,9 @@ import { UserActivityService } from '@credebl/user-activity';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { LoggingInterceptor } from '@credebl/logger/logging.interceptor';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { LoggerModule } from '@credebl/logger/logger.module';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
 @Module({
   imports: [
     ClientsModule.register([
@@ -27,7 +26,7 @@ import { LoggerModule } from '@credebl/logger/logger.module';
 
       }
     ]),
-
+GlobalConfigModule,
     CommonModule, LoggerModule, PlatformConfig, ContextInterceptorModule,
     CacheModule.register()
   ],
@@ -35,10 +34,6 @@ import { LoggerModule } from '@credebl/logger/logger.module';
   providers: [
       VerificationService, VerificationRepository, PrismaService, UserActivityService, 
     UserActivityRepository, Logger, OutOfBandVerification, EmailDto,
-    {
-      provide: APP_INTERCEPTOR,
-     useClass: LoggingInterceptor
-    },
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'Verification-Service' // Provide the name directly

@@ -11,8 +11,6 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { LoggingInterceptor } from '@credebl/logger/logging.interceptor';
 import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 
 @Module({
@@ -33,10 +31,6 @@ ClientsModule.register([
   controllers: [CloudWalletController],
   providers: [
     CloudWalletService, CloudWalletRepository, PrismaService, Logger,
-    {
-      provide: APP_INTERCEPTOR,
-     useClass: LoggingInterceptor
-    },
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'cloud-wallet' // Provide the name directly

@@ -5,7 +5,9 @@ import { catchError } from 'rxjs/operators';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import Logger, { LoggerKey } from './logger.interface';
 import { ClsService } from 'nestjs-cls';
+import { v4 } from 'uuid';
 
+const isNullUndefinedOrEmpty = (obj: any): boolean => obj === null || obj === undefined || (typeof obj === 'object' && Object.keys(obj).length === 0);
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   constructor(
@@ -16,32 +18,26 @@ export class LoggingInterceptor implements NestInterceptor {
   ) {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    return this.clsService.run(() => {
-    console.log(`Now intercepting call for microservice`);
-    console.log(JSON.stringify(context.switchToRpc().getData(), null, 2));
-    console.log(`RPC data:`, JSON.stringify(context.switchToRpc().getContext().getHeaders(), null, 2));
+    return this.clsService.run(() => {    
 
+    this._logger.info('In LoggingInterceptor configuration');
     const rpcContext = context.switchToRpc().getContext();
     const headers = rpcContext.getHeaders();     
-    // if (isJson(rpcContext.args[0])) {
-    //   store.ndiLogger.setContext(JSON.parse(rpcContext.args[0]).endpoint);
-    // } else {
-    //   store.ndiLogger.setContext(rpcContext.args[0]);
-    // }   
-    console.log(`JSON.parse(rpcContext.args[0]) headers._description : ${headers._description}`);
-    console.log(`contextStorageService OBJ : ${this.contextStorageService}`);
-    this.contextStorageService.set('x-correlation-id', headers._description);
-    console.log(`x-correlation-id is set............`);
-    this.contextStorageService.setContextId(headers._description);
+     
+    if (!isNullUndefinedOrEmpty(headers)) {
+      this.contextStorageService.set('x-correlation-id', headers._description);
+      this.contextStorageService.setContextId(headers._description);
+    } else {
+      const newContextId = v4();
+      this.contextStorageService.set('x-correlation-id', newContextId);
+      this.contextStorageService.setContextId(newContextId);
+    }
 
-    this._logger.info('In Interceptor configuration');
-   
     return next.handle().pipe(
-      catchError((err) => {
-        console.log(`${err}`);
+      catchError((err) => {        
         this._logger.error(err);
         return throwError(() => err);
-      }),
+      })
     );
 
   });

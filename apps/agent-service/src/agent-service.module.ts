@@ -16,8 +16,6 @@ import { LoggerModule } from '@credebl/logger/logger.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { LoggingInterceptor } from '@credebl/logger/logging.interceptor';
 
 @Module({
   imports: [
@@ -43,10 +41,6 @@ import { LoggingInterceptor } from '@credebl/logger/logging.interceptor';
     ConnectionService,
     ConnectionRepository,
     UserActivityRepository,
-    {
-      provide: APP_INTERCEPTOR,
-     useClass: LoggingInterceptor
-    },
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'Agent-service' // Provide the name directly

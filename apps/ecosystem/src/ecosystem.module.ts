@@ -9,6 +9,10 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 
 @Module({
   imports: [
@@ -19,8 +23,9 @@ import { CommonConstants } from '@credebl/common/common.constant';
         options: getNatsOptions(CommonConstants.ECOSYSTEM_SERVICE, process.env.ECOSYSTEM_NKEY_SEED)
       }
     ]),
-
     CommonModule,
+    GlobalConfigModule,
+    LoggerModule, PlatformConfig, ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [EcosystemController],

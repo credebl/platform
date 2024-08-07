@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import {Logger, ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
@@ -11,17 +11,24 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 
 import helmet from 'helmet';
-import { NodeEnvironment } from '@credebl/enum/enum';
+//import { NodeEnvironment } from '@credebl/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
+import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
-    logger:
-      NodeEnvironment.PRODUCTION !== process.env.PLATFORM_PROFILE_MODE
-        ? ['log', 'debug', 'error', 'verbose', 'warn']
-        : ['error', 'warn']
-  });
+  // const app = await NestFactory.create(AppModule, {
+  //   logger:
+  //     NodeEnvironment.PRODUCTION !== process.env.PLATFORM_PROFILE_MODE
+  //       ? ['log', 'debug', 'error', 'verbose', 'warn']
+  //       : ['error', 'warn']
+  // });
+
+  const app = await NestFactory.create(AppModule);
+
+  //const logger = await app.resolve<Logger>(LoggerKey);
+
+  app.useLogger(app.get(NestjsLoggerServiceAdapter));
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,

@@ -8,6 +8,7 @@ import { EcosystemController } from './ecosystem.controller';
 import { EcosystemService } from './ecosystem.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
     ])
   ],
   controllers: [EcosystemController],
-  providers: [EcosystemService, CommonService]
+  providers: [EcosystemService, CommonService, NATSClient]
 })
 export class EcosystemModule { }
 

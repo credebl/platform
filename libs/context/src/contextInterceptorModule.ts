@@ -6,6 +6,10 @@ import { ContextStorageServiceKey } from '@credebl/context/contextStorageService
 import NestjsClsContextStorageService from '@credebl/context/nestjsClsContextStorageService';
 
 
+const isNullUndefinedOrEmpty = (obj: any): boolean => {
+  return obj === null || obj === undefined || (typeof obj === 'object' && Object.keys(obj).length === 0);
+};
+
 @Global()
 @Module({
   imports: [
@@ -15,7 +19,16 @@ import NestjsClsContextStorageService from '@credebl/context/nestjsClsContextSto
         mount: true,
 
          generateId: true,
-         idGenerator: (context: ExecutionContext) => context.switchToRpc().getContext().getHeaders()['_description'] ?? v4()
+         idGenerator: (context: ExecutionContext) => {
+          const rpcContext = context.switchToRpc().getContext();
+          const headers = rpcContext.getHeaders();    
+          if (!isNullUndefinedOrEmpty(headers)) {
+            return context.switchToRpc().getContext().getHeaders()['_description'];
+          } else {
+            return v4();
+          }
+         }
+         
       }
     })
   ],
@@ -30,3 +43,4 @@ import NestjsClsContextStorageService from '@credebl/context/nestjsClsContextSto
 })
 
 export class ContextInterceptorModule {}
+

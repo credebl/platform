@@ -96,23 +96,24 @@ export default class WinstonLogger implements Logger {
         // Format the log as JSON
         winston.format.json(),
       ),
-      transports: [
-        ...('true' === process.env.CONSOLE_LOG?.toLowerCase() ? [new winston.transports.Console()] : []),
-        //Path to Elasticsearch
-        ...('true' === process.env.ELK_LOG?.toLowerCase() ? transports : []),
-      ],
+      // transports: [
+      //   ...('true' === process.env.CONSOLE_LOG?.toLowerCase() ? [new winston.transports.Console()] : []),
+      //   //Path to Elasticsearch
+      //   ...('true' === process.env.ELK_LOG?.toLowerCase() ? transports : []),
+      // ],
+      transports,
       exceptionHandlers: transports
     };
   }
 
-  public logByLevel(
+  public log(
     level: LogLevel,
     message: string | Error,
     data?: LogData,
     profile?: string
   ) : void {
     const logData = {
-      level: LogLevel.Info,
+      level: level,
       message: message instanceof Error ? message.message : message,
       error: message instanceof Error ? message : undefined,
       ...data
@@ -125,47 +126,63 @@ export default class WinstonLogger implements Logger {
     }
   }
 
-  public log(
-    message: string | Error,
-    data?: LogData,
-    profile?: string
-  ) : void {
-    const logData = {
-      level: LogLevel.Info,
-      message: message instanceof Error ? message.message : message,
-      error: message instanceof Error ? message : undefined,
-      ...data
-    };
+  // public log(
+  //   levelOrMessage: LogLevel | string | Error,
+  //   messageOrData?: string | Error | LogData,
+  //   dataOrProfile?: LogData | string,
+  //   profile?: string
+  // ): void {
+  //   if ('string' === typeof levelOrMessage || levelOrMessage instanceof Error) {
+  //     // Handling log(message, data?, profile?)
+  //     this.logInternal(LogLevel.Info, levelOrMessage, messageOrData as LogData, dataOrProfile as string);
+  //   } else {
+  //     // Handling log(level, message, data?, profile?)
+  //     this.logInternal(levelOrMessage, messageOrData as string | Error, dataOrProfile as LogData, profile);
+  //   }
+  // }
 
-    if (profile) {
-      this.logger.profile(profile, logData);
-    } else {
-      this.logger.log(logData);
-    }
-  }
+  // private logInternal(
+  //   level: LogLevel,
+  //   message: string | Error,
+  //   data?: LogData,
+  //   profile?: string
+  // ): void {
+  //   const logData = {
+  //     level: level,
+  //     message: message instanceof Error ? message.message : message,
+  //     error: message instanceof Error ? message : undefined,
+  //     ...data
+  //   };
+
+  //   if (profile) {
+  //     this.logger.profile(profile, logData);
+  //   } else {
+  //     this.logger.log(logData);
+  //   }
+  // }
 
   public debug(message: string, data?: LogData, profile?: string) : void {
-    this.logByLevel(LogLevel.Debug, message, data, profile);
+    this.log(LogLevel.Debug, message, data, profile);
   }
 
   public info(message: string, data?: LogData, profile?: string) : void {
-    this.logByLevel(LogLevel.Info, message, data, profile);
+    this.log(LogLevel.Info, message, data, profile);
   }
 
   public warn(message: string | Error, data?: LogData, profile?: string) : void {
-    this.logByLevel(LogLevel.Warn, message, data, profile);
+    this.log(LogLevel.Warn, message, data, profile);
   }
 
   public error(message: string | Error, data?: LogData, profile?: string) : void {
-    this.logByLevel(LogLevel.Error, message, data, profile);
+    this.log(LogLevel.Error, message, data, profile);
   }
 
   public fatal(message: string | Error, data?: LogData, profile?: string) : void {
-    this.logByLevel(LogLevel.Fatal, message, data, profile);
+    this.log(LogLevel.Fatal, message, data, profile);
   }
 
   public emergency(message: string | Error, data?: LogData, profile?: string) : void {
-    this.logByLevel(LogLevel.Emergency, message, data, profile);
+    this.log(LogLevel.Emergency, message, data, profile);
   }
 
   public startProfile(id: string) : void {

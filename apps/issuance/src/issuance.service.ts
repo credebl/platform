@@ -37,6 +37,7 @@ import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
+import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 
 @Injectable()
 export class IssuanceService {
@@ -53,7 +54,9 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    @Inject(ContextStorageServiceKey)
+      private contextStorageService: ContextStorageService
   ) { }
 
   async getIssuanceRecords(orgId: string): Promise<number> {

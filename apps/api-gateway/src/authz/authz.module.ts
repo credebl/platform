@@ -20,6 +20,7 @@ import { EcosystemService } from '../ecosystem/ecosystem.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { OrganizationService } from '../organization/organization.service';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
     AuthzService,
     MobileJwtStrategy,
     SocketGateway,
+    NATSClient,
     VerificationService,
     ConnectionService,
     AgentService,
@@ -50,7 +52,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
     UserService,
     SupabaseService,
     EcosystemService,
-    OrganizationService
+    OrganizationService,
+    NATSClient
   ],
   exports: [
     PassportModule,

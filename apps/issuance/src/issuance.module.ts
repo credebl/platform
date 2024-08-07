@@ -15,7 +15,11 @@ import * as redisStore from 'cache-manager-redis-store';
 import { BulkIssuanceProcessor } from './issuance.processor';
 import { AwsService } from '@credebl/aws';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
 
 @Module({
   imports: [
@@ -28,6 +32,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
       }
     ]),
     CommonModule,
+    GlobalConfigModule,
+    LoggerModule, PlatformConfig, ContextInterceptorModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     BullModule.forRoot({
       redis: {
@@ -40,6 +46,14 @@ import { CommonConstants } from '@credebl/common/common.constant';
     })
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, IssuanceRepository, UserActivityRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService]
+  providers: [
+    IssuanceService, IssuanceRepository, UserActivityRepository, PrismaService, 
+    Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService, 
+    {
+      provide: MICRO_SERVICE_NAME,
+      useValue: 'IssuanceService' // Provide the name directly
+    }
+  ]
+  //exports: [MICRO_SERVICE_NAME]
 })
 export class IssuanceModule { }

@@ -365,6 +365,10 @@ export class IssuanceDto {
     @ApiProperty()
     @IsOptional()
     outOfBandId: string | null;
+
+    @ApiProperty()
+    @IsOptional()
+    credentialData: object;
 }
 
 

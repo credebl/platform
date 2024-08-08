@@ -31,12 +31,24 @@ export class WebhookRepository {
 
   async getWebhookUrl(getWebhook: IWebhookUrl): Promise<IGetWebhookUrl> {
     try {
-      const webhookUrlInfo = this.prisma.org_agents.findFirst({
-        where: {
-          tenantId: getWebhook?.tenantId,
-          orgId: getWebhook?.orgId
-        }
-      });
+
+      const { tenantId, orgId } = getWebhook;
+      let webhookUrlInfo;
+
+      if ('default' === tenantId && orgId) {
+        webhookUrlInfo = this.prisma.org_agents.findFirst({
+          where: {
+            orgId
+          }
+        });
+      } else if (tenantId && 'default' !== tenantId) {
+        webhookUrlInfo = this.prisma.org_agents.findFirst({
+          where: {
+            tenantId
+          }
+        });
+      }
+      
       return webhookUrlInfo;
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details: ${JSON.stringify(error)}`);

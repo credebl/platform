@@ -723,14 +723,15 @@ issueCredentialDto.type = 'Issuance';
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.issuance.success.create,
         data: getCredentialDetails
-      };    
+      };   
+      
       const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId, id).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });      
-
       if (webhookUrl) {
-        
-          await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto}).catch(error => {
+        const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
+
+          await this.issueCredentialService._postWebhookResponse(webhookUrl, {data: plainIssuanceDto}).catch(error => {
             this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
           });
       

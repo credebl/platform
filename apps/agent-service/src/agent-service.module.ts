@@ -16,6 +16,7 @@ import { LoggerModule } from '@credebl/logger/logger.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -44,7 +45,8 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'Agent-service' // Provide the name directly
-    }
+    },
+    NATSClient
   ],
   exports: [AgentServiceService, AgentServiceRepository, AgentServiceModule]
 })

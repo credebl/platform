@@ -82,6 +82,7 @@ import { DeleteEcosystemMemberTemplate } from '../templates/DeleteEcosystemMembe
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { IOrgData } from '@credebl/common/interfaces/organization.interface';
 import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Injectable()
 export class EcosystemService {
@@ -91,7 +92,8 @@ export class EcosystemService {
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
     private readonly prisma: PrismaService,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private natsClient : NATSClient
   ) {}
 
   /**
@@ -154,9 +156,9 @@ export class EcosystemService {
     const pattern = { cmd: 'get-organization-by-id' };
     const payload = { orgId, userId };
 
-    const orgData = await this.ecosystemServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const orgData = await this.natsClient
+      .send<OrganizationData>(this.ecosystemServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -313,9 +315,9 @@ export class EcosystemService {
     const pattern = { cmd: 'get-network-details-by-id' };
     const payload = { id };
 
-    return this.ecosystemServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    return this.natsClient
+      .send<LedgerDetails>(this.ecosystemServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -782,9 +784,9 @@ export class EcosystemService {
     const pattern = { cmd: 'get-user-by-mail' };
     const payload = { email };
 
-    const userData: user = await this.ecosystemServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const userData: user = await this.natsClient
+      .send<user>(this.ecosystemServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -806,9 +808,9 @@ export class EcosystemService {
     const pattern = { cmd: 'get-user-by-mail' };
     const payload = { email: userEmail };
 
-    const userData = await this.ecosystemServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const userData = await this.natsClient
+      .send<user>(this.ecosystemServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1086,7 +1088,7 @@ export class EcosystemService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.ecosystemServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -1267,7 +1269,7 @@ export class EcosystemService {
     const payload = { requestSchemaPayload, url, orgId };
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.ecosystemServiceProxy, pattern, payload);
       return { message };
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -1281,7 +1283,7 @@ export class EcosystemService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.ecosystemServiceProxy, pattern, payload);
       return { message };
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -1465,7 +1467,7 @@ export class EcosystemService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.ecosystemServiceProxy, pattern, payload);
       return { message };
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -1818,9 +1820,9 @@ export class EcosystemService {
   async _createW3CSchema(payload: IschemaPayload): Promise<object> {
     const pattern = { cmd: 'create-schema' };
 
-    const w3cSchemaData = await this.ecosystemServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const w3cSchemaData = await this.natsClient
+      .send<object>(this.ecosystemServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1846,7 +1848,7 @@ export class EcosystemService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.ecosystemServiceProxy, pattern, payload);
       return { message };
     } catch (error) {
       this.logger.error(` agent-submit-transaction catch: ${JSON.stringify(error)}`);
@@ -2060,7 +2062,7 @@ export class EcosystemService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.ecosystemServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.ecosystemServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -2093,9 +2095,9 @@ export class EcosystemService {
   async _getOrgData(orgId: string): Promise<IOrgData> {
     const pattern = { cmd: 'get-organization-details' };
     const payload = { orgId };
-    const orgData = await this.ecosystemServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const orgData = await this.natsClient
+      .send<IOrgData>(this.ecosystemServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -2112,9 +2114,9 @@ export class EcosystemService {
   async _getUsersDetails(userId: string): Promise<string> {
     const pattern = { cmd: 'get-user-details-by-userId' };
     const payload = { userId };
-    const userData = await this.ecosystemServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const userData = await this.natsClient
+      .send<string>(this.ecosystemServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(

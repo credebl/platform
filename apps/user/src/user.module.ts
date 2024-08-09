@@ -24,6 +24,7 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -57,7 +58,8 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
     UserOrgRolesRepository,
     UserActivityService,
     UserActivityRepository,
-    UserDevicesRepository
+    UserDevicesRepository,
+    NATSClient
   ]
 })
 export class UserModule {}

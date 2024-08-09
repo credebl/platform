@@ -43,4 +43,13 @@ sendNatsMessage(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<a
 
   return firstValueFrom(result);
 }
+
+send<T>(serviceProxy: ClientProxy, pattern: object, payload: any): Promise<T> {
+  const headers = nats.headers(1, this.contextStorageService.getContextId());
+  const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
+
+  const result = serviceProxy.send<T>(pattern, record);
+
+  return firstValueFrom(result);
+}
 }

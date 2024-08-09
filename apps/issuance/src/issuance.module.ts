@@ -20,6 +20,7 @@ import { LoggerModule } from '@credebl/logger/logger.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -48,7 +49,7 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
   controllers: [IssuanceController],
   providers: [
     IssuanceService, IssuanceRepository, UserActivityRepository, PrismaService, 
-    Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService, 
+    Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService, NATSClient,
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'IssuanceService' // Provide the name directly

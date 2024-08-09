@@ -8,7 +8,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { map } from 'rxjs';
+import { from, map } from 'rxjs';
 import { BulkPayloadDetails, CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { AutoAccept, IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier, W3CSchemaDataType} from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
@@ -38,6 +38,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Injectable()
 export class IssuanceService {
@@ -56,7 +57,8 @@ export class IssuanceService {
     @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     @Inject(ContextStorageServiceKey)
-      private contextStorageService: ContextStorageService
+      private contextStorageService: ContextStorageService,
+      private natsClient : NATSClient
   ) { }
 
   async getIssuanceRecords(orgId: string): Promise<number> {
@@ -393,9 +395,9 @@ export class IssuanceService {
   // Once implement this for all component then we'll remove the duplicate function
   async natsCallAgent(pattern: IPattern, payload: ISendOfferNatsPayload): Promise<ICreateOfferResponse> {
     try {
-      const createOffer = await this.issuanceServiceProxy
-        .send<ICreateOfferResponse>(pattern, payload)
-        .toPromise()
+      const createOffer = await this.natsClient
+        .send<ICreateOfferResponse>(this.issuanceServiceProxy, pattern, payload)
+        // .toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(
@@ -415,8 +417,8 @@ export class IssuanceService {
     response: string;
   }> {
     try {
-      return this.issuanceServiceProxy
-        .send<string>(pattern, payload)
+      return from(this.natsClient
+        .send<string>(this.issuanceServiceProxy, pattern, payload))
         .pipe(
           map((response) => (
             {
@@ -1301,9 +1303,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     const payload = {
       templateIds
     };
-    const schemaDetails = await this.issuanceServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const schemaDetails = await this.natsClient
+      .send<ISchemaDetail[]>(this.issuanceServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1757,7 +1759,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.issuanceServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.issuanceServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

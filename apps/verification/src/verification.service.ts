@@ -275,7 +275,6 @@ export class VerificationService {
         ...proofRequestPayload
       };
     }
-
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;
     } catch (error) {
@@ -781,7 +780,6 @@ export class VerificationService {
         const verifiableCredential =
           getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0]
             ?.credentialSubject;
-
         if (getProofPresentationById?.response) {
           certificate =
             getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
@@ -792,12 +790,14 @@ export class VerificationService {
           Array.isArray(requestedAttributesForPresentationExchangeFormat)
         ) {
           requestedAttributesForPresentationExchangeFormat.forEach((requestedAttributeKey) => {
-            const attributeName = requestedAttributeKey?.split('.').pop();
-            const attributeValue = verifiableCredential[attributeName];
+
+            const attributeName = requestedAttributeKey?.match(/\['(.*?)'\]/)?.[1];
+            
+            const attributeValue = verifiableCredential?.[attributeName];
+            
             const schemaId =
               getProofPresentationById?.response?.request?.presentationExchange?.presentation_definition
                 ?.input_descriptors[0].schema[0].uri;
-
             if (attributeName && attributeValue !== undefined) {
               const extractedData: IProofPresentationDetails = {
                 [attributeName]: attributeValue,

@@ -4,7 +4,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
 import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
 import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -791,8 +791,7 @@ export class VerificationService {
         ) {
           requestedAttributesForPresentationExchangeFormat.forEach((requestedAttributeKey) => {
 
-            const attributeName = requestedAttributeKey?.match(/\['(.*?)'\]/)?.[1];
-            
+            const attributeName = requestedAttributeKey?.match(ATTRIBUTE_NAME_REGEX)?.[1];
             const attributeValue = verifiableCredential?.[attributeName];
             
             const schemaId =

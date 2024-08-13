@@ -374,6 +374,8 @@ ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
 SEED_LENGTH = 32
 }
 
+export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;
+
 export const postgresqlErrorCodes = [];
 postgresqlErrorCodes['23503'] = 'foreign_key_violation';
 postgresqlErrorCodes['00000'] = 'successful_completion';

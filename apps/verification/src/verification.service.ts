@@ -4,7 +4,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
 import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
 import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -275,7 +275,6 @@ export class VerificationService {
         ...proofRequestPayload
       };
     }
-
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;
     } catch (error) {
@@ -781,7 +780,6 @@ export class VerificationService {
         const verifiableCredential =
           getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0]
             ?.credentialSubject;
-
         if (getProofPresentationById?.response) {
           certificate =
             getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
@@ -792,12 +790,13 @@ export class VerificationService {
           Array.isArray(requestedAttributesForPresentationExchangeFormat)
         ) {
           requestedAttributesForPresentationExchangeFormat.forEach((requestedAttributeKey) => {
-            const attributeName = requestedAttributeKey?.split('.').pop();
-            const attributeValue = verifiableCredential[attributeName];
+
+            const attributeName = requestedAttributeKey?.match(ATTRIBUTE_NAME_REGEX)?.[1];
+            const attributeValue = verifiableCredential?.[attributeName];
+            
             const schemaId =
               getProofPresentationById?.response?.request?.presentationExchange?.presentation_definition
                 ?.input_descriptors[0].schema[0].uri;
-
             if (attributeName && attributeValue !== undefined) {
               const extractedData: IProofPresentationDetails = {
                 [attributeName]: attributeValue,

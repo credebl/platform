@@ -85,4 +85,29 @@ export interface IIssuedCredential {
       size: string;
       orientation: string;
     }
+
+    interface ICredentialSubject {
+      [key: string]: string;
+    }
+    
+    interface ICredential {
+      "@context": string[];
+      type: string[];
+      issuer?: {
+        id: string;
+      };
+      issuanceDate?: string;
+      credentialSubject?: ICredentialSubject;
+    }
+    
+    interface IOptions {
+      proofType: string;
+      proofPurpose: string;
+    }
+    
+    export interface ICredentialData {
+      emailId: string;
+      credential?: ICredential;
+      options?: IOptions;
+    }
     

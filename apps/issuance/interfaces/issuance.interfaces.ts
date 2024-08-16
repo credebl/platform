@@ -141,6 +141,15 @@ export interface ICredential{
   '@context':[];
   type: string[];
   prettyVc?: IPrettyVc;
+  issuer?: {
+    id: string;
+  };
+  issuanceDate?: string;
+  credentialSubject?: ICredentialSubject;
+}
+
+interface ICredentialSubject {
+  [key: string]: string;
 }
 
 export interface IOptions{ 

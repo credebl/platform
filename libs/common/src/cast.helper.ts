@@ -1,4 +1,4 @@
-import { JSONSchemaType, ledgerLessDIDType, schemaRequestType, TemplateIdentifier } from '@credebl/enum/enum';
+import { DidMethod, JSONSchemaType, ledgerLessDIDType, ProofType, schemaRequestType, TemplateIdentifier } from '@credebl/enum/enum';
 import { ISchemaFields } from './interfaces/schema.interface';
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
@@ -305,6 +305,8 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
   const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
   const credentialSubject = { };
 
+  const proofType = (orgDid?.includes(DidMethod.POLYGON)) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE;
+
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
       credentialSubject[key] = credentialData[key];
@@ -329,7 +331,7 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
           prettyVc
         },
         'options': {
-          'proofType': 'Ed25519Signature2018',
+          proofType,
           'proofPurpose': 'assertionMethod'
         }
       }

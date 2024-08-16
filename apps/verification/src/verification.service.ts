@@ -791,8 +791,8 @@ export class VerificationService {
           Array.isArray(requestedAttributesForPresentationExchangeFormat)
         ) {
           requestedAttributesForPresentationExchangeFormat.forEach((requestedAttributeKey) => {
-
-            const attributeName = requestedAttributeKey?.match(ATTRIBUTE_NAME_REGEX)?.[1];
+ 
+            const attributeName = requestedAttributeKey?.match(ATTRIBUTE_NAME_REGEX)?.[1] || requestedAttributeKey?.split('.').pop();
             const attributeValue = verifiableCredential?.[attributeName];
             
             const schemaId =

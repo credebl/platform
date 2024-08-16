@@ -325,7 +325,7 @@ export class VerificationController {
             };
            
            
-             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId).catch(error => {
+             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId).catch(error => {
                 this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
              });
             

@@ -14,7 +14,8 @@ import {
   Get,
   Param,
   UseFilters,
-  ParseUUIDPipe
+  ParseUUIDPipe,
+  Query
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -41,6 +42,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
+import { GetWebhookDto } from './dtos/get-webhoook-dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('webhooks')
@@ -81,36 +83,24 @@ return res.status(HttpStatus.CREATED).json(finalResponse);
 }
 
 
-@Get('/orgs/:tenantId/webhookurl')
-  @ApiOperation({
-    summary: 'Get the webhookurl details',
-    description: 'Get the webhookurl details'
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(OrgRoles.OWNER, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.ADMIN)
-  async getWebhookUrl(
-    @Param('tenantId') tenantId: string,
-    @Res() res: Response
-  ): Promise<Response> {
-  
-    // eslint-disable-next-line no-param-reassign
-    tenantId = tenantId.trim();
-    if (!tenantId.length) {
-      throw new BadRequestException(ResponseMessages.agent.error.requiredTenantId);
-    }
+@Get('/orgs/webhookurl')
+@ApiOperation({
+  summary: 'Get the webhookurl details',
+  description: 'Get the webhookurl details'
+})
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
+@Roles(OrgRoles.OWNER, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.ADMIN)
+async getWebhookUrl(@Query() getWebhook: GetWebhookDto, @Res() res: Response): Promise<Response> {
+  const webhookUrlData = await this.webhookService.getWebhookUrl(getWebhook);
 
-    const webhookUrlData = await this.webhookService.getWebhookUrl(tenantId);
+  const finalResponse: IResponse = {
+    statusCode: HttpStatus.OK,
+    message: ResponseMessages.agent.success.getWebhookUrl,
+    data: webhookUrlData
+  };
 
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.agent.success.getWebhookUrl,
-      data: webhookUrlData
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
+  return res.status(HttpStatus.OK).json(finalResponse);
+}
 
 }

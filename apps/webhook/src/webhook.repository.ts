@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ICreateWebhookUrl, IGetWebhookUrl } from '../interfaces/webhook.interfaces';
 import { org_agents } from '@prisma/client';
+import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
 @Injectable()
 export class WebhookRepository {
   constructor(
@@ -28,14 +29,26 @@ export class WebhookRepository {
     }
   }
 
-  async getWebhookUrl(tenantId: string): Promise<IGetWebhookUrl> {
+  async getWebhookUrl(getWebhook: IWebhookUrl): Promise<IGetWebhookUrl> {
     try {
-      const webhookUrlInfo = this.prisma.org_agents.findFirst({
-        where: {
-          tenantId
-        }
-      });
 
+      const { tenantId, orgId } = getWebhook;
+      let webhookUrlInfo;
+
+      if ('default' === tenantId && orgId) {
+        webhookUrlInfo = this.prisma.org_agents.findFirst({
+          where: {
+            orgId
+          }
+        });
+      } else if (tenantId && 'default' !== tenantId) {
+        webhookUrlInfo = this.prisma.org_agents.findFirst({
+          where: {
+            tenantId
+          }
+        });
+      }
+      
       return webhookUrlInfo;
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details: ${JSON.stringify(error)}`);

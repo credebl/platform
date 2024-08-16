@@ -1,3 +1,4 @@
+import { W3CSchemaDataType } from '@credebl/enum/enum';
 import { BadRequestException } from '@nestjs/common';
 import { IIssuanceAttributes, ISchemaAttributes } from 'apps/issuance/interfaces/issuance.interfaces';
 
@@ -27,7 +28,11 @@ export function validateW3CSchemaAttributes(
 
     if (attributeValue !== undefined) {
       const actualType = typeof attributeValue;
-      if (actualType !== schemaDataType) {
+
+      // Check if the schemaDataType is 'datetime-local' and treat it as a string
+      if ((W3CSchemaDataType.DATE_TIME === schemaDataType && W3CSchemaDataType.STRING !== actualType) || 
+          (W3CSchemaDataType.DATE_TIME !== schemaDataType && actualType !== schemaDataType)) {
+
         mismatchedAttributes.push(
           `Attribute ${attributeName} has type ${actualType} but expected type ${schemaDataType}`
         );

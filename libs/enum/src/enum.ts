@@ -216,7 +216,8 @@ export enum SchemaTypeEnum {
 export enum W3CSchemaDataType {
     NUMBER = 'number',
     INTEGER = 'integer',
-    STRING = 'string'
+    STRING = 'string',
+    DATE_TIME = 'datetime-local'
   }
 
 export enum JSONSchemaType {

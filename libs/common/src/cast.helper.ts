@@ -1,4 +1,4 @@
-import { JSONSchemaType, ledgerLessDIDType, schemaRequestType, TemplateIdentifier } from '@credebl/enum/enum';
+import { DidMethod, JSONSchemaType, ledgerLessDIDType, ProofType, schemaRequestType, TemplateIdentifier } from '@credebl/enum/enum';
 import { ISchemaFields } from './interfaces/schema.interface';
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
@@ -12,7 +12,7 @@ import {
   registerDecorator
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
-import { IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
 
 interface ToNumberOptions {
   default?: number;
@@ -305,6 +305,8 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
   const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
   const credentialSubject = { };
 
+  const proofType = (orgDid?.includes(DidMethod.POLYGON)) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE;
+
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
       credentialSubject[key] = credentialData[key];
@@ -329,7 +331,7 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
           prettyVc
         },
         'options': {
-          'proofType': 'Ed25519Signature2018',
+          proofType,
           'proofPurpose': 'assertionMethod'
         }
       }
@@ -383,4 +385,23 @@ export function checkDidLedgerAndNetwork(schemaType: string, did: string): boole
   }
 
   return false;
+}
+
+export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICredentialData[] {
+  // Get current date in 'YYYY-MM-DD' format
+  // eslint-disable-next-line prefer-destructuring
+  const currentDate = new Date().toISOString().split('T')[0];
+
+  return data.map((item) => {
+    const { issuanceDate } = item.credential;
+    // eslint-disable-next-line prefer-destructuring
+    const issuanceDateOnly = issuanceDate.split('T')[0];
+
+    // If the date does not match the current date, then update it
+    if (issuanceDateOnly !== currentDate) {
+      item.credential.issuanceDate = new Date().toISOString();
+    }
+
+    return item;
+  });
 }

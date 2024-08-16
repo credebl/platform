@@ -216,7 +216,8 @@ export enum SchemaTypeEnum {
 export enum W3CSchemaDataType {
     NUMBER = 'number',
     INTEGER = 'integer',
-    STRING = 'string'
+    STRING = 'string',
+    DATE_TIME = 'datetime-local'
   }
 
 export enum JSONSchemaType {
@@ -250,4 +251,9 @@ export enum CloudWalletType {
 export enum UserRole {
     DEFAULT_USER = 'DEFAULT_USER',
     HOLDER = 'HOLDER'
+}
+
+export enum ProofType {
+    POLYGON_PROOFTYPE = 'EcdsaSecp256k1Signature2019',
+    NO_LEDGER_PROOFTYPE = 'Ed25519Signature2018'
 }

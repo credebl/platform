@@ -553,7 +553,9 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       credentialType
     } = outOfBandCredential;
 
-    await validateAndUpdateIssuanceDates(credentialOffer);
+    if (IssueCredentialType.JSONLD === credentialType) {
+      await validateAndUpdateIssuanceDates(credentialOffer);
+    }
 
     if (IssueCredentialType.INDY === credentialType) {  
       const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(

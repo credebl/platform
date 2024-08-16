@@ -780,6 +780,7 @@ export class VerificationService {
         const verifiableCredential =
           getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0]
             ?.credentialSubject;
+
         if (getProofPresentationById?.response) {
           certificate =
             getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc

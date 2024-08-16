@@ -287,7 +287,7 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: connectionData
     };
-    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId).catch(error => {
+    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto?.contextCorrelationId, orgId).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
   
     });
@@ -320,7 +320,7 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: ''
     };
-    const webhookUrl = await this.connectionService._getWebhookUrl(questionAnswerWebhookDto.contextCorrelationId).catch(error => {
+    const webhookUrl = await this.connectionService._getWebhookUrl(questionAnswerWebhookDto?.contextCorrelationId, orgId).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
   
     });

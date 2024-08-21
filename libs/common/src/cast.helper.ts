@@ -12,7 +12,7 @@ import {
   registerDecorator
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
-import { IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
 
 interface ToNumberOptions {
   default?: number;
@@ -385,4 +385,23 @@ export function checkDidLedgerAndNetwork(schemaType: string, did: string): boole
   }
 
   return false;
+}
+
+export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICredentialData[] {
+  // Get current date in 'YYYY-MM-DD' format
+  // eslint-disable-next-line prefer-destructuring
+  const currentDate = new Date().toISOString().split('T')[0];
+
+  return data.map((item) => {
+    const { issuanceDate } = item.credential;
+    // eslint-disable-next-line prefer-destructuring
+    const issuanceDateOnly = issuanceDate.split('T')[0];
+
+    // If the date does not match the current date, then update it
+    if (issuanceDateOnly !== currentDate) {
+      item.credential.issuanceDate = new Date().toISOString();
+    }
+
+    return item;
+  });
 }

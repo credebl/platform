@@ -315,6 +315,10 @@ export class VerificationController {
     ): Promise<Response> {
         proofPresentationPayload.type = 'Verification';
        
+        if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
+            proofPresentationPayload.orgId = orgId;
+          }
+          
             const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
                 this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
             });

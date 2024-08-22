@@ -724,6 +724,10 @@ async downloadBulkIssuanceCSVTemplate(
     @Res() res: Response
   ): Promise<Response> {
 issueCredentialDto.type = 'Issuance';
+
+if (id && 'default' === issueCredentialDto.contextCorrelationId) {
+  issueCredentialDto.orgId = id;
+}
      
       const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
         this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);
@@ -736,7 +740,7 @@ issueCredentialDto.type = 'Issuance';
       
       const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId, id).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-      });      
+      });            
       if (webhookUrl) {
         const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
 

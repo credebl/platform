@@ -36,14 +36,14 @@ export class WebhookRepository {
       let webhookUrlInfo;
 
       if ((undefined === tenantId || 'default' === tenantId) && orgId) {
-        webhookUrlInfo = await this.prisma.org_agents.findFirst({
+        webhookUrlInfo = await this.prisma.org_agents.findFirstOrThrow({
 
           where: {
             orgId
           }
         });
       } else if (tenantId && 'default' !== tenantId) {
-        webhookUrlInfo = await this.prisma.org_agents.findFirst({
+        webhookUrlInfo = await this.prisma.org_agents.findFirstOrThrow({
 
           where: {
             tenantId

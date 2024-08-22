@@ -383,6 +383,10 @@ export class IssuanceDto {
   @ApiProperty()
   @IsOptional()
   credentialData: object;
+
+  @ApiProperty()
+  @IsOptional()
+  orgId: string;
 }
 
 export class CredentialAttributes {

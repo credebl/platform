@@ -12,11 +12,9 @@ export class WebhookService extends BaseService {
     super('WebhookService');
   }
 
-  async getWebhookUrl(getWebhook: GetWebhookDto): Promise<IGetWebhookUrl> {  
-
-    const payload = { getWebhook };
+  async getWebhookUrl(getWebhook: GetWebhookDto): Promise<IGetWebhookUrl> { 
     // NATS call
-    return this.sendNatsMessage(this.webhookProxy, 'get-webhookurl', payload);
+    return this.sendNatsMessage(this.webhookProxy, 'get-webhookurl', getWebhook);
   }
 
   async registerWebhook(registerWebhookDto: RegisterWebhookDto): Promise<ICreateWebhookUrl> {

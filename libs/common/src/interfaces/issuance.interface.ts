@@ -106,7 +106,8 @@ export interface IIssuedCredential {
     }
     
     export interface ICredentialData {
-      emailId: string;
+      emailId?: string;
+      connectionId?: string;
       credential?: ICredential;
       options?: IOptions;
     }

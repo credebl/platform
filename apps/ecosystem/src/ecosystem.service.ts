@@ -1499,13 +1499,13 @@ export class EcosystemService {
   async submitTransactionPayload(
     endorsementTransactionPayload,
     ecosystemMemberDetails,
-    ecosystemLeadAgentDetails
+    ecosystemDetails
   ): Promise<submitTransactionPayload> {
     const parsedRequestPayload = JSON.parse(endorsementTransactionPayload.responsePayload);
     const jsonString = endorsementTransactionPayload.responsePayload.toString();
     const payload: submitTransactionPayload = {
       endorsedTransaction: jsonString,
-      endorserDid: ecosystemLeadAgentDetails.orgDid
+      endorserDid: ecosystemDetails.orgDid
     };
 
     switch (endorsementTransactionPayload.type) {
@@ -1577,7 +1577,6 @@ export class EcosystemService {
     const schemaDetails = await this.ecosystemRepository.getSchemaDetailsById(
       endorsementTransactionPayload.requestBody['schemaId']
     );
-
     if (!schemaDetails) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.schemaNotFound);
     }
@@ -1653,7 +1652,7 @@ export class EcosystemService {
 
   async submitIndyTransaction(transactionPayload: ITransactionData): Promise<object> {
     try {
-      const { endorsementId, ecosystemId, ecosystemLeadAgentEndPoint, orgId } = transactionPayload;
+      const { endorsementId, ecosystemId, orgId } = transactionPayload;
 
       const endorsementTransactionPayload = await this.ecosystemRepository.getEndorsementTransactionById(
         endorsementId,
@@ -1664,23 +1663,25 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotSigned);
       }
 
-      const ecosystemMemberDetails = await this.ecosystemRepository.getAgentDetails(orgId);
-      const ecosystemLeadAgentDetails = await this.getEcosystemLeadAgentDetails(ecosystemId);
-      const agentEndPoint = ecosystemLeadAgentEndPoint
-        ? ecosystemLeadAgentEndPoint
-        : ecosystemMemberDetails.agentEndPoint;
+      const ecosystemMemberDetails = await this.getEcosystemMemberDetails(endorsementTransactionPayload);
 
-      const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemMemberDetails?.orgAgentTypeId);
+      const ecosystemDetails = await this.ecosystemRepository.getAgentDetails(orgId);
+       
+      const agentEndPoint = ecosystemDetails.agentEndPoint;
+
+      const orgAgentType = await this.ecosystemRepository.getOrgAgentType(ecosystemDetails?.orgAgentTypeId);
+
       const url = await this.getAgentUrl(
         orgAgentType,
         agentEndPoint,
         endorsementTransactionType.SUBMIT,
-        ecosystemMemberDetails?.tenantId
+        ecosystemDetails?.tenantId
       );
+
       const payload = await this.submitTransactionPayload(
         endorsementTransactionPayload,
         ecosystemMemberDetails,
-        ecosystemLeadAgentDetails
+        ecosystemDetails
       );
 
       if (endorsementTransactionPayload.type === endorsementTransactionType.SCHEMA) {
@@ -1716,7 +1717,7 @@ export class EcosystemService {
 
         const response = this.handleSchemaSubmission(
           endorsementTransactionPayload,
-          ecosystemMemberDetails,
+          ecosystemDetails,
           submitTransactionRequest
         );
 

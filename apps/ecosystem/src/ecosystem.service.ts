@@ -1663,7 +1663,7 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.transactionNotSigned);
       }
 
-      const ecosystemMemberDetails = await this.ecosystemRepository.getAgentDetails(orgId);
+      const ecosystemMemberDetails = await this.getEcosystemMemberDetails(endorsementTransactionPayload);
       const ecosystemLeadAgentDetails = await this.getEcosystemLeadAgentDetails(ecosystemId);
       const agentEndPoint = ecosystemLeadAgentEndPoint
         ? ecosystemLeadAgentEndPoint

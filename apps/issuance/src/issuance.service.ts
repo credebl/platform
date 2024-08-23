@@ -124,6 +124,11 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
+
+      if (payload.credentialType === IssueCredentialType.JSONLD) {
+        await validateAndUpdateIssuanceDates(credentialData);
+      }
+      
       const issuancePromises = credentialData.map(async (credentials) => {
         const { connectionId, attributes, credential, options } = credentials;
         let issueData;

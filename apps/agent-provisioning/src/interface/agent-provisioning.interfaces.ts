@@ -12,16 +12,22 @@ export interface IWalletProvision {
     walletStoragePort: string;
     walletStorageUser: string;
     walletStoragePassword: string;
-    internalIp: string;
+    internalIp?: string;
     containerName: string;
-    agentType: AgentType;
-    orgName: string;
+    agentType?: AgentType;
+    orgName?: string;
     indyLedger: string;
     protocol: string;
     credoImage: string;
     tenant: boolean;
     inboundEndpoint: string;
     apiKey?:string;
+    baseWalletApiKey?: string, 
+    tailsFileServer?: string, 
+    acayImage?: string, 
+    tenantJwtSecret?: string, 
+    walletType?: string, 
+    walletStorageType?: string
 }
 
 export interface IAgentSpinUp {

@@ -541,4 +541,18 @@ export class AgentServiceRepository {
         }
       }
 
+      async getAcapyAgentType(): Promise<string> {
+        try {
+            const { id } = await this.prisma.agents_type.findFirstOrThrow({
+                where: {
+                    agent: AgentType.ACAPY
+                }
+            });
+            return id;
+        } catch (error) {
+            this.logger.error(`[getAcapyAgentType] - get org agent type id: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
 }

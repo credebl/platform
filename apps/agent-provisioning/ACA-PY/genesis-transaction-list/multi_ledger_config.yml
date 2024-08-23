@@ -1,0 +1,16 @@
+- id: indicioDemonet
+  is_production: false
+  is_write: true
+  genesis_url: "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_demonet_genesis"
+- id: bcovrinTestnet
+  is_production: false
+  is_write: true
+  genesis_url: "http://test.bcovrin.vonx.io/genesis"
+- id: indicioTestnet
+  is_production: false
+  is_write: true
+  genesis_url: "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_testnet_genesis"
+- id: indicioMainnet
+  is_production: true
+  is_write: true
+  genesis_url: "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_mainnet_genesis"

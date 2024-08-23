@@ -30,7 +30,6 @@ export enum CommonConstants {
   URL_CONN_INVITATION = '/url',
 
   // WALLET SERVICES
-  URL_WALLET_CREATE_DID = '/wallet/did/create',
   URL_WALLET_LIST_DID = '/wallet/did',
   URL_WALLET_FETCH_CURR_PUB_DID = '/wallet/did/public',
   URL_WALLET_ASSIGN_CURR_DID_PUB = '/wallet/did/public',
@@ -120,6 +119,10 @@ export enum CommonConstants {
   URL_SHAGENT_QUESTION_ANSWER_RECORD = '/multi-tenancy/question-answer/#',
   URL_SHAGENT_DELETE_SUB_WALLET = '/multi-tenancy/#',
   URL_SHAGENT_ACCEPT_PROOF_REQUEST = '/multi-tenancy/proofs/#/accept-request/@',
+
+  // ACA-PY AGENT
+  URL_ACAPY_CREATE_DID = '/wallet/did/create',
+  URL_ACAPY_MULTI_TENANT_CREATE_WALLET = '/multitenancy/wallet',
 
   
   // PROOF SERVICES

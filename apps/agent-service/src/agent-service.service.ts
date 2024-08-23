@@ -75,6 +75,7 @@ import { InvitationMessage } from '@credebl/common/interfaces/agent-service.inte
 import * as CryptoJS from 'crypto-js';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { PrismaService } from '@credebl/prisma-service';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 @WebSocketGateway()
@@ -215,17 +216,30 @@ export class AgentServiceService {
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
       agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId);
 
-      // AFJ agent spin-up
-      this._agentSpinup(
-        walletProvisionPayload,
-        agentSpinupDto,
-        platformConfig?.sgApiKey,
-        orgData,
-        user,
-        socket,
-        agentSpinupDto.ledgerId,
-        agentProcess
-      );
+      if (agentSpinupDto.agentType === AgentType.AFJ) {
+        // AFJ agent spin-up
+        this._afjAgentSpinup(
+          walletProvisionPayload,
+          agentSpinupDto,
+          platformConfig?.sgApiKey,
+          orgData,
+          user,
+          socket,
+          agentSpinupDto.ledgerId,
+          agentProcess
+        );
+      } else if (agentSpinupDto.agentType === AgentType.ACAPY) {
+        this._acapyAgentSpinup(
+          walletProvisionPayload,
+          agentSpinupDto,
+          platformConfig?.sgApiKey,
+          orgData,
+          user,
+          socket,
+          agentSpinupDto.ledgerId,
+          agentProcess
+        );
+      }
     } catch (error) {
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
       throw error;
@@ -373,6 +387,23 @@ export class AgentServiceService {
     }
   }
 
+  async generateSecretKey(length: number = 32): Promise<string> {
+    const buffer: Buffer = await new Promise((resolve, reject) => {
+      randomBytes(length, (error, buf) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(buf);
+        }
+      });
+    });
+
+    // Convert the buffer to a hexadecimal string
+    const secretKey: string = buffer.toString('hex');
+
+    return secretKey;
+  }
+
   async prepareWalletProvisionPayload(
     agentSpinupDto: IAgentSpinupDto,
     externalIp: string,
@@ -387,28 +418,63 @@ export class AgentServiceService {
     }));
 
     const escapedJsonString = JSON.stringify(ledgerArray).replace(/"/g, '\\"');
+    let walletProvisionPayload: IWalletProvision;
 
-    const walletProvisionPayload: IWalletProvision = {
-      orgId: orgData?.id,
-      externalIp,
-      walletName: agentSpinupDto?.walletName,
-      walletPassword: agentSpinupDto?.walletPassword,
-      seed: agentSpinupDto?.seed,
-      webhookEndpoint: apiEndpoint,
-      walletStorageHost: process.env.WALLET_STORAGE_HOST || '',
-      walletStoragePort: process.env.WALLET_STORAGE_PORT || '',
-      walletStorageUser: process.env.WALLET_STORAGE_USER || '',
-      walletStoragePassword: process.env.WALLET_STORAGE_PASSWORD || '',
-      inboundEndpoint,
-      containerName: orgData.name.split(' ').join('_'),
-      agentType: AgentType.AFJ,
-      orgName: orgData?.name,
-      indyLedger: escapedJsonString,
-      credoImage: process.env.AFJ_VERSION || '',
-      protocol: process.env.AGENT_PROTOCOL || '',
-      tenant: agentSpinupDto.tenant || false,
-      apiKey: agentSpinupDto.apiKey
-    };
+    if (agentSpinupDto.agentType === AgentType.AFJ) {
+      walletProvisionPayload = {
+        orgId: orgData?.id,
+        externalIp,
+        walletName: agentSpinupDto?.walletName,
+        walletPassword: agentSpinupDto?.walletPassword,
+        seed: agentSpinupDto?.seed,
+        webhookEndpoint: apiEndpoint,
+        walletStorageHost: process.env.WALLET_STORAGE_HOST || '',
+        walletStoragePort: process.env.WALLET_STORAGE_PORT || '',
+        walletStorageUser: process.env.WALLET_STORAGE_USER || '',
+        walletStoragePassword: process.env.WALLET_STORAGE_PASSWORD || '',
+        inboundEndpoint,
+        containerName: orgData.name.split(' ').join('_'),
+        agentType: AgentType.AFJ,
+        orgName: orgData?.name,
+        indyLedger: escapedJsonString,
+        credoImage: process.env.AFJ_VERSION || '',
+        protocol: process.env.AGENT_PROTOCOL || '',
+        tenant: agentSpinupDto.tenant || false,
+        apiKey: agentSpinupDto.apiKey
+      };
+    } else if (agentSpinupDto.agentType === AgentType.ACAPY) {
+      let ledgerData;
+      if (agentSpinupDto.method !== DidMethod.KEY && agentSpinupDto.method !== DidMethod.WEB) {
+        ledgerData = (await this.agentServiceRepository.getLedgerByNameSpace(agentSpinupDto.network)).poolConfig;
+      } else if (agentSpinupDto.ledgerName) {
+        ledgerData = 'ALL';
+      }
+
+      walletProvisionPayload = {
+        orgId: orgData?.id,
+        externalIp,
+        indyLedger: ledgerData ?? 'NA',
+        apiKey: await this.generateSecretKey(),
+        walletName: agentSpinupDto?.walletName,
+        walletPassword: agentSpinupDto?.walletPassword,
+        seed: agentSpinupDto?.seed,
+        webhookEndpoint: apiEndpoint,
+        walletStorageHost: process.env.WALLET_STORAGE_HOST || '',
+        walletStoragePort: process.env.WALLET_STORAGE_PORT || '',
+        walletStorageUser: process.env.WALLET_STORAGE_USER || '',
+        walletStoragePassword: process.env.WALLET_STORAGE_PASSWORD || '',
+        tailsFileServer: agentSpinupDto.tailsFileServer ?? 'false',
+        containerName: orgData.name.split(' ').join('_'),
+        acayImage: process.env.ACA_PY_IMAGE,
+        protocol: process.env.AGENT_PROTOCOL || '',
+        tenantJwtSecret: await this.generateSecretKey(),
+        tenant: agentSpinupDto.tenant || false,
+        walletType: process.env.WALLET_TYPE,
+        walletStorageType: process.env.WALLET_STORAGE_TYPE,
+        agentType: AgentType.ACAPY,
+        orgName: orgData?.name
+      };
+    }
     return walletProvisionPayload;
   }
 
@@ -461,7 +527,7 @@ export class AgentServiceService {
     }
   }
 
-  async _agentSpinup(
+  async _afjAgentSpinup(
     walletProvisionPayload: IWalletProvision,
     agentSpinupDto: IAgentSpinupDto,
     orgApiKey: string,
@@ -578,6 +644,172 @@ export class AgentServiceService {
         await this.agentServiceRepository.removeOrgAgent(agentProcess?.id);
       }
       this.logger.error(`[_agentSpinup] - Error in Agent spin up : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async _acapyAgentSpinup(
+    walletProvisionPayload: IWalletProvision,
+    agentSpinupDto: IAgentSpinupDto,
+    orgApiKey: string,
+    orgData: organisation,
+    user: IUserRequestInterface,
+    socket: Socket,
+    ledgerId: string[],
+    agentProcess: ICreateOrgAgent
+  ): Promise<void> {
+    try {
+      const walletProvision = await this._walletProvision(walletProvisionPayload);
+      if (!walletProvision?.response) {
+        this.logger.error(`Agent not able to spin-up`);
+        throw new BadRequestException(ResponseMessages.agent.error.notAbleToSpinup, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.badRequest
+        });
+      }
+
+      const agentDetails = walletProvision.response;
+      const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.agentEndPoint}`;
+      const socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
+
+      if (agentEndPoint && agentSpinupDto.clientSocketId) {
+        socket.emit('agent-spinup-process-completed', { clientId: agentSpinupDto.clientSocketId });
+        socket.emit('did-publish-process-initiated', { clientId: agentSpinupDto.clientSocketId });
+        socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
+      }
+
+      const agentPayload: IStoreOrgAgentDetails = {
+        agentEndPoint,
+        seed: agentSpinupDto.seed,
+        apiKey: walletProvisionPayload?.apiKey,
+        agentsTypeId: agentSpinupDto?.agentType,
+        orgId: orgData.id,
+        walletName: agentSpinupDto.walletName,
+        walletPassword: agentSpinupDto.walletPassword,
+        clientSocketId: agentSpinupDto.clientSocketId,
+        method: agentSpinupDto.method,
+        role: agentSpinupDto.role,
+        network: agentSpinupDto.network,
+        keyType: agentSpinupDto.keyType,
+        ledgerId: ledgerId ?? null,
+        did: agentSpinupDto.did,
+        id: agentProcess?.id,
+        tenant: agentSpinupDto.tenant
+      };
+
+      const storeAgentDetails = await this._storeAcapyAgentDetails(agentPayload);
+      if (storeAgentDetails) {
+        if (agentSpinupDto.clientSocketId) {
+          socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
+        }
+
+        const getOrganization = await this.agentServiceRepository.getOrgDetails(orgData?.id);
+
+        await this._createConnectionInvitation(orgData?.id, user, getOrganization.name);
+        if (agentSpinupDto.clientSocketId) {
+          socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
+        }
+      } else {
+        this.logger.error(`Agent not able to spin-up`);
+        throw new BadRequestException(ResponseMessages.agent.error.notAbleToSpinup, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.badRequest
+        });
+      }
+    } catch (error) {
+      if (agentSpinupDto.clientSocketId) {
+        socket.emit('error-in-wallet-creation-process', { clientId: agentSpinupDto.clientSocketId, error });
+      }
+
+      if (agentProcess && agentProcess?.id) {
+        /**
+         * If getting error remove organization agent
+         */
+        await this.agentServiceRepository.removeOrgAgent(agentProcess?.id);
+      }
+      this.logger.error(`[_acapyAgentSpinup] - Error in Agent spin up : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async _storeAcapyAgentDetails(payload: IStoreOrgAgentDetails): Promise<IStoreAgent> {
+    const retryOptions = {
+      retries: 10
+    };
+    try {
+
+      const { agentEndPoint, method, keyType } = payload;
+      let didDetails;
+      let token;
+      if (payload.tenant) {
+        const createWallet = await retry(
+          async () => {
+            const response = await this.commonService.httpPost(
+              `${agentEndPoint}${CommonConstants.URL_ACAPY_MULTI_TENANT_CREATE_WALLET}`,
+              {
+                key_management_mode: 'managed',
+                label: payload.walletName,
+                wallet_dispatch_type: 'default',
+                wallet_key: payload.walletPassword,
+                wallet_name: `${payload.walletName}-${payload.id}`,
+                wallet_type: process.env.WALLET_TYPE
+              },
+              { headers: { 'x-api-key': payload.apiKey } }
+            );
+            
+            return response;
+          },
+          retryOptions
+        );
+
+        token = createWallet?.['token'];
+        didDetails = await retry(
+          async () => (
+            await this.commonService.httpPost(
+              `${agentEndPoint}${CommonConstants.URL_ACAPY_CREATE_DID}`,
+              { method: 'sov', options: { key_type: keyType }, seed: payload.seed },
+              { headers: { 'x-api-key': payload.apiKey, authorization: `Bearer ${token}` } }
+            ),
+            retryOptions
+          )
+        );
+      } else {
+        didDetails = await retry(
+          async () => (
+            await this.commonService.httpPost(
+              `${agentEndPoint}${CommonConstants.URL_ACAPY_CREATE_DID}`,
+              { method, options: { key_type: keyType }, seed: payload.seed },
+              { headers: { 'x-api-key': payload.apiKey } }
+            ),
+            retryOptions
+          )
+        );
+      }
+
+      const getAgentTypeId = await this.agentServiceRepository.getAcapyAgentType();
+      const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED);
+
+      const encryptedToken = await this.tokenEncryption(token);
+
+      const storeOrgAgentData = {
+        did: didDetails['result']?.did,
+        verkey: didDetails['result']?.verkey,
+        isDidPublic: true,
+        agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
+        walletName: payload.walletName,
+        agentsTypeId: getAgentTypeId,
+        orgId: payload.orgId,
+        agentEndPoint: payload.agentEndPoint,
+        agentId: payload.agentId,
+        orgAgentTypeId,
+        ledgerId: payload.ledgerId,
+        id: payload.id,
+        apiKey: encryptedToken
+      };
+
+      const storeAgentDid = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
+      return storeAgentDid;
+    } catch (error) {
+      await this._handleError(payload, error);
+      throw error;
     }
   }
 
@@ -803,23 +1035,23 @@ export class AgentServiceService {
     let ledgerIdData = [];
     try {
       let ledger;
-        const { network } = payload;
-        if (network) {
-          ledger = await ledgerName(network);
-        } else {
-          ledger = Ledgers.Not_Applicable;
-        }
+      const { network } = payload;
+      if (network) {
+        ledger = await ledgerName(network);
+      } else {
+        ledger = Ledgers.Not_Applicable;
+      }
 
-        const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
-        const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
-        if (!isLedgerExist) {
-          throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
-            cause: new Error(),
-            description: ResponseMessages.errorMessages.notFound
-          });
-        }
-        ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
-  
+      const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
+      const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
+      if (!isLedgerExist) {
+        throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
+      ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
+
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
 
       // Create and stored agent details
@@ -1656,81 +1888,83 @@ export class AgentServiceService {
 
   async deleteWallet(orgId: string, user: user): Promise<object> {
     try {
-        // Retrieve the API key and agent information
-        const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
-            this.getOrgAgentApiKey(orgId),
-            this.agentServiceRepository.getAgentApiKey(orgId)
-        ]);
+      // Retrieve the API key and agent information
+      const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
+        this.getOrgAgentApiKey(orgId),
+        this.agentServiceRepository.getAgentApiKey(orgId)
+      ]);
 
-        if (orgAgentResult.status === PromiseResult.FULFILLED && !orgAgentResult.value) {
-          throw new NotFoundException(ResponseMessages.agent.error.walletDoesNotExists);
+      if (orgAgentResult.status === PromiseResult.FULFILLED && !orgAgentResult.value) {
+        throw new NotFoundException(ResponseMessages.agent.error.walletDoesNotExists);
       }
 
-        if (getApiKeyResult.status === PromiseResult.REJECTED) {
-            throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
-        }
+      if (getApiKeyResult.status === PromiseResult.REJECTED) {
+        throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
+      }
 
-        if (orgAgentResult.status === PromiseResult.REJECTED) {
-            throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
-        }
+      if (orgAgentResult.status === PromiseResult.REJECTED) {
+        throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
+      }
 
-        const getApiKey = getApiKeyResult?.value;
-        const orgAgent = orgAgentResult?.value;
+      const getApiKey = getApiKeyResult?.value;
+      const orgAgent = orgAgentResult?.value;
 
-        const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
+      const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
 
-        if (!orgAgentTypeResult) {
-            throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
-        }
+      if (!orgAgentTypeResult) {
+        throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
+      }
 
-        // Determine the URL based on the agent type
-        const url =
-            orgAgentTypeResult.agent === OrgAgentType.SHARED
-                ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
-                : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
+      // Determine the URL based on the agent type
+      const url =
+        orgAgentTypeResult.agent === OrgAgentType.SHARED
+          ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
+          : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
 
-        // Perform the deletion in a transaction
-        return await this.prisma.$transaction(async (prisma) => {
-            // Delete org agent and related records
-            const { orgDid, agentInvitation, deleteOrgAgent } = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
+      // Perform the deletion in a transaction
+      return await this.prisma.$transaction(async (prisma) => {
+        // Delete org agent and related records
+        const { orgDid, agentInvitation, deleteOrgAgent } = await this.agentServiceRepository.deleteOrgAgentByOrg(
+          orgId
+        );
 
-            // Make the HTTP DELETE request
-            const deleteWallet = await this.commonService.httpDelete(url, {
-                headers: { authorization: getApiKey }
-            });
-
-            if (deleteWallet.status !== HttpStatus.NO_CONTENT) {
-                throw new InternalServerErrorException(ResponseMessages.agent.error.walletNotDeleted);
-            }
-
-            const deletions = [
-                { records: orgDid.count, tableName: 'org_dids' },
-                { records: agentInvitation.count, tableName: 'agent_invitations' },
-                { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
-            ];
-
-            const logDeletionActivity = async (records, tableName): Promise<void> => {
-                if (records) {
-                    const txnMetadata = {
-                        deletedRecordsCount: records,
-                        deletedRecordInTable: tableName
-                    };
-                    const recordType = RecordType.WALLET;
-                    await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
-                }
-            };
-
-            for (const { records, tableName } of deletions) {
-                await logDeletionActivity(records, tableName);
-            }
-
-            return deleteOrgAgent;
+        // Make the HTTP DELETE request
+        const deleteWallet = await this.commonService.httpDelete(url, {
+          headers: { authorization: getApiKey }
         });
+
+        if (deleteWallet.status !== HttpStatus.NO_CONTENT) {
+          throw new InternalServerErrorException(ResponseMessages.agent.error.walletNotDeleted);
+        }
+
+        const deletions = [
+          { records: orgDid.count, tableName: 'org_dids' },
+          { records: agentInvitation.count, tableName: 'agent_invitations' },
+          { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
+        ];
+
+        const logDeletionActivity = async (records, tableName): Promise<void> => {
+          if (records) {
+            const txnMetadata = {
+              deletedRecordsCount: records,
+              deletedRecordInTable: tableName
+            };
+            const recordType = RecordType.WALLET;
+            await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
+          }
+        };
+
+        for (const { records, tableName } of deletions) {
+          await logDeletionActivity(records, tableName);
+        }
+
+        return deleteOrgAgent;
+      });
     } catch (error) {
-        this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
-        throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
-}
+  }
 
   async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, orgId: string): Promise<string> {
     try {

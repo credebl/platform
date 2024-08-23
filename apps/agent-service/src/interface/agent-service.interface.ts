@@ -29,6 +29,7 @@ export interface IAgentSpinupDto {
   apiKey?: string;
   orgAgentType?: string;
   userId?: string;
+  tailsFileServer?: string
 }
 
 export interface IAgentConfigure {
@@ -156,11 +157,16 @@ export interface IWalletProvision {
   agentType: string;
   orgName: string;
   indyLedger: string;
-  credoImage: string;
+  credoImage?: string;
   protocol: string;
   tenant: boolean;
-  inboundEndpoint: string;
+  inboundEndpoint?: string;
   apiKey?: string;
+  tailsFileServer?: string
+  acayImage?: string
+  tenantJwtSecret?: string
+  walletType?: string
+  walletStorageType?: string
 }
 
 export interface IPlatformConfigDto {
@@ -198,6 +204,9 @@ export interface IStoreOrgAgentDetails {
   ledgerId?: string[];
   agentType?: string;
   userId?: string;
+  secretKey?: string;
+  tenant?: boolean;
+  walletPassword?: string;
 }
 
 export interface IStoreDidDetails {

@@ -37,6 +37,11 @@ export class AgentSpinupDto extends CreateDidDto {
   @IsOptional()
   @IsBoolean()
   tenant?: boolean;
+
+  @ApiPropertyOptional({ example: 'ACAPY' })
+  @IsOptional()
+  @IsString()
+  agentType?: string;
   
   orgId: string;
 }

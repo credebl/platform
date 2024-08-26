@@ -26,6 +26,7 @@ import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnect
 import { IQuestionPayload } from './interfaces/question-answer.interfaces';
 import { RecordType, user } from '@prisma/client';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { agent_invitations } from '@prisma/client';
 @Injectable()
 export class ConnectionService {
   constructor(
@@ -659,7 +660,7 @@ export class ConnectionService {
         routing: routing || undefined,
         messages: messages || undefined,
         recipientKey: recipientKey || undefined,
-        invitationDid: invitationDid || undefined
+        invitationDid: connectionInvitationDid || undefined
       };
 
       const createConnectionInvitationFlag = 'connection-invitation';

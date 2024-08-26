@@ -202,6 +202,10 @@ export class ConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     type: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    orgId: string;
 }
 
 class ReceiveInvitationCommonDto {

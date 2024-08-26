@@ -127,6 +127,11 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
+
+      if (payload.credentialType === IssueCredentialType.JSONLD) {
+        await validateAndUpdateIssuanceDates(credentialData);
+      }
+      
       const issuancePromises = credentialData.map(async (credentials) => {
         const { connectionId, attributes, credential, options } = credentials;
         let issueData;
@@ -555,7 +560,9 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       credentialType
     } = outOfBandCredential;
 
-    await validateAndUpdateIssuanceDates(credentialOffer);
+    if (IssueCredentialType.JSONLD === credentialType) {
+      await validateAndUpdateIssuanceDates(credentialOffer);
+    }
 
     if (IssueCredentialType.INDY === credentialType) {  
       const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(

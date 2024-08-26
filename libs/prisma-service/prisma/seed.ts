@@ -374,6 +374,56 @@ const createUserRole = async (): Promise<void> => {
     }
 };
 
+const migrateOrgAgentDids = async (): Promise<void> => {
+    try {
+        const orgAgents = await prisma.org_agents.findMany({
+            where: {
+                walletName: {
+                    not: 'platform-admin'
+                }
+            }
+        });
+
+        const orgDids = orgAgents.map((agent) => agent.orgDid);
+
+        const existingDids = await prisma.org_dids.findMany({
+            where: {
+                did: {
+                    in: orgDids
+                }
+            }
+        });
+
+        // If there are org DIDs that do not exist in org_dids table
+        if (orgDids.length !== existingDids.length) {
+            const newOrgAgents = orgAgents.filter(
+                (agent) => !existingDids.some((did) => did.did === agent.orgDid)
+            );
+
+            const newDidRecords = newOrgAgents.map((agent) => ({
+                orgId: agent.orgId,
+                did: agent.orgDid,
+                didDocument: agent.didDocument,
+                isPrimaryDid: true,
+                createdBy: agent.createdBy,
+                lastChangedBy: agent.lastChangedBy,
+                orgAgentId: agent.id
+            }));
+
+            const didInsertResult = await prisma.org_dids.createMany({
+                data: newDidRecords
+            });
+
+            logger.log(didInsertResult);
+        } else {
+            logger.log('No new DIDs to migrate in migrateOrgAgentDids');
+        }
+    } catch (error) {
+        logger.error('An error occurred during migrateOrgAgentDids:', error);
+    }
+};
+
+
 async function main(): Promise<void> {
 
     await createPlatformConfig();
@@ -388,6 +438,7 @@ async function main(): Promise<void> {
     await createEcosystemConfig();
     await createLedgerConfig();
     await createUserRole();
+    await migrateOrgAgentDids();
 }
 
 

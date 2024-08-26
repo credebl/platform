@@ -99,7 +99,10 @@ export class ClientRegistrationService {
         impersonate: true,
         manage: true
       },
-      realmRoles: ['mb-user']
+      realmRoles: ['mb-user'],
+      attributes: {
+        ...(user.isHolder ? { userRole: `${CommonConstants.USER_HOLDER_ROLE}` } : {})
+      }
     };
 
     const registerUserResponse = await this.commonService.httpPost(
@@ -181,8 +184,11 @@ export class ClientRegistrationService {
         throw new BadRequestException(`Client ID and client secret are missing`);
       } 
 
-      payload.client_id = clientId;
-      payload.client_secret = clientSecret;
+      const decryptClientId = await this.commonService.decryptPassword(clientId);
+      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
+
+      payload.client_id = decryptClientId;
+      payload.client_secret = decryptClientSecret;
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
     } catch (error) {
@@ -753,8 +759,11 @@ export class ClientRegistrationService {
         throw new BadRequestException(`Client ID and client secret are missing`);
       } 
       
-      payload.client_id = clientId;
-      payload.client_secret = clientSecret;
+      const decryptClientId = await this.commonService.decryptPassword(clientId);
+      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
+
+      payload.client_id = decryptClientId;
+      payload.client_secret = decryptClientSecret;
       payload.username = email;
       payload.password = password;
 
@@ -798,8 +807,11 @@ export class ClientRegistrationService {
         throw new BadRequestException(`Client ID and client secret are missing`);
       } 
 
-      payload.client_id = clientId;
-      payload.client_secret = clientSecret;
+      const decryptClientId = await this.commonService.decryptPassword(clientId);
+      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
+
+      payload.client_id = decryptClientId;
+      payload.client_secret = decryptClientSecret;
         
       payload.grant_type = 'refresh_token';
       payload.refresh_token = refreshToken;
@@ -888,8 +900,9 @@ export class ClientRegistrationService {
 
     const realmName = process.env.KEYCLOAK_REALM;
 
+    const decryptClientId = await this.commonService.decryptPassword(clientId);
     const redirectUrls = await this.commonService.httpGet(
-      await this.keycloakUrlService.GetClientURL(realmName, clientId),
+      await this.keycloakUrlService.GetClientURL(realmName, decryptClientId),
       this.getAuthHeader(token)
     );
     
@@ -900,5 +913,26 @@ export class ClientRegistrationService {
     );
 
     return redirectUrls;  
+  }
+
+  async getUserInfoByUserId(
+    userId: string,
+    token: string
+  ) {
+
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const userInfo = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetUserInfoURL(realmName, userId),
+      this.getAuthHeader(token)
+    );
+    
+    this.logger.debug(
+      `userInfo ${JSON.stringify(
+        userInfo
+      )}`
+    );
+
+    return userInfo;  
   }
 }

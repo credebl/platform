@@ -7,11 +7,13 @@ import { IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/v
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { SortValue } from '@credebl/enum/enum';
+import { CommonService } from '@credebl/common';
 
 @Injectable()
 export class VerificationRepository {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly commonService: CommonService,
     private readonly logger: Logger
   ) {}
 
@@ -60,6 +62,7 @@ export class VerificationRepository {
     proofRequestsSearchCriteria: IProofRequestSearchCriteria
   ): Promise<IProofPresentationsListCount> {
     try {
+
       const proofRequestsList = await this.prisma.presentations.findMany({
         where: {
           orgId,
@@ -76,7 +79,9 @@ export class VerificationRepository {
           state: true,
           connectionId: true,
           id: true,
-          presentationId: true
+          presentationId: true,
+          schemaId: true,
+          emailId: true
         },
         orderBy: {
           [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc'
@@ -119,8 +124,25 @@ export class VerificationRepository {
 
   async storeProofPresentation(payload: IProofPresentation): Promise<presentations> {
     try {
+      let encryptEmailId;
       let organisationId: string;
+      let schemaId;
+
       const { proofPresentationPayload, orgId } = payload;
+
+      //For Educreds
+      if (proofPresentationPayload?.['proofData']?.presentation?.presentationExchange?.verifiableCredential) {
+
+        const emailId = proofPresentationPayload?.['proofData']?.presentation?.presentationExchange?.verifiableCredential[0].credentialSubject?.email; 
+        encryptEmailId = await this.commonService.dataEncryption(emailId);
+      } else {
+        encryptEmailId = 'Not Available';
+      }
+     
+      //For Educreds 
+      if (proofPresentationPayload?.['proofData']?.request?.presentationExchange) {
+        schemaId = proofPresentationPayload?.['proofData']?.request?.presentationExchange?.presentation_definition?.input_descriptors[0].schema[0].uri;
+      }
 
       if ('default' !== proofPresentationPayload?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(proofPresentationPayload?.contextCorrelationId);
@@ -128,7 +150,7 @@ export class VerificationRepository {
       } else {
         organisationId = orgId;
       }
-
+      
       const proofPresentationsDetails = await this.prisma.presentations.upsert({
         where: {
           threadId: proofPresentationPayload?.threadId
@@ -137,7 +159,9 @@ export class VerificationRepository {
           state: proofPresentationPayload.state,
           threadId: proofPresentationPayload.threadId,
           isVerified: proofPresentationPayload.isVerified,
-          lastChangedBy: organisationId
+          lastChangedBy: organisationId,
+          connectionId: proofPresentationPayload.connectionId,
+          emailId: encryptEmailId
         },
         create: {
           connectionId: proofPresentationPayload.connectionId,
@@ -147,7 +171,9 @@ export class VerificationRepository {
           threadId: proofPresentationPayload.threadId,
           isVerified: proofPresentationPayload.isVerified,
           presentationId: proofPresentationPayload.id,
-          orgId: organisationId
+          orgId: organisationId,
+          schemaId,
+          emailId: encryptEmailId
         }
       });
       return proofPresentationsDetails;

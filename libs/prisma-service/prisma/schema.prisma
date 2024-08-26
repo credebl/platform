@@ -9,29 +9,31 @@ datasource db {
 }
 
 model user {
-  id                  String            @id(map: "PK_cace4a159ff9f2512dd42373760") @default(uuid()) @db.Uuid
-  createDateTime      DateTime          @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime DateTime          @default(now()) @db.Timestamptz(6)
-  firstName           String?           @db.VarChar(500)
-  lastName            String?           @db.VarChar(500)
-  email               String?           @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar(500)
-  username            String?           @db.VarChar(500)
-  verificationCode    String?           @db.VarChar(500)
-  isEmailVerified     Boolean           @default(false)
-  supabaseUserId      String?           @db.VarChar(500)
-  keycloakUserId      String?           @db.VarChar(500)
-  clientId            String?           @db.VarChar(500)
-  clientSecret        String?           @db.VarChar(500)
-  profileImg          String?
-  fidoUserId          String?           @db.VarChar(1000)
-  isFidoVerified      Boolean           @default(false)
-  publicProfile       Boolean           @default(false)
-  password            String?           @db.VarChar
-  orgInvitations      org_invitations[]
-  user_activities     user_activity[]
-  userDevices         user_devices[]
-  userOrgRoles        user_org_roles[]
-  token               token[]
+  id                     String                   @id(map: "PK_cace4a159ff9f2512dd42373760") @default(uuid()) @db.Uuid
+  createDateTime         DateTime                 @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime    DateTime                 @default(now()) @db.Timestamptz(6)
+  firstName              String?                  @db.VarChar(500)
+  lastName               String?                  @db.VarChar(500)
+  email                  String?                  @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar(500)
+  username               String?                  @db.VarChar(500)
+  verificationCode       String?                  @db.VarChar(500)
+  isEmailVerified        Boolean                  @default(false)
+  supabaseUserId         String?                  @db.VarChar(500)
+  keycloakUserId         String?                  @db.VarChar(500)
+  clientId               String?                  @db.VarChar(500)
+  clientSecret           String?                  @db.VarChar(500)
+  profileImg             String?
+  fidoUserId             String?                  @db.VarChar(1000)
+  isFidoVerified         Boolean                  @default(false)
+  publicProfile          Boolean                  @default(false)
+  password               String?                  @db.VarChar
+  orgInvitations         org_invitations[]
+  user_activities        user_activity[]
+  userDevices            user_devices[]
+  userOrgRoles           user_org_roles[]
+  token                  token[]
+  user_role_mapping      user_role_mapping[]
+  cloud_wallet_user_info cloud_wallet_user_info[]
 }
 
 model token {
@@ -106,12 +108,12 @@ model organisation {
   clientId              String?                 @db.VarChar(500)
   clientSecret          String?                 @db.VarChar(500)
   registrationNumber    String?                 @db.VarChar(100)
-  countryId             Int?                    
-  countries             countries?              @relation(fields:[countryId],references:[id])
-  stateId               Int?                    
-  states                states?                 @relation(fields:[stateId],references:[id])
-  cityId                Int?                    
-  cities                cities?                 @relation(fields:[cityId],references:[id])
+  countryId             Int?
+  countries             countries?              @relation(fields: [countryId], references: [id])
+  stateId               Int?
+  states                states?                 @relation(fields: [stateId], references: [id])
+  cityId                Int?
+  cities                cities?                 @relation(fields: [cityId], references: [id])
   connections           connections[]
   credentials           credentials[]
   org_agents            org_agents[]
@@ -125,7 +127,6 @@ model organisation {
   file_upload           file_upload[]
   ecosystemOrgs         ecosystem_orgs[]
 }
-
 
 model org_invitations {
   id                  String       @id @default(uuid()) @db.Uuid
@@ -361,6 +362,8 @@ model presentations {
   threadId            String        @unique
   isVerified          Boolean?
   presentationId      String?
+  schemaId            String?       @db.VarChar
+  emailId             String?
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
 }
@@ -549,37 +552,81 @@ enum RecordType {
 }
 
 model countries {
-  id              Int       @id @default(autoincrement())          @map("id")  
-  name            String                                           @map("name")
-  states          states[]                                         
-  cities          cities[]  
-  organisation    organisation[]                               
+  id           Int            @id @default(autoincrement()) @map("id")
+  name         String         @map("name")
+  states       states[]
+  cities       cities[]
+  organisation organisation[]
+
   @@map("countries")
 }
 
 model states {
-  id              Int       @id @default(autoincrement())              @map("id")           
-  name            String                                               @map("name")
-  countryId       Int                                                  @map("country_id")
-  countryCode     String                                               @map("country_code")
-  countries       countries @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  cities          cities[]
-  organisation    organisation[]                               
+  id           Int            @id @default(autoincrement()) @map("id")
+  name         String         @map("name")
+  countryId    Int            @map("country_id")
+  countryCode  String         @map("country_code")
+  countries    countries      @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  cities       cities[]
+  organisation organisation[]
 
   @@map("states")
 }
+
 model cities {
-  id          Int       @id @default(autoincrement())           @map("id")
-  name        String                                            @map("name")
-  stateId     Int                                               @map("state_id")
-  stateCode   String                                            @map("state_code")
-  countryId   Int                                               @map("country_id")
-  countryCode String                                            @map("country_code")
-  state       states    @relation(fields: [stateId], references: [id], onDelete: Cascade)
-  country     countries @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  organisation  organisation[]                               
+  id           Int            @id @default(autoincrement()) @map("id")
+  name         String         @map("name")
+  stateId      Int            @map("state_id")
+  stateCode    String         @map("state_code")
+  countryId    Int            @map("country_id")
+  countryCode  String         @map("country_code")
+  state        states         @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  country      countries      @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  organisation organisation[]
 
   @@index([stateId], name: "cities_stateId_idx")
   @@index([countryId], name: "cities_countryId_idx")
   @@map("cities")
+}
+
+model user_role {
+  id                String              @id @default(uuid()) @db.Uuid
+  role              UserRole
+  user_role_mapping user_role_mapping[]
+}
+
+enum UserRole {
+  DEFAULT_USER
+  HOLDER
+}
+
+model user_role_mapping {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  user       user      @relation(fields: [userId], references: [id])
+  userRoleId String    @db.Uuid
+  user_role  user_role @relation(fields: [userRoleId], references: [id])
+}
+
+model cloud_wallet_user_info {
+  id                  String          @id @default(uuid()) @db.Uuid
+  label               String?
+  tenantId            String?
+  email               String?         @unique() @db.VarChar(500)
+  type                CloudWalletType
+  createDateTime      DateTime        @default(now()) @db.Timestamptz(6)
+  createdBy           String          @db.Uuid
+  lastChangedDateTime DateTime        @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String          @db.Uuid
+  userId              String?          @db.Uuid
+  agentEndpoint       String?
+  agentApiKey         String?
+  key                 String?
+  connectionImageUrl  String?
+  user                user?            @relation(fields: [userId], references: [id])
+}
+
+enum CloudWalletType {
+  CLOUD_BASE_WALLET
+  CLOUD_SUB_WALLET
 }

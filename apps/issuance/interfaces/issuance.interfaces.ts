@@ -4,6 +4,7 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { Prisma, organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
+import { IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
 
 export interface IAttributes {
   attributeName: string;
@@ -139,8 +140,19 @@ export interface ICredentialAttributesInterface {
 export interface ICredential{
   '@context':[];
   type: string[];
+  prettyVc?: IPrettyVc;
+  issuer?: {
+    id: string;
+  };
+  issuanceDate?: string;
+  credentialSubject?: ICredentialSubject;
 }
-export interface IOptions{
+
+interface ICredentialSubject {
+  [key: string]: string;
+}
+
+export interface IOptions{ 
   proofType:string;
   proofPurpose:string;
 }
@@ -227,6 +239,11 @@ export interface IClientDetails {
   userId?: string;
   isSelectiveIssuance?: boolean;
   fileName?: string;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
@@ -274,6 +291,9 @@ export interface SendEmailCredentialOffer {
   url: string;
   orgId: string; 
   organizationDetails: organisation;
+  platformName?: string,
+  organizationLogoUrl?: string;
+  prettyVc?: IPrettyVc;
 }
 
 export interface TemplateDetailsInterface {
@@ -316,6 +336,11 @@ export interface IQueuePayload{
   totalJobs: number;
   isRetry: boolean;
   isLastData: boolean;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }
 
 interface FileDetails {
@@ -348,8 +373,13 @@ export interface IDeletedFileUploadRecords {
 }
 
 export interface BulkPayloadDetails {
-  clientId: string,
-  orgId: string,
-  requestId?: string,
-  isRetry: boolean
+  clientId: string;
+  orgId: string;
+  requestId?: string;
+  isRetry: boolean;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }

@@ -351,7 +351,7 @@ async downloadBulkIssuanceCSVTemplate(
   })
   async previewFileDataForIssuance(
     @Param('orgId') orgId: string,
-    @Query(new ValidationPipe({ transform: true })) query: RequestIdQuery,
+    @Param(new ValidationPipe({ transform: true })) query: RequestIdQuery,
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<Response> {
@@ -403,16 +403,15 @@ async downloadBulkIssuanceCSVTemplate(
   @UseInterceptors(FileInterceptor('file'))
 
   async issueBulkCredentials(
+    @Body() clientDetails: ClientDetails,
     @Param('requestId') requestId: string,
     @Param('orgId') orgId: string,
-    @Res() res: Response,
-    @Body() clientDetails: ClientDetails,
     @User() user: user,
     @Query(new ValidationPipe({ transform: true })) query: CredentialQuery,
+    @Res() res: Response,
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
-
     const { credDefId } = query;
     clientDetails.userId = user.id;
     let reqPayload;
@@ -430,7 +429,6 @@ async downloadBulkIssuanceCSVTemplate(
         fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
         type: fileDetails?.['type']
       };
-
     }
       const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails, reqPayload);
 
@@ -538,12 +536,12 @@ async downloadBulkIssuanceCSVTemplate(
     const bulkIssuanceDetails = await this.issueCredentialService.retryBulkCredential(
       fileId,
       orgId,
-      clientDetails.clientId
+      clientDetails
     );
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssuanceDetails.response
+      data: bulkIssuanceDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -717,6 +715,10 @@ async downloadBulkIssuanceCSVTemplate(
     @Res() res: Response
   ): Promise<Response> {
 issueCredentialDto.type = 'Issuance';
+
+if (id && 'default' === issueCredentialDto.contextCorrelationId) {
+  issueCredentialDto.orgId = id;
+}
      
       const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
         this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);
@@ -725,13 +727,15 @@ issueCredentialDto.type = 'Issuance';
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.issuance.success.create,
         data: getCredentialDetails
-      };    
-      const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId).catch(error => {
+      };   
+      
+      const  webhookUrl = await this.issueCredentialService._getWebhookUrl(issueCredentialDto.contextCorrelationId, id).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-      });
+      });            
       if (webhookUrl) {
-        
-          await this.issueCredentialService._postWebhookResponse(webhookUrl, {data:issueCredentialDto}).catch(error => {
+        const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
+
+          await this.issueCredentialService._postWebhookResponse(webhookUrl, {data: plainIssuanceDto}).catch(error => {
             this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
           });
       

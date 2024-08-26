@@ -49,7 +49,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { EcosystemConfigSettings, Invitation, UserCertificateId } from '@credebl/enum/enum';
+import { EcosystemConfigSettings, Invitation, UserCertificateId, UserRole } from '@credebl/enum/enum';
 import { WinnerTemplate } from '../templates/winner-template';
 import { ParticipantTemplate } from '../templates/participant-template';
 import { ArbiterTemplate } from '../templates/arbiter-template';
@@ -112,10 +112,12 @@ export class UserService {
   
       const verifyCode = uuidv4();
       let sendVerificationMail: boolean;
-  
+
       try {
+
         const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
         const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
+
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
   
         if (!redirectUrl) {
@@ -130,6 +132,8 @@ export class UserService {
       if (sendVerificationMail) {
         const uniqueUsername = await this.createUsername(email, verifyCode);
         userEmailVerification.username = uniqueUsername;
+        userEmailVerification.clientId = clientId;
+        userEmailVerification.clientSecret = clientSecret;
         const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
         return resUser;
       } 
@@ -252,10 +256,9 @@ export class UserService {
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
-
-      let keycloakDetails = null;
-
-      const token = await this.clientRegistrationService.getManagementToken(checkUserDetails.clientId, checkUserDetails.clientSecret);
+   let keycloakDetails = null;
+      
+   const token = await this.clientRegistrationService.getManagementToken(checkUserDetails.clientId, checkUserDetails.clientSecret);
       if (userInfo.isPasskey) {
         const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
@@ -286,6 +289,15 @@ export class UserService {
       await this.userRepository.updateUserDetails(userDetails.id,
         keycloakDetails.keycloakUserId.toString()
       );
+
+      if (userInfo?.isHolder) {
+        const getUserRole = await this.userRepository.getUserRole(UserRole.HOLDER);
+
+        if (!getUserRole) {
+          throw new NotFoundException(ResponseMessages.user.error.userRoleNotFound);
+        }
+        await this.userRepository.storeUserRole(userDetails.id, getUserRole?.id);
+      }
 
       const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token);
       
@@ -1189,6 +1201,25 @@ export class UserService {
       return getkeycloakUserIds;
     } catch (error) {
       this.logger.error(`In getUserKeycloakIdByEmail : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getUserByUserIdInKeycloak(email: string): Promise<string> {
+    try {
+     
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+
+      if (!userData) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+
+      const token = await this.clientRegistrationService.getManagementToken(userData?.clientId, userData?.clientSecret);
+      const getClientData = await this.clientRegistrationService.getUserInfoByUserId(userData?.keycloakUserId, token);
+
+      return getClientData;
+    } catch (error) {
+      this.logger.error(`In getUserByUserIdInKeycloak : ${JSON.stringify(error)}`);
       throw error;
     }
   }

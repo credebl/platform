@@ -79,3 +79,36 @@ export interface IIssuedCredential {
       deleteResult: IDeletedIssuanceRecordsCount;
       recordsToDelete: IIssuedCredentialResponse[];
     }
+
+    export interface IPrettyVc{
+      certificate: string;
+      size: string;
+      orientation: string;
+    }
+
+    interface ICredentialSubject {
+      [key: string]: string;
+    }
+    
+    interface ICredential {
+      "@context": string[];
+      type: string[];
+      issuer?: {
+        id: string;
+      };
+      issuanceDate?: string;
+      credentialSubject?: ICredentialSubject;
+    }
+    
+    interface IOptions {
+      proofType: string;
+      proofPurpose: string;
+    }
+    
+    export interface ICredentialData {
+      emailId?: string;
+      connectionId?: string;
+      credential?: ICredential;
+      options?: IOptions;
+    }
+    

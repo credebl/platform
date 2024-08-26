@@ -19,5 +19,5 @@ export class CreateUserDto {
   clientId?: string;
   clientSecret?: string;
   supabaseUserId?: string;
-
+  isHolder?: boolean;
 }

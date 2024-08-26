@@ -41,6 +41,10 @@ export class CreateOutOfBandConnectionInvitation {
         @ApiPropertyOptional()
         @IsOptional()
         multiUseInvitation?: boolean;
+
+        @ApiPropertyOptional()
+        @IsOptional()
+        IsReuseConnection?: boolean;
     
         @ApiPropertyOptional()
         @IsOptional()

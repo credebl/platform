@@ -5,9 +5,7 @@ import {
   Inject,
   ConflictException,
   Injectable,
-  NotAcceptableException, NotFoundException,
-  ForbiddenException
-} from '@nestjs/common';
+  NotAcceptableException, NotFoundException} from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
@@ -663,10 +661,6 @@ export class SchemaService extends BaseService {
       }
   
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-
-      if (getSchemaDetails?.orgId !== orgId) {
-        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch);
-      }
 
       let schemaResponse;
       if (getSchemaDetails?.type === SchemaType.INDY) {

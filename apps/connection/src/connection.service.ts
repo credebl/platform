@@ -861,7 +861,7 @@ export class ConnectionService {
 
       const organizationAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const label = 'send-basic-message';
-      const agentUrl = await this.sendBasicMessageAgentUrl(
+      const agentUrl = await this.commonService.sendBasicMessageAgentUrl(
         label,
         organizationAgentType,
         agentEndPoint,
@@ -893,40 +893,4 @@ export class ConnectionService {
     return await this.natsCall(pattern, payload);
   }
 
-  async sendBasicMessageAgentUrl(
-    label: string,
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId?: string,
-    connectionId?: string
-  ): Promise<string> {
-    try {
-      let url;
-      switch (label) {
-        case 'send-basic-message': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
-              : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
-                  .replace('#', connectionId)
-                  .replace('@', tenantId)
-              : null;
-          break;
-        }
-
-        default: {
-          break;
-        }
-      }
-
-      if (!url) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
-      }
-      return url;
-    } catch (error) {
-      this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
 }

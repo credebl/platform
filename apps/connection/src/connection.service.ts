@@ -872,7 +872,7 @@ export class ConnectionService {
       const sendBasicMessage = await this._sendBasicMessageToAgent(questionPayload, agentUrl, orgId);
       return sendBasicMessage;
     } catch (error) {
-      this.logger.error(`[sendQuestion] - error in sending question: ${error}`);
+      this.logger.error(`[sendBasicMesage] - error in send basic message: ${error}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
         throw new RpcException({
           message: error?.status?.message?.error?.reason

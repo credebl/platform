@@ -843,7 +843,7 @@ export class ConnectionService {
     }
   }
 
-  // WIP 
+ 
   async sendBasicMesage(payload: IBasicMessage): Promise<object> {
     const { content, orgId, connectionId } = payload;
     try {
@@ -859,17 +859,17 @@ export class ConnectionService {
         content
       };
 
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const organizationAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const label = 'send-basic-message';
-      const url = await this.sendBasicMessageAgentUrl(
+      const agentUrl = await this.sendBasicMessageAgentUrl(
         label,
-        orgAgentType,
+        organizationAgentType,
         agentEndPoint,
         agentDetails?.tenantId,
         connectionId
       );
 
-      const sendBasicMessage = await this._sendBasicMessage(questionPayload, url, orgId);
+      const sendBasicMessage = await this._sendBasicMessageToAgent(questionPayload, agentUrl, orgId);
       return sendBasicMessage;
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in sending question: ${error}`);
@@ -886,7 +886,7 @@ export class ConnectionService {
     }
   }
 
-  async _sendBasicMessage(content: IBasicMessage, url: string, orgId: string): Promise<object> {
+  async _sendBasicMessageToAgent(content: IBasicMessage, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-send-basic-message' };
     const payload = { content, url, orgId };
     // eslint-disable-next-line no-return-await

@@ -377,4 +377,21 @@ export class ConnectionRepository {
       throw error;
     }
   }
+
+   // eslint-disable-next-line camelcase
+   async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
+    try {
+      return this.prisma.agent_invitations.findMany({
+        where: {
+          orgId
+        },
+        orderBy: {
+          createDateTime: 'asc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getInvitationDid in connection repository: ${error.message}`);
+      throw error;
+    }
+  }
 }

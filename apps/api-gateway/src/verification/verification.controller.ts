@@ -313,6 +313,10 @@ export class VerificationController {
     ): Promise<Response> {
         proofPresentationPayload.type = 'Verification';
        
+        if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
+            proofPresentationPayload.orgId = orgId;
+          }
+          
             const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
                 this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
             });
@@ -323,7 +327,7 @@ export class VerificationController {
             };
            
            
-             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId).catch(error => {
+             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId).catch(error => {
                 this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
              });
             

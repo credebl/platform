@@ -281,6 +281,10 @@ export class ConnectionController {
     connectionDto.type = 'Connection';
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
   
+    if (orgId && 'default' === connectionDto?.contextCorrelationId) {
+      connectionDto.orgId = orgId;
+    }
+
     const connectionData = await this.connectionService.getConnectionWebhook(connectionDto, orgId).catch(error => {
         this.logger.debug(`error in saving connection webhook ::: ${JSON.stringify(error)}`);
      });
@@ -289,11 +293,11 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: connectionData
     };
-    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto.contextCorrelationId).catch(error => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-  
+    const webhookUrl = await this.connectionService._getWebhookUrl(connectionDto?.contextCorrelationId, orgId).catch(error => {
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`); 
+        
     });
-    if (webhookUrl) {
+    if (webhookUrl) {      
         await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto }).catch(error => {
             this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
         });
@@ -322,10 +326,11 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: ''
     };
-    const webhookUrl = await this.connectionService._getWebhookUrl(questionAnswerWebhookDto.contextCorrelationId).catch(error => {
+    const webhookUrl = await this.connectionService._getWebhookUrl(questionAnswerWebhookDto?.contextCorrelationId, orgId).catch(error => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
   
     });
+    
     if (webhookUrl) {
         await this.connectionService._postWebhookResponse(webhookUrl, { data: questionAnswerWebhookDto }).catch(error => {
             this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);

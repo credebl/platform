@@ -112,13 +112,11 @@ export class UserService {
   
       const verifyCode = uuidv4();
       let sendVerificationMail: boolean;
-  
-      const decryptClientId = await this.commonService.decryptPassword(clientId);
-      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
 
       try {
-        const token = await this.clientRegistrationService.getManagementToken(decryptClientId, decryptClientSecret);
-        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(decryptClientId, token);
+
+        const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
+        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
 
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
   
@@ -126,7 +124,7 @@ export class UserService {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
   
-        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, decryptClientId, brandLogoUrl, platformName);
+        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -134,8 +132,8 @@ export class UserService {
       if (sendVerificationMail) {
         const uniqueUsername = await this.createUsername(email, verifyCode);
         userEmailVerification.username = uniqueUsername;
-        userEmailVerification.clientId = decryptClientId;
-        userEmailVerification.clientSecret = decryptClientSecret;
+        userEmailVerification.clientId = clientId;
+        userEmailVerification.clientSecret = clientSecret;
         const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
         return resUser;
       } 

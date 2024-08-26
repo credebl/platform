@@ -31,7 +31,7 @@ import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gat
 import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential, IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
-import { createOobJsonldIssuancePayload, validateEmail } from '@credebl/common/cast.helper';
+import { createOobJsonldIssuancePayload, validateAndUpdateIssuanceDates, validateEmail } from '@credebl/common/cast.helper';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
@@ -127,6 +127,11 @@ export class IssuanceService {
       const issuanceMethodLabel = 'create-offer';
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
 
+
+      if (payload.credentialType === IssueCredentialType.JSONLD) {
+        await validateAndUpdateIssuanceDates(credentialData);
+      }
+      
       const issuancePromises = credentialData.map(async (credentials) => {
         const { connectionId, attributes, credential, options } = credentials;
         let issueData;
@@ -554,6 +559,11 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       emailId,
       credentialType
     } = outOfBandCredential;
+
+    if (IssueCredentialType.JSONLD === credentialType) {
+      await validateAndUpdateIssuanceDates(credentialOffer);
+    }
+
     if (IssueCredentialType.INDY === credentialType) {  
       const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
         credentialDefinitionId

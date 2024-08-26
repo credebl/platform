@@ -200,6 +200,14 @@ export class ConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     orgId: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    outOfBandRecord?: object;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    reuseThreadId?: string;
 }
 
 class ReceiveInvitationCommonDto {

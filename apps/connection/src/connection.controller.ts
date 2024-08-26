@@ -13,7 +13,7 @@ import {
 } from './interfaces/connection.interfaces';
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IQuestionPayload } from './interfaces/question-answer.interfaces';
+import { IQuestionPayload } from './interfaces/messaging.interfaces';
 import { user } from '@prisma/client';
 @Controller()
 export class ConnectionController {
@@ -110,5 +110,10 @@ export class ConnectionController {
   async deleteConnectionRecords(payload: {orgId: string, userDetails: user}): Promise<IDeletedConnectionsRecord> {  
     const { orgId, userDetails } = payload;
     return this.connectionService.deleteConnectionRecords(orgId, userDetails);
+  }
+
+  @MessagePattern({ cmd: 'send-basic-message' })
+  async sendBasicMessage(payload: {content: string, orgId: string, connectionId: string}): Promise<object> {
+    return this.connectionService.sendBasicMesage(payload);
   }
 }

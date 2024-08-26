@@ -21,7 +21,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { ClientProxy} from '@nestjs/microservices';
-import { QuestionAnswerWebhookDto, QuestionDto} from './dtos/question-answer.dto';
+import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto} from './dtos/question-answer.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 @UseFilters(CustomExceptionFilter)
@@ -363,4 +363,30 @@ export class ConnectionController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
+  // WIP : Create final Response
+  @Post('/orgs/:orgId/basic-message/:connectionId')
+    @ApiOperation({ summary: '', description: 'send question' })
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    async sendBasicMessage(
+        @Param('orgId') orgId: string,
+        @Param('connectionId') connectionId: string,
+        @Body() basicMessageDto: BasicMessageDto,
+        @User() reqUser: IUserRequestInterface,
+        @Res() res: Response
+    ): Promise<Response> {
+
+        basicMessageDto.orgId = orgId;
+        basicMessageDto.connectionId = connectionId;
+        const basicMesgResponse = await this.connectionService.sendBasicMessage(basicMessageDto);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.connection.success.basicMessage,
+            data: basicMesgResponse
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+
+    }
 }

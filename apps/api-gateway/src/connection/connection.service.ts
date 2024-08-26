@@ -6,7 +6,7 @@ import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDt
 import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
-import { QuestionDto } from './dtos/question-answer.dto';
+import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
 import { user } from '@prisma/client';
 @Injectable()
 export class ConnectionService extends BaseService {
@@ -24,27 +24,11 @@ export class ConnectionService extends BaseService {
     }
   }
 
-  createLegacyConnectionInvitation(
-    connectionDto: CreateConnectionDto,
-    user: IUserRequestInterface
-  ): Promise<ICreateConnectionUrl> {
+  sendBasicMessage(
+    basicMessageDto: BasicMessageDto
+  ): Promise<object> {
     try {
-      const connectionDetails = {
-        orgId: connectionDto.orgId,
-        alias: connectionDto.alias,
-        label: connectionDto.label,
-        imageUrl: connectionDto.imageUrl,
-        multiUseInvitation: connectionDto.multiUseInvitation,
-        autoAcceptConnection: connectionDto.autoAcceptConnection,
-        goalCode: connectionDto.goalCode,
-        goal: connectionDto.goal,
-        handshake: connectionDto.handshake,
-        handshakeProtocols: connectionDto.handshakeProtocols,
-        user,
-        recipientKey:connectionDto.recipientKey
-      };
-
-      return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection', connectionDetails);
+      return this.sendNatsMessage(this.connectionServiceProxy, 'send-basic-message', basicMessageDto);
     } catch (error) {
       throw new RpcException(error.response);
     }

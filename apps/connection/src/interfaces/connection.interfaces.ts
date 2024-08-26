@@ -279,6 +279,7 @@ export interface ICreateConnectionInvitation {
   messages?: object[];
   multiUseInvitation?: boolean;
   autoAcceptConnection?: boolean;
+  IsReuseConnection?: boolean;
   routing?: object;
   appendedAttachments?: object[];
   orgId?: string;

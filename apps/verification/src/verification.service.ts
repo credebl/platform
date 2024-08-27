@@ -776,6 +776,12 @@ export class VerificationService {
 
           const verifiableCredential = verifiableCredentials[index]?.credentialSubject;
 
+          if (getProofPresentationById?.response) {
+            certificate =
+              getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
+                ?.certificate;
+          }
+ 
           if (
             requestedAttributesForPresentationExchangeFormat &&
             Array.isArray(requestedAttributesForPresentationExchangeFormat)
@@ -798,6 +804,7 @@ export class VerificationService {
           }
         });
       }
+
       // For Indy format
       if (getProofPresentationById?.response?.request?.indy) {
         const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;

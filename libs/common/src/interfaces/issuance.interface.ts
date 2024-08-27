@@ -26,6 +26,7 @@ export interface IIssuedCredential {
     credentialData: CredentialData
     orgDid: string;
     orgId: string;
+    isReuseConnection?: boolean;
   }
 
   export interface ICredentialOfferResponse {

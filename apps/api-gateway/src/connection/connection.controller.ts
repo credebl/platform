@@ -367,7 +367,7 @@ export class ConnectionController {
   }
 
   @Post('/orgs/:orgId/basic-message/:connectionId')
-    @ApiOperation({ summary: '', description: 'send question' })
+    @ApiOperation({ summary: 'Send basic message', description: 'Send basic message' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })

@@ -170,7 +170,7 @@ export interface OutOfBandCredentialOfferPayload {
   emailId?: string;
   attributes?: IAttributes[];
   protocolVersion?: string;
-  reuseConnection?: boolean;
+  isReuseConnection?: boolean;
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
@@ -283,7 +283,7 @@ export interface SendEmailCredentialOffer {
   index: number;
   credentialType: IssueCredentialType; 
   protocolVersion: string;
-  reuseConnection?: boolean;
+  isReuseConnection?: boolean;
   attributes: IAttributes[]; 
   credentialDefinitionId: string; 
   outOfBandCredential: OutOfBandCredentialOfferPayload;

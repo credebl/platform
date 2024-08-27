@@ -558,7 +558,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       attributes,
       emailId,
       credentialType,
-      reuseConnection
+      isReuseConnection
     } = outOfBandCredential;
 
     if (IssueCredentialType.JSONLD === credentialType) {
@@ -638,7 +638,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       index: number;
       credentialType: IssueCredentialType;
       protocolVersion: string;
-      reuseConnection?: boolean;
+      isReuseConnection?: boolean;
       attributes: IAttributes[];
       credentialDefinitionId: string;
       outOfBandCredential: OutOfBandCredentialOfferPayload;
@@ -654,7 +654,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     } = {
       credentialType,
       protocolVersion,
-      reuseConnection,
+      isReuseConnection,
       attributes,
       credentialDefinitionId,
       outOfBandCredential,
@@ -739,14 +739,14 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     organizationDetails,
     platformName,
     organizationLogoUrl,
-    reuseConnection
+    isReuseConnection
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
 
 
     let invitationDid: string | undefined;
-    if (true === reuseConnection) {
+    if (true === isReuseConnection) {
       const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
        if (data && 0 < data.length) {
         const [firstElement] = data;
@@ -1544,7 +1544,7 @@ return newCacheKey;
           attributes: [],
           emailId: jobDetails?.credential_data?.email_identifier,
           credentialType: IssueCredentialType.INDY,
-          reuseConnection: true
+          isReuseConnection: true
         };
         for (const key in jobDetails?.credential_data) {
 
@@ -1562,7 +1562,7 @@ return newCacheKey;
         credentialData: jobDetails.credential_data,
         orgDid,
         orgId,
-        reuseConnection: true
+        isReuseConnection: true
       };
 
       prettyVc = {

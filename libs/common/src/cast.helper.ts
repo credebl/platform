@@ -302,7 +302,7 @@ export const validateEmail = (email: string): boolean => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
-  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
+  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection} = JsonldCredentialDetails;
   const credentialSubject = { };
 
   const proofType = (orgDid?.includes(DidMethod.POLYGON)) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE;
@@ -339,7 +339,8 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
     'comment': 'string',
     'protocolVersion': 'v2',
     'credentialType': 'jsonld',
-    orgId
+    orgId,
+    isReuseConnection
   };
 };
 

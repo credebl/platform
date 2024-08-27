@@ -41,6 +41,10 @@ export class CreateOutOfBandConnectionInvitation {
         @ApiPropertyOptional()
         @IsOptional()
         multiUseInvitation?: boolean;
+
+        @ApiPropertyOptional()
+        @IsOptional()
+        IsReuseConnection?: boolean;
     
         @ApiPropertyOptional()
         @IsOptional()
@@ -206,6 +210,14 @@ export class ConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     orgId: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    outOfBandRecord?: object;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    reuseThreadId?: string;
 }
 
 class ReceiveInvitationCommonDto {

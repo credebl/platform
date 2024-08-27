@@ -77,6 +77,7 @@ export enum CommonConstants {
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
   URL_SEND_QUESTION = '/question-answer/question/#',
   URL_QUESTION_ANSWER_RECORD = '/question-answer',
+  URL_SEND_BASIC_MESSAGE = '/basic-messages/#',
 
   // SCHEMA & CRED DEF SERVICES
   URL_SCHM_CREATE_SCHEMA = '/schemas',
@@ -119,6 +120,7 @@ export enum CommonConstants {
   URL_SHAGENT_SEND_ANSWER = '/multi-tenancy/question-answer/answer/#/@',
   URL_SHAGENT_QUESTION_ANSWER_RECORD = '/multi-tenancy/question-answer/#',
   URL_SHAGENT_DELETE_SUB_WALLET = '/multi-tenancy/#',
+  URL_SHARED_SEND_BASIC_MESSAGE =  '/multi-tenancy/basic-messages/#/@',
   URL_SHAGENT_ACCEPT_PROOF_REQUEST = '/multi-tenancy/proofs/#/accept-request/@',
 
   

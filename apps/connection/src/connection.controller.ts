@@ -112,7 +112,7 @@ export class ConnectionController {
     return this.connectionService.deleteConnectionRecords(orgId, userDetails);
   }
 
-  @MessagePattern({ cmd: 'send-basic-message' })
+  @MessagePattern({ cmd: 'send-basic-message-on-connection' })
   async sendBasicMessage(payload: {content: string, orgId: string, connectionId: string}): Promise<object> {
     return this.connectionService.sendBasicMesage(payload);
   }

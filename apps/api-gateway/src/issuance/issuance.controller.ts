@@ -642,9 +642,9 @@ async downloadBulkIssuanceCSVTemplate(
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
-    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
     @Param('orgId') orgId: string,
-    @Res() res: Response
+    @Res() res: Response,
+    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
     outOfBandCredentialDto.credentialType = credentialType;

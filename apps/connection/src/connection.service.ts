@@ -636,7 +636,8 @@ export class ConnectionService {
         orgId,
         routing,
         recipientKey,
-        invitationDid
+        invitationDid,
+        IsReuseConnection
       } = payload?.createOutOfBandConnectionInvitation;
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(

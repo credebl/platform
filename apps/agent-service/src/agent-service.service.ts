@@ -52,7 +52,9 @@ import {
   IStoreAgent,
   AgentHealthData,
   IAgentStore,
-  IAgentConfigure
+  IAgentConfigure,
+  OrgDid,
+  IBasicMessage
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -1935,13 +1937,13 @@ export class AgentServiceService {
     }
   }
 
-  async sendBasicMessage(messagePayload: IBasicMessage, url: string, orgId: string): Promise<object> {
+  async sendBasicMessage(questionPayload: IBasicMessage, url: string, orgId: string): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const basicMessageRes = await this.commonService
-        .httpPost(url, messagePayload, { headers: { authorization: getApiKey } })
+      const sendQuestionRes = await this.commonService
+        .httpPost(url, questionPayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
-      return basicMessageRes;
+      return sendQuestionRes;
     } catch (error) {
       this.logger.error(`Error in sendBasicMessage in agent service : ${JSON.stringify(error)}`);
       throw error;

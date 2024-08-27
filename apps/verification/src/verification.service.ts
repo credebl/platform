@@ -778,36 +778,10 @@ export class VerificationService {
 
       // For Presentation Exchange format
       if (getProofPresentationById?.response?.request?.presentationExchange) {
-        const requestedAttributesForPresentationExchangeFormat =
-          getProofPresentationById?.response?.request?.presentationExchange?.presentation_definition
-            ?.input_descriptors[0]?.constraints?.fields[0]?.path;
-
-        const verifiableCredential =
-          getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0]
-            ?.credentialSubject;
-
-        if (getProofPresentationById?.response) {
-          certificate =
-            getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
-              ?.certificate;
-        }
-        if (
-          requestedAttributesForPresentationExchangeFormat &&
-          Array.isArray(requestedAttributesForPresentationExchangeFormat)
-        ) {
-          requestedAttributesForPresentationExchangeFormat.forEach((requestedAttributeKey) => {
-            const attributeName = requestedAttributeKey?.split('.').pop();
-            const attributeValue = verifiableCredential[attributeName];
-            const schemaId =
-              getProofPresentationById?.response?.request?.presentationExchange?.presentation_definition
-                ?.input_descriptors[0].schema[0].uri;
-
-            if (attributeName && attributeValue !== undefined) {
-              const extractedData: IProofPresentationDetails = {
-                [attributeName]: attributeValue,
-                schemaId: schemaId || null,
-                certificateTemplate: certificate
-              };
+        const presentationDefinition =
+          getProofPresentationById?.response?.request?.presentationExchange?.presentation_definition;
+        const verifiableCredentials =
+          getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential;
 
         presentationDefinition?.input_descriptors.forEach((descriptor, index) => {
           const schemaId = descriptor?.schema[0]?.uri;
@@ -815,12 +789,6 @@ export class VerificationService {
 
           const verifiableCredential = verifiableCredentials[index]?.credentialSubject;
 
-          if (getProofPresentationById?.response) {
-            certificate =
-              getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
-                ?.certificate;
-          }
- 
           if (
             requestedAttributesForPresentationExchangeFormat &&
             Array.isArray(requestedAttributesForPresentationExchangeFormat)
@@ -843,7 +811,6 @@ export class VerificationService {
           }
         });
       }
-
       // For Indy format
       if (getProofPresentationById?.response?.request?.indy) {
         const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;

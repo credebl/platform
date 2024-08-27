@@ -507,7 +507,7 @@ export class CloudWalletController {
         * @returns Credential list
     */
     @Post('/basic-message/:connectionId')
-    @ApiOperation({ summary: 'Send basic message', description: 'Send basic message' })
+    @ApiOperation({ summary: 'send question', description: 'send question' })
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     @UseGuards(AuthGuard('jwt'), UserRoleGuard)
     async sendBasicMessage(

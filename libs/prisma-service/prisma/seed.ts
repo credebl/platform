@@ -384,8 +384,7 @@ const migrateOrgAgentDids = async (): Promise<void> => {
             }
         });
 
-        const orgDids = orgAgents.map((agent) => agent.orgDid);
-
+        const orgDids = orgAgents.map((agent) => agent.orgDid).filter((did) => null !== did && '' !== did);
         const existingDids = await prisma.org_dids.findMany({
             where: {
                 did: {

@@ -1835,13 +1835,13 @@ export class AgentServiceService {
     }
   }
 
-  async sendBasicMessage(questionPayload: IBasicMessage, url: string, orgId: string): Promise<object> {
+  async sendBasicMessage(messagePayload: IBasicMessage, url: string, orgId: string): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const sendQuestionRes = await this.commonService
-        .httpPost(url, questionPayload, { headers: { authorization: getApiKey } })
+      const basicMessageRes = await this.commonService
+        .httpPost(url, messagePayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
-      return sendQuestionRes;
+      return basicMessageRes;
     } catch (error) {
       this.logger.error(`Error in sendBasicMessage in agent service : ${JSON.stringify(error)}`);
       throw error;

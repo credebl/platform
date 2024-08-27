@@ -550,6 +550,9 @@ export interface IQuestionPayload {
   connectionId: string;
   tenantId: string;
 }
+export interface IBasicMessage {
+  content: string;
+}
 interface Ledger {
   id: string;
   createDateTime: string;

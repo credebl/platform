@@ -23,9 +23,10 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IQuestionPayload } from './interfaces/question-answer.interfaces';
+import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfaces';
 import { RecordType, user } from '@prisma/client';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { agent_invitations } from '@prisma/client';
 @Injectable()
 export class ConnectionService {
   constructor(
@@ -635,7 +636,8 @@ export class ConnectionService {
         orgId,
         routing,
         recipientKey,
-        invitationDid
+        invitationDid,
+        IsReuseConnection
       } = payload?.createOutOfBandConnectionInvitation;
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(
@@ -647,6 +649,21 @@ export class ConnectionService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
+
+      let legacyinvitationDid;
+      if (IsReuseConnection) {
+        const data: agent_invitations[] = await this.connectionRepository.getInvitationDidByOrgId(orgId);
+           if (data && 0 < data.length) {
+            const [firstElement] = data;
+            legacyinvitationDid = firstElement?.invitationDid ?? undefined;
+            
+            this.logger.log('legacyinvitationDid:', legacyinvitationDid);
+        }
+      }
+      const connectionInvitationDid = invitationDid ? invitationDid : legacyinvitationDid;
+
+      this.logger.log('connectionInvitationDid:', connectionInvitationDid);
+
       
       this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
       const connectionPayload = {
@@ -663,7 +680,7 @@ export class ConnectionService {
         routing: routing || undefined,
         messages: messages || undefined,
         recipientKey: recipientKey || undefined,
-        invitationDid: invitationDid || undefined
+        invitationDid: connectionInvitationDid || undefined
       };
 
       const createConnectionInvitationFlag = 'connection-invitation';
@@ -824,5 +841,56 @@ export class ConnectionService {
         this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
         throw new RpcException(error.response ? error.response : error);
     }
-}
+  }
+
+ 
+  async sendBasicMesage(payload: IBasicMessage): Promise<object> {
+    const { content, orgId, connectionId } = payload;
+    try {
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+
+      const { agentEndPoint } = agentDetails;
+
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
+      }
+
+      const questionPayload = {
+        content
+      };
+
+      const organizationAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const label = 'send-basic-message';
+      const agentUrl = await this.commonService.sendBasicMessageAgentUrl(
+        label,
+        organizationAgentType,
+        agentEndPoint,
+        agentDetails?.tenantId,
+        connectionId
+      );
+
+      const sendBasicMessage = await this._sendBasicMessageToAgent(questionPayload, agentUrl, orgId);
+      return sendBasicMessage;
+    } catch (error) {
+      this.logger.error(`[sendBasicMesage] - error in send basic message: ${error}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
+  async _sendBasicMessageToAgent(content: IBasicMessage, url: string, orgId: string): Promise<object> {
+    const pattern = { cmd: 'agent-send-basic-message' };
+    const payload = { content, url, orgId };
+    // eslint-disable-next-line no-return-await
+    return await this.natsCall(pattern, payload);
+  }
+
 }

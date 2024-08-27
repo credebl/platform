@@ -466,8 +466,8 @@ export class OOBCredentialDtoWithEmail {
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
-  @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
-  @IsBoolean({ message: 'reuseConnection must be a boolean' })
+  @IsNotEmpty({ message: 'please provide valid value for isReuseConnection' })
+  @IsBoolean({ message: 'isReuseConnection must be a boolean' })
   isReuseConnection?: boolean;
 
   imageUrl?: string;

@@ -24,6 +24,16 @@ export class ConnectionService extends BaseService {
     }
   }
 
+  sendBasicMessage(
+    basicMessageDto: BasicMessageDto
+  ): Promise<object> {
+    try {
+      return this.sendNatsMessage(this.connectionServiceProxy, 'send-basic-message', basicMessageDto);
+    } catch (error) {
+      throw new RpcException(error.response);
+    }
+  }
+
   getConnectionWebhook(
     connectionDto: ConnectionDto,
     orgId: string

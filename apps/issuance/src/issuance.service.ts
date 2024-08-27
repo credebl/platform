@@ -557,7 +557,8 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       protocolVersion,
       attributes,
       emailId,
-      credentialType
+      credentialType,
+      reuseConnection
     } = outOfBandCredential;
 
     if (IssueCredentialType.JSONLD === credentialType) {
@@ -637,6 +638,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       index: number;
       credentialType: IssueCredentialType;
       protocolVersion: string;
+      reuseConnection?: boolean;
       attributes: IAttributes[];
       credentialDefinitionId: string;
       outOfBandCredential: OutOfBandCredentialOfferPayload;
@@ -652,6 +654,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
     } = {
       credentialType,
       protocolVersion,
+      reuseConnection,
       attributes,
       credentialDefinitionId,
       outOfBandCredential,
@@ -735,11 +738,21 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     orgId,
     organizationDetails,
     platformName,
-    organizationLogoUrl
+    organizationLogoUrl,
+    reuseConnection
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
 
+
+    let invitationDid: string | undefined;
+    if (true === reuseConnection) {
+      const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
+       if (data && 0 < data.length) {
+        const [firstElement] = data;
+        invitationDid = firstElement?.invitationDid ?? undefined;
+    }
+    }
 
     let outOfBandIssuancePayload;
     if (IssueCredentialType.INDY === credentialType) {
@@ -759,7 +772,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         parentThreadId: outOfBandCredential.parentThreadId || undefined,
         willConfirm: outOfBandCredential.willConfirm || undefined,
         label: organisation?.name,
-        imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
+        imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl,
+        invitationDid: invitationDid || undefined
       };
     }
 
@@ -779,7 +793,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         parentThreadId: outOfBandCredential.parentThreadId || undefined,
         willConfirm: outOfBandCredential.willConfirm || undefined,
         label: organisation?.name,
-        imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl
+        imageUrl: organisation?.logoUrl || outOfBandCredential?.imageUrl,
+        invitationDid: invitationDid || undefined
       };
 
       const payloadAttributes = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.credentialSubject;
@@ -1516,7 +1531,6 @@ return newCacheKey;
     const { orgId } = jobDetails;
 
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-  
     const { organisation, orgDid } = agentDetails;
     let prettyVc;
     let isErrorOccurred = false;
@@ -1529,7 +1543,8 @@ return newCacheKey;
           label: organisation?.name,
           attributes: [],
           emailId: jobDetails?.credential_data?.email_identifier,
-          credentialType: IssueCredentialType.INDY
+          credentialType: IssueCredentialType.INDY,
+          reuseConnection: true
         };
         for (const key in jobDetails?.credential_data) {
 
@@ -1546,8 +1561,8 @@ return newCacheKey;
         schemaLedgerId,
         credentialData: jobDetails.credential_data,
         orgDid,
-        orgId
-
+        orgId,
+        reuseConnection: true
       };
 
       prettyVc = {
@@ -1558,6 +1573,7 @@ return newCacheKey;
 
       oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc);
       }
+
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl, prettyVc);
       if (oobCredentials) {

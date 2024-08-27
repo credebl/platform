@@ -366,7 +366,6 @@ export class ConnectionController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  // WIP : Create final Response
   @Post('/orgs/:orgId/basic-message/:connectionId')
     @ApiOperation({ summary: '', description: 'send question' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

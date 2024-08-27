@@ -343,7 +343,7 @@ export interface IQueuePayload{
   certificate?: string;
   size?: string;
   orientation?: string;
-  reuseConnection?: boolean;
+  isReuseConnection?: boolean;
 }
 
 interface FileDetails {

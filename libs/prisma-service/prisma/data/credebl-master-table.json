@@ -138,12 +138,12 @@
     },
     {
       "name": "NA",
-      "networkType": "",
-      "poolConfig": "",
+      "networkType": "NA",
+      "poolConfig": "NA",
       "isActive": true,
-      "networkString": "",
-      "nymTxnEndpoint": "",
-      "indyNamespace": ""
+      "networkString": "NA",
+      "nymTxnEndpoint": "NA",
+      "indyNamespace": "no_ledger"
     }
   ],
   "endorseData": [

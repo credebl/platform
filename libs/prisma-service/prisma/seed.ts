@@ -3,8 +3,10 @@ import * as fs from 'fs';
 import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { CommonConstants } from '../../common/src/common.constant';
-import { exec } from 'child_process';
 import * as CryptoJS from 'crypto-js';
+import { exec } from 'child_process';
+import * as util from 'util';
+const execPromise = util.promisify(exec); 
 
 const prisma = new PrismaClient();
 const logger = new Logger('Init seed DB');
@@ -453,23 +455,27 @@ const addSchemaType = async (): Promise<void> => {
 
 const importGeoLocationMasterData = async (): Promise<void> => {
     try {
-        const importGeoLocationData = `${process.cwd() + process.env.GEO_LOCATION_MASTER_DATA_IMPORT_SCRIPT} ${process.env.DATABASE_URL}`;
-        new Promise(async (resolve) => {
-
-            await exec(importGeoLocationData, async (err, stdout, stderr) => {
-              logger.log(`shell script output: ${stdout}`);
-              if (stderr) {
-                logger.error(`shell script error: ${stderr}`);
-              }
+      const scriptPath = process.env.GEO_LOCATION_MASTER_DATA_IMPORT_SCRIPT;
+      const dbUrl = process.env.DATABASE_URL;
   
-              resolve(stdout);
-            });
-          });
-          
+      if (!scriptPath || !dbUrl) {
+        throw new Error('Environment variables GEO_LOCATION_MASTER_DATA_IMPORT_SCRIPT or DATABASE_URL are not set.');
+      }
+  
+      const command = `${process.cwd()}/${scriptPath} ${dbUrl}`;
+  
+      const { stdout, stderr } = await execPromise(command);
+  
+      if (stdout) {
+        logger.log(`Shell script output: ${stdout}`);
+      }
+      if (stderr) {
+        logger.error(`Shell script error: ${stderr}`);
+      }
     } catch (error) {
-        logger.error('An error occurred during importGeoLocationMasterData:', error);
+      logger.error('An error occurred during importGeoLocationMasterData:', error);
     }
-};
+  };
 
 const encryptClientCredential = async (clientCredential: string): Promise<string> => {
     try {
@@ -483,21 +489,28 @@ const encryptClientCredential = async (clientCredential: string): Promise<string
 
 const updateClientCredential = async (): Promise<void> => {
     try {
-        const encryptedClientId = await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID);
-        const encryptedClientSecret = await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET);
+      const scriptPath = process.env.UPDATE_CLIENT_CREDENTIAL_SCRIPT;
+      const dbUrl = process.env.DATABASE_URL;
+      const clientId = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
+      const clientSecret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
 
-        const updateClientCredential = `${process.cwd() + process.env.UPDATE_CLIENT_CREDENTIAL_SCRIPT} ${process.env.DATABASE_URL} ${encryptedClientId} ${encryptedClientSecret}`;
-        new Promise(async (resolve) => {
-
-            await exec(updateClientCredential, async (err, stdout, stderr) => {
-              logger.log(`shell script output: ${stdout}`);
-              if (stderr) {
-                logger.error(`shell script error: ${stderr}`);
-              }
+      if (!scriptPath || !dbUrl || !clientId || !clientSecret) {
+        throw new Error('Environment variables UPDATE_CLIENT_CREDENTIAL_SCRIPT or DATABASE_URL or clientId or clientSecret are not set.');
+      }
   
-              resolve(stdout);
-            });
-          });
+      const encryptedClientId = await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID);
+      const encryptedClientSecret = await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET);
+
+      const command = `${process.cwd()}/${scriptPath} ${dbUrl} ${encryptedClientId} ${encryptedClientSecret}`;
+  
+      const { stdout, stderr } = await execPromise(command);
+  
+      if (stdout) {
+        logger.log(`Shell script output: ${stdout}`);
+      }
+      if (stderr) {
+        logger.error(`Shell script error: ${stderr}`);
+      }
           
     } catch (error) {
         logger.error('An error occurred during updateClientCredential:', error);

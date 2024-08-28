@@ -659,11 +659,21 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     orgId,
     organizationDetails,
     platformName,
-    organizationLogoUrl
+    organizationLogoUrl,
+    isReuseConnection
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
 
+
+    let invitationDid: string | undefined;
+    if (true === isReuseConnection) {
+      const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
+       if (data && 0 < data.length) {
+        const [firstElement] = data;
+        invitationDid = firstElement?.invitationDid ?? undefined;
+    }
+    }
 
     let outOfBandIssuancePayload;
     if (IssueCredentialType.INDY === credentialType) {
@@ -1479,8 +1489,8 @@ return newCacheKey;
         schemaLedgerId,
         credentialData: jobDetails.credential_data,
         orgDid,
-        orgId
-
+        orgId,
+        isReuseConnection: true
       };
 
       prettyVc = {
@@ -1491,6 +1501,7 @@ return newCacheKey;
 
       oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc);
       }
+
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl, prettyVc);
       if (oobCredentials) {

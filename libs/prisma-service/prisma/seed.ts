@@ -374,6 +374,81 @@ const createUserRole = async (): Promise<void> => {
     }
 };
 
+const migrateOrgAgentDids = async (): Promise<void> => {
+    try {
+        const orgAgents = await prisma.org_agents.findMany({
+            where: {
+                walletName: {
+                    not: 'platform-admin'
+                }
+            }
+        });
+
+        const orgDids = orgAgents.map((agent) => agent.orgDid).filter((did) => null !== did && '' !== did);
+        const existingDids = await prisma.org_dids.findMany({
+            where: {
+                did: {
+                    in: orgDids
+                }
+            }
+        });
+
+        // If there are org DIDs that do not exist in org_dids table
+        if (orgDids.length !== existingDids.length) {
+            const newOrgAgents = orgAgents.filter(
+                (agent) => !existingDids.some((did) => did.did === agent.orgDid)
+            );
+
+            const newDidRecords = newOrgAgents.map((agent) => ({
+                orgId: agent.orgId,
+                did: agent.orgDid,
+                didDocument: agent.didDocument,
+                isPrimaryDid: true,
+                createdBy: agent.createdBy,
+                lastChangedBy: agent.lastChangedBy,
+                orgAgentId: agent.id
+            }));
+
+            const didInsertResult = await prisma.org_dids.createMany({
+                data: newDidRecords
+            });
+
+            logger.log(didInsertResult);
+        } else {
+            logger.log('No new DIDs to migrate in migrateOrgAgentDids');
+        }
+    } catch (error) {
+        logger.error('An error occurred during migrateOrgAgentDids:', error);
+    }
+};
+
+const addSchemaType = async (): Promise<void> => {
+    try {
+        const emptyTypeSchemaList = await prisma.schema.findMany({
+            where: {
+              OR: [
+                { type: null },
+                { type: '' }
+              ]
+            }
+        });
+        if (0 < emptyTypeSchemaList.length) {
+            const updatePromises = emptyTypeSchemaList.map((schema) => prisma.schema.update({
+                    where: { id: schema.id },
+                    data: { type: 'indy' }
+                })
+            );
+           await Promise.all(updatePromises);
+
+            logger.log('Schemas updated successfully');
+        } else {
+            logger.log('No schemas to update');
+        }
+    } catch (error) {
+        logger.error('An error occurred during addSchemaType:', error);
+    }
+};
+
 async function main(): Promise<void> {
 
     await createPlatformConfig();
@@ -388,8 +463,9 @@ async function main(): Promise<void> {
     await createEcosystemConfig();
     await createLedgerConfig();
     await createUserRole();
+    await migrateOrgAgentDids();
+    await addSchemaType();
 }
-
 
 main()
     .then(async () => {

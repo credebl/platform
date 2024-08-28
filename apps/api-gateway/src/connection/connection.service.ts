@@ -28,7 +28,7 @@ export class ConnectionService extends BaseService {
     basicMessageDto: BasicMessageDto
   ): Promise<object> {
     try {
-      return this.sendNatsMessage(this.connectionServiceProxy, 'send-basic-message', basicMessageDto);
+      return this.sendNatsMessage(this.connectionServiceProxy, 'send-basic-message-on-connection', basicMessageDto);
     } catch (error) {
       throw new RpcException(error.response);
     }

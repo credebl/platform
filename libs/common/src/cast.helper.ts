@@ -181,7 +181,7 @@ export const validateEmail = (email: string): boolean => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
-  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
+  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection} = JsonldCredentialDetails;
   const credentialSubject = { };
 
   for (const key in credentialData) {

@@ -93,7 +93,7 @@
     {
       "name": "Bcovrin Testnet",
       "networkType": "testnet",
-      "poolConfig": "http://test.bcovrin.vonx.io/genesis",
+      "poolConfig": "https://raw.githubusercontent.com/bcgov/von-network/main/BCovrin/genesis_test",
       "isActive": true,
       "networkString": "testnet",
       "nymTxnEndpoint": "http://test.bcovrin.vonx.io/register",

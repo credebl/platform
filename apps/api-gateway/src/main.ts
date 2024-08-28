@@ -45,7 +45,6 @@ async function bootstrap(): Promise<void> {
     }
     next();
   });
-
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)

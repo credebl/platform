@@ -8,23 +8,18 @@ interface Attribute {
   value: string;
 }
 export class CreateCertificateDto {
+
   @ApiProperty()
-  @IsNotEmpty({ message: 'Please provide valid schemaId' })
+  @IsNotEmpty({ message: 'Please provide valid credentialId' })
   @Transform(({ value }) => trim(value))
   @IsString({ message: 'credentialId should be string' })
   credentialId: string;
 
-  @ApiProperty({ example: 'SchemaId' })
+  @ApiProperty({ example: 'schemaId' })
   @IsNotEmpty({ message: 'Please provide valid schemaId' })
   @Transform(({ value }) => trim(value))
   @IsString({ message: 'schemaId should be string' })
   schemaId: string;
-
-  @ApiProperty({ example: 'CredDefId' })
-  @IsNotEmpty({ message: 'Please provide valid schemaId' })
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'credDefId should be string' })
-  credDefId?: string;
 
   @ApiProperty({
     example: [

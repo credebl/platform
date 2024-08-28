@@ -893,6 +893,7 @@ export class UserService {
 
   async shareUserCertificate(shareUserCertificate: IShareUserCertificate): Promise<string> {
 
+    let template;
     const attributeArray = [];
     let attributeJson = {};
     const attributePromises = shareUserCertificate.attributes.map(async (iterator: Attribute) => {
@@ -902,8 +903,6 @@ export class UserService {
       attributeArray.push(attributeJson);
     });
     await Promise.all(attributePromises);
-    let template;
-
     switch (shareUserCertificate.schemaId.split(':')[2]) {
       case UserCertificateId.WINNER:
         // eslint-disable-next-line no-case-declarations
@@ -925,22 +924,35 @@ export class UserService {
         const userWorldRecordTemplate = new WorldRecordTemplate();
         template = await userWorldRecordTemplate.getWorldRecordTemplate(attributeArray);
         break;
+        case UserCertificateId.AYANWORKS_EVENT:
+           // eslint-disable-next-line no-case-declarations
+           const QRDetails = await this.getShorteningURL(shareUserCertificate, attributeArray);
+
+           if (shareUserCertificate.attributes.some(item => item.value.toLocaleLowerCase().includes("pinnacle"))) {
+            const userPinnacleTemplate = new EventPinnacle();
+            template = await userPinnacleTemplate.getPinnacleWinner(attributeArray, QRDetails);
+          } else {
+            const userCertificateTemplate = new EventCertificate();
+            template = await userCertificateTemplate.getCertificateWinner(attributeArray, QRDetails);
+          }
+          break;  
       default:
         throw new NotFoundException('error in get attributes');
     }
 
-    const option: IPuppeteerOption = {height: 0, width: 1000};
+    //Need to handle the option for all type of certificate
+    const option: IPuppeteerOption = {height: 974, width: 1606};
 
     const imageBuffer = 
     await this.convertHtmlToImage(template, shareUserCertificate.credentialId, option);
-    const verifyCode = uuidv4();
 
     const imageUrl = await this.awsService.uploadUserCertificate(
       imageBuffer,
       'svg',
       'certificates',
       process.env.AWS_PUBLIC_BUCKET_NAME,
-      'base64'
+      'base64',
+      'certificates'
     );
     const existCredentialId = await this.userRepository.getUserCredentialsById(shareUserCertificate.credentialId);
     
@@ -966,7 +978,7 @@ export class UserService {
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/google-chrome', 
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      protocolTimeout: 200000,
+      protocolTimeout: 800000, //initial - 200000
       headless: true
     });
 
@@ -980,6 +992,22 @@ export class UserService {
     return screenshot;
   }
 
+  //Need to add interface
+  async getShorteningURL(shareUserCertificate, attributeArray): Promise<unknown> {
+    const urlObject = {
+      schemaId: shareUserCertificate.schemaId,
+      credDefId: shareUserCertificate.credDefId,
+      attribute: attributeArray,
+      credentialId:shareUserCertificate.credentialId,
+      email:attributeArray.find((attr) => "email" in attr).email
+    };
+
+    const qrCodeOptions = { type: 'image/png' };
+    const encodedData = Buffer.from(JSON.stringify(shareUserCertificate)).toString('base64');
+      const qrCode = await QRCode.toDataURL(`https://credebl.id/c_v?${encodedData}`, qrCodeOptions);
+
+    return qrCode;
+  }
   /**
    *
    * @param acceptRejectInvitation

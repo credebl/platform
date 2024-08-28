@@ -29,6 +29,7 @@ const createPlatformConfig = async (): Promise<void> => {
         }
     } catch (e) {
         logger.error('An error occurred seeding platformConfig:', e);
+        throw e;
     }
 };
 
@@ -56,6 +57,7 @@ const createOrgRoles = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding orgRoles:', e);
+        throw e;
     }
 };
 
@@ -85,6 +87,7 @@ const createAgentTypes = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding agentTypes:', e);
+        throw e;
     }
 };
 
@@ -113,6 +116,7 @@ const createOrgAgentTypes = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding orgAgentTypes:', e);
+        throw e;
     }
 };
 
@@ -142,6 +146,7 @@ const createPlatformUser = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding platformUser:', e);
+        throw e;
     }
 };
 
@@ -170,6 +175,7 @@ const createPlatformOrganization = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding platformOrganization:', e);
+        throw e;
     }
 };
 
@@ -210,6 +216,7 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding platformOrganization:', e);
+        throw e;
     }
 };
 
@@ -245,6 +252,7 @@ const createLedger = async (): Promise<void> => {
       }
     } catch (e) {
       logger.error('An error occurred seeding createLedger:', e);
+      throw e;
     }
   };
 
@@ -274,6 +282,7 @@ const createEcosystemRoles = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding ecosystemRoles:', e);
+        throw e;
     }
 };
 
@@ -304,6 +313,7 @@ const createEcosystemConfig = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding createEcosystemConfig:', e);
+        throw e;
     }
 };
 
@@ -346,6 +356,7 @@ const createLedgerConfig = async (): Promise<void> => {
         }
     } catch (e) {
         logger.error('An error occurred while configuring ledger:', e);
+        throw e;
     }
 };
 
@@ -375,6 +386,7 @@ const createUserRole = async (): Promise<void> => {
 
     } catch (e) {
         logger.error('An error occurred seeding user role:', e);
+        throw e;
     }
 };
 
@@ -423,6 +435,7 @@ const migrateOrgAgentDids = async (): Promise<void> => {
         }
     } catch (error) {
         logger.error('An error occurred during migrateOrgAgentDids:', error);
+        throw error;
     }
 };
 
@@ -450,6 +463,7 @@ const addSchemaType = async (): Promise<void> => {
         }
     } catch (error) {
         logger.error('An error occurred during addSchemaType:', error);
+        throw error;
     }
 };
 
@@ -474,6 +488,7 @@ const importGeoLocationMasterData = async (): Promise<void> => {
       }
     } catch (error) {
       logger.error('An error occurred during importGeoLocationMasterData:', error);
+      throw error;
     }
   };
 
@@ -484,6 +499,7 @@ const encryptClientCredential = async (clientCredential: string): Promise<string
         return encryptedToken;
     } catch (error) {
         logger.error('An error occurred during encryptClientCredential:', error);
+        throw error;
     }
 };
 
@@ -514,6 +530,7 @@ const updateClientCredential = async (): Promise<void> => {
           
     } catch (error) {
         logger.error('An error occurred during updateClientCredential:', error);
+        throw error;
     }
 };
 

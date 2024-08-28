@@ -27,9 +27,9 @@ const createPlatformConfig = async (): Promise<void> => {
         } else {
             logger.log('Already seeding in platform config');
         }
-    } catch (e) {
-        logger.error('An error occurred seeding platformConfig:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding platformConfig:', error);
+        throw error;
     }
 };
 
@@ -55,9 +55,9 @@ const createOrgRoles = async (): Promise<void> => {
             logger.log('Already seeding in org role');
         }
 
-    } catch (e) {
-        logger.error('An error occurred seeding orgRoles:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding orgRoles:', error);
+        throw error;
     }
 };
 
@@ -85,9 +85,9 @@ const createAgentTypes = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding agentTypes:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding agentTypes:', error);
+        throw error;
     }
 };
 
@@ -114,9 +114,9 @@ const createOrgAgentTypes = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding orgAgentTypes:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding orgAgentTypes:', error);
+        throw error;
     }
 };
 
@@ -144,9 +144,9 @@ const createPlatformUser = async (): Promise<void> => {
             logger.log('Already seeding in user');
         }
 
-    } catch (e) {
-        logger.error('An error occurred seeding platformUser:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding platformUser:', error);
+        throw error;
     }
 };
 
@@ -173,9 +173,9 @@ const createPlatformOrganization = async (): Promise<void> => {
             logger.log('Already seeding in organization');
         }
 
-    } catch (e) {
-        logger.error('An error occurred seeding platformOrganization:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding platformOrganization:', error);
+        throw error;
     }
 };
 
@@ -214,9 +214,9 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding platformOrganization:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding platformOrganization:', error);
+        throw error;
     }
 };
 
@@ -250,9 +250,9 @@ const createLedger = async (): Promise<void> => {
             logger.log('No changes in ledger data');
         }
       }
-    } catch (e) {
-      logger.error('An error occurred seeding createLedger:', e);
-      throw e;
+    } catch (error) {
+      logger.error('An error occurred seeding createLedger:', error);
+      throw error;
     }
   };
 
@@ -280,9 +280,9 @@ const createEcosystemRoles = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding ecosystemRoles:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding ecosystemRoles:', error);
+        throw error;
     }
 };
 
@@ -311,9 +311,9 @@ const createEcosystemConfig = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding createEcosystemConfig:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding createEcosystemConfig:', error);
+        throw error;
     }
 };
 
@@ -354,9 +354,9 @@ const createLedgerConfig = async (): Promise<void> => {
         } else {
             logger.log('Already seeding in ledger config');
         }
-    } catch (e) {
-        logger.error('An error occurred while configuring ledger:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred while configuring ledger:', error);
+        throw error;
     }
 };
 
@@ -384,9 +384,9 @@ const createUserRole = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding user role:', e);
-        throw e;
+    } catch (error) {
+        logger.error('An error occurred seeding user role:', error);
+        throw error;
     }
 };
 
@@ -559,8 +559,8 @@ main()
     .then(async () => {
         await prisma.$disconnect();
     })
-    .catch(async (e) => {
-        logger.error(`In prisma seed initialize`, e);
+    .catch(async (error) => {
+        logger.error(`In prisma seed initialize`, error);
         await prisma.$disconnect();
         process.exit(1);
     });

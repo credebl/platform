@@ -1,5 +1,5 @@
 {
-    "family": "DEV_API-GATEWAY_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
             "name": "api_gateway",
@@ -34,7 +34,7 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_API-GATEWAY_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },

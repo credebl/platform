@@ -1,5 +1,5 @@
 {
-    "family": "DEV_USER_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
             "name": "user",
@@ -22,7 +22,7 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_USER_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },

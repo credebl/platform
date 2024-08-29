@@ -1,5 +1,5 @@
 {
-    "family": "DEV_ISSUANCE_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
             "name": "issuance",
@@ -28,7 +28,7 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_ISSUANCE_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },

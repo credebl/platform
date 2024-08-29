@@ -1,12 +1,18 @@
 {
-    "family": "DEV_AGENT-PROVISIONING_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
-            "name": "agent_provisioning",
-            "image": "%REPOSITORY_URI%:AGENT-PROVISIONING_v_%BUILD_NUMBER%",
+            "name": "api_gateway",
+            "image": "%REPOSITORY_URI%:API_GATEWAY_v_%BUILD_NUMBER%",
             "cpu": 256,
             "memory": 512,
-            "portMappings": [],
+            "portMappings": [
+                {
+                    "containerPort": 5000,
+                    "hostPort": 5000,
+                    "protocol": "tcp"
+                }
+            ],
             "essential": true,
             "environment": [],
             "environmentFiles": [
@@ -17,13 +23,8 @@
             ],
             "mountPoints": [
                 {
-                    "sourceVolume": "agent-config",
-                    "containerPath": "/app/agent-provisioning/AFJ/agent-config",
-                    "readOnly": false
-                },
-                {
-                    "sourceVolume": "port-file",
-                    "containerPath": "/app/agent-provisioning/AFJ/port-file",
+                    "sourceVolume": "uploadedFiles",
+                    "containerPath": "/app/uploadedFiles",
                     "readOnly": false
                 }
             ],
@@ -33,7 +34,7 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_AGENT-PROVISIONING_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },
@@ -41,6 +42,7 @@
             }
         }
     ],
+   
     "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "placementConstraints": [],
@@ -51,25 +53,13 @@
     "memory": "512",
     "volumes": [
         {
-            "name": "agent-config",
+            "name": "uploadedFiles",
             "efsVolumeConfiguration": {
                 "fileSystemId": "${EFS}",
                 "rootDirectory": "/",
                 "transitEncryption": "ENABLED",
                 "authorizationConfig": {
-                    "accessPointId": "${AGENT_CONFIG_ACCESS_POINT}",
-                    "iam": "DISABLED"
-                }
-            }
-        },
-        {
-            "name": "port-file",
-            "efsVolumeConfiguration": {
-                "fileSystemId": "${EFS}",
-                "rootDirectory": "/",
-                "transitEncryption": "ENABLED",
-                "authorizationConfig": {
-                    "accessPointId": "${PORT_FILE_ACCESS_POINT}",
+                    "accessPointId": "${UPLOADFILES_ACCESS_POINT}",
                     "iam": "DISABLED"
                 }
             }

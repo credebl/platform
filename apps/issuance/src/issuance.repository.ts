@@ -183,8 +183,8 @@ export class IssuanceRepository {
 
       let schemaId = '';
 
-      if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId) {
-        schemaId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId;
+      if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId || issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1]) {
+        schemaId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId || issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1];
       }
 
       let credDefId = '';

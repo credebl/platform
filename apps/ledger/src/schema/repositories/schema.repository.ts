@@ -276,7 +276,7 @@ export class SchemaRepository {
       });
 
       // Handle null orgId in the response
-      const schemasWithDefaultOrgId = schemasResult.map(schema => ({
+      const schemasWithDefaultOrgId = schemaResult.map(schema => ({
         ...schema,
         orgId: schema.orgId || null // Replace null orgId with 'N/A' or any default value
       }));

@@ -28,7 +28,7 @@ import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
 import { AwsService } from '@credebl/aws';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential, IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential, IJsonldCredential, IPrettyVc, ISchemaObject } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
 import { createOobJsonldIssuancePayload, validateAndUpdateIssuanceDates, validateEmail } from '@credebl/common/cast.helper';
@@ -456,6 +456,30 @@ export class IssuanceService {
         orgId,
         issuedCredentialsSearchCriteria
       );
+
+      const getSchemaIds = getIssuedCredentialsList?.issuedCredentialsList?.map((schema) => schema?.schemaId);
+
+      const getSchemaDetails = await this._getSchemaDetails(getSchemaIds);
+
+      let responseWithSchemaName;
+      if (getSchemaDetails) {
+        responseWithSchemaName = getIssuedCredentialsList?.issuedCredentialsList.map(file => {
+          const schemaDetail = getSchemaDetails?.find(schema => schema.schemaLedgerId === file.schemaId);
+          return {
+            ...file,
+            schemaName: schemaDetail?.name
+          };
+        });
+      } else {     
+        const getSchemaUrlDetails = await this.getSchemaUrlDetails(getSchemaIds);
+        responseWithSchemaName = getIssuedCredentialsList?.issuedCredentialsList.map(file => {
+          const schemaDetail = getSchemaUrlDetails?.find(schema => schema.title);
+          return {
+            ...file,
+            schemaName: schemaDetail?.title
+          };
+        });
+      }
       const issuedCredentialsResponse: IIssuedCredential = {
         totalItems: getIssuedCredentialsList.issuedCredentialsCount,
         hasNextPage:
@@ -464,7 +488,7 @@ export class IssuanceService {
         nextPage: Number(issuedCredentialsSearchCriteria.pageNumber) + 1,
         previousPage: issuedCredentialsSearchCriteria.pageNumber - 1,
         lastPage: Math.ceil(getIssuedCredentialsList.issuedCredentialsCount / issuedCredentialsSearchCriteria.pageSize),
-        data: getIssuedCredentialsList.issuedCredentialsList
+        data: responseWithSchemaName
       };
 
       if (0 === getIssuedCredentialsList?.issuedCredentialsCount) {
@@ -477,6 +501,22 @@ export class IssuanceService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async getSchemaUrlDetails(schemaUrls: string[]): Promise<ISchemaObject[]> {
+    const results = [];
+    
+    for (const schemaUrl of schemaUrls) {
+        const schemaRequest = await this.commonService.httpGet(schemaUrl);
+        if (!schemaRequest) {
+            throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
+                cause: new Error(),
+                description: ResponseMessages.errorMessages.notFound
+            });
+        }
+        results.push(schemaRequest);
+    }
+    return results;
+}
 
   async _getIssueCredentials(url: string, apiKey: string): Promise<{
     response: string;

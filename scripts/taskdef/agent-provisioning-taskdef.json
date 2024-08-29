@@ -1,9 +1,9 @@
 {
-    "family": "DEV_ISSUANCE_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
-            "name": "issuance",
-            "image": "%REPOSITORY_URI%:ISSUANCE_v_%BUILD_NUMBER%",
+            "name": "agent_provisioning",
+            "image": "%REPOSITORY_URI%:AGENT-PROVISIONING_v_%BUILD_NUMBER%",
             "cpu": 256,
             "memory": 512,
             "portMappings": [],
@@ -17,8 +17,13 @@
             ],
             "mountPoints": [
                 {
-                    "sourceVolume": "uploadedFiles",
-                    "containerPath": "/app/uploadedFiles",
+                    "sourceVolume": "agent-config",
+                    "containerPath": "/app/agent-provisioning/AFJ/agent-config",
+                    "readOnly": false
+                },
+                {
+                    "sourceVolume": "port-file",
+                    "containerPath": "/app/agent-provisioning/AFJ/port-file",
                     "readOnly": false
                 }
             ],
@@ -28,7 +33,7 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_ISSUANCE_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },
@@ -44,15 +49,27 @@
     ],
     "cpu": "256",
     "memory": "512",
-   "volumes": [
+    "volumes": [
         {
-            "name": "uploadedFiles",
+            "name": "agent-config",
             "efsVolumeConfiguration": {
                 "fileSystemId": "${EFS}",
                 "rootDirectory": "/",
                 "transitEncryption": "ENABLED",
                 "authorizationConfig": {
-                    "accessPointId": "${UPLOADFILES_ACCESS_POINT}",
+                    "accessPointId": "${AGENT_CONFIG_ACCESS_POINT}",
+                    "iam": "DISABLED"
+                }
+            }
+        },
+        {
+            "name": "port-file",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "${EFS}",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "${PORT_FILE_ACCESS_POINT}",
                     "iam": "DISABLED"
                 }
             }

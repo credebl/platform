@@ -1,9 +1,9 @@
 {
-    "family": "DEV_WEBHOOK_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
-            "name": "webhook",
-            "image": "%REPOSITORY_URI%:WEBHOOK_v_%BUILD_NUMBER%",
+            "name": "verification",
+            "image": "%REPOSITORY_URI%:VERIFICATION_v_%BUILD_NUMBER%",
             "cpu": 256,
             "memory": 512,
             "portMappings": [],
@@ -22,7 +22,7 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_WEBHOOK_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },
@@ -31,6 +31,7 @@
         }
         
     ],
+   
     "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "placementConstraints": [],

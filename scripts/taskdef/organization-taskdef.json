@@ -1,10 +1,10 @@
 {
-    "family": "DEV_VERIFICATION_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
-            "name": "verification",
-            "image": "%REPOSITORY_URI%:VERIFICATION_v_%BUILD_NUMBER%",
-            "cpu": 256,
+            "name": "organization",
+            "image": "%REPOSITORY_URI%:ORGANIZATION_v_%BUILD_NUMBER%",
+            "cpu":256 ,
             "memory": 512,
             "portMappings": [],
             "essential": true,
@@ -22,7 +22,7 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_VERIFICATION_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },

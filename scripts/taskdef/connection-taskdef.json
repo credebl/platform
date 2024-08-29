@@ -1,10 +1,10 @@
 {
-    "family": "DEV_ORGANIZATION_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
-            "name": "organization",
-            "image": "%REPOSITORY_URI%:ORGANIZATION_v_%BUILD_NUMBER%",
-            "cpu":256 ,
+            "name": "connection",
+            "image": "%REPOSITORY_URI%:CONNECTION_v_%BUILD_NUMBER%",
+            "cpu": 256,
             "memory": 512,
             "portMappings": [],
             "essential": true,
@@ -22,7 +22,7 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_ORGANIZATION_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },
@@ -31,7 +31,6 @@
         }
         
     ],
-   
     "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "placementConstraints": [],

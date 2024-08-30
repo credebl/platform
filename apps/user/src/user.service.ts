@@ -65,6 +65,8 @@ import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
+import { toNumber } from '@credebl/common/cast.helper';
+import * as jwt from 'jsonwebtoken';
 import { EventPinnacle } from '../templates/event-pinnacle';
 import { EventCertificate } from '../templates/event-certificates';
 import * as QRCode from 'qrcode';

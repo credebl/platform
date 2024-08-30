@@ -1,5 +1,16 @@
 export class OutOfBandIssuance {
-  public outOfBandIssuance(email: string, orgName: string, agentEndPoint: string): string {
+  public outOfBandIssuance(
+    email: string,
+    orgName: string,
+    deepLinkURL: string,
+    platformName?: string,
+    organizationLogoUrl?: string
+  ): string {
+    
+    const logoUrl = organizationLogoUrl || process.env.BRAND_LOGO;
+    const platform = platformName || process.env.PLATFORM_NAME;
+    const poweredBy = platformName || process.env.POWERED_BY;
+
     try {
       return `<!DOCTYPE html>
       <html lang="en">
@@ -8,12 +19,27 @@ export class OutOfBandIssuance {
           <title></title>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style type="text/css">
+            /* Mobile Styles */
+            @media only screen and (max-width: 600px) {
+                .desktop-button {
+                    display: none !important;
+                }
+            }
+    
+            /* Desktop Styles */
+            @media only screen and (min-width: 601px) {
+                .mobile-button {
+                    display: none !important;
+                }
+            }
+        </style>
       </head>
       
       <body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
           <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
               <div style="display: block; text-align:center;" >
-              <img src="${process.env.BRAND_LOGO}" alt="${process.env.PLATFORM_NAME} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+              <img src="${logoUrl}" alt="${platform} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
               </div>
               <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
               font-size: 15px; line-height: 24px;color: #00000;">
@@ -35,9 +61,15 @@ export class OutOfBandIssuance {
                           <li>Check <b>"Credentials"</b> tab in ${process.env.MOBILE_APP} to view the issued credential.</li>
                       </ul>
                       <div style="text-align: center; padding-bottom: 20px;">
-                      <a clicktracking=off href="${agentEndPoint}"
+                      <a clicktracking=off href="${deepLinkURL}"
+                          class="mobile-button"
                           style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
                           Accept Credential
+                      </a>
+                      <a clicktracking=off href="${process.env.MOBILE_APP_DOWNLOAD_URL}"
+                          class="desktop-button"
+                          style="padding: 10px 20px 10px 20px;color: #fff;background: #1F4EAD;border-radius: 5px;text-decoration: none;">
+                          Download App
                       </a>
                   </div>
                   
@@ -56,7 +88,7 @@ export class OutOfBandIssuance {
 
                   </div>
                   <p style="margin-top: 6px;">
-                     © ${process.env.POWERED_BY}
+                     © ${poweredBy}
                   </p>
                   </footer>
               </div>

@@ -1,9 +1,32 @@
+export enum NATSReconnects {
+    maxReconnectAttempts = (10 * 60) / 5, // 10 minutes with a reconnection attempt every 5 seconds
+    reconnectTimeWait = 5000 // 5 second delay between reconnection attempts
+}
+
 export enum SortValue {
     ASC = 'asc',
     DESC = 'desc'
 }
 
+export enum SortFields {
+    ID = 'id',
+    CREATED_DATE_TIME = 'createDateTime',
+    NAME = 'name',
+    VERSION = 'version',
+    LEDGER_ID = 'schemaLedgerId',
+    PUBLISHER_DID = 'publisherDid',
+    ISSUER_ID = 'issuerId'
+}
+
+export enum CredDefSortFields {
+    CREATED_DATE_TIME = 'createDateTime',
+    TAG = 'tag',
+    LEDGER_ID = 'schemaLedgerId',
+    CRED_DEF_ID= 'credentialDefinitionId'
+}
+
 export enum AgentType {
+    // TODO: Change to Credo
     AFJ = 'AFJ',
     ACAPY = 'ACAPY'
 }
@@ -32,6 +55,7 @@ export enum Ledgers {
     Indicio_Testnet = 'Indicio Testnet',
     Indicio_Demonet = 'Indicio Demonet',
     Indicio_Mainnet = 'Indicio Mainnet',
+    Not_Applicable = 'NA'
 }
 
 export enum Invitation {
@@ -58,6 +82,11 @@ export enum EcosystemConfigSettings {
 export enum EndorserTransactionType {
     SCHEMA = 'schema',
     CREDENTIAL_DEFINITION = 'credential-definition',
+}
+
+export enum schemaRequestType {
+    W3C = 'w3c',
+    INDY = 'indy'
 }
 
 export enum OrgAgentType {
@@ -104,8 +133,129 @@ const transitionMap: { [key in Invitation]: Invitation[] } = {
     [Invitation.REJECTED]: []
 };
 
-export enum CertificateDetails {
-    PINNACLE_CRED_DEF = 'PKDMuYSzJE22Jkh4B1EMiX:3:CL:826:Pinnacle Certificate'
+export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));
+
+export enum SchemaType {
+    INDY = 'indy',
+    W3C_Schema = 'w3c'
 }
 
-export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean => (transitionMap[currentStatus].includes(nextStatus));
+export enum IssueCredentialType {
+    JSONLD = 'jsonld',
+    INDY = 'indy'
+}
+
+export enum TemplateIdentifier {
+    EMAIL_COLUMN = 'email_identifier'
+}
+
+export enum PromiseResult {
+    REJECTED = 'rejected',
+    FULFILLED = 'fulfilled'
+}
+
+export enum PrismaTables {
+    PRESENTATIONS = 'presentations',
+    CREDENTIALS = 'credentials',
+    ECOSYSTEM_ORGS = 'ecosystem_orgs',
+    ORG_AGENTS = 'org_agents',
+    ORG_DIDS = 'org_dids',
+    AGENT_INVITATIONS = 'agent_invitations',
+    CONNECTIONS = 'connections',
+    ECOSYSTEM_INVITATIONS = 'ecosystem_invitations',
+    FILE_UPLOAD = 'file_upload',
+    NOTIFICATION = 'notification',
+    USER_ACTIVITY = 'user_activity',
+    USER_ORG_ROLES = 'user_org_roles',
+    ORG_INVITATIONS = 'org_invitations',
+    ORGANIZATION = 'organization'
+}
+
+export enum IssuanceProcessState {
+    PROPOSAL_SENT = 'proposal-sent',
+    PROPOSAL_RECEIVED = 'proposal-received',
+    OFFER_SENT = 'offer-sent',
+    OFFER_RECEIVED = 'offer-received',
+    DECLIEND = 'decliend',
+    REQUEST_SENT = 'request-sent',
+    REQUEST_RECEIVED = 'request-received',
+    CREDENTIAL_ISSUED = 'credential-issued',
+    CREDENTIAL_RECEIVED = 'credential-received',
+    DONE = 'done',
+    ABANDONED = 'abandoned'
+}
+
+export enum VerificationProcessState {
+    PROPOSAL_SENT = 'proposal-sent',
+    PROPOSAL_RECEIVED = 'proposal-received',
+    REQUEST_SENT = 'request-sent',
+    REQUEST_RECEIVED = 'request-received',
+    PRESENTATION_SENT = 'presentation-sent',
+    PRESENTATION_RECEIVED = 'presentation-received',
+    DECLIEND = 'declined',
+    ABANDONED = 'abandoned',
+    DONE = 'done'
+}
+
+export enum ConnectionProcessState {
+    START = 'start',
+    INVITATION_SENT = 'invitation-sent',
+    INVITATION_RECEIVED = 'invitation-received',
+    REQUEST_SENT = 'request-sent',
+    DECLIEND = 'decliend',
+    REQUEST_RECEIVED = 'request-received',
+    RESPONSE_SENT = 'response-sent',
+    RESPONSE_RECEIVED = 'response-received',
+    COMPLETE = 'completed',
+    ABANDONED = 'abandoned'
+}
+
+export enum SchemaTypeEnum {
+    JSON = 'json',
+    INDY = 'indy'
+  }
+
+export enum W3CSchemaDataType {
+    NUMBER = 'number',
+    INTEGER = 'integer',
+    STRING = 'string',
+    DATE_TIME = 'datetime-local'
+  }
+
+export enum JSONSchemaType {
+    POLYGON_W3C = 'polygon',
+    LEDGER_LESS = 'no_ledger'
+}
+
+export enum NetworkNamespace {
+    POLYGON_TESTNET = 'polygon:testnet'
+}
+
+export enum LedgerLessMethods {
+    WEB = 'web',
+    KEY = 'key'
+}
+
+export enum LedgerLessConstant {
+    NO_LEDGER = 'no_ledger',
+}
+
+export enum ledgerLessDIDType {
+    DID_KEY = 'did:key',
+    DID_WEB = 'did:web'
+}
+
+export enum CloudWalletType {
+    BASE_WALLET = 'CLOUD_BASE_WALLET',
+    SUB_WALLET = 'CLOUD_SUB_WALLET'
+}
+
+export enum UserRole {
+    DEFAULT_USER = 'DEFAULT_USER',
+    HOLDER = 'HOLDER'
+}
+
+export enum ProofType {
+    POLYGON_PROOFTYPE = 'EcdsaSecp256k1Signature2019',
+    NO_LEDGER_PROOFTYPE = 'Ed25519Signature2018'
+}

@@ -1,7 +1,7 @@
-import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiExtraModels, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { EcosystemService } from './ecosystem.service';
 import { Controller, UseFilters, Put, Post, Get, Body, Param, UseGuards, Query, BadRequestException, Delete, HttpStatus, Res, ParseUUIDPipe } from '@nestjs/common';
-import { RequestCredDefDto, RequestSchemaDto } from './dtos/request-schema.dto';
+import { RequestCredDefDto, RequestSchemaDto, RequestW3CSchemaDto } from './dtos/request-schema.dto';
 import IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -27,6 +27,8 @@ import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { AddOrganizationsDto } from './dtos/add-organizations.dto';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 
 @UseFilters(CustomExceptionFilter)
@@ -141,7 +143,7 @@ export class EcosystemController {
   })
   async getEcosystem(
     @Query() paginationDto: PaginationDto,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     const ecosystemList = await this.ecosystemService.getAllEcosystem(orgId, paginationDto);
@@ -305,22 +307,43 @@ export class EcosystemController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  
   @Post('/:ecosystemId/:orgId/transaction/schema')
+  @ApiExtraModels(RequestSchemaDto, RequestW3CSchemaDto)
   @ApiOperation({ summary: 'Request new schema', description: 'Create request for new schema' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER, EcosystemRoles.ECOSYSTEM_LEAD, EcosystemRoles.ECOSYSTEM_OWNER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async requestSchemaTransaction(@Body() requestSchemaPayload: RequestSchemaDto, @Param('orgId') orgId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
-    requestSchemaPayload.userId = user.id;
-    
-    const createSchemaRequest: IEndorsementTransaction = await this.ecosystemService.schemaEndorsementRequest(requestSchemaPayload, orgId, ecosystemId);
+  async requestSchemaTransaction(
+    @Body() requestSchemaPayload: RequestSchemaDto,
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    ) orgId: string,   
+    @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string,
+    @Res() res: Response,
+    @User() user: user
+  ): Promise<Response> {
+
+    const createSchemaRequest = await this.ecosystemService.schemaEndorsementRequest(
+      requestSchemaPayload,
+      user,
+      orgId,
+      ecosystemId
+    );
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.schemaRequest,
       data: createSchemaRequest
     };
+
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
@@ -360,7 +383,7 @@ export class EcosystemController {
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('orgId') orgId: string, @Param('ecosystemId') ecosystemId: string, @Res() res: Response, @User() user: user): Promise<Response> {
+  async requestCredDefTransaction(@Body() requestCredDefPayload: RequestCredDefDto, @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response, @User() user: user): Promise<Response> {
     requestCredDefPayload.userId = user.id;
     const createCredDefRequest: IEndorsementTransaction = await this.ecosystemService.credDefEndorsementRequest(requestCredDefPayload, orgId, ecosystemId);
     const finalResponse: IResponse = {
@@ -378,38 +401,68 @@ export class EcosystemController {
   @ApiBearerAuth()
   @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  async SignEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    const transactionResponse = await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
+  async SignEndorsementRequests(
+    @Param('endorsementId', TrimStringParamPipe) endorsementId: string,
+    @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string,
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    ) orgId: string,   
+    @Res() res: Response
+  ): Promise<Response> {
     
-    const responseMessage =
-    true === transactionResponse['autoEndorsement']
-      ? ResponseMessages.ecosystem.success.AutoSignAndSubmit
-      : ResponseMessages.ecosystem.success.sign;
+    const transactionResponse = await this.ecosystemService.signTransaction(endorsementId, ecosystemId);
 
-  const finalResponse: IResponse = {
-    statusCode: HttpStatus.CREATED,
-    message: responseMessage,
-    data: transactionResponse
-  };
-  return res.status(HttpStatus.CREATED).json(finalResponse);
-}
+    const responseMessage =
+      true === transactionResponse['autoEndorsement']
+        ? ResponseMessages.ecosystem.success.AutoSignAndSubmit
+        : ResponseMessages.ecosystem.success.sign;
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: responseMessage,
+      data: transactionResponse
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
 
   @Post('/:ecosystemId/:orgId/transaction/submit/:endorsementId')
   @ApiOperation({ summary: 'Submit transaction', description: 'Submit transaction' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, OrgRolesGuard)
   @ApiBearerAuth()
-  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER)
+  @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_MEMBER, EcosystemRoles.ECOSYSTEM_LEAD)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
-  async SubmitEndorsementRequests(@Param('endorsementId') endorsementId: string, @Param('ecosystemId') ecosystemId: string, @Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    const transactionResponse = await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId);
+  async SubmitEndorsementRequests(
+    @Param('endorsementId', TrimStringParamPipe) endorsementId: string,
+    @Param('ecosystemId', TrimStringParamPipe) ecosystemId: string,
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    const transactionResponse = await this.ecosystemService.submitTransaction(endorsementId, ecosystemId, orgId, user);
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.submit,
-      data: transactionResponse
+      message: transactionResponse?.['responseMessage'],
+      data: transactionResponse?.['txnPayload']
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+
   /**
    * 
    * @param bulkInvitationDto 
@@ -447,6 +500,45 @@ export class EcosystemController {
 
   }
 
+  /**
+   *
+   * @param orgId
+   * @param ecosystemId
+   */
+    @Post('/:ecosystemId/:orgId/orgs')
+    @ApiOperation({
+      summary: 'Add multiple organizations of ecosystem owner in ecosystem',
+      description: 'Add multiple organizations of ecosystem owner under the same ecosystem'
+    })
+    @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemRolesGuard)
+    @EcosystemsRoles(EcosystemRoles.ECOSYSTEM_OWNER, EcosystemRoles.ECOSYSTEM_LEAD)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+    async addOrganizationsInEcosystem(
+      @Body() addOrganizationsDto: AddOrganizationsDto,
+      @Param('ecosystemId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId); }}), TrimStringParamPipe) ecosystemId: string,
+      @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+      @User() user: user,
+      @Res() res: Response
+    ): Promise<Response> {  
+  
+      addOrganizationsDto.ecosystemId = ecosystemId;
+      addOrganizationsDto.orgId = orgId;
+
+      const addOrganizations = await this.ecosystemService.addOrganizationsInEcosystem(addOrganizationsDto, user.id);
+      const { results, statusCode, message } = addOrganizations;
+
+      const finalResponse: IResponse = {
+        statusCode,
+        message,
+        data: results
+      };
+  
+      return res.status(statusCode).json(finalResponse);
+    }
+
+    
   /**
    * 
    * @param res 
@@ -562,6 +654,27 @@ export class EcosystemController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.DeclineEndorsementTransaction,
       data: response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/:orgId/member-org')
+  @ApiOperation({ summary: 'Delete organization from ecosystem as a ecosystem member', description: 'Delete organization from ecosystem as a ecosystem member' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER)
+  @ApiBearerAuth()
+  async deleteOrgFromEcosystem(
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+    @Res() res: Response,
+    @User() user: user
+  ): Promise<Response> {
+
+    await this.ecosystemService.deleteOrgFromEcosystem(orgId, user);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.deleteEcosystemMember
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

@@ -1,17 +1,34 @@
+import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 import { Prisma } from '@prisma/client';
+import { IUserRequestInterface } from 'apps/ledger/src/schema/interfaces/schema.interface';
 export interface AttributeValue {
   attributeName: string;
   schemaDataType: string;
   displayName: string;
 }
 
-export interface RequestSchemaEndorsement {
-  orgId: string;
-  userId?: string;
-  name: string;
-  version: string;
+export interface IW3CSchemaAttributesValue {
+  attributeName: string;
+  schemaDataType: W3CSchemaDataType;
+  displayName: string;
+  isRequired: boolean;
+}
+export interface IRequestSchemaEndorsement {
+  type: SchemaTypeEnum,
+  endorse?: boolean,
+  schemaPayload: IRequestIndySchemaEndorsement | IRequestW3CSchemaEndorsement
+}
+
+export interface IRequestIndySchemaEndorsement {
+  schemaName: string;
+  schemaVersion: string;
   attributes: AttributeValue[];
-  endorse?: boolean;
+}
+export interface IRequestW3CSchemaEndorsement {
+  schemaName: string;
+  attributes: IW3CSchemaAttributesValue[];
+  schemaType: JSONSchemaType;
+  description: string;
 }
 
 export interface RequestCredDeffEndorsement {
@@ -134,6 +151,7 @@ export interface SaveSchema {
   publisherDid: string;
   orgId: string;
   ledgerId: string;
+  type?: string;
 }
 
 export interface saveCredDef {
@@ -256,11 +274,12 @@ export interface IEcosystemInvitation {
   totalPages: number;
 }
 
-export interface TransactionPayload {
+export interface ITransactionData {
   endorsementId: string;
   ecosystemId: string;
   ecosystemLeadAgentEndPoint?: string;
   orgId?: string;
+  user?: IUserRequestInterface
 }
 
 export interface IEcosystemDashboard {
@@ -368,4 +387,101 @@ export interface IEcosystemList {
   pageNumber: number;
   pageSize: number;
   search: string;
+}
+
+export interface IEcosystemLeadOrgs {
+  organizationIds: string[];
+  ecosystemId: string;
+  orgId: string;
+  userId: string;
+}
+
+export interface IEcosystemOrgs {
+  orgId: string,
+  ecosystemId: string,
+  ecosystemRoleId: string,
+  status: string,
+  deploymentMode: string,
+  createdBy: string,
+  lastChangedBy: string
+}
+export interface IEcosystemOrgsData extends IEcosystemOrgs {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+}
+
+export interface IEcosystemOrgDetails {
+  count: Prisma.BatchPayload;
+  ecosystemOrgs: IEcosystemOrgsData[];
+}
+
+export interface IEcosystemEndorsementFlag {
+  autoEndorsement: boolean;
+}
+
+
+interface IEcosystemRole {
+  id: string;
+  name: string;
+  description: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+}
+
+interface IEcosystemMemberOrgs extends IEcosystemOrgs{
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+  ecosystemRole: IEcosystemRole;
+}
+
+export interface IEcosystemData {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: Prisma.JsonValue;
+  ecosystemOrgs: IEcosystemMemberOrgs[];
+}
+
+interface IW3CAttributeValue {
+  attributeName: string;
+  schemaDataType: W3CSchemaDataType;
+  displayName: string;
+  isRequired: boolean;
+}
+
+export interface ISubmitIndySchema {
+  schemaVersion?: string;
+  schemaName: string;
+  attributes: IAttributeValue[];
+  orgId?: string;  
+  orgDid?: string;
+}
+export interface ISubmitW3CSchema {
+  attributes: IW3CAttributeValue[];
+  schemaName: string;
+  description: string;
+  schemaType: JSONSchemaType;
+}
+export interface ISubmitSchemaEndorsement {
+  type: SchemaTypeEnum;
+  schemaPayload: ISubmitIndySchema | ISubmitW3CSchema;
+}
+
+export interface IschemaPayload {
+  schemaDetails: ISubmitSchemaEndorsement,
+  user: IUserRequestInterface,
+  orgId: string
 }

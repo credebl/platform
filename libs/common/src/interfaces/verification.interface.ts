@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 export interface IProofPresentationsListCount {
     proofRequestsCount: number;
     proofRequestsList: IProofPresentationItem[];
@@ -9,7 +11,9 @@ export interface IProofPresentationsListCount {
     connectionId: string;
     state: string;
     orgId: string;
-    presentationId: string;  
+    presentationId: string; 
+    schemaId?: string; 
+    emailId?: string
   }
   export interface IProofPresentationList {
     totalItems: number;
@@ -23,6 +27,25 @@ export interface IProofPresentationsListCount {
 
   export interface IProofPresentationDetails {
     [key: string]: string;
-    credDefId: string;
+    credDefId?: string;
     schemaId: string;
+    certificateTemplate?: string;
   }
+  export interface IVerificationRecords {
+    deleteResult: Prisma.BatchPayload;
+    recordsToDelete: IRecords[]
+  }
+
+interface IRecords {
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    connectionId: string;
+    orgId: string;
+    presentationId: string;
+    isVerified: boolean;
+    threadId: string;
+    state: string;
+}

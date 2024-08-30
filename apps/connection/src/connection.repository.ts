@@ -1,11 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ConflictException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { agent_invitations, org_agents, platform_config, shortening_url } from '@prisma/client';
 import { IConnectionSearchCriteria, ICreateConnection, OrgAgent } from './interfaces/connection.interfaces';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IConnectionsListCount } from '@credebl/common/interfaces/connection.interface';
-import { SortValue } from '@credebl/enum/enum';
+import { IConnectionsListCount, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { ResponseMessages } from '@credebl/common/response-messages';
 // import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
 export class ConnectionRepository {
@@ -49,7 +50,7 @@ export class ConnectionRepository {
     connectionInvitation: string,
     agentId: string,
     orgId: string,
-    recipientKey: string
+    invitationDid: string
     // eslint-disable-next-line camelcase
   ): Promise<agent_invitations> {
     try {
@@ -59,7 +60,7 @@ export class ConnectionRepository {
           agentId,
           connectionInvitation,
           multiUse: true,
-          recipientKey
+          invitationDid
         }
       });
       return agentDetails;
@@ -89,6 +90,22 @@ export class ConnectionRepository {
     }
   }
 
+
+  async getConnectionRecordsCount(orgId: string): Promise<number> {
+    try {
+      const connectionRecordsCount = await this.prisma.connections.count({
+        where: {
+          orgId
+        }
+      });
+      return connectionRecordsCount;
+    } catch (error) {
+      this.logger.error(`[get connection records by org Id] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+
   /**
    * Description: Save connection details
    * @param connectionInvitation
@@ -99,11 +116,10 @@ export class ConnectionRepository {
   // eslint-disable-next-line camelcase
   async saveConnectionWebhook(payload: ICreateConnection): Promise<object> {
     try {
-
-      let organisationId: string;
+      let organisationId;
       const { connectionDto, orgId } = payload;
 
-      if (connectionDto?.contextCorrelationId) {
+      if ('default' !== connectionDto?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganization(connectionDto?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
@@ -149,7 +165,7 @@ export class ConnectionRepository {
           break;
       }
 
-      const agentDetails = await this.prisma.connections.upsert({
+      return this.prisma.connections.upsert({
         where: {
           connectionId: connectionDto?.id
         },
@@ -169,7 +185,6 @@ export class ConnectionRepository {
           orgId: organisationId
         }
       });
-      return agentDetails;
     } catch (error) {
       this.logger.error(`Error in saveConnectionWebhook: ${error.message} `);
       throw error;
@@ -267,20 +282,20 @@ export class ConnectionRepository {
           connectionId: true
         },
         orderBy: {
-          [connectionSearchCriteria.sortField]: SortValue.ASC === connectionSearchCriteria.sortBy ? 'asc' : 'desc' 
+          [connectionSearchCriteria.sortField]: SortValue.ASC === connectionSearchCriteria.sortBy ? 'asc' : 'desc'
         },
         take: Number(connectionSearchCriteria.pageSize),
         skip: (connectionSearchCriteria.pageNumber - 1) * connectionSearchCriteria.pageSize
       });
       const connectionCount = await this.prisma.connections.count({
-          where: {
-            orgId,
-            OR: [
-              { theirLabel: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } },
-              { connectionId: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } }
-            ]
-          }
-        });
+        where: {
+          orgId,
+          OR: [
+            { theirLabel: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } },
+            { connectionId: { contains: connectionSearchCriteria.searchByText, mode: 'insensitive' } }
+          ]
+        }
+      });
 
       return { connectionCount, connectionsList };
     } catch (error) {
@@ -299,6 +314,83 @@ export class ConnectionRepository {
       return agent;
     } catch (error) {
       this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteConnectionRecordsByOrgId(orgId: string): Promise<IDeletedConnectionsRecord> {
+    const tablesToCheck = [`${PrismaTables.CREDENTIALS}`, `${PrismaTables.PRESENTATIONS}`];
+
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+        const referenceCounts = await Promise.all(
+          tablesToCheck.map((table) => prisma[table].count({ where: { orgId } }))
+        );
+
+        const referencedTables = referenceCounts
+          .map((count, index) => (0 < count ? tablesToCheck[index] : null))
+          .filter(Boolean);
+
+        if (0 < referencedTables.length) {
+          let errorMessage = `Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`;
+        
+          if (1 === referencedTables.length) {
+            if (referencedTables.includes(`${PrismaTables.PRESENTATIONS}`)) {
+              errorMessage += `, ${ResponseMessages.verification.error.removeVerificationData}`;
+            } else if (referencedTables.includes(`${PrismaTables.CREDENTIALS}`)) {
+              errorMessage += `, ${ResponseMessages.issuance.error.removeIssuanceData}`;
+            }
+          } else if (2 === referencedTables.length) {
+            errorMessage += `, ${ResponseMessages.connection.error.removeConnectionReferences}`;
+          }
+        
+          throw new ConflictException(errorMessage);
+        }
+  
+        const getConnectionRecords = await prisma.connections.findMany(
+          { 
+            where: { 
+              orgId 
+            },
+            select: {
+              createDateTime: true,
+              createdBy: true,
+              connectionId: true,
+              theirLabel: true,
+              state: true,
+              orgId: true
+
+            }
+          });
+
+        const deleteConnectionRecords = await prisma.connections.deleteMany(
+          { 
+            where: { 
+              orgId 
+            }
+          });
+
+        return {getConnectionRecords, deleteConnectionRecords };
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting connection records: ${error.message}`);
+      throw error;
+    }
+  }
+
+   // eslint-disable-next-line camelcase
+   async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
+    try {
+      return this.prisma.agent_invitations.findMany({
+        where: {
+          orgId
+        },
+        orderBy: {
+          createDateTime: 'asc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getInvitationDid in connection repository: ${error.message}`);
       throw error;
     }
   }

@@ -4,11 +4,11 @@ import { Controller, Logger } from '@nestjs/common';
 
 import { CredentialDefinitionService } from './credential-definition.service';
 import { MessagePattern } from '@nestjs/microservices';
-import {  GetAllCredDefsPayload, GetCredDefBySchemaId } from './interfaces/create-credential-definition.interface';
+import {  GetAllCredDefsPayload, GetCredDefBySchemaId, IPlatformCredDefs } from './interfaces/create-credential-definition.interface';
 import { CreateCredDefPayload, GetCredDefPayload } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
 import { CredDefSchema } from './interfaces/credential-definition.interface';
-
+import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 @Controller('credential-definitions')
 export class CredentialDefinitionController {
     private logger = new Logger();
@@ -25,25 +25,13 @@ export class CredentialDefinitionController {
         return this.credDefService.getCredentialDefinitionById(payload);
     }
 
+    @MessagePattern({ cmd: 'get-all-platform-cred-defs' })
+    async getAllSchema(credDefPayload: IPlatformCredDefs): Promise<IPlatformCredDefsData> {
+      return this.credDefService.getAllPlatformCredDefs(credDefPayload);
+    }
+
     @MessagePattern({ cmd: 'get-all-credential-definitions' })
-    async getAllCredDefs(payload: GetAllCredDefsPayload): Promise<{
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-        nextPage: number;
-        previousPage: number;
-        lastPage: number;
-        data: {
-            createDateTime: Date;
-            createdBy: string;
-            credentialDefinitionId: string;
-            tag: string;
-            schemaLedgerId: string;
-            schemaId: string;
-            orgId: string;
-            revocable: boolean;
-        }[]
-    }> {
+    async getAllCredDefs(payload: GetAllCredDefsPayload): Promise<ICredDefDetails> {
         return this.credDefService.getAllCredDefs(payload);
     }
 
@@ -52,8 +40,9 @@ export class CredentialDefinitionController {
         return this.credDefService.getCredentialDefinitionBySchemaId(payload);
     }
 
-    @MessagePattern({ cmd: 'get-all-schema-cred-defs-for-bulk-operation' })
-    async getAllCredDefAndSchemaForBulkOperation (payload: {orgId : string}): Promise<CredDefSchema[]> {
-        return this.credDefService.getAllCredDefAndSchemaForBulkOperation(payload.orgId);
+    @MessagePattern({ cmd: 'get-all-credential-template-for-bulk-operation' })
+    async getAllCredentialTemplates (payload: {orgId : string, schemaType: string }): Promise<CredDefSchema[]> {
+        const {orgId, schemaType} = payload;
+        return this.credDefService.getAllCredentialTemplates(orgId, schemaType);
     }
 }

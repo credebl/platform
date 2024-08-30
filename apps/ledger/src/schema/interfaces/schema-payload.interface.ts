@@ -1,4 +1,4 @@
-import { SortValue } from '@credebl/enum/enum';
+import { SchemaType, SortValue } from '@credebl/enum/enum';
 import { IUserRequestInterface } from './schema.interface';
 
 export interface ISchema {
@@ -17,6 +17,7 @@ export interface ISchema {
     transactionId?: string;
     endorserWriteTxn?: string;
     orgDid?: string;
+    type?: string;
 }
 
 export interface IAttributeValue {
@@ -56,6 +57,7 @@ export interface ISchemaSearchCriteria {
     sortField: string;
     sortBy: string;
     searchByText?: string;
+    schemaType?: SchemaType;
     user?: IUserRequestInterface
     schemaId?: string;
     orgId?: string;
@@ -77,6 +79,7 @@ export interface SchemaPayload {
     schemaName: string,
     did: string,
     description: string
+    jsonSchemaType?: string
   }
 
   export interface W3CSchemaAttributes {
@@ -86,7 +89,8 @@ export interface SchemaPayload {
   
 export interface W3CSchemaPayload {
     schemaPayload: SchemaPayload,
-    orgId: string
+    orgId: string,
+    user: string
   }
 
 export interface W3CCreateSchema {

@@ -12,7 +12,11 @@ export interface ISignInUser {
       }
       export interface ISendVerificationEmail {
         email: string;
+        clientId?: string;
+        clientSecret?: string;
         username?: string;
+        brandLogoUrl?: string;
+        platformName?: string;
       }
       
       export  interface IUserInvitations {
@@ -43,4 +47,7 @@ export interface ISignInUser {
         id: string;
         email: string;
       }    
-        
+
+export interface ISignUpUserResponse {
+  userId: string
+}

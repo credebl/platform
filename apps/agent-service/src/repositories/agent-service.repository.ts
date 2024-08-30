@@ -1,9 +1,9 @@
 import { PrismaService } from '@credebl/prisma-service';
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { ledgerConfig, ledgers, org_agents, org_agents_type, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreOrgAgentDetails } from '../interface/agent-service.interface';
-import { AgentType } from '@credebl/enum/enum';
+import { Prisma, ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
+import { ICreateOrgAgent, ILedgers, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace, OrgDid } from '../interface/agent-service.interface';
+import { AgentType, PrismaTables } from '@credebl/enum/enum';
 
 @Injectable()
 export class AgentServiceRepository {
@@ -124,36 +124,102 @@ export class AgentServiceRepository {
     // eslint-disable-next-line camelcase
     async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
         try {
+            const { id, userId, ledgerId, did, didDoc, ...commonFields } = storeOrgAgentDetails;
+            const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
+            const data = {
+                ...commonFields,
+                ledgerId: firstLedgerId,
+                createdBy: userId,
+                lastChangedBy: userId,
+                didDocument: didDoc,
+                orgDid: did
+            };
+            
+            // eslint-disable-next-line camelcase
+            const query: Promise<org_agents> = id ?
+                this.prisma.org_agents.update({
+                    where: { id },
+                    data
+                }) :
+                this.prisma.org_agents.create({ data });
 
-            return await this.prisma.org_agents.update({
-                where: {
-                    id: storeOrgAgentDetails.id
-                },
-                data: {
-                    orgDid: storeOrgAgentDetails.did,
-                    didDocument: storeOrgAgentDetails.didDoc,
-                    verkey: storeOrgAgentDetails.verkey,
-                    isDidPublic: storeOrgAgentDetails.isDidPublic,
-                    agentSpinUpStatus: storeOrgAgentDetails.agentSpinUpStatus,
-                    walletName: storeOrgAgentDetails.walletName,
-                    agentsTypeId: storeOrgAgentDetails.agentsTypeId,
-                    orgId: storeOrgAgentDetails.orgId,
-                    agentEndPoint: storeOrgAgentDetails.agentEndPoint,
-                    agentId: storeOrgAgentDetails.agentId ? storeOrgAgentDetails.agentId : null,
-                    orgAgentTypeId: storeOrgAgentDetails.orgAgentTypeId ? storeOrgAgentDetails.orgAgentTypeId : null,
-                    tenantId: storeOrgAgentDetails.tenantId ? storeOrgAgentDetails.tenantId : null,
-                    ledgerId: storeOrgAgentDetails.ledgerId[0],
-                    apiKey: storeOrgAgentDetails.apiKey
-                },
-                select: {
-                    id: true
-                }
-            });
+            return { id: (await query).id };
         } catch (error) {
             this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
             throw error;
         }
     }
+      
+    /**
+     * Store DID details
+     * @param storeDidDetails
+     * @returns did details
+     */
+    // eslint-disable-next-line camelcase
+    async storeDidDetails(storeDidDetails: IStoreDidDetails): Promise<org_dids> {
+        try {
+          const {orgId, did, didDocument, isPrimaryDid, userId, orgAgentId} = storeDidDetails;
+
+          return this.prisma.org_dids.create({
+                data: {
+                    orgId,
+                    did,
+                    didDocument,
+                    isPrimaryDid,
+                    createdBy: userId,
+                    lastChangedBy: userId,
+                    orgAgentId
+                }
+            });
+        } catch (error) {
+            this.logger.error(`[storeDidDetails] - Store DID details: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+
+    /**
+     * Set primary DID
+     * @param did
+     * @returns did details
+     */
+    // eslint-disable-next-line camelcase
+    async setPrimaryDid(orgDid: string, orgId: string, didDocument: Prisma.JsonValue): Promise<org_agents> {
+        try {
+          return await this.prisma.org_agents.update({
+                 where: {
+                    orgId
+                 },
+                data: {
+                    orgDid,
+                    didDocument
+                }
+            });
+           
+        } catch (error) {
+            this.logger.error(`[setprimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
+    // eslint-disable-next-line camelcase
+    async updateLedgerId(orgId: string, ledgerId: string): Promise<org_agents> {
+        try {
+          return await this.prisma.org_agents.update({
+                 where: {
+                    orgId
+                 },
+                data: {
+                    ledgerId
+                }
+            });
+           
+        } catch (error) {
+            this.logger.error(`[updateLedgerId] - Update ledgerId: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
 
     /**
      * Get agent details
@@ -371,4 +437,109 @@ export class AgentServiceRepository {
       throw error;
     }
   }
+
+  async getLedgerByNameSpace(indyNamespace: string): Promise<LedgerNameSpace> {
+    try {
+      if (indyNamespace) {
+        const ledgerDetails = await this.prisma.ledgers.findFirstOrThrow({
+          where: {
+            indyNamespace
+          }
+        });
+        return ledgerDetails;
+      }
+
+    } catch (error) {
+      this.logger.error(`[getLedgerByNameSpace] - get indy ledger: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOrgDid(orgId: string): Promise<OrgDid[]> {
+    try {
+      const orgDids = await this.prisma.org_dids.findMany({
+        where: {
+          orgId
+        }
+      });
+      return orgDids;
+    } catch (error) {
+      this.logger.error(`[getOrgDid] - get org DID: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateIsPrimaryDid(orgId: string, isPrimaryDid: boolean): Promise<Prisma.BatchPayload> {
+    try {
+      const updateOrgDid = await this.prisma.org_dids.updateMany({
+        where: {
+          orgId
+        },
+        data: {
+          isPrimaryDid
+        }
+      });
+      return updateOrgDid;
+    } catch (error) {
+      this.logger.error(`[getOrgDid] - get org DID: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteOrgAgentByOrg(orgId: string): Promise<{orgDid: Prisma.BatchPayload;
+    agentInvitation: Prisma.BatchPayload;
+    // eslint-disable-next-line camelcase
+    deleteOrgAgent: org_agents;
+    }> {
+        const tablesToCheck = [
+            `${PrismaTables.CONNECTIONS}`,
+            `${PrismaTables.CREDENTIALS}`,
+            `${PrismaTables.PRESENTATIONS}`,
+            `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
+            `${PrismaTables.ECOSYSTEM_ORGS}`
+        ];
+
+    try {
+        return await this.prisma.$transaction(async (prisma) => {
+            const referenceCounts = await Promise.all(
+                tablesToCheck.map(table => prisma[table].count({ where: { orgId } }))
+            );
+
+            referenceCounts.forEach((count, index) => {
+                if (0 < count) {
+                    throw new ConflictException(`Organization ID ${orgId} is referenced in the table ${tablesToCheck[index]}`);
+                }
+            });
+
+            // Concurrently delete related records
+            const [orgDid, agentInvitation] = await Promise.all([
+                prisma.org_dids.deleteMany({ where: { orgId } }),
+                prisma.agent_invitations.deleteMany({ where: { orgId } })
+            ]);
+
+            // Delete the organization agent
+            const deleteOrgAgent = await prisma.org_agents.delete({ where: { orgId } });
+
+            return {orgDid, agentInvitation, deleteOrgAgent};
+        });
+    } catch (error) {
+        this.logger.error(`[deleteOrgAgentByOrg] - Error deleting org agent record: ${error.message}`);
+        throw error;
+    }
+}
+
+    async getLedger(name: string): Promise<ILedgers> {
+        try {
+          const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
+            where: {
+             name
+            }
+          });
+          return ledgerData;
+        } catch (error) {
+          this.logger.error(`[getLedger] - get org ledger: ${JSON.stringify(error)}`);
+          throw error;
+        }
+      }
+
 }

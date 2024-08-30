@@ -3,8 +3,8 @@ import { VerificationService } from './verification.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { IProofPresentation, IProofPresentationData, IProofRequests, IRequestProof, ISendProofRequestPayload } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { presentations } from '@prisma/client';
-import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { presentations, user } from '@prisma/client';
+import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 
 @Controller()
 export class VerificationController {
@@ -19,6 +19,12 @@ export class VerificationController {
   async getProofPresentations(payload: IProofRequests): Promise<IProofPresentationList> {
     const { user, orgId, proofRequestsSearchCriteria} = payload;
     return this.verificationService.getProofPresentations(user, orgId, proofRequestsSearchCriteria);
+  }
+
+  @MessagePattern({ cmd: 'get-verification-records' })
+  async getVerificationRecordsByOrgId(payload: { orgId: string, userId: string }): Promise<number> {
+    const { orgId } = payload;
+    return this.verificationService.getVerificationRecords(orgId);
   }
 
   /**
@@ -71,5 +77,11 @@ export class VerificationController {
   async getVerifiedProofdetails(payload: IProofPresentationData): Promise<IProofPresentationDetails[]> {  
     const { proofId, orgId } = payload;  
     return this.verificationService.getVerifiedProofdetails(proofId, orgId);
+  }
+
+  @MessagePattern({ cmd: 'delete-verification-records' })
+  async deleteVerificationRecord(payload: {orgId: string, userDetails: user}): Promise<IVerificationRecords> {  
+    const { orgId, userDetails } = payload;
+    return this.verificationService.deleteVerificationRecords(orgId, userDetails);
   }
 }

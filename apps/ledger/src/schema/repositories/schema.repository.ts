@@ -5,8 +5,8 @@ import { ledgers, org_agents, org_agents_type, organisation, schema } from '@pri
 import { ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
-import { SortValue } from '@credebl/enum/enum';
-import { ICredDefWithCount } from '@credebl/common/interfaces/schema.interface';
+import { SchemaType, SortValue } from '@credebl/enum/enum';
+import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class SchemaRepository {
@@ -17,7 +17,6 @@ export class SchemaRepository {
     try {
       if (schemaResult.schema.schemaName) {
         const schema = await this.schemaExists(schemaResult.schema.schemaName, schemaResult.schema.schemaVersion);
-
         const schemaLength = 0;
         if (schema.length !== schemaLength) {
           throw new ConflictException(ResponseMessages.schema.error.exists, {
@@ -34,9 +33,10 @@ export class SchemaRepository {
             issuerId: schemaResult.issuerId,
             createdBy: schemaResult.createdBy,
             lastChangedBy: schemaResult.changedBy,
-            publisherDid: schemaResult.issuerId.split(':')[4],
+            publisherDid: schemaResult.issuerId.split(':')[4] || schemaResult.issuerId,
             orgId: schemaResult.orgId,
-            ledgerId: schemaResult.ledgerId
+            ledgerId: schemaResult.ledgerId,
+            type: schemaResult.type
           }
         });
         return saveResult;
@@ -51,6 +51,7 @@ export class SchemaRepository {
     try {
       return this.prisma.schema.findMany({
         where: {
+          type: SchemaType.INDY,
           name: {
             contains: schemaName,
             mode: 'insensitive'
@@ -88,10 +89,24 @@ export class SchemaRepository {
           createdBy: true,
           publisherDid: true,
           orgId: true,
-          issuerId: true
+          issuerId: true,
+          organisation: {
+            select:{
+              name: true,
+              userOrgRoles: {
+                select: {
+                  user: {
+                    select: {
+                      firstName: true
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         orderBy: {
-          [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc'
+          [payload.sortField]: SortValue.ASC === payload.sortBy ? SortValue.ASC : SortValue.DESC
         },
         take: Number(payload.pageSize),
         skip: (payload.pageNumber - 1) * payload.pageSize
@@ -110,6 +125,29 @@ export class SchemaRepository {
         cause: new Error(),
         description: error.message
       });
+    }
+  }
+
+  async getSchemasDetailsBySchemaIds(templateIds: string[]): Promise<schema[]> {
+    try {
+      const schemasResult = await this.prisma.schema.findMany({
+        where: {
+          schemaLedgerId: {
+            in: templateIds
+          }
+        },
+        include: {
+          organisation: {
+            select: {
+              name: true
+            }
+          }
+        }
+      });
+      return schemasResult;
+    } catch (error) {
+      this.logger.error(`Error in getting agent DID: ${error}`);
+      throw error;
     }
   }
 
@@ -160,12 +198,17 @@ export class SchemaRepository {
   }
 
   async getSchemasCredDeffList(payload: ISchemaSearchCriteria): Promise<ICredDefWithCount> {
-    const { orgId, schemaId } = payload;
+    const { orgId, schemaId, searchByText, sortField, sortBy, pageNumber, pageSize } = payload;
 
     try {
       const credDefResult = await this.prisma.credential_definition.findMany({
         where: {
-          AND: [{ orgId }, { schemaLedgerId: schemaId }]
+          AND: [{ orgId }, { schemaLedgerId: schemaId }],
+          OR: [
+            { tag: { contains: searchByText, mode: 'insensitive' } },
+            { credentialDefinitionId: { contains: searchByText, mode: 'insensitive' } },
+            { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } }
+          ]
         },
         select: {
           tag: true,
@@ -175,10 +218,10 @@ export class SchemaRepository {
           createDateTime: true
         },
         orderBy: {
-          [payload.sortField]: SortValue.ASC === payload.sortBy ? 'asc' : 'desc'
+          [sortField]: SortValue.ASC === sortBy ? SortValue.ASC : SortValue.DESC
         },
-        take: Number(payload.pageSize),
-        skip: (payload.pageNumber - 1) * payload.pageSize
+        take: Number(pageSize),
+        skip: (pageNumber - 1) * pageSize
       });
       const credDefCount = await this.prisma.credential_definition.count({
         where: {
@@ -187,60 +230,94 @@ export class SchemaRepository {
       });
       return { credDefResult, credDefCount };
     } catch (error) {
-      this.logger.error(`Error in getting agent DID: ${error}`);
+      this.logger.error(`Error in getting cred def list by schema id: ${error}`);
       throw error;
     }
   }
 
-  async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<{
-    schemasCount: number;
-    schemasResult: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      version: string;
-      attributes: string;
-      schemaLedgerId: string;
-      publisherDid: string;
-      issuerId: string;
-      orgId: string;
-    }[];
-  }> {
+  async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<IPlatformSchemas> {
     try {
-      const schemasResult = await this.prisma.schema.findMany({
-        where: {
-          ledgerId: payload.ledgerId,
-          OR: [
-            { name: { contains: payload.searchByText, mode: 'insensitive' } },
-            { version: { contains: payload.searchByText, mode: 'insensitive' } },
-            { schemaLedgerId: { contains: payload.searchByText, mode: 'insensitive' } },
-            { issuerId: { contains: payload.searchByText, mode: 'insensitive' } }
-          ]
-        },
-        select: {
-          createDateTime: true,
-          name: true,
-          version: true,
-          attributes: true,
-          schemaLedgerId: true,
-          createdBy: true,
-          publisherDid: true,
-          orgId: true,
-          issuerId: true
-        },
-        orderBy: {
-          [payload.sortField]: 'desc' === payload.sortBy ? 'desc' : 'asc'
-        },
-        take: Number(payload.pageSize),
-        skip: (payload.pageNumber - 1) * payload.pageSize
-      });
+      const { ledgerId, schemaType, searchByText, sortField, sortBy, pageSize, pageNumber } = payload;
+      let schemaResult;
+      /** 
+       * This is made so because the default pageNumber is set to 1 in DTO, 
+       * If there is any 'searchByText' field, we ignore the pageNumbers and search
+       * in all available records.
+       * 
+       * Because in that case pageNumber would be insignificant.
+       */
+      if (searchByText) {
+        schemaResult = await this.prisma.schema.findMany({
+          where: {
+            ledgerId,
+            type: schemaType,
+            OR: [
+              { name: { contains: searchByText, mode: 'insensitive' } },
+              { version: { contains: searchByText, mode: 'insensitive' } },
+              { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } },
+              { issuerId: { contains: searchByText, mode: 'insensitive' } }
+            ]
+          },
+          select: {
+            createDateTime: true,
+            name: true,
+            version: true,
+            attributes: true,
+            schemaLedgerId: true,
+            createdBy: true,
+            publisherDid: true,
+            orgId: true,  // This field can be null
+            issuerId: true,
+            type: true
+          },
+          orderBy: {
+            [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
+          },
+          take: Number(pageSize)
+        });
+      } else {
+        /**
+         * Queries apart from the one containing searchText would go here
+         */
+        schemaResult = await this.prisma.schema.findMany({
+          where: {
+            ledgerId,
+            type: schemaType
+          },
+          select: {
+            createDateTime: true,
+            name: true,
+            version: true,
+            attributes: true,
+            schemaLedgerId: true,
+            createdBy: true,
+            publisherDid: true,
+            orgId: true,  // This field can be null
+            issuerId: true,
+            type: true
+          },
+          orderBy: {
+            [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
+          },
+          take: Number(pageSize),
+          skip: (pageNumber - 1) * pageSize
+        });
+      }
 
       const schemasCount = await this.prisma.schema.count({
         where: {
-          ledgerId: payload.ledgerId
+          ledgerId,
+          type: schemaType
         }
       });
-      return { schemasCount, schemasResult };
+
+      // Handle null orgId in the response
+      const schemasWithDefaultOrgId = schemaResult.map(schema => ({
+        ...schema,
+        orgId: schema.orgId || null // Replace null orgId with 'N/A' or any default value
+      }));
+
+      return { schemasCount, schemasResult: schemasWithDefaultOrgId };
     } catch (error) {
       this.logger.error(`Error in getting schemas: ${error}`);
       throw error;

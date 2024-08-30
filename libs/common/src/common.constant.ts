@@ -1,6 +1,7 @@
 export enum CommonConstants {
   // Error and Success Responses from POST and GET calls
   RESP_ERR_HTTP_INVALID_HEADER_VALUE = 'ERR_HTTP_INVALID_HEADER_VALUE',
+  RESP_ERR_HTTP_ECONNREFUSED = 'ECONNREFUSED',
   RESP_ERR_401 = 401,
   RESP_ERR_NOT_FOUND = 404,
   RESP_BAD_REQUEST = 400,
@@ -76,6 +77,7 @@ export enum CommonConstants {
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
   URL_SEND_QUESTION = '/question-answer/question/#',
   URL_QUESTION_ANSWER_RECORD = '/question-answer',
+  URL_SEND_BASIC_MESSAGE = '/basic-messages/#',
 
   // SCHEMA & CRED DEF SERVICES
   URL_SCHM_CREATE_SCHEMA = '/schemas',
@@ -117,6 +119,10 @@ export enum CommonConstants {
   URL_SHAGENT_SEND_QUESTION = '/multi-tenancy/question-answer/question/#/@',
   URL_SHAGENT_SEND_ANSWER = '/multi-tenancy/question-answer/answer/#/@',
   URL_SHAGENT_QUESTION_ANSWER_RECORD = '/multi-tenancy/question-answer/#',
+  URL_SHAGENT_DELETE_SUB_WALLET = '/multi-tenancy/#',
+  URL_SHARED_SEND_BASIC_MESSAGE =  '/multi-tenancy/basic-messages/#/@',
+  URL_SHAGENT_ACCEPT_PROOF_REQUEST = '/multi-tenancy/proofs/#/accept-request/@',
+
   
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',
@@ -275,6 +281,9 @@ export enum CommonConstants {
   PLATFORM_ADMIN_EMAIL='platform.admin@yopmail.com',
   PLATFORM_ADMIN_ORG='Platform-admin',
   PLATFORM_ADMIN_ORG_ROLE='platform_admin',
+  
+  USER_HOLDER_ROLE='holder',
+
 
   //onBoarding Type
   ONBOARDING_TYPE_ADMIN = 0,
@@ -321,8 +330,53 @@ export enum CommonConstants {
  //CacheInfo
 CACHE_SHARED_APIKEY_KEY = "dedicatedApiKey",
 CACHE_APIKEY_KEY = "sharedApiKey",
-CACHE_TTL_SECONDS = 604800
+CACHE_TTL_SECONDS = 604800,
+
+CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
+CLOUD_WALLET_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation',
+CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
+CLOUD_WALLET_DID_LIST = '/multi-tenancy/dids/',
+CLOUD_WALLET_CONNECTION_BY_ID = '/multi-tenancy/connections/',
+CLOUD_WALLET_CREDENTIAL = '/multi-tenancy/credentials',
+CLOUD_WALLET_BASIC_MESSAGE = '/multi-tenancy/basic-messages/',
+
+// Bulk-issuance
+BATCH_SIZE = 100,
+MAX_CONCURRENT_OPERATIONS = 50,
+ISSUANCE_BATCH_SIZE = 2000,
+ISSUANCE_MAX_CONCURRENT_OPERATIONS = 1000,
+ISSUANCE_BATCH_DELAY = 60000, //Intially 60000
+
+
+// MICROSERVICES NAMES
+API_GATEWAY_SERVICE = 'api-gateway',
+ORGANIZATION_SERVICE = 'organization',
+USER_SERVICE = 'user',
+AUTH_SERVICE = 'authz',
+FIDO_SERVICE = 'fido',
+UTILITY_SERVICE = 'utilitites',
+CONNECTION_SERVICE = 'connection',
+LEDGER_SERVICE = 'ledger',
+PLATFORM_SERVICE = 'platform',
+SCHEMA_SERVICE = 'schema',
+CREDENTIAL_DEFINITION_SERVICE = 'credential-definition',
+AGENT_SERVICE = 'agent-service',
+AGENT_PROVISIONING = 'agent-provisioning',
+ISSUANCE_SERVICE = 'issuance',
+VERIFICATION_SERVICE = 'verification',
+ECOSYSTEM_SERVICE = 'ecosystem',
+WEBHOOK_SERVICE = 'webhook',
+NOTIFICATION_SERVICE = 'notification',
+GEO_LOCATION_SERVICE = 'geo-location',
+CLOUD_WALLET_SERVICE = 'cloud-wallet',
+
+//CLOUD WALLET
+RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
+ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
+SEED_LENGTH = 32
 }
+
+export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;
 
 export const postgresqlErrorCodes = [];
 postgresqlErrorCodes['23503'] = 'foreign_key_violation';

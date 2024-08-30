@@ -19,13 +19,14 @@ import { ClientRegistrationService } from '@credebl/client-registration';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 
 import { AwsService } from '@credebl/aws';
+import { CommonConstants } from '@credebl/common/common.constant';
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.ORGANIZATION_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.ORGANIZATION_SERVICE, process.env.ORGANIZATION_NKEY_SEED)
       }
     ]),
     CommonModule,
@@ -35,7 +36,7 @@ import { AwsService } from '@credebl/aws';
   providers: [
     OrganizationService, OrganizationRepository, PrismaService,
      Logger, OrgRolesService, UserOrgRolesService, OrgRolesRepository, UserActivityRepository,
-      UserOrgRolesRepository, UserRepository, UserActivityService,
+     UserActivityRepository, UserOrgRolesRepository, UserRepository, UserActivityService,
       ClientRegistrationService,
       KeycloakUrlService,
       AwsService

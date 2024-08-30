@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import {
@@ -9,11 +9,14 @@ import {
   file_upload,
   org_agents,
   organisation,
-  platform_config
+  platform_config,
+  schema
 } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import {
+  FileUpload,
   FileUploadData,
+  IDeletedFileUploadRecords,
   IssueCredentialWebhookPayload,
   OrgAgent,
   PreviewRequest,
@@ -22,7 +25,8 @@ import {
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
-import { SortValue } from '@credebl/enum/enum';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -58,6 +62,20 @@ export class IssuanceRepository {
     }
   }
 
+  async getIssuanceRecordsCount(orgId: string): Promise<number> {
+    try {
+      const issuanceRecordsCount = await this.prisma.credentials.count({
+        where: {
+          orgId
+        }
+      });
+      return issuanceRecordsCount;
+    } catch (error) {
+      this.logger.error(`[get issuance records by org Id] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async getOrganizationByTenantId(tenantId: string): Promise<org_agents> {
     try {
       return this.prisma.org_agents.findFirst({
@@ -71,19 +89,18 @@ export class IssuanceRepository {
     }
   }
 
-
-  async getRecipientKeyByOrgId(orgId: string): Promise<agent_invitations[]> {
+  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({
         where: {
           orgId
         },
         orderBy: {
-          createDateTime: 'asc' 
+          createDateTime: 'asc'
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getRecipientKey in issuance repository: ${error.message}`);
+      this.logger.error(`Error in getInvitationDid in issuance repository: ${error.message}`);
       throw error;
     }
   }
@@ -128,7 +145,7 @@ export class IssuanceRepository {
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
-     
+
       const issuedCredentialsCount = await this.prisma.credentials.count({
         where: {
           orgId,
@@ -157,7 +174,7 @@ export class IssuanceRepository {
       let organisationId: string;
       const { issueCredentialDto, id } = payload;
 
-      if (issueCredentialDto?.contextCorrelationId) {
+      if ('default' !== issueCredentialDto?.contextCorrelationId) {
         const getOrganizationId = await this.getOrganizationByTenantId(issueCredentialDto?.contextCorrelationId);
         organisationId = getOrganizationId?.orgId;
       } else {
@@ -166,17 +183,22 @@ export class IssuanceRepository {
 
       let schemaId = '';
 
-      if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId) {
-        schemaId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId;
-      } 
-    
+        if (
+          (issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId ||
+           issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1]) ||
+          (issueCredentialDto?.state &&
+           issueCredentialDto?.['credentialData']?.proposal?.jsonld?.credential?.['@context'][1])
+        ) {
+        schemaId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId || issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1] || issueCredentialDto?.['credentialData']?.proposal?.jsonld?.credential?.['@context'][1];
+      }
+
       let credDefId = '';
       if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId) {
         credDefId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId;
       }
 
       const credentialDetails = await this.prisma.credentials.upsert({
-        where: { 
+        where: {
           threadId: issueCredentialDto?.threadId
         },
         update: {
@@ -184,7 +206,9 @@ export class IssuanceRepository {
           createDateTime: issueCredentialDto?.createDateTime,
           threadId: issueCredentialDto?.threadId,
           connectionId: issueCredentialDto?.connectionId,
-          state: issueCredentialDto?.state
+          state: issueCredentialDto?.state,
+          schemaId,
+          credDefId
         },
         create: {
           createDateTime: issueCredentialDto?.createDateTime,
@@ -199,6 +223,7 @@ export class IssuanceRepository {
           orgId: organisationId
         }
       });
+
       return credentialDetails;
     } catch (error) {
       this.logger.error(`Error in get saveIssuedCredentialDetails: ${error.message} `);
@@ -234,6 +259,21 @@ export class IssuanceRepository {
     }
   }
 
+  async getSchemaDetails(schemaId: string): Promise<schema> {
+    try {
+      const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+        where: {
+          schemaLedgerId: schemaId
+        }
+      });
+
+      return schemaDetails;
+    } catch (error) {
+      this.logger.error(`Error in get schema details: ${error.message}`);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
   async getCredentialDefinitionDetails(credentialDefinitionId: string): Promise<SchemaDetails> {
     try {
       const credentialDefinitionDetails = await this.prisma.credential_definition.findFirst({
@@ -246,12 +286,9 @@ export class IssuanceRepository {
         throw new NotFoundException(`Credential definition not found for ID: ${credentialDefinitionId}`);
       }
 
-      const schemaDetails = await this.prisma.schema.findFirst({
-        where: {
-          schemaLedgerId: credentialDefinitionDetails.schemaLedgerId
-        }
-      });
+      const schemaDetails = await this.getSchemaDetailsBySchemaIdentifier(credentialDefinitionDetails.schemaLedgerId);
 
+      
       if (!schemaDetails) {
         throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
       }
@@ -260,7 +297,8 @@ export class IssuanceRepository {
         credentialDefinitionId: credentialDefinitionDetails.credentialDefinitionId,
         tag: credentialDefinitionDetails.tag,
         schemaLedgerId: schemaDetails.schemaLedgerId,
-        attributes: schemaDetails.attributes
+        attributes: schemaDetails.attributes,
+        schemaName: schemaDetails.name
       };
 
       return credentialDefRes;
@@ -270,9 +308,18 @@ export class IssuanceRepository {
     }
   }
 
-  async saveFileUploadDetails(fileUploadPayload, userId: string): Promise<file_upload> {
+  async getSchemaDetailsBySchemaIdentifier(schemaIdentifier: string): Promise<schema> {
+    const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+      where: {
+        schemaLedgerId: schemaIdentifier
+      }
+    });
+    return schemaDetails;
+  }
+
+  async saveFileUploadDetails(fileUploadPayload: FileUpload, userId: string): Promise<file_upload> {
     try {
-      const { name, status, upload_type, orgId } = fileUploadPayload;
+      const { name, status, upload_type, orgId, credentialType, templateId } = fileUploadPayload;
       return this.prisma.file_upload.create({
         data: {
           name: String(name),
@@ -280,7 +327,9 @@ export class IssuanceRepository {
           status,
           upload_type,
           createdBy: userId,
-          lastChangedBy: userId
+          lastChangedBy: userId,
+          credential_type: credentialType,
+          templateId
         }
       });
     } catch (error) {
@@ -311,7 +360,7 @@ export class IssuanceRepository {
       const errorCount = await this.prisma.file_data.count({
         where: {
           fileUploadId,
-          isError: true
+          OR: [{ isError: true }, { status: false }]
         }
       });
 
@@ -339,6 +388,7 @@ export class IssuanceRepository {
       deletedAt: Date;
       failedRecords: number;
       totalRecords: number;
+      templateId: string;
     }[];
   }> {
     try {
@@ -459,7 +509,8 @@ export class IssuanceRepository {
         return this.prisma.file_data.update({
           where: { id: jobId },
           data: {
-            credential_data: null
+            credential_data: null,
+            status: true
           }
         });
       }
@@ -472,7 +523,7 @@ export class IssuanceRepository {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
   async saveFileDetails(fileData, userId: string) {
     try {
-      const { credential_data, schemaId, credDefId, status, isError, fileUploadId } = fileData;
+      const { credential_data, schemaId, credDefId, status, isError, fileUploadId, credentialType } = fileData;
       return this.prisma.file_data.create({
         data: {
           credential_data,
@@ -482,7 +533,8 @@ export class IssuanceRepository {
           fileUploadId,
           isError,
           createdBy: userId,
-          lastChangedBy: userId
+          lastChangedBy: userId,
+          credential_type: credentialType
         }
       });
     } catch (error) {
@@ -524,7 +576,7 @@ export class IssuanceRepository {
       return this.prisma.file_data.findMany({
         where: {
           fileUploadId: fileId,
-          isError: true
+          OR: [{ isError: true }, { status: false }]
         }
       });
     } catch (error) {
@@ -558,6 +610,97 @@ export class IssuanceRepository {
       });
     } catch (error) {
       this.logger.error(`[updateFileUploadStatus] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getFileUploadDataByOrgId(orgId: string): Promise<file_upload[]> {
+    try {
+      const fileDetails = await this.prisma.file_upload.findMany({
+        where: {
+          orgId
+        }
+      });
+      return fileDetails;
+    } catch (error) {
+      this.logger.error(`[getting file upload details] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteFileUploadData(fileUploadIds: string[], orgId: string): Promise<IDeletedFileUploadRecords> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+
+        const deleteFileDetails = await prisma.file_data.deleteMany({
+          where: {
+            fileUploadId: {
+              in: fileUploadIds
+            }
+          }
+        });
+
+        const deleteFileUploadDetails = await prisma.file_upload.deleteMany({
+          where: {
+            orgId
+          }
+        });
+
+        return { deleteFileDetails, deleteFileUploadDetails };
+    
+      });
+    } catch (error) {
+      this.logger.error(`[Error in deleting file data] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteIssuanceRecordsByOrgId(orgId: string): Promise<IDeletedIssuanceRecords> {
+    try {
+      const tablesToCheck = [`${PrismaTables.PRESENTATIONS}`];
+
+      const referenceCounts = await Promise.all(
+        tablesToCheck.map((table) => this.prisma[table].count({ where: { orgId } }))
+      );
+
+      const referencedTables = referenceCounts
+        .map((count, index) => (0 < count ? tablesToCheck[index] : null))
+        .filter(Boolean);
+
+      if (0 < referencedTables.length) {
+        let errorMessage = `Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`;
+
+        if (1 === referencedTables.length) {
+          if (referencedTables.includes(`${PrismaTables.PRESENTATIONS}`)) {
+            errorMessage += `, ${ResponseMessages.verification.error.removeVerificationData}`;
+          }
+        }
+
+        throw new ConflictException(errorMessage);
+      }
+
+      return await this.prisma.$transaction(async (prisma) => {
+        
+        const recordsToDelete = await this.prisma.credentials.findMany({
+          where: { orgId },
+          select: {
+            createDateTime: true,
+            createdBy: true,
+            connectionId: true,
+            schemaId: true,
+            state: true,
+            orgId: true
+          }
+        });
+
+        const deleteResult = await prisma.credentials.deleteMany({
+          where: { orgId }
+        });
+
+        return { deleteResult, recordsToDelete};
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting issuance records: ${error.message}`);
       throw error;
     }
   }

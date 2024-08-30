@@ -9,13 +9,16 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { CacheModule } from '@nestjs/cache-manager';
+import { UserActivityService } from '@credebl/user-activity';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { CommonConstants } from '@credebl/common/common.constant';
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.VERIFICATION_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.VERIFICATION_SERVICE, process.env.VERIFICATION_NKEY_SEED)
 
       }
     ]),
@@ -24,6 +27,6 @@ import { CacheModule } from '@nestjs/cache-manager';
     CacheModule.register()
   ],
   controllers: [VerificationController],
-  providers: [VerificationService, VerificationRepository, PrismaService, Logger, OutOfBandVerification, EmailDto]
+  providers: [VerificationService, VerificationRepository, PrismaService, UserActivityService, UserActivityRepository, Logger, OutOfBandVerification, EmailDto]
 })
 export class VerificationModule { }

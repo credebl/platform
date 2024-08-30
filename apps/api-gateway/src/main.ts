@@ -12,24 +12,27 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 
 import helmet from 'helmet';
 import { NodeEnvironment } from '@credebl/enum/enum';
+import { CommonConstants } from '@credebl/common/common.constant';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
-
   const app = await NestFactory.create(AppModule, {
-    logger: NodeEnvironment.PRODUCTION !== process.env.PLATFORM_PROFILE_MODE ? ['log', 'debug', 'error', 'verbose', 'warn'] : ['error', 'warn']
+    logger:
+      NodeEnvironment.PRODUCTION !== process.env.PLATFORM_PROFILE_MODE
+        ? ['log', 'debug', 'error', 'verbose', 'warn']
+        : ['error', 'warn']
   });
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+    options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
   });
 
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set('x-powered-by', false);
   app.use(express.json({ limit: '50mb' }));
-  app.use(express.urlencoded({ limit: '50mb' }));
-  
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
   app.use(function (req, res, next) {
     let err = null;
     try {
@@ -42,7 +45,6 @@ async function bootstrap(): Promise<void> {
     }
     next();
   });
-  
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)
@@ -61,7 +63,14 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup('api', app, document);
   const httpAdapter = app.get(HttpAdapterHost);
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
-  app.enableCors();
+  const { ENABLE_CORS_IP_LIST } = process.env || {};
+  if (ENABLE_CORS_IP_LIST && '' !== ENABLE_CORS_IP_LIST) {
+    app.enableCors({
+      origin: ENABLE_CORS_IP_LIST.split(','),
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      credentials: true
+    });
+  }
 
   app.use(express.static('uploadedFiles/holder-profile'));
   app.use(express.static('uploadedFiles/org-logo'));
@@ -73,11 +82,12 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('uploadedFiles/bulk-verification-templates'));
   app.use(express.static('uploadedFiles/import'));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  app.use(helmet({
-    xssFilter:true
-  }));
+  app.use(
+    helmet({
+      xssFilter: true
+    })
+  );
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);
 }
 bootstrap();
-

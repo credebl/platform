@@ -2,12 +2,12 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { Inject, Injectable} from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { ConnectionDto, CreateConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
+import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
-import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
-import { QuestionDto } from './dtos/question-answer.dto';
-
+import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
+import { user } from '@prisma/client';
 @Injectable()
 export class ConnectionService extends BaseService {
   constructor(@Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy) {
@@ -24,27 +24,11 @@ export class ConnectionService extends BaseService {
     }
   }
 
-  createLegacyConnectionInvitation(
-    connectionDto: CreateConnectionDto,
-    user: IUserRequestInterface
-  ): Promise<ICreateConnectionUrl> {
+  sendBasicMessage(
+    basicMessageDto: BasicMessageDto
+  ): Promise<object> {
     try {
-      const connectionDetails = {
-        orgId: connectionDto.orgId,
-        alias: connectionDto.alias,
-        label: connectionDto.label,
-        imageUrl: connectionDto.imageUrl,
-        multiUseInvitation: connectionDto.multiUseInvitation,
-        autoAcceptConnection: connectionDto.autoAcceptConnection,
-        goalCode: connectionDto.goalCode,
-        goal: connectionDto.goal,
-        handshake: connectionDto.handshake,
-        handshakeProtocols: connectionDto.handshakeProtocols,
-        user,
-        recipientKey:connectionDto.recipientKey
-      };
-
-      return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection', connectionDetails);
+      return this.sendNatsMessage(this.connectionServiceProxy, 'send-basic-message-on-connection', basicMessageDto);
     } catch (error) {
       throw new RpcException(error.response);
     }
@@ -121,10 +105,11 @@ export class ConnectionService extends BaseService {
     return this.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation', payload);
   }
 
-  async _getWebhookUrl(tenantId: string): Promise<string> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
     const pattern = { cmd: 'get-webhookurl' };
-    const payload = { tenantId };
 
+    const payload = { tenantId, orgId };
+    
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
@@ -138,7 +123,7 @@ export class ConnectionService extends BaseService {
   async _postWebhookResponse(webhookUrl: string, data:object): Promise<string> {
     const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
     const payload = { webhookUrl, data  };
-   
+    
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
@@ -155,5 +140,10 @@ export class ConnectionService extends BaseService {
   ): Promise<IReceiveInvitationRes> {
     const payload = { user, createOutOfBandConnectionInvitation };
     return this.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);
+  }
+
+  async deleteConnectionRecords(orgId: string, userDetails: user): Promise<IDeletedConnectionsRecord> {
+    const payload = { orgId, userDetails };
+    return this.sendNatsMessage(this.connectionServiceProxy, 'delete-connection-records', payload);
   }
 }

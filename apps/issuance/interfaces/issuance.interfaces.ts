@@ -1,9 +1,10 @@
 // eslint-disable-next-line camelcase
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { organisation } from '@prisma/client';
+import { Prisma, organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
+import { IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
 
 export interface IAttributes {
   attributeName: string;
@@ -11,20 +12,26 @@ export interface IAttributes {
   value: string;
   isRequired?: boolean;
 }
+
+interface ICredentialsAttributes {
+  connectionId: string;
+  attributes: IAttributes[];
+  credential?:ICredential;
+  options?:IOptions
+}
 export interface IIssuance {
   user?: IUserRequest;
   credentialDefinitionId: string;
   comment?: string;
-  connectionId: string;
-  attributes: IAttributes[];
+  credentialData: ICredentialsAttributes[];
   orgId: string;
   autoAcceptCredential?: AutoAccept,
   protocolVersion?: string;
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
-  label?: string
-
+  label?: string,
+  credentialType: string,
 }
 
 interface IIndy {
@@ -133,8 +140,19 @@ export interface ICredentialAttributesInterface {
 export interface ICredential{
   '@context':[];
   type: string[];
+  prettyVc?: IPrettyVc;
+  issuer?: {
+    id: string;
+  };
+  issuanceDate?: string;
+  credentialSubject?: ICredentialSubject;
 }
-export interface IOptions{
+
+interface ICredentialSubject {
+  [key: string]: string;
+}
+
+export interface IOptions{ 
   proofType:string;
   proofPurpose:string;
 }
@@ -152,6 +170,7 @@ export interface OutOfBandCredentialOfferPayload {
   emailId?: string;
   attributes?: IAttributes[];
   protocolVersion?: string;
+  isReuseConnection?: boolean;
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
@@ -166,32 +185,43 @@ export interface OutOfBandCredentialOffer {
   outOfBandCredentialDto: OutOfBandCredentialOfferPayload;
 }
 export interface SchemaDetails {
-  credentialDefinitionId: string;
-  tag: string;
+  credentialDefinitionId?: string;
+  tag?: string;
   schemaLedgerId: string;
   attributes: string;
+  name?: string;
 }
 export interface ImportFileDetails {
-  credDefId: string;
+  templateId: string;
   fileKey: string;
   fileName: string;
+  type: string
 }
-
+export interface ICredentialPayload {
+schemaLedgerId: string,
+credentialDefinitionId: string,
+fileData: object,
+fileName: string,
+credentialType: string,
+schemaName?: string
+}
 export interface PreviewRequest {
   pageNumber: number,
   pageSize: number,
   searchByText: string,
-  sortField: string,
-  sortBy: string
+  sortField?: string,
+  sortBy?: string
 }
 
 export interface FileUpload {
-  name?: string;
-  upload_type?: string;
-  status?: string;
-  orgId?: string;
-  createDateTime?: Date;
-  lastChangedDateTime?: Date;
+  name?: string,
+  upload_type?: string,
+  status?: string,
+  orgId?: string,
+  createDateTime?: Date | null,
+  lastChangedDateTime?: Date | null,
+  credentialType?: string,
+  templateId?: string
 }
 
 export interface FileUploadData {
@@ -210,6 +240,11 @@ export interface IClientDetails {
   userId?: string;
   isSelectiveIssuance?: boolean;
   fileName?: string;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
@@ -248,6 +283,7 @@ export interface SendEmailCredentialOffer {
   index: number;
   credentialType: IssueCredentialType; 
   protocolVersion: string;
+  isReuseConnection?: boolean;
   attributes: IAttributes[]; 
   credentialDefinitionId: string; 
   outOfBandCredential: OutOfBandCredentialOfferPayload;
@@ -257,4 +293,96 @@ export interface SendEmailCredentialOffer {
   url: string;
   orgId: string; 
   organizationDetails: organisation;
+  platformName?: string,
+  organizationLogoUrl?: string;
+  prettyVc?: IPrettyVc;
+}
+
+export interface TemplateDetailsInterface {
+  templateId?: string;
+  schemaType?: SchemaType;
+}
+interface CredentialData {
+  email_identifier: string;
+  [key: string]: string;
+}
+
+export interface IJobDetails {
+  id: string;
+  schemaName: string;
+  cacheId?: string;
+  clientId?: string;
+  referenceId: string | null;
+  fileUploadId: string;
+  schemaLedgerId: string;
+  credentialDefinitionId?: string;
+  status?: boolean;
+  credential_data: CredentialData
+  orgId: string;
+  credentialType: string;
+}
+
+export interface IQueuePayload{
+  id: string;
+  jobId: string;
+  cacheId?: string;
+  clientId: string;
+  referenceId: string;
+  fileUploadId: string;
+  schemaLedgerId: string;
+  credentialDefinitionId: string;
+  status: string;
+  credential_data: CredentialData;
+  orgId: string;
+  credentialType: string;
+  totalJobs: number;
+  isRetry: boolean;
+  isLastData: boolean;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
+  isReuseConnection?: boolean;
+}
+
+interface FileDetails {
+  schemaLedgerId: string;
+  credentialDefinitionId: string;
+  fileData:object
+  fileName: string;
+  credentialType: string;
+  schemaName: string;
+}
+export interface IBulkPayloadObject {
+  parsedData?: unknown[],
+  parsedFileDetails?: FileDetails,
+  userId: string,
+  fileUploadId: string
+  };
+export interface ISchemaAttributes {
+  attributeName: string;
+  schemaDataType: string;
+  displayName: string;
+  isRequired: boolean;
+}
+
+export interface IIssuanceAttributes {
+  [key: string]: string;
+}
+export interface IDeletedFileUploadRecords {
+  deleteFileDetails: Prisma.BatchPayload;
+  deleteFileUploadDetails: Prisma.BatchPayload;
+}
+
+export interface BulkPayloadDetails {
+  clientId: string;
+  orgId: string;
+  requestId?: string;
+  isRetry: boolean;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }

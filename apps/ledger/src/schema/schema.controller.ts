@@ -5,30 +5,31 @@ import {
   ISchema,
   ISchemaCredDeffSearchInterface,
   ISchemaExist,
-  ISchemaSearchPayload,
-  W3CSchemaPayload
+  ISchemaSearchPayload
 } from './interfaces/schema-payload.interface';
 import { schema } from '@prisma/client';
 import {
   ICredDefWithPagination,
   ISchemaData,
+  ISchemaDetails,
   ISchemasWithPagination
 } from '@credebl/common/interfaces/schema.interface';
+import { IschemaPayload } from './interfaces/schema.interface';
 
 @Controller('schema')
 export class SchemaController {
   constructor(private readonly schemaService: SchemaService) {}
 
   @MessagePattern({ cmd: 'create-schema' })
-  async createSchema(payload: ISchema): Promise<ISchemaData> {
-    const { schema, user, orgId } = payload;
-    return this.schemaService.createSchema(schema, user, orgId);
+  async createSchema(payload: IschemaPayload): Promise<ISchemaData> {
+    const { schemaDetails, user, orgId } = payload;
+    return this.schemaService.createSchema(schemaDetails, user, orgId);
   }
 
-  @MessagePattern({ cmd: 'create-w3c-schema' })
-  async createW3CSchema(payload: W3CSchemaPayload): Promise<object> {
-    const {orgId, schemaPayload} = payload;
-    return this.schemaService.createW3CSchema(orgId, schemaPayload);
+  @MessagePattern({ cmd: 'get-schemas-details' })
+  async getSchemasDetails(payload: {templateIds: string[]}): Promise<schema[]> {
+    const { templateIds } = payload;
+    return this.schemaService.getSchemaDetails(templateIds);
   }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })
@@ -43,30 +44,13 @@ export class SchemaController {
     return this.schemaService.getSchemas(schemaSearchCriteria, orgId);
   }
 
-  @MessagePattern({ cmd: 'get-cred-deff-list-by-schemas-id' })
-  async getcredDeffListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<ICredDefWithPagination> {
-    return this.schemaService.getcredDeffListBySchemaId(payload);
+  @MessagePattern({ cmd: 'get-cred-def-list-by-schemas-id' })
+  async getcredDefListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<ICredDefWithPagination> {
+    return this.schemaService.getcredDefListBySchemaId(payload);
   }
 
   @MessagePattern({ cmd: 'get-all-schemas' })
-  async getAllSchema(schemaSearch: ISchemaSearchPayload): Promise<{
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number;
-    previousPage: number;
-    lastPage: number;
-    data: {
-      createDateTime: Date;
-      createdBy: string;
-      name: string;
-      schemaLedgerId: string;
-      version: string;
-      attributes: string;
-      publisherDid: string;
-      issuerId: string;
-    }[];
-  }> {
+  async getAllSchema(schemaSearch: ISchemaSearchPayload): Promise<ISchemaDetails> {
     const { schemaSearchCriteria } = schemaSearch;
     return this.schemaService.getAllSchema(schemaSearchCriteria);
   }

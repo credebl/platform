@@ -10,10 +10,6 @@ export enum SortFields {
     ISSUER_ID = 'issuerId'
 }
 
-export enum CredDefSortFields {
-    ID = 'id',
-    CREATED_DATE_TIME = 'createDateTime',
-    TAG = 'tag',
-    LEDGER_ID = 'schemaLedgerId',
-    CRED_DEF_ID= 'credentialDefinitionId'
+export enum W3CSchemaVersion {
+    W3C_SCHEMA_VERSION = 'draft-07'
 }

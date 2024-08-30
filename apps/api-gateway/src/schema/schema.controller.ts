@@ -1,13 +1,13 @@
-import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param } from '@nestjs/common';
+import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param, ParseUUIDPipe } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
-import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery, ApiExtraModels, ApiBody, getSchemaPath } from '@nestjs/swagger';
 import { SchemaService } from './schema.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { User } from '../authz/decorators/user.decorator';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
@@ -17,9 +17,10 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CreateSchemaDto, CreateW3CSchemaDto } from '../dtos/create-schema.dto';
+import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { CredDefSortFields, SortFields } from 'apps/ledger/src/schema/enum/schema.enum';
+import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -42,18 +43,18 @@ export class SchemaController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
     @Res() res: Response,
-    @Param('orgId') orgId: string,
-    @Param('schemaId') schemaId: string
-  ): Promise<object> {
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
+    @Param('schemaId', TrimStringParamPipe) schemaId: string
+  ): Promise<Response> {
 
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
     const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
-      data: schemaDetails.response
+      data: schemaDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -72,7 +73,7 @@ export class SchemaController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getcredDeffListBySchemaId(
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
     @Param('schemaId') schemaId: string,
     @Query() getCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
@@ -85,8 +86,8 @@ export class SchemaController {
     getCredentialDefinitionBySchemaIdDto.schemaId = schemaId;
     getCredentialDefinitionBySchemaIdDto.orgId = orgId;
 
-    const credentialDefinitionList = await this.appService.getcredDeffListBySchemaId(getCredentialDefinitionBySchemaIdDto, user);
-    const finalResponse: IResponseType = {
+    const credentialDefinitionList = await this.appService.getcredDefListBySchemaId(getCredentialDefinitionBySchemaIdDto, user);
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
       data: credentialDefinitionList
@@ -110,7 +111,7 @@ export class SchemaController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemas(
     @Query() getAllSchemaDto: GetAllSchemaDto,
-    @Param('orgId') orgId: string,
+    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
     @Res() res: Response,
     @User() user: IUserRequestInterface
   ): Promise<Response> {
@@ -125,7 +126,7 @@ export class SchemaController {
     };
     const schemasResponse = await this.appService.getSchemas(schemaSearchCriteria, user, orgId);
 
-    const finalResponse: IResponseType = {
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.schema.success.fetch,
       data: schemasResponse
@@ -133,43 +134,22 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Post('/:orgId/polygon-w3c/schemas')
-  @ApiOperation({
-    summary: 'Create and sends a W3C-schema to the ledger.',
-    description: 'Create and sends a W3C-schema to the ledger.'
-  })
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createW3CSchema(@Res() res: Response, @Body() schemaPayload: CreateW3CSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
-
-    const schemaDetails = await this.appService.createW3CSchema(schemaPayload, orgId);
-
-    const finalResponse: IResponseType = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.schema.success.create,
-      data: schemaDetails
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-
+  
   @Post('/:orgId/schemas')
   @ApiOperation({
-    summary: 'Create and sends a schema to the ledger.',
-    description: 'Create and sends a schema to the ledger.'
-  })
+    summary: 'Create and register various types of schemas.',
+    description: 'Enables the creation and registration of schemas across different systems: the Indy ledger, the Polygon blockchain network, and W3C ledger-less standards.'
+  }
+  )
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async createSchema(@Res() res: Response, @Body() schema: CreateSchemaDto, @Param('orgId') orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
-
-    schema.orgId = orgId;
-    const schemaDetails = await this.appService.createSchema(schema, user, schema.orgId);
-
-    const finalResponse: IResponseType = {
+  async createSchema(@Res() res: Response, @Body() schemaDetails: GenericSchemaDTO, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
+  const schemaResponse = await this.appService.createSchema(schemaDetails, user, orgId);
+    const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.schema.success.create,
-      data: schemaDetails
+      data: schemaResponse
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

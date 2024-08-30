@@ -1,15 +1,16 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, platform_config, schema } from '@prisma/client';
+import { Prisma, credential_definition, ecosystem, ecosystem_config, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, endorsement_transaction, org_agents, org_roles, organisation, platform_config, schema, user_org_roles } from '@prisma/client';
 import { DeploymentModeType, EcosystemInvitationStatus, EcosystemOrgStatus, EcosystemRoles, endorsementTransactionStatus, endorsementTransactionType } from '../enums/ecosystem.enum';
 import { updateEcosystemOrgsDto } from '../dtos/update-ecosystemOrgs.dto';
-import { CreateEcosystem, IEcosystemInvitation, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
+import { CreateEcosystem, IEcosystemData, IEcosystemInvitation, IEcosystemOrgs, IEcosystemOrgsData, SaveSchema, SchemaTransactionResponse, saveCredDef } from '../interfaces/ecosystem.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotFoundException } from '@nestjs/common';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GetAllSchemaList, ISchemasResponse } from '../interfaces/endorsements.interface';
 import { SortValue } from '@credebl/enum/enum';
+import { IEcosystemDataDeletionResults } from '@credebl/common/interfaces/ecosystem.interface';
 // eslint-disable-next-line camelcase
 
 @Injectable()
@@ -84,6 +85,90 @@ export class EcosystemRepository {
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
       throw error;
+    }
+  }
+
+   //eslint-disable-next-line camelcase
+    async addOrganizationInEcosystem(orgs: IEcosystemOrgs[]): Promise<Prisma.BatchPayload> {
+    try {
+
+      const result = await this.prisma.ecosystem_orgs.createMany({
+        data: orgs
+      });
+
+    return result;
+
+    } catch (error) {
+      this.logger.error(`Error in add organization ecosystem: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemOrgs(orgIds: string[], ecosystemId: string): Promise<IEcosystemOrgsData[]> {
+    try {
+      const result = await this.prisma.ecosystem_orgs.findMany({
+         where: {
+            orgId: {
+              in: orgIds
+            },
+            ecosystemId
+         }
+      });
+
+    return result;
+
+    } catch (error) {
+      this.logger.error(`Error in fetch ecosystem orgs: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemsCount(orgId: string): Promise<number> {
+    try {
+      const ecosystemsCount = await this.prisma.ecosystem.count({
+        where: {
+          ecosystemOrgs: {
+            some: {
+              orgId
+            }
+          }
+        }
+      });
+      return ecosystemsCount;
+    } catch (error) {
+      this.logger.error(`[get all ecosystems by org Id] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async checkOrgExists(orgId: string): Promise<organisation> {
+    try {
+      const isOrgExists = await this.prisma.organisation.findUnique({
+        where: {
+          id: orgId
+        }
+      });
+      return isOrgExists;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+
+  // eslint-disable-next-line camelcase
+  async checkOrgExistsInEcosystem(orgId: string, ecosystemId: string): Promise<ecosystem_orgs> {
+    try {
+      const existingOrgs = await this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          ecosystemId,
+          orgId
+        }
+      });
+      return existingOrgs;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
     }
   }
 
@@ -410,11 +495,12 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async getEcosystemRole(name: string): Promise<ecosystem_roles> {
     try {
-      return this.prisma.ecosystem_roles.findFirst({
+      const getEcosytemRoles = this.prisma.ecosystem_roles.findFirst({
         where: {
           name
         }
       });
+      return getEcosytemRoles;
     } catch (error) {
       this.logger.error(`getEcosystemRole: ${JSON.stringify(error)}`);
       throw error;
@@ -539,7 +625,12 @@ export class EcosystemRepository {
                 name: true,
                 orgSlug: true,
                 // eslint-disable-next-line camelcase
-                org_agents: true
+                org_agents: true,
+                userOrgRoles: {
+                  select: {
+                    userId: true
+                  }
+                }
               }
             }
           },
@@ -622,7 +713,6 @@ export class EcosystemRepository {
       });
       
   }
-
 
   async getEndorsementsWithPagination(queryObject: object, pageNumber: number, pageSize: number): Promise<object> {
     try {
@@ -799,6 +889,34 @@ export class EcosystemRepository {
     }
   }
 
+  // eslint-disable-next-line camelcase
+  async getAllOrganizationsByUserId(userId: string): Promise<user_org_roles[]> {
+    try {
+      const getUserorgs = await this.prisma.user_org_roles.findMany({
+        where: {
+          userId
+        }
+      });
+      return getUserorgs;
+
+    } catch (error) {
+      this.logger.error(`Error in getting user organizations: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getAllOrgRoles(): Promise<org_roles[]> {
+    try {
+      const getUserorgs = await this.prisma.org_roles.findMany();
+      return getUserorgs;
+
+    } catch (error) {
+      this.logger.error(`Error in getting organization roled: ${error.message} `);
+      throw error;
+    }
+  }
+
   /**
    * Get platform config details
    * @returns 
@@ -939,11 +1057,71 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
+  async getTransactionDetailsByEndorsementId(endorsementId: string): Promise<endorsement_transaction> {
+    try {
+      const endorsementTransactionDetails = await this.prisma.endorsement_transaction.findUnique({
+        where: {
+          id: endorsementId
+        },
+        include: {
+          ecosystemOrgs: {
+            select: {
+              orgId: true
+            }
+          }
+        }
+      });
+
+      return endorsementTransactionDetails;
+
+    } catch (error) {
+      this.logger.error(`Error in getting endorsement transaction details: ${error.message} `);
+      throw error;
+    }
+  }
+
+    // eslint-disable-next-line camelcase
+    async getEndorsementTransactionByIdAndType(endorsementId: string, type: endorsementTransactionType): Promise<endorsement_transaction> {
+      try {
+        const ecosystemLeadDetails = await this.prisma.endorsement_transaction.findUnique({
+          where: {
+            id: endorsementId,
+            type
+          },
+          include: {
+            ecosystemOrgs: {
+              select: {
+                orgId: true
+              }
+            }
+          }
+        });
+  
+        return ecosystemLeadDetails;
+  
+      } catch (error) {
+        this.logger.error(`Error in getting ecosystem lead details for the ecosystem: ${error.message} `);
+        throw error;
+      }
+    }
+
+    
+  // eslint-disable-next-line camelcase
   async findRecordsByNameAndVersion(name: string, version: string): Promise<endorsement_transaction[]> {
     try {
       return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'name' = ${name} AND "requestBody"->>'version' = ${version}`;
     } catch (error) {
       this.logger.error(`Error in getting ecosystem schema: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async findSchemaRecordsBySchemaName(schemaName: string): Promise<endorsement_transaction[]> {
+    try {
+      return this.prisma.$queryRaw`SELECT * FROM endorsement_transaction WHERE "requestBody"->>'schemaName' = ${schemaName}`;
+    } catch (error) {
+      this.logger.error(`Error in getting w3c schema: ${error.message} `);
       throw error;
     }
   }
@@ -1025,7 +1203,7 @@ export class EcosystemRepository {
 
   async saveSchema(schemaResult: SaveSchema): Promise<schema> {
     try {
-      const { name, version, attributes, schemaLedgerId, issuerId, createdBy, lastChangedBy, publisherDid, orgId, ledgerId } = schemaResult;
+      const { name, version, attributes, schemaLedgerId, issuerId, createdBy, lastChangedBy, publisherDid, orgId, ledgerId, type } = schemaResult;
       const saveResult = await this.prisma.schema.create({
         data: {
           name,
@@ -1037,7 +1215,8 @@ export class EcosystemRepository {
           lastChangedBy,
           publisherDid,
           orgId: String(orgId),
-          ledgerId
+          ledgerId,
+          type
         }
       });
       return saveResult;
@@ -1188,6 +1367,116 @@ export class EcosystemRepository {
       return agent;
     } catch (error) {
       this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemsByOrgId(orgId: string): Promise<IEcosystemData[]> {
+    try {
+
+      const ecosystemsDetails = await this.prisma.ecosystem.findMany({
+        where: {
+          ecosystemOrgs: {
+            some: {
+              orgId
+            }
+          }
+          
+        },
+        include: {
+          ecosystemOrgs: {
+            include: {
+              ecosystemRole: true
+            }
+          }
+        }
+      });
+      
+      return ecosystemsDetails;
+    } catch (error) {
+      this.logger.error(`Error in getting ecosystems: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getOrgName(orgId: string): Promise<{
+    name: string;
+  }> {
+    try {
+      const orgName = await this.prisma.organisation.findUnique({
+        where: {
+          id: orgId
+        },
+        select: {
+          name: true
+        }
+      });
+
+      return orgName;
+    } catch (error) {
+      this.logger.error(`Error in getting organization names: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteEcosystemInvitations(orgId: string): Promise<Prisma.BatchPayload> {
+    try {
+      const deletedEcosystemInvitations = await this.prisma.ecosystem_invitations.deleteMany({
+        where: {
+          orgId
+        }
+      });
+
+      return deletedEcosystemInvitations;
+    } catch (error) {
+      this.logger.error(`Error in deleting ecosystem invitations: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteMemberOrgFromEcosystem(orgId: string): Promise<IEcosystemDataDeletionResults> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+        const deletedEcosystemUsers = await prisma.ecosystem_users.deleteMany({
+          where: {
+            ecosystem: {
+              ecosystemOrgs: {
+                some: {
+                  orgId
+                }
+              }
+            }
+          }
+        });
+
+        const deleteEndorsementTransactions = await prisma.endorsement_transaction.deleteMany({
+          where: {
+            ecosystemOrgs: {
+              orgId
+            }
+          }
+        });
+
+        const deletedEcosystemOrgs = await prisma.ecosystem_orgs.deleteMany({
+          where: {
+            orgId
+          }
+        });
+
+        const deletedEcosystems = await prisma.ecosystem.deleteMany({
+          where: {
+            ecosystemOrgs: {
+              some: {
+                orgId
+              }
+            }
+          }
+        });
+
+        return { deletedEcosystemUsers, deleteEndorsementTransactions, deletedEcosystemOrgs, deletedEcosystems };
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleting ecosystems: ${error.message}`);
       throw error;
     }
   }

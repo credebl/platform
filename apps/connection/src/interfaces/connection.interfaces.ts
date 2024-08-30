@@ -16,6 +16,7 @@ export interface IConnection {
   handshakeProtocols: string[];
   orgId: string;
   recipientKey?: string;
+  invitationDid?: string
 }
 export interface IUserRequestInterface {
   userId: string;
@@ -265,7 +266,7 @@ export interface ConnectionResponseDetail {
   lastChangedDateTime: Date;
   lastChangedBy: number;
   recordId: string;
-  recipientKey:string;
+  invitationDid?: string
 }
 
 export interface ICreateConnectionInvitation {
@@ -279,9 +280,12 @@ export interface ICreateConnectionInvitation {
   messages?: object[];
   multiUseInvitation?: boolean;
   autoAcceptConnection?: boolean;
+  IsReuseConnection?: boolean;
   routing?: object;
   appendedAttachments?: object[];
   orgId?: string;
+  recipientKey?: string;
+  invitationDid?: string;
 }
 
 export interface ICreateOutOfbandConnectionInvitation {

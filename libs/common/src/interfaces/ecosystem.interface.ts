@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 interface EcosystemRole {
     id: string;
     name: string;
@@ -6,7 +8,7 @@ interface EcosystemRole {
     lastChangedDateTime: Date;
     deletedAt: Date;
   }
-  
+   
 interface Ecosystem {
     id: string;
     name: string;
@@ -40,3 +42,20 @@ interface Ecosystem {
     ecosystemList: Ecosystem[];
   }
   
+  export interface IEndorsementTransaction {
+    id: string;
+    endorserDid: string;
+    authorDid: string;
+    status: string;
+    ecosystemOrgId: string;
+    createDateTime: Date;
+    createdBy: string;
+    type?: string;
+  }
+  
+  export interface IEcosystemDataDeletionResults {
+    deletedEcosystemUsers: Prisma.BatchPayload;
+    deleteEndorsementTransactions: Prisma.BatchPayload;
+    deletedEcosystemOrgs: Prisma.BatchPayload;
+    deletedEcosystems: Prisma.BatchPayload;
+  }

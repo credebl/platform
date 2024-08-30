@@ -6,14 +6,16 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { organisation } from '@prisma/client';
-import { IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
+import { organisation, user } from '@prisma/client';
+import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
-import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard } from '@credebl/common/interfaces/organization.interface';
+import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
+import { PrimaryDid } from './dtos/set-primary-did.dto';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -29,6 +31,17 @@ export class OrganizationService extends BaseService {
   async createOrganization(createOrgDto: CreateOrganizationDto, userId: string, keycloakUserId: string): Promise<organisation> {
     const payload = { createOrgDto, userId, keycloakUserId };
     return this.sendNatsMessage(this.serviceProxy, 'create-organization', payload);
+  }
+
+  /**
+   *
+   * @param primaryDidPayload
+   * @returns Set Primary Did for organization
+   */
+  async setPrimaryDid(primaryDidPayload: PrimaryDid, orgId:string): Promise<organisation> {
+    const {did, id} = primaryDidPayload;
+    const payload = { did, orgId, id};
+    return this.sendNatsMessage(this.serviceProxy, 'set-primary-did', payload);
   }
 
   /**
@@ -67,8 +80,8 @@ export class OrganizationService extends BaseService {
    * @returns Organizations details
    */
 
-  async getOrganizations(paginationDto: PaginationDto, userId: string): Promise<IGetOrganization> {
-    const payload = { userId, ...paginationDto };
+  async getOrganizations(organizationDto: GetAllOrganizationsDto, userId: string): Promise<IGetOrganization> {
+    const payload = { userId, ...organizationDto };
     const fetchOrgs = await this.sendNatsMessage(this.serviceProxy, 'get-organizations', payload);
     return fetchOrgs;
   }
@@ -127,14 +140,19 @@ export class OrganizationService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'get-organization-dashboard', payload);
   }
 
+  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgActivityCount> {
+    const payload = { orgId, userId };
+    return this.sendNatsMessage(this.serviceProxy, 'get-organization-activity-count', payload);
+  }
+
   /**
    *
    * @param
    * @returns get organization roles
    */
 
-  async getOrgRoles(orgId: string): Promise<IClientRoles[]> {
-    const payload = {orgId};
+  async getOrgRoles(orgId: string, user: user): Promise<IClientRoles[]> {
+    const payload = {orgId, user};
     return this.sendNatsMessage(this.serviceProxy, 'get-org-roles', payload);
   }
 
@@ -174,6 +192,13 @@ export class OrganizationService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-user', payload);
   }
 
+  async getDidList(
+    orgId: string
+  ): Promise<IDidList[]> {
+    const payload = { orgId };
+    return this.sendNatsMessage(this.serviceProxy, 'fetch-organization-dids', payload);
+  }
+
   async getOrgPofile(
     orgId: string
   ): Promise<organisation> {
@@ -183,17 +208,19 @@ export class OrganizationService extends BaseService {
   }
 
   async deleteOrganization(
-    orgId: string
-  ): Promise<boolean> {
-    const payload = { orgId };
+    orgId: string,
+    user: user
+  ): Promise<IDeleteOrganization> {
+    const payload = { orgId, user };
 
     return this.sendNatsMessage(this.serviceProxy, 'delete-organization', payload);
   }
 
   async deleteOrgClientCredentials(
-    orgId: string
+    orgId: string,
+    user: user
   ): Promise<string> {
-    const payload = { orgId };
+    const payload = { orgId, user };
 
     return this.sendNatsMessage(this.serviceProxy, 'delete-org-client-credentials', payload);
   }

@@ -4,9 +4,12 @@ import { BaseService } from 'libs/service/base.service';
 import { SendProofRequestPayload, RequestProofDto } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
-import { IProofPresentationDetails, IProofPresentationList } from '@credebl/common/interfaces/verification.interface';
+import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentation } from './interfaces/verification.interface';
+// To do make a similar interface in API-gateway
+import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
+import { user } from '@prisma/client';
 
 
 @Injectable()
@@ -43,7 +46,25 @@ export class VerificationService extends BaseService {
      * @param orgId 
      * @returns Requested proof presentation details
      */
-    sendProofRequest(requestProof: RequestProofDto, user: IUserRequest): Promise<IProofRequest> {
+    sendProofRequest(requestProofDto: RequestProofDto, user: IUserRequest): Promise<IProofRequest> {
+        const requestProof: IRequestProof = {
+          orgId: requestProofDto.orgId,
+          type: requestProofDto.type,
+          comment: requestProofDto.comment,
+          autoAcceptProof: requestProofDto.autoAcceptProof,
+          connectionId: requestProofDto.connectionId,
+          goalCode: requestProofDto.goalCode,
+          parentThreadId: requestProofDto.parentThreadId,
+          protocolVersion: requestProofDto.protocolVersion,
+          willConfirm: requestProofDto.willConfirm
+        };
+        if (requestProofDto.proofFormats) {
+          requestProof.attributes = requestProofDto.proofFormats.indy.attributes;
+        }
+        if (requestProofDto.presentationDefinition) {
+          requestProof.presentationDefinition = requestProofDto.presentationDefinition;
+        }
+
         const payload = { requestProof, user };
         return this.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);
     }
@@ -80,9 +101,9 @@ export class VerificationService extends BaseService {
         return this.sendNatsMessage(this.verificationServiceProxy, 'get-verified-proof-details', payload);
     }
 
-    async _getWebhookUrl(tenantId: string): Promise<string> {
+    async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
         const pattern = { cmd: 'get-webhookurl' };
-        const payload = { tenantId };
+        const payload = { tenantId, orgId };
     
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,4 +129,8 @@ export class VerificationService extends BaseService {
         }
       }
 
+      async deleteVerificationRecords(orgId: string, userDetails: user): Promise<IVerificationRecords> {
+        const payload = { orgId, userDetails };
+        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-records', payload);
+    }
 }

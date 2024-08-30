@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 export interface IUserOrgRoles {
   id: string
   userId: string
@@ -141,4 +143,104 @@ export interface Payload {
   pageNumber: number;
   pageSize: number;
   search: string;
+  role?: string;
+}
+
+export interface IDidList {
+  id: string;
+  createDateTime: Date;
+  did: string;
+  lastChangedDateTime: Date;
+  isPrimaryDid: boolean;
+}
+
+export interface IPrimaryDid {
+  orgId: string,
+  did: string
+}
+
+export interface IDidDetails {
+  id: string;
+  createDateTime: Date; 
+  createdBy: string;
+  lastChangedDateTime: Date; 
+  lastChangedBy: string;
+  orgId: string;
+  isPrimaryDid: boolean;
+  did: string;
+  didDocument: Prisma.JsonValue;
+  orgAgentId: string;
+}
+
+export interface IPrimaryDidDetails extends IPrimaryDid {
+  id: string
+  networkId: string
+  didDocument: Prisma.JsonValue
+}
+
+export interface OrgInvitation {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  userId: string;
+  orgId: string;
+  status: string;
+  orgRoles: string[];
+  email: string;
+}
+
+export interface ILedgerNameSpace {
+    id: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    nymTxnEndpoint: string;
+    indyNamespace: string;
+    networkUrl: string;
+}
+
+export interface IGetDids {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  orgId: string;
+  isPrimaryDid: boolean;
+  did: string;
+  didDocument: Prisma.JsonValue;
+  orgAgentId: string;
+}
+
+export interface ILedgerDetails {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  name: string;
+  networkType: string;
+  poolConfig: string;
+  isActive: boolean;
+  networkString: string;
+  nymTxnEndpoint: string;
+  indyNamespace: string;
+  networkUrl: string;
+
+}
+
+export interface IOrgRoleDetails {
+  id: string;
+  name: string;
+  description: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
 }

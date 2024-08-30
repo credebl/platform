@@ -6,13 +6,13 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import AsyncRetry = require('async-retry');
 import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/webhook.interfaces';
 import {
-  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException
 } from '@nestjs/common';
+import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
 
 @Injectable()
 export class WebhookService {
@@ -32,7 +32,6 @@ export class WebhookService {
       onRetry(e: { message: string }, attempt: number): void {
         logger.log(`Error:: ${e.message}`);
         logger.log(`Attempt:: ${attempt}`);
-       
       }
     };
   }
@@ -65,23 +64,19 @@ export class WebhookService {
     }
   }
 
-  async getWebhookUrl(tenantId: string): Promise<IGetWebhookUrl> {
+  async getWebhookUrl(getWebhook: IWebhookUrl): Promise<IGetWebhookUrl> {
     let webhookUrlInfo;
     try {
-      if (null === tenantId) {
-        throw new BadRequestException(ResponseMessages.agent.error.nullTenantId);
-      } else {
-        webhookUrlInfo = await this.webhookRepository.getWebhookUrl(tenantId);
-        if (!webhookUrlInfo) {
-          throw new NotFoundException(ResponseMessages.webhook.error.notFound);
-        } else {
-          return webhookUrlInfo.webhookUrl;
-        }
+      webhookUrlInfo = await this.webhookRepository.getWebhookUrl(getWebhook);
+
+      if (!webhookUrlInfo) {
+        throw new NotFoundException(ResponseMessages.webhook.error.notFound);
       }
+
+      return webhookUrlInfo.webhookUrl;
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
-    
     }
   }
 

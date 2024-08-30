@@ -8,6 +8,8 @@ import { ConnectionRepository } from './connection.repository';
 import { PrismaService } from '@credebl/prisma-service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { CommonConstants } from '@credebl/common/common.constant';
 // import { nkeyAuthenticator } from 'nats';
 
 @Module({
@@ -16,7 +18,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.CONNECTION_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED)
       }
     ]),
 
@@ -24,6 +26,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
      CacheModule.register()
   ],
   controllers: [ConnectionController],
-  providers: [ConnectionService, ConnectionRepository, PrismaService, Logger]
+  providers: [ConnectionService, ConnectionRepository, UserActivityRepository, PrismaService, Logger]
 })
 export class ConnectionModule { }

@@ -3,10 +3,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { ClientDetails, FileParameter, IssuanceDto, IssueCredentialDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
-import { FileExportResponse, IIssuedCredentialSearchParams, IssueCredentialType, RequestPayload } from './interfaces';
-import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
-
+import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails, TemplateDetails } from './dtos/issuance.dto';
+import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITemplateFormat, IssueCredentialType, UploadedFileDetails } from './interfaces';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { IssueCredentialDto } from './dtos/multi-connection.dto';
+import { user } from '@prisma/client';
 @Injectable()
 export class IssuanceService extends BaseService {
 
@@ -17,13 +18,11 @@ export class IssuanceService extends BaseService {
         super('IssuanceService');
     }
 
-    sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<{
-        response: object;
-    }> {
+    sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<ICredentialOfferResponse> {
 
-        const payload = { attributes: issueCredentialDto.attributes, comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, connectionId: issueCredentialDto.connectionId, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, user };
+        const payload = { comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, credentialData: issueCredentialDto.credentialData, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType, user };
 
-        return this.sendNats(this.issuanceProxy, 'send-credential-create-offer', payload);
+        return this.sendNatsMessage(this.issuanceProxy, 'send-credential-create-offer', payload);
     }
 
     sendCredentialOutOfBand(issueCredentialDto: OOBIssueCredentialDto): Promise<{
@@ -67,16 +66,21 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
     }
 
-    async exportSchemaToCSV(credentialDefinitionId: string
+    getAllCredentialTemplates(orgId:string, schemaType:string): Promise<ITemplateFormat> {
+        const payload = { orgId, schemaType};
+        return this.sendNatsMessage(this.issuanceProxy, 'get-all-credential-template-for-bulk-operation', payload);
+      }
+
+    async downloadBulkIssuanceCSVTemplate(orgId: string, templateDetails: TemplateDetails
     ): Promise<FileExportResponse> {
-        const payload = { credentialDefinitionId };
-        return (await this.sendNats(this.issuanceProxy, 'export-schema-to-csv-by-credDefId', payload)).response;
+        const payload = { orgId, templateDetails };
+        return (await this.sendNats(this.issuanceProxy, 'download-csv-template-for-bulk-operation', payload)).response;
     }
 
-    async importCsv(importFileDetails: RequestPayload
+    async uploadCSVTemplate(importFileDetails: UploadedFileDetails
     ): Promise<{ response: object }> {
         const payload = { importFileDetails };
-        return this.sendNats(this.issuanceProxy, 'import-and-preview-data-for-issuance', payload);
+        return this.sendNats(this.issuanceProxy, 'upload-csv-template', payload);
     }
 
     async previewCSVDetails(requestId: string,
@@ -115,19 +119,19 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'issued-file-data', payload);
     }
 
-    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: RequestPayload): Promise<object> {
+    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: IReqPayload): Promise<object> {
         const payload = { requestId, orgId, clientDetails, reqPayload };
         return this.sendNatsMessage(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }
 
-    async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<{ response: object }> {
-        const payload = { fileId, orgId, clientId };
-        return this.sendNats(this.issuanceProxy, 'retry-bulk-credentials', payload);
+    async retryBulkCredential(fileId: string, orgId: string, clientDetails: ClientDetails): Promise<object> {
+        const payload = { fileId, orgId, clientDetails };
+        return this.sendNatsMessage(this.issuanceProxy, 'retry-bulk-credentials', payload);
     }
 
-    async _getWebhookUrl(tenantId: string): Promise<string> {
+    async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
         const pattern = { cmd: 'get-webhookurl' };
-        const payload = { tenantId };
+        const payload = { tenantId, orgId };
 
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,6 +156,11 @@ export class IssuanceService extends BaseService {
 
             throw error;
         }
+    }
+
+    async deleteIssuanceRecords(orgId: string, userDetails: user): Promise<IDeletedIssuanceRecords> {
+        const payload = { orgId, userDetails };
+        return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
     }
 
 }

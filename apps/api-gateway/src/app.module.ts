@@ -21,12 +21,14 @@ import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { EcosystemModule } from './ecosystem/ecosystem.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { BullModule } from '@nestjs/bull';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { NotificationModule } from './notification/notification.module';
+import { GeoLocationModule } from './geo-location/geo-location.module';
+import { CommonConstants } from '@credebl/common/common.constant';
+import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
 
 @Module({
   imports: [
@@ -35,7 +37,7 @@ import { NotificationModule } from './notification/notification.module';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
       }
     ]),
     AgentModule,
@@ -55,20 +57,18 @@ import { NotificationModule } from './notification/notification.module';
     WebhookModule,
     NotificationModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
-    BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT)
-      }
-    })
+    GeoLocationModule,
+    CloudWalletModule
   ],
   controllers: [AppController],
   providers: [AppService]
 })
 export class AppModule {
   configure(userContext: MiddlewareConsumer): void {
-    userContext.apply(AuthzMiddleware)
-      .exclude({ path: 'authz', method: RequestMethod.ALL },
+    userContext
+      .apply(AuthzMiddleware)
+      .exclude(
+        { path: 'authz', method: RequestMethod.ALL },
         'authz/:splat*',
         'admin/subscriptions',
         'registry/organizations/',
@@ -97,9 +97,6 @@ export class AppModule {
         'issue-credentials/national-id',
         'labels/:id'
       )
-      .forRoutes(
-        AgentController,
-        RevocationController
-      );
+      .forRoutes(AgentController, RevocationController);
   }
 }

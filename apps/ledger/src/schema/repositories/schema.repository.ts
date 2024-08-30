@@ -238,35 +238,71 @@ export class SchemaRepository {
   async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<IPlatformSchemas> {
     try {
       const { ledgerId, schemaType, searchByText, sortField, sortBy, pageSize, pageNumber } = payload;
-      const schemasResult = await this.prisma.schema.findMany({
-        where: {
-          ledgerId,
-          type: schemaType,
-          OR: [
-            { name: { contains: searchByText, mode: 'insensitive' } },
-            { version: { contains: searchByText, mode: 'insensitive' } },
-            { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } },
-            { issuerId: { contains: searchByText, mode: 'insensitive' } }
-          ]
-        },
-        select: {
-          createDateTime: true,
-          name: true,
-          version: true,
-          attributes: true,
-          schemaLedgerId: true,
-          createdBy: true,
-          publisherDid: true,
-          orgId: true,  // This field can be null
-          issuerId: true,
-          type: true
-        },
-        orderBy: {
-          [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
-        },
-        take: Number(pageSize),
-        skip: (pageNumber - 1) * pageSize
-      });
+      let schemaResult;
+      /** 
+       * This is made so because the default pageNumber is set to 1 in DTO, 
+       * If there is any 'searchByText' field, we ignore the pageNumbers and search
+       * in all available records.
+       * 
+       * Because in that case pageNumber would be insignificant.
+       */
+      if (searchByText) {
+        schemaResult = await this.prisma.schema.findMany({
+          where: {
+            ledgerId,
+            type: schemaType,
+            OR: [
+              { name: { contains: searchByText, mode: 'insensitive' } },
+              { version: { contains: searchByText, mode: 'insensitive' } },
+              { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } },
+              { issuerId: { contains: searchByText, mode: 'insensitive' } }
+            ]
+          },
+          select: {
+            createDateTime: true,
+            name: true,
+            version: true,
+            attributes: true,
+            schemaLedgerId: true,
+            createdBy: true,
+            publisherDid: true,
+            orgId: true,  // This field can be null
+            issuerId: true,
+            type: true
+          },
+          orderBy: {
+            [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
+          },
+          take: Number(pageSize)
+        });
+      } else {
+        /**
+         * Queries apart from the one containing searchText would go here
+         */
+        schemaResult = await this.prisma.schema.findMany({
+          where: {
+            ledgerId,
+            type: schemaType
+          },
+          select: {
+            createDateTime: true,
+            name: true,
+            version: true,
+            attributes: true,
+            schemaLedgerId: true,
+            createdBy: true,
+            publisherDid: true,
+            orgId: true,  // This field can be null
+            issuerId: true,
+            type: true
+          },
+          orderBy: {
+            [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
+          },
+          take: Number(pageSize),
+          skip: (pageNumber - 1) * pageSize
+        });
+      }
 
       const schemasCount = await this.prisma.schema.count({
         where: {
@@ -276,7 +312,7 @@ export class SchemaRepository {
       });
 
       // Handle null orgId in the response
-      const schemasWithDefaultOrgId = schemasResult.map(schema => ({
+      const schemasWithDefaultOrgId = schemaResult.map(schema => ({
         ...schema,
         orgId: schema.orgId || null // Replace null orgId with 'N/A' or any default value
       }));

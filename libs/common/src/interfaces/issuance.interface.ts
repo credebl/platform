@@ -113,3 +113,17 @@ export interface IIssuedCredential {
       options?: IOptions;
     }
     
+    export interface ISchemaObject {
+      '$schema': string;
+      '$id': string;
+      type: string;
+      required: string[];
+      properties: {
+        [key: string]: object;
+      };
+      definitions: {
+        [key: string]: object;
+      };
+      title: string;
+      description: string;
+    }

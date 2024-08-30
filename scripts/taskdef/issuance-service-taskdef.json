@@ -1,9 +1,9 @@
 {
-    "family": "DEV_LEDGER_SERVICE_TASKDEFINITION",
+    "family": "${FAMILY}",
     "containerDefinitions": [
         {
-            "name": "ledger",
-            "image": "%REPOSITORY_URI%:LEDGER_v_%BUILD_NUMBER%",
+            "name": "issuance",
+            "image": "%REPOSITORY_URI%:ISSUANCE_v_%BUILD_NUMBER%",
             "cpu": 256,
             "memory": 512,
             "portMappings": [],
@@ -15,23 +15,27 @@
                     "type": "s3"
                 }
             ],
-            "mountPoints": [],
+            "mountPoints": [
+                {
+                    "sourceVolume": "uploadedFiles",
+                    "containerPath": "/app/uploadedFiles",
+                    "readOnly": false
+                }
+            ],
             "volumesFrom": [],
             "ulimits": [],
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_LEDGER_SERVICE_TASKDEFINITION",
+                    "awslogs-group": "/ecs/${FAMILY}",
                     "awslogs-region": "${AWS_REGION}",
                     "awslogs-stream-prefix": "ecs"
                 },
                 "secretOptions": []
             }
         }
-        
     ],
-   
     "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "placementConstraints": [],
@@ -39,5 +43,19 @@
         "FARGATE"
     ],
     "cpu": "256",
-    "memory": "512"
+    "memory": "512",
+   "volumes": [
+        {
+            "name": "uploadedFiles",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "${EFS}",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "${UPLOADFILES_ACCESS_POINT}",
+                    "iam": "DISABLED"
+                }
+            }
+        }
+    ]
 }

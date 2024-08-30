@@ -409,9 +409,13 @@ const migrateOrgAgentDids = async (): Promise<void> => {
             }
         });
 
+        const filteredOrgAgents = orgAgents.filter(
+            (agent) => null !== agent.orgDid && '' !== agent.orgDid
+        );
+
         // If there are org DIDs that do not exist in org_dids table
         if (orgDids.length !== existingDids.length) {
-            const newOrgAgents = orgAgents.filter(
+            const newOrgAgents = filteredOrgAgents.filter(
                 (agent) => !existingDids.some((did) => did.did === agent.orgDid)
             );
 

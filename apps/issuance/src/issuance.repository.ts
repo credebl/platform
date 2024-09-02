@@ -481,6 +481,27 @@ export class IssuanceRepository {
     }
   }
 
+  async getFileDetailsAndFileDataByFileId(
+    fileId: string,
+    orgId:string
+  ): Promise<object> {
+    try {
+      const fileDetails = await this.prisma.file_upload.findUnique({
+       where: {
+        id:fileId, 
+        orgId
+       },
+       include : {
+        file_data:true
+       }
+      });
+      return fileDetails;
+    } catch (error) {
+      this.logger.error(`[getFileDetailsAndFileDataByFileId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async updateFileUploadData(fileUploadData: FileUploadData): Promise<file_data> {
     try {
       const { jobId, fileUpload, isError, referenceId, error, detailError } = fileUploadData;

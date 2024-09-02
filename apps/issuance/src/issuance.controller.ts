@@ -88,6 +88,14 @@ export class IssuanceController {
     );
   }
 
+  @MessagePattern({ cmd: 'issued-file-data-and-file-details' })
+  async getFileDetailsAndFileDataByFileId(payload: { fileId: string, orgId: string }): Promise<object> {
+    return this.issuanceService.getFileDetailsAndFileDataByFileId(
+      payload.fileId,
+      payload.orgId
+    );
+  }
+
 
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
   async issueBulkCredentials(payload: { requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails }): Promise<string> {

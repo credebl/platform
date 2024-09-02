@@ -298,7 +298,8 @@ export const ResponseMessages = {
       bulkIssuance: 'Issuance process started. It will take some time',
       notFound: 'Schema records not found',
       bulkProcess: 'Process initiated for bulk issuance',
-      deleteIssuanceRecords: 'Issuance records deleted'
+      deleteIssuanceRecords: 'Issuance records deleted',
+      fileDetailsAndFileData:'File details and File data fetched successfully'
     },
     error: {
       exists: 'Credentials is already exist',

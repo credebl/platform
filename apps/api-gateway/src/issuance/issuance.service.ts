@@ -167,7 +167,7 @@ export class IssuanceService extends BaseService {
           orgId,
           fileId
         };
-        return this.sendNats(this.issuanceProxy, 'issued-file-data-and-file-details', payload);
+        return this.sendNatsMessage(this.issuanceProxy, 'issued-file-data-and-file-details', payload);
       }
 
 }

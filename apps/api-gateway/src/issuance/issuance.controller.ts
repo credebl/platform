@@ -316,7 +316,7 @@ async downloadBulkIssuanceCSVTemplate(
   }
 
   @Get('/orgs/:orgId/:requestId/preview')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER, OrgRoles.ISSUER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -367,7 +367,7 @@ async downloadBulkIssuanceCSVTemplate(
   }
 
   @Post('/orgs/:orgId/:requestId/bulk')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @Roles(OrgRoles.ADMIN, OrgRoles.OWNER,  OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -441,7 +441,7 @@ async downloadBulkIssuanceCSVTemplate(
   }
 
   @Get('/orgs/:orgId/bulk/files')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @Roles(OrgRoles.OWNER,  OrgRoles.ISSUER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -474,7 +474,7 @@ async downloadBulkIssuanceCSVTemplate(
   }
 
   @Get('/orgs/:orgId/:fileId/bulk/file-data')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @Roles(OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })

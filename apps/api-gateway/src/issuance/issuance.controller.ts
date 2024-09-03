@@ -319,12 +319,12 @@ async downloadBulkIssuanceCSVTemplate(
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER, OrgRoles.ISSUER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
@@ -370,7 +370,6 @@ async downloadBulkIssuanceCSVTemplate(
   @Roles(OrgRoles.ADMIN, OrgRoles.OWNER,  OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
@@ -385,6 +384,7 @@ async downloadBulkIssuanceCSVTemplate(
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -442,9 +442,9 @@ async downloadBulkIssuanceCSVTemplate(
 
   @Get('/orgs/:orgId/bulk/files')
   @Roles(OrgRoles.OWNER,  OrgRoles.ISSUER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',

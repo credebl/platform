@@ -507,6 +507,39 @@ async downloadBulkIssuanceCSVTemplate(
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+  @Get('/orgs/:orgId/:fileId/bulk/file-details-and-file-data')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto
+  })
+  @ApiForbiddenResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden',
+    type: ForbiddenErrorDto
+  })
+  @ApiOperation({
+    summary: 'Get all file details and file data by file id',
+    description: 'Get all file details and file data by file id'
+  })
+  async getFileDetailsAndFileDataByFileId(
+    @Param('orgId') orgId: string,
+    @Param(new ValidationPipe({ transform: true })) query: FileQuery,
+    @Res() res: Response
+  ): Promise<object> {
+    const { fileId } = query;
+    const issuedFileDetails = await this.issueCredentialService.getFileDetailsAndFileDataByFileId(orgId, fileId);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.fileDetailsAndFileData,
+      data: issuedFileDetails.response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
   @Post('/orgs/:orgId/:fileId/retry/bulk')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)

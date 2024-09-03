@@ -536,7 +536,7 @@ async downloadBulkIssuanceCSVTemplate(
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.fileDetailsAndFileData,
-      data: issuedFileDetails.response
+      data: issuedFileDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

@@ -508,15 +508,15 @@ async downloadBulkIssuanceCSVTemplate(
     return res.status(HttpStatus.OK).json(finalResponse);
   }
   @Get('/orgs/:orgId/:fileId/bulk/file-details-and-file-data')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @Roles(OrgRoles.ADMIN, OrgRoles.VERIFIER, OrgRoles.ISSUER, OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',

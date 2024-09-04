@@ -1,5 +1,4 @@
-import { Inject } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
@@ -8,14 +7,14 @@ import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invit
 import { GetAllEcosystemMembersDto } from './dtos/get-members.dto';
 import { GetAllEndorsementsDto } from './dtos/get-all-endorsements.dto';
 
-import { RequestSchemaDto, RequestCredDefDto, RequestW3CSchemaDto } from './dtos/request-schema.dto';
+import { RequestSchemaDto, RequestCredDefDto} from './dtos/request-schema.dto';
 import { CreateEcosystemDto } from './dtos/create-ecosystem-dto';
 import { EditEcosystemDto } from './dtos/edit-ecosystem-dto';
 import { IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystem, IEditEcosystem, IEndorsementTransaction, ISchemaResponse } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { IEcosystemDataDeletionResults, IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
 import { AddOrganizationsDto } from './dtos/add-organizations.dto';
-import { schemaRequestType } from '@credebl/enum/enum';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class EcosystemService extends BaseService {
@@ -130,6 +129,7 @@ export class EcosystemService extends BaseService {
     const payload = { invitationId };
     return this.sendNats(this.serviceProxy, 'delete-ecosystem-invitations', payload);
   }
+
   async acceptRejectEcosystemInvitaion(
     acceptRejectInvitation: AcceptRejectEcosystemInvitationDto,
     userEmail: string
@@ -164,12 +164,12 @@ export class EcosystemService extends BaseService {
   }
 
   async schemaEndorsementRequest(
-    requestSchemaPayload: RequestSchemaDto | RequestW3CSchemaDto,
+    requestSchemaPayload: RequestSchemaDto,
+    user: user,
     orgId: string,
-    ecosystemId: string,
-    schemaType: schemaRequestType = schemaRequestType.INDY
+    ecosystemId: string
   ): Promise<IEndorsementTransaction> {
-    const payload = { requestSchemaPayload, schemaType, orgId, ecosystemId };
+    const payload = { requestSchemaPayload, user, orgId, ecosystemId };
     return this.sendNatsMessage(this.serviceProxy, 'schema-endorsement-request', payload);
   }
 
@@ -187,8 +187,8 @@ export class EcosystemService extends BaseService {
     return this.sendNatsMessage(this.serviceProxy, 'sign-endorsement-transaction', payload);
   }
 
-  async submitTransaction(endorsementId: string, ecosystemId: string, orgId: string): Promise<object> {
-    const payload = { endorsementId, ecosystemId, orgId };
+  async submitTransaction(endorsementId: string, ecosystemId: string, orgId: string, user: user): Promise<object> {
+    const payload = { endorsementId, ecosystemId, orgId, user };
     return this.sendNatsMessage(this.serviceProxy, 'submit-endorsement-transaction', payload);
   }
 
@@ -205,4 +205,10 @@ export class EcosystemService extends BaseService {
     const payload = { ecosystemId, endorsementId, orgId };
     return this.sendNatsMessage(this.serviceProxy, 'decline-endorsement-transaction', payload);
   }
+
+  async deleteOrgFromEcosystem(orgId: string, userDetails: user): Promise<IEcosystemDataDeletionResults> {
+    const payload = { orgId, userDetails };
+    return this.sendNats(this.serviceProxy, 'delete-org-from-ecosystem', payload);
+  }
+
 }

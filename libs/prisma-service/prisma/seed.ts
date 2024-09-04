@@ -3,6 +3,10 @@ import * as fs from 'fs';
 import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { CommonConstants } from '../../common/src/common.constant';
+import * as CryptoJS from 'crypto-js';
+import { exec } from 'child_process';
+import * as util from 'util';
+const execPromise = util.promisify(exec); 
 
 const prisma = new PrismaClient();
 const logger = new Logger('Init seed DB');
@@ -23,8 +27,9 @@ const createPlatformConfig = async (): Promise<void> => {
         } else {
             logger.log('Already seeding in platform config');
         }
-    } catch (e) {
-        logger.error('An error occurred seeding platformConfig:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding platformConfig:', error);
+        throw error;
     }
 };
 
@@ -50,8 +55,9 @@ const createOrgRoles = async (): Promise<void> => {
             logger.log('Already seeding in org role');
         }
 
-    } catch (e) {
-        logger.error('An error occurred seeding orgRoles:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding orgRoles:', error);
+        throw error;
     }
 };
 
@@ -79,8 +85,9 @@ const createAgentTypes = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding agentTypes:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding agentTypes:', error);
+        throw error;
     }
 };
 
@@ -107,8 +114,9 @@ const createOrgAgentTypes = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding orgAgentTypes:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding orgAgentTypes:', error);
+        throw error;
     }
 };
 
@@ -136,8 +144,9 @@ const createPlatformUser = async (): Promise<void> => {
             logger.log('Already seeding in user');
         }
 
-    } catch (e) {
-        logger.error('An error occurred seeding platformUser:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding platformUser:', error);
+        throw error;
     }
 };
 
@@ -164,8 +173,9 @@ const createPlatformOrganization = async (): Promise<void> => {
             logger.log('Already seeding in organization');
         }
 
-    } catch (e) {
-        logger.error('An error occurred seeding platformOrganization:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding platformOrganization:', error);
+        throw error;
     }
 };
 
@@ -204,40 +214,47 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding platformOrganization:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding platformOrganization:', error);
+        throw error;
     }
 };
 
 const createLedger = async (): Promise<void> => {
     try {
-        const { ledgerData } = JSON.parse(configData);
-
-        const ledgerIndyNamespace = ledgerData.map(ledger => ledger.indyNamespace);
-        const existLedgerIndyNameSpace = await prisma.ledgers.findMany({
-            where: {
-                indyNamespace: {
-                    in: ledgerIndyNamespace
-                }
-            }
+      const { ledgerData } = JSON.parse(configData);
+  
+      const existingLedgers = await prisma.ledgers.findMany();
+  
+      if (0 === existingLedgers.length) {
+        const createLedger = await prisma.ledgers.createMany({
+          data: ledgerData
         });
+        logger.log('All ledgers inserted:', createLedger);
+      } else {
+        const updatesNeeded = [];
 
-        if (0 === existLedgerIndyNameSpace.length) {
-
-            const createLedger = await prisma.ledgers.createMany({
+        if (existingLedgers.length !== ledgerData.length) {
+            updatesNeeded.push(ledgerData);
+            if (0 < updatesNeeded.length) {
+              await prisma.ledgers.deleteMany();
+        
+              const createLedger = await prisma.ledgers.createMany({
                 data: ledgerData
-            });
-
-            logger.log(createLedger);
+              });
+              logger.log('Updated ledgers:', createLedger);
+            } else {
+              logger.log('No changes in ledger data');
+            }
         } else {
-            logger.log('Already seeding in ledgers');
+            logger.log('No changes in ledger data');
         }
-
-
-    } catch (e) {
-        logger.error('An error occurred seeding createLedger:', e);
+      }
+    } catch (error) {
+      logger.error('An error occurred seeding createLedger:', error);
+      throw error;
     }
-};
+  };
 
 const createEcosystemRoles = async (): Promise<void> => {
     try {
@@ -263,8 +280,9 @@ const createEcosystemRoles = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding ecosystemRoles:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding ecosystemRoles:', error);
+        throw error;
     }
 };
 
@@ -293,8 +311,9 @@ const createEcosystemConfig = async (): Promise<void> => {
         }
 
 
-    } catch (e) {
-        logger.error('An error occurred seeding createEcosystemConfig:', e);
+    } catch (error) {
+        logger.error('An error occurred seeding createEcosystemConfig:', error);
+        throw error;
     }
 };
 
@@ -335,8 +354,187 @@ const createLedgerConfig = async (): Promise<void> => {
         } else {
             logger.log('Already seeding in ledger config');
         }
-    } catch (e) {
-        logger.error('An error occurred while configuring ledger:', e);
+    } catch (error) {
+        logger.error('An error occurred while configuring ledger:', error);
+        throw error;
+    }
+};
+
+const createUserRole = async (): Promise<void> => {
+    try {
+        const { userRoleData } = JSON.parse(configData);
+
+        const userRoleDetails = userRoleData.map(userRole => userRole.role);
+        const existUserRole = await prisma.user_role.findMany({
+            where: {
+                role: {
+                    in: userRoleDetails
+                }
+            }
+        });
+
+        if (0 === existUserRole.length) {
+            const userRole = await prisma.user_role.createMany({
+                data: userRoleData
+            });
+
+            logger.log(userRole);
+        } else {
+            logger.log('Already seeding in user role');
+        }
+
+
+    } catch (error) {
+        logger.error('An error occurred seeding user role:', error);
+        throw error;
+    }
+};
+
+const migrateOrgAgentDids = async (): Promise<void> => {
+    try {
+        const orgAgents = await prisma.org_agents.findMany({
+            where: {
+                walletName: {
+                    not: 'platform-admin'
+                }
+            }
+        });
+
+        const orgDids = orgAgents.map((agent) => agent.orgDid).filter((did) => null !== did && '' !== did);
+        const existingDids = await prisma.org_dids.findMany({
+            where: {
+                did: {
+                    in: orgDids
+                }
+            }
+        });
+
+        const filteredOrgAgents = orgAgents.filter(
+            (agent) => null !== agent.orgDid && '' !== agent.orgDid
+        );
+
+        // If there are org DIDs that do not exist in org_dids table
+        if (orgDids.length !== existingDids.length) {
+            const newOrgAgents = filteredOrgAgents.filter(
+                (agent) => !existingDids.some((did) => did.did === agent.orgDid)
+            );
+
+            const newDidRecords = newOrgAgents.map((agent) => ({
+                orgId: agent.orgId,
+                did: agent.orgDid,
+                didDocument: agent.didDocument,
+                isPrimaryDid: true,
+                createdBy: agent.createdBy,
+                lastChangedBy: agent.lastChangedBy,
+                orgAgentId: agent.id
+            }));
+
+            const didInsertResult = await prisma.org_dids.createMany({
+                data: newDidRecords
+            });
+
+            logger.log(didInsertResult);
+        } else {
+            logger.log('No new DIDs to migrate in migrateOrgAgentDids');
+        }
+    } catch (error) {
+        logger.error('An error occurred during migrateOrgAgentDids:', error);
+        throw error;
+    }
+};
+
+const addSchemaType = async (): Promise<void> => {
+    try {
+        const emptyTypeSchemaList = await prisma.schema.findMany({
+            where: {
+              OR: [
+                { type: null },
+                { type: '' }
+              ]
+            }
+        });
+        if (0 < emptyTypeSchemaList.length) {
+            const updatePromises = emptyTypeSchemaList.map((schema) => prisma.schema.update({
+                    where: { id: schema.id },
+                    data: { type: 'indy' }
+                })
+            );
+           await Promise.all(updatePromises);
+
+            logger.log('Schemas updated successfully');
+        } else {
+            logger.log('No schemas to update');
+        }
+    } catch (error) {
+        logger.error('An error occurred during addSchemaType:', error);
+        throw error;
+    }
+};
+
+const importGeoLocationMasterData = async (): Promise<void> => {
+    try {
+      const scriptPath = process.env.GEO_LOCATION_MASTER_DATA_IMPORT_SCRIPT;
+      const dbUrl = process.env.DATABASE_URL;
+  
+      if (!scriptPath || !dbUrl) {
+        throw new Error('Environment variables GEO_LOCATION_MASTER_DATA_IMPORT_SCRIPT or DATABASE_URL are not set.');
+      }
+  
+      const command = `${process.cwd()}/${scriptPath} ${dbUrl}`;
+  
+      const { stdout, stderr } = await execPromise(command);
+  
+      if (stdout) {
+        logger.log(`Shell script output: ${stdout}`);
+      }
+      if (stderr) {
+        logger.error(`Shell script error: ${stderr}`);
+      }
+    } catch (error) {
+      logger.error('An error occurred during importGeoLocationMasterData:', error);
+      throw error;
+    }
+  };
+
+const encryptClientCredential = async (clientCredential: string): Promise<string> => {
+    try {
+        const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(clientCredential), process.env.CRYPTO_PRIVATE_KEY).toString();
+
+        return encryptedToken;
+    } catch (error) {
+        logger.error('An error occurred during encryptClientCredential:', error);
+        throw error;
+    }
+};
+
+const updateClientCredential = async (): Promise<void> => {
+    try {
+      const scriptPath = process.env.UPDATE_CLIENT_CREDENTIAL_SCRIPT;
+      const dbUrl = process.env.DATABASE_URL;
+      const clientId = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
+      const clientSecret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
+
+      if (!scriptPath || !dbUrl || !clientId || !clientSecret) {
+        throw new Error('Environment variables UPDATE_CLIENT_CREDENTIAL_SCRIPT or DATABASE_URL or clientId or clientSecret are not set.');
+      }
+  
+      const encryptedClientId = await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID);
+      const encryptedClientSecret = await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET);
+
+      const command = `${process.cwd()}/${scriptPath} ${dbUrl} ${encryptedClientId} ${encryptedClientSecret}`;
+  
+      const { stdout, stderr } = await execPromise(command);
+  
+      if (stdout) {
+        logger.log(`Shell script output: ${stdout}`);
+      }
+      if (stderr) {
+        logger.error(`Shell script error: ${stderr}`);
+      }
+          
+    } catch (error) {
+        logger.error('An error occurred during updateClientCredential:', error);
+        throw error;
     }
 };
 
@@ -354,15 +552,19 @@ async function main(): Promise<void> {
     await createEcosystemRoles();
     await createEcosystemConfig();
     await createLedgerConfig();
+    await createUserRole();
+    await migrateOrgAgentDids();
+    await addSchemaType();
+    await importGeoLocationMasterData();
+    await updateClientCredential();
 }
-
 
 main()
     .then(async () => {
         await prisma.$disconnect();
     })
-    .catch(async (e) => {
-        logger.error(`In prisma seed initialize`, e);
+    .catch(async (error) => {
+        logger.error(`In prisma seed initialize`, error);
         await prisma.$disconnect();
         process.exit(1);
     });

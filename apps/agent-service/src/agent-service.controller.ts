@@ -242,8 +242,8 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'delete-wallet' })
-  async deleteWallet(payload: { orgId }): Promise<object> {
-    return this.agentServiceService.deleteWallet(payload.orgId);
+  async deleteWallet(payload: { orgId, user }): Promise<object> {
+    return this.agentServiceService.deleteWallet(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'agent-receive-invitation-url' })
@@ -259,6 +259,11 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'agent-send-question' })
   async sendQuestion(payload: { url, orgId, questionPayload }): Promise<object> {
     return this.agentServiceService.sendQuestion(payload.questionPayload, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-send-basic-message' })
+  async sendBasicMessage(payload: { url, orgId, content }): Promise<object> {
+    return this.agentServiceService.sendBasicMessage(payload.content, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-get-question-answer-record' })

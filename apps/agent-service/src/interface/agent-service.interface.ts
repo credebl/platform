@@ -550,6 +550,9 @@ export interface IQuestionPayload {
   connectionId: string;
   tenantId: string;
 }
+export interface IBasicMessage {
+  content: string;
+}
 interface Ledger {
   id: string;
   createDateTime: string;
@@ -636,4 +639,19 @@ export interface OrgDid {
   did: string;
   didDocument: Prisma.JsonValue;
   orgAgentId: string;
+}
+
+export interface ILedgers {
+    id: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    nymTxnEndpoint: string;
+    indyNamespace: string;
+    networkUrl: string;
+
 }

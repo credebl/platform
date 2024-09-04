@@ -1,4 +1,6 @@
+import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 import { Prisma } from '@prisma/client';
+import { IUserRequestInterface } from 'apps/ledger/src/schema/interfaces/schema.interface';
 export interface AttributeValue {
   attributeName: string;
   schemaDataType: string;
@@ -6,25 +8,26 @@ export interface AttributeValue {
 }
 
 export interface IW3CSchemaAttributesValue {
-  title: string;
-  type: string;
+  attributeName: string;
+  schemaDataType: W3CSchemaDataType;
+  displayName: string;
+  isRequired: boolean;
 }
-
 export interface IRequestSchemaEndorsement {
-  orgId: string;
-  userId?: string;
-  name: string;
-  version: string;
-  attributes: AttributeValue[];
-  endorse?: boolean;
+  type: SchemaTypeEnum,
+  endorse?: boolean,
+  schemaPayload: IRequestIndySchemaEndorsement | IRequestW3CSchemaEndorsement
 }
 
-export interface IRequestW3CSchemaEndorsement {
-  orgId: string;
-  userId?: string;
+export interface IRequestIndySchemaEndorsement {
   schemaName: string;
-  did: string;
-  schemaAttributes: IW3CSchemaAttributesValue[];
+  schemaVersion: string;
+  attributes: AttributeValue[];
+}
+export interface IRequestW3CSchemaEndorsement {
+  schemaName: string;
+  attributes: IW3CSchemaAttributesValue[];
+  schemaType: JSONSchemaType;
   description: string;
 }
 
@@ -276,6 +279,7 @@ export interface ITransactionData {
   ecosystemId: string;
   ecosystemLeadAgentEndPoint?: string;
   orgId?: string;
+  user?: IUserRequestInterface
 }
 
 export interface IEcosystemDashboard {
@@ -413,7 +417,71 @@ export interface IEcosystemOrgDetails {
   ecosystemOrgs: IEcosystemOrgsData[];
 }
 
-
 export interface IEcosystemEndorsementFlag {
   autoEndorsement: boolean;
+}
+
+
+interface IEcosystemRole {
+  id: string;
+  name: string;
+  description: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+}
+
+interface IEcosystemMemberOrgs extends IEcosystemOrgs{
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  deletedAt: Date;
+  ecosystemRole: IEcosystemRole;
+}
+
+export interface IEcosystemData {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: Prisma.JsonValue;
+  ecosystemOrgs: IEcosystemMemberOrgs[];
+}
+
+interface IW3CAttributeValue {
+  attributeName: string;
+  schemaDataType: W3CSchemaDataType;
+  displayName: string;
+  isRequired: boolean;
+}
+
+export interface ISubmitIndySchema {
+  schemaVersion?: string;
+  schemaName: string;
+  attributes: IAttributeValue[];
+  orgId?: string;  
+  orgDid?: string;
+}
+export interface ISubmitW3CSchema {
+  attributes: IW3CAttributeValue[];
+  schemaName: string;
+  description: string;
+  schemaType: JSONSchemaType;
+}
+export interface ISubmitSchemaEndorsement {
+  type: SchemaTypeEnum;
+  schemaPayload: ISubmitIndySchema | ISubmitW3CSchema;
+}
+
+export interface IschemaPayload {
+  schemaDetails: ISubmitSchemaEndorsement,
+  user: IUserRequestInterface,
+  orgId: string
 }

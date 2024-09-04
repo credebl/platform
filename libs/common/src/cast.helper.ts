@@ -1,4 +1,4 @@
-import { schemaRequestType } from '@credebl/enum/enum';
+import { DidMethod, JSONSchemaType, ledgerLessDIDType, ProofType, schemaRequestType, TemplateIdentifier } from '@credebl/enum/enum';
 import { ISchemaFields } from './interfaces/schema.interface';
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
@@ -12,8 +12,7 @@ import {
   registerDecorator
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
-import { TemplateIdentifier } from '@credebl/enum/enum';
-import { IJsonldCredential } from './interfaces/issuance.interface';
+import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
 
 interface ToNumberOptions {
   default?: number;
@@ -93,13 +92,19 @@ export const IsNotSQLInjection =
         validate(value) {
           // Check if the value contains any common SQL injection keywords
           const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', 'WHERE', 'AND', 'OR'];
+        if ('string' === typeof value) {
+          // Convert the value to upper case for case-insensitive comparison
+          const upperCaseValue = value.toUpperCase();
+          // Use a regular expression to check for whole words
           for (const keyword of sqlKeywords) {
-            if (value.includes(keyword)) {
+            const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+            if (regex.test(upperCaseValue)) {
               return false; // Value contains a SQL injection keyword
             }
           }
-          return true; // Value does not contain any SQL injection keywords
-        },
+        }
+        return true; // Value does not contain any SQL injection keywords
+      },
         defaultMessage(args: ValidationArguments) {
           return `${args.property} contains SQL injection keywords.`;
         }
@@ -296,16 +301,15 @@ export const validateEmail = (email: string): boolean => {
 
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
-export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential) => {
-  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName} = JsonldCredentialDetails;
-  const credentialSubject = { 'id': 'did:key:kdfJmG7pi1MnrX4y4nkJe' };
+export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
+  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection} = JsonldCredentialDetails;
+  const credentialSubject = { };
+
+  const proofType = (orgDid?.includes(DidMethod.POLYGON)) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE;
 
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
-      credentialSubject[key] = {
-        'type': typeof credentialData[key],
-        'title': credentialData[key]
-      };
+      credentialSubject[key] = credentialData[key];
     }
   }
 
@@ -323,10 +327,11 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
             'id': `${orgDid}`
           },
           'issuanceDate': new Date().toISOString(),
-          credentialSubject
+          credentialSubject,
+          prettyVc
         },
         'options': {
-          'proofType': 'Ed25519Signature2018',
+          proofType,
           'proofPurpose': 'assertionMethod'
         }
       }
@@ -334,7 +339,8 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
     'comment': 'string',
     'protocolVersion': 'v2',
     'credentialType': 'jsonld',
-    orgId
+    orgId,
+    isReuseConnection
   };
 };
 
@@ -343,9 +349,8 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
 export class IsHostPortOrDomainConstraint implements ValidatorConstraintInterface {
   validate(value: string): boolean {
     // Regular expression for validating URL with host:port or domain
-    const hostPortRegex =
-      /^(http:\/\/|https:\/\/)?(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):(?:\d{1,5})$/;
-    const domainRegex = /^(http:\/\/|https:\/\/)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+    const hostPortRegex = /^(http:\/\/|https:\/\/)?(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):(?:\d{1,5})(\/[^\s]*)?$/;
+    const domainRegex = /^(http:\/\/|https:\/\/)?(?:localhost|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})(:\d{1,5})?(\/[^\s]*)?$/;
 
     return hostPortRegex.test(value) || domainRegex.test(value);
   }
@@ -365,4 +370,39 @@ export function IsHostPortOrDomain(validationOptions?: ValidationOptions) {
       validator: IsHostPortOrDomainConstraint
     });
   };
+}
+
+export function checkDidLedgerAndNetwork(schemaType: string, did: string): boolean {
+
+  const cleanSchemaType = schemaType.trim().toLowerCase();
+  const cleanDid = did.trim().toLowerCase();
+  
+  if (JSONSchemaType.POLYGON_W3C === cleanSchemaType) {
+    return cleanDid.includes(JSONSchemaType.POLYGON_W3C);
+  }
+
+  if (JSONSchemaType.LEDGER_LESS === cleanSchemaType) {
+    return cleanDid.startsWith(ledgerLessDIDType.DID_KEY) || cleanDid.startsWith(ledgerLessDIDType.DID_WEB);
+  }
+
+  return false;
+}
+
+export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICredentialData[] {
+  // Get current date in 'YYYY-MM-DD' format
+  // eslint-disable-next-line prefer-destructuring
+  const currentDate = new Date().toISOString().split('T')[0];
+
+  return data.map((item) => {
+    const { issuanceDate } = item.credential;
+    // eslint-disable-next-line prefer-destructuring
+    const issuanceDateOnly = issuanceDate.split('T')[0];
+
+    // If the date does not match the current date, then update it
+    if (issuanceDateOnly !== currentDate) {
+      item.credential.issuanceDate = new Date().toISOString();
+    }
+
+    return item;
+  });
 }

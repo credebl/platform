@@ -93,7 +93,7 @@
     {
       "name": "Bcovrin Testnet",
       "networkType": "testnet",
-      "poolConfig": "http://test.bcovrin.vonx.io/genesis",
+      "poolConfig": "https://raw.githubusercontent.com/bcgov/von-network/main/BCovrin/genesis_test",
       "isActive": true,
       "networkString": "testnet",
       "nymTxnEndpoint": "http://test.bcovrin.vonx.io/register",
@@ -134,6 +134,15 @@
       "networkString": "testnet",
       "nymTxnEndpoint": "",
       "indyNamespace": "polygon:testnet"
+    },
+    {
+      "name": "NA",
+      "networkType": "NA",
+      "poolConfig": "NA",
+      "isActive": true,
+      "networkString": "NA",
+      "nymTxnEndpoint": "NA",
+      "indyNamespace": "no_ledger"
     }
   ],
   "endorseData": [
@@ -219,6 +228,15 @@
         "did:key": "did:key",
         "did:web": "did:web"
     }
+    }
+  ],
+
+  "userRoleData": [
+    {
+      "role": "HOLDER"
+    },
+    {
+      "role": "DEFAULT_USER"
     }
   ]
 }

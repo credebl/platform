@@ -11,10 +11,10 @@ import {
   IReceiveInvitationByUrlOrg,
   IReceiveInvitationResponse
 } from './interfaces/connection.interfaces';
-import { IConnectionList } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IQuestionPayload } from './interfaces/question-answer.interfaces';
-
+import { IQuestionPayload } from './interfaces/messaging.interfaces';
+import { user } from '@prisma/client';
 @Controller()
 export class ConnectionController {
   constructor(private readonly connectionService: ConnectionService) {}
@@ -63,6 +63,12 @@ export class ConnectionController {
     return this.connectionService.getConnectionsById(user, connectionId, orgId);
   }
 
+  @MessagePattern({ cmd: 'get-connection-records' })
+  async getConnectionRecordsByOrgId(payload: { orgId: string, userId: string }): Promise<number> {
+    const { orgId } = payload;
+    return this.connectionService.getConnectionRecords(orgId);
+  }
+
   @MessagePattern({ cmd: 'receive-invitation-url' })
   async receiveInvitationUrl(payload: IReceiveInvitationByUrlOrg): Promise<IReceiveInvitationResponse> {
     const { user, receiveInvitationUrl, orgId } = payload;
@@ -88,5 +94,16 @@ export class ConnectionController {
   @MessagePattern({ cmd: 'create-connection-invitation' })
   async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<object> {
     return this.connectionService.createConnectionInvitation(payload);
+  }
+
+  @MessagePattern({ cmd: 'delete-connection-records' })
+  async deleteConnectionRecords(payload: {orgId: string, userDetails: user}): Promise<IDeletedConnectionsRecord> {  
+    const { orgId, userDetails } = payload;
+    return this.connectionService.deleteConnectionRecords(orgId, userDetails);
+  }
+
+  @MessagePattern({ cmd: 'send-basic-message-on-connection' })
+  async sendBasicMessage(payload: {content: string, orgId: string, connectionId: string}): Promise<object> {
+    return this.connectionService.sendBasicMesage(payload);
   }
 }

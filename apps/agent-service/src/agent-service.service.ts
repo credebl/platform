@@ -8,6 +8,7 @@ import {
   BadRequestException,
   ConflictException,
   HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -52,11 +53,12 @@ import {
   AgentHealthData,
   IAgentStore,
   IAgentConfigure,
-  OrgDid
+  OrgDid,
+  IBasicMessage
 } from './interface/agent-service.interface';
-import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType } from '@credebl/enum/enum';
+import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
-import { Prisma, ledgers, org_agents, organisation, platform_config } from '@prisma/client';
+import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
 import { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';
@@ -72,6 +74,8 @@ import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnect
 import { ledgerName } from '@credebl/common/cast.helper';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import * as CryptoJS from 'crypto-js';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { PrismaService } from '@credebl/prisma-service';
 
 @Injectable()
 @WebSocketGateway()
@@ -80,10 +84,12 @@ export class AgentServiceService {
 
   constructor(
     private readonly agentServiceRepository: AgentServiceRepository,
+    private readonly prisma: PrismaService,
     private readonly commonService: CommonService,
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly userActivityRepository: UserActivityRepository
   ) {}
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {
@@ -797,9 +803,14 @@ export class AgentServiceService {
     let agentProcess;
     let ledgerIdData = [];
     try {
-      if (payload.method !== DidMethod.KEY && payload.method !== DidMethod.WEB) {
+      let ledger;
         const { network } = payload;
-        const ledger = await ledgerName(network);
+        if (network) {
+          ledger = await ledgerName(network);
+        } else {
+          ledger = Ledgers.Not_Applicable;
+        }
+
         const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
         const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
         if (!isLedgerExist) {
@@ -808,10 +819,8 @@ export class AgentServiceService {
             description: ResponseMessages.errorMessages.notFound
           });
         }
-
         ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
-      }
-
+  
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
 
       // Create and stored agent details
@@ -854,7 +863,7 @@ export class AgentServiceService {
         orgAgentTypeId,
         tenantId: tenantDetails.walletResponseDetails['id'],
         walletName: payload.label,
-        ledgerId: ledgerIdData ? ledgerIdData.map((item) => item.id) : null,
+        ledgerId: ledgerIdData.map((item) => item.id),
         id: agentProcess?.id
       };
 
@@ -932,6 +941,16 @@ export class AgentServiceService {
   async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
     try {
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+
+      if (createDidPayload?.network) {
+        const getNameSpace = await this.agentServiceRepository.getLedgerByNameSpace(createDidPayload?.network);
+        if (agentDetails.ledgerId !== null) {
+          if (agentDetails.ledgerId !== getNameSpace.id) {
+            throw new BadRequestException(ResponseMessages.agent.error.networkMismatch);
+          }
+        }
+      }
+
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
 
@@ -953,8 +972,8 @@ export class AgentServiceService {
 
       const createdDidDetails = {
         orgId,
-        did: didDetails?.['did'] ?? didDetails?.["didState"]?.["did"],
-        didDocument: didDetails?.['didDocument'] ?? didDetails?.['didDoc'] ?? didDetails?.["didState"]?.["didDocument"],
+        did: didDetails?.['did'] ?? didDetails?.['didState']?.['did'],
+        didDocument: didDetails?.['didDocument'] ?? didDetails?.['didDoc'] ?? didDetails?.['didState']?.['didDocument'],
         isPrimaryDid,
         orgAgentId: agentDetails.id,
         userId: user.id
@@ -1021,9 +1040,7 @@ export class AgentServiceService {
     );
   }
 
-  private async storeDid(createdDidDetails): Promise<
-    OrgDid
-  > {
+  private async storeDid(createdDidDetails): Promise<OrgDid> {
     const storeDidDetails = await this.agentServiceRepository.storeDidDetails(createdDidDetails);
 
     if (!storeDidDetails) {
@@ -1041,9 +1058,15 @@ export class AgentServiceService {
       await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId, storeDidDetails.didDocument);
     }
 
-    if (method === DidMethod.INDY) {
+    if (network) {
       const getLedgerDetails = await this.agentServiceRepository.getLedgerByNameSpace(network);
       await this.agentServiceRepository.updateLedgerId(orgId, getLedgerDetails.id);
+    } else {
+      const noLedgerData = await this.agentServiceRepository.getLedger(Ledgers.Not_Applicable);
+      if (!noLedgerData) {
+        throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound);
+      }
+      await this.agentServiceRepository.updateLedgerId(orgId, noLedgerData?.id);
     }
   }
 
@@ -1632,7 +1655,7 @@ export class AgentServiceService {
     }
   }
 
-  async deleteWallet(orgId: string): Promise<object> {
+  async deleteWallet(orgId: string, user: user): Promise<object> {
     try {
         // Retrieve the API key and agent information
         const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
@@ -1640,11 +1663,15 @@ export class AgentServiceService {
             this.agentServiceRepository.getAgentApiKey(orgId)
         ]);
 
-        if (getApiKeyResult.status === 'rejected') {
+        if (orgAgentResult.status === PromiseResult.FULFILLED && !orgAgentResult.value) {
+          throw new NotFoundException(ResponseMessages.agent.error.walletDoesNotExists);
+      }
+
+        if (getApiKeyResult.status === PromiseResult.REJECTED) {
             throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
         }
 
-        if (orgAgentResult.status === 'rejected') {
+        if (orgAgentResult.status === PromiseResult.REJECTED) {
             throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
         }
 
@@ -1658,26 +1685,53 @@ export class AgentServiceService {
         }
 
         // Determine the URL based on the agent type
-        const url = orgAgentTypeResult.agent === OrgAgentType.SHARED
-            ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
-            : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
+        const url =
+            orgAgentTypeResult.agent === OrgAgentType.SHARED
+                ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
+                : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
 
-        // Make the HTTP DELETE request
-        const deleteWallet = await this.commonService.httpDelete(url, {
-            headers: { authorization: getApiKey }
-        })
-        .then(async (response) => response);
+        // Perform the deletion in a transaction
+        return await this.prisma.$transaction(async (prisma) => {
+            // Delete org agent and related records
+            const { orgDid, agentInvitation, deleteOrgAgent } = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
 
-        if (deleteWallet.status === 204) {
-          const deleteOrgAgent = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
-          return deleteOrgAgent;
-        }
+            // Make the HTTP DELETE request
+            const deleteWallet = await this.commonService.httpDelete(url, {
+                headers: { authorization: getApiKey }
+            });
+
+            if (deleteWallet.status !== HttpStatus.NO_CONTENT) {
+                throw new InternalServerErrorException(ResponseMessages.agent.error.walletNotDeleted);
+            }
+
+            const deletions = [
+                { records: orgDid.count, tableName: 'org_dids' },
+                { records: agentInvitation.count, tableName: 'agent_invitations' },
+                { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
+            ];
+
+            const logDeletionActivity = async (records, tableName): Promise<void> => {
+                if (records) {
+                    const txnMetadata = {
+                        deletedRecordsCount: records,
+                        deletedRecordInTable: tableName
+                    };
+                    const recordType = RecordType.WALLET;
+                    await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
+                }
+            };
+
+            for (const { records, tableName } of deletions) {
+                await logDeletionActivity(records, tableName);
+            }
+
+            return deleteOrgAgent;
+        });
     } catch (error) {
         this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
         throw new RpcException(error.response ? error.response : error);
     }
-  }
-
+}
 
   async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, orgId: string): Promise<string> {
     try {
@@ -1758,6 +1812,19 @@ export class AgentServiceService {
     }
   }
 
+  async sendBasicMessage(messagePayload: IBasicMessage, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const basicMessageRes = await this.commonService
+        .httpPost(url, messagePayload, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return basicMessageRes;
+    } catch (error) {
+      this.logger.error(`Error in sendBasicMessage in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async getQuestionAnswersRecord(url: string, orgId: string): Promise<object> {
     try {
       const getQuestionAnswersRecord = await this.agentCall(url, orgId);
@@ -1788,6 +1855,7 @@ export class AgentServiceService {
       return schemaRequest;
     } catch (error) {
       this.logger.error(`Error in createW3CSchema request in agent service : ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

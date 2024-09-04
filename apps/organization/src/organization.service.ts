@@ -1,6 +1,6 @@
 /* eslint-disable prefer-destructuring */
 // eslint-disable-next-line camelcase
-import { org_invitations, organisation, user } from '@prisma/client';
+import { RecordType, org_invitations, organisation, user } from '@prisma/client';
 import {
   Injectable,
   Logger,
@@ -26,7 +26,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { Invitation, transition } from '@credebl/enum/enum';
+import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -39,13 +39,16 @@ import {
   IOrganization,
   IOrganizationInvitations,
   IOrganizationDashboard,
-  IDeleteOrganization
+  IDeleteOrganization,
+  IOrgActivityCount
 } from '@credebl/common/interfaces/organization.interface';
 
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { toNumber } from '@credebl/common/cast.helper';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -59,8 +62,10 @@ export class OrganizationService {
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private readonly clientRegistrationService: ClientRegistrationService
+    private readonly clientRegistrationService: ClientRegistrationService,
+    private readonly userActivityRepository: UserActivityRepository
   ) {}
+  
 
   /**
    *
@@ -196,25 +201,55 @@ export class OrganizationService {
       if (!didDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
       }
+      
+      const dids = await this.organizationRepository.getDids(orgId);
+      const noPrimaryDid = dids.every(orgDids => false === orgDids.isPrimaryDid);
+
+      let existingPrimaryDid;
+      let priviousDidFalse;
+      if (!noPrimaryDid) {
+        existingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
+        
+        if (!existingPrimaryDid) {
+          throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+        }
+  
+        priviousDidFalse = await this.organizationRepository.setPreviousDidFlase(existingPrimaryDid.id);
+      } 
+
+      const didParts = did.split(':');
+      let nameSpace: string | null = null;
+        
+      // This condition will handle the multi-ledger support
+      if (DidMethod.INDY === didParts[1]) {
+        nameSpace = `${didParts[2]}:${didParts[3]}`;
+      } else if (DidMethod.POLYGON === didParts[1]) {
+        nameSpace = `${didParts[1]}:${didParts[2]}`;
+      } else {
+        nameSpace = null;
+      }
+
+      let network;
+      if (null !== nameSpace) {
+        network = await this.organizationRepository.getNetworkByNameSpace(nameSpace);
+      } else {
+        network = await this.organizationRepository.getLedger(Ledgers.Not_Applicable);
+        if (!network) {
+          throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound);
+        }
+      }
+
       const primaryDidDetails: IPrimaryDidDetails = {
         did,
         orgId,
         id,
-        didDocument: didDetails.didDocument
+        didDocument: didDetails.didDocument,
+        networkId: network?.id ?? null
       };
 
-      
-      const getExistingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
-      
-     if (!getExistingPrimaryDid) {
-       throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
-     }
-
-      const setPriviousDidFalse = await this.organizationRepository.setPreviousDidFlase(getExistingPrimaryDid.id);
-      
       const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
 
-      await Promise.all([setPrimaryDid, getExistingPrimaryDid, setPriviousDidFalse]);
+      await Promise.all([setPrimaryDid, existingPrimaryDid, priviousDidFalse]);
 
 
       return ResponseMessages.organisation.success.primaryDid;
@@ -242,7 +277,9 @@ export class OrganizationService {
       let generatedClientSecret = '';
 
       if (organizationDetails.idpId) {
-        const token = await this.clientRegistrationService.getManagementToken();
+
+        const userDetails = await this.organizationRepository.getUser(userId);
+        const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
 
         generatedClientSecret = await this.clientRegistrationService.generateClientSecret(
           organizationDetails.idpId,
@@ -308,7 +345,8 @@ export class OrganizationService {
     userId: string,
     shouldUpdateRole: boolean
   ): Promise<IOrgCredentials> {
-    const token = await this.clientRegistrationService.getManagementToken();
+    const userDetails = await this.organizationRepository.getUser(userId);
+    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
     const orgDetails = await this.clientRegistrationService.createClient(orgName, orgId, token);
 
     const orgRolesList = [OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER];
@@ -357,8 +395,9 @@ export class OrganizationService {
     return orgDetails;
   }
 
-  async deleteClientCredentials(orgId: string): Promise<string> {
-    const token = await this.clientRegistrationService.getManagementToken();
+  async deleteClientCredentials(orgId: string, user: user): Promise<string> {
+    const getUser = await this.organizationRepository.getUser(user?.id);
+    const token = await this.clientRegistrationService.getManagementToken(getUser.clientId, getUser.clientSecret);
 
     const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
 
@@ -702,7 +741,7 @@ export class OrganizationService {
    * @returns organization roles
    */
 
-  async getOrgRoles(orgId: string): Promise<IClientRoles[]> {
+  async getOrgRoles(orgId: string, user: user): Promise<IClientRoles[]> {
     try {
       if (!orgId) {
         throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
@@ -718,7 +757,8 @@ export class OrganizationService {
         return this.orgRoleService.getOrgRoles();
       }
 
-      const token = await this.clientRegistrationService.getManagementToken();
+      const getUser = await this.organizationRepository.getUser(user?.id);
+      const token = await this.clientRegistrationService.getManagementToken(getUser?.clientId, getUser?.clientSecret);
 
       return this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
     } catch (error) {
@@ -810,7 +850,8 @@ export class OrganizationService {
     ): Promise<void> {
     const { invitations, orgId } = bulkInvitationDto;
 
-    const token = await this.clientRegistrationService.getManagementToken();
+    const userDetails = await this.organizationRepository.getUser(userId);
+    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
     const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
     const orgRoles = await this.orgRoleService.getOrgRoles();
 
@@ -1030,7 +1071,8 @@ export class OrganizationService {
     orgId: string,
     status: string
   ): Promise<void> {
-    const token = await this.clientRegistrationService.getManagementToken();
+    const userDetails = await this.organizationRepository.getUser(userId);
+    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
       const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
 
       const orgRoles = await this.orgRoleService.getOrgRolesByIds(invitation.orgRoles);
@@ -1135,7 +1177,8 @@ export class OrganizationService {
     userId: string,
     orgId: string
   ): Promise<boolean> {
-    const token = await this.clientRegistrationService.getManagementToken();
+    const userDetails = await this.organizationRepository.getUser(userId);
+    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
     const clientRolesList = await this.clientRegistrationService.getAllClientRoles(
       idpId,
       token
@@ -1259,6 +1302,131 @@ export class OrganizationService {
     }
   }
 
+
+  async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgActivityCount> {
+    try {
+      const [
+        verificationRecordsCount,
+        issuanceRecordsCount,
+        connectionRecordsCount,
+        orgInvitationsCount, 
+        orgUsers,
+        orgEcosystemsCount
+      ] = await Promise.all([
+        this._getVerificationRecordsCount(orgId, userId),
+        this._getIssuanceRecordsCount(orgId, userId),
+        this._getConnectionRecordsCount(orgId, userId),
+        this.organizationRepository.getOrgInvitationsCount(orgId),
+        this.organizationRepository.getOrgDashboard(orgId),
+        this._getEcosystemsCount(orgId, userId)
+      ]);
+
+      const orgUsersCount = orgUsers?.['usersCount'];
+
+      return {verificationRecordsCount, issuanceRecordsCount, connectionRecordsCount, orgUsersCount, orgEcosystemsCount, orgInvitationsCount};
+    } catch (error) {
+      this.logger.error(`In fetch organization references count : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async _getEcosystemsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-ecosystem-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const ecosystemsCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return ecosystemsCount;
+  }
+
+  async _getConnectionRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-connection-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const connectionsCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return connectionsCount;
+  }
+
+
+  async _getIssuanceRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-issuance-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const issuanceCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return issuanceCount;
+  }
+
+  async _getVerificationRecordsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-verification-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const verificationCount = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return verificationCount;
+  }
+
   async getOrgPofile(orgId: string): Promise<organisation> {
     try {
       const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
@@ -1288,6 +1456,16 @@ export class OrganizationService {
     }
   }
 
+  async getOrgDetails(orgId: string): Promise<organisation> {
+    try {
+      const orgDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+      return orgDetails;
+    } catch (error) {
+      this.logger.error(`in getting organization details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async getOrgOwner(orgId: string): Promise<IOrganization> {
     try {
       const orgDetails = await this.organizationRepository.getOrganizationOwnerDetails(orgId, OrgRoles.OWNER);
@@ -1297,16 +1475,141 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
-  async deleteOrganization(orgId: string): Promise<IDeleteOrganization> {
+  
+  async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     try {
-      const deleteOrg = await this.organizationRepository.deleteOrg(orgId);
-      return deleteOrg;
+      const getUser = await this.organizationRepository.getUser(user?.id);
+      // Fetch token and organization details in parallel
+      const [token, organizationDetails] = await Promise.all([
+        this.clientRegistrationService.getManagementToken(getUser?.clientId, getUser?.clientSecret),
+        this.organizationRepository.getOrganizationDetails(orgId)
+      ]);
+  
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+  
+      const organizationInvitationDetails = await this.organizationRepository.getOrgInvitationsByOrg(orgId);
+        
+      const arrayEmail = organizationInvitationDetails.map(userData => userData.email);
+      this.logger.debug(`arrayEmail ::: ${JSON.stringify(arrayEmail)}`);
       
+      // Fetch Keycloak IDs only if there are emails to process
+      const keycloakUserIds = 0 < arrayEmail.length
+        ? (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map(user => user.keycloakUserId)
+        : [];
+      
+      this.logger.log('Keycloak User Ids');
+
+      // Delete user client roles in parallel
+      const deleteUserRolesPromises = keycloakUserIds.map(keycloakUserId => this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
+      );
+      deleteUserRolesPromises.push(
+        this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, getUser?.keycloakUserId)
+      );
+  
+      this.logger.debug(`deleteUserRolesPromises ::: ${JSON.stringify(deleteUserRolesPromises)}`);
+
+      const deleteUserRolesResults = await Promise.allSettled(deleteUserRolesPromises);
+  
+      // Check for failures in deleting user roles
+      const deletionFailures = deleteUserRolesResults.filter(result => 'rejected' === result?.status);
+      
+      if (0 < deletionFailures.length) {
+        this.logger.error(`deletionFailures ::: ${JSON.stringify(deletionFailures)}`);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgDataNotFoundInkeycloak);
+      }
+  
+      const deletedOrgInvitationInfo: { email?: string, orgName?: string, orgRoleNames?: string[] }[] = [];
+      const userIds = (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map(user => user.id);
+      await Promise.all(userIds.map(async (userId) => {
+        const userOrgRoleIds = await this.organizationRepository.getUserOrgRole(userId, orgId);
+        this.logger.debug(`userOrgRoleIds ::::: ${JSON.stringify(userOrgRoleIds)}`);
+
+        const userDetails = await this.organizationRepository.getUser(userId);
+        this.logger.debug(`userDetails ::::: ${JSON.stringify(userDetails)}`);
+
+        const orgRoles = await this.organizationRepository.getOrgRole(userOrgRoleIds);
+        this.logger.debug(`orgRoles ::::: ${JSON.stringify(orgRoles)}`);
+        
+        const orgRoleNames = orgRoles.map(orgRoleName => orgRoleName.name);
+        const sendEmail = await this.sendEmailForOrgInvitationsMember(userDetails?.email, organizationDetails?.name, orgRoleNames);
+        const newInvitation = {
+          email: userDetails.email,
+          orgName: organizationDetails?.name,
+          orgRoleNames
+        };
+        
+        // Step 3: Push the data into the array
+        deletedOrgInvitationInfo.push(newInvitation);
+        
+        this.logger.log(`email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(orgRoleNames)}, sendEmail: ${sendEmail}`);
+      }));
+      
+      // Delete organization data
+      const { deletedUserActivity, deletedUserOrgRole, deleteOrg, deletedOrgInvitations, deletedNotification } = await this.organizationRepository.deleteOrg(orgId);
+  
+      this.logger.debug(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
+      this.logger.debug(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
+      this.logger.debug(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`);
+      this.logger.debug(`deletedOrgInvitations ::: ${JSON.stringify(deletedOrgInvitations)}`);
+  
+      const deletions = [
+        { records: deletedUserActivity.count, tableName: `${PrismaTables.USER_ACTIVITY}` },
+        { records: deletedUserOrgRole.count, tableName: `${PrismaTables.USER_ORG_ROLES}` },
+        { records: deletedOrgInvitations.count, deletedOrgInvitationInfo, tableName: `${PrismaTables.ORG_INVITATIONS}` },
+        { records: deletedNotification.count, tableName: `${PrismaTables.NOTIFICATION}` },
+        { records: deleteOrg ? 1 : 0, tableName: `${PrismaTables.ORGANIZATION}` }
+      ];
+  
+      // Log deletion activities in parallel
+      await Promise.all(deletions.map(async ({ records, tableName, deletedOrgInvitationInfo }) => {
+        if (records) {
+          const txnMetadata: {
+            deletedRecordsCount: number;
+            deletedRecordInTable: string;
+            deletedOrgInvitationInfo?: object[]
+          } = {
+            deletedRecordsCount: records,
+            deletedRecordInTable: tableName
+          };
+          
+          if (deletedOrgInvitationInfo) {
+            txnMetadata.deletedOrgInvitationInfo = deletedOrgInvitationInfo;
+          }
+          
+          const recordType = RecordType.ORGANIZATION;
+          await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
+        }
+      }));
+  
+      return deleteOrg;
+  
     } catch (error) {
       this.logger.error(`delete organization: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ?? error);
     }
+  }
+   
+
+  async sendEmailForOrgInvitationsMember(email: string, orgName: string, orgRole: string[]): Promise<boolean> {
+    const platformConfigData = await this.prisma.platform_config.findMany();
+    const urlEmailTemplate = new DeleteOrgInvitationsEmail();
+    const emailData = new EmailDto();
+    emailData.emailFrom = platformConfigData[0].emailFrom;
+    emailData.emailTo = email;
+    emailData.emailSubject = `Removal of participation of “${orgName}”`;
+
+    emailData.emailHtml = await urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(
+      email,
+      orgName,
+      orgRole
+    );
+
+    //Email is sent to user for the verification through emailData
+    const isEmailSent = await sendEmail(emailData);
+
+    return isEmailSent;
   }
 
   async _deleteWallet(payload: IOrgAgent): Promise<{
@@ -1337,6 +1640,38 @@ export class OrganizationService {
         });
     } catch (error) {
       this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getUserKeycloakIdByEmail(userEmails: string[]): Promise<{
+    response;
+  }> {
+    try {
+      const pattern = {
+        cmd: 'get-user-keycloak-id'
+      };
+
+      return this.organizationServiceProxy
+        .send<string>(pattern, userEmails)
+        .pipe(
+          map((response: string) => ({
+            response
+          }))
+        )
+        .toPromise()
+        .catch((error) => {
+          this.logger.error(`getUserKeycloakIdByEmail catch: ${JSON.stringify(error)}`);
+          throw new HttpException(
+            {
+              status: error?.statusCode,
+              error: error?.message
+            },
+            error.error
+          );
+        });
+    } catch (error) {
+      this.logger.error(`[getUserKeycloakIdByEmail] - error in get keycloak id by email : ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -1411,7 +1746,8 @@ export class OrganizationService {
 
           const usersToRegisterList = userOrgRoles.filter(userOrgRole => null !== userOrgRole.user.keycloakUserId);
           
-            const token = await this.clientRegistrationService.getManagementToken();
+            const userDetails = await this.organizationRepository.getUser(orgObj.ownerId);
+            const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
             const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
 
             const deletedUserDetails: string[] = [];

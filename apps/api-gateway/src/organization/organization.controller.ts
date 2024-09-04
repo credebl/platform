@@ -27,6 +27,7 @@ import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -106,9 +107,9 @@ export class OrganizationController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  async getOrgRoles(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response): Promise<Response> {
+  async getOrgRoles(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: user, @Res() res: Response): Promise<Response> {
 
-    const orgRoles = await this.organizationService.getOrgRoles(orgId.trim());
+    const orgRoles = await this.organizationService.getOrgRoles(orgId.trim(), user);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -171,6 +172,25 @@ export class OrganizationController {
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrgDashboard,
+      data: getOrganization
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+
+  }
+
+  @Get('/activity-count/:orgId')
+  @ApiOperation({ summary: 'Get organization references count', description: 'Get organization references count by org Id' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  async getOrganizationActivityCount(@Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @Res() res: Response, @User() reqUser: user): Promise<Response> {
+
+    const getOrganization = await this.organizationService.getOrganizationActivityCount(orgId, reqUser.id);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getOrganizationActivity,
       data: getOrganization
     };
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -522,14 +542,15 @@ export class OrganizationController {
   @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER)
   async deleteOrganization(
-    @Param('orgId') orgId: string, 
+    @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
+    @User() user: user,
     @Res() res: Response
     ): Promise<Response> {
 
-    await this.organizationService.deleteOrganization(orgId);
+    await this.organizationService.deleteOrganization(orgId, user);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -544,9 +565,9 @@ export class OrganizationController {
   @ApiBearerAuth()
   @ApiExcludeEndpoint()
   @UseGuards(AuthGuard('jwt'))
-  async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+  async deleteOrgClientCredentials(@Param('orgId') orgId: string, @Res() res: Response, @User() user: user): Promise<Response> {
 
-    const deleteResponse = await this.organizationService.deleteOrgClientCredentials(orgId);
+    const deleteResponse = await this.organizationService.deleteOrgClientCredentials(orgId, user);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.ACCEPTED,

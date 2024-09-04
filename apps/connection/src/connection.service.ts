@@ -18,19 +18,22 @@ import {
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { OrgAgentType, ConnectionProcessState } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { IConnectionList, ICreateConnectionUrl } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IQuestionPayload } from './interfaces/question-answer.interfaces';
-
+import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfaces';
+import { RecordType, user } from '@prisma/client';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { agent_invitations } from '@prisma/client';
 @Injectable()
 export class ConnectionService {
   constructor(
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
     private readonly connectionRepository: ConnectionRepository,
+    private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
@@ -86,6 +89,18 @@ export class ConnectionService {
     } catch (error) {
       this.logger.error(`Error in store agent details : ${JSON.stringify(error)}`);
       throw error;
+    }
+  }
+
+  async getConnectionRecords(orgId: string): Promise<number> {
+    try {
+      return await this.connectionRepository.getConnectionRecordsCount(orgId);
+    } catch (error) {
+                    
+      this.logger.error(
+        `[getConnectionRecords ] [NATS call]- error in get connection records count : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -621,7 +636,8 @@ export class ConnectionService {
         orgId,
         routing,
         recipientKey,
-        invitationDid
+        invitationDid,
+        IsReuseConnection
       } = payload?.createOutOfBandConnectionInvitation;
 
       const agentDetails = await this.connectionRepository.getAgentEndPoint(
@@ -633,6 +649,21 @@ export class ConnectionService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
+
+      let legacyinvitationDid;
+      if (IsReuseConnection) {
+        const data: agent_invitations[] = await this.connectionRepository.getInvitationDidByOrgId(orgId);
+           if (data && 0 < data.length) {
+            const [firstElement] = data;
+            legacyinvitationDid = firstElement?.invitationDid ?? undefined;
+            
+            this.logger.log('legacyinvitationDid:', legacyinvitationDid);
+        }
+      }
+      const connectionInvitationDid = invitationDid ? invitationDid : legacyinvitationDid;
+
+      this.logger.log('connectionInvitationDid:', connectionInvitationDid);
+
       
       this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
       const connectionPayload = {
@@ -649,7 +680,7 @@ export class ConnectionService {
         routing: routing || undefined,
         messages: messages || undefined,
         recipientKey: recipientKey || undefined,
-        invitationDid: invitationDid || undefined
+        invitationDid: connectionInvitationDid || undefined
       };
 
       const createConnectionInvitationFlag = 'connection-invitation';
@@ -767,4 +798,99 @@ export class ConnectionService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async deleteConnectionRecords(orgId: string, user: user): Promise<IDeletedConnectionsRecord> {
+    try {
+        const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
+
+        if (0 === deleteConnections?.deleteConnectionRecords?.count) {
+            throw new NotFoundException(ResponseMessages.connection.error.connectionRecordNotFound);
+        }
+
+        const statusCounts = {
+            [ConnectionProcessState.START]: 0,
+            [ConnectionProcessState.COMPLETE]: 0,
+            [ConnectionProcessState.ABANDONED]: 0,
+            [ConnectionProcessState.INVITATION_SENT]: 0,
+            [ConnectionProcessState.INVITATION_RECEIVED]: 0,
+            [ConnectionProcessState.REQUEST_SENT]: 0,
+            [ConnectionProcessState.DECLIEND]: 0,
+            [ConnectionProcessState.REQUEST_RECEIVED]: 0,
+            [ConnectionProcessState.RESPONSE_SENT]: 0,
+            [ConnectionProcessState.RESPONSE_RECEIVED]: 0
+        };
+
+        await Promise.all(deleteConnections.getConnectionRecords.map(async (record) => {
+            statusCounts[record.state]++;
+        }));
+
+        const filteredStatusCounts = Object.fromEntries(
+          Object.entries(statusCounts).filter(entry => 0 < entry[1])
+        );
+
+        const deletedConnectionData = {
+            deletedConnectionsRecordsCount: deleteConnections?.deleteConnectionRecords?.count,
+            deletedRecordsStatusCount: filteredStatusCounts
+        };
+
+        await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedConnectionData, RecordType.CONNECTION);
+
+        return deleteConnections;
+
+    } catch (error) {
+        this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
+        throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+ 
+  async sendBasicMesage(payload: IBasicMessage): Promise<object> {
+    const { content, orgId, connectionId } = payload;
+    try {
+      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
+
+      const { agentEndPoint } = agentDetails;
+
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
+      }
+
+      const questionPayload = {
+        content
+      };
+
+      const organizationAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+      const label = 'send-basic-message';
+      const agentUrl = await this.commonService.sendBasicMessageAgentUrl(
+        label,
+        organizationAgentType,
+        agentEndPoint,
+        agentDetails?.tenantId,
+        connectionId
+      );
+
+      const sendBasicMessage = await this._sendBasicMessageToAgent(questionPayload, agentUrl, orgId);
+      return sendBasicMessage;
+    } catch (error) {
+      this.logger.error(`[sendBasicMesage] - error in send basic message: ${error}`);
+      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+        throw new RpcException({
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
+    }
+  }
+
+  async _sendBasicMessageToAgent(content: IBasicMessage, url: string, orgId: string): Promise<object> {
+    const pattern = { cmd: 'agent-send-basic-message' };
+    const payload = { content, url, orgId };
+    // eslint-disable-next-line no-return-await
+    return await this.natsCall(pattern, payload);
+  }
+
 }

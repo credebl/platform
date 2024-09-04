@@ -1,9 +1,9 @@
 import { PrismaService } from '@credebl/prisma-service';
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { Prisma, ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
-import { ICreateOrgAgent, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace, OrgDid } from '../interface/agent-service.interface';
-import { AgentType } from '@credebl/enum/enum';
+import { ICreateOrgAgent, ILedgers, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace, OrgDid } from '../interface/agent-service.interface';
+import { AgentType, PrismaTables } from '@credebl/enum/enum';
 
 @Injectable()
 export class AgentServiceRepository {
@@ -485,12 +485,33 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
-  async deleteOrgAgentByOrg(orgId: string): Promise<org_agents> {
+  async deleteOrgAgentByOrg(orgId: string): Promise<{orgDid: Prisma.BatchPayload;
+    agentInvitation: Prisma.BatchPayload;
+    // eslint-disable-next-line camelcase
+    deleteOrgAgent: org_agents;
+    }> {
+        const tablesToCheck = [
+            `${PrismaTables.CONNECTIONS}`,
+            `${PrismaTables.CREDENTIALS}`,
+            `${PrismaTables.PRESENTATIONS}`,
+            `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
+            `${PrismaTables.ECOSYSTEM_ORGS}`
+        ];
+
     try {
         return await this.prisma.$transaction(async (prisma) => {
+            const referenceCounts = await Promise.all(
+                tablesToCheck.map(table => prisma[table].count({ where: { orgId } }))
+            );
+
+            referenceCounts.forEach((count, index) => {
+                if (0 < count) {
+                    throw new ConflictException(`Organization ID ${orgId} is referenced in the table ${tablesToCheck[index]}`);
+                }
+            });
+
             // Concurrently delete related records
-            await Promise.all([
+            const [orgDid, agentInvitation] = await Promise.all([
                 prisma.org_dids.deleteMany({ where: { orgId } }),
                 prisma.agent_invitations.deleteMany({ where: { orgId } })
             ]);
@@ -498,12 +519,26 @@ export class AgentServiceRepository {
             // Delete the organization agent
             const deleteOrgAgent = await prisma.org_agents.delete({ where: { orgId } });
 
-            return deleteOrgAgent;
+            return {orgDid, agentInvitation, deleteOrgAgent};
         });
     } catch (error) {
         this.logger.error(`[deleteOrgAgentByOrg] - Error deleting org agent record: ${error.message}`);
         throw error;
     }
 }
+
+    async getLedger(name: string): Promise<ILedgers> {
+        try {
+          const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
+            where: {
+             name
+            }
+          });
+          return ledgerData;
+        } catch (error) {
+          this.logger.error(`[getLedger] - get org ledger: ${JSON.stringify(error)}`);
+          throw error;
+        }
+      }
 
 }

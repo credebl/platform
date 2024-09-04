@@ -4,9 +4,9 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { RecordType, agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
-import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
+import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
+import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
+import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -18,6 +18,9 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
 import { UserActivityService } from '@credebl/user-activity';
+import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class VerificationService {
@@ -27,6 +30,7 @@ export class VerificationService {
   constructor(
     @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
     private readonly verificationRepository: VerificationRepository,
+    private readonly userActivityRepository: UserActivityRepository,
     private readonly outOfBandVerification: OutOfBandVerification,
     private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
@@ -52,6 +56,20 @@ export class VerificationService {
         orgId,
         proofRequestsSearchCriteria
       );
+      
+      const schemaIds = getProofRequestsList?.proofRequestsList?.map((schema) => schema?.schemaId).filter(Boolean);
+
+      const getSchemaDetails = await this._getSchemaAndOrganizationDetails(schemaIds);
+      
+      const proofDetails = getProofRequestsList.proofRequestsList.map((proofRequest) => {
+        const schemaDetail = getSchemaDetails.find((schema) => schema.schemaLedgerId === proofRequest.schemaId);
+
+        return {
+          ...proofRequest,
+          schemaName: schemaDetail ? schemaDetail?.name : '',
+          issuanceEntity: schemaDetail ? schemaDetail?.['organisation']?.name : ''
+        };
+      });
 
       if (0 === getProofRequestsList.proofRequestsCount) {
         throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound);
@@ -81,18 +99,53 @@ export class VerificationService {
         nextPage: Number(proofRequestsSearchCriteria.pageNumber) + 1,
         previousPage: proofRequestsSearchCriteria.pageNumber - 1,
         lastPage: Math.ceil(getProofRequestsList.proofRequestsCount / proofRequestsSearchCriteria.pageSize),
-        data: getProofRequestsList.proofRequestsList
+        data: proofDetails || getProofRequestsList?.proofRequestsList
       };
 
       return proofPresentationsResponse;
     } catch (error) {
-                    
+
       this.logger.error(
         `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
       );
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async _getSchemaAndOrganizationDetails(templateIds: string[]): Promise<ISchemaDetail[]> {
+    const pattern = { cmd: 'get-schemas-details' };
+
+    const payload = {
+      templateIds
+    };
+    const schemaAndOrgDetails = await this.verificationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+    return schemaAndOrgDetails;
+  }
+
+  async getVerificationRecords(orgId: string): Promise<number> {
+    try {
+      return await this.verificationRepository.getVerificationRecordsCount(orgId);
+    } catch (error) {
+
+      this.logger.error(
+        `[getVerificationRecords ] [NATS call]- error in get verification records count : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
 
   /**
    * Consume agent API for get all proof presentations
@@ -222,7 +275,6 @@ export class VerificationService {
         ...proofRequestPayload
       };
     }
-
       const getProofPresentationById = await this._sendProofRequest(payload);
       return getProofPresentationById?.response;
     } catch (error) {
@@ -360,12 +412,13 @@ export class VerificationService {
       }
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
 
-      
+
       let payload: IProofRequestPayload;
 
       if (ProofRequestType.INDY === type) {
         updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
         updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
+        updateOutOfBandRequestProof.imageUrl = getOrganization?.logoUrl || undefined;
         payload   = {
         orgId: user.orgId,
         url,
@@ -374,7 +427,7 @@ export class VerificationService {
       }
       
       if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
-       
+
          payload = {
           orgId: user.orgId,
           url,
@@ -383,6 +436,7 @@ export class VerificationService {
             protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
             comment:outOfBandRequestProof.comment,
             label,
+            imageUrl: outOfBandRequestProof?.imageUrl,
             proofFormats: {
               presentationExchange: {
                 presentationDefinition: {
@@ -409,6 +463,7 @@ export class VerificationService {
           this.logger.log('shortenedUrl', shortenedUrl);
           if (shortenedUrl) {
             presentationProof.invitationUrl = shortenedUrl;
+            presentationProof.deepLinkURL = convertUrlToDeepLinkUrl(shortenedUrl);
           }
         }
         if (!presentationProof) {
@@ -460,7 +515,7 @@ export class VerificationService {
       this.logger.error(accumulatedErrors);
       throw new Error(ResponseMessages.verification.error.emailSend);
     }
-     
+
   } catch (error) {
     this.logger.error('[sendEmailInBatches] - error in sending email in batches');
     throw new Error(ResponseMessages.verification.error.batchEmailSend);
@@ -480,6 +535,7 @@ export class VerificationService {
     // Currently have shortenedUrl to store only for 30 days
     const persist: boolean = false;
     const shortenedUrl = await this.storeVerificationObjectAndReturnUrl(invitationUrl, persist);
+    const deepLinkURL = convertUrlToDeepLinkUrl(shortenedUrl);
     const qrCodeOptions: QRCode.QRCodeToDataURLOptions = { type: 'image/png' };
     const outOfBandVerificationQrCode = await QRCode.toDataURL(shortenedUrl, qrCodeOptions);
 
@@ -492,7 +548,7 @@ export class VerificationService {
     this.emailData.emailFrom = platformConfigData.emailFrom;
     this.emailData.emailTo = email;
     this.emailData.emailSubject = `${process.env.PLATFORM_NAME} Platform: Verification of Your Credentials`;
-    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, shortenedUrl);
+    this.emailData.emailHtml = await this.outOfBandVerification.outOfBandVerification(email, organizationDetails.name, deepLinkURL);
     this.emailData.emailAttachments = [
       {
         filename: 'qrcode.png',
@@ -576,7 +632,7 @@ export class VerificationService {
           }
 
           return [attributeReferent];
-        }));
+          }));
 
         return {
           requestedAttributes,
@@ -606,7 +662,7 @@ export class VerificationService {
     proofPresentationId?: string
   ): Promise<string> {
     try {
-
+      
 
       let url;
       switch (verificationMethodLabel) {
@@ -685,16 +741,23 @@ export class VerificationService {
     }
   }
 
-  // TODO: This function is only for anoncreds indy
   async getVerifiedProofdetails(proofId: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
       const verificationMethodLabel = 'get-verified-proof';
       let credDefId;
       let schemaId;
+      let certificate;
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId, '', proofId);
-      
+      const url = await this.getAgentUrl(
+        verificationMethodLabel,
+        orgAgentType,
+        getAgentDetails?.agentEndPoint,
+        getAgentDetails?.tenantId,
+        '',
+        proofId
+      );
+
       const payload = { orgId, url };
 
       const getProofPresentationById = await this._getVerifiedProofDetails(payload);
@@ -706,109 +769,141 @@ export class VerificationService {
         });
       }
 
-      const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;
-      const requestedPredicates = getProofPresentationById?.response?.request?.indy?.requested_predicates;
-      const revealedAttrs = getProofPresentationById?.response?.presentation?.indy?.requested_proof?.revealed_attrs;
-
-
       const extractedDataArray: IProofPresentationDetails[] = [];
 
-      if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
-        for (const key in requestedAttributes) {
+      // For Presentation Exchange format
+      if (getProofPresentationById?.response?.request?.presentationExchange) {
+        const presentationDefinition =
+          getProofPresentationById?.response?.request?.presentationExchange?.presentation_definition;
+        const verifiableCredentials =
+          getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential;
 
-          if (requestedAttributes.hasOwnProperty(key)) {
-            const requestedAttributeKey = requestedAttributes[key];
-            const attributeName = requestedAttributeKey.name;
+        presentationDefinition?.input_descriptors.forEach((descriptor, index) => {
+          const schemaId = descriptor?.schema[0]?.uri;
+          const requestedAttributesForPresentationExchangeFormat = descriptor?.constraints?.fields[0]?.path;
 
-            if (requestedAttributeKey?.restrictions) {
+          const verifiableCredential = verifiableCredentials[index]?.credentialSubject;
 
-              credDefId = requestedAttributeKey?.restrictions[0]?.cred_def_id;
-              schemaId = requestedAttributeKey?.restrictions[0]?.schema_id;
-
-            } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
-
-              credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
-              schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
-
-            }
-
-            if (revealedAttrs.hasOwnProperty(key)) {
-              const extractedData: IProofPresentationDetails = {
-                [attributeName]: revealedAttrs[key]?.raw,
-                'credDefId': credDefId || null,
-                'schemaId': schemaId || null
-              };
-              extractedDataArray.push(extractedData);
-            }
+          if (getProofPresentationById?.response) {
+            certificate =
+              getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
+                ?.certificate;
           }
-        }
+ 
+          if (
+            requestedAttributesForPresentationExchangeFormat &&
+            Array.isArray(requestedAttributesForPresentationExchangeFormat)
+          ) {
+            requestedAttributesForPresentationExchangeFormat.forEach((requestedAttributeKey) => {
+              const attributeName =
+                requestedAttributeKey?.match(ATTRIBUTE_NAME_REGEX)?.[1] || requestedAttributeKey?.split('.').pop();
+              const attributeValue = verifiableCredential?.[attributeName];
 
-        for (const key in requestedPredicates) {
+              if (attributeName && attributeValue !== undefined) {
+                const extractedData: IProofPresentationDetails = {
+                  [attributeName]: attributeValue,
+                  schemaId: schemaId || null,
+                  certificateTemplate: certificate
+                };
 
-          if (requestedPredicates.hasOwnProperty(key)) {
-            const attribute = requestedPredicates[key];
-
-            const attributeName = attribute?.name;
-
-            if (attribute?.restrictions) {
-              credDefId = attribute?.restrictions[0]?.cred_def_id;
-              schemaId = attribute?.restrictions[0]?.schema_id;
-            }
-
-            const extractedData: IProofPresentationDetails = {
-              [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,
-              'credDefId': credDefId || null,
-              'schemaId': schemaId || null
-            };
-            extractedDataArray.push(extractedData);
+                extractedDataArray.push(extractedData);
+              }
+            });
           }
-        }
-
-      } else if (0 !== Object.keys(requestedAttributes).length) {
-
-        for (const key in requestedAttributes) {
-
-          if (requestedAttributes.hasOwnProperty(key)) {
-            const attribute = requestedAttributes[key];
-            const attributeName = attribute.name;
-
-
-            [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
-
-
-            if (revealedAttrs.hasOwnProperty(key)) {
-              const extractedData: IProofPresentationDetails = {
-                [attributeName]: revealedAttrs[key]?.raw,
-                'credDefId': credDefId || null,
-                'schemaId': schemaId || null
-              };
-              extractedDataArray.push(extractedData);
-            }
-          }
-        }
-      } else if (0 !== Object.keys(requestedPredicates).length) {
-
-        for (const key in requestedPredicates) {
-
-          if (requestedPredicates.hasOwnProperty(key)) {
-            const attribute = requestedPredicates[key];
-            const attributeName = attribute?.name;
-
-            [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
-            const extractedData: IProofPresentationDetails = {
-              [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,
-              'credDefId': credDefId || null,
-              'schemaId': schemaId || null
-            };
-            extractedDataArray.push(extractedData);
-          }
-        }
-      } else {
-        throw new InternalServerErrorException(ResponseMessages.errorMessages.serverError, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
         });
       }
+
+      // For Indy format
+      if (getProofPresentationById?.response?.request?.indy) {
+        const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;
+        const requestedPredicates = getProofPresentationById?.response?.request?.indy?.requested_predicates;
+        const revealedAttrs = getProofPresentationById?.response?.presentation?.indy?.requested_proof?.revealed_attrs;
+
+        if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
+          for (const key in requestedAttributes) {
+            if (requestedAttributes.hasOwnProperty(key)) {
+              const requestedAttributeKey = requestedAttributes[key];
+              const attributeName = requestedAttributeKey.name;
+
+              if (requestedAttributeKey?.restrictions) {
+                credDefId = requestedAttributeKey?.restrictions[0]?.cred_def_id;
+                schemaId = requestedAttributeKey?.restrictions[0]?.schema_id;
+              } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
+                credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
+                schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
+              }
+
+              if (revealedAttrs.hasOwnProperty(key)) {
+                const extractedData: IProofPresentationDetails = {
+                  [attributeName]: revealedAttrs[key]?.raw,
+                  credDefId: credDefId || null,
+                  schemaId: schemaId || null
+                };
+                extractedDataArray.push(extractedData);
+              }
+            }
+          }
+
+          for (const key in requestedPredicates) {
+            if (requestedPredicates.hasOwnProperty(key)) {
+              const attribute = requestedPredicates[key];
+
+              const attributeName = attribute?.name;
+
+              if (attribute?.restrictions) {
+                credDefId = attribute?.restrictions[0]?.cred_def_id;
+                schemaId = attribute?.restrictions[0]?.schema_id;
+              }
+
+              const extractedData: IProofPresentationDetails = {
+                [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,
+                credDefId: credDefId || null,
+                schemaId: schemaId || null
+              };
+              extractedDataArray.push(extractedData);
+            }
+          }
+        } else if (0 !== Object.keys(requestedAttributes).length) {
+          for (const key in requestedAttributes) {
+            if (requestedAttributes.hasOwnProperty(key)) {
+              const attribute = requestedAttributes[key];
+              const attributeName = attribute.name;
+
+              [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
+
+              if (revealedAttrs.hasOwnProperty(key)) {
+                const extractedData: IProofPresentationDetails = {
+                  [attributeName]: revealedAttrs[key]?.raw,
+                  credDefId: credDefId || null,
+                  schemaId: schemaId || null
+                };
+                extractedDataArray.push(extractedData);
+              }
+            }
+          }
+        } else if (0 !== Object.keys(requestedPredicates).length) {
+          for (const key in requestedPredicates) {
+            if (requestedPredicates.hasOwnProperty(key)) {
+              const attribute = requestedPredicates[key];
+              const attributeName = attribute?.name;
+
+              [credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById);
+              const extractedData: IProofPresentationDetails = {
+                [attributeName]: `${attribute?.p_type}${attribute?.p_value}`,
+                credDefId: credDefId || null,
+                schemaId: schemaId || null
+              };
+              extractedDataArray.push(extractedData);
+            }
+          }
+        } else {
+          throw new InternalServerErrorException(ResponseMessages.errorMessages.serverError, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.serverError
+          });
+        }
+      }
+
       return extractedDataArray;
     } catch (error) {
       this.logger.error(`[getVerifiedProofDetails] - error in get verified proof details : ${JSON.stringify(error)}`);
@@ -916,16 +1011,42 @@ export class VerificationService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
+  async deleteVerificationRecords(orgId: string, userDetails: user): Promise<IVerificationRecords> {
     try {
       const deleteProofRecords = await this.verificationRepository.deleteVerificationRecordsByOrgId(orgId);
-      
+
+      if (0 === deleteProofRecords?.deleteResult?.count) {
+        throw new NotFoundException(ResponseMessages.verification.error.verificationRecordsNotFound);
+    }
+
+    const statusCounts = {
+        [VerificationProcessState.PROPOSAL_SENT]: 0,
+        [VerificationProcessState.PROPOSAL_RECEIVED]: 0,
+        [VerificationProcessState.REQUEST_SENT]: 0,
+        [VerificationProcessState.REQUEST_RECEIVED]: 0,
+        [VerificationProcessState.PRESENTATION_RECEIVED]: 0,
+        [VerificationProcessState.PRESENTATION_SENT]: 0,
+        [VerificationProcessState.DONE]: 0,
+        [VerificationProcessState.DECLIEND]: 0,
+        [VerificationProcessState.ABANDONED]: 0
+    };
+
+    await Promise.all(deleteProofRecords.recordsToDelete.map(async (record) => {
+        statusCounts[record.state]++;
+        }));
+
+        const filteredStatusCounts = Object.fromEntries(
+          Object.entries(statusCounts).filter(entry => 0 < entry[1])
+        );
+    
       const deletedVerificationData = {
-        deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count
+        deletedProofRecordsCount : deleteProofRecords?.deleteResult?.count,
+        deletedRecordsStatusCount : filteredStatusCounts
       }; 
 
-      await this.userActivityService.deletedRecordsDetails(userId, orgId, RecordType.VERIFICATION_RECORD, deletedVerificationData);
-      return deleteProofRecords;
+      await this.userActivityRepository._orgDeletedActivity(orgId, userDetails, deletedVerificationData, RecordType.VERIFICATION_RECORD);
+
+      return deleteProofRecords;    
     } catch (error) {
       this.logger.error(`[deleteVerificationRecords] - error in deleting verification records: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

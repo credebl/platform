@@ -5,9 +5,9 @@ import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails, TemplateDetails } from './dtos/issuance.dto';
 import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITemplateFormat, IssueCredentialType, UploadedFileDetails } from './interfaces';
-import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
-
+import { user } from '@prisma/client';
 @Injectable()
 export class IssuanceService extends BaseService {
 
@@ -18,7 +18,7 @@ export class IssuanceService extends BaseService {
         super('IssuanceService');
     }
 
-    sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<object> {
+    sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<ICredentialOfferResponse> {
 
         const payload = { comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, credentialData: issueCredentialDto.credentialData, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType, user };
 
@@ -124,14 +124,14 @@ export class IssuanceService extends BaseService {
         return this.sendNatsMessage(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }
 
-    async retryBulkCredential(fileId: string, orgId: string, clientId: string): Promise<{ response: object }> {
-        const payload = { fileId, orgId, clientId };
-        return this.sendNats(this.issuanceProxy, 'retry-bulk-credentials', payload);
+    async retryBulkCredential(fileId: string, orgId: string, clientDetails: ClientDetails): Promise<object> {
+        const payload = { fileId, orgId, clientDetails };
+        return this.sendNatsMessage(this.issuanceProxy, 'retry-bulk-credentials', payload);
     }
 
-    async _getWebhookUrl(tenantId: string): Promise<string> {
+    async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
         const pattern = { cmd: 'get-webhookurl' };
-        const payload = { tenantId };
+        const payload = { tenantId, orgId };
 
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -157,5 +157,17 @@ export class IssuanceService extends BaseService {
             throw error;
         }
     }
+
+    async deleteIssuanceRecords(orgId: string, userDetails: user): Promise<IDeletedIssuanceRecords> {
+        const payload = { orgId, userDetails };
+        return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
+    }
+    async getFileDetailsAndFileDataByFileId(orgId: string, fileId: string): Promise<object> {
+        const payload = {
+          orgId,
+          fileId
+        };
+        return this.sendNatsMessage(this.issuanceProxy, 'issued-file-data-and-file-details', payload);
+      }
 
 }

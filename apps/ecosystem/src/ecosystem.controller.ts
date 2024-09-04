@@ -1,16 +1,15 @@
-import { Controller, Logger } from '@nestjs/common';
-
+import { Controller, Logger, Body } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { EcosystemService } from './ecosystem.service';
-import { Body } from '@nestjs/common';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { AcceptRejectEcosystemInvitationDto } from '../dtos/accept-reject-ecosysteminvitation.dto';
 import { FetchInvitationsPayload } from '../interfaces/invitations.interface';
 import { EcosystemMembersPayload } from '../interfaces/ecosystemMembers.interface';
 import { GetEndorsementsPayload, ISchemasResponse } from '../interfaces/endorsements.interface';
-import { IEcosystemDashboard, RequestCredDeffEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs, IRequestSchemaEndorsement, IRequestW3CSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
-import { IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
-import { schemaRequestType } from '@credebl/enum/enum';
+import { IEcosystemDashboard, RequestCredDeffEndorsement, IEcosystem, IEcosystemInvitation, IEcosystemInvitations, IEditEcosystem, IEndorsementTransaction, IEcosystemList, IEcosystemLeadOrgs, IRequestSchemaEndorsement } from '../interfaces/ecosystem.interfaces';
+import { IEcosystemDataDeletionResults, IEcosystemDetails } from '@credebl/common/interfaces/ecosystem.interface';
+import { user } from '@prisma/client';
+import { IUserRequestInterface } from 'apps/ledger/src/credential-definition/interfaces';
 // eslint-disable-next-line camelcase
 
 @Controller()
@@ -126,6 +125,12 @@ export class EcosystemController {
     return this.ecosystemService.acceptRejectEcosystemInvitations(payload.acceptRejectInvitation, payload.userEmail);
   }
 
+  @MessagePattern({ cmd: 'get-ecosystem-records' })
+  async getEcosystemsByOrgId(payload: { orgId: string, userId: string }): Promise<number> {
+    const { orgId } = payload;
+    return this.ecosystemService.getEcosystems(orgId);
+  }
+
   @MessagePattern({ cmd: 'get-sent-invitations-ecosystemId' })
   async getInvitationsByOrgId(@Body() payload: FetchInvitationsPayload): Promise<IEcosystemInvitation> {
     return this.ecosystemService.getInvitationsByEcosystemId(payload);
@@ -157,14 +162,13 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'schema-endorsement-request' })
   async schemaEndorsementRequest(payload: {
-    requestSchemaPayload: IRequestSchemaEndorsement | IRequestW3CSchemaEndorsement;
-    schemaType: schemaRequestType;
+    requestSchemaPayload: IRequestSchemaEndorsement;
+    user: user;
     orgId: string;
     ecosystemId: string;
   }): Promise<IEndorsementTransaction> {
-    const { requestSchemaPayload, schemaType, orgId, ecosystemId } = payload;
-
-    return this.ecosystemService.requestSchemaEndorsement(requestSchemaPayload, schemaType, orgId, ecosystemId);
+    const { requestSchemaPayload, user, orgId, ecosystemId } = payload;
+    return this.ecosystemService.requestSchemaEndorsement(requestSchemaPayload, user, orgId, ecosystemId);
   }
 
   /**
@@ -202,11 +206,13 @@ export class EcosystemController {
    * @returns submit endorsement request
    */
   @MessagePattern({ cmd: 'submit-endorsement-transaction' })
-  async submitTransaction(payload: { endorsementId: string; ecosystemId: string; orgId: string }): Promise<object> {
+  async submitTransaction(payload: { endorsementId: string; ecosystemId: string; orgId: string, user: IUserRequestInterface}): Promise<object> {
+    const { endorsementId, ecosystemId, orgId, user } = payload;
     return this.ecosystemService.submitTransaction({
-      endorsementId: payload.endorsementId,
-      ecosystemId: payload.ecosystemId,
-      orgId: payload.orgId
+      endorsementId,
+      ecosystemId,
+      orgId,
+      user
     });
   }
 
@@ -228,5 +234,11 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'decline-endorsement-transaction' })
   async declineEndorsementRequestByLead(payload: { ecosystemId: string; endorsementId: string }): Promise<object> {
     return this.ecosystemService.declineEndorsementRequestByLead(payload.ecosystemId, payload.endorsementId);
+  }
+
+  @MessagePattern({ cmd: 'delete-org-from-ecosystem' })
+  async deleteOrgFromEcosystem(payload: { orgId: string, userDetails: user}): Promise<IEcosystemDataDeletionResults> {
+    const { orgId, userDetails } = payload;
+    return this.ecosystemService.deleteOrgFromEcosystem(orgId, userDetails);
   }
 }

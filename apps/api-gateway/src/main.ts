@@ -12,6 +12,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 
 import helmet from 'helmet';
 import { NodeEnvironment } from '@credebl/enum/enum';
+import { CommonConstants } from '@credebl/common/common.constant';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -24,13 +25,13 @@ async function bootstrap(): Promise<void> {
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
-    options: getNatsOptions(process.env.API_GATEWAY_NKEY_SEED)
+    options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
   });
 
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set('x-powered-by', false);
   app.use(express.json({ limit: '50mb' }));
-  app.use(express.urlencoded({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
   app.use(function (req, res, next) {
     let err = null;

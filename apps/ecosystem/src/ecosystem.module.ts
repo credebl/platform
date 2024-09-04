@@ -7,6 +7,8 @@ import { EcosystemRepository } from './ecosystem.repository';
 import { PrismaService } from '@credebl/prisma-service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -14,7 +16,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.ECOSYSTEM_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.ECOSYSTEM_SERVICE, process.env.ECOSYSTEM_NKEY_SEED)
       }
     ]),
 
@@ -22,6 +24,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     CacheModule.register()
   ],
   controllers: [EcosystemController],
-  providers: [EcosystemService, PrismaService, Logger, EcosystemRepository]
+  providers: [EcosystemService, UserActivityRepository, PrismaService, Logger, EcosystemRepository]
 })
 export class EcosystemModule { }

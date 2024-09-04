@@ -5,8 +5,7 @@ import {
   ISchema,
   ISchemaCredDeffSearchInterface,
   ISchemaExist,
-  ISchemaSearchPayload,
-  W3CSchemaPayload
+  ISchemaSearchPayload
 } from './interfaces/schema-payload.interface';
 import { schema } from '@prisma/client';
 import {
@@ -15,21 +14,22 @@ import {
   ISchemaDetails,
   ISchemasWithPagination
 } from '@credebl/common/interfaces/schema.interface';
+import { IschemaPayload } from './interfaces/schema.interface';
 
 @Controller('schema')
 export class SchemaController {
   constructor(private readonly schemaService: SchemaService) {}
 
   @MessagePattern({ cmd: 'create-schema' })
-  async createSchema(payload: ISchema): Promise<ISchemaData> {
-    const { schema, user, orgId } = payload;
-    return this.schemaService.createSchema(schema, user, orgId);
+  async createSchema(payload: IschemaPayload): Promise<ISchemaData> {
+    const { schemaDetails, user, orgId } = payload;
+    return this.schemaService.createSchema(schemaDetails, user, orgId);
   }
 
-  @MessagePattern({ cmd: 'create-w3c-schema' })
-  async createW3CSchema(payload: W3CSchemaPayload): Promise<string> {
-    const {orgId, schemaPayload, user} = payload;
-    return this.schemaService.createW3CSchema(orgId, schemaPayload, user);
+  @MessagePattern({ cmd: 'get-schemas-details' })
+  async getSchemasDetails(payload: {templateIds: string[]}): Promise<schema[]> {
+    const { templateIds } = payload;
+    return this.schemaService.getSchemaDetails(templateIds);
   }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })

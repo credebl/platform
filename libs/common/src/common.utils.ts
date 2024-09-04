@@ -1,3 +1,7 @@
+import { NotFoundException } from '@nestjs/common';
+import * as dotenv from 'dotenv';
+import { ResponseMessages } from './response-messages';
+dotenv.config();
 /* eslint-disable camelcase */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export function paginator<T>(
@@ -5,17 +9,19 @@ export function paginator<T>(
   current_page: number,
   items_per_page: number
 ) {
-  const page = current_page || 1,
-    per_page = items_per_page || 10,
-    offset = (page - 1) * per_page,
-    paginatedItems = items.slice(offset).slice(0, items_per_page),
-    total_pages = Math.ceil(items.length / per_page);
+  const page: number = Number(current_page) || 1;
+  const per_page: number = Number(items_per_page) || 10;
+  const offset: number = (page - 1) * per_page;
+  const paginatedItems = items.slice(offset, offset + per_page);
+  const total_pages: number = Math.ceil(items.length / per_page);
 
+  const previousPage: number | null = 1 < page ? page - 1 : null;
+  const nextPage: number | null = page < total_pages ? page + 1 : null;
   return {
     page,
     pageSize: per_page,
-    previousPage: page - 1 ? page - 1 : null,
-    nextPage: total_pages > page ? page + 1 : null,
+    previousPage,
+    nextPage,
     totalItems: items.length,
     lastPage: total_pages,
     data: paginatedItems
@@ -42,3 +48,24 @@ export function orderValues(key, order = 'asc') {
     return 'desc' === order ? comparison * -1 : comparison;
   };
 }
+
+
+export function convertUrlToDeepLinkUrl(url: string): string {
+  const deepLinkDomain = process.env.DEEPLINK_DOMAIN
+  if(!deepLinkDomain) {
+    throw new NotFoundException(ResponseMessages.shorteningUrl.error.deepLinkDomainNotFound)
+  }
+  const deepLinkUrl = deepLinkDomain.concat(url);
+  return deepLinkUrl;
+}
+
+export const networkNamespace = (did):string => {
+  // Split the DID into segments using the colon as a delimiter
+  const segments = did.split(':');
+  const containsTestnet = segments.some(segment => segment.includes('polygon'));
+  if (containsTestnet) {
+    return `${segments[1]}:${segments[2]}`;
+  } else {
+    return segments[1];
+  }
+};

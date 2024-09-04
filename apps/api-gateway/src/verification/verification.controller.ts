@@ -33,6 +33,8 @@ import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { ProofRequestType, SortFields } from './enum/verification.enum';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { user } from '@prisma/client';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -311,6 +313,10 @@ export class VerificationController {
     ): Promise<Response> {
         proofPresentationPayload.type = 'Verification';
        
+        if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
+            proofPresentationPayload.orgId = orgId;
+          }
+          
             const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
                 this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
             });
@@ -321,7 +327,7 @@ export class VerificationController {
             };
            
            
-             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload.contextCorrelationId).catch(error => {
+             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId).catch(error => {
                 this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
              });
             
@@ -336,26 +342,26 @@ export class VerificationController {
 
 }
 
-@Delete('/:orgId/verification-records')
+@Delete('/orgs/:orgId/verification-records')
 @ApiOperation({ summary: 'Delete verification record', description: 'Delete verification records by orgId' })
 @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
 @ApiBearerAuth()
 @Roles(OrgRoles.OWNER)
 @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-async deleteOrganizationInvitation(
+async deleteVerificationRecordsByOrgId(
   @Param(
     'orgId',
     new ParseUUIDPipe({
       exceptionFactory: (): Error => {
-        throw new BadRequestException(`Invalid format for orgId`);
+        throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
       }
     })
   )
   orgId: string,
-  @User() user: IUserRequest,
+  @User() user: user,
   @Res() res: Response
 ): Promise<Response> {
-  await this.verificationService.deleteVerificationRecord(orgId, user?.['id']);
+  await this.verificationService.deleteVerificationRecords(orgId, user);
   const finalResponse: IResponse = {
     statusCode: HttpStatus.OK,
     message: ResponseMessages.verification.success.deleteVerificationRecord

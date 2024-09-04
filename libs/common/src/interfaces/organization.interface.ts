@@ -93,3 +93,20 @@ export interface IOrganizationDashboard {
     clientId: string;
     clientSecret: string;
   }
+
+  export interface IOrgData extends IDeleteOrganization{
+    registrationNumber: string,
+    country: string,
+    city: string,
+    state: string
+  }
+  
+  export interface IOrgActivityCount {
+    verificationRecordsCount: number;
+    issuanceRecordsCount: number;
+    connectionRecordsCount: number;
+    orgUsersCount: number;
+    orgEcosystemsCount: number;
+    orgInvitationsCount: number;
+  }
+  

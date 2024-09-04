@@ -1,9 +1,10 @@
 // eslint-disable-next-line camelcase
 import { AutoAccept, SchemaType } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { organisation } from '@prisma/client';
+import { Prisma, organisation } from '@prisma/client';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
+import { IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
 
 export interface IAttributes {
   attributeName: string;
@@ -139,8 +140,19 @@ export interface ICredentialAttributesInterface {
 export interface ICredential{
   '@context':[];
   type: string[];
+  prettyVc?: IPrettyVc;
+  issuer?: {
+    id: string;
+  };
+  issuanceDate?: string;
+  credentialSubject?: ICredentialSubject;
 }
-export interface IOptions{
+
+interface ICredentialSubject {
+  [key: string]: string;
+}
+
+export interface IOptions{ 
   proofType:string;
   proofPurpose:string;
 }
@@ -158,6 +170,7 @@ export interface OutOfBandCredentialOfferPayload {
   emailId?: string;
   attributes?: IAttributes[];
   protocolVersion?: string;
+  isReuseConnection?: boolean;
   goalCode?: string,
   parentThreadId?: string,
   willConfirm?: boolean,
@@ -196,8 +209,8 @@ export interface PreviewRequest {
   pageNumber: number,
   pageSize: number,
   searchByText: string,
-  sortField: string,
-  sortBy: string
+  sortField?: string,
+  sortBy?: string
 }
 
 export interface FileUpload {
@@ -208,6 +221,7 @@ export interface FileUpload {
   createDateTime?: Date | null,
   lastChangedDateTime?: Date | null,
   credentialType?: string,
+  templateId?: string
 }
 
 export interface FileUploadData {
@@ -226,6 +240,11 @@ export interface IClientDetails {
   userId?: string;
   isSelectiveIssuance?: boolean;
   fileName?: string;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
@@ -264,6 +283,7 @@ export interface SendEmailCredentialOffer {
   index: number;
   credentialType: IssueCredentialType; 
   protocolVersion: string;
+  isReuseConnection?: boolean;
   attributes: IAttributes[]; 
   credentialDefinitionId: string; 
   outOfBandCredential: OutOfBandCredentialOfferPayload;
@@ -273,6 +293,9 @@ export interface SendEmailCredentialOffer {
   url: string;
   orgId: string; 
   organizationDetails: organisation;
+  platformName?: string,
+  organizationLogoUrl?: string;
+  prettyVc?: IPrettyVc;
 }
 
 export interface TemplateDetailsInterface {
@@ -315,4 +338,51 @@ export interface IQueuePayload{
   totalJobs: number;
   isRetry: boolean;
   isLastData: boolean;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
+  isReuseConnection?: boolean;
+}
+
+interface FileDetails {
+  schemaLedgerId: string;
+  credentialDefinitionId: string;
+  fileData:object
+  fileName: string;
+  credentialType: string;
+  schemaName: string;
+}
+export interface IBulkPayloadObject {
+  parsedData?: unknown[],
+  parsedFileDetails?: FileDetails,
+  userId: string,
+  fileUploadId: string
+  };
+export interface ISchemaAttributes {
+  attributeName: string;
+  schemaDataType: string;
+  displayName: string;
+  isRequired: boolean;
+}
+
+export interface IIssuanceAttributes {
+  [key: string]: string;
+}
+export interface IDeletedFileUploadRecords {
+  deleteFileDetails: Prisma.BatchPayload;
+  deleteFileUploadDetails: Prisma.BatchPayload;
+}
+
+export interface BulkPayloadDetails {
+  clientId: string;
+  orgId: string;
+  requestId?: string;
+  isRetry: boolean;
+  organizationLogoUrl?: string;
+  platformName?: string;
+  certificate?: string;
+  size?: string;
+  orientation?: string;
 }

@@ -9,6 +9,7 @@ import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './int
 import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
 import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
+import { user } from '@prisma/client';
 
 
 @Injectable()
@@ -100,9 +101,9 @@ export class VerificationService extends BaseService {
         return this.sendNatsMessage(this.verificationServiceProxy, 'get-verified-proof-details', payload);
     }
 
-    async _getWebhookUrl(tenantId: string): Promise<string> {
+    async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
         const pattern = { cmd: 'get-webhookurl' };
-        const payload = { tenantId };
+        const payload = { tenantId, orgId };
     
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,8 +129,8 @@ export class VerificationService extends BaseService {
         }
       }
 
-      async deleteVerificationRecord(orgId: string, userId: string): Promise<IVerificationRecords> {
-        const payload = { orgId, userId };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-record', payload);
+      async deleteVerificationRecords(orgId: string, userDetails: user): Promise<IVerificationRecords> {
+        const payload = { orgId, userDetails };
+        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-records', payload);
     }
 }

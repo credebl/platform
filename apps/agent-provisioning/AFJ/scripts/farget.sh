@@ -1,3 +1,4 @@
+
 #!/bin/sh
 
 START_TIME=$(date +%s)
@@ -32,7 +33,48 @@ AWS_PUBLIC_REGION=${27}
 STAGE=${28}
 AGENT_WEBSOCKET_PROTOCOL=${29}
 DB_SECURITY_GROUP_ID=${30}
-TESKDEFINITION_FAMILY="${STAGE_}_${CONTAINER_NAME}_TASKDEFIITION"
+TESKDEFINITION_FAMILY="${STAGE}_${CONTAINER_NAME}_TASKDEFITION"
+
+
+echo "START_TIME: $START_TIME"
+echo "AGENCY: $AGENCY"
+echo "EXTERNAL_IP: $EXTERNAL_IP"
+echo "WALLET_NAME: $WALLET_NAME"
+echo "WALLET_PASSWORD: $WALLET_PASSWORD"
+echo "RANDOM_SEED: $RANDOM_SEED"
+echo "WEBHOOK_HOST: $WEBHOOK_HOST"
+echo "WALLET_STORAGE_HOST: $WALLET_STORAGE_HOST"
+echo "WALLET_STORAGE_PORT: $WALLET_STORAGE_PORT"
+echo "WALLET_STORAGE_USER: $WALLET_STORAGE_USER"
+echo "WALLET_STORAGE_PASSWORD: $WALLET_STORAGE_PASSWORD"
+echo "CONTAINER_NAME: $CONTAINER_NAME"
+echo "PROTOCOL: $PROTOCOL"
+echo "TENANT: $TENANT"
+echo "AFJ_VERSION: $AFJ_VERSION"
+echo "INDY_LEDGER: $INDY_LEDGER"
+echo "INBOUND_ENDPOINT: $INBOUND_ENDPOINT"
+echo "AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID"
+echo "S3_BUCKET_ARN: $S3_BUCKET_ARN"
+echo "CLUSTER_NAME: $CLUSTER_NAME"
+echo "TESKDEFINITION_FAMILY: $TESKDEFINITION_FAMILY"
+echo "FILESYSTEMID: $FILESYSTEMID"
+echo "ACCESSPOINTID: $ACCESSPOINTID"
+echo "VPC_ID: $VPC_ID"
+echo "ECS_SUBNET_ID: $ECS_SUBNET_ID"
+echo "ALB_SUBNET_ID_ONE: $ALB_SUBNET_ID_ONE"
+echo "ALB_SUBNET_ID_TWO: $ALB_SUBNET_ID_TWO"
+echo "SSL_CRTS: $SSL_CRTS"
+echo "EFS_SECURITY_GROUP_ID: $EFS_SECURITY_GROUP_ID"
+echo "AGENT_URL: $AGENT_URL"
+echo "AWS_PUBLIC_REGION: $AWS_PUBLIC_REGION"
+echo "STAGE: $STAGE"
+echo "AGENT_WEBSOCKET_PROTOCOL: $AGENT_WEBSOCKET_PROTOCOL"
+echo "ALB_SECURITY_GROUP_ID: $ALB_SECURITY_GROUP_ID"
+echo "ADMIN_TG_ARN: $ADMIN_TG_ARN"
+echo "INBOUND_TG_ARN: $INBOUND_TG_ARN"
+echo "AGENT_INBOUND_URL: $AGENT_INBOUND_URL"
+echo "DB_SECURITY_GROUP_ID: $DB_SECURITY_GROUP_ID"
+
 
 DESIRED_COUNT=1
 
@@ -395,7 +437,7 @@ CONTAINER_DEFINITIONS=$(
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/$TESKDEFINITION_FAMILY/$CONTAINER_NAME",
+                    "awslogs-group": "/ecs/$TESKDEFINITION_FAMILY",
                     "awslogs-region": "$AWS_PUBLIC_REGION",
                     "awslogs-stream-prefix": "ecs"
                 },
@@ -540,16 +582,19 @@ echo "service_description=$service_description"
 task_id=$(echo "$service_description" | jq -r '.services[0].events[] | select(.message | test("has started 1 tasks")) | .message | capture("\\(task (?<id>[^)]+)\\)") | .id')
 #echo "task_id=$task_id"
 
+# to fetch log group of container 
+.............................................................
 log_group=/ecs/$TESKDEFINITION_FAMILY
-#echo "log_group=$log_group"
+echo "log_group=$log_group"
 
 # Get Log Stream Name
 log_stream=ecs/$CONTAINER_NAME/$task_id
 
-#echo "logstrem=$log_stream"
+echo "logstrem=$log_stream"
+
 
 # Fetch logs
-#echo "$(aws logs get-log-events --log-group-name "/ecs/$TESKDEFINITION_FAMILY" --log-stream-name "$log_stream" --region $AWS_PUBLIC_REGION)"
+#echo "$(aws logs get-log-events --log-group-name "/ecs/$TESKDEFINITION_FAMILY/$CONTAINER_NAME" --log-stream-name "$log_stream" --region $AWS_PUBLIC_REGION)"
 
 # Check if the token folder exists, and create it if it doesn't
 token_folder="$PWD/agent-provisioning/AFJ/token"
@@ -629,4 +674,5 @@ ls -d "${PWD}/agent-provisioning/AFJ/"*/
 echo "Content of endpoint JSON file:"
 cat "$config_file"
 echo "Content of token JSON file:"
-cat "${PWD}/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json"
+
+

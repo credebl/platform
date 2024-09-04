@@ -104,4 +104,11 @@ export class IssuanceController {
     const { orgId, userDetails } = payload;
     return this.issuanceService.deleteIssuanceRecords(orgId, userDetails);
   }
+  @MessagePattern({ cmd: 'issued-file-data-and-file-details' })
+  async getFileDetailsAndFileDataByFileId(payload: { fileId: string, orgId: string }): Promise<object> {
+    return this.issuanceService.getFileDetailsAndFileDataByFileId(
+      payload.fileId,
+      payload.orgId
+    );
+  }
 }

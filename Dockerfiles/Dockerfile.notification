@@ -36,7 +36,3 @@ COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/notification/main.js"]
-
-# docker build -t notification -f Dockerfiles/Dockerfile.notification .
-# docker run -d --env-file .env --name notification docker.io/library/notification
-# docker logs -f notification

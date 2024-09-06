@@ -649,6 +649,23 @@ export class ConnectionService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
+
+      let legacyinvitationDid;
+      if (IsReuseConnection) {
+        const data: agent_invitations[] = await this.connectionRepository.getInvitationDidByOrgId(orgId);
+           if (data && 0 < data.length) {
+            const [firstElement] = data;
+            legacyinvitationDid = firstElement?.invitationDid ?? undefined;
+            
+            this.logger.log('legacyinvitationDid:', legacyinvitationDid);
+        }
+      }
+      const connectionInvitationDid = invitationDid ? invitationDid : legacyinvitationDid;
+
+      this.logger.log('connectionInvitationDid:', connectionInvitationDid);
+
+      
+      this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation ?? true,
         autoAcceptConnection: autoAcceptConnection ?? true,

@@ -36,7 +36,3 @@ COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/organization/main.js"]
-
-# docker build -t organization -f Dockerfiles/Dockerfile.organization .
-# docker run -d --env-file .env --name issuance docker.io/library/organization
-# docker logs -f organization

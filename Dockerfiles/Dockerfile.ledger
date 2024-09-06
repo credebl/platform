@@ -36,7 +36,3 @@ COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/ledger/main.js"]
-
-# docker build -t ledger -f Dockerfiles/Dockerfile.ledger .
-# docker run -d --env-file .env --name ledger docker.io/library/ledger
-# docker logs -f ledger

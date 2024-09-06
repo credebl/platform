@@ -965,31 +965,8 @@ export class AgentServiceService {
       const didDetails = await this.getDidDetails(url, payload, getApiKey);
       const getDidByOrg = await this.agentServiceRepository.getOrgDid(orgId);
 
-      
-      const didDetails = await this.commonService.httpPost(url, payload, {
-        headers: { authorization: getApiKey }
-      });
+      await this.checkDidExistence(getDidByOrg, didDetails);
 
-      const didDetails = await this.commonService.httpPost(url, createDidPayload, {
-        headers: { authorization: getApiKey }
-      });
-
-      if (!didDetails || Object.keys(didDetails).length === 0) {
-        throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      
-      
-      const didExist = getDidByOrg.some((orgDidExist) => orgDidExist.did === didDetails.did);
-      if (didExist) {
-        throw new ConflictException(ResponseMessages.agent.error.didAlreadyExist, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      
       if (isPrimaryDid) {
         await this.updateAllDidsToNonPrimary(orgId, getDidByOrg);
       }

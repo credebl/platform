@@ -27,6 +27,8 @@ import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { NotificationModule } from './notification/notification.module';
 import { GeoLocationModule } from './geo-location/geo-location.module';
+import { CommonConstants } from '@credebl/common/common.constant';
+import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
 
 @Module({
   imports: [

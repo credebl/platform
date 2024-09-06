@@ -50,7 +50,3 @@ COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/agent-service/main.js"]
-
-# docker build -t agent-service -f Dockerfiles/Dockerfile.agent-service .
-# docker run -d --env-file .env --name agent-service docker.io/library/agent-service
-# docker logs -f agent-service

@@ -292,7 +292,8 @@ async downloadBulkIssuanceCSVTemplate(
       if (file) {
         const fileKey: string = uuidv4();
         try {
-          await this.awsService.uploadCsvFile(fileKey, file?.buffer);
+        const data =  await this.awsService.uploadCsvFile(fileKey, file?.buffer);
+        this.logger.log(`data:::: ${data}`)
         } catch (error) {
           throw new RpcException(error.response ? error.response : error);
         }

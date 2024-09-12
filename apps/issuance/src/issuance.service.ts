@@ -1646,6 +1646,7 @@ return newCacheKey;
           0 === errorCount ? FileUploadStatus.completed : FileUploadStatus.partially_completed;
 
         if (!jobDetails.isRetry) {
+          this.logger.log(`$$$$$$ jobDetails :::: $$$$$$ ::::: ${JSON.stringify(jobDetails)}`)
           socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId });
           this.cacheManager.del(jobDetails.cacheId);
         } else {

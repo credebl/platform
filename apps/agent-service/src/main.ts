@@ -5,6 +5,7 @@ import { AgentServiceModule } from './agent-service.module';
 import { AgentServiceService } from './agent-service.service';
 import { IAgentSpinupDto, IUserRequestInterface } from './interface/agent-service.interface';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { Ledgers } from '@credebl/enum/enum';
 

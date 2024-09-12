@@ -141,6 +141,15 @@ export interface ICredential{
   '@context':[];
   type: string[];
   prettyVc?: IPrettyVc;
+  issuer?: {
+    id: string;
+  };
+  issuanceDate?: string;
+  credentialSubject?: ICredentialSubject;
+}
+
+interface ICredentialSubject {
+  [key: string]: string;
 }
 
 export interface IOptions{ 
@@ -216,14 +225,14 @@ export interface FileUpload {
 }
 
 export interface FileUploadData {
-    fileUpload: string;
-    fileRow: string;
-    isError: boolean;
-    referenceId: string;
-    createDateTime: Date;
-    error?: string;
-    detailError?: string;
-    jobId: string;
+  fileUpload: string;
+  fileRow: string;
+  isError: boolean;
+  referenceId: string;
+  createDateTime: Date;
+  error?: string;
+  detailError?: string;
+  jobId: string;
 }
 
 export interface IClientDetails {

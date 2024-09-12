@@ -2,12 +2,6 @@
 FROM node:18-slim as build
 RUN npm install -g pnpm
 
-RUN addgroup -S nonroot \
-    && adduser -S nonroot -G nonroot
-
-USER nonroot
-RUN npm install -g pnpm
-
 RUN apt-get update -y
 RUN apt-get --no-install-recommends install -y openssl
 # Set the working directory

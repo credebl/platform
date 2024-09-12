@@ -18,11 +18,13 @@ export class CreateDidDto {
 
     @ApiProperty({ example: 'ed25519'})
     @IsNotEmpty({ message: 'key type is required' })
+    @Transform(({ value }) => trim(value))
     @IsString({ message: 'key type be in string format.' })
     keyType: string;
 
     @ApiProperty({ example: 'indy'})
     @IsNotEmpty({ message: 'method is required' })
+    @Transform(({ value }) => trim(value))
     @IsString({ message: 'method must be in string format.' })
     method: string;
 
@@ -47,6 +49,7 @@ export class CreateDidDto {
     @ApiPropertyOptional({example: ''})
     @IsOptional()
     @IsString({ message: 'private key must be in string format.' })
+    @Transform(({ value }) => trim(value))
     privatekey?: string;
 
     @ApiPropertyOptional({example: 'http://localhost:6006/docs'})

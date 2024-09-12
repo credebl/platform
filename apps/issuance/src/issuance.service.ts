@@ -50,7 +50,10 @@ export class IssuanceService {
     private readonly userActivityRepository: UserActivityRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
-    private readonly emailData: EmailDto
+    private readonly emailData: EmailDto,
+    private readonly awsService: AwsService,
+    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
+    @Inject(CACHE_MANAGER) private cacheService: Cache
   ) { }
 
   async getIssuanceRecords(orgId: string): Promise<number> {
@@ -237,7 +240,6 @@ export class IssuanceService {
 
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion } = payload;
 
       const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType, isShortenUrl, reuseConnection } = payload;
       if (credentialType === IssueCredentialType.INDY) {
@@ -245,28 +247,28 @@ export class IssuanceService {
           credentialDefinitionId
         );
 
-      if (schemadetailsResponse?.attributes) {
-        const schemadetailsResponseError = [];
-        const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
+        if (schemadetailsResponse?.attributes) {
+          const schemadetailsResponseError = [];
+          const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes);
 
-        attributesArray.forEach((attribute) => {
-          if (attribute.attributeName && attribute.isRequired) {
-            
-            payload.attributes.map((attr) => { 
-              if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
-                schemadetailsResponseError.push(
-                  `Attribute '${attribute.attributeName}' is required but has an empty value.`
-                );
-              }
-              return true;
-             });
+          attributesArray.forEach((attribute) => {
+            if (attribute.attributeName && attribute.isRequired) {
+
+              payload.attributes.map((attr) => {
+                if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
+                  schemadetailsResponseError.push(
+                    `Attribute '${attribute.attributeName}' is required but has an empty value.`
+                  );
+                }
+                return true;
+              });
+            }
+          });
+          if (0 < schemadetailsResponseError.length) {
+            throw new BadRequestException(schemadetailsResponseError);
           }
-        });
-        if (0 < schemadetailsResponseError.length) {
-          throw new BadRequestException(schemadetailsResponseError);
-        }
-      }
 
+        }
       }
 
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
@@ -312,7 +314,7 @@ export class IssuanceService {
           invitationDid:invitationDid || undefined
         };
 
-    }
+      }
 
       if (credentialType === IssueCredentialType.JSONLD) {
         issueData = {
@@ -415,8 +417,8 @@ export class IssuanceService {
         .pipe(
           map((response) => (
             {
-            response
-          }))
+              response
+            }))
         ).toPromise()
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -956,8 +958,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       switch (issuanceMethodLabel) {
         case 'create-offer': {
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
-              : orgAgentType === OrgAgentType.SHARED
+            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
               : null;
           break;
@@ -965,8 +967,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
         case 'create-offer-oob': {
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
-              : orgAgentType === OrgAgentType.SHARED
+            ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
               : null;
           break;
@@ -974,18 +976,18 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
         case 'get-issue-credentials': {
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
-              : orgAgentType === OrgAgentType.SHARED
+            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
               : null;
           break;
         }
 
         case 'get-issue-credential-by-credential-id': {
-          
+
           url = orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
-              : orgAgentType === OrgAgentType.SHARED
+            ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
+            : orgAgentType === OrgAgentType.SHARED
               ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`.replace('#', credentialRecordId).replace('@', tenantId)
               : null;
           break;
@@ -1125,8 +1127,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       
       const fileData: string[][] = parsedData.data.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
-      this.logger.log("fileData:", fileData);
-      this.logger.log('fileHeader:', fileHeader);
       const attributesArray = JSON.parse(credentialDetails.attributes);
 
       // Extract the 'attributeName' values from the objects and store them in an array
@@ -1179,10 +1179,7 @@ return newCacheKey;
 
 } catch (error) {
       this.logger.error(`error in validating credentials : ${error.response}`);
-      throw  new Error(error.response.message ? error.response.message : error);
-    } finally {
-      // await this.awsService.deleteFile(importFileDetails.fileKey);
-      // this.logger.error(`Deleted uploaded file after processing.`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -1378,6 +1375,7 @@ return newCacheKey;
 
       // Execute the batched jobs with limited concurrency
       await Promise.all(queueJobsArray.map(job => limit(() => job)));
+
       return queueJobsArray;
     };
 
@@ -1573,7 +1571,7 @@ return newCacheKey;
     fileUploadData.createDateTime = new Date();
     fileUploadData.referenceId = jobDetails?.credential_data?.email_identifier;
     fileUploadData.jobId = jobDetails.id;
-    const {orgId} = jobDetails;
+    const { orgId } = jobDetails;
 
     const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
     const { organisation, orgDid } = agentDetails;
@@ -1718,36 +1716,36 @@ return newCacheKey;
     }
   }
 
-  async validateFileData(fileData: string[][], attributesArray: { attributeName: string, schemaDataType: string,  displayName: string, isRequired: boolean }[], fileHeader: string[]): Promise<void> {
-    try { 
+  async validateFileData(fileData: string[][], attributesArray: { attributeName: string, schemaDataType: string, displayName: string, isRequired: boolean }[], fileHeader: string[]): Promise<void> {
+    try {
       const filedata = fileData.map((item: string[]) => {
-       const fileHeaderData = item?.map((element, j) => ({
-           value: element,
-           header: fileHeader[j]
-         }));
-       return fileHeaderData;
+        const fileHeaderData = item?.map((element, j) => ({
+          value: element,
+          header: fileHeader[j]
+        }));
+        return fileHeaderData;
       });
-       
-       const errorFileData = [];
-   
-       filedata.forEach((attr, i) => {
+
+      const errorFileData = [];
+
+      filedata.forEach((attr, i) => {
         attr.forEach((eachElement) => {
 
-         attributesArray.forEach((eachItem) => {
-           if (eachItem.attributeName === eachElement.header) {
-               if (eachItem.isRequired && !eachElement.value) {
-                 errorFileData.push(`Attribute ${eachItem.attributeName} is required at row ${i + 1}`);
-               }
-           }
-           });
-           return eachElement;
-         });
-         return attr;
-       });
-   
-       if (0 < errorFileData.length) {
-         throw new BadRequestException(errorFileData);
-       }
+          attributesArray.forEach((eachItem) => {
+            if (eachItem.attributeName === eachElement.header) {
+              if (eachItem.isRequired && !eachElement.value) {
+                errorFileData.push(`Attribute ${eachItem.attributeName} is required at row ${i + 1}`);
+              }
+            }
+          });
+          return eachElement;
+        });
+        return attr;
+      });
+
+      if (0 < errorFileData.length) {
+        throw new BadRequestException(errorFileData);
+      }
     } catch (error) {
       throw error;
     }
@@ -1764,9 +1762,9 @@ return newCacheKey;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException({
-          status: error.status,
-          error: error.message
-        }, error.status);
+        status: error.status,
+        error: error.message
+      }, error.status);
     }
   }
 

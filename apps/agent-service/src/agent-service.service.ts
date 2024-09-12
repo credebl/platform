@@ -52,7 +52,9 @@ import {
   IStoreAgent,
   AgentHealthData,
   IAgentStore,
-  IAgentConfigure
+  IAgentConfigure,
+  OrgDid,
+  IBasicMessage
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -119,14 +121,14 @@ export class AgentServiceService {
   private async processWalletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<void> {
     let platformAdminUser;
     let userId: string;
-    let agentProcess: org_agents;
-
+    let agentProcess: ICreateOrgAgent;
+    let getOrgAgent;
     try {
       const [platformConfig, getAgentType, ledgerIdData] = await Promise.all([
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          agentSpinupDto.network ? agentSpinupDto.network : [Ledgers.Indicio_Demonet]
+          agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
         )
       ]);
 
@@ -134,6 +136,7 @@ export class AgentServiceService {
       if (!user?.userId && agentSpinupDto?.platformAdminEmail) {
         // Get Platform admin user by platform admin email
         platformAdminUser = await this.agentServiceRepository.getPlatfomAdminUser(agentSpinupDto?.platformAdminEmail);
+
         userId = platformAdminUser?.id;
       } else {
         userId = user?.id;
@@ -232,7 +235,7 @@ export class AgentServiceService {
 
   async agentConfigure(agentConfigureDto: IAgentConfigure, user: IUserRequestInterface): Promise<IStoreAgent> {
     try {
-      const { agentEndpoint, apiKey, did, walletName, orgId, network } = agentConfigureDto;
+      const { agentEndpoint, apiKey, did, walletName, orgId } = agentConfigureDto;
       const { id: userId } = user;
       const orgExist = await this.agentServiceRepository.getAgentDetails(orgId);
       if (orgExist) {
@@ -274,7 +277,6 @@ export class AgentServiceService {
         return fulfilledValues.filter((value) => value !== null);
       });
 
-      const ledgerIdData = await this.agentServiceRepository.getLedgerDetails(network);
       const getOrganization = await this.agentServiceRepository.getOrgDetails(orgId);
 
       const storeAgentConfig = await this.agentServiceRepository.storeOrgAgentDetails({
@@ -286,7 +288,6 @@ export class AgentServiceService {
         orgId,
         agentEndPoint: agentEndpoint,
         orgAgentTypeId,
-        ledgerId: ledgerIdData.map((ledger) => ledger?.id),
         apiKey: encryptedToken,
         userId
       });
@@ -424,7 +425,7 @@ export class AgentServiceService {
     return socket;
   }
 
-  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus, userId: string): Promise<org_agents> {
+  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus, userId: string): Promise<ICreateOrgAgent> {
     try {
       const agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, userId);
       this.logger.log(`Organization agent created with status: ${agentSpinUpStatus}`);
@@ -651,7 +652,8 @@ export class AgentServiceService {
       agentId: payload.agentId,
       orgAgentTypeId,
       ledgerId: payload.ledgerId,
-      id: payload?.id
+      id: payload.id,
+      apiKey: payload.apiKey
     };
   }
 
@@ -896,130 +898,6 @@ export class AgentServiceService {
         this.agentServiceRepository.removeOrgAgent(agentProcess?.id);
       }
       throw error;
-    }
-  }
-
-  /**
-   * Create wallet
-   * @param payload
-   * @returns wallet details
-   */
-  async createWallet(payload: IWallet): Promise<ITenantRecord> {
-    try {
-      const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
-        CommonConstants.PLATFORM_ADMIN_ORG
-      );
-
-      const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
-      const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
-
-      const { label } = payload;
-      const createTenantOptions = {
-        config: { label }
-      };
-
-      const tenantDetails = await this.commonService.httpPost(
-        `${getPlatformAgentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`,
-        createTenantOptions,
-        { headers: { authorization: getDcryptedToken } }
-      );
-
-      return tenantDetails;
-    } catch (error) {
-      this.logger.error(`error in create wallet : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
-  /**
-   * Create did
-   * @param payload
-   * @returns did and didDocument
-   */
-  async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
-    try {
-      const { isPrimaryDid } = createDidPayload;
-      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-      if (createDidPayload.method === DidMethod.POLYGON) {
-        createDidPayload.endpoint = agentDetails.agentEndPoint;
-      }
-      const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      let url;
-      if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
-        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-      } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
-        url = `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
-      }
-      
-      delete createDidPayload.isPrimaryDid;
-            
-      const didDetails = await this.commonService.httpPost(url, createDidPayload, { headers: { authorization: getApiKey } });
-
-      if (!didDetails || Object.keys(didDetails).length === 0) {
-        throw new InternalServerErrorException(ResponseMessages.agent.error.createDid, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      const createdDidDetails = {
-        orgId,
-        did: didDetails.did,
-        didDocument: didDetails.didDocument || didDetails.didDoc,
-        isPrimaryDid,
-        orgAgentId: agentDetails.id,
-        userId: user.id
-      };
-      const storeDidDetails = await this.agentServiceRepository.storeDidDetails(createdDidDetails);
-
-      if (!storeDidDetails) {
-        throw new InternalServerErrorException(ResponseMessages.agent.error.storeDid, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
-      }
-      if (isPrimaryDid && storeDidDetails.did) {
-        await this.agentServiceRepository.setPrimaryDid(storeDidDetails.did, orgId);
-      }
-
-      return storeDidDetails;
-    } catch (error) {
-      this.logger.error(`error in create did : ${JSON.stringify(error)}`);
-
-      if (error?.response?.error?.message) {
-        throw new RpcException({
-          statusCode: error?.response?.status,
-          error: error?.response?.error?.message
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
-    }
-  }
-
-  /**
-   * @returns Secp256k1 key pair for polygon DID
-   */
-  async createSecp256k1KeyPair(orgId: string): Promise<object> {
-    try {
-      const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
-        CommonConstants.PLATFORM_ADMIN_ORG
-      );
-
-      const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
-      const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
-
-      const url = `${getPlatformAgentEndPoint}${CommonConstants.CREATE_POLYGON_SECP256k1_KEY}`;
-
-      const createKeyPairResponse = await this.commonService.httpPost(
-        url,
-        {},
-        { headers: { authorization: getDcryptedToken } }
-      );
-      return createKeyPairResponse;
-    } catch (error) {
-      this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -1408,7 +1286,9 @@ export class AgentServiceService {
           '#',
           `${payload.schemaId}`
         )}`;
-        schemaResponse = await this.commonService.httpGet(url, { headers: { authorization: getApiKey } }).then(async (schema) => schema);
+        schemaResponse = await this.commonService
+          .httpGet(url, { headers: { authorization: getApiKey } })
+          .then(async (schema) => schema);
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`
           .replace('@', `${payload.payload.schemaId}`)

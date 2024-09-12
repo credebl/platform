@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("POOL_DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("POOL_DATABASE_URL")
   directUrl = env("DATABASE_URL")
 }
 
@@ -528,4 +528,105 @@ model ledgerConfig {
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
+}
+
+model user_org_delete_activity {
+  id             String     @id @default(uuid()) @db.Uuid
+  userEmail      String     @default("")
+  userId         String     @db.Uuid
+  orgId          String     @db.Uuid
+  recordType     RecordType
+  txnMetadata    Json
+  deletedBy      String     @db.Uuid
+  deleteDateTime DateTime   @default(now()) @db.Timestamptz(6)
+}
+
+enum RecordType {
+  VERIFICATION_RECORD
+  ISSUANCE_RECORD
+  CONNECTION
+  ECOSYSTEM_MEMBER
+  ORGANIZATION
+  WALLET
+  INVITATION
+}
+
+model countries {
+  id           Int            @id @default(autoincrement()) @map("id")
+  name         String         @map("name")
+  states       states[]
+  cities       cities[]
+  organisation organisation[]
+
+  @@map("countries")
+}
+
+model states {
+  id           Int            @id @default(autoincrement()) @map("id")
+  name         String         @map("name")
+  countryId    Int            @map("country_id")
+  countryCode  String         @map("country_code")
+  countries    countries      @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  cities       cities[]
+  organisation organisation[]
+
+  @@map("states")
+}
+
+model cities {
+  id           Int            @id @default(autoincrement()) @map("id")
+  name         String         @map("name")
+  stateId      Int            @map("state_id")
+  stateCode    String         @map("state_code")
+  countryId    Int            @map("country_id")
+  countryCode  String         @map("country_code")
+  state        states         @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  country      countries      @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  organisation organisation[]
+
+  @@index([stateId], name: "cities_stateId_idx")
+  @@index([countryId], name: "cities_countryId_idx")
+  @@map("cities")
+}
+
+model user_role {
+  id                String              @id @default(uuid()) @db.Uuid
+  role              UserRole
+  user_role_mapping user_role_mapping[]
+}
+
+enum UserRole {
+  DEFAULT_USER
+  HOLDER
+}
+
+model user_role_mapping {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  user       user      @relation(fields: [userId], references: [id])
+  userRoleId String    @db.Uuid
+  user_role  user_role @relation(fields: [userRoleId], references: [id])
+}
+
+model cloud_wallet_user_info {
+  id                  String          @id @default(uuid()) @db.Uuid
+  label               String?
+  tenantId            String?
+  email               String?         @unique() @db.VarChar(500)
+  type                CloudWalletType
+  createDateTime      DateTime        @default(now()) @db.Timestamptz(6)
+  createdBy           String          @db.Uuid
+  lastChangedDateTime DateTime        @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String          @db.Uuid
+  userId              String?          @db.Uuid
+  agentEndpoint       String?
+  agentApiKey         String?
+  key                 String?
+  connectionImageUrl  String?
+  user                user?            @relation(fields: [userId], references: [id])
+}
+
+enum CloudWalletType {
+  CLOUD_BASE_WALLET
+  CLOUD_SUB_WALLET
 }

@@ -15,13 +15,16 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
 import { map } from 'rxjs/operators';
-import { OrgAgentType, SchemaType } from '@credebl/enum/enum';
+import { JSONSchemaType, LedgerLessConstant, LedgerLessMethods, OrgAgentType, SchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemaDetails, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
 import { W3CSchemaVersion } from './enum/schema.enum';
+import { v4 as uuidv4 } from 'uuid';
+import { networkNamespace } from '@credebl/common/common.utils';
+import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -181,61 +184,51 @@ export class SchemaService extends BaseService {
               ledgerId: getLedgerId.id,
               type: SchemaType.INDY
             };
-            schemaResponseFromAgentService = await this._createSchema(schemaPayload);
-          }
-
-          const responseObj = JSON.parse(JSON.stringify(schemaResponseFromAgentService.response));
-
-          const indyNamespace = `${did.split(':')[2]}:${did.split(':')[3]}`;
-          const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
-          const schemaDetails: ISchema = {
-            schema: { schemaName: '', attributes: [], schemaVersion: '', id: '' },
-            createdBy: `0`,
-            issuerId: '',
-            onLedgerStatus: 'Submitted on ledger',
-            orgId,
-            ledgerId: getLedgerId.id,
-            type: SchemaType.INDY
-          };
-
-          if ('finished' === responseObj.schema.state) {
-            schemaDetails.schema.schemaName = responseObj.schema.schema.name;
-            schemaDetails.schema.attributes = trimmedAttributes;
-            schemaDetails.schema.schemaVersion = responseObj.schema.schema.version;
-            schemaDetails.createdBy = userId;
-            schemaDetails.schema.id = responseObj.schema.schemaId;
-            schemaDetails.changedBy = userId;
-            schemaDetails.orgId = orgId;
-            schemaDetails.issuerId = responseObj.schema.schema.issuerId;
-            const saveResponse = this.schemaRepository.saveSchema(
-              schemaDetails
-            );
-
-            const attributesArray = JSON.parse((await saveResponse).attributes);
-            (await saveResponse).attributes = attributesArray;
-            delete (await saveResponse).lastChangedBy;
-            delete (await saveResponse).lastChangedDateTime;
-            return saveResponse;
-
-          } else if ('finished' === responseObj.state) {
-            schemaDetails.schema.schemaName = responseObj.schema.name;
-            schemaDetails.schema.attributes = trimmedAttributes;
-            schemaDetails.schema.schemaVersion = responseObj.schema.version;
-            schemaDetails.createdBy = userId;
-            schemaDetails.schema.id = responseObj.schemaId;
-            schemaDetails.changedBy = userId;
-            schemaDetails.orgId = orgId;
-            schemaDetails.issuerId = responseObj.schema.issuerId;
-            const saveResponse = this.schemaRepository.saveSchema(
-              schemaDetails
-            );
-
-            const attributesArray = JSON.parse((await saveResponse).attributes);
-            (await saveResponse).attributes = attributesArray;
-            delete (await saveResponse).lastChangedBy;
-            delete (await saveResponse).lastChangedDateTime;
-            return saveResponse;
-
+  
+            if ('finished' === responseObj.schema.state) {
+              schemaDetails.schema.schemaName = responseObj.schema.schema.name;
+              schemaDetails.schema.attributes = trimmedAttributes;
+              schemaDetails.schema.schemaVersion = responseObj.schema.schema.version;
+              schemaDetails.createdBy = userId;
+              schemaDetails.schema.id = responseObj.schema.schemaId;
+              schemaDetails.changedBy = userId;
+              schemaDetails.orgId = orgId;
+              schemaDetails.issuerId = responseObj.schema.schema.issuerId;
+              const saveResponse = this.schemaRepository.saveSchema(
+                schemaDetails
+              );
+  
+              const attributesArray = JSON.parse((await saveResponse).attributes);
+              (await saveResponse).attributes = attributesArray;
+              delete (await saveResponse).lastChangedBy;
+              delete (await saveResponse).lastChangedDateTime;
+              return saveResponse;
+  
+            } else if ('finished' === responseObj.state) {
+              schemaDetails.schema.schemaName = responseObj.schema.name;
+              schemaDetails.schema.attributes = trimmedAttributes;
+              schemaDetails.schema.schemaVersion = responseObj.schema.version;
+              schemaDetails.createdBy = userId;
+              schemaDetails.schema.id = responseObj.schemaId;
+              schemaDetails.changedBy = userId;
+              schemaDetails.orgId = orgId;
+              schemaDetails.issuerId = responseObj.schema.issuerId;
+              const saveResponse = this.schemaRepository.saveSchema(
+                schemaDetails
+              );
+  
+              const attributesArray = JSON.parse((await saveResponse).attributes);
+              (await saveResponse).attributes = attributesArray;
+              delete (await saveResponse).lastChangedBy;
+              delete (await saveResponse).lastChangedDateTime;
+              return saveResponse;
+  
+            } else {
+              throw new NotFoundException(
+                ResponseMessages.schema.error.notCreated,
+                { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
+              );
+            }
           } else {
             throw new BadRequestException(
               ResponseMessages.schema.error.emptyData,
@@ -262,15 +255,11 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async createW3CSchema(orgId:string, schemaPayload: SchemaPayload, user: IUserRequestInterface): Promise<string> {
+  async createW3CSchema(orgId:string, schemaPayload: ICreateW3CSchema, user: string): Promise<ISchemaData> {
     try {
-      const isSchemaExist = await this.schemaRepository.schemaExists(schemaPayload.schemaName, W3CSchemaVersion.W3C_SCHEMA_VERSION);
-
-      if (0 !== isSchemaExist.length) {
-        throw new ConflictException(ResponseMessages.schema.error.exists);
-      }
-
-      const { description, did, schemaAttributes, schemaName} = schemaPayload;
+      let createSchema;
+      
+      const { description, attributes, schemaName} = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound, {
@@ -314,21 +303,37 @@ export class SchemaService extends BaseService {
         orgId,
         schemaRequestPayload: agentSchemaPayload
       };
-      const createSchema = await this._createW3CSchema(W3cSchemaPayload);
-      
-     const storeW3CSchema = await this.storeW3CSchemas(createSchema.response, user, orgId);
+      if (schemaPayload.schemaType === JSONSchemaType.POLYGON_W3C) {
+        const createSchemaPayload = await this._createW3CSchema(W3cSchemaPayload);
+        createSchema = createSchemaPayload.response;
+        createSchema.type = JSONSchemaType.POLYGON_W3C;
+      } else {
+        const createSchemaPayload = await this._createW3CledgerAgnostic(schemaObject);
+        if (!createSchemaPayload) {
+          throw new BadRequestException(ResponseMessages.schema.error.schemaUploading, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.badRequest
+          });
+        }
+        createSchema = createSchemaPayload.data;
+        createSchema.did = agentDetails.orgDid;
+        createSchema.type = JSONSchemaType.LEDGER_LESS;
+        createSchema.schemaUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${createSchemaPayload.data.schemaId}`;
+      }
+     
+     const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId, attributes);
 
      if (!storeW3CSchema) {
-      throw new ConflictException(ResponseMessages.schema.error.storeW3CSchema, {
+      throw new BadRequestException(ResponseMessages.schema.error.storeW3CSchema, {
         cause: new Error(),
         description: ResponseMessages.errorMessages.notFound
       });
      }
       
-      return createSchema.response;
+      return storeW3CSchema;
     } catch (error) {
       this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw error;
     }
   }
 
@@ -515,36 +520,31 @@ export class SchemaService extends BaseService {
     return W3CSchema;
   }
   
-   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-   private async storeW3CSchemas(schemaDetails, user, orgId) {
-
+   private async storeW3CSchemas(schemaDetails, user, orgId, attributes): Promise <schema> {
+    let ledgerDetails;
     const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
-
     const schemaRequest = await this.commonService
     .httpGet(schemaServerUrl)
     .then(async (response) => response);
-  
     if (!schemaRequest) {
       throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
         cause: new Error(),
         description: ResponseMessages.errorMessages.notFound
       });
     }
-  const schemaAttributeJson = schemaRequest.definitions.credentialSubject.properties;
-  const extractedData = [];
-  
-  for (const key in schemaAttributeJson) {
-      if (2 < Object.keys(schemaAttributeJson[key]).length) {
-          const { type, title } = schemaAttributeJson[key];
-          const schemaDataType = type;
-          const displayName = title;
-          const isRequired = false;
-          extractedData.push({ 'attributeName': title, schemaDataType, displayName, isRequired });
-      }
+  const indyNamespace = await networkNamespace(schemaDetails?.did); 
+  if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
+    ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER);
+  } else {
+    ledgerDetails = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
   }
-  const indyNamespace = schemaDetails?.did.includes(':testnet:') ? 'polygon:testnet' : 'polygon';
-  const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
 
+  if (!ledgerDetails) {
+    throw new NotFoundException(ResponseMessages.schema.error.networkNotFound, {
+      cause: new Error(),
+      description: ResponseMessages.errorMessages.notFound
+    });
+  }
     const storeSchemaDetails = {
         schema: {
           schemaName: schemaRequest.title,
@@ -554,11 +554,11 @@ export class SchemaService extends BaseService {
 
         },
       issuerId: schemaDetails.did,
-      createdBy: user.id,
-      changedBy: user.id,
+      createdBy: user,
+      changedBy: user,
       publisherDid: schemaDetails.did,
       orgId,
-      ledgerId: getLedgerId.id,
+      ledgerId: ledgerDetails.id,
       type: SchemaType.W3C_Schema
     };
     const saveResponse = await this.schemaRepository.saveSchema(
@@ -609,7 +609,12 @@ export class SchemaService extends BaseService {
         ).toPromise()
         .catch(error => {
           this.logger.error(`Error in creating W3C schema : ${JSON.stringify(error)}`);
-          throw new Error(error.error ? error.error.message : error.message);
+          throw new HttpException(
+            {
+              status: error.error.code,  
+              error: error.message,
+              message: error.error.message.error.message
+            }, error.error);
         });
       return W3CSchemaResponse;  
   }

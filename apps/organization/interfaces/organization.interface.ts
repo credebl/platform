@@ -173,6 +173,74 @@ export interface IDidDetails {
 }
 
 export interface IPrimaryDidDetails extends IPrimaryDid {
-  id: string,
+  id: string
+  networkId: string
   didDocument: Prisma.JsonValue
+}
+
+export interface OrgInvitation {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  userId: string;
+  orgId: string;
+  status: string;
+  orgRoles: string[];
+  email: string;
+}
+
+export interface ILedgerNameSpace {
+    id: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    nymTxnEndpoint: string;
+    indyNamespace: string;
+    networkUrl: string;
+}
+
+export interface IGetDids {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  orgId: string;
+  isPrimaryDid: boolean;
+  did: string;
+  didDocument: Prisma.JsonValue;
+  orgAgentId: string;
+}
+
+export interface ILedgerDetails {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  name: string;
+  networkType: string;
+  poolConfig: string;
+  isActive: boolean;
+  networkString: string;
+  nymTxnEndpoint: string;
+  indyNamespace: string;
+  networkUrl: string;
+
+}
+
+export interface IOrgRoleDetails {
+  id: string;
+  name: string;
+  description: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
 }

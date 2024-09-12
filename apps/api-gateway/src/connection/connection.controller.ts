@@ -1,10 +1,9 @@
-import IResponseType, {IResponse} from '@credebl/common/interfaces/response.interface';
+import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject, ParseUUIDPipe, BadRequestException, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { User } from '../authz/decorators/user.decorator';
-import { AuthTokenResponse } from '../authz/dtos/auth-token-res.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ConnectionService } from './connection.service';
@@ -28,11 +27,13 @@ import { user } from '@prisma/client';
 @Controller()
 @ApiTags('connections')
 @ApiBearerAuth()
-@ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
 export class ConnectionController {
 
-    constructor(private readonly connectionService: ConnectionService
+    private readonly logger = new Logger('Connection');
+    constructor(private readonly connectionService: ConnectionService,
+        @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy
     ) { }
 
     /**
@@ -58,7 +59,7 @@ export class ConnectionController {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.OK,
-            message: ResponseMessages.connection.success.fetch,
+            message: ResponseMessages.connection.success.fetchConnection,
             data: connectionsDetails
         };
         return res.status(HttpStatus.OK).json(finalResponse);
@@ -277,6 +278,7 @@ export class ConnectionController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
+    connectionDto.type = 'Connection';
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
   
     if (orgId && 'default' === connectionDto?.contextCorrelationId) {

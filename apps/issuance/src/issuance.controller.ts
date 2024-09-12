@@ -17,12 +17,12 @@ export class IssuanceController {
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
-  async sendCredentialCreateOffer(payload: IIssuance): Promise<PromiseSettledResult<ICreateOfferResponse>[]> {
+  async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
     return this.issuanceService.sendCredentialCreateOffer(payload);
   }
 
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })
-  async sendCredentialOutOfBand(payload: IIssuance): Promise<string> {
+  async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{response: object;}> { 
     return this.issuanceService.sendCredentialOutOfBand(payload);
   }
 

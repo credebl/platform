@@ -3,11 +3,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails } from './dtos/issuance.dto';
-import { FileExportResponse, IIssuedCredentialSearchParams, IssueCredentialType, RequestPayload } from './interfaces';
-import { IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
+import { ClientDetails, FileParameter, IssuanceDto, OOBCredentialDtoWithEmail, OOBIssueCredentialDto, PreviewFileDetails, TemplateDetails } from './dtos/issuance.dto';
+import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITemplateFormat, IssueCredentialType, UploadedFileDetails } from './interfaces';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
-
+import { user } from '@prisma/client';
 @Injectable()
 export class IssuanceService extends BaseService {
 
@@ -18,7 +18,7 @@ export class IssuanceService extends BaseService {
         super('IssuanceService');
     }
 
-    sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<object> {
+    sendCredentialCreateOffer(issueCredentialDto: IssueCredentialDto, user: IUserRequest): Promise<ICredentialOfferResponse> {
 
         const payload = { comment: issueCredentialDto.comment, credentialDefinitionId: issueCredentialDto.credentialDefinitionId, credentialData: issueCredentialDto.credentialData, orgId: issueCredentialDto.orgId, protocolVersion: issueCredentialDto.protocolVersion, autoAcceptCredential: issueCredentialDto.autoAcceptCredential, credentialType: issueCredentialDto.credentialType, user };
 
@@ -52,14 +52,16 @@ export class IssuanceService extends BaseService {
         return this.sendNats(this.issuanceProxy, 'get-issued-credentials-by-credentialDefinitionId', payload);
     }
 
-    getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: number): Promise<{
+    getIssueCredentialWebhook(issueCredentialDto: IssuanceDto, id: string): Promise<{
         response: object;
     }> {
         const payload = { issueCredentialDto, id };
         return this.sendNats(this.issuanceProxy, 'webhook-get-issue-credential', payload);
     }
 
-    outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OutOfBandCredentialOfferDto): Promise<boolean> {
+    outOfBandCredentialOffer(user: IUserRequest, outOfBandCredentialDto: OOBCredentialDtoWithEmail): Promise<{
+        response: object;
+    }> {
         const payload = { user, outOfBandCredentialDto };
         return this.sendNats(this.issuanceProxy, 'out-of-band-credential-offer', payload);
     }
@@ -151,6 +153,7 @@ export class IssuanceService extends BaseService {
             return message;
         } catch (error) {
             this.logger.error(`catch: ${JSON.stringify(error)}`);
+
             throw error;
         }
     }

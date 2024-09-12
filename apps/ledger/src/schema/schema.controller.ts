@@ -26,10 +26,10 @@ export class SchemaController {
     return this.schemaService.createSchema(schemaDetails, user, orgId);
   }
 
-  @MessagePattern({ cmd: 'create-w3c-schema' })
-  async createW3CSchema(payload: W3CSchemaPayload): Promise<string> {
-    const {orgId, schemaPayload, user} = payload;
-    return this.schemaService.createW3CSchema(orgId, schemaPayload, user);
+  @MessagePattern({ cmd: 'get-schemas-details' })
+  async getSchemasDetails(payload: {templateIds: string[]}): Promise<schema[]> {
+    const { templateIds } = payload;
+    return this.schemaService.getSchemaDetails(templateIds);
   }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })

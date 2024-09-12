@@ -13,6 +13,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from 'apps/user/repositories/user.repository';
+import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
@@ -37,7 +38,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
      Logger, OrgRolesService, UserOrgRolesService, OrgRolesRepository, UserActivityRepository,
      UserActivityRepository, UserOrgRolesRepository, UserRepository, UserActivityService,
       ClientRegistrationService,
-      KeycloakUrlService
+      KeycloakUrlService,
+      AwsService
     ]
 
 })

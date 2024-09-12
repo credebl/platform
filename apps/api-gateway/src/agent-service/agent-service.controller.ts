@@ -44,7 +44,7 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { validateDid } from '@credebl/common/did.validator';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
-import { AgentSpinupValidator } from '@credebl/common/cast.helper';
+import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 
 const seedLength = 32;
@@ -279,7 +279,7 @@ export class AgentController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  async agentconfigure(
+  async agentConfigure(
     @Param('orgId') orgId: string,
     @Body() agentConfigureDto: AgentConfigureDto,
     @User() user: user,
@@ -297,5 +297,28 @@ export class AgentController {
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Delete('/orgs/:orgId/agents/wallet')
+  @ApiOperation({
+    summary: 'Delete wallet',
+    description: 'Delete agent wallet by organization.'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async deleteWallet(
+    @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.agentService.deleteWallet(orgId, user);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.agent.success.walletDelete
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

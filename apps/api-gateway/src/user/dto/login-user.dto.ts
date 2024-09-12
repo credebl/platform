@@ -1,4 +1,5 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
+
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {  trim } from '@credebl/common/cast.helper';

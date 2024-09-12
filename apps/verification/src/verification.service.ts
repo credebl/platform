@@ -4,14 +4,16 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { agent_invitations, org_agents, organisation, presentations } from '@prisma/client';
-import { AutoAccept, OrgAgentType } from '@credebl/enum/enum';
+import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
+import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
+import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
@@ -378,9 +380,8 @@ export class VerificationService {
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean | object> {
     try {
 
-      outOfBandRequestProof.protocolVersion = outOfBandRequestProof.protocolVersion || 'v1';
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || 'always';
-
+      // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
+     
       const [getAgentDetails, getOrganization] = await Promise.all([
         this.verificationRepository.getAgentEndPoint(user.orgId),
         this.verificationRepository.getOrganization(user.orgId)
@@ -595,10 +596,9 @@ export class VerificationService {
     try {
       let requestedAttributes = {}; 
       const requestedPredicates = {};
-      const {attributes} = proofRequestpayload;
+      const { attributes } = proofRequestpayload;
       if (attributes) {
-        requestedAttributes = Object.fromEntries(proofRequestpayload.attributes.map((attribute, index) => {
-  
+        requestedAttributes = Object.fromEntries(attributes.map((attribute, index) => {
           const attributeElement = attribute.attributeName || attribute.attributeNames;
           const attributeReferent = `additionalProp${index + 1}`;
           const attributeKey = attribute.attributeName ? 'name' : 'names';
@@ -608,7 +608,7 @@ export class VerificationService {
             return [
               attributeReferent,
               {
-                name: attributeElement,
+                [attributeKey]: attributeElement,
                 restrictions: [
                   {
                     cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
@@ -741,7 +741,6 @@ export class VerificationService {
     }
   }
 
-  // TODO: This function is only for anoncreds indy
   async getVerifiedProofdetails(proofId: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
@@ -762,13 +761,13 @@ export class VerificationService {
       const payload = { orgId, url };
 
       const getProofPresentationById = await this._getVerifiedProofDetails(payload);
-     
+
       if (!getProofPresentationById?.response?.presentation) {
         throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.notFound
         });
-        }
+      }
 
       const extractedDataArray: IProofPresentationDetails[] = [];
 
@@ -927,23 +926,6 @@ export class VerificationService {
 
     if (attribute?.restrictions) {
 
-      credDefId = attribute?.restrictions[0]?.cred_def_id;
-      schemaId = attribute?.restrictions[0]?.schema_id;
-    } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
-
-      credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
-      schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
-    }
-
-    return [credDefId, schemaId];
-  }
-
-  async _schemaCredDefRestriction(attribute, getProofPresentationById): Promise<string[]> {
-    let credDefId;
-    let schemaId;
-
-    if (attribute?.restrictions) {
-              
       credDefId = attribute?.restrictions[0]?.cred_def_id;
       schemaId = attribute?.restrictions[0]?.schema_id;
     } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {

@@ -39,15 +39,6 @@ export class UserService extends BaseService {
     const payload = { updateUserProfileDto };
     return this.sendNatsMessage(this.serviceProxy, 'update-user-profile', payload);
   }
-  
-  async getPublicProfile(id: number): Promise<{ response: object }> {
-    const payload = { id };
-    try {
-      return this.sendNats(this.serviceProxy, 'get-user-public-profile', payload);
-    } catch (error) {
-      this.logger.error(`Error in get user:${JSON.stringify(error)}`);
-    }
-  }
 
   async findUserinSupabase(id: string): Promise<object> {
     const payload = { id };

@@ -27,6 +27,7 @@ import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -217,8 +218,9 @@ export class OrganizationController {
     required: false
   })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  async getInvitationsByOrgId(@Param('orgId') orgId: string, @Query() getAllInvitationsDto: GetAllSentInvitationsDto, @Res() res: Response): Promise<IResponseType> {    
-    const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, getAllInvitationsDto);
+  async getInvitationsByOrgId(@Param('orgId') orgId: string, @Query() paginationDto: PaginationDto, @Res() res: Response): Promise<Response> {
+
+    const getInvitationById = await this.organizationService.getInvitationsByOrgId(orgId, paginationDto);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -326,7 +328,7 @@ export class OrganizationController {
   */
 
    @Get('/:orgId/dids')
-   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.MEMBER)
    @ApiBearerAuth()
    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })

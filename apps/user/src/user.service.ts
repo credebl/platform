@@ -34,9 +34,6 @@ import {
   PlatformSettings,
   IShareUserCertificate,
   IOrgUsers,
-  InvitationsI,
-  PlatformSettingsI,
-  ShareUserCertificateI,
   UpdateUserProfile,
   IUserCredentials, 
    IUserInformation,
@@ -165,54 +162,6 @@ export class UserService {
       const uniqueUsername = `${cleanedUsername}-${uuid}`;
 
       return uniqueUsername;
-    } catch (error) {
-      this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
-  async createUsername(email: string, verifyCode: string): Promise<string> {
-
-    try {
-      // eslint-disable-next-line prefer-destructuring
-      const emailTrim = email.split('@')[0];
-
-      // Replace special characters with hyphens
-      const cleanedUsername = emailTrim.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '-');
-
-      // Generate a 5-digit UUID
-      // eslint-disable-next-line prefer-destructuring
-      const uuid = verifyCode.split('-')[0];
-
-      // Combine cleaned username and UUID
-      const uniqueUsername = `${cleanedUsername}-${uuid}`;
-
-      return uniqueUsername;
-
-    } catch (error) {
-      this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
-  async createUsername(email: string, verifyCode: string): Promise<string> {
-
-    try {
-      // eslint-disable-next-line prefer-destructuring
-      const emailTrim = email.split('@')[0];
-
-      // Replace special characters with hyphens
-      const cleanedUsername = emailTrim.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '-');
-
-      // Generate a 5-digit UUID
-      // eslint-disable-next-line prefer-destructuring
-      const uuid = verifyCode.split('-')[0];
-
-      // Combine cleaned username and UUID
-      const uniqueUsername = `${cleanedUsername}-${uuid}`;
-
-      return uniqueUsername;
-
     } catch (error) {
       this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -734,9 +683,8 @@ export class UserService {
         }
       });
 
-      if ('true' === ecosystemDetails.value) {
-        userData['enableEcosystem'] = true;
-        return userData;
+      for (const setting of ecosystemSettingsList) {
+        userData[setting.key] = 'true' === setting.value;
       }
 
       return userData;

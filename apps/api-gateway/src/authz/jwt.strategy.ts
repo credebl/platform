@@ -92,9 +92,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new NotFoundException(ResponseMessages.user.error.notFound);
     }
     //TODO patch to QA
-    // if (userInfo && userInfo?.['attributes'] && userInfo?.['attributes']?.userRole) {
-    //   userDetails['userRole'] = userInfo?.['attributes']?.userRole;
-    // }
+    if (userInfo && userInfo?.['attributes'] && userInfo?.['attributes']?.userRole) {
+      userDetails['userRole'] = userInfo?.['attributes']?.userRole;
+    }
 
     return {
       ...userDetails,

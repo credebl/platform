@@ -12,7 +12,7 @@ import {
     ApiQuery,
     ApiExcludeEndpoint
 } from '@nestjs/swagger';
-import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe, Delete } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
@@ -35,8 +35,6 @@ import { IProofRequestSearchCriteria } from './interfaces/verification.interface
 import { ProofRequestType, SortFields } from './enum/verification.enum';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
-
-
 
 @UseFilters(CustomExceptionFilter)
 @Controller()

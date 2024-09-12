@@ -62,7 +62,7 @@ export class UserController {
     private readonly userService: UserService,
     private readonly commonService: CommonService,
     private readonly awsService: AwsService
-  ) {}
+  ) { }
 
   /**
    *
@@ -102,8 +102,8 @@ export class UserController {
       data: users
     };
 
- return res.status(HttpStatus.OK).json(finalResponse);
-}
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
   @Get('public-profiles/:username')
   @ApiExcludeEndpoint()

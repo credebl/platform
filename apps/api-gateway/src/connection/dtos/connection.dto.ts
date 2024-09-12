@@ -91,7 +91,7 @@ export class CreateConnectionDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsNotEmpty({ message: 'please provide valid imageUrl' })
-    @IsString()
+    @IsString({ message: 'imageUrl must be a string' })
     imageUrl: string;
 
     @ApiPropertyOptional()

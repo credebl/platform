@@ -6,6 +6,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { IssuanceController } from './issuance.controller';
 import { IssuanceRepository } from './issuance.repository';
 import { IssuanceService } from './issuance.service';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { BullModule } from '@nestjs/bull';

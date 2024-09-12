@@ -70,7 +70,6 @@ export class ConnectionService {
     const payload = { connectionPayload, url, orgId };
 
     try {
-      
       return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -133,21 +132,40 @@ export class ConnectionService {
     connectionSearchCriteria: IConnectionSearchCriteria
   ): Promise<IConnectionList> {
     try {
-      const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      // const platformConfig: platform_config = await this.connectionRepository.getPlatformConfigDetails();
+      const getConnectionList = await this.connectionRepository.getAllConnections(
+        user,
+        orgId,
+        connectionSearchCriteria
+      );
 
-      const { agentEndPoint } = agentDetails;
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      if (0 === getConnectionList.connectionCount) {
+        throw new NotFoundException(ResponseMessages.connection.error.connectionNotFound);
       }
-      const params = {
-        outOfBandId,
-        alias,
-        state,
-        myDid,
-        theirDid,
-        theirLabel
+
+      const connectionResponse: {
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        nextPage: number;
+        previousPage: number;
+        lastPage: number;
+        data: {
+          createDateTime: Date;
+          createdBy: string;
+          connectionId: string;
+          theirLabel: string;
+          state: string;
+          orgId: string;
+        }[];
+      } = {
+        totalItems: getConnectionList.connectionCount,
+        hasNextPage:
+          connectionSearchCriteria.pageSize * connectionSearchCriteria.pageNumber < getConnectionList.connectionCount,
+        hasPreviousPage: 1 < connectionSearchCriteria.pageNumber,
+        nextPage: Number(connectionSearchCriteria.pageNumber) + 1,
+        previousPage: connectionSearchCriteria.pageNumber - 1,
+        lastPage: Math.ceil(getConnectionList.connectionCount / connectionSearchCriteria.pageSize),
+        data: getConnectionList.connectionsList
       };
       return connectionResponse;
     } catch (error) {

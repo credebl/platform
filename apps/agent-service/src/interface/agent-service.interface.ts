@@ -1,4 +1,5 @@
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
+import { Prisma } from '@prisma/client';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
@@ -37,7 +38,6 @@ export interface IAgentConfigure {
   apiKey: string;
   orgId: string;
   network?: string;
-  tenant?: boolean;
 }
 
 export interface IOutOfBandCredentialOffer {
@@ -54,29 +54,29 @@ export interface IOutOfBandCredentialOffer {
 }
 
 export interface ITenantDto {
-    label: string;
-    seed?: string;
-    keyType: string;
-    ledgerId: string[];
-    domain?: string;
-    privatekey?: string;
-    endpoint?: string;
-    role?: string;
-    network?: string
-    endorserDid?: string
-    method: string;
-    orgId: string;
-    did?: string;
-    tenantId?: string;
-    didDocument?: string;
-    clientSocketId?: string;
+  label: string;
+  seed?: string;
+  keyType: string;
+  ledgerId: string[];
+  domain?: string;
+  privatekey?: string;
+  endpoint?: string;
+  role?: string;
+  network?: string;
+  endorserDid?: string;
+  method: string;
+  orgId: string;
+  did?: string;
+  tenantId?: string;
+  didDocument?: string;
+  clientSocketId?: string;
 }
 
 export interface IWallet {
-    label: string;
-    orgId: string;
-    did?: string;
-    clientSocketId?: string;
+  label: string;
+  orgId: string;
+  did?: string;
+  clientSocketId?: string;
 }
 
 export interface IDidCreate {
@@ -210,23 +210,23 @@ export interface IStoreDidDetails {
 }
 
 export interface IStoreOrgAgent {
-    id?: string;
-    clientSocketId?: string;
-    agentEndPoint?: string;
-    apiKey?: string;
-    seed?: string;
-    did?: string;
-    verkey?: string;
-    isDidPublic?: boolean;
-    agentSpinUpStatus?: number;
-    walletName?: string;
-    agentsTypeId?: string;
-    orgId?: string;
-    agentId?: string;
-    orgAgentTypeId?: string;
-    tenantId?: string;
-    ledgerId?: unknown;
-    agentType?: string;
+  id?: string;
+  clientSocketId?: string;
+  agentEndPoint?: string;
+  apiKey?: string;
+  seed?: string;
+  did?: string;
+  verkey?: string;
+  isDidPublic?: boolean;
+  agentSpinUpStatus?: number;
+  walletName?: string;
+  agentsTypeId?: string;
+  orgId?: string;
+  agentId?: string;
+  orgAgentTypeId?: string;
+  tenantId?: string;
+  ledgerId?: unknown;
+  agentType?: string;
 }
 
 export interface IConnectionDetails {
@@ -272,14 +272,6 @@ export interface IPlatformAgent {
   role: string;
 }
 
-export interface IPlatformAgent {
-    seed: string;
-    keyType: string;
-    method: string;
-    network: string;
-    role: string;
-  }
-  
 export interface IOrgAgentInterface {
   orgDid: string;
   verkey: string;
@@ -429,12 +421,12 @@ interface IConfig {
   walletConfig: IWalletConfig;
 }
 export interface ITenantRecord {
-    _tags: string;
-    metadata: string;
-    id: string;
-    createdAt: string;
-    config: IConfig;
-    updatedAt: string;
+  _tags: string;
+  metadata: string;
+  id: string;
+  createdAt: string;
+  config: IConfig;
+  updatedAt: string;
 }
 
 export interface ICreateTenant {
@@ -442,7 +434,6 @@ export interface ICreateTenant {
   did: string;
   verkey: string;
 }
-
 
 export interface IOrgAgent {
   agentSpinUpStatus: number;
@@ -621,4 +612,46 @@ export interface IAgentStore {
   lastChangedBy?: string;
   didDoc?: string;
   tenantId?: string;
+}
+
+export interface LedgerNameSpace {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  name: string;
+  networkType: string;
+  poolConfig: string;
+  isActive: boolean;
+  networkString: string;
+  nymTxnEndpoint: string;
+  indyNamespace: string;
+  networkUrl: string;
+}
+
+export interface OrgDid {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  orgId: string;
+  isPrimaryDid: boolean;
+  did: string;
+  didDocument: Prisma.JsonValue;
+  orgAgentId: string;
+}
+
+export interface ILedgers {
+    id: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    nymTxnEndpoint: string;
+    indyNamespace: string;
+    networkUrl: string;
+
 }

@@ -109,7 +109,6 @@ export class AgentServiceController {
     );
   }
 
-//DONE
   @MessagePattern({ cmd: 'agent-send-credential-create-offer' })
   async sendCredentialCreateOffer(payload: {
     issueData: IIssuanceCreateOffer;
@@ -242,10 +241,9 @@ export class AgentServiceController {
     );
   }
 
-  //DONE
   @MessagePattern({ cmd: 'delete-wallet' })
-  async deleteWallet(payload: { url, apiKey }): Promise<object> {
-    return this.agentServiceService.deleteWallet(payload.url, payload.apiKey);
+  async deleteWallet(payload: { orgId, user }): Promise<object> {
+    return this.agentServiceService.deleteWallet(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'agent-receive-invitation-url' })

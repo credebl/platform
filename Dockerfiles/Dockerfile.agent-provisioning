@@ -1,5 +1,6 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
+
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \
@@ -24,7 +25,7 @@ COPY . .
 
 # Generate Prisma client
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma migrate && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
 RUN ls -R /app/apps/agent-provisioning/AFJ/
 
 # Build the user service
@@ -32,6 +33,7 @@ RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
 FROM node:18-alpine as prod
+
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \

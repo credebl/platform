@@ -14,6 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetAllSentEcosystemInvitationsDto } from './dtos/get-all-received-invitations.dto';
 import { EcosystemRoles, Invitation } from '@credebl/enum/enum';
 import { User } from '../authz/decorators/user.decorator';
+import { BulkEcosystemInvitationDto } from './dtos/send-invitation.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { AcceptRejectEcosystemInvitationDto } from './dtos/accept-reject-invitations.dto';
@@ -205,7 +206,11 @@ export class EcosystemController {
     type: String,
     required: false
   })
-  async getEcosystemInvitations(@Query() getAllInvitationsDto: GetAllSentEcosystemInvitationsDto, @User() user: user, @Res() res: Response): Promise<Response> {
+  async getEcosystemInvitations(
+    @Query() getAllInvitationsDto: GetAllSentEcosystemInvitationsDto,
+    @Param('orgId') orgId: string,
+    @User() user: user, @Res() res: Response): Promise<Response> {
+
     if (!Object.values(Invitation).includes(getAllInvitationsDto.status)) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.invalidInvitationStatus);
     }

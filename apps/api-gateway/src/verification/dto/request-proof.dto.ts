@@ -10,13 +10,13 @@ export class ProofRequestAttribute {
 
     @ValidateIf((obj) => obj.attributeNames === undefined)
     @IsNotEmpty()
-    @IsString({each:true})
+    @IsString()
     attributeName?: string;
 
     @ValidateIf((obj) => obj.attributeName === undefined)
     @IsArray({ message: 'attributeNames must be an array.' })
     @ArrayNotEmpty({ message: 'array can not be empty' })
-    @IsString({ each: true})
+    @IsString({ each: true })
     @IsNotEmpty({ each: true, message: 'each element cannot be empty' })
     attributeNames?: string[];
 
@@ -289,7 +289,7 @@ export class OutOfBandRequestProof extends ProofPayload {
         type: () => [ProofRequestAttribute]
     })
     @IsArray({ message: 'attributes must be in array' })
-    @ValidateNested({each: true})
+    @ValidateNested({ each: true })
     @IsObject({ each: true })
     @IsNotEmpty({ message: 'please provide valid attributes' })
     @Type(() => ProofRequestAttribute)
@@ -346,11 +346,11 @@ export class SendProofRequestPayload {
                     requested_attributes: {
                         verifynameAddress: {
                             names: ['name', 'address'],
-                            restrictions: [{'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:National ID:1.0.0'}]
+                            restrictions: [{ 'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:National ID:1.0.0' }]
                         },
                         verifyBirthPlace: {
                             name: 'Place',
-                            restrictions: [{'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:Birth Certificate:1.0.0'}]
+                            restrictions: [{ 'schema_id': 'KU583UbI4yAKfaBTSz1rqG:2:Birth Certificate:1.0.0' }]
                         }
                     },
                     // eslint-disable-next-line camelcase
@@ -416,15 +416,10 @@ export class SendProofRequestPayload {
     @IsOptional()
     @IsUUID()
     @IsNotEmpty({ message: 'please provide valid parentThreadId' })
-    parentThreadId: string;  
+    parentThreadId: string;
 
-    @ApiPropertyOptional()
-    @IsEmail({}, { each: true, message: 'Please provide a valid email' })
-    @ArrayNotEmpty({ message: 'Email array must not be empty' })
-    @ArrayUnique({ message: 'Duplicate emails are not allowed' })
-    @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} proof request max).` })
-    @IsArray()
-    @IsString({ each: true, message: 'Each emailId in the array should be a string' })
+    @ApiProperty({ example: true })
+    @IsBoolean()
     @IsOptional()
     @IsNotEmpty({message:'Please provide the flag for shorten url.'})
     isShortenUrl?: boolean;

@@ -1,4 +1,4 @@
-import { JSONSchemaType, ledgerLessDIDType, schemaRequestType, TemplateIdentifier } from '@credebl/enum/enum';
+import { DidMethod, JSONSchemaType, ledgerLessDIDType, ProofType, schemaRequestType, TemplateIdentifier } from '@credebl/enum/enum';
 import { ISchemaFields } from './interfaces/schema.interface';
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
@@ -12,7 +12,7 @@ import {
   registerDecorator
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
-import { IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
 
 interface ToNumberOptions {
   default?: number;
@@ -150,6 +150,127 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
   }
 }
 
+export class TrimStringParamPipe implements PipeTransform {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  transform(value: string) {
+    return plainToClass(String, value.trim());
+  }
+}
+
+// export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
+//   registerDecorator({
+//     name: 'isNotUUID',
+//     target: object.constructor,
+//     propertyName,
+//     options: validationOptions,
+//     validator: {
+//       validate(value) {
+//         return !isUUID(value);
+//       }
+//     }
+//   });
+// };
+
+
+export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: string): void {
+  const errors: string[] = [];
+
+  switch (true) {
+    case schemaRequestType.INDY === schemaType:
+      switch (true) {
+        case !schemaPayload?.name:
+          errors.push('name is required for indy schema type');
+          break;
+        case 'string' !== typeof schemaPayload?.name:
+          errors.push('name must be string');
+          break;
+        case !schemaPayload?.version:
+          errors.push('version is required for indy schema type');
+          break;
+        default:
+          break;
+      }
+      if (!Array.isArray(schemaPayload?.attributes) || 0 === schemaPayload?.attributes.length) {
+        errors.push('attributes array must not be empty for indy schema type');
+      } else {
+        schemaPayload?.attributes.forEach((attribute, index) => {
+          if (!attribute) {
+            errors.push(`attributes are required at position ${index + 1} in indy schema type`);
+          } else {
+            switch (true) {
+              case !attribute?.displayName:
+                errors.push(`displayName is required at position ${index + 1} in indy schema type`);
+                break;
+              case !attribute?.attributeName:
+                errors.push(`attributeName is required at position ${index + 1} in indy schema type`);
+                break;
+              case !attribute?.schemaDataType:
+                errors.push(`schemaDataType is required at position ${index + 1} in indy schema type`);
+                break;
+              default:
+                break;
+            }
+          }
+        });
+      }
+      break;
+
+    case schemaRequestType.W3C === schemaType:
+      switch (true) {
+        case !schemaPayload?.schemaName:
+          errors.push('schemaName is required for w3c schema type');
+          break;
+        case 'string' !== typeof schemaPayload?.schemaName:
+          errors.push('schemaName must be string');
+          break;
+
+        case !schemaPayload?.did:
+          errors.push('did is required for w3c schema type');
+          break;
+        case 'string' !== typeof schemaPayload?.did:
+          errors.push('did must be string');
+          break;
+
+        case !schemaPayload?.description:
+          errors.push('description is required for w3c schema type');
+          break;
+        case 'string' !== typeof schemaPayload?.description:
+          errors.push('description must be string');
+          break;
+        default:
+          break;
+      }
+      if (!Array.isArray(schemaPayload.schemaAttributes) || 0 === schemaPayload.schemaAttributes.length) {
+        errors.push('schemaAttributes array must not be empty for w3c schema type');
+      } else {
+        schemaPayload.schemaAttributes.forEach((attribute, index) => {
+          if (!attribute) {
+            errors.push(`schemaAttributes are required at position ${index + 1} in w3c schema type`);
+          } else {
+            switch (true) {
+              case !attribute.title:
+                errors.push(`title is required at position ${index + 1} in w3c schema type`);
+                break;
+              case !attribute.type:
+                errors.push(`type is required at position ${index + 1} in w3c schema type`);
+                break;
+              default:
+                break;
+            }
+          }
+        });
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  if (0 < errors.length) {
+    throw new BadRequestException(errors);
+  }
+}
+
 export class AgentSpinupValidator {
   private static validateField(value: string, errorMessage: string): void {
     if (!value) {
@@ -183,6 +304,8 @@ export const validateEmail = (email: string): boolean => {
 export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
   const {credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection} = JsonldCredentialDetails;
   const credentialSubject = { };
+
+  const proofType = (orgDid?.includes(DidMethod.POLYGON)) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE;
 
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {

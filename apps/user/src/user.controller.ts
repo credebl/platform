@@ -79,11 +79,6 @@ export class UserController {
   @MessagePattern({ cmd: 'update-user-profile' })
   async updateUserProfile(payload: { updateUserProfileDto: UpdateUserProfile }): Promise<user> {
     return this.userService.updateUserProfile(payload.updateUserProfileDto);
-  @MessagePattern({ cmd: 'get-user-public-profile' });
-  }
-
-  async getPublicProfile(payload: { id }): Promise<object> {
-    return this.userService.getPublicProfile(payload);
   }
 
   @MessagePattern({ cmd: 'get-user-by-supabase' })

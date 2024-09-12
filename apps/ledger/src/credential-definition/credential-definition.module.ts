@@ -7,6 +7,7 @@ import { CredentialDefinitionRepository } from './repositories/credential-defini
 import { CredentialDefinitionService } from './credential-definition.service';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from '@credebl/prisma-service';
+import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 @Module({

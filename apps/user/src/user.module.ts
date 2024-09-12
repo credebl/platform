@@ -17,6 +17,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { UserService } from './user.service';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
 

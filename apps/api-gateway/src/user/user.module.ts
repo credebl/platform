@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
 

@@ -105,6 +105,7 @@ export class SocketGateway implements OnGatewayConnection {
 
   @SubscribeMessage('bulk-issuance-process-completed')
   async handleBulkIssuance(client:string, payload: ISocketInterface): Promise<void> {
+    this.logger.log("payload:::::" , payload)
     this.logger.log(`bulk-issuance-process-completed ${payload.clientId}`);
     this.server
       .to(payload.clientId)

@@ -292,8 +292,7 @@ async downloadBulkIssuanceCSVTemplate(
       if (file) {
         const fileKey: string = uuidv4();
         try {
-        const data =  await this.awsService.uploadCsvFile(fileKey, file?.buffer);
-        this.logger.log(`data:::: ${data}`)
+        await this.awsService.uploadCsvFile(fileKey, file?.buffer);
         } catch (error) {
           throw new RpcException(error.response ? error.response : error);
         }
@@ -414,7 +413,6 @@ async downloadBulkIssuanceCSVTemplate(
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
     const { credDefId } = query;
-    this.logger.log(`clients details in controller:::::: ${JSON.stringify(clientDetails)}`)
     clientDetails.userId = user.id;
     let reqPayload;
     // Need to update logic for University DEMO 

@@ -414,6 +414,7 @@ async downloadBulkIssuanceCSVTemplate(
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
     const { credDefId } = query;
+    this.logger.log(`clients details in controller:::::: ${clientDetails}`)
     clientDetails.userId = user.id;
     let reqPayload;
     // Need to update logic for University DEMO 

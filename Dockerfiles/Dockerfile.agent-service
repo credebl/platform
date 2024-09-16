@@ -7,8 +7,12 @@ RUN npm install -g pnpm --ignore-scripts \
     && apk add aws-cli \
     && apk add docker \
     && apk add docker-compose 
-    
+
+# Add PostgreSQL client to the image
+RUN apk add --no-cache postgresql-client
+
 RUN npm install -g pnpm
+
 # Set the working directory
 WORKDIR /app
 
@@ -18,10 +22,17 @@ COPY package.json ./
 # Install dependencies
 RUN pnpm i
 
+RUN pnpm add -D ts-node typescript @types/node
+
 # Copy the rest of the application code
 COPY . .
+
+RUN chown -R node:node /app/libs/prisma-service/prisma/scripts/
+RUN chmod +x /app/libs/prisma-service/prisma/scripts/geo_location_data_import.sh
+RUN chmod +x /app/libs/prisma-service/prisma/scripts/update_client_credential_data.sh
+
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && npx prisma db seed
 
 # Build the user service
 RUN pnpm run build agent-service
@@ -49,4 +60,4 @@ COPY --from=build /app/libs/ ./libs/
 COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/agent-service/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma db seed && cd ../.. && node dist/apps/agent-service/main.js"]

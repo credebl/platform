@@ -2,13 +2,18 @@
 FROM node:18-alpine as build
 
 RUN set -eux \
+    # Install packages and dependencies
     && apk --no-cache add \
         openssh-client \
         aws-cli \
         docker \
         docker-compose \
+        postgresql-client \
+    # Install pnpm globally without running scripts
     && npm install -g pnpm --ignore-scripts \
+    # Update PATH for pnpm
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
+    # Clean up
     && rm -rf /var/cache/apk/*
 
 # Add PostgreSQL client to the image
@@ -21,9 +26,9 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN pnpm i
+RUN pnpm i \
+    && pnpm add -D ts-node typescript @types/node --ignore-scripts
 
-RUN pnpm add -D ts-node typescript @types/node --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .

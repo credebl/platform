@@ -1,6 +1,10 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
 RUN npm install -g pnpm
+
+# Add PostgreSQL client to the image
+RUN apk add --no-cache postgresql-client
+
 # Set the working directory
 WORKDIR /app
 
@@ -11,10 +15,17 @@ COPY package.json ./
 # Install dependencies
 RUN pnpm i
 
+RUN pnpm add -D ts-node typescript @types/node
+
 # Copy the rest of the application code
 COPY . .
+
+RUN chown -R node:node /app/libs/prisma-service/prisma/scripts/
+RUN chmod +x /app/libs/prisma-service/prisma/scripts/geo_location_data_import.sh
+RUN chmod +x /app/libs/prisma-service/prisma/scripts/update_client_credential_data.sh
+
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && npx prisma db seed
 
 # Build the ledger service
 RUN npm run build ledger
@@ -35,4 +46,4 @@ COPY --from=build /app/libs/ ./libs/
 COPY --from=build /app/node_modules  ./node_modules
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/ledger/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma db seed && cd ../.. && node dist/apps/ledger/main.js"]

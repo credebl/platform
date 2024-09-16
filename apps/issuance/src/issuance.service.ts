@@ -1865,6 +1865,18 @@ return newCacheKey;
       throw new RpcException(error.response ? error.response : error);
     }
   }
+  async getFileDetailsAndFileDataByFileId(fileId: string, orgId: string): Promise<object> {
+    try {
+      const fileDetails = await this.issuanceRepository.getFileDetailsAndFileDataByFileId(fileId, orgId);
+      if (!fileDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.fileNotFound);
+      }
 
+      return fileDetails;
+    } catch (error) {
+      this.logger.error(`error in getFileDetailsAndFileDataByFileId : ${error}`);
+      throw new RpcException(error.response);
+    }
+  }
   
 }

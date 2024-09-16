@@ -15,7 +15,7 @@ COPY package.json ./
 # Install dependencies
 RUN pnpm i
 
-RUN pnpm add -D ts-node typescript @types/node
+RUN pnpm add -D ts-node typescript @types/node --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .

@@ -35,6 +35,7 @@ import { IProofRequestSearchCriteria } from './interfaces/verification.interface
 import { ProofRequestType, SortFields } from './enum/verification.enum';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -99,8 +100,8 @@ export class VerificationController {
     async getProofPresentationById(
         @Res() res: Response,
         @User() user: IUserRequest,
-        @Param('proofId') proofId: string,
-        @Param('orgId') orgId: string
+        @Param('proofId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.verification.error.invalidProofId); }})) proofId: string,
+        @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string
     ): Promise<Response> {
         const getProofPresentationById = await this.verificationService.getProofPresentationById(proofId, orgId, user);
         const finalResponse: IResponse = {

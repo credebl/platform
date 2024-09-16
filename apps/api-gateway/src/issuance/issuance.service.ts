@@ -162,5 +162,12 @@ export class IssuanceService extends BaseService {
         const payload = { orgId, userDetails };
         return this.sendNatsMessage(this.issuanceProxy, 'delete-issuance-records', payload);
     }
+    async getFileDetailsAndFileDataByFileId(orgId: string, fileId: string): Promise<object> {
+        const payload = {
+          orgId,
+          fileId
+        };
+        return this.sendNatsMessage(this.issuanceProxy, 'issued-file-data-and-file-details', payload);
+      }
 
 }

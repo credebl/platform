@@ -19,7 +19,6 @@ import { SchemaModule } from './schema/schema.module';
 // import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
-import { EcosystemModule } from './ecosystem/ecosystem.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
@@ -52,7 +51,6 @@ import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
     UserModule,
     ConnectionModule,
     IssuanceModule,
-    EcosystemModule,
     UtilitiesModule,
     WebhookModule,
     NotificationModule,

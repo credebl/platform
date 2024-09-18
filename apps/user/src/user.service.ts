@@ -49,7 +49,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { EcosystemConfigSettings, Invitation, UserCertificateId, UserRole } from '@credebl/enum/enum';
+import { Invitation, UserCertificateId, UserRole } from '@credebl/enum/enum';
 import { WinnerTemplate } from '../templates/winner-template';
 import { ParticipantTemplate } from '../templates/participant-template';
 import { ArbiterTemplate } from '../templates/arbiter-template';
@@ -674,16 +674,6 @@ export class UserService {
   async getProfile(payload: { id }): Promise<IUsersProfile> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-      const ecosystemSettingsList = await this.prisma.ecosystem_config.findMany({
-        where: {
-          OR: [{ key: EcosystemConfigSettings.ENABLE_ECOSYSTEM }, { key: EcosystemConfigSettings.MULTI_ECOSYSTEM }]
-        }
-      });
-
-      for (const setting of ecosystemSettingsList) {
-        userData[setting.key] = 'true' === setting.value;
-      }
-
       return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
@@ -1121,36 +1111,14 @@ export class UserService {
         throw new BadRequestException(ResponseMessages.user.error.notUpdatePlatformSettings);
       }
 
-      const ecosystemobj = {};
-
-      if (EcosystemConfigSettings.ENABLE_ECOSYSTEM in platformSettings) {
-        ecosystemobj[EcosystemConfigSettings.ENABLE_ECOSYSTEM] = platformSettings.enableEcosystem;
-      }
-
-      if (EcosystemConfigSettings.MULTI_ECOSYSTEM in platformSettings) {
-        ecosystemobj[EcosystemConfigSettings.MULTI_ECOSYSTEM] = platformSettings.multiEcosystemSupport;
-      }
-
-      const eosystemKeys = Object.keys(ecosystemobj);
-
-      if (0 === eosystemKeys.length) {
-        return ResponseMessages.user.success.platformEcosystemettings;
-      }
-
-      const ecosystemSettings = await this.userRepository.updateEcosystemSettings(eosystemKeys, ecosystemobj);
-
-      if (!ecosystemSettings) {
-        throw new BadRequestException(ResponseMessages.user.error.notUpdateEcosystemSettings);
-      }
-
-      return ResponseMessages.user.success.platformEcosystemettings;
+      return ResponseMessages.user.success.platformSettings;
     } catch (error) {
       this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async getPlatformEcosystemSettings(): Promise<object> {
+  async getPlatformSettings(): Promise<object> {
     try {
       const platformSettings = {};
       const platformConfigSettings = await this.userRepository.getPlatformSettings();
@@ -1159,14 +1127,7 @@ export class UserService {
         throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound);
       }
 
-      const ecosystemConfigSettings = await this.userRepository.getEcosystemSettings();
-
-      if (!ecosystemConfigSettings) {
-        throw new BadRequestException(ResponseMessages.user.error.ecosystemSetttingsNotFound);
-      }
-
       platformSettings['platform_config'] = platformConfigSettings;
-      platformSettings['ecosystem_config'] = ecosystemConfigSettings;
 
       return platformSettings;
     } catch (error) {

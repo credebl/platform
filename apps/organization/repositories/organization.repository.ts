@@ -624,11 +624,6 @@ export class OrganizationRepository {
             countryId:true,
             stateId: true,
             cityId: true,
-            ecosystemOrgs: {
-              select: {
-                ecosystemId: true
-              }
-            },
             userOrgRoles: {
               where: {
                 orgRole: {
@@ -785,8 +780,6 @@ export class OrganizationRepository {
       `${PrismaTables.CONNECTIONS}`,
       `${PrismaTables.CREDENTIALS}`,
       `${PrismaTables.PRESENTATIONS}`,
-      `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
-      `${PrismaTables.ECOSYSTEM_ORGS}`,
       `${PrismaTables.FILE_UPLOAD}`
     ];
 
@@ -802,20 +795,6 @@ export class OrganizationRepository {
             throw new ConflictException(`Organization ID ${id} is referenced in the table ${tablesToCheck[index]}`);
           }
         });
-
-        // Check if the organization is an ecosystem lead
-        const isEcosystemLead = await prisma.ecosystem_orgs.findMany({
-          where: {
-            orgId: id,
-            ecosystemRole: {
-              name: { in: ['Ecosystem Lead', 'Ecosystem Owner'] }
-            }
-          }
-        });
-
-        if (0 < isEcosystemLead.length) {
-          throw new ConflictException(ResponseMessages.organisation.error.organizationEcosystemValidate);
-        }
 
         const deletedNotification = await prisma.notification.deleteMany({ where: { orgId: id } });
 

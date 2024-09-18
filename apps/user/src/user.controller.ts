@@ -190,18 +190,18 @@ export class UserController {
     return this.userService.addPasskey(payload.userEmail, payload.userInfo);
   }
  /**
-   * @returns platform and ecosystem settings updated status
+   * @returns platform settings updated status
    */
   @MessagePattern({ cmd: 'update-platform-settings' })
   async updatePlatformSettings(payload: { platformSettings: PlatformSettings }): Promise<string> {
     return this.userService.updatePlatformSettings(payload.platformSettings);
   }
   /**
-   * @returns platform and ecosystem settings
+   * @returns platform settings
    */
   @MessagePattern({ cmd: 'fetch-platform-settings' })
-  async getPlatformEcosystemSettings(): Promise<object> {
-    return this.userService.getPlatformEcosystemSettings();
+  async getPlatformSettings(): Promise<object> {
+    return this.userService.getPlatformSettings();
   }
 
   @MessagePattern({ cmd: 'org-deleted-activity' })

@@ -56,23 +56,6 @@
       "description": "To setup all the platform of the user"
     }
   ],
-  "ecosystemRoleData": [
-    {
-      "name": "Ecosystem Owner",
-      "description": "Ecosystem Owner"
-     
-    },
-    {
-      "name": "Ecosystem Lead",
-      "description": "Ecosystem Lead"
-     
-    },
-    {
-      "name": "Ecosystem Member",
-      "description": "Ecosystem Member"
-    }
-  ],
-
   "agentTypeData": [
     {
       "agent": "AFJ"
@@ -181,24 +164,6 @@
       "responsePayload": "{\"type\": \"dummy_response_4\"}",
       "status": "Submitted",
       "ecosystemOrgId": "ca6ee687-a3a9-42ce-9e49-02bf62f5c93a"
-    }
-  ],
-  "ecosystemConfigData": [
-    {
-      "key": "url",
-      "value": "https://dummyurl.tk"
-    },
-    {
-      "key": "enableEcosystem",
-      "value": "false"
-    },
-    {
-      "key": "participateInEcosystem",
-      "value": "false"
-    },
-    {
-      "key": "multiEcosystemSupport",
-      "value": "false"
     }
   ],
   "ledgerConfig": [

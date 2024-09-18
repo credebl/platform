@@ -64,21 +64,6 @@ export enum Invitation {
     PENDING = 'pending'
 }
 
-export enum EcosystemRoles {
-    ECOSYSTEM_LEAD = 'Ecosystem Lead',
-    ECOSYSTEM_MEMBER = 'Ecosystem Member',
-    ECOSYSTEM_OWNER = 'Ecosystem Owner'
-}
-
-export enum EcosystemConfigSettings {
-    URL = 'url',
-    ENABLE_ECOSYSTEM = 'enableEcosystem',
-    AUTO_ENDORSEMENT = 'autoEndorsement',
-    PARTICIPATE_IN_ECOSYSTEM = 'participateInEcosystem',
-    MULTI_ECOSYSTEM = 'multiEcosystemSupport'
-
-}
-
 export enum EndorserTransactionType {
     SCHEMA = 'schema',
     CREDENTIAL_DEFINITION = 'credential-definition',
@@ -155,12 +140,10 @@ export enum PromiseResult {
 export enum PrismaTables {
     PRESENTATIONS = 'presentations',
     CREDENTIALS = 'credentials',
-    ECOSYSTEM_ORGS = 'ecosystem_orgs',
     ORG_AGENTS = 'org_agents',
     ORG_DIDS = 'org_dids',
     AGENT_INVITATIONS = 'agent_invitations',
     CONNECTIONS = 'connections',
-    ECOSYSTEM_INVITATIONS = 'ecosystem_invitations',
     FILE_UPLOAD = 'file_upload',
     NOTIFICATION = 'notification',
     USER_ACTIVITY = 'user_activity',

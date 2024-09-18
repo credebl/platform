@@ -81,8 +81,6 @@ export interface PlatformSettings {
   sgApiKey: string;
   emailFrom: string;
   apiEndPoint: string;
-  enableEcosystem: boolean;
-  multiEcosystemSupport: boolean;
 }
 
 export interface IShareUserCertificate {

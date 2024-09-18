@@ -493,9 +493,7 @@ export class AgentServiceRepository {
         const tablesToCheck = [
             `${PrismaTables.CONNECTIONS}`,
             `${PrismaTables.CREDENTIALS}`,
-            `${PrismaTables.PRESENTATIONS}`,
-            `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
-            `${PrismaTables.ECOSYSTEM_ORGS}`
+            `${PrismaTables.PRESENTATIONS}`
         ];
 
     try {

@@ -719,53 +719,12 @@ export class UserRepository {
     }
   }
 
-  /**
-   *
-   * @Body updatePlatformSettings
-   * @returns Update ecosystem settings
-   */
-  async updateEcosystemSettings(eosystemKeys: string[], ecosystemObj: object): Promise<boolean> {
-    try {
-      for (const key of eosystemKeys) {
-        const ecosystemKey = await this.prisma.ecosystem_config.findFirst({
-          where: {
-            key
-          }
-        });
-
-        await this.prisma.ecosystem_config.update({
-          where: {
-            id: ecosystemKey.id
-          },
-          data: {
-            value: ecosystemObj[key].toString()
-          }
-        });
-      }
-
-      return true;
-    } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
   async getPlatformSettings(): Promise<object> {
     try {
       const getPlatformSettingsList = await this.prisma.platform_config.findMany();
       return getPlatformSettingsList;
     } catch (error) {
       this.logger.error(`error in getPlatformSettings: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
-  async getEcosystemSettings(): Promise<object> {
-    try {
-      const getEcosystemSettingsList = await this.prisma.ecosystem_config.findMany();
-      return getEcosystemSettingsList;
-    } catch (error) {
-      this.logger.error(`error in getEcosystemSettings: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
     }
   }

@@ -125,7 +125,6 @@ model organisation {
   agent_invitations     agent_invitations[]
   credential_definition credential_definition[]
   file_upload           file_upload[]
-  ecosystemOrgs         ecosystem_orgs[]
 }
 
 model org_invitations {
@@ -366,109 +365,6 @@ model presentations {
   emailId             String?
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
-}
-
-model ecosystem_roles {
-  id                  String           @id @default(uuid()) @db.Uuid
-  name                String           @unique
-  description         String
-  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
-  deletedAt           DateTime?        @db.Timestamp(6)
-  ecosystemOrgs       ecosystem_orgs[]
-}
-
-model ecosystem {
-  id                   String                  @id @default(uuid()) @db.Uuid
-  name                 String
-  description          String
-  tags                 String?
-  createDateTime       DateTime                @default(now()) @db.Timestamptz(6)
-  createdBy            String                  @db.Uuid
-  lastChangedDateTime  DateTime                @default(now()) @db.Timestamptz(6)
-  lastChangedBy        String                  @db.Uuid
-  deletedAt            DateTime?               @db.Timestamp(6)
-  logoUrl              String?
-  autoEndorsement      Boolean                 @default(false)
-  ecosystemInvitations ecosystem_invitations[]
-  ecosystemOrgs        ecosystem_orgs[]
-  ecosystemUsers       ecosystem_users[]
-  ledgers              Json?
-}
-
-model ecosystem_invitations {
-  id                  String    @id @default(uuid()) @db.Uuid
-  email               String
-  status              String
-  ecosystemId         String    @db.Uuid
-  userId              String
-  orgId               String
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           String    @db.Uuid
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String    @db.Uuid
-  deletedAt           DateTime? @db.Timestamp(6)
-  ecosystem           ecosystem @relation(fields: [ecosystemId], references: [id])
-}
-
-model ecosystem_users {
-  id                  String    @id @default(uuid()) @db.Uuid
-  userId              String
-  ecosystemId         String    @db.Uuid
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           String    @db.Uuid
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String    @db.Uuid
-  deletedAt           DateTime? @db.Timestamp(6)
-  ecosystem           ecosystem @relation(fields: [ecosystemId], references: [id])
-}
-
-model ecosystem_orgs {
-  id                     String                    @id @default(uuid()) @db.Uuid
-  orgId                  String                    @db.Uuid
-  status                 String
-  deploymentMode         String?
-  ecosystemId            String                    @db.Uuid
-  ecosystemRoleId        String                    @db.Uuid
-  createDateTime         DateTime                  @default(now()) @db.Timestamptz(6)
-  createdBy              String                    @db.Uuid
-  lastChangedDateTime    DateTime                  @default(now()) @db.Timestamptz(6)
-  lastChangedBy          String                    @db.Uuid
-  deletedAt              DateTime?                 @db.Timestamp(6)
-  ecosystem              ecosystem                 @relation(fields: [ecosystemId], references: [id])
-  ecosystemRole          ecosystem_roles           @relation(fields: [ecosystemRoleId], references: [id])
-  endorsementTransaction endorsement_transaction[]
-  organisation           organisation?             @relation(fields: [orgId], references: [id])
-}
-
-model endorsement_transaction {
-  id                  String         @id @default(uuid()) @db.Uuid
-  endorserDid         String
-  authorDid           String
-  requestPayload      String
-  responsePayload     String
-  type                String?
-  createDateTime      DateTime       @default(now()) @db.Timestamptz(6)
-  createdBy           String         @db.Uuid
-  lastChangedDateTime DateTime       @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String         @db.Uuid
-  deletedAt           DateTime?      @db.Timestamp(6)
-  status              String
-  ecosystemOrgId      String         @db.Uuid
-  requestBody         Json?
-  resourceId          String?
-  ecosystemOrgs       ecosystem_orgs @relation(fields: [ecosystemOrgId], references: [id])
-}
-
-model ecosystem_config {
-  id                  String    @id @default(uuid()) @db.Uuid
-  key                 String?
-  value               String?
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           String    @default("1")
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String    @default("1")
-  deletedAt           DateTime? @db.Timestamp(6)
 }
 
 model file_upload {

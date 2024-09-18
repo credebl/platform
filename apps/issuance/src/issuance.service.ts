@@ -1649,7 +1649,7 @@ return newCacheKey;
           socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId });
           this.cacheManager.del(jobDetails.cacheId);
         } else {
-          socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId });
+          socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId , fileUploadId: jobDetails.fileUploadId });
         }
 
         await this.issuanceRepository.updateFileUploadDetails(jobDetails.fileUploadId, {
@@ -1668,7 +1668,7 @@ return newCacheKey;
       });
       if (!isErrorOccurred) {
         isErrorOccurred = true;
-        socket.emit('error-in-bulk-issuance-retry-process', { clientId: jobDetails.clientId, error });
+        socket.emit('error-in-bulk-issuance-process', { clientId: jobDetails.clientId, error ,fileUploadId: jobDetails.fileUploadId});
       }
       throw error;
 

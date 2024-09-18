@@ -12,8 +12,8 @@ WORKDIR /app
 COPY package.json ./
 #COPY package-lock.json ./
 
-# Install dependencies
-RUN pnpm i \
+# Install dependencies safely
+RUN pnpm i --ignore-scripts \
     && pnpm add -D ts-node typescript @types/node --ignore-scripts
 
 

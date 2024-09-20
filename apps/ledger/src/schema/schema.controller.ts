@@ -5,7 +5,8 @@ import {
   ISchema,
   ISchemaCredDeffSearchInterface,
   ISchemaExist,
-  ISchemaSearchPayload
+  ISchemaSearchPayload,
+  SaveSchemaPayload
 } from './interfaces/schema-payload.interface';
 import { schema } from '@prisma/client';
 import {
@@ -72,5 +73,10 @@ export class SchemaController {
     ledgerId: string;
   }[]> {
     return this.schemaService.schemaExist(payload);
+  }
+
+  @MessagePattern({ cmd: 'store-schema-record' })
+  async saveSchemaRecord(payload: SaveSchemaPayload): Promise<schema> {
+    return this.schemaService.storeSchemaDetails(payload);
   }
 }

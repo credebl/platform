@@ -2,7 +2,7 @@
 import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
-import { ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
+import { ISchema, ISchemaExist, ISchemaSearchCriteria, ISaveSchema } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
 import { SchemaType, SortValue } from '@credebl/enum/enum';
@@ -43,6 +43,31 @@ export class SchemaRepository {
       }
     } catch (error) {
       this.logger.error(`Error in saving schema repository: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // Todo: Need to remove this to make the above function 'saveSchema' generic that only saves schemas and not makes any changes
+  async saveSchemaRecord(schemaDetails: ISaveSchema): Promise<schema> {
+    try {
+      const saveResult = await this.prisma.schema.create({
+        data: {
+          name: schemaDetails.name,
+          version: schemaDetails.version,
+          attributes: schemaDetails.attributes,
+          schemaLedgerId: schemaDetails.schemaLedgerId,
+          issuerId: schemaDetails.issuerId,
+          createdBy: schemaDetails.createdBy,
+          lastChangedBy: schemaDetails.lastChangedBy,
+          publisherDid: schemaDetails.publisherDid,
+          orgId: String(schemaDetails.orgId),
+          ledgerId: schemaDetails.ledgerId,
+          type: schemaDetails.type
+        }
+      });
+      return saveResult;
+    } catch (error) {
+      this.logger.error(`Error in saveSchemaRecord: ${error}`);
       throw error;
     }
   }

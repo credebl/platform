@@ -1,17 +1,15 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable camelcase */
 
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles } from '@prisma/client';
+import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles, organisation } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails, IOrgRoleDetails } from '../interfaces/organization.interface';
-import { InternalServerErrorException } from '@nestjs/common';
 import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
-import { organisation } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization} from '@credebl/common/interfaces/organization.interface';
 
@@ -22,6 +20,16 @@ export class OrganizationRepository {
     private readonly logger: Logger,
     private readonly userOrgRoleService: UserOrgRolesService
   ) { }
+
+  async getPlatformConfigDetails(): Promise<object> {
+    try {
+      const platformConfigdetails = await this.prisma.platform_config.findMany();
+      return platformConfigdetails;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 
   /**
    *

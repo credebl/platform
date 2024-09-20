@@ -66,7 +66,16 @@ export class OrganizationService {
     private readonly userActivityRepository: UserActivityRepository
   ) {}
   
-
+  async getPlatformConfigDetails(): Promise<object> {
+    try {
+      const getPlatformDetails = await this.organizationRepository.getPlatformConfigDetails();
+      return getPlatformDetails;
+    } catch (error) {
+      this.logger.error(`In fetch getPlatformConfigDetails : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+  
   /**
    *
    * @param registerOrgDto

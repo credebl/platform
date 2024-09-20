@@ -253,4 +253,9 @@ export class OrganizationController {
   async clientLoginCredentails(payload: { clientId: string; clientSecret: string;}): Promise<IAccessTokenData> {
     return this.organizationService.clientLoginCredentails(payload);
   }
+
+  @MessagePattern({ cmd: 'get-platform-config-details' })
+  async getPlatformConfigDetails(): Promise<object> {
+    return this.organizationService.getPlatformConfigDetails();
+  }
 }

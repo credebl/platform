@@ -1035,4 +1035,19 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
       throw error;
     }
   }
+
+  async getAgentTypeByAgentTypeId(orgAgentTypeId: string): Promise<string> {
+    try {
+      const { agent } = await this.prisma.org_agents_type.findFirst({
+        where: {
+          id: orgAgentTypeId
+        }
+      });
+
+      return agent;
+    } catch (error) {
+      this.logger.error(`[getAgentTypeByAgentTypeId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

@@ -1844,4 +1844,13 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async getAgentTypeByAgentTypeId(orgAgentTypeId: string): Promise<string> {
+    try {
+      return await this.organizationRepository.getAgentTypeByAgentTypeId(orgAgentTypeId);
+    } catch (error) {
+      this.logger.error(`get getAgentTypeByAgentTypeId error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 }

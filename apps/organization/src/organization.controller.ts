@@ -258,4 +258,9 @@ export class OrganizationController {
   async getPlatformConfigDetails(): Promise<object> {
     return this.organizationService.getPlatformConfigDetails();
   }
+
+  @MessagePattern({ cmd: 'get-agent-type-by-org-agent-type-id' })
+  async getAgentTypeByAgentTypeId(payload: {orgAgentTypeId: string}): Promise<string> {
+    return this.organizationService.getAgentTypeByAgentTypeId(payload.orgAgentTypeId);
+  }
 }

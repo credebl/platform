@@ -2,7 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { LedgerRepository } from './repositories/ledger.repository';
 import { RpcException } from '@nestjs/microservices';
-import { ledgers } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { ledgers, user_org_roles } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { LedgerDetails } from './interfaces/ledgers.interface';
 import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
@@ -55,6 +56,53 @@ export class LedgerService extends BaseService {
             }
 
             return getAllLedgerDetails;
+        } catch (error) {
+            this.logger.error(`Error in getLedgerDetailsById: ${error}`);
+            throw new RpcException(error.response ? error.response : error);
+        }
+    }
+
+
+    async schemaDetailsForEcosystem(data): Promise<LedgerDetails> {
+        try {
+            const getSchemaDetails = await this.ledgerRepository.handleGetSchemas(data);
+
+            if (!getSchemaDetails) {
+                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+            }
+
+            return getSchemaDetails;
+        } catch (error) {
+            this.logger.error(`Error in getLedgerDetailsById: ${error}`);
+            throw new RpcException(error.response ? error.response : error);
+        }
+    }
+
+    async getOrgAgentDetailsForEcosystem(data): Promise<LedgerDetails> {
+        try {
+            const getAllOrganizationDetails = await this.ledgerRepository.handleGetOrganisationData(data);
+
+            if (!getAllOrganizationDetails) {
+                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+            }
+
+            return getAllOrganizationDetails;
+        } catch (error) {
+            this.logger.error(`Error in getLedgerDetailsById: ${error}`);
+            throw new RpcException(error.response ? error.response : error);
+        }
+    }
+
+    // eslint-disable-next-line camelcase
+    async getuserOrganizationForEcosystem(data): Promise<user_org_roles[]> {
+        try {
+            const getOrganizationDetails = await this.ledgerRepository.handleGetUserOrganizations(data);
+
+            if (!getOrganizationDetails) {
+                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+            }
+
+            return getOrganizationDetails;
         } catch (error) {
             this.logger.error(`Error in getLedgerDetailsById: ${error}`);
             throw new RpcException(error.response ? error.response : error);

@@ -23,4 +23,22 @@ export class LedgerController {
   async getNetworkDetailsById(payload: {id: string}): Promise<LedgerDetails> {
     return this.ledgerService.getLedgerDetailsById(payload.id);
   }
+
+  @MessagePattern({ cmd: 'get-schema-details-for-ecosystem' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async schemaDetailsForEcosystem(payload): Promise<any> {
+    return this.ledgerService.schemaDetailsForEcosystem(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-org-agents-and-user-roles' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getOrgAgentDetailsForEcosystem(payload): Promise<any> {
+    return this.ledgerService.getOrgAgentDetailsForEcosystem(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-user-organizations' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getuserOrganizationForEcosystem(payload): Promise<any> {
+    return this.ledgerService.getuserOrganizationForEcosystem(payload);
+  }
 }

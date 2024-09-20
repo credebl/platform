@@ -77,6 +77,11 @@ export class SchemaController {
 
   @MessagePattern({ cmd: 'store-schema-record' })
   async saveSchemaRecord(payload: SaveSchemaPayload): Promise<schema> {
-    return this.schemaService.storeSchemaDetails(payload);
+    return this.schemaService.storeSchemaDetails(payload.schemaDetails);
+  }
+
+  @MessagePattern({ cmd: 'store-schema-record' })
+  async getSchemaRecordBySchemaId(payload: {schemaId: string}): Promise<schema> {
+    return this.schemaService.getSchemaBySchemaId(payload.schemaId);
   }
 }

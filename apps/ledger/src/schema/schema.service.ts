@@ -10,7 +10,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { schema } from '@prisma/client';
-import { ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, SaveSchemaPayload, W3CCreateSchema } from './interfaces/schema-payload.interface';
+import { ISaveSchema, ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, W3CCreateSchema } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
@@ -887,9 +887,9 @@ export class SchemaService extends BaseService {
   }
 
 
-  async storeSchemaDetails(payload: SaveSchemaPayload): Promise<schema> {
+  async storeSchemaDetails(schemaDetails: ISaveSchema): Promise<schema> {
     try {
-      const schemaStoreResult = await this.schemaRepository.saveSchemaRecord(payload.schemaDetails);
+      const schemaStoreResult = await this.schemaRepository.saveSchemaRecord(schemaDetails);
       return schemaStoreResult;
     } catch (error) {
       this.logger.error(`Error in storeSchemaDetails: ${error}`);
@@ -897,4 +897,13 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async getSchemaBySchemaId(schemaId: string): Promise<schema> {
+    try {
+      const schemaSearchResult = await this.schemaRepository.getSchemaBySchemaId(schemaId);
+      return schemaSearchResult;
+    } catch (error) {
+      this.logger.error(`Error in getSchemaBySchemaId: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 }

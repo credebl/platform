@@ -80,7 +80,7 @@ export class SchemaController {
     return this.schemaService.storeSchemaDetails(payload.schemaDetails);
   }
 
-  @MessagePattern({ cmd: 'store-schema-record' })
+  @MessagePattern({ cmd: 'get-schema-record-by-schema-id' })
   async getSchemaRecordBySchemaId(payload: {schemaId: string}): Promise<schema> {
     return this.schemaService.getSchemaBySchemaId(payload.schemaId);
   }

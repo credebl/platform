@@ -1649,6 +1649,9 @@ return newCacheKey;
           socket.emit('bulk-issuance-process-completed', { clientId: jobDetails.clientId, fileUploadId: jobDetails.fileUploadId });
           this.cacheManager.del(jobDetails.cacheId);
         } else {
+          console.log("inside issuance:: jobDetails.clientId" ,jobDetails.clientId )
+          console.log("inside issuance:: jobDetails.fileUploadId" ,jobDetails.fileUploadId )
+          
           socket.emit('bulk-issuance-process-retry-completed', { clientId: jobDetails.clientId , fileUploadId: jobDetails.fileUploadId });
         }
 

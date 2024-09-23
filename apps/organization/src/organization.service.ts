@@ -9,13 +9,14 @@ import {
   HttpException,
   BadRequestException,
   ForbiddenException,
-  UnauthorizedException
+  UnauthorizedException,
+  NotFoundException,
+  Inject
 } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { Inject, NotFoundException } from '@nestjs/common';
 import { OrgRolesService } from '@credebl/org-roles';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -49,6 +50,7 @@ import { IClientRoles } from '@credebl/client-registration/interfaces/client.int
 import { toNumber } from '@credebl/common/cast.helper';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -1850,6 +1852,36 @@ export class OrganizationService {
       return await this.organizationRepository.getAgentTypeByAgentTypeId(orgAgentTypeId);
     } catch (error) {
       this.logger.error(`get getAgentTypeByAgentTypeId error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getOrgRolesDetails(roleName: string): Promise<object> {
+    try {
+      const orgRoleDetails = await this.organizationRepository.getOrgRoles(roleName);
+      return orgRoleDetails;
+    } catch (error) {
+      this.logger.error(`in getting organization role details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getAllOrgRoles(): Promise<IOrgRoles[]> {
+    try {
+      const orgRoleDetails = await this.organizationRepository.getAllOrgRolesDetails();
+      return orgRoleDetails;
+    } catch (error) {
+      this.logger.error(`in getting all organization roles : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getOrgRolesDetailsByIds(orgRoles: string[]): Promise<object[]> {
+    try {
+      const orgRoleDetails = await this.organizationRepository.getOrgRolesById(orgRoles);
+      return orgRoleDetails;
+    } catch (error) {
+      this.logger.error(`in getting org roles by id : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

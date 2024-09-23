@@ -9,6 +9,7 @@ import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganization
 import { organisation, user } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 
 @Controller()
 export class OrganizationController {
@@ -262,5 +263,20 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-agent-type-by-org-agent-type-id' })
   async getAgentTypeByAgentTypeId(payload: {orgAgentTypeId: string}): Promise<string> {
     return this.organizationService.getAgentTypeByAgentTypeId(payload.orgAgentTypeId);
+  }
+
+  @MessagePattern({ cmd: 'get-org-roles-details' })
+  async getOrgRolesDetails(payload: {roleName: string}): Promise<object> {
+    return this.organizationService.getOrgRolesDetails(payload.roleName);
+  }
+
+  @MessagePattern({ cmd: 'get-all-org-roles-details' })
+  async getAllOrgRoles(): Promise<IOrgRoles[]> {
+    return this.organizationService.getAllOrgRoles();
+  }
+
+  @MessagePattern({ cmd: 'get-org-roles-by-id' })
+  async getOrgRolesDetailsByIds(orgRoles: string[]): Promise<object[]> {
+    return this.organizationService.getOrgRolesDetailsByIds(orgRoles);
   }
 }

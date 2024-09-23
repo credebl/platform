@@ -3,7 +3,7 @@
 
 import { ConflictException, Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles, organisation } from '@prisma/client';
+import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles, organisation, org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails, IOrgRoleDetails } from '../interfaces/organization.interface';
@@ -12,6 +12,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization} from '@credebl/common/interfaces/organization.interface';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 
 @Injectable()
 export class OrganizationRepository {
@@ -1047,6 +1048,52 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
       return agent;
     } catch (error) {
       this.logger.error(`[getAgentTypeByAgentTypeId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOrgRoles(roleName: string): Promise<org_roles> {
+    try {
+      const orgRoleDetails = await this.prisma.org_roles.findFirstOrThrow({
+        where: {
+          name: roleName
+        }
+      });
+
+      return orgRoleDetails;
+    } catch (error) {
+      this.logger.error(`[getOrgRoles] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getAllOrgRolesDetails(): Promise<IOrgRoles[]> {
+    try {
+      const orgRoleDetails = await this.prisma.org_roles.findMany();
+      return orgRoleDetails;
+    } catch (error) {
+      this.logger.error(`[getAllOrgRolesDetails] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOrgRolesById(orgRoles: string[]): Promise<object[]> {
+    try {
+      const roleDetails = await this.prisma.org_roles.findMany({
+          where: {
+            id: {
+              in: orgRoles
+            }
+          },
+          select: {
+            id: true,
+            name: true,
+            description: true
+          }
+        });      
+        return roleDetails;
+    } catch (error) {
+      this.logger.error(`[getOrgRolesById] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

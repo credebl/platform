@@ -120,15 +120,13 @@ export class AgentServiceRepository {
     async getAgentDetailsByOrgId(orgId: string): Promise<org_agents> {
         try {
 
-            if (orgId) {
-
-                return this.prisma.org_agents.findUnique({
+            const agentDetails =
+                await this.prisma.org_agents.findFirst({   //need to change later after testing
                     where: {
                         orgId
                     }
                 });
-            }
-
+            return agentDetails;
         } catch (error) {
             this.logger.error(`[getAgentDetailsByOrgId] - get agent details by orgId: ${JSON.stringify(error)}`);
             throw error;

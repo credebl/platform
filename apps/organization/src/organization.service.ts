@@ -1882,6 +1882,14 @@ export class OrganizationService {
       return orgRoleDetails;
     } catch (error) {
       this.logger.error(`in getting org roles by id : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async getOrganisationsByIds(organisationIds): Promise<object[]> {
+    try {
+      return await this.organizationRepository.getOrganisationsByIds(organisationIds);
+    } catch (error) {
+      this.logger.error(`get getOrganisationsByIds error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

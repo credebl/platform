@@ -1094,6 +1094,27 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
         return roleDetails;
     } catch (error) {
       this.logger.error(`[getOrgRolesById] - error: ${JSON.stringify(error)}`);
+    }
+  }
+
+  async getOrganisationsByIds(organisationIds: string[]): Promise<object[]> {
+    try {
+      const organisations = await this.prisma.organisation.findMany({
+        where: {
+          id: {
+            in: organisationIds
+          }
+        },
+        select: {
+          id: true,
+          name: true,
+          orgSlug: true
+        }
+      });
+
+      return organisations;
+    } catch (error) {
+      this.logger.error(`Error fetching organisations: ${JSON.stringify(error)}`);
       throw error;
     }
   }

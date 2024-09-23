@@ -279,4 +279,9 @@ export class OrganizationController {
   async getOrgRolesDetailsByIds(orgRoles: string[]): Promise<object[]> {
     return this.organizationService.getOrgRolesDetailsByIds(orgRoles);
   }
+
+  @MessagePattern({ cmd: 'get-organization-by-org-id' })
+  async getOrganisationsByIds(payload): Promise<object[]> {
+    return this.organizationService.getOrganisationsByIds(payload.organisationIds);
+  }
 }

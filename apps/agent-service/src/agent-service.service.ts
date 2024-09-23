@@ -96,6 +96,18 @@ export class AgentServiceService {
     return input.slice(0, start) + input.slice(start, end).replace(search, replace) + input.slice(end);
   }
 
+  async getAgentDetails(
+    orgId: string
+  ): Promise<org_agents> {
+    try {
+      const agentDetails = await this.agentServiceRepository.getAgentDetailsByOrgId(orgId);
+      return agentDetails;
+    } catch (error) {
+      this.logger.error(`in getAgentDetails::: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
   /**
    * Spinup the agent by organization
    * @param agentSpinupDto

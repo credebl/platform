@@ -116,6 +116,25 @@ export class AgentServiceRepository {
 
     }
 
+    // eslint-disable-next-line camelcase
+    async getAgentDetailsByOrgId(orgId: string): Promise<org_agents> {
+        try {
+
+            if (orgId) {
+
+                return this.prisma.org_agents.findUnique({
+                    where: {
+                        orgId
+                    }
+                });
+            }
+
+        } catch (error) {
+            this.logger.error(`[getAgentDetailsByOrgId] - get agent details by orgId: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
      /**
      * Store agent details
      * @param storeAgentDetails

@@ -285,7 +285,7 @@ export class AgentController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    this.logger.log(`**** Configure the agent...${JSON.stringify(agentConfigureDto)}`);
+    
 
     agentConfigureDto.orgId = orgId;
     const agentDetails = await this.agentService.agentConfigure(agentConfigureDto, user);

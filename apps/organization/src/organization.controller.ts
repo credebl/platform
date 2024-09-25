@@ -281,7 +281,7 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'get-organization-by-org-id' })
-  async getOrganisationsByIds(payload): Promise<object[]> {
+  async getOrganisationsByIds(payload: { organisationIds }): Promise<object[]> {
     return this.organizationService.getOrganisationsByIds(payload.organisationIds);
   }
 }

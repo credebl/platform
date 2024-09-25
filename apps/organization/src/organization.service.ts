@@ -543,7 +543,6 @@ export class OrganizationService {
     }
   }
 
-
   async _createConnection(
     orgName: string,
     logoUrl: string,
@@ -616,11 +615,36 @@ export class OrganizationService {
       };
 
       const getOrgs = await this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize, role, userId);
+      // const orgIds = getOrgs?.organizations?.map(item => item.id);
+      // const getOrgEcosystems = await this._getOrgEcosystems(orgIds);
       return getOrgs;
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async _getOrgEcosystems(orgIds: string[]): Promise<any> {
+    const pattern = { cmd: 'get-ecosystems-by-org' };
+
+    const payload = { orgIds };
+
+    const response = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return response;
   }
 
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {

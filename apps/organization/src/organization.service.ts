@@ -604,20 +604,46 @@ export class OrganizationService {
         userOrgRoles: {
           some: { userId }
         },
-          OR: [
+        OR: [
           { name: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } }
         ]
       };
-
+  
       const filterOptions = {
         userId
       };
-
-      const getOrgs = await this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize, role, userId);
-      // const orgIds = getOrgs?.organizations?.map(item => item.id);
-      // const getOrgEcosystems = await this._getOrgEcosystems(orgIds);
-      return getOrgs;
+  
+      const getOrgs = await this.organizationRepository.getOrganizations(
+        query,
+        filterOptions,
+        pageNumber,
+        pageSize,
+        role,
+        userId
+      );
+      const orgIds = getOrgs?.organizations?.map(item => item.id);
+  
+      const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
+      if (!orgEcosystemDetails || !Array.isArray(orgEcosystemDetails) || 0 === orgEcosystemDetails.length) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemDetailsNotFound);
+      }
+  
+      const updatedOrgs = getOrgs.organizations.map(org => {
+        const matchingEcosystems = orgEcosystemDetails
+          .filter(ecosystem => ecosystem.orgId === org.id)
+          .map(ecosystem => ({ ecosystemId: ecosystem.ecosystemId }));
+        return {
+          ...org,
+          ecosystemOrgs: 0 < matchingEcosystems.length ? matchingEcosystems : []
+        };
+      });
+  
+      return {
+        totalCount: getOrgs.totalCount,
+        totalPages: getOrgs.totalPages,
+        organizations: updatedOrgs
+      };
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

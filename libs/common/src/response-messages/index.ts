@@ -388,6 +388,11 @@ export const ResponseMessages = {
     notFound: 'Not Found',
     serverError: 'Internal Server error'
   },
+  ecosystem: {
+    error: {
+      ecosystemDetailsNotFound: 'Ecosystem details not found'
+    }
+  },
   webhook: {
     success: {
       webhookUrlRegister: 'Webhook Url registered successfully',

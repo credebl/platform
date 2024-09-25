@@ -42,7 +42,8 @@ import {
     IPuppeteerOption,
     IShareDegreeCertificateRes,
     IUserDeletedActivity,
-    UserKeycloakId
+    UserKeycloakId,
+    IEcosystemConfig
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -686,8 +687,7 @@ export class UserService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async  _getEcosystemConfig(): Promise<any> {
+  async  _getEcosystemConfig(): Promise<IEcosystemConfig[]> {
     const pattern = { cmd: 'get-ecosystem-config-details' };
     const payload = { };
 

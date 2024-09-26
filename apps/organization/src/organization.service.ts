@@ -622,8 +622,12 @@ export class OrganizationService {
         role,
         userId
       );
-      const orgIds = getOrgs?.organizations?.map(item => item.id);
-  
+
+      let orgIds;
+      if (0 > getOrgs?.organizations?.length) {
+        orgIds = getOrgs?.organizations?.map(item => item.id);
+      }
+       
       const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
       if (!orgEcosystemDetails || !Array.isArray(orgEcosystemDetails) || 0 === orgEcosystemDetails.length) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemDetailsNotFound);

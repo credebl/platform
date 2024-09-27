@@ -244,3 +244,8 @@ export interface IOrgRoleDetails {
   lastChangedBy: string;
   deletedAt: Date;
 }
+export interface IEcosystemOrgStatus {
+  ecosystemId: string;
+  orgId: string;
+  status: string;
+}

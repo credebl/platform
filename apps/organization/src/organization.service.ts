@@ -28,7 +28,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IEcosystemOrgStatus } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
@@ -654,8 +654,7 @@ export class OrganizationService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async _getOrgEcosystems(orgIds: string[]): Promise<any> {
+  async _getOrgEcosystems(orgIds: string[]): Promise<IEcosystemOrgStatus[]> {
     const pattern = { cmd: 'get-ecosystems-by-org' };
 
     const payload = { orgIds };
@@ -673,7 +672,6 @@ export class OrganizationService {
           error.status
         );
       });
-
     return response;
   }
 

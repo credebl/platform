@@ -121,7 +121,7 @@ export class AgentServiceRepository {
         try {
 
             const agentDetails =
-                await this.prisma.org_agents.findFirst({   //need to change later after testing
+                await this.prisma.org_agents.findFirstOrThrow({   
                     where: {
                         orgId
                     }

@@ -233,15 +233,6 @@
         "tsConfigPath": "libs/supabase/tsconfig.lib.json"
       }
     },
-    "ecosystem": {
-      "type": "application",
-      "root": "apps/ecosystem",
-      "entryFile": "main",
-      "sourceRoot": "apps/ecosystem/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/ecosystem/tsconfig.app.json"
-      }
-    },
     "webhook": {
       "type": "application",
       "root": "apps/webhook",

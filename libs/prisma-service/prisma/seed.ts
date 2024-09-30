@@ -256,67 +256,6 @@ const createLedger = async (): Promise<void> => {
     }
   };
 
-const createEcosystemRoles = async (): Promise<void> => {
-    try {
-        const { ecosystemRoleData } = JSON.parse(configData);
-
-        const ecosystemRoleDetails = ecosystemRoleData.map(ecosystemRole => ecosystemRole.name);
-        const existEcosystemRole = await prisma.ecosystem_roles.findMany({
-            where: {
-                name: {
-                    in: ecosystemRoleDetails
-                }
-            }
-        });
-
-        if (0 === existEcosystemRole.length) {
-            const ecosystemRoles = await prisma.ecosystem_roles.createMany({
-                data: ecosystemRoleData
-            });
-
-            logger.log(ecosystemRoles);
-        } else {
-            logger.log('Already seeding in ecosystem roles');
-        }
-
-
-    } catch (error) {
-        logger.error('An error occurred seeding ecosystemRoles:', error);
-        throw error;
-    }
-};
-
-const createEcosystemConfig = async (): Promise<void> => {
-    try {
-        const { ecosystemConfigData } = JSON.parse(configData);
-
-        const ecosystemConfigKey = ecosystemConfigData.map(ecosystemConfig => ecosystemConfig.key);
-        const existEcosystemConfig = await prisma.ecosystem_config.findMany({
-            where: {
-                key: {
-                    in: ecosystemConfigKey
-                }
-            }
-        });
-
-
-        if (0 === existEcosystemConfig.length) {
-            const configDetails = await prisma.ecosystem_config.createMany({
-                data: ecosystemConfigData
-            });
-
-            logger.log(configDetails);
-        } else {
-            logger.log('Already seeding in ecosystem config');
-        }
-
-
-    } catch (error) {
-        logger.error('An error occurred seeding createEcosystemConfig:', error);
-        throw error;
-    }
-};
-
 const createLedgerConfig = async (): Promise<void> => {
     try {
         const { ledgerConfig } = JSON.parse(configData);
@@ -549,8 +488,6 @@ async function main(): Promise<void> {
     await createPlatformUserOrgRoles();
     await createOrgAgentTypes();
     await createLedger();
-    await createEcosystemRoles();
-    await createEcosystemConfig();
     await createLedgerConfig();
     await createUserRole();
     await migrateOrgAgentDids();

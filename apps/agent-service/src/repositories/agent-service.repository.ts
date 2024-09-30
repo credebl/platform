@@ -116,6 +116,23 @@ export class AgentServiceRepository {
 
     }
 
+    // eslint-disable-next-line camelcase
+    async getAgentDetailsByOrgId(orgId: string): Promise<org_agents> {
+        try {
+
+            const agentDetails =
+                await this.prisma.org_agents.findFirstOrThrow({   
+                    where: {
+                        orgId
+                    }
+                });
+            return agentDetails;
+        } catch (error) {
+            this.logger.error(`[getAgentDetailsByOrgId] - get agent details by orgId: ${JSON.stringify(error)}`);
+            throw error;
+        }
+    }
+
      /**
      * Store agent details
      * @param storeAgentDetails
@@ -493,9 +510,7 @@ export class AgentServiceRepository {
         const tablesToCheck = [
             `${PrismaTables.CONNECTIONS}`,
             `${PrismaTables.CREDENTIALS}`,
-            `${PrismaTables.PRESENTATIONS}`,
-            `${PrismaTables.ECOSYSTEM_INVITATIONS}`,
-            `${PrismaTables.ECOSYSTEM_ORGS}`
+            `${PrismaTables.PRESENTATIONS}`
         ];
 
     try {

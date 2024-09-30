@@ -103,3 +103,24 @@ export interface IschemaPayload {
   user: IUserRequestInterface,
   orgId: string
 }
+export interface ISchemasResult {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  name: string;
+  version: string;
+  attributes: string;
+  schemaLedgerId: string;
+  publisherDid: string;
+  issuerId: string;
+  orgId: string;
+  ledgerId: string;
+  type: string;
+}
+
+export interface ISchemasList {
+  schemasCount: number;
+  schemasResult: ISchemasResult[];
+}

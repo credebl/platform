@@ -4,6 +4,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { ledgers } from '@prisma/client';
 import { LedgerDetails } from './interfaces/ledgers.interface';
 import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
+import { ISchemasList } from './schema/interfaces/schema.interface';
 
 @Controller()
 export class LedgerController {
@@ -25,20 +26,7 @@ export class LedgerController {
   }
 
   @MessagePattern({ cmd: 'get-schema-details-for-ecosystem' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async schemaDetailsForEcosystem(payload): Promise<any> {
+  async schemaDetailsForEcosystem(payload: {schemaArray: string[], search: string, pageSize: number, pageNumber: number}): Promise<ISchemasList> {
     return this.ledgerService.schemaDetailsForEcosystem(payload);
-  }
-
-  @MessagePattern({ cmd: 'get-org-agents-and-user-roles' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getOrgAgentDetailsForEcosystem(payload): Promise<any> {
-    return this.ledgerService.getOrgAgentDetailsForEcosystem(payload);
-  }
-
-  @MessagePattern({ cmd: 'get-user-organizations' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getuserOrganizationForEcosystem(payload): Promise<any> {
-    return this.ledgerService.getuserOrganizationForEcosystem(payload);
   }
 }

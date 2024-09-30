@@ -6,7 +6,7 @@ import { ConflictException, Injectable, Logger, NotFoundException, InternalServe
 import { Prisma, agent_invitations, org_agents, org_invitations, user, user_org_roles, organisation, org_roles } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails, IOrgRoleDetails } from '../interfaces/organization.interface';
+import { IGetDids, IDidDetails, IDidList, IGetOrgById, IGetOrganization, IPrimaryDidDetails, IUpdateOrganization, ILedgerNameSpace, OrgInvitation, ILedgerDetails, IOrgRoleDetails, IOrgDetails } from '../interfaces/organization.interface';
 import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -1118,4 +1118,52 @@ async getDidDetailsByDid(did:string): Promise<IDidDetails> {
       throw error;
     }
   }
+
+  async handleGetOrganisationData(data: {orgIds: string[], search: string}): Promise<IOrgDetails> {
+    try {
+      const { orgIds, search } = data;
+
+      // Fetch organisation data with optional search filtering
+      const organisations = await this.prisma.organisation.findMany({
+        where: {
+          id: { in: orgIds },
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            // eslint-disable-next-line camelcase
+            { org_agents: { some: { orgDid: { contains: search, mode: 'insensitive' } } } }
+          ]
+        },
+        select: {
+          id: true,
+          name: true,
+          orgSlug: true
+        }
+      });
+
+      // Fetch org_agents data
+      const orgAgents = await this.prisma.org_agents.findMany({
+        where: {
+          orgId: { in: orgIds },
+          ...(search && { orgDid: { contains: search, mode: 'insensitive' } })
+        }
+      });
+
+      const userOrgRoles = await this.prisma.user_org_roles.findMany({
+        where: {
+          orgId: { in: orgIds }
+        }
+      });
+
+      return {
+        organisations,
+        orgAgents,
+        userOrgRoles
+      };
+
+    } catch (error) {
+      this.logger.error(`Error in handleGetOrganisationData: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
 }

@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { JsonValue } from "@prisma/client/runtime/library";
 
 export interface IUserOrgRoles {
   id: string
@@ -233,7 +234,6 @@ export interface ILedgerDetails {
   networkUrl: string;
 
 }
-
 export interface IOrgRoleDetails {
   id: string;
   name: string;
@@ -249,3 +249,62 @@ export interface IEcosystemOrgStatus {
   orgId: string;
   status: string;
 }
+
+
+interface IDidDocument {
+  id: string;
+  "@context": string[];
+  authentication: string[];
+  verificationMethod: IVerificationMethod[];
+}
+
+interface IVerificationMethod {
+  id: string;
+  type: string;
+  controller: string;
+  publicKeyBase58: string;
+}
+
+interface IOrgAgentDetails {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  orgDid: string;
+  verkey: string | null;
+  agentEndPoint: string;
+  agentId: string | null;
+  isDidPublic: boolean;
+  agentSpinUpStatus: number;
+  agentOptions: string | Buffer | null;
+  walletName: string;
+  tenantId: string;
+  apiKey: string | null;
+  agentsTypeId: string;
+  orgId: string;
+  orgAgentTypeId: string;
+  ledgerId: string;
+  didDocument: IDidDocument | JsonValue;
+  webhookUrl: string | null;
+}
+
+interface IOrganisation {
+  id: string;
+  name: string;
+  orgSlug: string;
+}
+
+interface IUserOrgRolesDetails {
+  id: string
+  userId: string
+  orgRoleId: string
+  orgId: string | null,
+  idpRoleId: string
+}
+export interface IOrgDetails {
+  organisations: IOrganisation[];
+  orgAgents: IOrgAgentDetails[];
+  userOrgRoles: IUserOrgRolesDetails[];
+}
+

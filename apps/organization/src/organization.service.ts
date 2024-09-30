@@ -28,7 +28,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IEcosystemOrgStatus } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IEcosystemOrgStatus, IOrgDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
@@ -1945,4 +1945,19 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async getOrgAgentDetailsForEcosystem(data: {orgIds: string[], search: string}): Promise<IOrgDetails> {
+    try {
+        const getAllOrganizationDetails = await this.organizationRepository.handleGetOrganisationData(data);
+
+        if (!getAllOrganizationDetails) {
+            throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+        }
+
+        return getAllOrganizationDetails;
+    } catch (error) {
+        this.logger.error(`Error in getOrgAgentDetailsForEcosystem: ${error}`);
+        throw new RpcException(error.response ? error.response : error);
+    }
+}
 }

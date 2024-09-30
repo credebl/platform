@@ -26,7 +26,8 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
-import { RecordType, user } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { RecordType, user, user_org_roles } from '@prisma/client';
 import {
   Attribute,
   ICheckUserDetails,
@@ -1212,4 +1213,20 @@ export class UserService {
       throw error;
     }
   }
+
+   // eslint-disable-next-line camelcase
+   async getuserOrganizationByUserId(userId: string): Promise<user_org_roles[]> {
+    try {
+        const getOrganizationDetails = await this.userRepository.handleGetUserOrganizations(userId);
+
+        if (!getOrganizationDetails) {
+            throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+        }
+
+        return getOrganizationDetails;
+    } catch (error) {
+        this.logger.error(`Error in getuserOrganizationByUserId: ${error}`);
+        throw new RpcException(error.response ? error.response : error);
+    }
+}
 }

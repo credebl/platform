@@ -1,9 +1,10 @@
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { ledgers, user_org_roles } from '@prisma/client';
+import { ledgers } from '@prisma/client';
 import { LedgerDetails } from '../interfaces/ledgers.interface';
 import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
+import { ISchemasList, ISchemasResult } from '../schema/interfaces/schema.interface';
 
 
 @Injectable()
@@ -60,19 +61,14 @@ export class LedgerRepository {
         }
     }
 
-    //New code
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async handleGetSchemas(data: any): Promise<any> {
+    async handleGetSchemas(data: {schemaArray: string[], search: string, pageSize: number, pageNumber: number}): Promise<ISchemasList> {
         try {
-          const { schemaIds, search, pageSize, pageNumber } = data;
+          const { schemaArray, search, pageSize, pageNumber } = data;
     
-          // Query the schema table based on the received data
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const schemasResult: any[] = await this.prisma.schema.findMany({
+          const schemasResult: ISchemasResult[] = await this.prisma.schema.findMany({
             where: {
               schemaLedgerId: {
-                in: schemaIds
+                in: schemaArray
               },
               OR: [
                 { version: { contains: search, mode: 'insensitive' } },
@@ -91,7 +87,7 @@ export class LedgerRepository {
           const schemasCount = await this.prisma.schema.count({
             where: {
               schemaLedgerId: {
-                in: schemaIds
+                in: schemaArray
               },
               OR: [
                 { version: { contains: search, mode: 'insensitive' } },
@@ -106,77 +102,12 @@ export class LedgerRepository {
             schemasCount,
             schemasResult
           };
+          
         } catch (error) {
           this.logger.error(`Error handling 'get-schemas' request: ${JSON.stringify(error)}`);
           throw error;
         }
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async handleGetOrganisationData(data): Promise<any> {
-        try {
-          const { orgIds, search } = data;
       
-          // Fetch organisation data with optional search filtering
-          const organisations = await this.prisma.organisation.findMany({
-            where: {
-              id: { in: orgIds },
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                // eslint-disable-next-line camelcase
-                { org_agents: { some: { orgDid: { contains: search, mode: 'insensitive' } } } }
-              ]
-            },
-            select: {
-              id: true,
-              name: true,
-              orgSlug: true
-            }
-          });
-      
-          // Fetch org_agents data
-          const orgAgents = await this.prisma.org_agents.findMany({
-            where: {
-              orgId: { in: orgIds },
-              ...(search && { orgDid: { contains: search, mode: 'insensitive' } })
-            }
-          });
-      
-          const userOrgRoles = await this.prisma.user_org_roles.findMany({
-            where: {
-              orgId: { in: orgIds }
-            }
-          });
-      
-          return {
-            organisations,
-            orgAgents,
-            userOrgRoles
-          };
-        } catch (error) {
-          this.logger.error(`Error in handleGetOrganisationData: ${JSON.stringify(error)}`);
-          throw error;
-        }
-      }
-
-      // eslint-disable-next-line camelcase
-      async handleGetUserOrganizations(data: { userId: string }): Promise<user_org_roles[]> {
-        try {
-          const { userId } = data;
-      
-          // Query the user_org_roles table using Prisma
-          const getUserOrgs = await this.prisma.user_org_roles.findMany({
-            where: {
-              userId
-            }
-          });
-      
-          return getUserOrgs;
-        } catch (error) {
-          this.logger.error(
-            `Error in handleGetUserOrganizations: ${error.message}`
-          );
-          throw error;
-        }
-      }
 }

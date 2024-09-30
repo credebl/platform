@@ -4,7 +4,7 @@ import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IDidList, IGetOrgById, IGetOrganization, IOrgDetails, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
 import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
 import { organisation, user } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
@@ -283,5 +283,10 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'get-organization-by-org-id' })
   async getOrganisationsByIds(payload: { organisationIds }): Promise<object[]> {
     return this.organizationService.getOrganisationsByIds(payload.organisationIds);
+  }
+
+  @MessagePattern({ cmd: 'get-org-agents-and-user-roles' })
+  async getOrgAgentDetailsForEcosystem(payload: {orgIds: string[], search: string}): Promise<IOrgDetails> {
+    return this.organizationService.getOrgAgentDetailsForEcosystem(payload);
   }
 }

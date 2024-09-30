@@ -19,7 +19,7 @@ import {
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { RecordType, schema, token, user } from '@prisma/client';
+import { RecordType, schema, token, user, user_org_roles } from '@prisma/client';
 import { UserRole } from '@credebl/enum/enum';
 
 interface UserQueryOptions {
@@ -823,6 +823,24 @@ export class UserRepository {
       return getUserRole;
     } catch (error) {
       this.logger.error(`Error in getUserRole: ${error.message} `);
+      throw error;
+    }
+  }
+
+   // eslint-disable-next-line camelcase
+   async handleGetUserOrganizations(userId: string): Promise<user_org_roles[]> {
+    try {  
+      const getUserOrgs = await this.prisma.user_org_roles.findMany({
+        where: {
+          userId
+        }
+      });
+  
+      return getUserOrgs;
+    } catch (error) {
+      this.logger.error(
+        `Error in handleGetUserOrganizations: ${error.message}`
+      );
       throw error;
     }
   }

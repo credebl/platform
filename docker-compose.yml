@@ -132,6 +132,7 @@ services:
       - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
       - /var/run/docker.sock:/var/run/docker.sock
       - /app/agent-provisioning/AFJ/token:/app/agent-provisioning/AFJ/token
+      - $PWD/apps/agent-provisioning/AFJ/agent.env:/app/agent-provisioning/AFJ/agent.env
   agent-service:
     depends_on:
       - nats  # Use depends_on instead of needs

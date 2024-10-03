@@ -65,3 +65,18 @@ export interface GetAllCredDefsPayload {
 export interface GetCredDefBySchemaId {
   schemaId: string
 }
+
+export interface ISaveCredDef {
+  schemaLedgerId: string;
+  tag: string;
+  credentialDefinitionId: string;
+  revocable: boolean;
+  createdBy: string;
+  lastChangedBy: string;
+  orgId: string;
+  schemaId: string;
+}
+
+export interface SaveCredDefPayload {
+  credDefDetails: ISaveCredDef
+}

@@ -297,4 +297,11 @@ export class AgentServiceController {
   }): Promise<IStoreAgent> {
     return this.agentServiceService.agentConfigure(payload.agentConfigureDto, payload.user);
   }
+
+  @MessagePattern({ cmd: 'get-agent-details-by-org-id' })
+  async agentdetailsByOrgId(payload: {
+    orgId: string,
+  }): Promise<IStoreAgent> {
+    return this.agentServiceService.getAgentDetails(payload.orgId);
+  }
 }

@@ -19,7 +19,7 @@ import {
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { RecordType, schema, token, user } from '@prisma/client';
+import { RecordType, schema, token, user, user_org_roles } from '@prisma/client';
 import { UserRole } from '@credebl/enum/enum';
 
 interface UserQueryOptions {
@@ -719,53 +719,12 @@ export class UserRepository {
     }
   }
 
-  /**
-   *
-   * @Body updatePlatformSettings
-   * @returns Update ecosystem settings
-   */
-  async updateEcosystemSettings(eosystemKeys: string[], ecosystemObj: object): Promise<boolean> {
-    try {
-      for (const key of eosystemKeys) {
-        const ecosystemKey = await this.prisma.ecosystem_config.findFirst({
-          where: {
-            key
-          }
-        });
-
-        await this.prisma.ecosystem_config.update({
-          where: {
-            id: ecosystemKey.id
-          },
-          data: {
-            value: ecosystemObj[key].toString()
-          }
-        });
-      }
-
-      return true;
-    } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
   async getPlatformSettings(): Promise<object> {
     try {
       const getPlatformSettingsList = await this.prisma.platform_config.findMany();
       return getPlatformSettingsList;
     } catch (error) {
       this.logger.error(`error in getPlatformSettings: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
-  async getEcosystemSettings(): Promise<object> {
-    try {
-      const getEcosystemSettingsList = await this.prisma.ecosystem_config.findMany();
-      return getEcosystemSettingsList;
-    } catch (error) {
-      this.logger.error(`error in getEcosystemSettings: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
     }
   }
@@ -864,6 +823,24 @@ export class UserRepository {
       return getUserRole;
     } catch (error) {
       this.logger.error(`Error in getUserRole: ${error.message} `);
+      throw error;
+    }
+  }
+
+   // eslint-disable-next-line camelcase
+   async handleGetUserOrganizations(userId: string): Promise<user_org_roles[]> {
+    try {  
+      const getUserOrgs = await this.prisma.user_org_roles.findMany({
+        where: {
+          userId
+        }
+      });
+  
+      return getUserOrgs;
+    } catch (error) {
+      this.logger.error(
+        `Error in handleGetUserOrganizations: ${error.message}`
+      );
       throw error;
     }
   }

@@ -812,7 +812,6 @@ export class VerificationService {
           }
         });
       }
-
       // For Indy format
       if (getProofPresentationById?.response?.request?.indy) {
         const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;

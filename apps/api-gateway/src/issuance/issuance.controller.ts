@@ -416,8 +416,6 @@ async downloadBulkIssuanceCSVTemplate(
     const { credDefId } = query;
     clientDetails.userId = user.id;
     let reqPayload;
-
-    this.logger.log(`file:: ${file}`);
     
     // Need to update logic for University DEMO 
     if (file && clientDetails?.isSelectiveIssuance) {

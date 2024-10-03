@@ -1,4 +1,4 @@
-import { IOrgUsers, Payload, ICheckUserDetails, PlatformSettings, IShareUserCertificate, UpdateUserProfile, IUsersProfile, IUserInformation, IUserSignIn, IUserCredentials, IUserResetPassword, IUserDeletedActivity, UserKeycloakId} from '../interfaces/user.interface';
+import { IOrgUsers, Payload, ICheckUserDetails, PlatformSettings, UpdateUserProfile, IUsersProfile, IUserInformation, IUserSignIn, IUserResetPassword, IUserDeletedActivity, UserKeycloakId} from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
@@ -103,20 +103,11 @@ export class UserController {
   }
 
   /**
-   * @param credentialId
-   * @returns User credentials
-   */
-  @MessagePattern({ cmd: 'get-user-credentials-by-id' })
-  async getUserCredentialsById(payload: { credentialId }): Promise<IUserCredentials> {
-    return this.userService.getUserCredentialsById(payload);
-  }
-
-  /**
    * @returns Organization invitation data
    */
   @MessagePattern({ cmd: 'get-org-invitations' })
   async invitations(payload: { id; status; pageNumber; pageSize; search; }): Promise<IUserInvitations> {
-        return this.userService.invitations(payload);
+    return this.userService.invitations(payload);
   }
   
   /**
@@ -130,17 +121,6 @@ export class UserController {
     userId: string;
   }): Promise<IUserInvitations> {
     return this.userService.acceptRejectInvitations(payload.acceptRejectInvitation, payload.userId);
-  }
-
-  /**
-   * @param payload
-   * @returns User certificate URL
-   */
-  @MessagePattern({ cmd: 'share-user-certificate' })
-  async shareUserCertificate(
-    shareUserCredentials: IShareUserCertificate
-  ): Promise<string> {
-    return this.userService.shareUserCertificate(shareUserCredentials);
   }
 
   /**

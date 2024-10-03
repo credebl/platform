@@ -470,7 +470,7 @@ export class OrganizationService {
     try {
       const updatedOrglogo = orgLogo.split(',')[1];
       const imgData = Buffer.from(updatedOrglogo, 'base64');
-      const logoUrl = await this.awsService.uploadUserCertificate(
+      const logoUrl = await this.awsService.uploadFileToS3Bucket(
         imgData,
         'png',
         'orgLogo',

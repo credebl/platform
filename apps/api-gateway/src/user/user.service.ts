@@ -11,7 +11,6 @@ import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { CreateCertificateDto } from './dto/share-certificate.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -62,12 +61,6 @@ export class UserService extends BaseService {
   ): Promise<string> {
     const payload = { acceptRejectInvitation, userId };
     return this.sendNatsMessage(this.serviceProxy, 'accept-reject-invitations', payload);
-  }
-
-  async shareUserCertificate(
-    shareUserCredentials: CreateCertificateDto
-  ): Promise<Buffer> {
-      return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', shareUserCredentials);
   }
 
   async get(

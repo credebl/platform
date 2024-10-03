@@ -29,7 +29,7 @@ export class AwsService {
     });
   }
 
-  async uploadUserCertificate(
+  async uploadFileToS3Bucket(
     fileBuffer: Buffer,
     ext: string,
     filename: string,

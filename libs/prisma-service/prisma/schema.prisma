@@ -60,15 +60,6 @@ model user_activity {
   user                user         @relation(fields: [userId], references: [id])
 }
 
-model user_credentials {
-  id                  String    @id @default(uuid()) @db.Uuid
-  imageUrl            String?
-  credentialId        String    @unique
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  deletedAt           DateTime? @db.Timestamp(6)
-}
-
 model org_roles {
   id                  String           @id @default(uuid()) @db.Uuid
   name                String           @unique

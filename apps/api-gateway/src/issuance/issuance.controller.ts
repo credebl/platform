@@ -401,8 +401,8 @@ async downloadBulkIssuanceCSVTemplate(
     required: true
   })
   @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 100 * 1024 * 1024 } 
-  }))
+    limits: { fieldSize: 100 * 1024 * 1024 } 
+  })) 
   async issueBulkCredentials(
     @Body() clientDetails: ClientDetails,
     @Param('requestId') requestId: string,
@@ -416,6 +416,9 @@ async downloadBulkIssuanceCSVTemplate(
     const { credDefId } = query;
     clientDetails.userId = user.id;
     let reqPayload;
+
+    this.logger.log(`file:: ${file}`);
+    
     // Need to update logic for University DEMO 
     if (file && clientDetails?.isSelectiveIssuance) {
       const fileKey: string = uuidv4();

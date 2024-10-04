@@ -1173,9 +1173,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       credentialPayload.fileName = fileName;
       const newCacheKey = uuidv4();
 
-      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 60000);
-     
-return newCacheKey;
+      const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) || 60000; 
+      await this.cacheManager.set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL);
+
+      return newCacheKey;
 
 } catch (error) {
       this.logger.error(`error in validating credentials : ${error.response}`);

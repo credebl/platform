@@ -39,7 +39,7 @@ export enum CommonConstants {
   URL_WALLET_PROVISION = '/wallet/provision',
 
    DEFAULT_CACHE_TTL = 60000,
-   DEFAULT_FIELD_UPLOAD_SIZE = 100 * 1024 * 1024,
+   DEFAULT_FIELD_UPLOAD_SIZE = 10485760,
 
   // LEDGER SERVICES
   URL_LEDG_GET_DID_VERKEY = '/ledger/did-verkey?did=#',

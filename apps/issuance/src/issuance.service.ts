@@ -1170,8 +1170,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       credentialPayload.fileData = type === SchemaType.W3C_Schema ? finalFileData : parsedData;
       credentialPayload.fileName = fileName;
       const newCacheKey = uuidv4();
-      const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) ?? 60000; 
-      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), cacheTTL);
+      const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) || 60000; 
+      await this.cacheManager.set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL);
      
       return newCacheKey;
 

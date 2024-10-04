@@ -37,6 +37,7 @@ import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
+import { CommonConstants } from '../../../libs/common/src/common.constant';
 
 @Injectable()
 export class IssuanceService {
@@ -1173,7 +1174,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       credentialPayload.fileName = fileName;
       const newCacheKey = uuidv4();
 
-      const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) || 60000; 
+      const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) || CommonConstants.DEFAULT_CACHE_TTL; 
       await this.cacheManager.set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL);
 
       return newCacheKey;

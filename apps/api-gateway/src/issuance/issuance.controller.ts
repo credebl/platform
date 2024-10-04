@@ -401,8 +401,8 @@ async downloadBulkIssuanceCSVTemplate(
     required: true
   })
   @UseInterceptors(FileInterceptor('file', {
-    limits: { fieldSize: 100 * 1024 * 1024 } 
-  })) 
+    limits: { fieldSize: Number(process.env.FIELD_UPLOAD_SIZE) || 100 * 1024 * 1024 } 
+  }))
 
   async issueBulkCredentials(
     @Body() clientDetails: ClientDetails,

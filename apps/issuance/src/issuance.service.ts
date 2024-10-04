@@ -48,12 +48,12 @@ export class IssuanceService {
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
     private readonly userActivityRepository: UserActivityRepository,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
-    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache
   ) { }
 
   async getIssuanceRecords(orgId: string): Promise<number> {

@@ -1171,7 +1171,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       credentialPayload.fileName = fileName;
       const newCacheKey = uuidv4();
 
-      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 60000);
+      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 1800000);
      
 return newCacheKey;
 

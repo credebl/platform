@@ -72,7 +72,7 @@ import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { SchemaType } from '@credebl/enum/enum';
-
+import { CommonConstants } from '../../../../libs/common/src/common.constant';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -401,8 +401,8 @@ async downloadBulkIssuanceCSVTemplate(
     required: true
   })
   @UseInterceptors(FileInterceptor('file', {
-    limits: { fieldSize: 100 * 1024 * 1024 } 
-  })) 
+    limits: { fieldSize: Number(process.env.FIELD_UPLOAD_SIZE) || CommonConstants.DEFAULT_FIELD_UPLOAD_SIZE } 
+  }))
   async issueBulkCredentials(
     @Body() clientDetails: ClientDetails,
     @Param('requestId') requestId: string,

@@ -148,7 +148,14 @@ prompt_input "Enter WALLET_STORAGE_PORT: " WALLET_STORAGE_PORT
 prompt_input "Enter WALLET_STORAGE_USER: " WALLET_STORAGE_USER
 prompt_input "Enter WALLET_STORAGE_PASSWORD: " WALLET_STORAGE_PASSWORD
 prompt_input "Enter AGENT_NAME: " AGENT_NAME
-prompt_input "Enter PROTOCOL: " PROTOCOL
+pronections": true,
+  "autoAcceptCredentials": "contentApproved",
+  "autoAcceptProofs": "contentApproved",
+  "logLevel": 2,
+  "inboundTransport": [
+    {
+      "transport": "$PROTOCOL",
+      "port": $INBmpt_input "Enter PROTOCOL: " PROTOCOL
 prompt_input_with_tenant_validation "Enter TENANT (true/false): " TENANT "Error: TENANT must be either 'true' or 'false'."
 prompt_input "Enter CREDO_IMAGE: " CREDO_IMAGE
 prompt_input "Enter INBOUND_ENDPOINT: " INBOUND_ENDPOINT

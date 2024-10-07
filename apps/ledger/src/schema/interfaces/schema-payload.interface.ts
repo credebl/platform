@@ -104,3 +104,21 @@ export interface IdAttribute extends W3CSchemaAttributes {
     order?: string
 }   
 
+
+export interface ISaveSchema {
+    name: string;
+    version: string;
+    attributes: string;
+    schemaLedgerId: string;
+    issuerId: string;
+    createdBy: string;
+    lastChangedBy: string;
+    publisherDid: string;
+    orgId: string;
+    ledgerId: string;
+    type?: string;
+}
+
+export interface SaveSchemaPayload {
+    schemaDetails: ISaveSchema
+}

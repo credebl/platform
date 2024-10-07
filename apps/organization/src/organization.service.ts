@@ -9,13 +9,14 @@ import {
   HttpException,
   BadRequestException,
   ForbiddenException,
-  UnauthorizedException
+  UnauthorizedException,
+  NotFoundException,
+  Inject
 } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { Inject, NotFoundException } from '@nestjs/common';
 import { OrgRolesService } from '@credebl/org-roles';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -27,7 +28,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IEcosystemOrgStatus, IOrgDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
@@ -49,6 +50,7 @@ import { IClientRoles } from '@credebl/client-registration/interfaces/client.int
 import { toNumber } from '@credebl/common/cast.helper';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
+import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -66,7 +68,16 @@ export class OrganizationService {
     private readonly userActivityRepository: UserActivityRepository
   ) {}
   
-
+  async getPlatformConfigDetails(): Promise<object> {
+    try {
+      const getPlatformDetails = await this.organizationRepository.getPlatformConfigDetails();
+      return getPlatformDetails;
+    } catch (error) {
+      this.logger.error(`In fetch getPlatformConfigDetails : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+  
   /**
    *
    * @param registerOrgDto
@@ -532,7 +543,6 @@ export class OrganizationService {
     }
   }
 
-
   async _createConnection(
     orgName: string,
     logoUrl: string,
@@ -594,22 +604,75 @@ export class OrganizationService {
         userOrgRoles: {
           some: { userId }
         },
-          OR: [
+        OR: [
           { name: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } }
         ]
       };
-
+  
       const filterOptions = {
         userId
       };
+  
+      const getOrgs = await this.organizationRepository.getOrganizations(
+        query,
+        filterOptions,
+        pageNumber,
+        pageSize,
+        role,
+        userId
+      );
 
-      const getOrgs = await this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize, role, userId);
-      return getOrgs;
+      let orgIds;
+      if (0 > getOrgs?.organizations?.length) {
+        orgIds = getOrgs?.organizations?.map(item => item.id);
+      }
+       
+      const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
+      if (!orgEcosystemDetails || !Array.isArray(orgEcosystemDetails) || 0 === orgEcosystemDetails.length) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemDetailsNotFound);
+      }
+  
+      const updatedOrgs = getOrgs.organizations.map(org => {
+        const matchingEcosystems = orgEcosystemDetails
+          .filter(ecosystem => ecosystem.orgId === org.id)
+          .map(ecosystem => ({ ecosystemId: ecosystem.ecosystemId }));
+        return {
+          ...org,
+          ecosystemOrgs: 0 < matchingEcosystems.length ? matchingEcosystems : []
+        };
+      });
+  
+      return {
+        totalCount: getOrgs.totalCount,
+        totalPages: getOrgs.totalPages,
+        organizations: updatedOrgs
+      };
     } catch (error) {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  async _getOrgEcosystems(orgIds: string[]): Promise<IEcosystemOrgStatus[]> {
+    const pattern = { cmd: 'get-ecosystems-by-org' };
+
+    const payload = { orgIds };
+
+    const response = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+    return response;
   }
 
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
@@ -1310,49 +1373,24 @@ export class OrganizationService {
         issuanceRecordsCount,
         connectionRecordsCount,
         orgInvitationsCount, 
-        orgUsers,
-        orgEcosystemsCount
+        orgUsers
       ] = await Promise.all([
         this._getVerificationRecordsCount(orgId, userId),
         this._getIssuanceRecordsCount(orgId, userId),
         this._getConnectionRecordsCount(orgId, userId),
         this.organizationRepository.getOrgInvitationsCount(orgId),
-        this.organizationRepository.getOrgDashboard(orgId),
-        this._getEcosystemsCount(orgId, userId)
+        this.organizationRepository.getOrgDashboard(orgId)
       ]);
 
       const orgUsersCount = orgUsers?.['usersCount'];
 
-      return {verificationRecordsCount, issuanceRecordsCount, connectionRecordsCount, orgUsersCount, orgEcosystemsCount, orgInvitationsCount};
+      return {verificationRecordsCount, issuanceRecordsCount, connectionRecordsCount, orgUsersCount, orgInvitationsCount};
     } catch (error) {
       this.logger.error(`In fetch organization references count : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async _getEcosystemsCount(orgId: string, userId: string): Promise<number> {
-    const pattern = { cmd: 'get-ecosystem-records' };
-
-    const payload = {
-      orgId,
-      userId
-    };
-    const ecosystemsCount = await this.organizationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
-      .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException(
-          {
-            status: error.status,
-            error: error.message
-          },
-          error.status
-        );
-      });
-
-    return ecosystemsCount;
-  }
 
   async _getConnectionRecordsCount(orgId: string, userId: string): Promise<number> {
     const pattern = { cmd: 'get-connection-records' };
@@ -1860,4 +1898,66 @@ export class OrganizationService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async getAgentTypeByAgentTypeId(orgAgentTypeId: string): Promise<string> {
+    try {
+      return await this.organizationRepository.getAgentTypeByAgentTypeId(orgAgentTypeId);
+    } catch (error) {
+      this.logger.error(`get getAgentTypeByAgentTypeId error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getOrgRolesDetails(roleName: string): Promise<object> {
+    try {
+      const orgRoleDetails = await this.organizationRepository.getOrgRoles(roleName);
+      return orgRoleDetails;
+    } catch (error) {
+      this.logger.error(`in getting organization role details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getAllOrgRoles(): Promise<IOrgRoles[]> {
+    try {
+      const orgRoleDetails = await this.organizationRepository.getAllOrgRolesDetails();
+      return orgRoleDetails;
+    } catch (error) {
+      this.logger.error(`in getting all organization roles : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getOrgRolesDetailsByIds(orgRoles: string[]): Promise<object[]> {
+    try {
+      const orgRoleDetails = await this.organizationRepository.getOrgRolesById(orgRoles);
+      return orgRoleDetails;
+    } catch (error) {
+      this.logger.error(`in getting org roles by id : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async getOrganisationsByIds(organisationIds): Promise<object[]> {
+    try {
+      return await this.organizationRepository.getOrganisationsByIds(organisationIds);
+    } catch (error) {
+      this.logger.error(`get getOrganisationsByIds error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getOrgAgentDetailsForEcosystem(data: {orgIds: string[], search: string}): Promise<IOrgDetails> {
+    try {
+        const getAllOrganizationDetails = await this.organizationRepository.handleGetOrganisationData(data);
+
+        if (!getAllOrganizationDetails) {
+            throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+        }
+
+        return getAllOrganizationDetails;
+    } catch (error) {
+        this.logger.error(`Error in getOrgAgentDetailsForEcosystem: ${error}`);
+        throw new RpcException(error.response ? error.response : error);
+    }
+}
 }

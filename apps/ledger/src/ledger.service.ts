@@ -2,10 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { LedgerRepository } from './repositories/ledger.repository';
 import { RpcException } from '@nestjs/microservices';
+// eslint-disable-next-line camelcase
 import { ledgers } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { LedgerDetails } from './interfaces/ledgers.interface';
 import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
+import { ISchemasList } from './schema/interfaces/schema.interface';
 
 @Injectable()
 export class LedgerService extends BaseService {
@@ -60,4 +62,22 @@ export class LedgerService extends BaseService {
             throw new RpcException(error.response ? error.response : error);
         }
     }
+
+
+    async schemaDetailsForEcosystem(data: {schemaArray: string[], search: string, pageSize: number, pageNumber: number}): Promise<ISchemasList> {
+
+        try {
+            const getSchemaDetails = await this.ledgerRepository.handleGetSchemas(data);
+
+            if (!getSchemaDetails) {
+                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+            }
+
+            return getSchemaDetails;
+        } catch (error) {
+            this.logger.error(`Error in getLedgerDetailsById: ${error}`);
+            throw new RpcException(error.response ? error.response : error);
+        }
+    }
+
 }

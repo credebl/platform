@@ -16,7 +16,6 @@ import { SupabaseService } from '@credebl/supabase';
 import { UserModule } from '../user/user.module';
 import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';
-import { EcosystemService } from '../ecosystem/ecosystem.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { OrganizationService } from '../organization/organization.service';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -49,7 +48,6 @@ import { CommonConstants } from '@credebl/common/common.constant';
     CommonService,
     UserService,
     SupabaseService,
-    EcosystemService,
     OrganizationService
   ],
   exports: [

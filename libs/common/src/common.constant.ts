@@ -219,6 +219,9 @@ export enum CommonConstants {
   URL_REVOC_GETBY_CREDDEF = '/revocation/active-registry/#',
   URL_REVOC_REG_BYID = '/revocation/registry/#',
 
+  DEFAULT_CACHE_TTL = 60000,
+  DEFAULT_FIELD_UPLOAD_SIZE = 10485760,
+
   // SUBSCRIPTION TYPES
   SUBSCRIPTION_COMMON = 'common',
   SUBSCRIPTION_BOTH = 'both',
@@ -290,9 +293,6 @@ export enum CommonConstants {
   ONBOARDING_TYPE_EXTERNAL = 1,
   ONBOARDING_TYPE_INVITATION = 2,
 
-  // ecosystem config auto endorsement
-  ECOSYSTEM_AUTO_ENDOSEMENT = 'autoEndorsement',
-
   // Network
   TESTNET = 'testnet',
   STAGINGNET = 'stagingnet',
@@ -311,14 +311,6 @@ export enum CommonConstants {
   ENDORSER_DID = 8,
   ORGANIZATION_CREATION = 9,
   ADD_USER = 10,
-
-  // Ecosystem
-  SIGN_TRANSACTION = '/transactions/endorse',
-  SUBMIT_TRANSACTION = '/transactions/write',
-  TRANSACTION_MULTITENANT_SCHEMA = '/multi-tenancy/schema/#',
-  TRANSACTION_MULTITENANT_CRED_DEF = '/multi-tenancy/credential-definition/#',
-  TRANSACTION_MULTITENANT_SIGN = '/multi-tenancy/transactions/endorse/#',
-  TRANSACTION_MULTITENANT_SUMBIT = '/multi-tenancy/transactions/write/#',
 
   // Static values to up platform Agent
   SEED = '101111110111101100111100000Seed1',
@@ -364,7 +356,6 @@ AGENT_SERVICE = 'agent-service',
 AGENT_PROVISIONING = 'agent-provisioning',
 ISSUANCE_SERVICE = 'issuance',
 VERIFICATION_SERVICE = 'verification',
-ECOSYSTEM_SERVICE = 'ecosystem',
 WEBHOOK_SERVICE = 'webhook',
 NOTIFICATION_SERVICE = 'notification',
 GEO_LOCATION_SERVICE = 'geo-location',

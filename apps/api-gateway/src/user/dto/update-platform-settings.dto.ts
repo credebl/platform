@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdatePlatformSettingsDto {
     @ApiProperty({ example: '127.0.0.1' })
@@ -27,17 +26,4 @@ export class UpdatePlatformSettingsDto {
     @IsOptional()
     @IsString({ message: 'API endpoint should be string' })
     apiEndPoint: string;
-
-    @ApiProperty({ example: 'true' })
-    @IsBoolean()
-    @IsOptional()
-    @IsNotEmpty({ message: 'enableEcosystem should boolean' })
-    enableEcosystem: boolean;
-
-    @ApiProperty({ example: 'true' })
-    @IsBoolean()
-    @IsOptional()
-    @IsNotEmpty({ message: 'multiEcosystemSupport should boolean' })
-    multiEcosystemSupport: boolean;
-
 }

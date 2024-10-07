@@ -42,6 +42,7 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { Response } from 'express';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { IssuanceService } from './issuance.service';
+import { CommonConstants } from '../../../../libs/common/src/common.constant';
 import {
   ClientDetails,
   CredentialQuery,
@@ -400,7 +401,9 @@ async downloadBulkIssuanceCSVTemplate(
     },
     required: true
   })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fieldSize: Number(process.env.FIELD_UPLOAD_SIZE) || CommonConstants.DEFAULT_FIELD_UPLOAD_SIZE } 
+  }))
 
   async issueBulkCredentials(
     @Body() clientDetails: ClientDetails,

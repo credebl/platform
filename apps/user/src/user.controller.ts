@@ -4,7 +4,8 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { user } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { user, user_org_roles } from '@prisma/client';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
@@ -190,18 +191,18 @@ export class UserController {
     return this.userService.addPasskey(payload.userEmail, payload.userInfo);
   }
  /**
-   * @returns platform and ecosystem settings updated status
+   * @returns platform settings updated status
    */
   @MessagePattern({ cmd: 'update-platform-settings' })
   async updatePlatformSettings(payload: { platformSettings: PlatformSettings }): Promise<string> {
     return this.userService.updatePlatformSettings(payload.platformSettings);
   }
   /**
-   * @returns platform and ecosystem settings
+   * @returns platform settings
    */
   @MessagePattern({ cmd: 'fetch-platform-settings' })
-  async getPlatformEcosystemSettings(): Promise<object> {
-    return this.userService.getPlatformEcosystemSettings();
+  async getPlatformSettings(): Promise<object> {
+    return this.userService.getPlatformSettings();
   }
 
   @MessagePattern({ cmd: 'org-deleted-activity' })
@@ -225,4 +226,9 @@ export class UserController {
     return this.userService.getUserByUserIdInKeycloak(payload.email);
   }
 
+  @MessagePattern({ cmd: 'get-user-organizations' })
+  // eslint-disable-next-line camelcase
+  async getuserOrganizationByUserId(payload: {userId: string}): Promise<user_org_roles[]> {
+    return this.userService.getuserOrganizationByUserId(payload.userId);
+  }
 }

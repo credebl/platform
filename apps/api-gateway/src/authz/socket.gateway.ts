@@ -125,6 +125,6 @@ export class SocketGateway implements OnGatewayConnection {
     this.logger.log(`bulk-issuance-process-retry-completed ${payload.clientId}`);
     this.server
       .to(payload.clientId)
-      .emit('bulk-issuance-process-retry-completed');
+      .emit('bulk-issuance-process-retry-completed', {fileUploadId: payload.fileUploadId});
   }
 }

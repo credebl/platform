@@ -704,4 +704,24 @@ export class IssuanceRepository {
       throw error;
     }
   }
+  async getFileDetailsAndFileDataByFileId(
+    fileId: string,
+    orgId:string
+  ): Promise<object> {
+    try {
+      const fileDetails = await this.prisma.file_upload.findUnique({
+       where: {
+        id:fileId, 
+        orgId
+       },
+       include : {
+        file_data:true
+       }
+      });
+      return fileDetails;
+    } catch (error) {
+      this.logger.error(`[getFileDetailsAndFileDataByFileId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

@@ -30,8 +30,8 @@ async function bootstrap(): Promise<void> {
 
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set('x-powered-by', false);
-  app.use(express.json({ limit: '50mb' }));
-  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+  app.use(express.json({ limit: '100mb' }));
+  app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
   app.use(function (req, res, next) {
     let err = null;
@@ -45,6 +45,7 @@ async function bootstrap(): Promise<void> {
     }
     next();
   });
+
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)

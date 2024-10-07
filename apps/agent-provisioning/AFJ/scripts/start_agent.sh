@@ -141,7 +141,7 @@ cat <<EOF >${CONFIG_FILE}
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
   "autoAcceptProofs": "contentApproved",
-  "logLevel": 5,
+  "logLevel": 2,
   "inboundTransport": [
     {
       "transport": "$PROTOCOL",

@@ -81,8 +81,6 @@ export interface PlatformSettings {
   sgApiKey: string;
   emailFrom: string;
   apiEndPoint: string;
-  enableEcosystem: boolean;
-  multiEcosystemSupport: boolean;
 }
 
 export interface IShareUserCertificate {
@@ -234,4 +232,15 @@ export interface UserRoleMapping {
 export interface UserRoleDetails{
   id: string;
   role: $Enums.UserRole;
+}
+
+export interface IEcosystemConfig {
+  id: string;
+  key: string;
+  value: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date | null;
 }

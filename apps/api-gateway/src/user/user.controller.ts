@@ -148,12 +148,12 @@ export class UserController {
   }
 
   /**
-   * @returns platform and ecosystem settings
+   * @returns platform settings
    */
   @Get('/platform-settings')
   @ApiOperation({
-    summary: 'Get all platform and ecosystem settings',
-    description: 'Get all platform and ecosystem settings'
+    summary: 'Get all platform settings',
+    description: 'Get all platform settings'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)
@@ -396,13 +396,13 @@ export class UserController {
 
   /**
    * @Body platformSettings
-   * @returns platform and ecosystem settings updated status
+   * @returns platform settings updated status
    */
   
   @Put('/platform-settings')
   @ApiOperation({
-    summary: 'Update platform and ecosystem settings',
-    description: 'Update platform and ecosystem settings'
+    summary: 'Update platform settings',
+    description: 'Update platform settings'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)

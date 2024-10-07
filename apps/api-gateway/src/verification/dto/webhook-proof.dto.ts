@@ -43,6 +43,10 @@ export class WebhookPresentationProofDto {
 
     @ApiPropertyOptional()
     @IsOptional()
+    parentThreadId?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
     presentationId: string;
 
     @ApiPropertyOptional()

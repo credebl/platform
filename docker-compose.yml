@@ -39,10 +39,20 @@ services:
       dockerfile: Dockerfiles/Dockerfile.user
     env_file:
       - ./.env
+  utility:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.utility
+    env_file:
+      - ./.env
   connection:
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
+      - utility
       - user
     build:
       context: ./  # Adjust the context path as needed
@@ -122,6 +132,7 @@ services:
       - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
       - /var/run/docker.sock:/var/run/docker.sock
       - /app/agent-provisioning/AFJ/token:/app/agent-provisioning/AFJ/token
+      - $PWD/apps/agent-provisioning/AFJ/agent.env:/app/agent-provisioning/AFJ/agent.env
   agent-service:
     depends_on:
       - nats  # Use depends_on instead of needs

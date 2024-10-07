@@ -37,7 +37,6 @@ import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
-import { CommonConstants } from '../../../libs/common/src/common.constant';
 
 @Injectable()
 export class IssuanceService {

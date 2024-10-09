@@ -49,7 +49,6 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { AwsService } from '@credebl/aws/aws.service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { CreateCertificateDto } from './dto/share-certificate.dto';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
 
 @UseFilters(CustomExceptionFilter)
@@ -266,23 +265,6 @@ export class UserController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-  /**
-   * @param credentialId
-   * @returns User credentials
-   */
-  @Get('/user-credentials/:credentialId')
-  @ApiOperation({ summary: 'Get user credentials by Id', description: 'Get user credentials by Id' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  async getUserCredentialsById(@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
-    const getUserCrdentialsById = await this.userService.getUserCredentialsById(credentialId);
-
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.userCredentials,
-      data: getUserCrdentialsById
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
 
   /**
 *
@@ -310,33 +292,6 @@ export class UserController {
       message: invitationRes
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-  /** 
-   * @Body shareUserCredentials
-   * @returns User certificate URL
-   */
-  @Post('/certificate')
-  @ApiOperation({
-    summary: 'Share user certificate',
-    description: 'Share user certificate'
-  })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  async shareUserCertificate(
-    @Body() shareUserCredentials: CreateCertificateDto,
-    @Res() res: Response
-  ): Promise<Response> {  
-    const schemaIdParts = shareUserCredentials.schemaId.split(':');
-    // eslint-disable-next-line prefer-destructuring
-    const title = schemaIdParts[2];
-
-   const imageBuffer = await this.userService.shareUserCertificate(shareUserCredentials);
-      const finalResponse: IResponse = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.user.success.shareUserCertificate || ResponseMessages.user.success.degreeCertificate,
-        label: title,
-        data: imageBuffer
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**

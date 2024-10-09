@@ -106,14 +106,6 @@ export interface ICheckUserDetails {
   isFidoVerified?: boolean;
   isRegistrationCompleted?: boolean;
 }
-export interface IUserCredentials {
-  id: string;
-  imageUrl?: string;
-  credentialId?: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  deletedAt: Date;
-}
 
 export interface IOrgUsers {
     totalPages: number,

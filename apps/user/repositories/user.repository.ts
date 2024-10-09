@@ -1,12 +1,11 @@
 /* eslint-disable prefer-destructuring */
 
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import {
   IOrgUsers,
   PlatformSettings,
   IShareUserCertificate,
   UpdateUserProfile,
-  IUserCredentials,
   ISendVerificationEmail,
   IUsersProfile,
   IUserInformation,
@@ -16,7 +15,6 @@ import {
   UserRoleMapping,
   UserRoleDetails
 } from '../interfaces/user.interface';
-import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { RecordType, schema, token, user, user_org_roles } from '@prisma/client';
@@ -116,19 +114,6 @@ export class UserRepository {
     };
 
     return this.findUser(queryOptions);
-  }
-
-  /**
-   *
-   * @param id
-   * @returns User profile data
-   */
-  async getUserCredentialsById(credentialId: string): Promise<IUserCredentials> {
-    return this.prisma.user_credentials.findUnique({
-      where: {
-        credentialId
-      }
-    });
   }
 
   /**
@@ -558,20 +543,6 @@ export class UserRepository {
     } catch (error) {
       this.logger.error(`checkSchemaExist:${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
-    }
-  }
-
-  async saveCertificateImageUrl(imageUrl: string, credentialId: string): Promise<unknown> {
-    try {
-      const saveImageUrl = await this.prisma.user_credentials.create({
-        data: {
-          imageUrl,
-          credentialId
-        }
-      });
-      return saveImageUrl;
-    } catch (error) {
-      throw new Error(`Error saving certificate image URL: ${error.message}`);
     }
   }
 

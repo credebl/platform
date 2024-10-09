@@ -37,7 +37,6 @@ import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
-
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
@@ -48,12 +47,12 @@ export class IssuanceService {
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
     private readonly userActivityRepository: UserActivityRepository,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
-    @InjectQueue('bulk-issuance') private bulkIssuanceQueue: Queue,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache
   ) { }
 
   async getIssuanceRecords(orgId: string): Promise<number> {
@@ -1170,10 +1169,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       credentialPayload.fileData = type === SchemaType.W3C_Schema ? finalFileData : parsedData;
       credentialPayload.fileName = fileName;
       const newCacheKey = uuidv4();
-
-      await this.cacheManager.set(requestId ? requestId : newCacheKey, JSON.stringify(credentialPayload), 60000);
+      const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) || CommonConstants.DEFAULT_CACHE_TTL; 
+      await this.cacheManager.set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL);
      
-return newCacheKey;
+      return newCacheKey;
 
 } catch (error) {
       this.logger.error(`error in validating credentials : ${error.response}`);

@@ -219,6 +219,9 @@ export enum CommonConstants {
   URL_REVOC_GETBY_CREDDEF = '/revocation/active-registry/#',
   URL_REVOC_REG_BYID = '/revocation/registry/#',
 
+  DEFAULT_CACHE_TTL = 60000,
+  DEFAULT_FIELD_UPLOAD_SIZE = 10485760,
+
   // SUBSCRIPTION TYPES
   SUBSCRIPTION_COMMON = 'common',
   SUBSCRIPTION_BOTH = 'both',

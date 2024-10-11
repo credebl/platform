@@ -1116,7 +1116,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       if (0 >= parsedData.meta.fields.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyheader);
       }
-      const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email_identifier));
+      const invalidEmails = parsedData.data.filter((entry) => !validateEmail(entry.email_identifier.trim()));
 
       if (0 < invalidEmails.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.invalidEmails);

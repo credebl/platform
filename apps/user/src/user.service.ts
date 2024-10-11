@@ -982,7 +982,7 @@ export class UserService {
 
   async convertHtmlToImage(template: string, credentialId: string, option?: IPuppeteerOption): Promise<Buffer> {
     const browser = await puppeteer.launch({
-      executablePath: '/usr/bin/google-chrome', 
+      executablePath: '/usr/bin/chromium',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       protocolTimeout: 200000,
       headless: true

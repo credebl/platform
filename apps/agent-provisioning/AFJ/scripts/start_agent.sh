@@ -181,6 +181,8 @@ services:
     ports:
      - ${INBOUND_PORT}:${INBOUND_PORT}
      - ${ADMIN_PORT}:${ADMIN_PORT}
+    env_file:
+      - agent.env
    
     volumes: 
       - ./agent-config/${AGENCY}_${CONTAINER_NAME}.json:/config.json   

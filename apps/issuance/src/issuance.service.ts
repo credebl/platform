@@ -253,7 +253,7 @@ export class IssuanceService {
           attributesArray.forEach((attribute) => {
             if (attribute.attributeName && attribute.isRequired) {
 
-              payload.attributes.map((attr) => {
+              payload.attributes.forEach((attr) => {
                 if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
                   schemadetailsResponseError.push(
                     `Attribute '${attribute.attributeName}' is required but has an empty value.`

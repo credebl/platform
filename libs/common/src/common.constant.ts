@@ -157,6 +157,11 @@ export enum CommonConstants {
   // EVENTS
   EVENT_AUDIT = 'audit_event',
 
+  // POLYGON KEYWORDS
+  POLYGON = 'polygon',
+  POLYGON_MAINNET = 'mainnet',
+  POLYGON_TESTNET = 'testnet',
+
   // DOMAIN EVENTS
   DOMAIN_EVENT_SCHEMA_CREATED = 'Schema Created',
   DOMAIN_EVENT_CRED_DEF_CREATED = 'Cred-Def Created',

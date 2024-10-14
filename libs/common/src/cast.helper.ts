@@ -94,7 +94,7 @@ export const IsNotSQLInjection =
           // Check if the value is a string
           if ('string' === typeof value) {
             // Regex to check for SQL injection keywords at the start
-            const startInjectionRegex = new RegExp(`^\\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|FROM|WHERE|AND|OR|HAVING|LIMIT|OFFSET|JOIN|LIKE|IN|IS|NULL|SET|CASE|WHEN|THEN|ELSE|END)\\b`, 'i');
+            const startInjectionRegex = new RegExp(`^\\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|FROM|WHERE|AND|OR)\\b`, 'i');
 
             // Check if the SQL injection pattern is present at the start
             if (startInjectionRegex.test(value)) {

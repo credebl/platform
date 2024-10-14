@@ -90,16 +90,18 @@ export const IsNotSQLInjection =
       options: validationOptions,
       validator: {
         validate(value) {
-          // Check if the value contains any common SQL injection keywords
-          const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', 'WHERE', 'AND', 'OR'];
+
+          // Check if the value is a string
           if ('string' === typeof value) {
-            for (const keyword of sqlKeywords) {
-              const regex = new RegExp(`\\b${keyword}\\b`);
-              if (regex.test(value)) {
-                return false; // Value contains a SQL injection keyword
-              }
+            // Regex to check for SQL injection keywords at the start
+            const startInjectionRegex = new RegExp(`^\\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|FROM|WHERE|AND|OR|HAVING|LIMIT|OFFSET|JOIN|LIKE|IN|IS|NULL|SET|CASE|WHEN|THEN|ELSE|END)\\b`, 'i');
+
+            // Check if the SQL injection pattern is present at the start
+            if (startInjectionRegex.test(value)) {
+              return false; // SQL keyword present at the start
             }
           }
+
           return true; // Value does not contain any SQL injection keywords
         },
         defaultMessage(args: ValidationArguments) {

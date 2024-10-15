@@ -90,16 +90,18 @@ export const IsNotSQLInjection =
       options: validationOptions,
       validator: {
         validate(value) {
-          // Check if the value contains any common SQL injection keywords
-          const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', 'WHERE', 'AND', 'OR'];
-         if ('string' === typeof value) {
-            for (const keyword of sqlKeywords) {
-              const regex = new RegExp(`\\b${keyword}\\b`);
-              if (regex.test(value)) {
-                return false; // Value contains a SQL injection keyword
-              }
+
+          // Check if the value is a string
+          if ('string' === typeof value) {
+            // Regex to check for SQL injection keywords at the start
+            const startInjectionRegex = new RegExp(`^\\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|FROM|WHERE|AND|OR)\\b`, 'i');
+
+            // Check if the SQL injection pattern is present at the start
+            if (startInjectionRegex.test(value)) {
+              return false; // SQL keyword present at the start
             }
           }
+
           return true; // Value does not contain any SQL injection keywords
         },
         defaultMessage(args: ValidationArguments) {
@@ -108,7 +110,7 @@ export const IsNotSQLInjection =
       }
     });
   };
-
+  
 @ValidatorConstraint({ name: 'customText', async: false })
 export class ImageBase64Validator implements ValidatorConstraintInterface {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars

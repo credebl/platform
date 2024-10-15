@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import { ResponseMessages } from './response-messages';
+import { CommonConstants } from './common.constant';
 dotenv.config();
 /* eslint-disable camelcase */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
@@ -59,13 +60,14 @@ export function convertUrlToDeepLinkUrl(url: string): string {
   return deepLinkUrl;
 }
 
-export const networkNamespace = (did):string => {
+export const networkNamespace = (did: string): string => {
   // Split the DID into segments using the colon as a delimiter
   const segments = did.split(':');
-  const containsTestnet = segments.some(segment => segment.includes('polygon'));
-  if (containsTestnet) {
-    return `${segments[1]}:${segments[2]}`;
-  } else {
-    return segments[1];
+  const hasPolygon = segments.some(segment => segment.includes(CommonConstants.POLYGON));
+  const hasTestnet = segments.some(segment => segment.includes(CommonConstants.TESTNET));
+  if (hasPolygon) {
+    return hasTestnet ? `${segments[1]}:${segments[2]}` : `${segments[1]}:${CommonConstants.MAINNET}`;
   }
+
+  return segments[1];
 };

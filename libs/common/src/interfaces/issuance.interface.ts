@@ -85,6 +85,8 @@ export interface IIssuedCredential {
       certificate: string;
       size: string;
       orientation: string;
+      height?: string;
+      width?: string;
     }
 
     interface ICredentialSubject {

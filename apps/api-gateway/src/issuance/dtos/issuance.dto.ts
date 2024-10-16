@@ -55,6 +55,18 @@ class PrettyVc {
   @Transform(({ value }) => trim(value))
   @IsString({ message: 'orientation must be in string format.' })
   orientation: string;
+
+  @ApiPropertyOptional({ example: '60px' })
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'height must be in string format.' })
+  height?: string;
+
+  @ApiPropertyOptional({ example: '60px' })
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'width must be in string format.' })
+  width?: string;
 }
 export class Credential {
   @ApiProperty()

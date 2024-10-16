@@ -711,7 +711,9 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       prettyVc: {
         certificate: prettyVc?.certificate,
         size: prettyVc?.size,
-        orientation: prettyVc?.orientation
+        orientation: prettyVc?.orientation,
+        height: prettyVc?.height,
+        width: prettyVc?.width
       }
     };
 
@@ -1607,7 +1609,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       prettyVc = {
         certificate: jobDetails?.certificate,
         size: jobDetails?.size,
-        orientation: jobDetails?.orientation
+        orientation: jobDetails?.orientation,
+        height: prettyVc?.height,
+        width: prettyVc?.width
       };
 
       oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc);

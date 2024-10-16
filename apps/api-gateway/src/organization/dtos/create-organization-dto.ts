@@ -12,7 +12,7 @@ export class CreateOrganizationDto {
   @MinLength(2, { message: 'Organization name must be at least 2 characters.' })
   @MaxLength(200, { message: 'Organization name must be at most 200 characters.' })
   @IsString({ message: 'Organization name must be in string format.' })
-  @IsNotSQLInjection({ message: 'Organization name is required.' })
+  @IsNotSQLInjection({ message: 'Incorrect pattern for organization name.' })
   name: string;
 
   @ApiProperty()

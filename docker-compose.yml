@@ -154,7 +154,23 @@ services:
     - /var/run/docker.sock:/var/run/docker.sock
     volumes_from:
       - agent-provisioning
- 
+  cloud-wallet:
+    depends_on:
+      - nats
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+      - organization
+      - verification
+      - agent-provisioning
+      - agent-service
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.cloud-wallet
+    env_file:
+      - ./.env
   
   
   

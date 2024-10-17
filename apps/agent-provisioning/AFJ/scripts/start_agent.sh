@@ -209,7 +209,7 @@ if [ $? -eq 0 ]; then
 
   docker rm -f "${PROJECT_NAME}" || true
 
-  docker compose -f $FILE_NAME --project-name "${PROJECT_NAME}" up -d
+  docker-compose -f $FILE_NAME --project-name "${PROJECT_NAME}" up -d
   if [ $? -eq 0 ]; then
 
     n=0

@@ -170,6 +170,8 @@ services:
     environment:
       AFJ_REST_LOG_LEVEL: 1
       ROOT_PATH: ${ROOT_PATH}
+    env_file:
+      - /app/agent.env
     ports:
      - ${INBOUND_PORT}:${INBOUND_PORT}
      - ${ADMIN_PORT}:${ADMIN_PORT}

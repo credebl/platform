@@ -1616,8 +1616,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         certificate: jobDetails?.certificate,
         size: jobDetails?.size,
         orientation: jobDetails?.orientation,
-        height: prettyVc?.height,
-        width: prettyVc?.width
+        height: jobDetails?.height,
+        width: jobDetails?.width
       };
 
       oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc);

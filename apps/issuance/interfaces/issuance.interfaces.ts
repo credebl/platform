@@ -245,6 +245,8 @@ export interface IClientDetails {
   certificate?: string;
   size?: string;
   orientation?: string;
+  height?: string;
+  width?: string;
 }
 export interface IIssuedCredentialsSearchInterface {
   issuedCredentialsSearchCriteria: IIssuedCredentialsSearchCriteria;
@@ -343,6 +345,8 @@ export interface IQueuePayload{
   certificate?: string;
   size?: string;
   orientation?: string;
+  height?: string;
+  width?: string;
   isReuseConnection?: boolean;
 }
 
@@ -385,4 +389,6 @@ export interface BulkPayloadDetails {
   certificate?: string;
   size?: string;
   orientation?: string;
+  height?: string;
+  width?: string;
 }

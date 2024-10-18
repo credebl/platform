@@ -591,6 +591,18 @@ export class ClientDetails {
   @IsOptional()
   @IsString({ message: 'Orientation should be string' })
   orientation?: string;
+
+  @ApiPropertyOptional({ example: '60px' })
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'height must be in string format.' })
+  height?: string;
+
+  @ApiPropertyOptional({ example: '60px' })
+  @IsOptional()
+  @Transform(({ value }) => trim(value))
+  @IsString({ message: 'width must be in string format.' })
+  width?: string;
 }
 
 export class TemplateDetails {

@@ -1531,7 +1531,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           platformName: clientDetails?.platformName,
           certificate: clientDetails?.certificate,
           size: clientDetails?.size,
-          orientation: clientDetails?.orientation
+          orientation: clientDetails?.orientation,
+          height: clientDetails?.height,
+          width: clientDetails?.width
         };
         this.processInBatches(bulkpayloadRetry, bulkPayloadDetails);
        } catch (error) {

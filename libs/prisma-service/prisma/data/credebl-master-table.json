@@ -136,6 +136,15 @@
       "indyNamespace": "polygon:testnet"
     },
     {
+      "name": "Polygon Mainnet",
+      "networkType": "mainnet",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "mainnet",
+      "nymTxnEndpoint": "",
+      "indyNamespace": "polygon:mainnet"
+    },
+    {
       "name": "NA",
       "networkType": "NA",
       "poolConfig": "NA",

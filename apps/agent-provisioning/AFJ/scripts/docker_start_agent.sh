@@ -143,7 +143,7 @@ cat <<EOF >${CONFIG_FILE}
     "$PROTOCOL"
   ],
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
-  "adminPort": "$ADMIN_PORT",
+  "adminPort": $ADMIN_PORT,
   "tenancy": $TENANT
 }
 EOF
@@ -170,6 +170,8 @@ services:
     environment:
       AFJ_REST_LOG_LEVEL: 1
       ROOT_PATH: ${ROOT_PATH}
+    env_file:
+      - /app/agent.env
     ports:
      - ${INBOUND_PORT}:${INBOUND_PORT}
      - ${ADMIN_PORT}:${ADMIN_PORT}
@@ -194,7 +196,7 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker compose -f $FILE_NAME up -d
+  docker-compose -f $FILE_NAME up -d
   if [ $? -eq 0 ]; then
 
     n=0
@@ -223,7 +225,7 @@ if [ $? -eq 0 ]; then
     container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
 
     # Extract the token from the logs using sed
-    token=$(echo "$container_logs" | sed -nE 's/.*API Toekn: ([^ ]+).*/\1/p')
+    token=$(echo "$container_logs" | sed -nE 's/.*API Token: ([^ ]+).*/\1/p')
 
     # Print the extracted token
     echo "Token: $token"

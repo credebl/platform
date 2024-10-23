@@ -25,7 +25,7 @@ export class UpdateOrganizationDto {
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'Description is required.' })
     @MinLength(2, { message: 'Description must be at least 2 characters.' })
-    @MaxLength(1000, { message: 'Description must be at most 1000 characters.' })
+    @MaxLength(500, { message: 'Description must be at most 500 characters.' })
     @IsString({ message: 'Description must be in string format.' })
     description: string;
 

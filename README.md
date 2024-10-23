@@ -97,7 +97,7 @@ http://localhost:5000/api
 
 ## Credit
 
-The CREDEBL platform is built by Blockster Labs (Product division of AyanWorks) team. 
+The CREDEBL platform is built by AYANWORKS team. 
 For the core SSI capabilities, it leverages the great work from multiple open-source projects such as Hyperledger Aries, Bifold, Asker, Indy, etc.
 
 ## Contributing

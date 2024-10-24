@@ -106,7 +106,7 @@ export class AuthzController {
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
 
     if (loginUserDto.email) {
-      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password, loginUserDto.isPasskey);
+      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password);
 
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,

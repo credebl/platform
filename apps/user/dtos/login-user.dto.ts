@@ -14,10 +14,10 @@ export class LoginUserDto {
     @ApiProperty({ example: 'Password@1' })
     @IsOptional()
     @IsString({ message: 'password should be string' })
-    password: string;
+    password?: string;
 
     @ApiProperty({ example: 'false' })
     @IsOptional()
     @IsBoolean({ message: 'isPasskey should be boolean' })
-    isPasskey: boolean;
+    isPasskey?: boolean;
 }

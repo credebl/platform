@@ -184,7 +184,7 @@ export interface IVerifyUserEmail{
 export interface  IUserSignIn{
   email: string;
   password: string;
-  isPasskey: boolean;
+  isPasskey?: boolean;
 }
 
 export interface IUserResetPassword{

@@ -1,10 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsBoolean, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export class GenerateRegistrationDto {
 
   @IsOptional()
-  @ApiProperty({ example: 'false' })
+  @ApiPropertyOptional({ example: 'false' })
   @IsBoolean({ message: 'isPasskey should be boolean' })
   deviceFlag: boolean;
 }
@@ -37,7 +37,7 @@ export class VerifyRegistrationDto {
   @IsString()
   rawId: string;
 
-  @ApiProperty({ type: ResponseDto, nullable: true }) 
+  @ApiPropertyOptional({ type: ResponseDto, nullable: true }) 
   @IsOptional()
   response: ResponseDto;
 
@@ -105,7 +105,7 @@ class VerifyAuthenticationResponseDto {
     @IsString()
     rawId: string;
   
-    @ApiProperty() 
+    @ApiPropertyOptional() 
     @IsOptional()
     response: VerifyAuthenticationResponseDto;
   

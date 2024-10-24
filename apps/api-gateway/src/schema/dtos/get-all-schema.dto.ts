@@ -1,31 +1,31 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 /* eslint-disable camelcase */
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsUUID, Min } from 'class-validator';
 import { toNumber, trim } from '@credebl/common/cast.helper';
 import { CredDefSortFields, SchemaType, SortFields, SortValue } from '@credebl/enum/enum';
 
 export class GetAllSchemaDto {
-    @ApiProperty({ required: false })
+    @ApiPropertyOptional({ required: false })
     @IsOptional()
     @Transform(({ value }) => trim(value))
     @Type(() => String)
     searchByText: string = '';
 
-    @ApiProperty({ required: false, default: 1 })
+    @ApiPropertyOptional({ required: false, default: 1 })
     @IsOptional()
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: 'Page number must be greater than 0' })
     pageNumber: number = 1;
 
-    @ApiProperty({ required: false, default: 10 })
+    @ApiPropertyOptional({ required: false, default: 10 })
     @IsOptional()
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: 'Page size must be greater than 0' })
     pageSize: number = 10;
     
-    @ApiProperty({
+    @ApiPropertyOptional({
         required: false
     })
     @Transform(({ value }) => trim(value))
@@ -33,7 +33,7 @@ export class GetAllSchemaDto {
     @IsEnum(SortFields)
     sortField: string = SortFields.CREATED_DATE_TIME;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         enum: [SortValue.DESC, SortValue.ASC],
         required: false
     })
@@ -45,24 +45,24 @@ export class GetAllSchemaDto {
 
 export class GetCredentialDefinitionBySchemaIdDto {
 
-    @ApiProperty({ required: false, default: 1 })
+    @ApiPropertyOptional({ required: false, default: 1 })
     @IsOptional()
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: 'Page number must be greater than 0' })
     pageNumber: number = 1;
 
-    @ApiProperty({ required: false, default: 10 })
+    @ApiPropertyOptional({ required: false, default: 10 })
     @IsOptional()
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: 'Page size must be greater than 0' })
     pageSize: number = 10;
 
-    @ApiProperty({ required: false })
+    @ApiPropertyOptional({ required: false })
     @IsOptional()
     @Type(() => String)
     searchByText: string = '';
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         required: false
     })
     @Transform(({ value }) => trim(value))
@@ -70,7 +70,7 @@ export class GetCredentialDefinitionBySchemaIdDto {
     @IsEnum(CredDefSortFields)
     sortField: string = SortFields.CREATED_DATE_TIME;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         enum: [SortValue.DESC, SortValue.ASC],
         required: false
     })
@@ -87,30 +87,30 @@ export class GetCredentialDefinitionBySchemaIdDto {
 
 export class GetAllSchemaByPlatformDto {
 
-    @ApiProperty({ example: '1a7eac11-ff05-40d7-8351-4d7467687cad'})
+    @ApiPropertyOptional({ example: '1a7eac11-ff05-40d7-8351-4d7467687cad'})
     @ApiPropertyOptional()
     @IsOptional()
     @IsUUID('4', { message: 'Invalid format of ledgerId' })
     ledgerId?: string;
     
-    @ApiProperty({ required: false, default: 1  })
+    @ApiPropertyOptional({ required: false, default: 1  })
     @IsOptional()
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: 'Page number must be greater than 0' })
     pageNumber: number = 1;
 
-    @ApiProperty({ required: false })
+    @ApiPropertyOptional({ required: false })
     @IsOptional()
     @Type(() => String)
     searchByText: string = '';
 
-    @ApiProperty({ required: false, default: 10  })
+    @ApiPropertyOptional({ required: false, default: 10  })
     @IsOptional()
     @Transform(({ value }) => toNumber(value))
     @Min(1, { message: 'Page size must be greater than 0' })
     pageSize: number = 10;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         required: false
     })
     @Transform(({ value }) => trim(value))
@@ -118,11 +118,11 @@ export class GetAllSchemaByPlatformDto {
     @IsEnum(SortFields)
     sorting: string = SortFields.CREATED_DATE_TIME;
 
-    @ApiProperty({ required: false })
+    @ApiPropertyOptional({ required: false })
     @IsOptional()
     sortByValue: string = SortValue.DESC;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         type: SchemaType,
         required: false
     })

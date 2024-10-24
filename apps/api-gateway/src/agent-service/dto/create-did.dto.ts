@@ -5,7 +5,7 @@ import { MaxLength, IsString, Matches, IsNotEmpty, IsOptional } from 'class-vali
 
 export class CreateDidDto {
 
-    @ApiProperty({ example: '000000000000000000000000000Seed1' })
+    @ApiPropertyOptional({ example: '000000000000000000000000000Seed1' })
     @MaxLength(32, { message: 'seed must be at most 32 characters.' })
     @Transform(({ value }) => trim(value))
     @IsOptional()

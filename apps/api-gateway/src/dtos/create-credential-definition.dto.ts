@@ -1,6 +1,6 @@
 import { IsBoolean, IsDefined, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCredentialDefinitionDto {
 
@@ -19,7 +19,7 @@ export class CreateCredentialDefinitionDto {
     @IsNotEmpty({ message: 'Please provide orgId' })
     orgId: string;
 
-    @ApiProperty({ required: false })
+    @ApiPropertyOptional({ required: false })
     @IsOptional()
     @IsString({ message: 'orgDid must be a string' })
     orgDid: string;

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 
 interface ITags {
@@ -23,47 +23,47 @@ interface IMetadata {
 
 export class IssueCredentialSaveDto {
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     _tags: ITags;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     metadata: IMetadata;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     credentials: [];
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     id: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     createdAt: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     state: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     connectionId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     threadId: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     protocolVersion: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     credentialAttributes: ICredentialAttributes[];
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     autoAcceptCredential: string;
 }

@@ -12,7 +12,7 @@ class ConnectionAttributes {
     @Transform(({ value }) => trim(value))
     connectionId: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
       example: [
         {
           value: 'string',
@@ -28,7 +28,7 @@ class ConnectionAttributes {
     @IsOptional()
     attributes?: Attribute[];
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsNotEmpty({ message: 'Please provide valid credential' })
     @IsObject({ message: 'credential should be an object' })
     @Type(() => Credential)
@@ -36,7 +36,7 @@ class ConnectionAttributes {
     @ValidateNested({ each: true })
     credential?: Credential;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsNotEmpty({ message: 'Please provide valid options' })
     @IsObject({ message: 'options should be an object' })
     @Type(() => JsonLdCredentialDetailOptions)
@@ -103,7 +103,7 @@ export class IssueCredentialDto extends CredentialsIssuanceDto {
     })
     autoAcceptCredential?: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         example: false
       })
       @IsOptional()

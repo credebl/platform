@@ -11,13 +11,13 @@ export class CreateTenantDto extends CreateDidDto {
     @MinLength(2, { message: 'Minimum length for label must be 2 characters.' })
     label: string;
 
-    @ApiProperty({ example: 'ojIckSD2jqNzOqIrAGzL' })
+    @ApiPropertyOptional({ example: 'ojIckSD2jqNzOqIrAGzL' })
     @IsOptional()
     @ApiPropertyOptional()
     @IsString({ message: 'did must be in string format.' })
     clientSocketId?: string;
 
-    @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
+    @ApiPropertyOptional({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
     @IsOptional()
     @ApiPropertyOptional()
     @IsString({ message: 'did must be in string format.' })

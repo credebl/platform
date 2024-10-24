@@ -16,7 +16,7 @@ export class AgentSpinupDto extends CreateDidDto {
   })
   walletName: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @Transform(({ value }) => trim(value))
   @IsOptional()
   @IsString({ message: 'walletPassword must be in string format.' })

@@ -77,7 +77,7 @@ export class Fields {
 }
 
 export class Constraints {
-  @ApiProperty({type: () => [Fields]})
+  @ApiPropertyOptional({type: () => [Fields]})
   @IsOptional()
   @IsNotEmpty({ message: 'Fields are required.' })
   @ValidateNested()
@@ -99,13 +99,13 @@ export class InputDescriptors {
   @IsString()
   id:string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   @IsNotEmpty({ message: 'name is required.' })
   name:string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   @IsNotEmpty({ message: 'purpose is required.' })
@@ -119,7 +119,7 @@ export class InputDescriptors {
   schema:Schema[];
 
   
-  @ApiProperty({type: () => Constraints})
+  @ApiPropertyOptional({type: () => Constraints})
   @IsOptional()
   @IsNotEmpty({ message: 'Constraints are required.' })
   @ValidateNested()
@@ -199,7 +199,7 @@ export class RequestProofDto extends ProofPayload {
     @IsNotEmpty({ message: 'connectionId is required.' })
     connectionId: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
       'example': 
       {
         'indy': {
@@ -223,7 +223,7 @@ export class RequestProofDto extends ProofPayload {
   @Type(() => IndyDto)
   proofFormats?: IndyDto;    
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         'example': 
             {
                 id: '32f54163-7166-48f1-93d8-ff217bdb0653',
@@ -295,7 +295,7 @@ export class OutOfBandRequestProof extends ProofPayload {
     @Type(() => ProofRequestAttribute)
     attributes: ProofRequestAttribute[];
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @Transform(({ value }) => trim(value))
@@ -303,7 +303,7 @@ export class OutOfBandRequestProof extends ProofPayload {
     @IsOptional()
     emailId?: string | string[];
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     comment: string;
     orgId: string;
@@ -337,7 +337,7 @@ export class SendProofRequestPayload {
     @IsString({ message: 'comment must be in string' })
     comment: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         'example': {
                 indy: {
                     name: 'Verify national identity',
@@ -363,7 +363,7 @@ export class SendProofRequestPayload {
     @IsOptional()
     proofFormats?: IProofFormats;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         'example': 
             {
                 id: '32f54163-7166-48f1-93d8-ff217bdb0653',
@@ -418,7 +418,7 @@ export class SendProofRequestPayload {
     @IsNotEmpty({ message: 'please provide valid parentThreadId' })
     parentThreadId: string;
 
-    @ApiProperty({ example: true })
+    @ApiPropertyOptional({ example: true })
     @IsBoolean()
     @IsOptional()
     @IsNotEmpty({message:'Please provide the flag for shorten url.'})

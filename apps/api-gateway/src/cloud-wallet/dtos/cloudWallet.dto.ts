@@ -12,7 +12,7 @@ export class CreateCloudWalletDto {
     @IsNotSQLInjection({ message: 'label is required.' })
     label: string;
 
-    @ApiProperty({ example: 'https://picsum.photos/200', description: 'Connection image URL' })
+    @ApiPropertyOptional({ example: 'https://picsum.photos/200', description: 'Connection image URL' })
     @IsString({ message: 'Image URL must be a string' })
     @IsOptional()
     @IsNotEmpty({ message: 'please provide valid image URL' })
@@ -122,7 +122,7 @@ export class ReceiveInvitationUrlDTO {
 
   export class CreateCloudWalletDidDto {
 
-    @ApiProperty({ example: '000000000000000000000000000Seed1' })
+    @ApiPropertyOptional({ example: '000000000000000000000000000Seed1' })
     @MaxLength(32, { message: 'seed must be at most 32 characters.' })
     @Transform(({ value }) => trim(value))
     @IsOptional()
@@ -192,19 +192,19 @@ export class ReceiveInvitationUrlDTO {
 }
 
 export class CredentialListDto {
-  @ApiProperty({ required: false})
+  @ApiPropertyOptional({ required: false})
   @IsNotEmpty()
   @IsOptional()
   @IsString()
   threadId: string;
 
-  @ApiProperty({ required: false})
+  @ApiPropertyOptional({ required: false})
   @IsNotEmpty()
   @IsOptional()
   @IsString()
   connectionId: string;
  
-  @ApiProperty({ required: false})
+  @ApiPropertyOptional({ required: false})
   @IsNotEmpty()
   @IsOptional()
   @IsString()
@@ -216,31 +216,31 @@ export class CredentialListDto {
 }
 
 export class GetAllCloudWalletConnectionsDto {
-  @ApiProperty({ required: false, example: 'e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
+  @ApiPropertyOptional({ required: false, example: 'e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
   @IsNotEmpty()
   @IsString()
   @IsOptional()
   outOfBandId: string;
 
-  @ApiProperty({ required: false, example: 'Test' })
+  @ApiPropertyOptional({ required: false, example: 'Test' })
   @IsNotEmpty()
   @IsString()
   @IsOptional()
   alias: string;
 
-  @ApiProperty({ required: false, example: 'did:example:e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
+  @ApiPropertyOptional({ required: false, example: 'did:example:e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
   @IsNotEmpty()
   @IsString()
   @IsOptional()
   myDid: string;
 
-  @ApiProperty({ required: false, example: 'did:example:e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
+  @ApiPropertyOptional({ required: false, example: 'did:example:e315f30d-9beb-4068-aea4-abb5fe5eecb1' })
   @IsNotEmpty()
   @IsString()
   @IsOptional()
   theirDid: string;
 
-  @ApiProperty({ required: false, example: 'Bob' })
+  @ApiPropertyOptional({ required: false, example: 'Bob' })
   @IsNotEmpty()
   @IsString()
   @IsOptional()

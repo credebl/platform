@@ -12,13 +12,13 @@ export class CreateWalletDto {
     @MinLength(2, { message: 'Minimum length for label must be 2 characters.' })
     label: string;
 
-    @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
+    @ApiPropertyOptional({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
     @IsOptional()
     @ApiPropertyOptional()
     @IsString({ message: 'did must be in string format.' })
     did?: string;
 
-    @ApiProperty({ example: 'ojIckSD2jqNzOqIrAGzL' })
+    @ApiPropertyOptional({ example: 'ojIckSD2jqNzOqIrAGzL' })
     @IsOptional()
     @ApiPropertyOptional()
     @IsString({ message: 'did must be in string format.' })

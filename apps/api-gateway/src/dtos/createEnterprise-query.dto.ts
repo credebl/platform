@@ -1,6 +1,6 @@
 import {IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEnterpriseQueryDto {
 
@@ -20,19 +20,19 @@ export class CreateEnterpriseQueryDto {
     emailAddress: string;
 
     @IsOptional()
-    @ApiProperty({ example: '1234567890' })
+    @ApiPropertyOptional({ example: '1234567890' })
     mobileNumber: string;
 
     @IsOptional()
-    @ApiProperty({ example: 'Organization Name' })
+    @ApiPropertyOptional({ example: 'Organization Name' })
     organizationName: string;
 
     @IsOptional()
-    @ApiProperty({ example: 'Role in organization' })
+    @ApiPropertyOptional({ example: 'Role in organization' })
     roleInOrganization: string;
 
     @IsOptional()
-    @ApiProperty({ example: 'Your query' })
+    @ApiPropertyOptional({ example: 'Your query' })
     query: string;
 
 }

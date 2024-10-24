@@ -78,7 +78,7 @@ export class Credential {
   @IsNotEmpty({ message: 'type is required' })
   type: string[];
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString({ message: 'id should be string' })
   @IsNotEmpty({ message: 'id  is required' })
   @Type(() => String)
@@ -101,7 +101,7 @@ export class Credential {
   @Type(() => PrettyVc)
   prettyVc?: PrettyVc;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString({ message: 'expiration date should be string' })
   @IsNotEmpty({ message: 'expiration date  is required' })
   @Type(() => String)
@@ -172,20 +172,20 @@ export class Attribute {
   @Transform(({ value }) => trim(value))
   value: string;
 
-  @ApiProperty({ default: false })
+  @ApiPropertyOptional({ default: false })
   @IsBoolean()
   @IsOptional()
   isRequired?: boolean = false;
 }
 export class CredentialsIssuanceDto {
-  @ApiProperty({ example: 'string' })
+  @ApiPropertyOptional({ example: 'string' })
   @IsNotEmpty({ message: 'Credential definition Id is required' })
   @IsString({ message: 'Credential definition id should be string' })
   @Transform(({ value }) => value.trim())
   @IsOptional()
   credentialDefinitionId?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiPropertyOptional({ example: 'string' })
   @IsNotEmpty({ message: 'Please provide valid comment' })
   @IsString({ message: 'comment should be string' })
   @IsOptional()
@@ -236,7 +236,7 @@ export class CredentialsIssuanceDto {
   })
   autoAcceptCredential?: string;
 
-  @ApiProperty({ example: 'jsonld' })
+  @ApiPropertyOptional({ example: 'jsonld' })
   @IsNotEmpty({ message: 'Please provide credential type ' })
   @Transform(({ value }) => trim(value).toLocaleLowerCase())
   @IsOptional()
@@ -252,7 +252,7 @@ export class CredentialsIssuanceDto {
 }
 
 export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: [
       {
         value: 'string',
@@ -268,7 +268,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   @Type(() => Attribute)
   attributes?: Attribute[];
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: false
   })
   @IsOptional()
@@ -276,7 +276,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   @IsBoolean({ message: 'isShortenUrl must be boolean' })
   isShortenUrl?: boolean;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsNotEmpty({ message: 'Please provide valid credential' })
   @IsObject({ message: 'credential should be an object' })
   @Type(() => Credential)
@@ -284,7 +284,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   @ValidateNested({ each: true })
   credential?: Credential;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   @IsNotEmpty({ message: 'Please provide valid options' })
   @IsObject({ message: 'options should be an object' })
@@ -294,7 +294,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
 }
 
 class CredentialOffer {
-  @ApiProperty({ example: [{ value: 'string', name: 'string' }] })
+  @ApiPropertyOptional({ example: [{ value: 'string', name: 'string' }] })
   @IsNotEmpty({ message: 'Attribute name is required' })
   @IsArray({ message: 'Attributes should be an array' })
   @ValidateNested({ each: true })
@@ -318,7 +318,7 @@ class CredentialOffer {
   @ValidateNested({ each: true })
   credential?: Credential;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   @IsNotEmpty({ message: 'Please provide valid options' })
   @IsObject({ message: 'options should be an object' })
@@ -328,59 +328,59 @@ class CredentialOffer {
 }
 
 export class IssuanceDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   _tags?: object;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   metadata?: object;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   credentials: object[];
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   id: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   createdAt: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   state: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   connectionId: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   protocolVersion: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   threadId: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   schemaId: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   credDefId: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   credentialAttributes: CredentialAttributes[];
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   autoAcceptCredential: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   contextCorrelationId: string;
 
@@ -388,29 +388,29 @@ export class IssuanceDto {
   @IsOptional()
   type: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   outOfBandId: string | null;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   credentialData: object;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   orgId: string;
 }
 
 export class CredentialAttributes {
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   'mime-type'?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   name?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsOptional()
   value: string;
 }
@@ -451,26 +451,26 @@ export class OOBCredentialDtoWithEmail {
   @Type(() => CredentialOffer)
   credentialOffer: CredentialOffer[];
 
-  @ApiProperty({ example: 'string' })
+  @ApiPropertyOptional({ example: 'string' })
   @IsNotEmpty({ message: 'Please provide valid credential definition id' })
   @IsString({ message: 'credential definition id should be string' })
   @IsOptional()
   @Transform(({ value }) => value.trim())
   credentialDefinitionId?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiPropertyOptional({ example: 'string' })
   @IsOptional()
   @IsNotEmpty({ message: 'Please provide valid comment' })
   @IsString({ message: 'comment should be string' })
   comment?: string;
 
-  @ApiProperty({ example: 'v1' })
+  @ApiPropertyOptional({ example: 'v1' })
   @IsOptional()
   @IsNotEmpty({ message: 'Please provide valid protocol version' })
   @IsString({ message: 'protocol version should be string' })
   protocolVersion?: string;
 
-  @ApiProperty({ example: 'jsonld' })
+  @ApiPropertyOptional({ example: 'jsonld' })
   @IsNotEmpty({ message: 'Please provide credential type ' })
   @Transform(({ value }) => trim(value).toLocaleLowerCase())
   @IsOptional()
@@ -488,15 +488,15 @@ export class OOBCredentialDtoWithEmail {
 }
 
 export class PreviewFileDetails {
-  @ApiProperty({ required: false, example: '1' })
+  @ApiPropertyOptional({ required: false, example: '1' })
   @IsOptional()
   pageNumber: number = 1;
 
-  @ApiProperty({ required: false, example: '10' })
+  @ApiPropertyOptional({ required: false, example: '10' })
   @IsOptional()
   pageSize: number = 10;
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ required: false })
   @IsOptional()
   @Transform(({ value }) => trim(value))
   @Type(() => String)
@@ -504,15 +504,15 @@ export class PreviewFileDetails {
 }
 
 export class FileParameter {
-  @ApiProperty({ required: false, example: '10' })
+  @ApiPropertyOptional({ required: false, example: '10' })
   @IsOptional()
   pageSize: number = 10;
 
-  @ApiProperty({ required: false, example: '1' })
+  @ApiPropertyOptional({ required: false, example: '1' })
   @IsOptional()
   pageNumber: number = 1;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     required: false
   })
   @Transform(({ value }) => trim(value))
@@ -520,7 +520,7 @@ export class FileParameter {
   @IsEnum(SortFields)
   sortField: string = SortFields.CREATED_DATE_TIME;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     enum: [SortValue.DESC, SortValue.ASC],
     required: false
   })
@@ -529,7 +529,7 @@ export class FileParameter {
   @IsEnum(SortValue)
   sortBy: string = SortValue.DESC;
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ required: false })
   @IsOptional()
   @Transform(({ value }) => trim(value))
   @Type(() => String)
@@ -537,17 +537,17 @@ export class FileParameter {
 }
 
 export class ClientDetails {
-  @ApiProperty({ required: false, example: '68y647ayAv79879' })
+  @ApiPropertyOptional({ required: false, example: '68y647ayAv79879' })
   @IsOptional()
   @Type(() => String)
   clientId = '';
 
-  @ApiProperty({ required: false, example: 'issue-data.csv' })
+  @ApiPropertyOptional({ required: false, example: 'issue-data.csv' })
   @IsOptional()
   @Type(() => String)
   fileName = '';
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ required: false })
   @IsOptional()
   @Type(() => Boolean)
   isSelectiveIssuance?: boolean = false;
@@ -606,7 +606,7 @@ export class ClientDetails {
 }
 
 export class TemplateDetails {
-  @ApiProperty({ required: true, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
+  @ApiPropertyOptional({ required: true, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
   @IsOptional()
   @IsString({ message: 'templateId should be string' })
   @IsNotEmpty({ message: 'Template Id is required' })
@@ -619,7 +619,7 @@ export class TemplateDetails {
 }
 
 export class FileUploadDetails extends TemplateDetails {
-  @ApiProperty({ required: false, example: 'CSV file' })
+  @ApiPropertyOptional({ required: false, example: 'CSV file' })
   @IsOptional()
   @IsString({ message: 'fileName should be string' })
   fileName: string;

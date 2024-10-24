@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
 import { SortValue } from '../../enum';
@@ -8,7 +8,7 @@ import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 export class GetAllProofRequestsDto extends PaginationDto {
     
-    @ApiProperty({
+    @ApiPropertyOptional({
         enum: [SortValue.DESC, SortValue.ASC],
         required: false
     })
@@ -17,7 +17,7 @@ export class GetAllProofRequestsDto extends PaginationDto {
     @IsEnum(SortValue)
     sortBy: string = SortValue.DESC;
     
-    @ApiProperty({
+    @ApiPropertyOptional({
         required: false
     })
     @Transform(({ value }) => trim(value))

@@ -267,7 +267,7 @@ class ReceiveInvitationCommonDto {
 
 export class ReceiveInvitationUrlDto extends ReceiveInvitationCommonDto {
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString({ message: 'invitationUrl must be a string' })
     @IsNotEmpty({ message: 'please provide valid invitationUrl' })

@@ -676,11 +676,14 @@ export class UserService {
   async getProfile(payload: { id }): Promise<IUsersProfile> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-      const ecosystemSettings = await this._getEcosystemConfig();
-      for (const setting of ecosystemSettings) {
-        userData[setting.key] = 'true' === setting.value;
-      }
 
+      if ('true' === process.env.IS_ECOSYSTEM_ENABLE) {
+        const ecosystemSettings = await this._getEcosystemConfig();
+        for (const setting of ecosystemSettings) {
+          userData[setting.key] = 'true' === setting.value;
+        }
+      }
+    
       return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);

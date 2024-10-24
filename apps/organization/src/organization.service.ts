@@ -591,7 +591,7 @@ export class OrganizationService {
   /**
    * @returns Get created organizations details
    */
-
+  
   async getOrganizations(
     userId: string,
     pageNumber: number,
@@ -623,26 +623,38 @@ export class OrganizationService {
         userId
       );
 
+      if (0 === getOrgs?.organizations?.length) {
+        throw new BadRequestException(ResponseMessages.organisation.error.organizationNotFound);
+      }
+
       let orgIds;
-      if (0 > getOrgs?.organizations?.length) {
-        orgIds = getOrgs?.organizations?.map(item => item.id);
+      let updatedOrgs;
+
+      if ('true' === process.env.IS_ECOSYSTEM_ENABLE) {
+        if (0 > getOrgs?.organizations?.length) {
+          orgIds = getOrgs?.organizations?.map(item => item.id);
+        }
+         
+        const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
+        if (!orgEcosystemDetails || !Array.isArray(orgEcosystemDetails) || 0 === orgEcosystemDetails.length) {
+          throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemDetailsNotFound);
+        }
+    
+        updatedOrgs = getOrgs.organizations.map(org => {
+          const matchingEcosystems = orgEcosystemDetails
+            .filter(ecosystem => ecosystem.orgId === org.id)
+            .map(ecosystem => ({ ecosystemId: ecosystem.ecosystemId }));
+          return {
+            ...org,
+            ecosystemOrgs: 0 < matchingEcosystems.length ? matchingEcosystems : []
+          };
+        });
+      } else {
+        updatedOrgs = getOrgs?.organizations?.map(org => ({
+          ...org
+        }));
       }
-       
-      const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
-      if (!orgEcosystemDetails || !Array.isArray(orgEcosystemDetails) || 0 === orgEcosystemDetails.length) {
-        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemDetailsNotFound);
-      }
-  
-      const updatedOrgs = getOrgs.organizations.map(org => {
-        const matchingEcosystems = orgEcosystemDetails
-          .filter(ecosystem => ecosystem.orgId === org.id)
-          .map(ecosystem => ({ ecosystemId: ecosystem.ecosystemId }));
-        return {
-          ...org,
-          ecosystemOrgs: 0 < matchingEcosystems.length ? matchingEcosystems : []
-        };
-      });
-  
+      
       return {
         totalCount: getOrgs.totalCount,
         totalPages: getOrgs.totalPages,

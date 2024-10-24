@@ -121,6 +121,7 @@ export const ResponseMessages = {
       invalidClient: 'Invalid client credentials',
       primaryDid: 'This DID is already set to primary DID',
       didNotFound: 'DID does not exist in organiation',
+      organizationNotFound: 'No any organizations found',
       MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.'
     }
   },

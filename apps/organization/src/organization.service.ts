@@ -624,7 +624,7 @@ export class OrganizationService {
       );
 
       if (0 === getOrgs?.organizations?.length) {
-        throw new BadRequestException(ResponseMessages.organisation.error.organizationNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound);
       }
 
       let orgIds;

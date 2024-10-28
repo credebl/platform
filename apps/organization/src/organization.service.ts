@@ -623,7 +623,9 @@ export class OrganizationService {
         userId
       );
 
-      if (0 === getOrgs?.organizations?.length) {
+      const { organizations } = getOrgs;
+      
+      if (0 === organizations?.length) {
         throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound);
       }
 

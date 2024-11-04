@@ -9,6 +9,10 @@ import { UtilitiesService } from './utilities.service';
 import { UtilitiesRepository } from './utilities.repository';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 
 @Module({
   imports: [
@@ -20,6 +24,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
       }
     ]),
     CommonModule,
+    GlobalConfigModule,
+    LoggerModule, PlatformConfig, ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [UtilitiesController],

@@ -8,6 +8,7 @@ import { UserService } from './user.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -23,6 +24,6 @@ import { CommonConstants } from '@credebl/common/common.constant';
     ])
   ],
   controllers: [UserController],
-  providers: [UserService, CommonService, AwsService]
+  providers: [UserService, CommonService, AwsService, NATSClient]
 })
 export class UserModule {}

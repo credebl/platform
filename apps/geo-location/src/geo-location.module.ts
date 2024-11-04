@@ -8,6 +8,10 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { PrismaService } from '@credebl/prisma-service';
 import { GeoLocationRepository } from './geo-location.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 
 @Module({
   imports: [
@@ -19,6 +23,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
       }
     ]),
     CommonModule,
+    GlobalConfigModule,
+    LoggerModule, PlatformConfig, ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [GeoLocationController],

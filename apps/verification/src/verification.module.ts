@@ -11,7 +11,11 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { CacheModule } from '@nestjs/cache-manager';
 import { UserActivityService } from '@credebl/user-activity';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
 @Module({
   imports: [
     ClientsModule.register([
@@ -22,11 +26,19 @@ import { CommonConstants } from '@credebl/common/common.constant';
 
       }
     ]),
-
-    CommonModule,
+GlobalConfigModule,
+    CommonModule, LoggerModule, PlatformConfig, ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [VerificationController],
-  providers: [VerificationService, VerificationRepository, PrismaService, UserActivityService, UserActivityRepository, Logger, OutOfBandVerification, EmailDto]
+  providers: [
+      VerificationService, VerificationRepository, PrismaService, UserActivityService, 
+    UserActivityRepository, Logger, OutOfBandVerification, EmailDto,
+    {
+      provide: MICRO_SERVICE_NAME,
+      useValue: 'Verification-Service' // Provide the name directly
+    }
+  ]
+  //exports: [MICRO_SERVICE_NAME]
 })
 export class VerificationModule { }

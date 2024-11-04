@@ -14,25 +14,25 @@ export class BaseService {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  sendNats(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
-    const pattern = { cmd };
+//   sendNats(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
+//     const pattern = { cmd };
 
-    return serviceProxy
-      .send<string>(pattern, payload)
-      .pipe(
-        map((response: string) => ({
-          response
-        }))
-      )
-      .toPromise();
-  }
+//     return serviceProxy
+//       .send<string>(pattern, payload)
+//       .pipe(
+//         map((response: string) => ({
+//           response
+//         }))
+//       )
+//       .toPromise();
+//   }
 
 
-sendNatsMessage(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
-  const pattern = { cmd };
+// sendNatsMessage(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
+//   const pattern = { cmd };
 
-  const result = serviceProxy.send<string>(pattern, payload);
+//   const result = serviceProxy.send<string>(pattern, payload);
 
-  return firstValueFrom(result);
-}
+//   return firstValueFrom(result);
+// }
 }

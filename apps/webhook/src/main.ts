@@ -5,6 +5,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { WebhookModule } from '../src/webhook.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
+import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 
 const logger = new Logger();
 
@@ -15,7 +16,7 @@ async function bootstrap(): Promise<void> {
     options: getNatsOptions(CommonConstants.WEBHOOK_SERVICE, process.env.ISSUANCE_NKEY_SEED)
 
   });
-
+  app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen();

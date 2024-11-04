@@ -9,6 +9,7 @@ import { ImageServiceService } from '@credebl/image-service';
 import { UtilitiesController } from './utilities.controller';
 import { UtilitiesService } from './utilities.service';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
     ])
   ],
   controllers: [UtilitiesController],
-  providers: [UtilitiesService, CommonService, ImageServiceService]
+  providers: [UtilitiesService, CommonService, ImageServiceService, NATSClient]
 })
 export class UtilitiesModule { }
 

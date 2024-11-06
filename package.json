@@ -99,7 +99,7 @@
     "rxjs": "^7.8.1",
     "socket.io-client": "^4.7.1",
     "swagger-ui-express": "^5.0.0",
-    "typeorm": "^0.3.10",
+    "typeorm": "^0.3.20",
     "unzipper": "^0.10.14",
     "uuid": "^9.0.0",
     "validator": "^13.11.0",

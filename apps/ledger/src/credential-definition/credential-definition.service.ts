@@ -25,7 +25,7 @@ export class CredentialDefinitionService extends BaseService {
     constructor(
         private readonly credentialDefinitionRepository: CredentialDefinitionRepository,
         @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy,
-        @Inject(CACHE_MANAGER) private cacheService: Cache,
+        @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
         private readonly natsClient : NATSClient
 
     ) {

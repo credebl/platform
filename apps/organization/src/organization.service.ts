@@ -52,7 +52,6 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { NATSClient } from 'libs/common/NATSClient';
-import { from } from 'rxjs';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -1107,7 +1106,6 @@ export class OrganizationService {
 
     const userData = await this.natsClient
       .send<user>(this.organizationServiceProxy, pattern, userId)
-      // .toPromise() TODO: remove after test from all places
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(

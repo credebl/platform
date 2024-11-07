@@ -13,8 +13,8 @@ export class LoggingInterceptor implements NestInterceptor {
   constructor(
     private readonly clsService: ClsService,
     @Inject(ContextStorageServiceKey)
-  private contextStorageService: ContextStorageService,
-  @Inject(LoggerKey) private _logger: Logger,
+  private readonly contextStorageService: ContextStorageService,
+  @Inject(LoggerKey) private readonly _logger: Logger,
   ) {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {

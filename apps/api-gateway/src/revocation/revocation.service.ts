@@ -12,7 +12,7 @@ import { NATSClient } from 'libs/common/NATSClient';
 export class RevocationService extends BaseService {
   constructor(
     @Inject('NATS_CLIENT') private readonly revocationServiceProxy: ClientProxy,
-    private natsClient: NATSClient
+    private readonly natsClient: NATSClient
   ) {
     super('RevocationService');
   }

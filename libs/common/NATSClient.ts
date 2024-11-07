@@ -9,9 +9,9 @@ import ContextStorageService, { ContextStorageServiceKey } from '@credebl/contex
 
 @Injectable()
 export class NATSClient {
-  private logger: Logger;
+  private readonly logger: Logger;
   constructor(@Inject(ContextStorageServiceKey)
-  private contextStorageService: ContextStorageService
+  private readonly contextStorageService: ContextStorageService
 ) {
     this.logger = new Logger('NATSClient');
   }

@@ -3,7 +3,7 @@ import { ConfigService as NestConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ConfigService {
-  constructor(private configService: NestConfigService) {}
+  constructor(private readonly configService: NestConfigService) {}
 
   get isProduction(): boolean {
     return 'production' === this.environment;

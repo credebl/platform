@@ -55,8 +55,8 @@ import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 })
 export class LoggerModule implements NestModule {
   public constructor(
-    @Inject(LoggerKey) private logger: Logger,
-    private configService: ConfigService
+    @Inject(LoggerKey) private readonly logger: Logger,
+    private readonly configService: ConfigService
   ) {}
 
   public configure(consumer: MiddlewareConsumer): void {

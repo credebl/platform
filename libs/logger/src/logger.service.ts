@@ -12,17 +12,17 @@ import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export default class LoggerService implements Logger {
-  private sourceClass: string;
-  private organization: string;
-  private context: string;
-  private app: string;
+  private readonly sourceClass: string;
+  private readonly organization: string;
+  private readonly context: string;
+  private readonly app: string;
 
   public constructor(
-    @Inject(LoggerBaseKey) private logger: Logger,
+    @Inject(LoggerBaseKey) private readonly logger: Logger,
     configService: ConfigService,
     @Inject(INQUIRER) parentClass: object,
     @Inject(ContextStorageServiceKey)
-    private contextStorageService: ContextStorageService,
+    private readonly contextStorageService: ContextStorageService,
     @Inject(MICRO_SERVICE_NAME) private readonly microserviceName: string
   ) {
     // Set the source class from the parent class

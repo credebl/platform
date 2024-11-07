@@ -36,7 +36,7 @@ export class VerificationService {
     private readonly outOfBandVerification: OutOfBandVerification,
     private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
-    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient : NATSClient
 
   ) { }

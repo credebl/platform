@@ -56,7 +56,7 @@ export class IssuanceService {
     @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(ContextStorageServiceKey)
-      private contextStorageService: ContextStorageService,
+      private readonly contextStorageService: ContextStorageService,
       private readonly natsClient : NATSClient
   ) { }
 

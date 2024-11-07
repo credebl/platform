@@ -14,7 +14,7 @@ import { NATSClient } from 'libs/common/NATSClient';
 export class AgentService extends BaseService {
     constructor(
         @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
-        private natsClient : NATSClient
+        private readonly natsClient : NATSClient
     ) {
         super('AgentService');
     }

@@ -92,7 +92,7 @@ export class AgentServiceService {
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly userActivityRepository: UserActivityRepository,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
   ) {}
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {

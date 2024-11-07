@@ -15,7 +15,7 @@ export class IssuanceService extends BaseService {
 
     constructor(
         @Inject('NATS_CLIENT') private readonly issuanceProxy: ClientProxy,
-        private natsClient : NATSClient
+        private readonly natsClient : NATSClient
     ) {
         super('IssuanceService');
     }

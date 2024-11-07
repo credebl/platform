@@ -35,7 +35,7 @@ export class SchemaService extends BaseService {
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
   ) {
     super('SchemaService');
   }

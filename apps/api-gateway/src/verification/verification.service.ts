@@ -17,7 +17,7 @@ import { NATSClient } from 'libs/common/NATSClient';
 export class VerificationService extends BaseService {
     constructor(
         @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
-        private natsClient : NATSClient
+        private readonly natsClient : NATSClient
     ) {
         super('VerificationService');
     }

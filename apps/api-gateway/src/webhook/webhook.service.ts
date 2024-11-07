@@ -9,7 +9,7 @@ import { NATSClient } from 'libs/common/NATSClient';
 
 @Injectable()
 export class WebhookService extends BaseService {
-  constructor(@Inject('NATS_CLIENT') private readonly webhookProxy: ClientProxy, private natsClient : NATSClient) {
+  constructor(@Inject('NATS_CLIENT') private readonly webhookProxy: ClientProxy, private readonly natsClient : NATSClient) {
     super('WebhookService');
   }
 

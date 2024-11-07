@@ -13,7 +13,7 @@ export class CredentialDefinitionService extends BaseService {
 
   constructor(
     @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
   ) {
     super('CredentialDefinitionService');
   }

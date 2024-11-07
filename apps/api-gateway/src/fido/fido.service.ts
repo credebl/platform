@@ -9,7 +9,7 @@ import { NATSClient } from 'libs/common/NATSClient';
 export class FidoService extends BaseService {
     constructor(
         @Inject('NATS_CLIENT') private readonly fidoServiceProxy: ClientProxy,
-        private natsClient : NATSClient
+        private readonly natsClient : NATSClient
     ) {
         super('FidoService');
     }

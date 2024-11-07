@@ -68,7 +68,7 @@ export class OrganizationService {
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly clientRegistrationService: ClientRegistrationService,
     private readonly userActivityRepository: UserActivityRepository,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
   ) {}
   
   async getPlatformConfigDetails(): Promise<object> {

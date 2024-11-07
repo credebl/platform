@@ -13,7 +13,7 @@ export class SchemaService extends BaseService {
 
   constructor(
     @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
   ) { super(`Schema Service`); }
 
   createSchema(schemaDetails: GenericSchemaDTO, user: IUserRequestInterface, orgId: string): Promise<ISchemaData> {

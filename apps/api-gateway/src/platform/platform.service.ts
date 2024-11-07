@@ -12,7 +12,7 @@ import { NATSClient } from 'libs/common/NATSClient';
 export class PlatformService extends BaseService {
     constructor(
         @Inject('NATS_CLIENT') private readonly platformServiceProxy: ClientProxy,
-        private natsClient : NATSClient
+        private readonly natsClient : NATSClient
     ) {
         super('PlatformService');
     }

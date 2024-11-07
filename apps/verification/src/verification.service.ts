@@ -37,7 +37,7 @@ export class VerificationService {
     private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
 
   ) { }
 

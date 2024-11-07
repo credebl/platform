@@ -22,7 +22,7 @@ export class AuthzService extends BaseService {
   @WebSocketServer() server;
   constructor(
     @Inject('NATS_CLIENT') private readonly authServiceProxy: ClientProxy,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
   ) {
 
     super('AuthzService');

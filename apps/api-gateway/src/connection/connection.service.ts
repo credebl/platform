@@ -11,7 +11,7 @@ import { user } from '@prisma/client';
 import { NATSClient } from 'libs/common/NATSClient';
 @Injectable()
 export class ConnectionService extends BaseService {
-  constructor(@Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy, private natsClient : NATSClient) {
+  constructor(@Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy, private readonly natsClient : NATSClient) {
     super('ConnectionService');
   }
 

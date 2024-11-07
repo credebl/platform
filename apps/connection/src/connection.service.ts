@@ -37,7 +37,7 @@ export class ConnectionService {
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
   ) {}
 
   /**

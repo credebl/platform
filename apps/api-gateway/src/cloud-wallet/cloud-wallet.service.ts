@@ -7,7 +7,7 @@ import { NATSClient } from 'libs/common/NATSClient';
 
 @Injectable()
 export class CloudWalletService extends BaseService {
-  constructor(@Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy: ClientProxy, private natsClient : NATSClient) {
+  constructor(@Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy: ClientProxy, private readonly natsClient : NATSClient) {
     super('CloudWalletServiceProxy');
   }
 

@@ -57,7 +57,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(ContextStorageServiceKey)
       private contextStorageService: ContextStorageService,
-      private natsClient : NATSClient
+      private readonly natsClient : NATSClient
   ) { }
 
   async getIssuanceRecords(orgId: string): Promise<number> {

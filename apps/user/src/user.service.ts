@@ -74,7 +74,7 @@ export class UserService {
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
-    private natsClient : NATSClient
+    private readonly natsClient : NATSClient
   ) {}
 
   /**

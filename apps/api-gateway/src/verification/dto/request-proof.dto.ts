@@ -23,15 +23,18 @@ export class ProofRequestAttribute {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    @IsNotEmpty({ message: 'schemaId is required.' })
     schemaId?: string;
 
     @ApiPropertyOptional()
+    @ValidateIf((obj) => obj.value !== undefined)
     @IsString()
     @IsOptional()
     @IsNotEmpty({ message: 'condition is required.' })
     condition?: string;
 
     @ApiPropertyOptional()
+    @ValidateIf((obj) => obj.condition !== undefined)
     @IsOptional()
     @IsNotEmpty({ message: 'value is required.' })
     @IsNumberString({}, { message: 'Value must be a number' })
@@ -40,6 +43,7 @@ export class ProofRequestAttribute {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    @IsNotEmpty({ message: 'credDefId is required.' })
     credDefId?: string;
 }
 
@@ -191,7 +195,8 @@ export class IndyDto {
   indy: ProofRequestAttributeDto;
 }
 
-export class RequestProofDto extends ProofPayload {
+
+export class RequestProofDto {
     @ApiProperty()
     @IsString()
     @Transform(({ value }) => trim(value))
@@ -273,6 +278,59 @@ export class RequestProofDto extends ProofPayload {
         message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
     })
     autoAcceptProof: AutoAccept;
+}
+
+export class PresentationPayload extends ProofPayload {
+  @ApiProperty({
+    'example':  [
+      {
+          'connectionId': 'string',
+          'proofFormats': {
+              'indy': {
+                  'attributes': [
+                      {
+                          'attributeName': 'attributeName',
+                          'condition': '>=',
+                          'value': 'predicates',
+                          'credDefId': 'string',
+                          'schemaId': 'string'
+                      }
+                  ]
+              }
+          },
+          'presentationDefinition': {
+              'id': '32f54163-7166-48f1-93d8-ff217bdb0653',
+              'inputDescriptors': [
+                  {
+                      'id': 'healthcare_input_1',
+                      'name': 'Medical History',
+                      'schema': [
+                          {
+                              'uri': 'https://health-schemas.org/1.0.1/medical_history.json'
+                          }
+                      ],
+                      'constraints': {
+                          'fields': [
+                              {
+                                  'path': ['$.PatientID']
+                              }
+                          ]
+                      }
+                  }
+              ]
+          },
+          'comment': 'string',
+          'autoAcceptProof': {}
+      }
+  ],
+    type: () => [RequestProofDto]
+})
+@IsArray({ message: 'attributes must be in array' })
+@ValidateNested({ each: true })
+@IsObject({ each: true })
+@IsNotEmpty({ message: 'please provide valid attributes' })
+@Type(() => RequestProofDto)
+  presentationData: RequestProofDto[];
 }
 
 export class OutOfBandRequestProof extends ProofPayload {

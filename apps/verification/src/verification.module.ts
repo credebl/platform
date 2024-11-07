@@ -16,6 +16,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
   controllers: [VerificationController],
   providers: [
     VerificationService, VerificationRepository, PrismaService, UserActivityService, 
-  UserActivityRepository, Logger, OutOfBandVerification, EmailDto,
+  UserActivityRepository, Logger, OutOfBandVerification, EmailDto, NATSClient,
   {
     provide: MICRO_SERVICE_NAME,
     useValue: 'Verification-Service'

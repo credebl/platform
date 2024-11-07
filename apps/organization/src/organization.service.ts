@@ -51,6 +51,8 @@ import { toNumber } from '@credebl/common/cast.helper';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { NATSClient } from 'libs/common/NATSClient';
+import { from } from 'rxjs';
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -65,7 +67,8 @@ export class OrganizationService {
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly clientRegistrationService: ClientRegistrationService,
-    private readonly userActivityRepository: UserActivityRepository
+    private readonly userActivityRepository: UserActivityRepository,
+    private natsClient : NATSClient
   ) {}
   
   async getPlatformConfigDetails(): Promise<object> {
@@ -557,9 +560,9 @@ export class OrganizationService {
         orgId
       }
     };
-    const connectionInvitationData = await this.organizationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const connectionInvitationData = await this.natsClient
+      .send<ICreateConnectionUrl>(this.organizationServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1059,9 +1062,9 @@ export class OrganizationService {
     const pattern = { cmd: 'get-user-by-mail' };
     const payload = { email };
 
-    const userData: user = await this.organizationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const userData: user = await this.natsClient
+      .send<user>(this.organizationServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1082,9 +1085,9 @@ export class OrganizationService {
     const pattern = { cmd: 'get-user-by-mail' };
     const payload = { email: userEmail };
 
-    const userData = await this.organizationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const userData = await this.natsClient
+      .send<user>(this.organizationServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1102,9 +1105,9 @@ export class OrganizationService {
     const pattern = { cmd: 'get-user-by-user-id' };
     // const payload = { id: userId };
 
-    const userData = await this.organizationServiceProxy
-      .send(pattern, userId)
-      .toPromise()
+    const userData = await this.natsClient
+      .send<user>(this.organizationServiceProxy, pattern, userId)
+      // .toPromise() TODO: remove after test from all places
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1400,6 +1403,30 @@ export class OrganizationService {
     }
   }
 
+  async _getEcosystemsCount(orgId: string, userId: string): Promise<number> {
+    const pattern = { cmd: 'get-ecosystem-records' };
+
+    const payload = {
+      orgId,
+      userId
+    };
+    const ecosystemsCount = await (this.natsClient
+      .send<string>(this.organizationServiceProxy, pattern, payload) as unknown as Promise<number>)
+      // .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return ecosystemsCount;
+  }
+
 
   async _getConnectionRecordsCount(orgId: string, userId: string): Promise<number> {
     const pattern = { cmd: 'get-connection-records' };
@@ -1408,9 +1435,9 @@ export class OrganizationService {
       orgId,
       userId
     };
-    const connectionsCount = await this.organizationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const connectionsCount = await this.natsClient
+      .send<number>(this.organizationServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1433,9 +1460,9 @@ export class OrganizationService {
       orgId,
       userId
     };
-    const issuanceCount = await this.organizationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const issuanceCount = await this.natsClient
+      .send<number>(this.organizationServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1457,9 +1484,9 @@ export class OrganizationService {
       orgId,
       userId
     };
-    const verificationCount = await this.organizationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const verificationCount = await this.natsClient
+      .send<number>(this.organizationServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1848,7 +1875,7 @@ export class OrganizationService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.organizationServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.organizationServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

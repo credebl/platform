@@ -3,10 +3,11 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
 import { INotification } from './interfaces/notification.interfaces';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Injectable()
 export class NotificationService extends BaseService {
-    constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy) {
+    constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy, private natsClient : NATSClient) {
         super('NotificationService');
     }
 
@@ -16,7 +17,7 @@ export class NotificationService extends BaseService {
      * @returns Stored notification data
      */
     async registerOrgWebhookEndpoint(registerOrgWebhhookEndpointDto: RegisterOrgWebhhookEndpointDto): Promise<INotification> {
-        return this.sendNatsMessage(this.serviceProxy, 'register-org-webhook-endpoint-for-notification', registerOrgWebhhookEndpointDto);
+        return this.natsClient.sendNatsMessage(this.serviceProxy, 'register-org-webhook-endpoint-for-notification', registerOrgWebhhookEndpointDto);
     }
 
     /**
@@ -25,6 +26,6 @@ export class NotificationService extends BaseService {
      * @returns Get notification details
      */
     async sendNotification(notificationRequestBody: SendNotificationDto): Promise<INotification> {
-        return this.sendNatsMessage(this.serviceProxy, 'send-notification', notificationRequestBody);
+        return this.natsClient.sendNatsMessage(this.serviceProxy, 'send-notification', notificationRequestBody);
     }
 }

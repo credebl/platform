@@ -21,6 +21,8 @@ import { UserActivityService } from '@credebl/user-activity';
 import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
+import { NATSClient } from 'libs/common/NATSClient';
+import { from } from 'rxjs';
 
 @Injectable()
 export class VerificationService {
@@ -34,7 +36,8 @@ export class VerificationService {
     private readonly outOfBandVerification: OutOfBandVerification,
     private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private natsClient : NATSClient
 
   ) { }
 
@@ -118,9 +121,9 @@ export class VerificationService {
     const payload = {
       templateIds
     };
-    const schemaAndOrgDetails = await this.verificationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const schemaAndOrgDetails = await this.natsClient
+      .send<ISchemaDetail[]>(this.verificationServiceProxy, pattern, payload)
+      // .toPromise()
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -961,7 +964,7 @@ export class VerificationService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.verificationServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.verificationServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -987,8 +990,8 @@ export class VerificationService {
   async natsCall(pattern: object, payload: object): Promise<{
     response: string;
   }> {
-      return this.verificationServiceProxy
-        .send<string>(pattern, payload)
+    return from(this.natsClient
+      .send<string>(this.verificationServiceProxy, pattern, payload))
         .pipe(
           map((response) => (
             {

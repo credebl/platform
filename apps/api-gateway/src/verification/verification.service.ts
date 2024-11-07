@@ -10,12 +10,14 @@ import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
 import { IRequestProof } from 'apps/verification/src/interfaces/verification.interface';
 import { user } from '@prisma/client';
+import { NATSClient } from 'libs/common/NATSClient';
 
 
 @Injectable()
 export class VerificationService extends BaseService {
     constructor(
-        @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy
+        @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
+        private natsClient : NATSClient
     ) {
         super('VerificationService');
     }
@@ -27,7 +29,7 @@ export class VerificationService extends BaseService {
      */
     getProofPresentations(proofRequestsSearchCriteria: IProofRequestSearchCriteria, user: IUserRequest, orgId: string): Promise<IProofPresentationList> {
         const payload = { proofRequestsSearchCriteria, user, orgId };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'get-all-proof-presentations', payload);
+        return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'get-all-proof-presentations', payload);
     }
 
     /**
@@ -38,7 +40,7 @@ export class VerificationService extends BaseService {
      */
     getProofPresentationById(proofId: string, orgId: string, user: IUserRequest): Promise<IProofPresentation> {
         const payload = { proofId, orgId, user };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'get-proof-presentations-by-proofId', payload);
+        return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'get-proof-presentations-by-proofId', payload);
     }
 
     /**
@@ -66,7 +68,7 @@ export class VerificationService extends BaseService {
         }
 
         const payload = { requestProof, user };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);
+        return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);
     }
 
     /**
@@ -77,12 +79,12 @@ export class VerificationService extends BaseService {
      */
     verifyPresentation(proofId: string, orgId: string, user: IUserRequest): Promise<IPresentation> {
         const payload = { proofId, orgId, user };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'verify-presentation', payload);
+        return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'verify-presentation', payload);
     }
 
     webhookProofPresentation(orgId: string, proofPresentationPayload: WebhookPresentationProofDto): Promise<object> {
         const payload = { orgId, proofPresentationPayload };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'webhook-proof-presentation', payload);
+        return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'webhook-proof-presentation', payload);
     }
 
     /**
@@ -93,12 +95,12 @@ export class VerificationService extends BaseService {
      */
     sendOutOfBandPresentationRequest(outOfBandRequestProof: SendProofRequestPayload, user: IUserRequest): Promise<object> {
         const payload = { outOfBandRequestProof, user };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'send-out-of-band-proof-request', payload);
+        return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'send-out-of-band-proof-request', payload);
     }
     
     getVerifiedProofDetails(proofId: string, orgId: string, user: IUserRequest): Promise<IProofPresentationDetails[]> {
         const payload = { proofId, orgId, user };       
-        return this.sendNatsMessage(this.verificationServiceProxy, 'get-verified-proof-details', payload);
+        return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'get-verified-proof-details', payload);
     }
 
     async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
@@ -131,6 +133,6 @@ export class VerificationService extends BaseService {
 
       async deleteVerificationRecords(orgId: string, userDetails: user): Promise<IVerificationRecords> {
         const payload = { orgId, userDetails };
-        return this.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-records', payload);
+        return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'delete-verification-records', payload);
     }
 }

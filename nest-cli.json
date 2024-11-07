@@ -107,15 +107,6 @@
         "tsConfigPath": "libs/user-request/tsconfig.lib.json"
       }
     },
-    "logger": {
-      "type": "library",
-      "root": "libs/logger",
-      "entryFile": "index",
-      "sourceRoot": "libs/logger/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/logger/tsconfig.lib.json"
-      }
-    },
     "enum": {
       "type": "library",
       "root": "libs/enum",
@@ -294,6 +285,33 @@
       "sourceRoot": "apps/cloud-wallet/src",
       "compilerOptions": {
         "tsConfigPath": "apps/cloud-wallet/tsconfig.app.json"
+      }
+    },
+    "config": {
+      "type": "library",
+      "root": "libs/config",
+      "entryFile": "index",
+      "sourceRoot": "libs/config/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/config/tsconfig.lib.json"
+      }
+    },
+    "context": {
+      "type": "library",
+      "root": "libs/context",
+      "entryFile": "index",
+      "sourceRoot": "libs/context/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/context/tsconfig.lib.json"
+      }
+    },
+    "logger": {
+      "type": "library",
+      "root": "libs/logger",
+      "entryFile": "index",
+      "sourceRoot": "libs/logger/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/logger/tsconfig.lib.json"
       }
     }
   }

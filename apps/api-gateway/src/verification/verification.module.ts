@@ -7,6 +7,7 @@ import { VerificationService } from './verification.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from 'libs/common/NATSClient';
 
 @Module({
   imports: [
@@ -20,6 +21,6 @@ import { CommonConstants } from '@credebl/common/common.constant';
     ])
   ],
   controllers: [VerificationController],
-  providers: [VerificationService, ImageServiceService]
+  providers: [VerificationService, ImageServiceService, NATSClient]
 })
 export class VerificationModule { }

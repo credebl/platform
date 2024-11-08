@@ -146,7 +146,6 @@ export class AuthzController {
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Res() res: Response): Promise<Response> {
-      this.logger.log(`forgotPasswordDto::: ${JSON.stringify(forgotPasswordDto)}`);
       const userData = await this.authzService.forgotPassword(forgotPasswordDto);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,

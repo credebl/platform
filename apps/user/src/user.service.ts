@@ -44,7 +44,8 @@ import {
     IShareDegreeCertificateRes,
     IUserDeletedActivity,
     UserKeycloakId,
-    IEcosystemConfig
+    IEcosystemConfig,
+    IUserForgotPassword
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -436,8 +437,8 @@ export class UserService {
    * @param forgotPasswordDto 
    * @returns 
    */
-  async forgotPassword(forgotPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
-    const { email } = forgotPasswordDto;
+  async forgotPassword(forgotPasswordDto: IUserForgotPassword): Promise<IResetPasswordResponse> {
+    const { email, brandLogoUrl, platformName, endpoint } = forgotPasswordDto;
 
     try {
       this.validateEmail(email.toLowerCase());
@@ -461,7 +462,7 @@ export class UserService {
       }
 
       try {
-        await this.sendEmailForResetPassword(email, tokenCreated.token);
+        await this.sendEmailForResetPassword(email, brandLogoUrl, platformName, endpoint, tokenCreated.token);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -483,7 +484,7 @@ export class UserService {
    * @param verificationCode 
    * @returns 
    */
-  async sendEmailForResetPassword(email: string, verificationCode: string): Promise<boolean> {
+  async sendEmailForResetPassword(email: string, brandLogoUrl: string, platformName: string, endpoint: string, verificationCode: string): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -491,9 +492,11 @@ export class UserService {
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
       emailData.emailTo = email;
-      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Important: Password Reset Request`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, verificationCode);
+      const platform = platformName || process.env.PLATFORM_NAME;
+      emailData.emailSubject = `[${platform}] Important: Password Reset Request`;
+
+      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, platform, brandLogoUrl, endpoint, verificationCode);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;

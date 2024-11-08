@@ -1,12 +1,15 @@
 import * as url from 'url';
 export class URLUserResetPasswordTemplate {
-  public getUserResetPasswordTemplate(email: string, verificationCode: string): string {
-    const endpoint = `${process.env.FRONT_END_URL}`;
+  public getUserResetPasswordTemplate(email: string, platform: string, brandLogoUrl: string, uiEndpoint: string, verificationCode: string): string {
+    const endpoint = uiEndpoint || process.env.FRONT_END_URL;
 
     const apiUrl = url.parse(
       `${endpoint}/reset-password?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
     );
     
+    const logoUrl = brandLogoUrl || process.env.BRAND_LOGO;
+    const poweredBy = platform || process.env.POWERED_BY;
+
     const validUrl = apiUrl.href.replace('/:', ':');
 
     try {
@@ -23,7 +26,7 @@ export class URLUserResetPasswordTemplate {
           
           <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
           <div style="display: block; text-align:center;">
-                  <img src="${process.env.BRAND_LOGO}" alt="${process.env.PLATFORM_NAME} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+                  <img src="${logoUrl}" alt="${platform} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
               </div>
               
             <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
@@ -32,7 +35,7 @@ export class URLUserResetPasswordTemplate {
                       Hello ${email},
                   </p>
                   <p>
-                  A password reset request has been received for your ${process.env.PLATFORM_NAME} platform account. To reset your password, please click on the following link:
+                  A password reset request has been received for your ${platform} platform account. To reset your password, please click on the following link:
                   </p>               
 
                   <div style="text-align: center; padding-bottom: 20px;">
@@ -50,7 +53,7 @@ export class URLUserResetPasswordTemplate {
 
                       </div>
                       <p style="margin-top: 6px;">
-                         © ${process.env.POWERED_BY}
+                         © ${poweredBy}
                       </p>
                   </footer>
               </div>

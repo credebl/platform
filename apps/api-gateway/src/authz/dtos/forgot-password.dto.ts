@@ -30,7 +30,7 @@ export class ForgotPasswordDto {
     @IsString({ message: 'platformName should be string' })
     platformName?: string;
 
-    @ApiPropertyOptional({ example: 'http://0.0.0.0:5000' })
+    @ApiPropertyOptional({ example: 'https://0.0.0.0:5000' })
     @Transform(({ value }) => trim(value))
     @IsOptional()
     @IsString({ message: 'endpoint should be string' })

@@ -231,19 +231,39 @@ export class RequestProofDto extends ProofPayload {
                     {
                       'id': 'healthcare_input_1',
                       'name': 'Medical History',
+                      'purpose': 'Get medical information of patient',
+                      'format':'',
                       'schema': [
                         {
-                          'uri': 'https://health-schemas.org/1.0.1/medical_history.json'
+                          'uri': 'https://health-schemas.org/1.0.1/medical_history.json',
+                          'required':'true'
                         }
                         
                       ],
                       'constraints': {
+                        'subject_is_issuer':'required', // other value is preferred
+                        'limit_disclosure':{
+                          'required':{},
+                           'preferred':{}
+                        },
+                        'statuses': {
+                          'active': {
+                            'directive': 'required'   // other values: "allowed", "disallowed"
+                          },
+                          'suspended': {},
+                          'revoked': {}
+                        },
                         'fields': [
                           {
-                            'path': ['$.PatientID']
+                            'path': ['$.PatientID'],
+                            'purpose':'',
+                            'filter': {
+                              'type': 'string',
+                              'pattern': 'did:example:123|did:example:456'
+                            }
                           }
                         ]
-                      }
+                      } 
                     }
                   ]
             },

@@ -439,7 +439,7 @@ export class UserService {
    */
   async forgotPassword(forgotPasswordDto: IUserForgotPassword): Promise<IResetPasswordResponse> {
     const { email, brandLogoUrl, platformName, endpoint } = forgotPasswordDto;
-
+    this.logger.log(`forgotPasswordDto::::::: ${forgotPasswordDto}`);
     try {
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());

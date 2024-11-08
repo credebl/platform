@@ -194,6 +194,12 @@ export interface IUserResetPassword{
   token?: string;
   password?: string;
 }
+export interface IUserForgotPassword{
+  email: string;
+  brandLogoUrl?: string,
+  platformName?: string,
+  endpoint?: string
+}
 export interface IIssueCertificate {
   courseCode: string;
   courseName: string;

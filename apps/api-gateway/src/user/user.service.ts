@@ -11,7 +11,6 @@ import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { CreateCertificateDto } from './dto/share-certificate.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -27,12 +26,6 @@ export class UserService extends BaseService {
   async getPublicProfile(username: string): Promise<object> {
   const payload = { username };
   return this.sendNatsMessage(this.serviceProxy, 'get-user-public-profile', payload);
-  }
-
-
-  async getUserCredentialsById(credentialId: string): Promise<object> {
-    const payload = { credentialId };
-    return this.sendNatsMessage(this.serviceProxy, 'get-user-credentials-by-id', payload);
   }
 
   async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<user> {
@@ -62,12 +55,6 @@ export class UserService extends BaseService {
   ): Promise<string> {
     const payload = { acceptRejectInvitation, userId };
     return this.sendNatsMessage(this.serviceProxy, 'accept-reject-invitations', payload);
-  }
-
-  async shareUserCertificate(
-    shareUserCredentials: CreateCertificateDto
-  ): Promise<Buffer> {
-      return this.sendNatsMessage(this.serviceProxy, 'share-user-certificate', shareUserCredentials);
   }
 
   async get(

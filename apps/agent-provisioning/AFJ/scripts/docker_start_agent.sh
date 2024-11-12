@@ -91,14 +91,14 @@ if [ -d "${PWD}/agent-provisioning/AFJ/endpoints" ]; then
   echo "Endpoints directory exists."
 else
   echo "Error: Endpoints directory does not exists."
-  mkdir ${PWD}/agent-provisioning/AFJ/endpoints
+  mkdir -p ${PWD}/agent-provisioning/AFJ/endpoints
 fi
 
 if [ -d "${PWD}/agent-provisioning/AFJ/agent-config" ]; then
   echo "Endpoints directory exists."
 else
   echo "Error: Endpoints directory does not exists."
-  mkdir ${PWD}/agent-provisioning/AFJ/agent-config
+  mkdir -p ${PWD}/agent-provisioning/AFJ/agent-config
 fi
 
 AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"

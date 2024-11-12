@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as winston from 'winston';
 import { LogLevel } from '@credebl/logger/log';
 
@@ -10,33 +11,44 @@ enum LogColors {
   cyan = '\x1b[36m',
   pink = '\x1b[38;5;206m',
 }
+interface LogData {
+  label?: string;
+  '@timestamp'?: string;
+  correlationId?: string;
+  sourceClass?: string;
+  error?: string;
+  durationMs?: number;
+  stack?: string;
+  props?: Record<string, any>;
+}
 
 export default class ConsoleTransport {
   public static createColorize(): winston.transports.ConsoleTransportInstance {
     return new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.printf((log) => {        
-          const color = this.mapLogLevelColor(log.level as LogLevel);
-          const prefix = log.data.label ? `[${log.data.label}]` : '';
-          const timestamp = log.data['@timestamp'];
-          const correlationId = log.data.correlationId
-            ? `(${this.colorize(LogColors.cyan, log.data.correlationId)})`
+        winston.format.printf((log) => {
+          const data = log.data as LogData;
+          const color = ConsoleTransport.mapLogLevelColor(log.level as LogLevel);
+          const prefix = data.label ? `[${data.label}]` : '';
+          const timestamp = data['@timestamp'];
+          const correlationId = data.correlationId
+            ? `(${ConsoleTransport.colorize(LogColors.cyan, data.correlationId)})`
             : '';
-          const level = this.colorize(color, log.level.toUpperCase());
-          const sourceClass = log.data.sourceClass
-            ? `${this.colorize(LogColors.yellow, `[${log.data.sourceClass}]`)}`
+          const level = ConsoleTransport.colorize(color, log.level.toUpperCase());
+          const sourceClass = data.sourceClass
+            ? `${ConsoleTransport.colorize(LogColors.yellow, `[${data.sourceClass}]`)}`
             : '';
-          const message = this.colorize(color, `${log.message}`);
-          const error = log.data.error ? ` - ${log.data.error}` : '';
-          const duration = log.data.durationMs !== undefined
-            ? ` +${log.data.durationMs}ms`
+          const message = ConsoleTransport.colorize(color, `${log.message}`);
+          const error = data.error ? ` - ${data.error}` : '';
+          const duration = data.durationMs !== undefined
+            ? ` +${data.durationMs}ms`
             : '';
-          const stack = log.data.stack ? ` - ${log.data.stack}` : '';
-          const props = log.data.props
-            ? `\n  - Props: ${JSON.stringify(log.data.props, null, 4)}`
+          const stack = data.stack ? ` - ${data.stack}` : '';
+          const props = data.props
+            ? `\n  - Props: ${JSON.stringify(data.props, null, 4)}`
             : '';
 
-          return `${this.colorize(color, `${prefix} -`)} ${timestamp} ${correlationId} ${level} ${sourceClass} ${message}${error}${duration}${stack}${props}`;
+          return `${ConsoleTransport.colorize(color, `${prefix} -`)} ${timestamp} ${correlationId} ${level} ${sourceClass} ${message}${error}${duration}${stack}${props}`;
         })
       )
     });

@@ -123,7 +123,7 @@ export class VerificationService {
     };
     const schemaAndOrgDetails = await this.natsClient
       .send<ISchemaDetail[]>(this.verificationServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(

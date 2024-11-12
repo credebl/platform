@@ -1,3 +1,4 @@
+import { DevelopmentEnvironment } from '@credebl/enum/enum';
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 
@@ -6,15 +7,15 @@ export class ConfigService {
   constructor(private readonly configService: NestConfigService) {}
 
   get isProduction(): boolean {
-    return 'production' === this.environment;
+    return DevelopmentEnvironment.PRODUCTION === this.environment;
   }
 
   get isDevelopment(): boolean {
-    return 'development' === this.environment;
+    return DevelopmentEnvironment.DEVELOPMENT === this.environment;
   }
 
   get isTest(): boolean {
-    return 'test' === this.environment;
+    return DevelopmentEnvironment.TEST === this.environment;
   }
 
   get slackWebhookUrl(): string {

@@ -561,7 +561,7 @@ export class OrganizationService {
     };
     const connectionInvitationData = await this.natsClient
       .send<ICreateConnectionUrl>(this.organizationServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1063,7 +1063,7 @@ export class OrganizationService {
 
     const userData: user = await this.natsClient
       .send<user>(this.organizationServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1086,7 +1086,7 @@ export class OrganizationService {
 
     const userData = await this.natsClient
       .send<user>(this.organizationServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1410,7 +1410,7 @@ export class OrganizationService {
     };
     const ecosystemsCount = await (this.natsClient
       .send<string>(this.organizationServiceProxy, pattern, payload) as unknown as Promise<number>)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1435,7 +1435,7 @@ export class OrganizationService {
     };
     const connectionsCount = await this.natsClient
       .send<number>(this.organizationServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1460,7 +1460,7 @@ export class OrganizationService {
     };
     const issuanceCount = await this.natsClient
       .send<number>(this.organizationServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1484,7 +1484,7 @@ export class OrganizationService {
     };
     const verificationCount = await this.natsClient
       .send<number>(this.organizationServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(

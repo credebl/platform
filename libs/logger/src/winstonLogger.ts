@@ -28,7 +28,7 @@ esTransport.on('error', (error) => {
 
 @Injectable()
 export default class WinstonLogger implements Logger {
-  private logger: winston.Logger;
+  private readonly logger: winston.Logger;
 
   public constructor(
     @Inject(WinstonLoggerTransportsKey) transports: winston.transport[]

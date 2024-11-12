@@ -810,7 +810,7 @@ export class UserService {
 
     const invitationsData = await this.natsClient
       .send<IUserInvitations>(this.userServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -878,7 +878,7 @@ export class UserService {
 
     const getOrganizationCount = await this.natsClient
       .send<number>(this.userServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -915,7 +915,7 @@ export class UserService {
 
       const invitationsData = await this.natsClient
         .send<IUserInvitations>(this.userServiceProxy, pattern, payload)
-        // .toPromise()
+        
         .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(

@@ -12,34 +12,31 @@ enum LogColors {
 }
 
 export default class ConsoleTransport {
-  public static createColorize() : winston.transports.ConsoleTransportInstance {
+  public static createColorize(): winston.transports.ConsoleTransportInstance {
     return new winston.transports.Console({
       format: winston.format.combine(
         winston.format.printf((log) => {        
           const color = this.mapLogLevelColor(log.level as LogLevel);
-          const prefix = `${log.data.label ? `[${log.data.label}]` : ''}`;
-          return `${this.colorize(color, `${prefix}  -`)} ${log.data['@timestamp']}    ${
-            log.data.correlationId
-              ? `(${this.colorize(LogColors.cyan, log.data.correlationId)})`
-              : ''
-          } ${this.colorize(color, log.level.toUpperCase())} ${
-            log.data.sourceClass
-              ? `${this.colorize(LogColors.yellow, `[${log.data.sourceClass}]`)}`
-              : ''
-          } ${this.colorize(
-            color,
-            `${log.message} - ${log.data.error ? log.data.error : ''}`
-          )}${
-            log.data.durationMs !== undefined
-              ? this.colorize(color, ` \+${log.data.durationMs}ms`)
-              : ''
-          }${
-            log.data.stack ? this.colorize(color, `  - ${log.data.stack}`) : ''
-          }${
-            log.data.props
-              ? `\n  - Props: ${JSON.stringify(log.data.props, null, 4)}`
-              : ''
-          }`;
+          const prefix = log.data.label ? `[${log.data.label}]` : '';
+          const timestamp = log.data['@timestamp'];
+          const correlationId = log.data.correlationId
+            ? `(${this.colorize(LogColors.cyan, log.data.correlationId)})`
+            : '';
+          const level = this.colorize(color, log.level.toUpperCase());
+          const sourceClass = log.data.sourceClass
+            ? `${this.colorize(LogColors.yellow, `[${log.data.sourceClass}]`)}`
+            : '';
+          const message = this.colorize(color, `${log.message}`);
+          const error = log.data.error ? ` - ${log.data.error}` : '';
+          const duration = log.data.durationMs !== undefined
+            ? ` +${log.data.durationMs}ms`
+            : '';
+          const stack = log.data.stack ? ` - ${log.data.stack}` : '';
+          const props = log.data.props
+            ? `\n  - Props: ${JSON.stringify(log.data.props, null, 4)}`
+            : '';
+
+          return `${this.colorize(color, `${prefix} -`)} ${timestamp} ${correlationId} ${level} ${sourceClass} ${message}${error}${duration}${stack}${props}`;
         })
       )
     });

@@ -7,7 +7,7 @@ export default class NestjsLoggerServiceAdapter
   extends ConsoleLogger
   implements LoggerService
 {
-  public constructor(private logger: Logger) {
+  public constructor(private readonly logger: Logger) {
     super();
   }
 

@@ -396,7 +396,7 @@ export class IssuanceService {
     try {
       const createOffer = await this.natsClient
         .send<ICreateOfferResponse>(this.issuanceServiceProxy, pattern, payload)
-        // .toPromise()
+        
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(
@@ -1306,7 +1306,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     };
     const schemaDetails = await this.natsClient
       .send<ISchemaDetail[]>(this.issuanceServiceProxy, pattern, payload)
-      // .toPromise()
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(

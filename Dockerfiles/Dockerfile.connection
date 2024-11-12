@@ -8,8 +8,10 @@ WORKDIR /app
 COPY package.json ./
 #COPY package-lock.json ./
 
-# Install dependencies
-RUN pnpm i
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
+# Install dependencies while ignoring scripts (including Puppeteer's installation)
+RUN pnpm i --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -21,7 +23,7 @@ RUN pnpm run build connection
 
 # Stage 2: Create the final image
 FROM node:18-alpine
-RUN npm install -g pnpm
+# RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
 

@@ -29,37 +29,28 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 // eslint-disable-next-line camelcase
 import { RecordType, user, user_org_roles } from '@prisma/client';
 import {
-  Attribute,
   ICheckUserDetails,
   OrgInvitations,
   PlatformSettings,
-  IShareUserCertificate,
   IOrgUsers,
   UpdateUserProfile,
-  IUserCredentials, 
    IUserInformation,
     IUsersProfile,
     IUserResetPassword,
-    IPuppeteerOption,
-    IShareDegreeCertificateRes,
     IUserDeletedActivity,
     UserKeycloakId,
-    IEcosystemConfig
+    IEcosystemConfig,
+    IUserForgotPassword
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { Invitation, UserCertificateId, UserRole } from '@credebl/enum/enum';
-import { WinnerTemplate } from '../templates/winner-template';
-import { ParticipantTemplate } from '../templates/participant-template';
-import { ArbiterTemplate } from '../templates/arbiter-template';
+import { Invitation, UserRole } from '@credebl/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { AwsService } from '@credebl/aws';
-import puppeteer from 'puppeteer';
-import { WorldRecordTemplate } from '../templates/world-record-template';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
@@ -436,9 +427,8 @@ export class UserService {
    * @param forgotPasswordDto 
    * @returns 
    */
-  async forgotPassword(forgotPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
-    const { email } = forgotPasswordDto;
-
+  async forgotPassword(forgotPasswordDto: IUserForgotPassword): Promise<IResetPasswordResponse> {
+    const { email, brandLogoUrl, platformName, endpoint } = forgotPasswordDto;
     try {
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
@@ -461,7 +451,7 @@ export class UserService {
       }
 
       try {
-        await this.sendEmailForResetPassword(email, tokenCreated.token);
+        await this.sendEmailForResetPassword(email, brandLogoUrl, platformName, endpoint, tokenCreated.token);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -483,7 +473,7 @@ export class UserService {
    * @param verificationCode 
    * @returns 
    */
-  async sendEmailForResetPassword(email: string, verificationCode: string): Promise<boolean> {
+  async sendEmailForResetPassword(email: string, brandLogoUrl: string, platformName: string, endpoint: string, verificationCode: string): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -491,9 +481,11 @@ export class UserService {
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
       emailData.emailTo = email;
-      emailData.emailSubject = `[${process.env.PLATFORM_NAME}] Important: Password Reset Request`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, verificationCode);
+      const platform = platformName || process.env.PLATFORM_NAME;
+      emailData.emailSubject = `[${platform}] Important: Password Reset Request`;
+
+      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, platform, brandLogoUrl, endpoint, verificationCode);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
@@ -676,11 +668,14 @@ export class UserService {
   async getProfile(payload: { id }): Promise<IUsersProfile> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-      const ecosystemSettings = await this._getEcosystemConfig();
-      for (const setting of ecosystemSettings) {
-        userData[setting.key] = 'true' === setting.value;
-      }
 
+      if ('true' === process.env.IS_ECOSYSTEM_ENABLE) {
+        const ecosystemSettings = await this._getEcosystemConfig();
+        for (const setting of ecosystemSettings) {
+          userData[setting.key] = 'true' === setting.value;
+        }
+      }
+    
       return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
@@ -718,19 +713,6 @@ export class UserService {
       }
 
       return userProfile;
-    } catch (error) {
-      this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
-  async getUserCredentialsById(payload: { credentialId }): Promise<IUserCredentials> {
-    try {
-      const userCredentials = await this.userRepository.getUserCredentialsById(payload.credentialId);
-      if (!userCredentials) {
-        throw new NotFoundException(ResponseMessages.user.error.credentialNotFound);
-      }
-      return userCredentials;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -907,95 +889,6 @@ export class UserService {
       });
 
     return getOrganizationCount;
-  }
-
-  async shareUserCertificate(shareUserCertificate: IShareUserCertificate): Promise<string> {
-
-    const attributeArray = [];
-    let attributeJson = {};
-    const attributePromises = shareUserCertificate.attributes.map(async (iterator: Attribute) => {
-      attributeJson = {
-        [iterator.name]: iterator.value
-      };
-      attributeArray.push(attributeJson);
-    });
-    await Promise.all(attributePromises);
-    let template;
-
-    switch (shareUserCertificate.schemaId.split(':')[2]) {
-      case UserCertificateId.WINNER:
-        // eslint-disable-next-line no-case-declarations
-        const userWinnerTemplate = new WinnerTemplate();
-        template = await userWinnerTemplate.getWinnerTemplate(attributeArray);
-        break;
-      case UserCertificateId.PARTICIPANT:
-        // eslint-disable-next-line no-case-declarations
-        const userParticipantTemplate = new ParticipantTemplate();
-        template = await userParticipantTemplate.getParticipantTemplate(attributeArray);
-        break;
-      case UserCertificateId.ARBITER:
-        // eslint-disable-next-line no-case-declarations
-        const userArbiterTemplate = new ArbiterTemplate();
-        template = await userArbiterTemplate.getArbiterTemplate(attributeArray);
-        break;
-      case UserCertificateId.WORLD_RECORD:
-        // eslint-disable-next-line no-case-declarations
-        const userWorldRecordTemplate = new WorldRecordTemplate();
-        template = await userWorldRecordTemplate.getWorldRecordTemplate(attributeArray);
-        break;
-      default:
-        throw new NotFoundException('error in get attributes');
-    }
-
-    const option: IPuppeteerOption = {height: 0, width: 1000};
-
-    const imageBuffer = 
-    await this.convertHtmlToImage(template, shareUserCertificate.credentialId, option);
-    const verifyCode = uuidv4();
-
-    const imageUrl = await this.awsService.uploadUserCertificate(
-      imageBuffer,
-      'svg',
-      'certificates',
-      process.env.AWS_PUBLIC_BUCKET_NAME,
-      'base64'
-    );
-    const existCredentialId = await this.userRepository.getUserCredentialsById(shareUserCertificate.credentialId);
-    
-    if (existCredentialId) {
-      return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
-    }
-
-    const saveCredentialData = await this.saveCertificateUrl(imageUrl, shareUserCertificate.credentialId);
-
-    if (!saveCredentialData) {
-      throw new BadRequestException(ResponseMessages.schema.error.notStoredCredential);
-    }
-
-    return `${process.env.FRONT_END_URL}/certificates/${shareUserCertificate.credentialId}`;
-
-  }
-
-  async saveCertificateUrl(imageUrl: string, credentialId: string): Promise<unknown> {
-    return this.userRepository.saveCertificateImageUrl(imageUrl, credentialId);
-  }
-
-  async convertHtmlToImage(template: string, credentialId: string, option?: IPuppeteerOption): Promise<Buffer> {
-    const browser = await puppeteer.launch({
-      executablePath: '/usr/bin/chromium',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      protocolTimeout: 200000,
-      headless: true
-    });
-
-    const options: IPuppeteerOption = (option && 0 < Object.keys(option).length) ? option : {width: 0, height: 1000};
-    
-    const page = await browser.newPage();
-    await page.setViewport({ width: options?.width, height: options?.height, deviceScaleFactor: 2});
-    await page.setContent(template);
-    const screenshot = await page.screenshot();
-    await browser.close();
-    return screenshot;
   }
 
   /**

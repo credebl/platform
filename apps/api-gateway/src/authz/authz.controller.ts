@@ -106,7 +106,7 @@ export class AuthzController {
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
 
     if (loginUserDto.email) {
-      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password, loginUserDto.isPasskey);
+      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password);
 
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
@@ -146,7 +146,6 @@ export class AuthzController {
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Res() res: Response): Promise<Response> {
-
       const userData = await this.authzService.forgotPassword(forgotPasswordDto);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,

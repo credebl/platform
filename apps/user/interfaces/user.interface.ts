@@ -106,14 +106,6 @@ export interface ICheckUserDetails {
   isFidoVerified?: boolean;
   isRegistrationCompleted?: boolean;
 }
-export interface IUserCredentials {
-  id: string;
-  imageUrl?: string;
-  credentialId?: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  deletedAt: Date;
-}
 
 export interface IOrgUsers {
     totalPages: number,
@@ -193,6 +185,12 @@ export interface IUserResetPassword{
   newPassword?: string;
   token?: string;
   password?: string;
+}
+export interface IUserForgotPassword{
+  email: string;
+  brandLogoUrl?: string,
+  platformName?: string,
+  endpoint?: string
 }
 export interface IIssueCertificate {
   courseCode: string;

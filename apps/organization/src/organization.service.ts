@@ -636,10 +636,6 @@ export class OrganizationService {
           orgIds = organizations?.map(item => item.id);
         
         const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
-        
-        if (!orgEcosystemDetails || !Array.isArray(orgEcosystemDetails) || 0 === orgEcosystemDetails.length) {
-          throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemDetailsNotFound);
-        }
     
         updatedOrgs = getOrgs.organizations.map(org => {
           const matchingEcosystems = orgEcosystemDetails

@@ -9,7 +9,7 @@ import {
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
-import { schema } from '@prisma/client';
+import { Prisma, schema } from '@prisma/client';
 import { ISaveSchema, ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, W3CCreateSchema } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUserRequestInterface } from './interfaces/schema.interface';
@@ -54,6 +54,7 @@ export class SchemaService extends BaseService {
           schema.schemaName,
           schema.schemaVersion
            );
+
            if (0 !== schemaExists.length) {
              this.logger.error(ResponseMessages.schema.error.exists);
              throw new ConflictException(
@@ -886,6 +887,15 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async updateSchemaDetails(did: string): Promise<Prisma.BatchPayload> {
+    try {
+      const schemaDetails = await this.schemaRepository.updateSchemaDetails(did);
+      return schemaDetails;
+    } catch (error) {
+      this.logger.error(`Error in updateSchemaDetails: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 
   async storeSchemaDetails(schemaDetails: ISaveSchema): Promise<schema> {
     try {

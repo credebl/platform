@@ -341,14 +341,18 @@ export class CredentialDefinitionService extends BaseService {
                 
                 return schemaResponse;
             }
-            const credDefSchemaList: CredDefSchema[] =
+            const credDefSchemaList =
                 await this.credentialDefinitionRepository.getAllCredDefsByOrgIdForBulk(
                     payload
                 );
+ 
             if (!credDefSchemaList) {
                 throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
             }
-            return credDefSchemaList;
+
+            const activeCredDefSchemaList = credDefSchemaList.filter((item) => !item?.['isSchemaArchived']);
+            
+            return activeCredDefSchemaList;
         } catch (error) {
             this.logger.error(
                 `get Cred-Defs and schema List By OrgId for bulk operations: ${JSON.stringify(error)}`

@@ -28,7 +28,7 @@ import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IOrgAgent, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IEcosystemOrgStatus, IOrgDetails } from '../interfaces/organization.interface';
+import { IGetOrgById, IGetOrganization, IUpdateOrganization, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IEcosystemOrgStatus, IOrgDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
@@ -636,6 +636,7 @@ export class OrganizationService {
           orgIds = organizations?.map(item => item.id);
         
         const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
+        
         if (!orgEcosystemDetails || !Array.isArray(orgEcosystemDetails) || 0 === orgEcosystemDetails.length) {
           throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemDetailsNotFound);
         }
@@ -1660,38 +1661,6 @@ export class OrganizationService {
     const isEmailSent = await sendEmail(emailData);
 
     return isEmailSent;
-  }
-
-  async _deleteWallet(payload: IOrgAgent): Promise<{
-    response;
-  }> {
-    try {
-      const pattern = {
-        cmd: 'delete-wallet'
-      };
-
-      return this.organizationServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
-        });
-    } catch (error) {
-      this.logger.error(`[_deleteWallet] - error in delete wallet : ${JSON.stringify(error)}`);
-      throw error;
-    }
   }
 
   async getUserKeycloakIdByEmail(userEmails: string[]): Promise<{

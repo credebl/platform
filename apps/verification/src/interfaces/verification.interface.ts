@@ -18,7 +18,7 @@ export enum ProofRequestType {
 
 export interface IRequestProof {
     orgId: string;
-    connectionId?: string;
+    connectionId?: string[];
     attributes?: IProofRequestAttribute[];
     type: ProofRequestType;
     presentationDefinition?:IProofRequestPresentationDefinition;
@@ -30,6 +30,47 @@ export interface IRequestProof {
     parentThreadId?: string;
     willConfirm?: boolean;
 }
+
+export interface IProofRequestData {
+        goalCode?: string;
+        parentThreadId?: string;
+        willConfirm?: boolean;
+        protocolVersion?: string;
+        presentationData: PresentationData
+
+    }
+    export interface PresentationData {
+        proofFormats?:ProofFormats;
+        orgId: string;
+        connectionId?: string[];
+        attributes?: IProofRequestAttribute[];
+        type: ProofRequestType;
+        presentationDefinition?:IProofRequestPresentationDefinition;
+        comment: string;
+        autoAcceptProof: AutoAccept;
+    }
+
+  
+    export interface ProofFormats {
+        indy: {
+            attributes: {
+                attributeName: string;
+                attributeNames?: string[];
+        condition: string;
+        value: string;
+        credDefId: string;
+        schemaId: string;
+            }[]
+        };
+      }
+    export interface ProofRequestAttributeDto {
+        attributeName: string;
+        condition: string;
+        value: string;
+        credDefId: string;
+        schemaId: string;
+      }
+   
 
 export interface IGetAllProofPresentations {
     url: string;

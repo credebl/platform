@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize, ArrayMinSize } from 'class-validator';
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
@@ -142,12 +142,12 @@ export class ProofRequestPresentationDefinition {
   @IsOptional()
   name: string;
 
-  @ApiProperty({type: () =>  [InputDescriptors]})
-  @IsNotEmpty({ message: 'inputDescriptors is required.' })
+  @ApiProperty()
   @IsArray({ message: 'inputDescriptors must be an array' })
-  @IsObject({ each: true })
+  @IsNotEmpty({ message: 'inputDescriptors is required.' })
+  @ArrayMinSize(1)
+  @ValidateNested({each:true})
   @Type(() => InputDescriptors)
-  @ValidateNested()
   // eslint-disable-next-line camelcase
   input_descriptors:InputDescriptors[];
 }
@@ -166,7 +166,7 @@ export class ProofRequestAttributeDto {
     type: () => [ProofRequestAttribute]
 })
 @IsArray({ message: 'attributes must be in array' })
-@ValidateNested()
+@ValidateNested({ each: true })
 @IsObject({ each: true })
 @IsNotEmpty({ message: 'please provide valid attributes' })
 @Type(() => ProofRequestAttribute)
@@ -197,12 +197,18 @@ export class IndyDto {
 
 
 export class RequestProofDto {
-    @ApiProperty()
-    @IsString()
-    @Transform(({ value }) => trim(value))
-    @IsUUID()
-    @IsNotEmpty({ message: 'connectionId is required.' })
-    connectionId: string;
+@ApiProperty({
+    example: ['32f54163-7166-48f1-93d8-ff217bdb0653']
+  })
+
+  @IsNotEmpty({ each: true, message: 'connectionId array elements must not be empty.' })
+  @ValidateIf((obj) => Array.isArray(obj.connectionId))
+  @IsArray({ message: 'connectionId must be an array.' })
+  @ArrayMinSize(1, { message: 'connectionId must contain at least 1 element.' })
+  @ArrayMaxSize(10, { message: 'connectionId can contain at most 10 elements.' })
+  @IsUUID('all', { each: true, message: 'Each connectionId must be a valid UUID.' })
+  connectionId: string | string[];
+
 
     @ApiProperty({
       'example': 
@@ -282,55 +288,52 @@ export class RequestProofDto {
 
 export class PresentationPayload extends ProofPayload {
   @ApiProperty({
-    'example':  [
-      {
-          'connectionId': 'string',
-          'proofFormats': {
-              'indy': {
-                  'attributes': [
-                      {
-                          'attributeName': 'attributeName',
-                          'condition': '>=',
-                          'value': 'predicates',
-                          'credDefId': 'string',
-                          'schemaId': 'string'
-                      }
-                  ]
-              }
-          },
-          'presentationDefinition': {
-              'id': '32f54163-7166-48f1-93d8-ff217bdb0653',
-              'inputDescriptors': [
-                  {
-                      'id': 'healthcare_input_1',
-                      'name': 'Medical History',
-                      'schema': [
-                          {
-                              'uri': 'https://health-schemas.org/1.0.1/medical_history.json'
-                          }
-                      ],
-                      'constraints': {
-                          'fields': [
-                              {
-                                  'path': ['$.PatientID']
-                              }
-                          ]
-                      }
-                  }
-              ]
-          },
-          'comment': 'string',
-          'autoAcceptProof': {}
-      }
-  ],
+  'example': 
+  {
+    'connectionId': ['string'],
+    'proofFormats': {
+        'indy': {
+            'attributes': [
+                {
+                    'attributeName': 'attributeName',
+                    'condition': '>=',
+                    'value': 'predicates',
+                    'credDefId': 'string',
+                    'schemaId': 'string'
+                }
+            ]
+        }
+    },
+    'presentationDefinition': {
+        'id': '32f54163-7166-48f1-93d8-ff217bdb0653',
+        'inputDescriptors': [
+            {
+                'id': 'healthcare_input_1',
+                'name': 'Medical History',
+                'schema': [
+                    {
+                        'uri': 'https://health-schemas.org/1.0.1/medical_history.json'
+                    }
+                ],
+                'constraints': {
+                    'fields': [
+                        {
+                            'path': ['$.PatientID']
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    'comment': 'string',
+    'autoAcceptProof': 'string',
+    'goalCode': 'string'
+},
     type: () => [RequestProofDto]
 })
-@IsArray({ message: 'attributes must be in array' })
 @ValidateNested({ each: true })
-@IsObject({ each: true })
-@IsNotEmpty({ message: 'please provide valid attributes' })
 @Type(() => RequestProofDto)
-  presentationData: RequestProofDto[];
+  presentationData: RequestProofDto;
 }
 
 export class OutOfBandRequestProof extends ProofPayload {

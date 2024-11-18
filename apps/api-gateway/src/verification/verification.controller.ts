@@ -184,37 +184,35 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
         @Body() requestProof: PresentationPayload,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
 
-        // if (requestType === ProofRequestType.INDY) {
-        //     if (!requestProof.proofFormats) {
-        //         throw new BadRequestException(`type: ${requestType} requires proofFormats`);
-        //     }
-        // }
+        if (requestType === ProofRequestType.INDY) {
+            if (!requestProof.presentationData.proofFormats) {
+                throw new BadRequestException(`type: ${requestType} requires proofFormats`);
+            }
+        }
 
-        // if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
-        //     if (!requestProof.presentationDefinition) {
-        //         throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
-        //     }
-        // }
-        // if (requestProof.proofFormats) {
-        //     const attributeArray = [];
-        // for (const attrData of requestProof.proofFormats.indy.attributes) {
-        //   if (0 === attributeArray.length) {
-        //     attributeArray.push(Object.values(attrData)[0]);
-        //   } else if (!attributeArray.includes(Object.values(attrData)[0])) {
-        //     attributeArray.push(Object.values(attrData)[0]);
-        //   } else {
-        //     throw new BadRequestException('Please provide unique attribute names');
-        //   }           
+        if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
+            if (!requestProof.presentationData) {
+                throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
+            }
+        }
+        if (requestProof?.presentationData?.proofFormats) {
+            const attributeArray = [];
+        for (const attrData of requestProof.presentationData.proofFormats.indy.attributes) {
+          if (0 === attributeArray.length) {
+            attributeArray.push(Object.values(attrData)[0]);
+          } else if (!attributeArray.includes(Object.values(attrData)[0])) {
+            attributeArray.push(Object.values(attrData)[0]);
+          } else {
+            throw new BadRequestException('Please provide unique attribute names');
+          }           
+        }
+        }
 
-        // }
-        // }
-
-        // requestProof.orgId = orgId;
-        // requestProof.type = requestType;
+        requestProof.presentationData.orgId = orgId;
+        requestProof.presentationData.type = requestType;
         const proofData = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,

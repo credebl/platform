@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { IProofPresentation, IProofPresentationData, IProofRequests, IRequestProof, ISendProofRequestPayload } from './interfaces/verification.interface';
+import { IProofPresentation, IProofPresentationData, IProofRequests, IProofRequestData, ISendProofRequestPayload } from './interfaces/verification.interface';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { presentations, user } from '@prisma/client';
 import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
@@ -44,8 +44,8 @@ export class VerificationController {
    * @returns Requested proof presentation details
    */
   @MessagePattern({ cmd: 'send-proof-request' })
-  async sendProofRequest(payload: { requestProof: IRequestProof, user: IUserRequest }): Promise<string> {
-    return this.verificationService.sendProofRequest(payload.requestProof);
+  async sendProofRequest(payload: { requestProofDto: IProofRequestData, user: IUserRequest }): Promise<string[]> {
+    return this.verificationService.sendProofRequest(payload.requestProofDto);
   }
 
     /**

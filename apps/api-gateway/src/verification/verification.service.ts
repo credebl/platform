@@ -46,24 +46,6 @@ export class VerificationService extends BaseService {
      * @returns Requested proof presentation details
      */
     sendProofRequest(requestProofDto: PresentationPayload, user: IUserRequest): Promise<IProofRequest> {
-        // const requestProof: IRequestProof = {
-        //   orgId: requestProofDto.orgId,
-        //   type: requestProofDto.type,
-        //   comment: requestProofDto.comment,
-        //   autoAcceptProof: requestProofDto.autoAcceptProof,
-        //   connectionId: requestProofDto.connectionId,
-        //   goalCode: requestProofDto.goalCode,
-        //   parentThreadId: requestProofDto.parentThreadId,
-        //   protocolVersion: requestProofDto.protocolVersion,
-        //   willConfirm: requestProofDto.willConfirm
-        // };
-        // if (requestProofDto.proofFormats) {
-        //   requestProof.attributes = requestProofDto.proofFormats.indy.attributes;
-        // }
-        // if (requestProofDto.presentationDefinition) {
-        //   requestProof.presentationDefinition = requestProofDto.presentationDefinition;
-        // }
-
         const payload = { requestProofDto, user };
         return this.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);
     }

@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation, IProofRequestData } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
 import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
@@ -224,64 +224,76 @@ export class VerificationService {
    * @param orgId 
    * @returns Requested proof presentation details
    */
-  async sendProofRequest(requestProof: ISendProofRequestPayload): Promise<string> {
+
+  async sendProofRequest(requestProof: IProofRequestData): Promise<string[]> {
+
+    const responses: string[] = []; 
+  
     try {
-      const comment = requestProof.comment ? requestProof.comment : '';
-
-      const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
-
+      const comment = requestProof.presentationData.comment ? requestProof.presentationData.comment : '';
+      
+      const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.presentationData.orgId);
+     
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
+      
       const verificationMethodLabel = 'request-proof';
       const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-      
-      const payload: IProofRequestPayload = {
-        orgId: requestProof.orgId,
-        url,
-        proofRequestPayload: {}
-      };
 
-      const proofRequestPayload = {
-        comment,
-        connectionId: requestProof.connectionId,
-        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.Never,
-        goalCode: requestProof.goalCode || undefined,
-        parentThreadId: requestProof.parentThreadId || undefined,
-        willConfirm: requestProof.willConfirm || undefined
-      };
-
-      if (requestProof.type === ProofRequestType.INDY) {
-        const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof as IRequestProof);
-        payload.proofRequestPayload = {
-          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
-          proofFormats: {
-            indy: {
-              name: 'Proof Request',
-              version: '1.0',
-              requested_attributes: requestedAttributes,
-              requested_predicates: requestedPredicates
-            }
-          },
-          ...proofRequestPayload
+      const connectionIds = Array.isArray(requestProof.presentationData.connectionId)
+        ? requestProof.presentationData.connectionId
+        : [requestProof.presentationData.connectionId];
+  
+      for (const connectionId of connectionIds) {
+        const proofRequestPayload = {
+          comment,
+          connectionId,
+          autoAcceptProof: requestProof.presentationData.autoAcceptProof || AutoAccept.Never,
+          goalCode: requestProof.goalCode || undefined,
+          parentThreadId: requestProof.parentThreadId || undefined,
+          willConfirm: requestProof.willConfirm || undefined
         };
-
-      } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE) {
-        payload.proofRequestPayload = {
-          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v2',
-          proofFormats: {
-            presentationExchange: {
-              presentationDefinition: requestProof.presentationDefinition
-            }
-        },
-        ...proofRequestPayload
-      };
-    }
-      const getProofPresentationById = await this._sendProofRequest(payload);
-      return getProofPresentationById?.response;
+  
+        const payload: IProofRequestPayload = {
+          orgId: requestProof.presentationData.orgId,
+          url,
+          proofRequestPayload: {}
+        };
+  
+        if (requestProof.presentationData.type === ProofRequestType.INDY) {
+          const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof);
+          payload.proofRequestPayload = {
+            protocolVersion: requestProof.protocolVersion || 'v1',
+            proofFormats: {
+              indy: {
+                name: 'Proof Request',
+                version: '1.0',
+                requested_attributes: requestedAttributes,
+                requested_predicates: requestedPredicates
+              }
+            },
+            ...proofRequestPayload
+          };
+        } else if (requestProof.presentationData.type === ProofRequestType.PRESENTATIONEXCHANGE) {
+          payload.proofRequestPayload = {
+            protocolVersion: requestProof.protocolVersion || 'v2',
+            proofFormats: {
+              presentationExchange: {
+                presentationDefinition: requestProof.presentationData.presentationDefinition
+              }
+            },
+            ...proofRequestPayload
+          };
+        }
+          const getProofPresentationById = await this._sendProofRequest(payload);
+          responses.push(getProofPresentationById?.response);
+        
+      }
     } catch (error) {
       this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
       this.verificationErrorHandling(error);
-
     }
+  
+    return responses; 
   }
 
   /**
@@ -589,20 +601,23 @@ export class VerificationService {
     }
   }
 
-  async _proofRequestPayload(proofRequestpayload: IRequestProof): Promise<{
+  async _proofRequestPayload(proofRequestpayload: IProofRequestData): Promise<{
     requestedAttributes;
     requestedPredicates;
   }> {
     try {
       let requestedAttributes = {}; 
       const requestedPredicates = {};
-      const { attributes } = proofRequestpayload;
-      if (attributes) {
-        requestedAttributes = Object.fromEntries(attributes.map((attribute, index) => {
+
+      const indyAttributes = proofRequestpayload.presentationData.proofFormats?.indy;
+    if (indyAttributes && indyAttributes.attributes) {
+        requestedAttributes = Object.fromEntries(indyAttributes.attributes.map((attribute, index) => {
+
           const attributeElement = attribute.attributeName || attribute.attributeNames;
           const attributeReferent = `additionalProp${index + 1}`;
+
           const attributeKey = attribute.attributeName ? 'name' : 'names';
-          
+
           if (!attribute.condition && !attribute.value) {
 
             return [
@@ -611,8 +626,8 @@ export class VerificationService {
                 [attributeKey]: attributeElement,
                 restrictions: [
                   {
-                    cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                    schema_id: proofRequestpayload.attributes[index].schemaId
+                    cred_def_id: proofRequestpayload?.presentationData.proofFormats.indy.attributes[index].credDefId ? proofRequestpayload.presentationData.proofFormats.indy.attributes[index].credDefId : undefined,
+                    schema_id: proofRequestpayload.presentationData.proofFormats.indy.attributes[index].schemaId
                   }
                 ]
               }
@@ -624,8 +639,8 @@ export class VerificationService {
               p_value: parseInt(attribute.value),
               restrictions: [
                 {
-                  cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                  schema_id: proofRequestpayload.attributes[index].schemaId
+                  cred_def_id: proofRequestpayload.presentationData.attributes[index].credDefId ? proofRequestpayload.presentationData.attributes[index].credDefId : undefined,
+                  schema_id: proofRequestpayload.presentationData.attributes[index].schemaId
                 }
               ]
             };
@@ -633,7 +648,7 @@ export class VerificationService {
 
           return [attributeReferent];
           }));
-
+          
         return {
           requestedAttributes,
           requestedPredicates

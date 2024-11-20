@@ -8,7 +8,7 @@ import {
   ISchemaSearchPayload,
   SaveSchemaPayload
 } from './interfaces/schema-payload.interface';
-import { schema } from '@prisma/client';
+import { Prisma, schema } from '@prisma/client';
 import {
   ICredDefWithPagination,
   ISchemaData,
@@ -73,6 +73,11 @@ export class SchemaController {
     ledgerId: string;
   }[]> {
     return this.schemaService.schemaExist(payload);
+  }
+
+  @MessagePattern({ cmd: 'archive-schemas' })
+  async archiveSchemas(payload: {did: string}): Promise<Prisma.BatchPayload> {
+    return this.schemaService.archiveSchemas(payload.did);
   }
 
   @MessagePattern({ cmd: 'store-schema-record' })

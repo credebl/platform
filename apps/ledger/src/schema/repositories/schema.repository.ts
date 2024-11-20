@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
+import { ledgers, org_agents, org_agents_type, organisation, Prisma, schema } from '@prisma/client';
 import { ISchema, ISchemaExist, ISchemaSearchCriteria, ISaveSchema } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
@@ -36,7 +36,8 @@ export class SchemaRepository {
             publisherDid: schemaResult.issuerId.split(':')[4] || schemaResult.issuerId,
             orgId: schemaResult.orgId,
             ledgerId: schemaResult.ledgerId,
-            type: schemaResult.type
+            type: schemaResult.type,
+            isSchemaArchived: false
           }
         });
         return saveResult;
@@ -77,6 +78,7 @@ export class SchemaRepository {
       return this.prisma.schema.findMany({
         where: {
           type: SchemaType.INDY,
+          isSchemaArchived: false,
           name: {
             contains: schemaName,
             mode: 'insensitive'
@@ -98,6 +100,7 @@ export class SchemaRepository {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
           organisation: { id: orgId },
+          isSchemaArchived: false,
           OR: [
             { name: { contains: payload.searchByText, mode: 'insensitive' } },
             { version: { contains: payload.searchByText, mode: 'insensitive' } },
@@ -172,6 +175,24 @@ export class SchemaRepository {
       return schemasResult;
     } catch (error) {
       this.logger.error(`Error in getting agent DID: ${error}`);
+      throw error;
+    }
+  }
+
+  async archiveSchemasByDid(did: string): Promise<Prisma.BatchPayload> {
+    try {
+      const schemasResult = await this.prisma.schema.updateMany({
+        where: {
+          issuerId: did
+        },
+        data: {
+          isSchemaArchived: true
+        }
+      });
+
+      return schemasResult;
+    } catch (error) {
+      this.logger.error(`Error in archive schemas: ${error}`);
       throw error;
     }
   }
@@ -275,6 +296,7 @@ export class SchemaRepository {
         schemaResult = await this.prisma.schema.findMany({
           where: {
             ledgerId,
+            isSchemaArchived: false,
             type: schemaType,
             OR: [
               { name: { contains: searchByText, mode: 'insensitive' } },
@@ -289,6 +311,7 @@ export class SchemaRepository {
             version: true,
             attributes: true,
             schemaLedgerId: true,
+            isSchemaArchived: true,
             createdBy: true,
             publisherDid: true,
             orgId: true,  // This field can be null
@@ -307,6 +330,7 @@ export class SchemaRepository {
         schemaResult = await this.prisma.schema.findMany({
           where: {
             ledgerId,
+            isSchemaArchived: false,
             type: schemaType
           },
           select: {
@@ -315,6 +339,7 @@ export class SchemaRepository {
             version: true,
             attributes: true,
             schemaLedgerId: true,
+            isSchemaArchived: true,
             createdBy: true,
             publisherDid: true,
             orgId: true,  // This field can be null

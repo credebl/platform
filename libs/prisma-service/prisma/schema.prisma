@@ -267,6 +267,7 @@ model schema {
   ledgers               ledgers?                @relation(fields: [ledgerId], references: [id])
   ledgerId              String?                 @db.Uuid
   type                  String?                 @db.VarChar
+  isSchemaArchived      Boolean                 @default(false)
   credential_definition credential_definition[]
 }
 

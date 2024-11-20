@@ -75,9 +75,9 @@ export class SchemaController {
     return this.schemaService.schemaExist(payload);
   }
 
-  @MessagePattern({ cmd: 'update-schema-details' })
-  async updateSchemaDetails(payload: {did: string}): Promise<Prisma.BatchPayload> {
-    return this.schemaService.updateSchemaDetails(payload.did);
+  @MessagePattern({ cmd: 'archive-schemas' })
+  async archiveSchemas(payload: {did: string}): Promise<Prisma.BatchPayload> {
+    return this.schemaService.archiveSchemas(payload.did);
   }
 
   @MessagePattern({ cmd: 'store-schema-record' })

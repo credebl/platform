@@ -887,12 +887,12 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async updateSchemaDetails(did: string): Promise<Prisma.BatchPayload> {
+  async archiveSchemas(did: string): Promise<Prisma.BatchPayload> {
     try {
-      const schemaDetails = await this.schemaRepository.updateSchemaDetails(did);
+      const schemaDetails = await this.schemaRepository.archiveSchemasByDid(did);
       return schemaDetails;
     } catch (error) {
-      this.logger.error(`Error in updateSchemaDetails: ${error}`);
+      this.logger.error(`Error in archive schemas: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

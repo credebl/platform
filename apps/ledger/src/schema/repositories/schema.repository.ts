@@ -179,7 +179,7 @@ export class SchemaRepository {
     }
   }
 
-  async updateSchemaDetails(did: string): Promise<Prisma.BatchPayload> {
+  async archiveSchemasByDid(did: string): Promise<Prisma.BatchPayload> {
     try {
       const schemasResult = await this.prisma.schema.updateMany({
         where: {
@@ -192,7 +192,7 @@ export class SchemaRepository {
 
       return schemasResult;
     } catch (error) {
-      this.logger.error(`Error in getting agent DID: ${error}`);
+      this.logger.error(`Error in archive schemas: ${error}`);
       throw error;
     }
   }

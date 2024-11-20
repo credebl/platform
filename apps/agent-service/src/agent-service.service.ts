@@ -1753,7 +1753,7 @@ export class AgentServiceService {
 async _updateIsSchemaArchivedFlag(did: string): Promise<{
   count: number
 }> {
-  const pattern = { cmd: 'update-schema-details' };
+  const pattern = { cmd: 'archive-schemas' };
 
   const payload = {
     did

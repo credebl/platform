@@ -1077,6 +1077,21 @@ export class UserService {
     }
   }
 
+  async fetchUserDetails(email: string): Promise<user> {
+    try {
+      const userDetails = await this.userRepository.fetchUserDetails(email);
+      
+      if (!userDetails) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+
+      return userDetails;
+    } catch (error) {
+      this.logger.error(`In get user details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async getUserKeycloakIdByEmail(userEmails: string[]): Promise<UserKeycloakId[]> {
     try {
      

@@ -778,6 +778,44 @@ export class OrganizationService {
     }
   }
 
+  async getAllUserOrganizations(email: string): Promise<object[]> {
+    try {
+      const getUserDetails = await this._userDetails(email);
+    
+      const getUserOrgs = await this.organizationRepository.getUserOrgIds(getUserDetails?.['id']);
+      
+      const orgIds = getUserOrgs?.map((item) => item?.orgId).filter((id) => null !== id);
+            
+      const organizationDetails = await this.organizationRepository.fetchUserOrganizations(orgIds);
+      return organizationDetails;
+    } catch (error) {
+      this.logger.error(`In get user organizations : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async _userDetails(email: string): Promise<object> {
+    const pattern = { cmd: 'get-user-details' };
+    const payload = {
+      email
+   };
+    const userDetails = await this.organizationServiceProxy
+      .send(pattern, payload)
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return userDetails;
+  }
+
   /**
    * Description: get invitation
    * @param orgId Registration Details

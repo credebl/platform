@@ -306,7 +306,7 @@ export class PresentationPayload extends ProofPayload {
     },
     'presentationDefinition': {
         'id': '32f54163-7166-48f1-93d8-ff217bdb0653',
-        'inputDescriptors': [
+        'input_descriptors': [
             {
                 'id': 'healthcare_input_1',
                 'name': 'Medical History',
@@ -318,7 +318,7 @@ export class PresentationPayload extends ProofPayload {
                 'constraints': {
                     'fields': [
                         {
-                            'path': ['$.PatientID']
+                            'path': ['$.credentialSubject.PatientID']
                         }
                     ]
                 }

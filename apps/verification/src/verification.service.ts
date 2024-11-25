@@ -629,8 +629,8 @@ export class VerificationService {
                 [attributeKey]: attributeElement,
                 restrictions: [
                   {
-                    cred_def_id: proofRequestpayload?.presentationData.proofFormats.indy.attributes[index].credDefId ? proofRequestpayload.presentationData.proofFormats.indy.attributes[index].credDefId : undefined,
-                    schema_id: proofRequestpayload.presentationData.proofFormats.indy.attributes[index].schemaId
+                    cred_def_id: proofRequestpayload?.presentationData?.proofFormats?.indy?.attributes[index].credDefId ? proofRequestpayload.presentationData.proofFormats.indy.attributes[index].credDefId : undefined,
+                    schema_id: proofRequestpayload?.presentationData?.proofFormats?.indy?.attributes[index].schemaId
                   }
                 ]
               }
@@ -642,13 +642,12 @@ export class VerificationService {
               p_value: parseInt(attribute.value),
               restrictions: [
                 {
-                  cred_def_id: proofRequestpayload.presentationData.attributes[index].credDefId ? proofRequestpayload.presentationData.attributes[index].credDefId : undefined,
-                  schema_id: proofRequestpayload.presentationData.attributes[index].schemaId
+                  cred_def_id: proofRequestpayload?.presentationData?.proofFormats?.indy?.attributes[index].credDefId ? proofRequestpayload?.presentationData?.proofFormats?.indy?.attributes[index].credDefId : undefined,
+                  schema_id: proofRequestpayload.presentationData?.proofFormats?.indy?.attributes[index].schemaId
                 }
               ]
             };
           }
-
           return [attributeReferent];
           }));
           

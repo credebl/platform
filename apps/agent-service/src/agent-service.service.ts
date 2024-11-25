@@ -1722,6 +1722,11 @@ export class AgentServiceService {
                 { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
             ];
 
+            const did = orgAgent?.orgDid;
+
+            //archive schemas
+            await this._updateIsSchemaArchivedFlag(did);
+
             const logDeletionActivity = async (records, tableName): Promise<void> => {
                 if (records) {
                     const txnMetadata = {
@@ -1743,6 +1748,30 @@ export class AgentServiceService {
         this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
         throw new RpcException(error.response ? error.response : error);
     }
+}
+
+async _updateIsSchemaArchivedFlag(did: string): Promise<{
+  count: number
+}> {
+  const pattern = { cmd: 'archive-schemas' };
+
+  const payload = {
+    did
+  };
+  const updatedSchemaInfo = await this.agentServiceProxy
+    .send(pattern, payload)
+    .toPromise()
+    .catch((error) => {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
+    });
+  return updatedSchemaInfo;
 }
 
   async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, orgId: string): Promise<string> {

@@ -36,11 +36,11 @@ export interface IProofRequestData {
         parentThreadId?: string;
         willConfirm?: boolean;
         protocolVersion?: string;
-        presentationData: PresentationData
+        presentationData: IPresentationData
 
     }
-    export interface PresentationData {
-        proofFormats?:ProofFormats;
+    export interface IPresentationData {
+        proofFormats?:IProofFormat;
         orgId: string;
         connectionId?: string[];
         attributes?: IProofRequestAttribute[];
@@ -49,20 +49,23 @@ export interface IProofRequestData {
         comment: string;
         autoAcceptProof: AutoAccept;
     }
-
-  
-    export interface ProofFormats {
-        indy: {
-            attributes: {
-                attributeName: string;
-                attributeNames?: string[];
+    export interface IProofFormat {
+        indy: Indy;
+    }
+    
+    export interface Indy {
+        attributes: IProofAttributesData[];
+    }
+    
+    export interface IProofAttributesData {
+        attributeName: string;
+        attributeNames?: string[];
         condition: string;
         value: string;
         credDefId: string;
         schemaId: string;
-            }[]
-        };
-      }
+    }
+      
     export interface ProofRequestAttributeDto {
         attributeName: string;
         condition: string;

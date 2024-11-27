@@ -8,7 +8,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 
 import { WalletDetailsDto } from '../dtos/wallet-details.dto';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class AgentService extends BaseService {

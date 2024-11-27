@@ -38,7 +38,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');

@@ -5,7 +5,7 @@ import { BaseService } from 'libs/service/base.service';
 import { RegisterWebhookDto } from './dtos/register-webhook-dto';
 import { ICreateWebhookUrl, IGetWebhookUrl } from 'apps/webhook/interfaces/webhook.interfaces';
 import { GetWebhookDto } from './dtos/get-webhoook-dto';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class WebhookService extends BaseService {

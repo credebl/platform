@@ -8,7 +8,7 @@ import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/inte
 import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
 import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
 import { user } from '@prisma/client';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class ConnectionService extends BaseService {
   constructor(@Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy, private readonly natsClient : NATSClient) {

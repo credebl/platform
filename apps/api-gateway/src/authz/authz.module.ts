@@ -19,7 +19,7 @@ import { VerificationService } from '../verification/verification.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { OrganizationService } from '../organization/organization.service';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [

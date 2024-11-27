@@ -51,7 +51,7 @@ import { toNumber } from '@credebl/common/cast.helper';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class OrganizationService {
   constructor(

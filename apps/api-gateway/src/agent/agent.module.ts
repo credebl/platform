@@ -7,7 +7,7 @@ import { CommonModule } from '../../../../libs/common/src/common.module';
 import { CommonService } from '../../../../libs/common/src/common.service';
 import { ConfigModule } from '@nestjs/config';
 import { commonNatsOptions } from 'libs/service/nats.options';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [

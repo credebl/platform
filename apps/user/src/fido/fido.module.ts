@@ -20,7 +20,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserService } from '../user.service';
 import { AwsService } from '@credebl/aws';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [

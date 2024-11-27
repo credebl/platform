@@ -76,8 +76,8 @@ import { InvitationMessage } from '@credebl/common/interfaces/agent-service.inte
 import * as CryptoJS from 'crypto-js';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { PrismaService } from '@credebl/prisma-service';
-import { NATSClient } from 'libs/common/NATSClient';
 import { from } from 'rxjs';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 @WebSocketGateway()

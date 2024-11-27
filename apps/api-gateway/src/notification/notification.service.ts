@@ -3,7 +3,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
 import { INotification } from './interfaces/notification.interfaces';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class NotificationService extends BaseService {

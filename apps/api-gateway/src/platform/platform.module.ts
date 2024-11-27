@@ -5,7 +5,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Module({
   imports: [
     ConfigModule.forRoot(),

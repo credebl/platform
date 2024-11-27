@@ -8,7 +8,7 @@ import { FileExportResponse, IIssuedCredentialSearchParams, IReqPayload, ITempla
 import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { user } from '@prisma/client';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class IssuanceService extends BaseService {
 

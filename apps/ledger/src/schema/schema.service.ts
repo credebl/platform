@@ -25,7 +25,7 @@ import { W3CSchemaVersion } from './enum/schema.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { networkNamespace } from '@credebl/common/common.utils';
 import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 import { from } from 'rxjs';
 
 @Injectable()

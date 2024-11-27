@@ -4,7 +4,7 @@ import { ConnectionService } from './connection.service';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
     imports: [

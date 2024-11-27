@@ -13,7 +13,7 @@ import { IResetPasswordResponse, ISendVerificationEmail, ISignInUser, ISignUpUse
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 @WebSocketGateway()

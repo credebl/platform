@@ -21,7 +21,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 import { from } from 'rxjs';
 
 @Injectable()

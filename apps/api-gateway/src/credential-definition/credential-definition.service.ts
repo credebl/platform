@@ -6,7 +6,7 @@ import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { GetAllCredDefsDto } from '../dtos/get-cred-defs.dto';
 import { ICredDef, ICredDefs } from './interfaces';
 import { ICredDefData } from '@credebl/common/interfaces/cred-def.interface';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class CredentialDefinitionService extends BaseService {

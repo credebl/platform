@@ -57,7 +57,7 @@ import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 import { toNumber } from '@credebl/common/cast.helper';
 import * as jwt from 'jsonwebtoken';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class UserService {

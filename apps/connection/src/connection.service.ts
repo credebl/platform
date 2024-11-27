@@ -27,7 +27,7 @@ import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfac
 import { RecordType, user } from '@prisma/client';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { agent_invitations } from '@prisma/client';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class ConnectionService {
   constructor(

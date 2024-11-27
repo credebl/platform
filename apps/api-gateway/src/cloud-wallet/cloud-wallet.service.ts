@@ -3,7 +3,7 @@ import { IAcceptOffer, ICreateCloudWallet, ICreateCloudWalletDid, IReceiveInvita
 import { Inject, Injectable} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class CloudWalletService extends BaseService {

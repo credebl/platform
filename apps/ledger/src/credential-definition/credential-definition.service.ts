@@ -18,7 +18,7 @@ import { OrgAgentType, SchemaType, SortValue } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 import { from } from 'rxjs';
 @Injectable()
 export class CredentialDefinitionService extends BaseService {

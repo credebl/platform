@@ -11,7 +11,7 @@ import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class UserService extends BaseService {

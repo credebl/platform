@@ -9,7 +9,7 @@ import { AgentStatus } from './interface/agent-service.interface';
 import { CreateDidDto } from './dto/create-did.dto';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class AgentService extends BaseService {

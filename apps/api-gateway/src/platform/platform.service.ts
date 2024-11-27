@@ -6,7 +6,7 @@ import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { INetworkUrl, ISchemaDetails } from '@credebl/common/interfaces/schema.interface';
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
 import { IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class PlatformService extends BaseService {

@@ -6,7 +6,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { CreateRevocationRegistryDto } from '../dtos/create-revocation-registry.dto';
 import { UpdateRevocationRegistryUriDto } from '../dtos/update-revocation-registry.dto';
 import { BaseService } from 'libs/service/base.service';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class RevocationService extends BaseService {

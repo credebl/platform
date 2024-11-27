@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { UpdateFidoUserDetailsDto, VerifyRegistrationDto, GenerateAuthenticationDto, VerifyAuthenticationDto } from '../dtos/fido-user.dto';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 
 @Injectable()

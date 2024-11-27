@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class UtilitiesService extends BaseService {

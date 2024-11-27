@@ -2,7 +2,7 @@ import { CountryInterface, StateInterface, CityInterface } from '@credebl/common
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class GeoLocationService extends BaseService {

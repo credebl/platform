@@ -16,7 +16,7 @@ import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class OrganizationService extends BaseService {

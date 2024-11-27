@@ -16,7 +16,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { NATSClient } from 'libs/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [

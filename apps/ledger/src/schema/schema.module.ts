@@ -10,6 +10,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Module({
   imports: [
     ClientsModule.register([
@@ -28,7 +29,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
     SchemaService,
     SchemaRepository,
     Logger,
-    PrismaService
+    PrismaService,
+    NATSClient
   ],
   controllers: [SchemaController]
 })

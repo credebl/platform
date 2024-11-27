@@ -10,6 +10,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { ImageServiceService } from '@credebl/image-service';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Module({
   imports: [
     HttpModule,
@@ -25,7 +26,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
     ])
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService, ImageServiceService, AwsService]
+  providers: [OrganizationService, CommonService, ImageServiceService, AwsService, NATSClient]
 })
 export class OrganizationModule { }
 

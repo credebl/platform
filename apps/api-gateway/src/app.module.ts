@@ -26,12 +26,19 @@ import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { NotificationModule } from './notification/notification.module';
 import { GeoLocationModule } from './geo-location/geo-location.module';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
+import { ContextModule } from '@credebl/context/contextModule';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ContextModule,
+    PlatformConfig,
+    LoggerModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -54,12 +61,19 @@ import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
     UtilitiesModule,
     WebhookModule,
     NotificationModule,
+    GlobalConfigModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     GeoLocationModule,
     CloudWalletModule
   ],
   controllers: [AppController],
-  providers: [AppService]
+  providers: [
+    AppService,
+    {
+      provide: MICRO_SERVICE_NAME,
+      useValue: 'APIGATEWAY'
+    }
+  ]
 })
 export class AppModule {
   configure(userContext: MiddlewareConsumer): void {

@@ -76,6 +76,8 @@ import { InvitationMessage } from '@credebl/common/interfaces/agent-service.inte
 import * as CryptoJS from 'crypto-js';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { PrismaService } from '@credebl/prisma-service';
+import { from } from 'rxjs';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 @WebSocketGateway()
@@ -89,7 +91,8 @@ export class AgentServiceService {
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private readonly userActivityRepository: UserActivityRepository
+    private readonly userActivityRepository: UserActivityRepository,
+    private readonly natsClient : NATSClient
   ) {}
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {
@@ -1925,8 +1928,8 @@ async _updateIsSchemaArchivedFlag(did: string): Promise<{
     response: string;
   }> {
     try {
-      return this.agentServiceProxy
-        .send<string>(pattern, payload)
+      return from(this.natsClient
+        .send<string>(this.agentServiceProxy, pattern, payload))
         .pipe(map((response) => ({ response })))
         .toPromise()
         .catch((error) => {

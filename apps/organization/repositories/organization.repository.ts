@@ -500,9 +500,12 @@ export class OrganizationRepository {
       );
 
       const schemasCount = await this.prisma.schema.count({
-        ...query
+        where: {
+          orgId,
+          isSchemaArchived: false
+        }
       });
-
+      
       const credentialsCount = await this.prisma.credentials.count({
         ...query
       });

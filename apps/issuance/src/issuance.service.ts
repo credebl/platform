@@ -37,6 +37,8 @@ import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
+import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
@@ -52,7 +54,10 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
-    @Inject(CACHE_MANAGER) private readonly cacheService: Cache
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+    @Inject(ContextStorageServiceKey)
+      private readonly contextStorageService: ContextStorageService,
+      private readonly natsClient : NATSClient
   ) { }
 
   async getIssuanceRecords(orgId: string): Promise<number> {
@@ -389,9 +394,9 @@ export class IssuanceService {
   // Once implement this for all component then we'll remove the duplicate function
   async natsCallAgent(pattern: IPattern, payload: ISendOfferNatsPayload): Promise<ICreateOfferResponse> {
     try {
-      const createOffer = await this.issuanceServiceProxy
-        .send<ICreateOfferResponse>(pattern, payload)
-        .toPromise()
+      const createOffer = await this.natsClient
+        .send<ICreateOfferResponse>(this.issuanceServiceProxy, pattern, payload)
+        
         .catch(error => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(
@@ -1299,9 +1304,9 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     const payload = {
       templateIds
     };
-    const schemaDetails = await this.issuanceServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const schemaDetails = await this.natsClient
+      .send<ISchemaDetail[]>(this.issuanceServiceProxy, pattern, payload)
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -1763,7 +1768,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.issuanceServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.issuanceServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

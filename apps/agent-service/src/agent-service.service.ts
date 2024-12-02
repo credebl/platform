@@ -76,6 +76,8 @@ import { InvitationMessage } from '@credebl/common/interfaces/agent-service.inte
 import * as CryptoJS from 'crypto-js';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { PrismaService } from '@credebl/prisma-service';
+import { from } from 'rxjs';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 @WebSocketGateway()
@@ -89,7 +91,8 @@ export class AgentServiceService {
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private readonly userActivityRepository: UserActivityRepository
+    private readonly userActivityRepository: UserActivityRepository,
+    private readonly natsClient : NATSClient
   ) {}
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {
@@ -1722,6 +1725,11 @@ export class AgentServiceService {
                 { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
             ];
 
+            const did = orgAgent?.orgDid;
+
+            //archive schemas
+            await this._updateIsSchemaArchivedFlag(did);
+
             const logDeletionActivity = async (records, tableName): Promise<void> => {
                 if (records) {
                     const txnMetadata = {
@@ -1743,6 +1751,30 @@ export class AgentServiceService {
         this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
         throw new RpcException(error.response ? error.response : error);
     }
+}
+
+async _updateIsSchemaArchivedFlag(did: string): Promise<{
+  count: number
+}> {
+  const pattern = { cmd: 'archive-schemas' };
+
+  const payload = {
+    did
+  };
+  const updatedSchemaInfo = await this.agentServiceProxy
+    .send(pattern, payload)
+    .toPromise()
+    .catch((error) => {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
+    });
+  return updatedSchemaInfo;
 }
 
   async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, orgId: string): Promise<string> {
@@ -1896,8 +1928,8 @@ export class AgentServiceService {
     response: string;
   }> {
     try {
-      return this.agentServiceProxy
-        .send<string>(pattern, payload)
+      return from(this.natsClient
+        .send<string>(this.agentServiceProxy, pattern, payload))
         .pipe(map((response) => ({ response })))
         .toPromise()
         .catch((error) => {

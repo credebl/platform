@@ -4,6 +4,7 @@ import { FidoController } from './fido.controller';
 import { FidoService } from './fido.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports:[
@@ -17,6 +18,6 @@ import { CommonConstants } from '@credebl/common/common.constant';
     ])
   ],
   controllers: [FidoController],
-  providers: [FidoService]
+  providers: [FidoService, NATSClient]
 })
 export class FidoModule { }

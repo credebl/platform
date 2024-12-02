@@ -9,7 +9,7 @@ import {
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
-import { schema } from '@prisma/client';
+import { Prisma, schema } from '@prisma/client';
 import { ISaveSchema, ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, W3CCreateSchema } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUserRequestInterface } from './interfaces/schema.interface';
@@ -25,6 +25,8 @@ import { W3CSchemaVersion } from './enum/schema.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { networkNamespace } from '@credebl/common/common.utils';
 import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
+import { NATSClient } from '@credebl/common/NATSClient';
+import { from } from 'rxjs';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -32,7 +34,8 @@ export class SchemaService extends BaseService {
     private readonly schemaRepository: SchemaRepository,
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+    private readonly natsClient : NATSClient
   ) {
     super('SchemaService');
   }
@@ -54,6 +57,7 @@ export class SchemaService extends BaseService {
           schema.schemaName,
           schema.schemaVersion
            );
+
            if (0 !== schemaExists.length) {
              this.logger.error(ResponseMessages.schema.error.exists);
              throw new ConflictException(
@@ -573,8 +577,8 @@ export class SchemaService extends BaseService {
       const pattern = {
         cmd: 'agent-create-schema'
       };
-      const schemaResponse = await this.schemaServiceProxy
-        .send(pattern, payload)
+      const schemaResponse = await from(this.natsClient
+        .send<string>(this.schemaServiceProxy, pattern, payload))
         .pipe(
           map((response) => (
             {
@@ -599,8 +603,8 @@ export class SchemaService extends BaseService {
       const natsPattern = {
         cmd: 'agent-create-w3c-schema'
       };
-      const W3CSchemaResponse = await this.schemaServiceProxy
-        .send(natsPattern, payload)
+      const W3CSchemaResponse = await from(this.natsClient
+        .send<string>(this.schemaServiceProxy, natsPattern, payload))
         .pipe(
           map((response) => (
             {
@@ -717,8 +721,8 @@ export class SchemaService extends BaseService {
       const pattern = {
         cmd: 'agent-get-schema'
       };
-      const schemaResponse = await this.schemaServiceProxy
-        .send(pattern, payload)
+      const schemaResponse = await from(this.natsClient
+        .send<string>(this.schemaServiceProxy, pattern, payload))
         .pipe(
           map((response) => (
             {
@@ -850,7 +854,7 @@ export class SchemaService extends BaseService {
    
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.schemaServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.schemaServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -886,6 +890,15 @@ export class SchemaService extends BaseService {
     }
   }
 
+  async archiveSchemas(did: string): Promise<Prisma.BatchPayload> {
+    try {
+      const schemaDetails = await this.schemaRepository.archiveSchemasByDid(did);
+      return schemaDetails;
+    } catch (error) {
+      this.logger.error(`Error in archive schemas: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 
   async storeSchemaDetails(schemaDetails: ISaveSchema): Promise<schema> {
     try {

@@ -3,7 +3,7 @@ import { CommonService } from '@credebl/common';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { map } from 'rxjs';
+import { from, map } from 'rxjs';
 import {
   ConnectionResponseDetail,
   AgentConnectionSearchCriteria,
@@ -27,6 +27,7 @@ import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfac
 import { RecordType, user } from '@prisma/client';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { agent_invitations } from '@prisma/client';
+import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class ConnectionService {
   constructor(
@@ -35,7 +36,8 @@ export class ConnectionService {
     private readonly connectionRepository: ConnectionRepository,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+    private readonly natsClient : NATSClient
   ) {}
 
   /**
@@ -762,8 +764,8 @@ export class ConnectionService {
     response: string;
   }> {
     try {
-      return this.connectionServiceProxy
-        .send(pattern, payload)
+      return from(this.natsClient
+        .send<string>(this.connectionServiceProxy, pattern, payload))
         .pipe(
           map((response) => ({
             response

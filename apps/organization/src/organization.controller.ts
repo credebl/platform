@@ -116,7 +116,6 @@ export class OrganizationController {
   async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<IGetOrgById> {
     return this.organizationService.getOrganization(payload.orgId);
   }
-
 /**
  * @param orgSlug 
  * @returns organization details

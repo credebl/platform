@@ -20,6 +20,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { from } from 'rxjs';
+import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
     constructor(
@@ -284,26 +285,62 @@ export class CredentialDefinitionService extends BaseService {
         try {
             const { credDefSearchCriteria, orgId } = payload;
             const response = await this.credentialDefinitionRepository.getAllCredDefs(credDefSearchCriteria, orgId);
+    
+            const schemaIds = response?.map((item) => item?.schemaLedgerId);
+    
+            const schemaDetails = await this._getSchemaDetails(schemaIds);
+    
+            const archivedSchemaIds = schemaDetails
+                .filter((schema) => schema.isSchemaArchived)
+                .map((schema) => schema.schemaLedgerId);   
+    
+            const filteredResponse = response.filter(
+                (credDef) => !archivedSchemaIds.includes(credDef.schemaLedgerId)
+            );
+    
             const credDefResponse = {
-                totalItems: response.length,
+                totalItems: filteredResponse.length,
                 hasNextPage: credDefSearchCriteria.pageSize * credDefSearchCriteria.pageNumber < response.length,
                 hasPreviousPage: 1 < credDefSearchCriteria.pageNumber,
                 nextPage: credDefSearchCriteria.pageNumber + 1,
                 previousPage: credDefSearchCriteria.pageNumber - 1,
                 lastPage: Math.ceil(response.length / credDefSearchCriteria.pageSize),
-                data: response
+                data: filteredResponse
             };
-
-            if (0 == response.length) {
+    
+            if (0 === filteredResponse.length) {
                 throw new NotFoundException(ResponseMessages.credentialDefinition.error.NotFound);
             }
+    
             return credDefResponse;
-
         } catch (error) {
             this.logger.error(`Error in retrieving credential definitions: ${error}`);
             throw new RpcException(error.response ? error.response : error);
         }
     }
+    
+    async _getSchemaDetails(schemaIds: string[]): Promise<ISchemaDetail[]> {
+        const pattern = { cmd: 'get-schemas-details' };
+      
+        const payload = {
+            templateIds: schemaIds
+        };
+
+        const getSchemaDetails = await this.credDefServiceProxy
+          .send(pattern, payload)
+          .toPromise()
+          .catch((error) => {
+            this.logger.error(`catch: ${JSON.stringify(error)}`);
+            throw new HttpException(
+              {
+                status: error.status,
+                error: error.message
+              },
+              error.status
+            );
+          });
+        return getSchemaDetails;
+      }
 
     async getCredentialDefinitionBySchemaId(payload: GetCredDefBySchemaId): Promise<credential_definition[]> {
         try {

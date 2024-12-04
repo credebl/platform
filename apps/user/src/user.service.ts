@@ -57,6 +57,7 @@ import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 import { toNumber } from '@credebl/common/cast.helper';
 import * as jwt from 'jsonwebtoken';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class UserService {
@@ -72,7 +73,8 @@ export class UserService {
     private readonly awsService: AwsService,
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
-    @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy
+    @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
+    private readonly natsClient : NATSClient
   ) {}
 
   /**
@@ -809,9 +811,9 @@ export class UserService {
       search
     };
 
-    const invitationsData = await this.userServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const invitationsData = await this.natsClient
+      .send<IUserInvitations>(this.userServiceProxy, pattern, payload)
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -877,9 +879,9 @@ export class UserService {
   async  _getTotalOrgCount(payload): Promise<number> {
     const pattern = { cmd: 'get-organizations-count' };
 
-    const getOrganizationCount = await this.userServiceProxy
-      .send(pattern, payload)
-      .toPromise()
+    const getOrganizationCount = await this.natsClient
+      .send<number>(this.userServiceProxy, pattern, payload)
+      
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -914,9 +916,9 @@ export class UserService {
 
       const payload = { userId, keycloakUserId, orgId, invitationId, status, email };
 
-      const invitationsData = await this.userServiceProxy
-        .send(pattern, payload)
-        .toPromise()
+      const invitationsData = await this.natsClient
+        .send<IUserInvitations>(this.userServiceProxy, pattern, payload)
+        
         .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(

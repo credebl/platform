@@ -18,12 +18,15 @@ import { OrgAgentType, SchemaType, SortValue } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
+import { NATSClient } from '@credebl/common/NATSClient';
+import { from } from 'rxjs';
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
     constructor(
         private readonly credentialDefinitionRepository: CredentialDefinitionRepository,
         @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy,
-        @Inject(CACHE_MANAGER) private cacheService: Cache
+        @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+        private readonly natsClient : NATSClient
 
     ) {
         super('CredentialDefinitionService');
@@ -148,8 +151,8 @@ export class CredentialDefinitionService extends BaseService {
                 cmd: 'agent-create-credential-definition'
             };
 
-            const credDefResponse = await this.credDefServiceProxy
-                .send(pattern, payload)
+            const credDefResponse = await from(this.natsClient
+                .send<string>(this.credDefServiceProxy, pattern, payload))
                 .pipe(
                     map((response) => (
                         {
@@ -254,8 +257,8 @@ export class CredentialDefinitionService extends BaseService {
             const pattern = {
                 cmd: 'agent-get-credential-definition'
             };
-            const credDefResponse = await this.credDefServiceProxy
-                .send(pattern, payload)
+            const credDefResponse = await from(this.natsClient
+                .send<string>(this.credDefServiceProxy, pattern, payload))
                 .pipe(
                     map((response) => (
                         {
@@ -375,7 +378,7 @@ export class CredentialDefinitionService extends BaseService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.credDefServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.credDefServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

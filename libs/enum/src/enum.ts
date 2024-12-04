@@ -31,6 +31,12 @@ export enum AgentType {
     ACAPY = 'ACAPY'
 }
 
+export enum DevelopmentEnvironment {
+    PRODUCTION = 'production',
+    DEVELOPMENT = 'development',
+    TEST = 'test'
+}
+
 export declare enum KeyType {
     Ed25519 = 'ed25519',
     Bls12381g1g2 = 'bls12381g1g2',

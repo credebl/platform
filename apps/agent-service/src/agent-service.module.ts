@@ -11,11 +11,19 @@ import { ConnectionRepository } from 'apps/connection/src/connection.repository'
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { NATSClient } from '@credebl/common/NATSClient';
+
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    GlobalConfigModule,
+    LoggerModule, PlatformConfig, ContextInterceptorModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -34,7 +42,12 @@ import { CommonConstants } from '@credebl/common/common.constant';
     Logger,
     ConnectionService,
     ConnectionRepository,
-    UserActivityRepository
+    UserActivityRepository,
+    {
+      provide: MICRO_SERVICE_NAME,
+      useValue: 'Agent-service'
+    },
+    NATSClient
   ],
   exports: [AgentServiceService, AgentServiceRepository, AgentServiceModule]
 })

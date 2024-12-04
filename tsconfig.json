@@ -118,6 +118,18 @@
       ],
       "credebl/utility/*": [
         "libs/utility/src/*"
+      ],
+      "@credebl/config": [
+        "libs/config/src"
+      ],
+      "@credebl/config/*": [
+        "libs/config/src/*"
+      ],
+      "@credebl/context": [
+        "libs/context/src"
+      ],
+      "@credebl/context/*": [
+        "libs/context/src/*"
       ]
     }
   },

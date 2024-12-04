@@ -369,7 +369,7 @@ RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
 ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
 SEED_LENGTH = 32
 }
-
+export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;
 
 export const postgresqlErrorCodes = [];

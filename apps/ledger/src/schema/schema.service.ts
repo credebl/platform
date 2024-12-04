@@ -25,6 +25,8 @@ import { W3CSchemaVersion } from './enum/schema.enum';
 import { v4 as uuidv4 } from 'uuid';
 import { networkNamespace } from '@credebl/common/common.utils';
 import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
+import { NATSClient } from '@credebl/common/NATSClient';
+import { from } from 'rxjs';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -32,7 +34,8 @@ export class SchemaService extends BaseService {
     private readonly schemaRepository: SchemaRepository,
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
-    @Inject(CACHE_MANAGER) private cacheService: Cache
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+    private readonly natsClient : NATSClient
   ) {
     super('SchemaService');
   }
@@ -574,8 +577,8 @@ export class SchemaService extends BaseService {
       const pattern = {
         cmd: 'agent-create-schema'
       };
-      const schemaResponse = await this.schemaServiceProxy
-        .send(pattern, payload)
+      const schemaResponse = await from(this.natsClient
+        .send<string>(this.schemaServiceProxy, pattern, payload))
         .pipe(
           map((response) => (
             {
@@ -600,8 +603,8 @@ export class SchemaService extends BaseService {
       const natsPattern = {
         cmd: 'agent-create-w3c-schema'
       };
-      const W3CSchemaResponse = await this.schemaServiceProxy
-        .send(natsPattern, payload)
+      const W3CSchemaResponse = await from(this.natsClient
+        .send<string>(this.schemaServiceProxy, natsPattern, payload))
         .pipe(
           map((response) => (
             {
@@ -718,8 +721,8 @@ export class SchemaService extends BaseService {
       const pattern = {
         cmd: 'agent-get-schema'
       };
-      const schemaResponse = await this.schemaServiceProxy
-        .send(pattern, payload)
+      const schemaResponse = await from(this.natsClient
+        .send<string>(this.schemaServiceProxy, pattern, payload))
         .pipe(
           map((response) => (
             {
@@ -851,7 +854,7 @@ export class SchemaService extends BaseService {
    
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.schemaServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.natsClient.send<any>(this.schemaServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

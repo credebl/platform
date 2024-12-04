@@ -390,7 +390,7 @@ export class UserService {
       } else {
 
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);        
+        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);     
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
@@ -629,10 +629,13 @@ export class UserService {
   async generateToken(email: string, password: string, userData: user): Promise<ISignInUser> {
 
       if (userData.keycloakUserId) {
-
         try {
           const tokenResponse = await this.clientRegistrationService.getUserToken(email, password, userData.clientId, userData.clientSecret);
           tokenResponse.isRegisteredToSupabase = false;
+          tokenResponse.userId = userData?.id;
+          tokenResponse.email = userData?.email;
+          tokenResponse.firstName = userData?.firstName;
+          tokenResponse.lastName = userData?.lastName;
           return tokenResponse;
         } catch (error) {
           throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);

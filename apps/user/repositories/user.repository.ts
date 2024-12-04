@@ -738,20 +738,6 @@ export class UserRepository {
     }
   }
 
-  async fetchUserDetails(email: string): Promise<user> {
-    try {
-      const userDetails = await this.prisma.user.findUnique({
-        where: {
-          email
-        }
-      });
-      return userDetails;
-    } catch (error) {
-      this.logger.error(`Error in getting user details: ${error} `);
-      throw error;
-    }
-  }
-
   async getUserKeycloak(userEmails: string[]): Promise<UserKeycloakId[]> {
     try {
       const users = await this.prisma.user.findMany({

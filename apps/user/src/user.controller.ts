@@ -70,11 +70,6 @@ export class UserController {
     return this.userService.getProfile(payload);
   }
 
-  @MessagePattern({ cmd: 'get-user-details' })
-  async getUserDetails(payload: { email: string }): Promise<user> {
-    return this.userService.fetchUserDetails(payload.email);
-  }
-
   @MessagePattern({ cmd: 'get-user-public-profile' })
   async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     return this.userService.getPublicProfile(payload);

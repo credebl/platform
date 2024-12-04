@@ -390,7 +390,7 @@ export class UserService {
       } else {
 
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData); 
+        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);     
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
@@ -1079,21 +1079,6 @@ export class UserService {
     } catch (error) {
       this.logger.error(`In get user details by user Id : ${JSON.stringify(error)}`);
       throw error;
-    }
-  }
-
-  async fetchUserDetails(email: string): Promise<user> {
-    try {
-      const userDetails = await this.userRepository.fetchUserDetails(email);
-      
-      if (!userDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
-      }
-
-      return userDetails;
-    } catch (error) {
-      this.logger.error(`In get user details : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
     }
   }
 

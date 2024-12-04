@@ -29,11 +29,6 @@ export class UserService extends BaseService {
   return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-public-profile', payload);
   }
 
-  async getUserDetails(email: string): Promise<user> {
-    const payload = { email };
-    return this.sendNatsMessage(this.serviceProxy, 'get-user-details', payload);
-  }
-
   async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<user> {
     const payload = { updateUserProfileDto };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-user-profile', payload);

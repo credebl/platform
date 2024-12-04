@@ -127,23 +127,6 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('user-details/:email')
-  @ApiOperation({
-    summary: 'Fetch user details',
-    description: 'Fetch user details'
-  })
-  async getUserDetails(@Param('email') email: string, @Res() res: Response): Promise<Response> {
-    
-    const userDetails = await this.userService.getUserDetails(email);
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.user.success.fetchUserDetails,
-      data: userDetails
-    };
-
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
   @Get('/profile')
   @ApiOperation({
     summary: 'Fetch login user details',

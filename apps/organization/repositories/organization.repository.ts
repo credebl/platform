@@ -412,57 +412,6 @@ export class OrganizationRepository {
     }
   }
 
-  async getUserOrgIds(userId: string): Promise<user_org_roles[]> {
-    try {
-      const getUserorgs = await this.prisma.user_org_roles.findMany({
-        where:{
-          userId
-      }});
-      return getUserorgs;
-
-    } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new error;
-    }
-  }
-
-  async fetchUserOrganizations(orgIds: string[]): Promise<object[]> {
-    try {
-      const userOrgs = await this.prisma.organisation.findMany({
-        where:{
-          id: {
-            in: orgIds
-          }
-      },
-    select:
-    {
-      id: true,
-          name: true,
-          description: true,
-          orgSlug: true,
-          logoUrl: true,
-          website: true,
-          publicProfile: true,
-          cityId: true,
-          countryId: true,
-          stateId: true,
-          clientId: true,
-          clientSecret: true,
-          registrationNumber: true,
-          org_agents: {
-              select: {
-                orgDid: true,
-                agentSpinUpStatus: true
-            }
-          }
-  }});
-      return userOrgs;
-    } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new error;
-    }
-  }
-
   async getOrganization(queryObject: object): Promise<IGetOrgById> {
     try {
       return this.prisma.organisation.findFirst({

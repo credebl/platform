@@ -117,11 +117,6 @@ export class OrganizationController {
     return this.organizationService.getOrganization(payload.orgId);
   }
 
-  @MessagePattern({ cmd: 'get-organizations-by-user-email' })
-  async getAllOrganizations(payload: { email: string}): Promise<object> {
-    return this.organizationService.getAllUserOrganizations(payload.email);
-  }
-
 /**
  * @param orgSlug 
  * @returns organization details

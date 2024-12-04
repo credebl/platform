@@ -249,21 +249,6 @@ export class OrganizationController {
 
   }
 
-  @Get('/user-orgs/:email')
-  @ApiOperation({ summary: 'Get all organizations by user email', description: 'Get all organizations by user email' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  async getAllOrganizations(@Param('email') email: string, @Res() res: Response): Promise<Response> {
-    const getOrganizations = await this.organizationService.getAllOrganizations(email);
-
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.organisation.success.getOrganizations,
-      data: getOrganizations
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-
-  }
-
   /**
    * @returns Organization details
    */

@@ -62,6 +62,10 @@ export interface ISchemasWithPagination extends IPaginationDetails{
     orgId: string;
     ledgerId: string;
     type: string;
+    isSchemaArchived: boolean,
+    organisation: {
+      name: string
+    }
   }
 
   export interface IPlatformSchemas {

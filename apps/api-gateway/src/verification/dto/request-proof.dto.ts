@@ -7,7 +7,6 @@ import { IProofFormats } from '../interfaces/verification.interface';
 import { ProofRequestType } from '../enum/verification.enum';
 
 export class ProofRequestAttribute {
-
     @ValidateIf((obj) => obj.attributeNames === undefined)
     @IsNotEmpty()
     @IsString()

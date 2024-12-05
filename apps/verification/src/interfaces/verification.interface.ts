@@ -31,6 +31,45 @@ export interface IRequestProof {
     willConfirm?: boolean;
 }
 
+export interface IProofRequestData {
+    goalCode?: string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
+    protocolVersion?: string;
+    proofFormats?:IProofFormat;
+    orgId: string;
+    connectionId?: string | string[];
+    attributes?: IProofRequestAttribute[];
+    type: ProofRequestType;
+    presentationDefinition?:IProofRequestPresentationDefinition;
+    comment: string;
+    autoAcceptProof: AutoAccept;
+}
+export interface IProofFormat {
+    indy: Indy;
+}
+
+export interface Indy {
+    attributes: IProofAttributesData[];
+}
+
+export interface IProofAttributesData {
+    attributeName: string;
+    attributeNames?: string[];
+    condition: string;
+    value: string;
+    credDefId: string;
+    schemaId: string;
+}
+
+export interface ProofRequestAttributeDto {
+    attributeName: string;
+    condition: string;
+    value: string;
+    credDefId: string;
+    schemaId: string;
+  }
+
 export interface IGetAllProofPresentations {
     url: string;
     apiKey: string;

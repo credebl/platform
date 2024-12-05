@@ -232,7 +232,15 @@ export class VerificationService {
     const responses: string[] = []; 
   
     try {
-      const comment = requestProof.comment ? requestProof.comment : '';
+
+      const {
+        comment = '',
+        autoAcceptProof = AutoAccept.Never, 
+        goalCode, 
+        parentThreadId, 
+        willConfirm
+      } = requestProof;
+      
       
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
      
@@ -245,16 +253,16 @@ export class VerificationService {
         ? requestProof.connectionId
         : [requestProof.connectionId];
   
-      for (const connectionId of connectionIds) {
-        const proofRequestPayload = {
-          comment,
-          connectionId,
-          autoAcceptProof: requestProof.autoAcceptProof || AutoAccept.Never,
-          goalCode: requestProof.goalCode || undefined,
-          parentThreadId: requestProof.parentThreadId || undefined,
-          willConfirm: requestProof.willConfirm || undefined
-        };
-  
+        for (const connectionId of connectionIds) {
+          const proofRequestPayload = {
+            comment,
+            connectionId,
+            autoAcceptProof,
+            goalCode,
+            parentThreadId,
+            willConfirm
+          };
+        
         const payload: IProofRequestPayload = {
           orgId: requestProof.orgId,
           url,

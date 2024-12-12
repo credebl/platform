@@ -141,7 +141,7 @@ export class ProofRequestPresentationDefinition {
   @IsOptional()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({type: () => [InputDescriptors]})
   @IsArray({ message: 'inputDescriptors must be an array' })
   @IsNotEmpty({ message: 'inputDescriptors is required.' })
   @ArrayMinSize(1)
@@ -274,14 +274,14 @@ export class RequestProofDto extends ProofPayload {
 
     orgId: string;
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({enum:AutoAccept})
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()
     @IsEnum(AutoAccept, {
         message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
     })
-    autoAcceptProof: string;
+    autoAcceptProof: AutoAccept;
 }
 
 export class OutOfBandRequestProof extends ProofPayload {

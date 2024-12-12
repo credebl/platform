@@ -62,14 +62,6 @@ export interface IProofAttributesData {
     schemaId: string;
 }
 
-export interface ProofRequestAttributeDto {
-    attributeName: string;
-    condition: string;
-    value: string;
-    credDefId: string;
-    schemaId: string;
-  }
-
 export interface IGetAllProofPresentations {
     url: string;
     apiKey: string;

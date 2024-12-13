@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize, ArrayMinSize } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize, ArrayMinSize, Matches } from 'class-validator';
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
@@ -43,6 +43,10 @@ export class ProofRequestAttribute {
     @IsString()
     @IsOptional()
     @IsNotEmpty({ message: 'credDefId is required.' })
+    @Matches(
+      /^[a-zA-Z0-9]{21,22}:[a-zA-Z0-9]+:[a-zA-Z0-9]+:[0-9]+:[a-zA-Z0-9\s]+$/,
+      { message: 'credDefId is it not a valid unqualified credDef' }
+  )
     credDefId?: string;
 }
 
@@ -200,12 +204,11 @@ export class RequestProofDto extends ProofPayload {
   })  
 
     @IsNotEmpty({ each: true, message: 'connectionId array elements must not be empty.' })
-    @ValidateIf((obj) => Array.isArray(obj.connectionId))
     @IsArray({ message: 'connectionId must be an array.' })
     @ArrayMinSize(1, { message: 'connectionId must contain at least 1 element.' })
     @ArrayMaxSize(10, { message: 'connectionId can contain at most 10 elements.' })
     @IsUUID('all', { each: true, message: 'Each connectionId must be a valid UUID.' })
-    connectionId: string | string[];
+    connectionId:string[];
 
     @ApiProperty({
       'example': 

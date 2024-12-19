@@ -81,7 +81,8 @@ export class VerificationRepository {
           id: true,
           presentationId: true,
           schemaId: true,
-          emailId: true
+          emailId: true,
+          errorMessage: true
         },
         orderBy: {
           [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc'

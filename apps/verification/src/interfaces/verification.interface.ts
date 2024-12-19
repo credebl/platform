@@ -210,6 +210,7 @@ export interface IWebhookProofPresentation {
     updatedAt: string;
     isVerified: boolean;
     contextCorrelationId: string;
+    errorMessage?: string;
 }
 
 export interface IProofPresentation {

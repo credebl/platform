@@ -354,6 +354,7 @@ model presentations {
   isVerified          Boolean?
   presentationId      String?
   schemaId            String?       @db.VarChar
+  errorMessage        String?       @db.VarChar
   emailId             String?
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])

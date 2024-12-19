@@ -127,7 +127,7 @@ export class VerificationRepository {
       let encryptEmailId;
       let organisationId: string;
       let schemaId;
-
+      
       const { proofPresentationPayload, orgId } = payload;
 
       //For Educreds
@@ -161,7 +161,8 @@ export class VerificationRepository {
           isVerified: proofPresentationPayload.isVerified,
           lastChangedBy: organisationId,
           connectionId: proofPresentationPayload.connectionId,
-          emailId: encryptEmailId
+          emailId: encryptEmailId,
+          errorMessage: proofPresentationPayload.errorMessage
         },
         create: {
           connectionId: proofPresentationPayload.connectionId,

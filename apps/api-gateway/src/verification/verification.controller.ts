@@ -12,11 +12,11 @@ import {
     ApiQuery,
     ApiExcludeEndpoint
 } from '@nestjs/swagger';
-import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe, Delete } from '@nestjs/common';
+import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe, Delete, Version, VERSION_NEUTRAL } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { SendProofRequestPayload, RequestProofDto } from './dto/request-proof.dto';
+import { SendProofRequestPayload, RequestProofDto, ProofRequestPayloadDto } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -32,7 +32,7 @@ import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
-import { ProofRequestType, SortFields } from './enum/verification.enum';
+import { API_Version, ProofRequestType, SortFields } from './enum/verification.enum';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
@@ -163,6 +163,7 @@ export class VerificationController {
      * @param orgId
      * @returns Requested proof presentation details
      */
+    @Version(VERSION_NEUTRAL)
     @Post('/orgs/:orgId/proofs')
     @ApiOperation({
         summary: `Sends a proof request`,
@@ -210,7 +211,74 @@ export class VerificationController {
 
         }
         }
+        const version = API_Version.version_neutral;
+        requestProof.version = version;
+        requestProof.orgId = orgId;
+        requestProof.type = requestType;
+        const proofData = await this.verificationService.sendProofRequest(requestProof, user);
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.verification.success.send,
+            data: proofData
+        };
+        return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
 
+     /**
+     * Send proof request v1
+     * @param orgId
+     * @returns Requested proof presentation details
+     */
+    @Version('1')
+    @Post('/orgs/:orgId/proofs')
+    @ApiOperation({
+        summary: `Sends a proof request`,
+        description: `Sends a proof request`
+    })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+    @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+    @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+    @ApiBody({ type: ProofRequestPayloadDto })@ApiQuery({
+        name: 'requestType',
+        enum: ProofRequestType
+      })
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
+    async sendPresentationRequestV1(
+        @Res() res: Response,
+        @User() user: IUserRequest,
+        @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
+        @Body() requestProof: ProofRequestPayloadDto,
+        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
+    ): Promise<Response> {
+        
+        if (requestType === ProofRequestType.INDY) {
+            if (!requestProof.proofFormats) {
+                throw new BadRequestException(`type: ${requestType} requires proofFormats`);
+            }
+        }
+
+        if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
+            if (!requestProof.presentationDefinition) {
+                throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
+            }
+        }
+        if (requestProof.proofFormats) {
+            const attributeArray = [];
+        for (const attrData of requestProof.proofFormats.indy.attributes) {
+          if (0 === attributeArray.length) {
+            attributeArray.push(Object.values(attrData)[0]);
+          } else if (!attributeArray.includes(Object.values(attrData)[0])) {
+            attributeArray.push(Object.values(attrData)[0]);
+          } else {
+            throw new BadRequestException('Please provide unique attribute names');
+          }           
+
+        }
+        }
+        const version = API_Version.VERSION_1; 
+        requestProof.version = version;
         requestProof.orgId = orgId;
         requestProof.type = requestType;
         const proofData = await this.verificationService.sendProofRequest(requestProof, user);

@@ -250,18 +250,18 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
         @Body() requestProof: ProofRequestPayloadDto,
-        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
+        @Query('requestType') requestTypeV1:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
-        
-        if (requestType === ProofRequestType.INDY) {
+       
+        if (requestTypeV1 === ProofRequestType.INDY) {
             if (!requestProof.proofFormats) {
-                throw new BadRequestException(`type: ${requestType} requires proofFormats`);
+                throw new BadRequestException(`type: ${requestTypeV1} requires proofFormats`);
             }
         }
 
-        if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
+        if (requestTypeV1 === ProofRequestType.PRESENTATIONEXCHANGE) {
             if (!requestProof.presentationDefinition) {
-                throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
+                throw new BadRequestException(`type: ${requestTypeV1} requires presentationDefinition`);
             }
         }
         if (requestProof.proofFormats) {
@@ -280,7 +280,7 @@ export class VerificationController {
         const version = API_Version.VERSION_1; 
         requestProof.version = version;
         requestProof.orgId = orgId;
-        requestProof.type = requestType;
+        requestProof.type = requestTypeV1;
         const proofData = await this.verificationService.sendProofRequest(requestProof, user);
         const finalResponse: IResponse = {
             statusCode: HttpStatus.CREATED,

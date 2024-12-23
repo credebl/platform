@@ -265,12 +265,12 @@ export class VerificationController {
             }
         }
         if (requestProof.proofFormats) {
-            const attributeArray = [];
+            const attributeArrayV1 = [];
         for (const attrData of requestProof.proofFormats.indy.attributes) {
-          if (0 === attributeArray.length) {
-            attributeArray.push(Object.values(attrData)[0]);
-          } else if (!attributeArray.includes(Object.values(attrData)[0])) {
-            attributeArray.push(Object.values(attrData)[0]);
+          if (0 === attributeArrayV1.length) {
+            attributeArrayV1.push(Object.values(attrData)[0]);
+          } else if (!attributeArrayV1.includes(Object.values(attrData)[0])) {
+            attributeArrayV1.push(Object.values(attrData)[0]);
           } else {
             throw new BadRequestException('Please provide unique attribute names');
           }           

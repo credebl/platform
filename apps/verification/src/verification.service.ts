@@ -2,7 +2,7 @@
 import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
-import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation } from './interfaces/verification.interface';
+import { IGetAllProofPresentations, IProofRequestSearchCriteria, IGetProofPresentationById, IProofPresentation, IProofRequestPayload, IRequestProof, ISendProofRequestPayload, IVerifyPresentation, IVerifiedProofData, IInvitation, IProofRequestData } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
 import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
@@ -16,7 +16,7 @@ import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
-import { ProofRequestType } from 'apps/api-gateway/src/verification/enum/verification.enum';
+import { API_Version, ProofRequestLabel, ProofRequestType, ProofVersion, ProtocolVersionType, VerificationMethodLabel } from 'apps/api-gateway/src/verification/enum/verification.enum';
 import { UserActivityService } from '@credebl/user-activity';
 import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
@@ -227,65 +227,94 @@ export class VerificationService {
    * @param orgId 
    * @returns Requested proof presentation details
    */
-  async sendProofRequest(requestProof: ISendProofRequestPayload): Promise<string> {
+
+  async sendProofRequest(requestProof: IProofRequestData): Promise<string | string[]> {
     try {
       const comment = requestProof.comment ? requestProof.comment : '';
-
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
-
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      const verificationMethodLabel = 'request-proof';
-      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-      
-      const payload: IProofRequestPayload = {
-        orgId: requestProof.orgId,
-        url,
-        proofRequestPayload: {}
-      };
-
-      const proofRequestPayload = {
-        comment,
-        connectionId: requestProof.connectionId,
-        autoAcceptProof: requestProof.autoAcceptProof ? requestProof.autoAcceptProof : AutoAccept.Never,
-        goalCode: requestProof.goalCode || undefined,
-        parentThreadId: requestProof.parentThreadId || undefined,
-        willConfirm: requestProof.willConfirm || undefined
-      };
-
-      if (requestProof.type === ProofRequestType.INDY) {
-        const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof as IRequestProof);
-        payload.proofRequestPayload = {
-          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v1',
-          proofFormats: {
-            indy: {
-              name: 'Proof Request',
-              version: '1.0',
-              requested_attributes: requestedAttributes,
-              requested_predicates: requestedPredicates
-            }
-          },
-          ...proofRequestPayload
+      const verificationMethodLabel = VerificationMethodLabel.REQUEST_PROOF; 
+      const url = await this.getAgentUrl(
+        verificationMethodLabel,
+        orgAgentType,
+        getAgentDetails?.agentEndPoint,
+        getAgentDetails?.tenantId
+      );
+  
+      // Function to create a payload
+      const createPayload = async (connectionId: string): Promise<IProofRequestPayload> => {
+        const proofRequestPayload = {
+          comment,
+          connectionId,
+          autoAcceptProof: requestProof.autoAcceptProof || AutoAccept.Never,
+          goalCode: requestProof.goalCode || undefined,
+          parentThreadId: requestProof.parentThreadId || undefined,
+          willConfirm: requestProof.willConfirm || undefined
         };
-
-      } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE) {
-        payload.proofRequestPayload = {
-          protocolVersion: requestProof.protocolVersion ? requestProof.protocolVersion : 'v2',
-          proofFormats: {
-            presentationExchange: {
-              presentationDefinition: requestProof.presentationDefinition
-            }
-        },
-        ...proofRequestPayload
+  
+        const payload: IProofRequestPayload = {
+          orgId: requestProof.orgId,
+          url,
+          proofRequestPayload: {}
+        };
+  
+        if (requestProof.type === ProofRequestType.INDY) {
+          const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(requestProof as IRequestProof);
+          payload.proofRequestPayload = {
+            protocolVersion: requestProof.protocolVersion || ProtocolVersionType.PROTOCOL_VERSION_1,
+            proofFormats: {
+              indy: {
+                name: ProofRequestLabel.PROOF_REQUEST,
+                version: ProofVersion.PROOF_VERSION,
+                requested_attributes: requestedAttributes,
+                requested_predicates: requestedPredicates
+              }
+            },
+            ...proofRequestPayload
+          };
+        } else if (requestProof.type === ProofRequestType.PRESENTATIONEXCHANGE) {
+          payload.proofRequestPayload = {
+            protocolVersion: requestProof.protocolVersion || ProtocolVersionType.PROTOCOL_VERSION_2,
+            proofFormats: {
+              presentationExchange: {
+                presentationDefinition: requestProof.presentationDefinition
+              }
+            },
+            ...proofRequestPayload
+          };
+        }
+  
+        return payload;
       };
-    }
-      const getProofPresentationById = await this._sendProofRequest(payload);
-      return getProofPresentationById?.response;
-    } catch (error) {
-      this.logger.error(`[verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
-      this.verificationErrorHandling(error);
+  
+      if (API_Version.VERSION_1 === requestProof.version) {
 
+        const connectionIds = Array.isArray(requestProof.connectionId)
+          ? requestProof.connectionId
+          : [requestProof.connectionId];
+  
+        const responses: string[] = [];
+        for (const connectionId of connectionIds) {
+          const payload = await createPayload(connectionId);
+          const getProofPresentationById = await this._sendProofRequest(payload);
+          responses.push(getProofPresentationById?.response);
+        }
+        return responses;
+      } else {
+        const connectionId = Array.isArray(requestProof.connectionId)
+          ? requestProof.connectionId[0] 
+          : requestProof.connectionId;
+  
+        const payload = await createPayload(connectionId);
+        const getProofPresentationById = await this._sendProofRequest(payload);
+        return getProofPresentationById?.response;
+      }
+    } catch (error) {
+      this.logger.error(`[sendProofRequest] - error in sending proof request: ${JSON.stringify(error)}`);
+      this.verificationErrorHandling(error);
     }
   }
+  
 
   /**
    * Consume agent API for request proof presentation
@@ -592,16 +621,18 @@ export class VerificationService {
     }
   }
 
-  async _proofRequestPayload(proofRequestpayload: IRequestProof): Promise<{
+  async _proofRequestPayload(proofRequestpayload: IProofRequestData): Promise<{
     requestedAttributes;
     requestedPredicates;
   }> {
     try {
       let requestedAttributes = {}; 
       const requestedPredicates = {};
-      const { attributes } = proofRequestpayload;
-      if (attributes) {
-        requestedAttributes = Object.fromEntries(attributes.map((attribute, index) => {
+
+        const indyAttributes = proofRequestpayload.proofFormats?.indy;
+        if (indyAttributes && indyAttributes.attributes) {
+            requestedAttributes = Object.fromEntries(indyAttributes.attributes.map((attribute, index) => {
+
           const attributeElement = attribute.attributeName || attribute.attributeNames;
           const attributeReferent = `additionalProp${index + 1}`;
           const attributeKey = attribute.attributeName ? 'name' : 'names';
@@ -614,8 +645,8 @@ export class VerificationService {
                 [attributeKey]: attributeElement,
                 restrictions: [
                   {
-                    cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                    schema_id: proofRequestpayload.attributes[index].schemaId
+                    cred_def_id: proofRequestpayload?.proofFormats?.indy?.attributes[index].credDefId ? proofRequestpayload.proofFormats.indy.attributes[index].credDefId : undefined,
+                    schema_id: proofRequestpayload?.proofFormats?.indy?.attributes[index].schemaId
                   }
                 ]
               }
@@ -627,8 +658,8 @@ export class VerificationService {
               p_value: parseInt(attribute.value),
               restrictions: [
                 {
-                  cred_def_id: proofRequestpayload.attributes[index].credDefId ? proofRequestpayload.attributes[index].credDefId : undefined,
-                  schema_id: proofRequestpayload.attributes[index].schemaId
+                  cred_def_id: proofRequestpayload?.proofFormats?.indy?.attributes[index].credDefId ? proofRequestpayload?.proofFormats?.indy?.attributes[index].credDefId : undefined,
+                  schema_id: proofRequestpayload?.proofFormats?.indy?.attributes[index].schemaId
                 }
               ]
             };

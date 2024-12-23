@@ -272,7 +272,7 @@ export class RequestProofDtoBase extends ProofPayload {
     autoAcceptProof: AutoAccept;
     version: string;
 }
-export class RequestProofDto extends RequestProofDtoBase {
+export class RequestProofDtoV1 extends RequestProofDtoBase {
   @ApiProperty({
     example: '32f54163-7166-48f1-93d8-ff217bdb0653'
   })  
@@ -283,7 +283,7 @@ export class RequestProofDto extends RequestProofDtoBase {
 }
 
 
-export class ProofRequestPayloadDto extends RequestProofDtoBase {
+export class RequestProofDtoV2 extends RequestProofDtoBase {
   @ApiProperty({
     example: ['32f54163-7166-48f1-93d8-ff217bdb0653']
   })  

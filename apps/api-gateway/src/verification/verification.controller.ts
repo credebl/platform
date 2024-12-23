@@ -12,7 +12,7 @@ import {
     ApiQuery,
     ApiExcludeEndpoint
 } from '@nestjs/swagger';
-import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe, Delete, Version, VERSION_NEUTRAL } from '@nestjs/common';
+import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards, Param, UseFilters, BadRequestException, ParseUUIDPipe, Delete, Version } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
@@ -163,7 +163,6 @@ export class VerificationController {
      * @param orgId
      * @returns Requested proof presentation details
      */
-    @Version(VERSION_NEUTRAL)
     @Post('/orgs/:orgId/proofs')
     @ApiOperation({
         summary: `Sends a proof request`,
@@ -225,11 +224,11 @@ export class VerificationController {
      * @param orgId
      * @returns Requested proof presentation details
      */
-    @Version('1')
+    @Version('2')
     @Post('/orgs/:orgId/proofs')
     @ApiOperation({
         summary: `Sends a proof request`,
-        description: `Sends a proof request`
+        description: `Send a proof request on multiple connections`
     })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })

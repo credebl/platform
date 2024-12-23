@@ -290,7 +290,7 @@ export class ProofRequestPayloadDto extends RequestProofDtoBase {
   @IsNotEmpty({ each: true, message: 'connectionId array elements must not be empty' })
   @IsArray({ message: 'connectionId must be an array' })
   @ArrayMinSize(1, { message: 'connectionId must contain at least 1 element' })
-  @ArrayMaxSize(Number(process.env.MAX_CONNECTIONS_LIMIT), { message: `Limit reached (${process.env.MAX_CONNECTIONS_LIMIT} connections max).` })
+  @ArrayMaxSize(Number(process.env.PROOF_REQ_CONN_LIMIT), { message: `Limit reached (${process.env.PROOF_REQ_CONN_LIMIT} connections max).` })
   @IsUUID('all', { each: true, message: 'Each connectionId must be a valid UUID' })
   connectionId: string[];
 }

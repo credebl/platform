@@ -187,16 +187,12 @@ export class VerificationController {
         @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
 
-        if (requestType === ProofRequestType.INDY) {
-            if (!requestProof.proofFormats) {
+        if (requestType === ProofRequestType.INDY && !requestProof.proofFormats) {
                 throw new BadRequestException(`type: ${requestType} requires proofFormats`);
-            }
         }
 
-        if (requestType === ProofRequestType.PRESENTATIONEXCHANGE) {
-            if (!requestProof.presentationDefinition) {
+        if (requestType === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
                 throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
-            }
         }
         if (requestProof.proofFormats) {
             const attributeArray = [];
@@ -253,17 +249,13 @@ export class VerificationController {
         @Query('requestType') requestTypeV1:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
        
-        if (requestTypeV1 === ProofRequestType.INDY) {
-            if (!requestProof.proofFormats) {
-                throw new BadRequestException(`type: ${requestTypeV1} requires proofFormats`);
-            }
-        }
+        if (requestTypeV1 === ProofRequestType.INDY && !requestProof.proofFormats) {
+            throw new BadRequestException(`type: ${requestTypeV1} requires proofFormats`);
+    }
 
-        if (requestTypeV1 === ProofRequestType.PRESENTATIONEXCHANGE) {
-            if (!requestProof.presentationDefinition) {
-                throw new BadRequestException(`type: ${requestTypeV1} requires presentationDefinition`);
-            }
-        }
+    if (requestTypeV1 === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
+            throw new BadRequestException(`type: ${requestTypeV1} requires presentationDefinition`);
+    }
         if (requestProof.proofFormats) {
             const attributeArrayV1 = [];
         for (const attrData of requestProof.proofFormats.indy.attributes) {

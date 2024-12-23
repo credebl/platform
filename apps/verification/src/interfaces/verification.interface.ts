@@ -18,7 +18,8 @@ export enum ProofRequestType {
 
 export interface IRequestProof {
     orgId: string;
-    connectionId?: string;
+    version:string;
+    connectionId?: string | string[];
     attributes?: IProofRequestAttribute[];
     type: ProofRequestType;
     presentationDefinition?:IProofRequestPresentationDefinition;
@@ -235,4 +236,36 @@ export interface IProofRequestSearchCriteria {
 export interface IInvitation{
     invitationUrl?: string;
     deepLinkURL?: string;
+}
+
+export interface IProofRequestData {
+    goalCode?: string;
+    version:string;
+    parentThreadId?: string;
+    willConfirm?: boolean;
+    protocolVersion?: string;
+    proofFormats?:IProofFormat;
+    orgId: string;
+    connectionId?: string | string[];
+    attributes?: IProofRequestAttribute[];
+    type: ProofRequestType;
+    presentationDefinition?:IProofRequestPresentationDefinition;
+    comment: string;
+    autoAcceptProof: AutoAccept;
+}
+export interface IProofFormat {
+    indy: Indy;
+}
+
+export interface Indy {
+    attributes: IProofAttributesData[];
+}
+
+export interface IProofAttributesData {
+    attributeName: string;
+    attributeNames?: string[];
+    condition: string;
+    value: string;
+    credDefId: string;
+    schemaId: string;
 }

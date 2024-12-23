@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
@@ -58,7 +58,8 @@ async function bootstrap(): Promise<void> {
     .build();
 
     app.enableVersioning({
-      type: VersioningType.URI
+      type: VersioningType.URI,
+      defaultVersion: ['1']
     });
 
   const document = SwaggerModule.createDocument(app, options);
@@ -73,6 +74,11 @@ async function bootstrap(): Promise<void> {
       credentials: true
     });
   }
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: ['1', VERSION_NEUTRAL]
+  });
 
   app.use(express.static('uploadedFiles/holder-profile'));
   app.use(express.static('uploadedFiles/org-logo'));

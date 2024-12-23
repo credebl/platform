@@ -1,7 +1,7 @@
 import { Injectable, Inject} from '@nestjs/common';
 import { ClientProxy} from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
-import { SendProofRequestPayload, RequestProofDto, ProofRequestPayloadDto } from './dto/request-proof.dto';
+import { SendProofRequestPayload, RequestProofDtoV1, RequestProofDtoV2 } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { IProofPresentationDetails, IProofPresentationList, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
@@ -47,7 +47,7 @@ export class VerificationService extends BaseService {
      * @param orgId 
      * @returns Requested proof presentation details
      */
-    sendProofRequest(requestProofDto: RequestProofDto | ProofRequestPayloadDto, user: IUserRequest): Promise<IProofRequest> {
+    sendProofRequest(requestProofDto: RequestProofDtoV1 | RequestProofDtoV2, user: IUserRequest): Promise<IProofRequest> {
         const payload = { requestProofDto, user };
         return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'send-proof-request', payload);
     }

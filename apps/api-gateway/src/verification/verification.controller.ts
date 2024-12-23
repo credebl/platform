@@ -16,7 +16,7 @@ import { Controller, Logger, Post, Body, Get, Query, HttpStatus, Res, UseGuards,
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { SendProofRequestPayload, RequestProofDto, ProofRequestPayloadDto } from './dto/request-proof.dto';
+import { SendProofRequestPayload, RequestProofDtoV1, RequestProofDtoV2 } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -171,7 +171,7 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: RequestProofDto })@ApiQuery({
+    @ApiBody({ type: RequestProofDtoV1 })@ApiQuery({
         name: 'requestType',
         enum: ProofRequestType
       })
@@ -182,7 +182,7 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
-        @Body() requestProof: RequestProofDto,
+        @Body() requestProof: RequestProofDtoV1,
         @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
 
@@ -233,7 +233,7 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: ProofRequestPayloadDto })@ApiQuery({
+    @ApiBody({ type: RequestProofDtoV2 })@ApiQuery({
         name: 'requestType',
         enum: ProofRequestType
       })
@@ -244,7 +244,7 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
-        @Body() requestProof: ProofRequestPayloadDto,
+        @Body() requestProof: RequestProofDtoV2,
         @Query('requestType') requestTypeV1:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
        

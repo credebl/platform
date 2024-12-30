@@ -13,6 +13,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import helmet from 'helmet';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { NatsInterceptor } from '../../../libs/interceptors/nats.interceptor';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -95,6 +96,7 @@ async function bootstrap(): Promise<void> {
       xssFilter: true
     })
   );
+  app.useGlobalInterceptors(new NatsInterceptor());
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);
 }

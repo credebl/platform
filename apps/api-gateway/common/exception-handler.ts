@@ -33,7 +33,7 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
     if ('string' === typeof exceptionResponseData) {
       exceptionResponse.message = exceptionResponseData;
     } else {
-      exceptionResponse = exceptionResponseData as ExceptionResponse;
+      exceptionResponse = exceptionResponseData as unknown as ExceptionResponse;
     }
 
     if (exceptionResponse.message && exceptionResponse.message.includes(ResponseMessages.nats.error.noSubscribers)) {

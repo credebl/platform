@@ -44,7 +44,7 @@ export class Validator {
         }
     }
     
-    static validateProofAttributes(attributes: IProofRequestAttribute[]): void {
+    static validateIndyProofAttributes(attributes: IProofRequestAttribute[]): void {
         const seenAttributes = new Map();
 
         for (const attribute of attributes) {

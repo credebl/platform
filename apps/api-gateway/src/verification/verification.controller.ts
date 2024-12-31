@@ -195,8 +195,8 @@ export class VerificationController {
                 throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
         }
         
-          if (requestProof.proofFormats) {
-            Validator.validateProofAttributes(requestProof.proofFormats.indy.attributes);
+        if (ProofRequestType.INDY) {        
+                Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
           }
 
         const version = API_Version.version_neutral;
@@ -250,8 +250,8 @@ export class VerificationController {
     }
 
     
-      if (requestProof.proofFormats) {
-        Validator.validateProofAttributes(requestProof.proofFormats.indy.attributes);
+    if (ProofRequestType.INDY) {
+        Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
       }
 
         const version = API_Version.VERSION_1; 

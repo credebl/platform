@@ -36,7 +36,7 @@ import { API_Version, ProofRequestType, SortFields } from './enum/verification.e
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
-import { ProofRequestValidator } from '@credebl/common/did.validator';
+import { Validator } from '@credebl/common/validator';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -196,7 +196,7 @@ export class VerificationController {
         }
         
           if (requestProof.proofFormats) {
-            ProofRequestValidator.validateAttributes(requestProof.proofFormats.indy.attributes);
+            Validator.validateProofAttributes(requestProof.proofFormats.indy.attributes);
           }
 
         const version = API_Version.version_neutral;
@@ -251,7 +251,7 @@ export class VerificationController {
 
     
       if (requestProof.proofFormats) {
-        ProofRequestValidator.validateAttributes(requestProof.proofFormats.indy.attributes);
+        Validator.validateProofAttributes(requestProof.proofFormats.indy.attributes);
       }
 
         const version = API_Version.VERSION_1; 

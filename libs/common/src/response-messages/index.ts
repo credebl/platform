@@ -257,7 +257,16 @@ export const ResponseMessages = {
       failedOrganization: 'Failed to fetch organization agent type details',
       promiseReject: 'One or more promises were rejected.',
       orgAgentNotFound: 'Org agent type not found',
-      walletDoesNotExists: 'Organization wallet does not exists'
+      walletDoesNotExists: 'Organization wallet does not exists',
+      requiredDomain: 'domain is required for Web method',
+      requiredNetwork: 'network is required',
+      keyType: 'Only ed25519 key type is supported',
+      keyTypeWeb : 'Only ed25519 and bls12381g2 key type is supported',
+      requiredEndorserDid: 'role or endorserDid is required',
+      requiredPrivateKey: 'privatekey is required for polygon method',
+      privateKeyLength: 'Private key must be exactly 64 characters long',
+      requiredSeed: 'seed is required'
+
     }
   },
   connection: {

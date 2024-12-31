@@ -12,28 +12,28 @@ export class Validator {
     
         switch (true) {
             case DidMethod.WEB === createDid.method && !createDid.domain:
-                errors.push('domain is required for Web method');
+                errors.push(ResponseMessages.agent.error.requiredDomain);
                 break;    
             case (createDid.method === DidMethod.INDY || createDid.method === DidMethod.POLYGON) && !createDid.network:
-                errors.push('network is required');
+                errors.push(ResponseMessages.agent.error.requiredNetwork);
                 break;
             case (createDid.method === DidMethod.INDY || createDid.method === DidMethod.POLYGON) && 'ed25519' !== createDid.keyType:
-                errors.push('Only ed25519 key type is supported');
+                errors.push(ResponseMessages.agent.error.keyType);
                 break;
             case (createDid.method === DidMethod.WEB || createDid.method === DidMethod.KEY) && !('ed25519' === createDid.keyType || 'bls12381g2' === createDid.keyType):
-                errors.push('Only ed25519 and bls12381g2 key type is supported');
+                errors.push(ResponseMessages.agent.error.keyTypeWeb);
                 break;
             case DidMethod.INDY === createDid.method && !(createDid.role || createDid.endorserDid):
-                errors.push('role or endorserDid is required');
+                errors.push(ResponseMessages.agent.error.requiredEndorserDid);
                 break;
             case DidMethod.POLYGON === createDid.method && !createDid.privatekey:
-                errors.push('privatekey is required for polygon method');
+                errors.push(ResponseMessages.agent.error.requiredPrivateKey);
                 break;
             case DidMethod.POLYGON === createDid.method && createDid.privatekey && 64 !== createDid.privatekey.length:
-                errors.push('Private key must be exactly 64 characters long');
+                errors.push(ResponseMessages.agent.error.privateKeyLength);
                 break;
             case (DidMethod.INDY === createDid.method || DidMethod.KEY === createDid.method || DidMethod.WEB === createDid.method) && (!createDid.seed):
-                errors.push('seed is required');
+                errors.push(ResponseMessages.agent.error.requiredSeed);
                 break;
             default:
                 break;

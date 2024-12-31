@@ -1,6 +1,8 @@
 import { DidMethod } from '@credebl/enum/enum';
 import { IDidCreate } from './interfaces/did.interface';
 import { BadRequestException } from '@nestjs/common';
+import { ResponseMessages } from './response-messages';
+import { IProofRequestAttribute } from 'apps/verification/src/interfaces/verification.interface';
 
 export function validateDid(createDid: IDidCreate): void {
     const errors = [];
@@ -36,5 +38,28 @@ export function validateDid(createDid: IDidCreate): void {
 
     if (0 < errors.length) {
         throw new BadRequestException(errors);
+    }
+}
+
+export class ProofRequestValidator {
+    
+    static validateAttributes(attributes: IProofRequestAttribute[]): void {
+        const seenAttributes = new Map();
+
+        for (const attribute of attributes) {
+            const key = attribute.schemaId || attribute.credDefId 
+                ? `${attribute.schemaId || ''}:${attribute.credDefId || ''}`
+                : 'default';
+
+            if (!seenAttributes.has(key)) {
+                seenAttributes.set(key, new Set());
+            }
+
+            const attributeNames = seenAttributes.get(key);
+            if (attributeNames.has(attribute.attributeName)) {
+                throw new BadRequestException(ResponseMessages.verification.error.uniqueAttributes);
+            }
+            attributeNames.add(attribute.attributeName);
+        }
     }
 }

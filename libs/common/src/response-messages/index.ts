@@ -354,7 +354,8 @@ export const ResponseMessages = {
       batchEmailSend: 'Unable to send email in batches',
       emailSend: 'Unable to send email to the user',
       verificationRecordsNotFound: 'Verification records does not exists',
-      removeVerificationData: 'First you have to remove verification data'
+      removeVerificationData: 'First you have to remove verification data',
+      uniqueAttributes:'Please provide unique attribute names'
     }
   },
 

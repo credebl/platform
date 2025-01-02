@@ -36,6 +36,7 @@ import { API_Version, ProofRequestType, SortFields } from './enum/verification.e
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { Validator } from '@credebl/common/validator';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -193,19 +194,10 @@ export class VerificationController {
         if (requestType === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
                 throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
         }
-        if (requestProof.proofFormats) {
-            const attributeArray = [];
-        for (const attrData of requestProof.proofFormats.indy.attributes) {
-          if (0 === attributeArray.length) {
-            attributeArray.push(Object.values(attrData)[0]);
-          } else if (!attributeArray.includes(Object.values(attrData)[0])) {
-            attributeArray.push(Object.values(attrData)[0]);
-          } else {
-            throw new BadRequestException('Please provide unique attribute names');
-          }           
-
-        }
-        }
+        
+        if (requestType === ProofRequestType.INDY) {        
+                Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
+          }
         const version = API_Version.version_neutral;
         requestProof.version = version;
         requestProof.orgId = orgId;
@@ -255,19 +247,12 @@ export class VerificationController {
     if (requestTypeV1 === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
             throw new BadRequestException(`type: ${requestTypeV1} requires presentationDefinition`);
     }
-        if (requestProof.proofFormats) {
-            const attributeArrayV1 = [];
-        for (const attrData of requestProof.proofFormats.indy.attributes) {
-          if (0 === attributeArrayV1.length) {
-            attributeArrayV1.push(Object.values(attrData)[0]);
-          } else if (!attributeArrayV1.includes(Object.values(attrData)[0])) {
-            attributeArrayV1.push(Object.values(attrData)[0]);
-          } else {
-            throw new BadRequestException('Please provide unique attribute names');
-          }           
 
-        }
-        }
+    
+    if (requestTypeV1 === ProofRequestType.INDY) {        
+        Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
+      }
+
         const version = API_Version.VERSION_1; 
         requestProof.version = version;
         requestProof.orgId = orgId;

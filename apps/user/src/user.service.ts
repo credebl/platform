@@ -990,24 +990,34 @@ export class UserService {
   async checkUserExist(email: string): Promise<ICheckUserDetails> {
     try {
       const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase());
-      if (userDetails && !userDetails.isEmailVerified) {
-        throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
-      } else if (userDetails && userDetails.keycloakUserId) {
-        throw new ConflictException(ResponseMessages.user.error.exists);
-      } else if (userDetails && !userDetails.keycloakUserId && userDetails.supabaseUserId) {
-        throw new ConflictException(ResponseMessages.user.error.exists);
-      } else if (null === userDetails) {
-        return {
-          isRegistrationCompleted: false,
-          isEmailVerified: false
-        };
-      } else {
-        const userVerificationDetails = {
+     let userVerificationDetails;
+      if (userDetails) {
+        userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isRegistrationCompleted: null !== userDetails.keycloakUserId && undefined !== userDetails.keycloakUserId
-
+          isRegistrationCompleted: null !== userDetails.keycloakUserId && undefined !== userDetails.keycloakUserId,
+          message:'',
+          userId: userDetails.id
         };
+
+      }
+      if (userDetails && !userDetails.isEmailVerified) {
+        userVerificationDetails.message = ResponseMessages.user.error.verificationAlreadySent;
+        return userVerificationDetails;
+      } else if (userDetails && userDetails.keycloakUserId) {
+        userVerificationDetails.message = ResponseMessages.user.error.exists;
+        return userVerificationDetails;
+      } else if (userDetails && !userDetails.keycloakUserId && userDetails.supabaseUserId) {
+        userVerificationDetails.message = ResponseMessages.user.error.exists;
+        return userVerificationDetails;
+      } else if (null === userDetails) {
+         return {
+          isRegistrationCompleted: false,
+           isEmailVerified: false,
+           userId:null,
+           message: ResponseMessages.user.error.notFound
+        };
+      } else {
         return userVerificationDetails;
       }
     } catch (error) {

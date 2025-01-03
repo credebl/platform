@@ -257,7 +257,16 @@ export const ResponseMessages = {
       failedOrganization: 'Failed to fetch organization agent type details',
       promiseReject: 'One or more promises were rejected.',
       orgAgentNotFound: 'Org agent type not found',
-      walletDoesNotExists: 'Organization wallet does not exists'
+      walletDoesNotExists: 'Organization wallet does not exists',
+      requiredDomain: 'Domain is required for Web method',
+      requiredNetwork: 'Network is required',
+      keyType: 'Only ed25519 key type is supported',
+      keyTypeWeb : 'Only ed25519 and bls12381g2 key type is supported',
+      requiredEndorserDid: 'Role or endorser DID is required',
+      requiredPrivateKey: 'Privatekey is required for polygon method',
+      privateKeyLength: 'Private key must be exactly 64 characters long',
+      requiredSeed: 'Seed is required'
+
     }
   },
   connection: {
@@ -354,7 +363,8 @@ export const ResponseMessages = {
       batchEmailSend: 'Unable to send email in batches',
       emailSend: 'Unable to send email to the user',
       verificationRecordsNotFound: 'Verification records does not exists',
-      removeVerificationData: 'First you have to remove verification data'
+      removeVerificationData: 'First you have to remove verification data',
+      uniqueAttributes:'Please provide unique attribute names'
     }
   },
 

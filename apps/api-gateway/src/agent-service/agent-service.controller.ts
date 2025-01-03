@@ -41,7 +41,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { validateDid } from '@credebl/common/did.validator';
+import { Validator } from '@credebl/common/validator';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
 import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/cast.helper';
@@ -223,7 +223,7 @@ export class AgentController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    await validateDid(createDidDto);
+    Validator.validateDid(createDidDto);
 
     if (createDidDto.seed && seedLength !== createDidDto.seed.length) {
       this.logger.error(`seed must be at most 32 characters.`);

@@ -1,7 +1,7 @@
 import { AutoAccept } from '@credebl/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
-interface IProofRequestAttribute {
+export interface IProofRequestAttribute {
     attributeName?: string;
     attributeNames?:string[];
     condition?: string;

@@ -475,5 +475,14 @@ export const ResponseMessages = {
       notFoundBaseWallet: 'The base wallet record is missing.',
       walletRecordNotFound: 'Wallet record not found.'
     }
+  },
+  nats: {
+    success: {
+      
+    },
+    error: {
+     noSubscribers: 'No subscribers for the requested message. Error while connecting to NATS, service might not be started',
+     natsConnect: 'Empty response. There are no subscribers listening to that message'
+    }
   }
 };

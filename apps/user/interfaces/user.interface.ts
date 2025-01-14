@@ -105,6 +105,8 @@ export interface ICheckUserDetails {
   isEmailVerified?: boolean;
   isFidoVerified?: boolean;
   isRegistrationCompleted?: boolean;
+  userId?: number;
+  message?:string;
 }
 
 export interface IOrgUsers {

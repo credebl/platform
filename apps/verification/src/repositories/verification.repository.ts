@@ -81,7 +81,8 @@ export class VerificationRepository {
           id: true,
           presentationId: true,
           schemaId: true,
-          emailId: true
+          emailId: true,
+          errorMessage: true
         },
         orderBy: {
           [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc'
@@ -127,7 +128,7 @@ export class VerificationRepository {
       let encryptEmailId;
       let organisationId: string;
       let schemaId;
-
+      
       const { proofPresentationPayload, orgId } = payload;
 
       //For Educreds
@@ -161,7 +162,8 @@ export class VerificationRepository {
           isVerified: proofPresentationPayload.isVerified,
           lastChangedBy: organisationId,
           connectionId: proofPresentationPayload.connectionId,
-          emailId: encryptEmailId
+          emailId: encryptEmailId,
+          errorMessage: proofPresentationPayload.errorMessage
         },
         create: {
           connectionId: proofPresentationPayload.connectionId,

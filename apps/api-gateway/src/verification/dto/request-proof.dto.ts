@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize, ArrayMinSize } from 'class-validator';
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
@@ -14,7 +14,7 @@ export class ProofRequestAttribute {
     attributeName?: string;
 
     @ValidateIf((obj) => obj.attributeName === undefined)
-    @IsArray({ message: 'attributeNames must be an array.' })
+    @IsArray({ message: 'attributeNames must be an array' })
     @ArrayNotEmpty({ message: 'array can not be empty' })
     @IsString({ each: true })
     @IsNotEmpty({ each: true, message: 'each element cannot be empty' })
@@ -23,23 +23,25 @@ export class ProofRequestAttribute {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    @IsNotEmpty({ message: 'schemaId is required' })
     schemaId?: string;
 
     @ApiPropertyOptional()
-    @IsString()
-    @IsOptional()
-    @IsNotEmpty({ message: 'condition is required.' })
+    @ValidateIf((obj) => obj.value !== undefined || obj.condition !== undefined)
+    @IsNotEmpty({ message: 'condition is required' })
+    @IsString({ message: 'condition must be a string' })
     condition?: string;
-
+  
     @ApiPropertyOptional()
-    @IsOptional()
-    @IsNotEmpty({ message: 'value is required.' })
-    @IsNumberString({}, { message: 'Value must be a number' })
+    @ValidateIf((obj) => obj.condition !== undefined || obj.value !== undefined)
+    @IsNotEmpty({ message: 'value is required' })
+    @IsNumberString({}, { message: 'value must be a number' })
     value?: string;
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    @IsNotEmpty({ message: 'credDefId is required' })
     credDefId?: string;
 }
 
@@ -54,7 +56,7 @@ class ProofPayload {
     @IsString({ message: 'parentThreadId must be in string' })
     @IsNotEmpty({ message: 'please provide valid parentThreadId' })
     @IsOptional()
-    parentThreadId: string;
+    parentThreadId?: string;
 
     @ApiPropertyOptional()
     @IsBoolean({ message: 'willConfirm must be in boolean' })
@@ -72,14 +74,14 @@ class ProofPayload {
 export class Fields {
   @ApiProperty()
   @IsArray()
-  @IsNotEmpty({ message: 'path is required.' })
+  @IsNotEmpty({ message: 'path is required' })
   path: string[];
 }
 
 export class Constraints {
   @ApiProperty({type: () => [Fields]})
   @IsOptional()
-  @IsNotEmpty({ message: 'Fields are required.' })
+  @IsNotEmpty({ message: 'Fields are required' })
   @ValidateNested()
   @Type(() => Fields)
   fields: Fields[];
@@ -88,32 +90,32 @@ export class Constraints {
 
 export class Schema {
   @ApiProperty()
-  @IsNotEmpty({ message: 'uri is required.' })
+  @IsNotEmpty({ message: 'uri is required' })
   @IsString()
   uri:string;
 
 }
 export class InputDescriptors {
   @ApiProperty()
-  @IsNotEmpty({ message: 'id is required.' })
+  @IsNotEmpty({ message: 'id is required' })
   @IsString()
   id:string;
 
   @ApiProperty()
   @IsString()
   @IsOptional()
-  @IsNotEmpty({ message: 'name is required.' })
+  @IsNotEmpty({ message: 'name is required' })
   name:string;
 
   @ApiProperty()
   @IsString()
   @IsOptional()
-  @IsNotEmpty({ message: 'purpose is required.' })
+  @IsNotEmpty({ message: 'purpose is required' })
   purpose:string;
 
 
   @ApiProperty({type: () => [Schema]})
-  @IsNotEmpty({ message: 'schema is required.' })
+  @IsNotEmpty({ message: 'schema is required' })
   @ValidateNested()
   @Type(() => Schema)
   schema:Schema[];
@@ -121,7 +123,7 @@ export class InputDescriptors {
   
   @ApiProperty({type: () => Constraints})
   @IsOptional()
-  @IsNotEmpty({ message: 'Constraints are required.' })
+  @IsNotEmpty({ message: 'Constraints are required' })
   @ValidateNested()
   @Type(() => Constraints)
   constraints:Constraints;
@@ -131,19 +133,19 @@ export class InputDescriptors {
 export class ProofRequestPresentationDefinition {
 
   @IsString()
-  @IsNotEmpty({ message: 'id is required.' })
+  @IsNotEmpty({ message: 'id is required' })
   id: string;
 
   @IsString()
   @IsOptional()
   name: string;
 
-  @ApiProperty({type: () =>  [InputDescriptors]})
-  @IsNotEmpty({ message: 'inputDescriptors is required.' })
+  @ApiProperty({type: () => [InputDescriptors]})
   @IsArray({ message: 'inputDescriptors must be an array' })
-  @IsObject({ each: true })
+  @IsNotEmpty({ message: 'inputDescriptors is required' })
+  @ArrayMinSize(1)
+  @ValidateNested({each:true})
   @Type(() => InputDescriptors)
-  @ValidateNested()
   // eslint-disable-next-line camelcase
   input_descriptors:InputDescriptors[];
 }
@@ -162,7 +164,7 @@ export class ProofRequestAttributeDto {
     type: () => [ProofRequestAttribute]
 })
 @IsArray({ message: 'attributes must be in array' })
-@ValidateNested()
+@ValidateNested({ each: true })
 @IsObject({ each: true })
 @IsNotEmpty({ message: 'please provide valid attributes' })
 @Type(() => ProofRequestAttribute)
@@ -191,13 +193,7 @@ export class IndyDto {
   indy: ProofRequestAttributeDto;
 }
 
-export class RequestProofDto extends ProofPayload {
-    @ApiProperty()
-    @IsString()
-    @Transform(({ value }) => trim(value))
-    @IsUUID()
-    @IsNotEmpty({ message: 'connectionId is required.' })
-    connectionId: string;
+export class RequestProofDtoBase extends ProofPayload {
 
     @ApiProperty({
       'example': 
@@ -213,7 +209,7 @@ export class RequestProofDto extends ProofPayload {
             }
           ]
         }
-    },
+      },
       type: () => [IndyDto]
   })
   @IsOptional()
@@ -222,12 +218,13 @@ export class RequestProofDto extends ProofPayload {
   @IsNotEmpty({ message: 'ProofFormatDto must not be empty' })
   @Type(() => IndyDto)
   proofFormats?: IndyDto;    
-
+  
     @ApiProperty({
         'example': 
             {
-                id: '32f54163-7166-48f1-93d8-ff217bdb0653',
-                inputDescriptors: [
+              id: '32f54163-7166-48f1-93d8-ff217bdb0653',
+                // eslint-disable-next-line camelcase
+                input_descriptors: [
                     {
                       'id': 'healthcare_input_1',
                       'name': 'Medical History',
@@ -240,7 +237,7 @@ export class RequestProofDto extends ProofPayload {
                       'constraints': {
                         'fields': [
                           {
-                            'path': ['$.PatientID']
+                            'path': ['$.credentialSubject.PatientID']
                           }
                         ]
                       }
@@ -260,20 +257,44 @@ export class RequestProofDto extends ProofPayload {
     @IsOptional()
     @IsString({ message: 'comment must be in string' })
     comment: string;
-
+    
     type:ProofRequestType;
-
+    
     orgId: string;
-
-    @ApiPropertyOptional()
+    
+    @ApiPropertyOptional({enum:AutoAccept})
     @IsString({ message: 'auto accept proof must be in string' })
     @IsNotEmpty({ message: 'please provide valid auto accept proof' })
     @IsOptional()
     @IsEnum(AutoAccept, {
-        message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
+      message: `Invalid auto accept proof. It should be one of: ${Object.values(AutoAccept).join(', ')}`
     })
     autoAcceptProof: AutoAccept;
+    version: string;
 }
+export class RequestProofDtoV1 extends RequestProofDtoBase {
+  @ApiProperty({
+    example: '32f54163-7166-48f1-93d8-ff217bdb0653'
+  })  
+    @IsNotEmpty({ message: 'connectionId is required' })
+    @IsString({ message: 'connectionId must be a string' })
+    @IsUUID()
+    connectionId:string;
+}
+
+
+export class RequestProofDtoV2 extends RequestProofDtoBase {
+  @ApiProperty({
+    example: ['32f54163-7166-48f1-93d8-ff217bdb0653']
+  })  
+  @IsNotEmpty({ each: true, message: 'connectionId array elements must not be empty' })
+  @IsArray({ message: 'connectionId must be an array' })
+  @ArrayMinSize(1, { message: 'connectionId must contain at least 1 element' })
+  @ArrayMaxSize(Number(process.env.PROOF_REQ_CONN_LIMIT), { message: `Limit reached (${process.env.PROOF_REQ_CONN_LIMIT} connections max).` })
+  @IsUUID('all', { each: true, message: 'Each connectionId must be a valid UUID' })
+  connectionId: string[];
+}
+
 
 export class OutOfBandRequestProof extends ProofPayload {
     @ApiProperty({
@@ -421,7 +442,7 @@ export class SendProofRequestPayload {
     @ApiProperty({ example: true })
     @IsBoolean()
     @IsOptional()
-    @IsNotEmpty({message:'Please provide the flag for shorten url.'})
+    @IsNotEmpty({message:'Please provide the flag for shorten url'})
     isShortenUrl?: boolean;
 
     @ApiPropertyOptional()

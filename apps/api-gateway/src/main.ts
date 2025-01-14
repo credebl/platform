@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
@@ -13,6 +13,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import helmet from 'helmet';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { NatsInterceptor } from '../../../libs/interceptors/nats.interceptor';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -57,6 +58,11 @@ async function bootstrap(): Promise<void> {
     .addServer(`${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_GATEWAY_HOST}`)
     .build();
 
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: ['1']
+    });
+
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
   const httpAdapter = app.get(HttpAdapterHost);
@@ -69,6 +75,11 @@ async function bootstrap(): Promise<void> {
       credentials: true
     });
   }
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: ['1', VERSION_NEUTRAL]
+  });
 
   app.use(express.static('uploadedFiles/holder-profile'));
   app.use(express.static('uploadedFiles/org-logo'));
@@ -85,6 +96,7 @@ async function bootstrap(): Promise<void> {
       xssFilter: true
     })
   );
+  app.useGlobalInterceptors(new NatsInterceptor());
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);
 }

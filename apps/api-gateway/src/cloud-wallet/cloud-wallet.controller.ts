@@ -14,7 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
-import { validateDid } from '@credebl/common/did.validator';
+import { Validator } from '@credebl/common/validator';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { UserRoleGuard } from '../authz/guards/user-role.guard';
 import { AcceptProofRequestDto } from './dtos/accept-proof-request.dto';
@@ -267,7 +267,7 @@ export class CloudWalletController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    await validateDid(createDidDto);
+    Validator.validateDid(createDidDto);
     const {email, id} = user;
     createDidDto.email = email;
     createDidDto.userId = id;

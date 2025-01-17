@@ -17,11 +17,14 @@ import {
     intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
       return next.handle().pipe(
         catchError((error) => {
-          if (error.message.includes(ResponseMessages.nats.error.natsConnect)) {
+          
+          if ('string' === typeof error.message && error.message.includes(ResponseMessages.nats.error.natsConnect)) {
             this.logger.error(`No subscribers for message: ${error.message}`);
             return throwError(() => new HttpException(ResponseMessages.nats.error.noSubscribers, 500));
+          } else if (error.message.message) {
+            return throwError(() => new HttpException(error.message.message, error.statusCode));
           }
-          return throwError(() => error);
+        return throwError(() => error);
         })
       );
     }

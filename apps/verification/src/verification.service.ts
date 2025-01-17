@@ -310,10 +310,26 @@ export class VerificationService {
         return getProofPresentationById?.response;
       }
     } catch (error) {
+   // TODO: Handle cases where identical attributes are used in both predicates and non-predicates. 
+   // Currently unsupported, so this exception is handled temporarily.
+
+
+    const errorMessage = error?.status?.message?.error?.message; 
+    const match = errorMessage.match(
+      /CredoError: The proof request contains duplicate predicates and attributes: (.+)/
+    );
+    if (match) {
+      const [, duplicateAttributes] = match;
+      throw new RpcException({
+        message: `CredoError: The proof request contains duplicate attributes: ${duplicateAttributes}`,
+        statusCode: 500
+      });
+    }
+
       this.logger.error(`[sendProofRequest] - error in sending proof request: ${JSON.stringify(error)}`);
       this.verificationErrorHandling(error);
+      }
     }
-  }
   
 
   /**

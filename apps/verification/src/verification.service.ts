@@ -315,7 +315,7 @@ export class VerificationService {
 
 
     const errorMessage = error?.status?.message?.error?.message; 
-    const match = errorMessage.match(
+    const match = errorMessage?.match(
       /CredoError: The proof request contains duplicate predicates and attributes: (.+)/
     );
     if (match) {

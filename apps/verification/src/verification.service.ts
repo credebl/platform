@@ -310,9 +310,9 @@ export class VerificationService {
         return getProofPresentationById?.response;
       }
     } catch (error) {
-     // This case is not supported in credo-ts, so we are handling in platform
-     // TODO: Handle all credo-errors globally in platform
-
+      // Handle cases where identical attributes are used in both predicates and non-predicates.   
+      // This case is not supported in credo-ts, so we are handling in platform
+      // TODO: Handle all credo-errors globally in platform
 
     const errorMessage = error?.status?.message?.error?.message; 
     const match = errorMessage?.match(

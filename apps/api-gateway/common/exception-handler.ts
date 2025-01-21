@@ -12,8 +12,6 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
     
     let errorResponse;
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    
-    this.logger.error(`exception ::: ${JSON.stringify(exception)}`);
 
     if (!exception || '{}' === JSON.stringify(exception)) {
       errorResponse = {

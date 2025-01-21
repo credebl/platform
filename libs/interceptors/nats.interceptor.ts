@@ -17,7 +17,7 @@ import {
     intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
       return next.handle().pipe(
         catchError((error) => {
-          if (error.message.includes(ResponseMessages.nats.error.natsConnect)) {
+          if (error?.message && error?.message.includes(ResponseMessages.nats.error.natsConnect)) {
             this.logger.error(`No subscribers for message: ${error.message}`);
             return throwError(() => new HttpException(ResponseMessages.nats.error.noSubscribers, 500));
           }

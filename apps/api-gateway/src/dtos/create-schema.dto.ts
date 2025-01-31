@@ -5,6 +5,18 @@ import { Transform, Type } from 'class-transformer';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 
+
+class NestedAttribute {
+  @ApiProperty({ description: 'Name of the nested attribute group', example: 'ProductDetails' })
+  @IsString()
+  @IsNotEmpty({ message: 'Name is required' })
+  name: string;
+
+  @ApiProperty()
+  @IsArray()
+ 
+  attributes: Record<string, any>[];
+}
   class W3CAttributeValue {
     @ApiProperty()
     @IsString()
@@ -30,6 +42,17 @@ import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum
     @IsBoolean()
     @IsNotEmpty({ message: 'isRequired property is required' })
     isRequired: boolean;
+
+    @ApiProperty({
+      description: '',
+      type: [NestedAttribute],
+    })
+    @IsArray()
+    @IsOptional()
+    @ValidateNested({ each: true })
+    @Type(() => NestedAttribute)
+    nestedAttributes: NestedAttribute[];
+  
   }
 class AttributeValue {
 

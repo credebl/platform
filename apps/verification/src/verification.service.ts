@@ -433,6 +433,7 @@ export class VerificationService {
           url,
           proofRequestPayload: {
             goalCode: outOfBandRequestProof.goalCode,
+            parentThreadId: outOfBandRequestProof.parentThreadId,
             protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
             comment:outOfBandRequestProof.comment,
             label,

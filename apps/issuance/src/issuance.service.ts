@@ -1068,7 +1068,6 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       
       attributeNameArray.unshift(TemplateIdentifier.EMAIL_COLUMN);
 
-      // const [csvData, csvFields] = [jsonData, attributeNameArray];
       const [csvData, csvFields] = 0 < nestedAttributes.length
         ? [jsonData, [...attributeNameArray, ...nestedAttributes]]
         : [jsonData, attributeNameArray];

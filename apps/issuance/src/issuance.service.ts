@@ -245,7 +245,7 @@ export class IssuanceService {
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     try {
 
-      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType, isShortenUrl, reuseConnection } = payload;
+      const { orgId, credentialDefinitionId, comment, attributes, protocolVersion, credential, options, credentialType, isShortenUrl, reuseConnection, isValidateSchema } = payload;
       if (credentialType === IssueCredentialType.INDY) {
         const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
           credentialDefinitionId
@@ -346,8 +346,10 @@ export class IssuanceService {
         const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
 
         const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
-        validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
-        
+
+        if (isValidateSchema) {
+          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+        }
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
       if (isShortenUrl) {
@@ -591,7 +593,7 @@ export class IssuanceService {
     }
   }
 
-async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string, prettyVc?: IPrettyVc): Promise<boolean> {
+async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayload, platformName?: string, organizationLogoUrl?: string, prettyVc?: IPrettyVc, isValidateSchema?: boolean): Promise<boolean> {
   try {
     const {
       credentialOffer,
@@ -695,6 +697,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       platformName?: string;
       organizationLogoUrl?: string;
       prettyVc?: IPrettyVc;
+      isValidateSchema?: boolean;
     } = {
       credentialType,
       protocolVersion,
@@ -707,6 +710,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
       errors,
       url,
       orgId,
+      isValidateSchema,
       organizationDetails,
       iterator: undefined,
       emailId: emailId || '',
@@ -731,7 +735,7 @@ async outOfBandCredentialOffer(outOfBandCredential: OutOfBandCredentialOfferPayl
 
           await this.delay(500); // Wait for 0.5 seconds
           const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
-          
+
           arraycredentialOfferResponse.push(sendOobOffer);
       }  
       if (0 < errors.length) {
@@ -785,7 +789,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     organizationDetails,
     platformName,
     organizationLogoUrl,
-    isReuseConnection
+    isReuseConnection,
+    isValidateSchema
   } = sendEmailCredentialOffer;
   const iterationNo = index + 1;
   try {
@@ -851,8 +856,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       const schemaServerUrl = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
 
       const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
-      validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
 
+      if (isValidateSchema) {
+        validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+      }
     }
     const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
 
@@ -1045,10 +1052,26 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       const attributesArray = JSON.parse(schemaResponse.attributes);
       
       // Extract the 'attributeName' values from the objects and store them in an array
-      const attributeNameArray = attributesArray.map(attribute => attribute.attributeName);
+      const attributeNameArray = attributesArray
+        .filter((attribute) => 'array' !== attribute?.schemaDataType)
+        .map((attribute) => attribute.attributeName);
+
+      let nestedAttributes = [];
+
+      if (attributesArray.some((attribute) => W3CSchemaDataType.ARRAY === attribute?.schemaDataType)) {
+        nestedAttributes = attributesArray
+          .filter((attribute) => W3CSchemaDataType.ARRAY === attribute?.schemaDataType)
+          .flatMap((attribute) => attribute.nestedAttributes || []) 
+          .flatMap(Object.entries) 
+          .flatMap(([key, value]) => [key, ...Object.values(value)]);
+      }
+      
       attributeNameArray.unshift(TemplateIdentifier.EMAIL_COLUMN);
 
-      const [csvData, csvFields] = [jsonData, attributeNameArray];
+      // const [csvData, csvFields] = [jsonData, attributeNameArray];
+      const [csvData, csvFields] = 0 < nestedAttributes.length
+        ? [jsonData, [...attributeNameArray, ...nestedAttributes]]
+        : [jsonData, attributeNameArray];
 
       if (!csvData || !csvFields) {
         // eslint-disable-next-line prefer-promise-reject-errors
@@ -1090,7 +1113,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         credentialType: '',
         schemaName: ''
       };
-      const { fileName, templateId, type } = importFileDetails;
+      const { fileName, templateId, type, isValidateSchema } = importFileDetails;
       if (type === SchemaType.W3C_Schema) {
         credentialDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
         credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
@@ -1141,7 +1164,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
       let validatedData;
 
-      if (type === SchemaType.W3C_Schema) {
+      if (type === SchemaType.W3C_Schema && isValidateSchema) {
         validatedData = parsedData.data.map((row) => {
           const { email_identifier, ...rest } = row;
           const newRow = { ...rest };
@@ -1162,6 +1185,13 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
   
           return { email_identifier, ...newRow };
         });
+      } else if (type === SchemaType.W3C_Schema && !isValidateSchema) {
+        validatedData = parsedData.data.map((row) => {
+          const { email_identifier, ...rest } = row;
+          const newRow = { ...rest };
+  
+          return { email_identifier, ...newRow };
+        });
       }
 
       const finalFileData = {
@@ -1170,8 +1200,10 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         meta: parsedData.meta
       };
 
-      await this.validateFileHeaders(fileHeader, attributeNameArray);
-      await this.validateFileData(fileData, attributesArray, fileHeader);
+      if (isValidateSchema) {
+        await this.validateFileHeaders(fileHeader, attributeNameArray);
+        await this.validateFileData(fileData, attributesArray, fileHeader);
+      }
 
       credentialPayload.fileData = type === SchemaType.W3C_Schema ? finalFileData : parsedData;
       credentialPayload.fileName = fileName;
@@ -1333,8 +1365,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
    * @param requestId
    */
  
-  private async processInBatches(bulkPayload, bulkPayloadDetails: BulkPayloadDetails):Promise<void> {
-    const {clientId, isRetry, orgId, requestId} = bulkPayloadDetails;
+  private async processInBatches(bulkPayload, bulkPayloadDetails: BulkPayloadDetails): Promise<void> {
+    const {clientId, isRetry, orgId, requestId, isValidateSchema } = bulkPayloadDetails;
     const delay = (ms: number): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, ms));
     const batchSize = CommonConstants.ISSUANCE_BATCH_SIZE; // initial 1000
     const uniqueJobId = uuidv4();
@@ -1366,6 +1398,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           credentialType: item.credential_type,
           totalJobs: bulkPayload.length,
           isRetry,
+          isValidateSchema,
           isLastData: false,
           organizationLogoUrl: bulkPayloadDetails?.organizationLogoUrl,
           platformName: bulkPayloadDetails?.platformName,
@@ -1413,7 +1446,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     requestId: string,
     orgId: string,
     clientDetails: IClientDetails,
-    reqPayload: ImportFileDetails
+    reqPayload: ImportFileDetails,
+    isValidateSchema: boolean
   ): Promise<string> {
     if (!requestId) {
       throw new BadRequestException(ResponseMessages.issuance.error.missingRequestId);
@@ -1486,6 +1520,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           clientId: clientDetails.clientId,
           orgId,
           requestId,
+          isValidateSchema,
           isRetry: false,
           organizationLogoUrl: clientDetails?.organizationLogoUrl,
           platformName: clientDetails?.platformName,
@@ -1514,7 +1549,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
     }
   }
 
-  async retryBulkCredential(fileId: string, orgId: string, clientDetails: IClientDetails): Promise<string> {
+  async retryBulkCredential(fileId: string, orgId: string, clientDetails: IClientDetails, isValidateSchema?: boolean): Promise<string> {
     let bulkpayloadRetry;
     try {
       const fileDetails = await this.issuanceRepository.getFileDetailsById(fileId);
@@ -1532,6 +1567,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           clientId : clientDetails.clientId,
           orgId,
           isRetry: true,
+          isValidateSchema,
           organizationLogoUrl: clientDetails?.organizationLogoUrl,
           platformName: clientDetails?.platformName,
           certificate: clientDetails?.certificate,
@@ -1629,7 +1665,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       }
 
       const oobCredentials = await this.outOfBandCredentialOffer(
-        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl, prettyVc);
+        oobIssuancepayload, jobDetails?.platformName, jobDetails?.organizationLogoUrl, prettyVc, jobDetails?.isValidateSchema);
       if (oobCredentials) {
         await this.issuanceRepository.deleteFileDataByJobId(jobDetails.id);
       }

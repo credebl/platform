@@ -278,6 +278,11 @@ async downloadBulkIssuanceCSVTemplate(
     required: true,
     description: 'The type of schema to be used'
   })
+  @ApiQuery({
+    name: 'isValidateSchema',
+    type: Boolean,
+    required: false
+  })
   @UseInterceptors(FileInterceptor('file'))
   async uploadCSVTemplate(
     @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
@@ -285,7 +290,8 @@ async downloadBulkIssuanceCSVTemplate(
     @UploadedFile() file: Express.Multer.File,
     @Body() fileDetails: object,
     @Res() res: Response,
-    @Query('schemaType') schemaType: SchemaType = SchemaType.INDY
+    @Query('schemaType') schemaType: SchemaType = SchemaType.INDY,
+    @Query('isValidateSchema') isValidateSchema: boolean = true
   ): Promise<object> {
     const { templateId } = query;
 
@@ -301,7 +307,8 @@ async downloadBulkIssuanceCSVTemplate(
           type: schemaType,
           templateId,
           fileKey,
-          fileName: fileDetails['fileName'] || file?.filename || file?.originalname
+          fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
+          isValidateSchema
         };
 
         const importCsvDetails = await this.issueCredentialService.uploadCSVTemplate(uploadedfileDetails);
@@ -384,6 +391,11 @@ async downloadBulkIssuanceCSVTemplate(
     summary: 'bulk issue credential',
     description: 'bulk issue credential'
   })
+  @ApiQuery({
+    name: 'isValidateSchema',
+    type: Boolean,
+    required: false
+  })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -409,6 +421,7 @@ async downloadBulkIssuanceCSVTemplate(
     @Param('orgId') orgId: string,
     @User() user: user,
     @Query(new ValidationPipe({ transform: true })) query: CredentialQuery,
+    @Query('isValidateSchema') isValidateSchema: boolean = true,
     @Res() res: Response,
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
@@ -432,7 +445,7 @@ async downloadBulkIssuanceCSVTemplate(
         type: fileDetails?.['type']
       };
     }
-      const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails, reqPayload);
+      const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(requestId, orgId, clientDetails, reqPayload, isValidateSchema);
 
       const finalResponse: IResponse = {
         statusCode: HttpStatus.CREATED,
@@ -562,16 +575,23 @@ async downloadBulkIssuanceCSVTemplate(
     summary: 'Retry bulk issue credential',
     description: 'Retry bulk issue credential'
   })
+  @ApiQuery({
+    name: 'isValidateSchema',
+    type: Boolean,
+    required: false
+  })
   async retryBulkCredentials(
     @Param('fileId') fileId: string,
     @Param('orgId') orgId: string,
+    @Query('isValidateSchema') isValidateSchema: boolean = true,
     @Res() res: Response,
     @Body() clientDetails: ClientDetails
   ): Promise<Response> {
     const bulkIssuanceDetails = await this.issueCredentialService.retryBulkCredential(
       fileId,
       orgId,
-      clientDetails
+      clientDetails,
+      isValidateSchema
     );
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
@@ -713,17 +733,24 @@ async downloadBulkIssuanceCSVTemplate(
       name:'credentialType',
       enum: IssueCredentialType
     })
+    @ApiQuery({
+      name: 'isValidateSchema',
+      type: Boolean,
+      required: false
+    })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     async createOOBCredentialOffer(
       @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
+      @Query('isValidateSchema') isValidateSchema: boolean = true,
       @Param('orgId') orgId: string,
       @Body() issueCredentialDto: OOBIssueCredentialDto,
       @Res() res: Response
     ): Promise<Response> {
       issueCredentialDto.orgId = orgId;
       issueCredentialDto.credentialType = credentialType;
+      issueCredentialDto.isValidateSchema = isValidateSchema;
       const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,

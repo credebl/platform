@@ -195,7 +195,8 @@ export interface ImportFileDetails {
   templateId: string;
   fileKey: string;
   fileName: string;
-  type: string
+  type: string;
+  isValidateSchema?: boolean;
 }
 export interface ICredentialPayload {
 schemaLedgerId: string,
@@ -298,6 +299,7 @@ export interface SendEmailCredentialOffer {
   platformName?: string,
   organizationLogoUrl?: string;
   prettyVc?: IPrettyVc;
+  isValidateSchema?: boolean;
 }
 
 export interface TemplateDetailsInterface {
@@ -328,6 +330,7 @@ export interface IQueuePayload{
   id: string;
   jobId: string;
   cacheId?: string;
+  isValidateSchema?: boolean;
   clientId: string;
   referenceId: string;
   fileUploadId: string;
@@ -383,6 +386,7 @@ export interface BulkPayloadDetails {
   clientId: string;
   orgId: string;
   requestId?: string;
+  isValidateSchema?: boolean;
   isRetry: boolean;
   organizationLogoUrl?: string;
   platformName?: string;

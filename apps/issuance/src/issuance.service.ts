@@ -1053,7 +1053,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
       
       // Extract the 'attributeName' values from the objects and store them in an array
       const attributeNameArray = attributesArray
-        .filter((attribute) => 'array' !== attribute?.schemaDataType)
+        .filter((attribute) => W3CSchemaDataType.ARRAY !== attribute?.schemaDataType)
         .map((attribute) => attribute.attributeName);
 
       let nestedAttributes = [];

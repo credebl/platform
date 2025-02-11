@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject, ParseUUIDPipe, BadRequestException, Delete } from '@nestjs/common';
@@ -7,7 +8,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ConnectionService } from './connection.service';
-import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
+import {  CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -274,10 +275,14 @@ export class ConnectionController {
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async getConnectionWebhook(
-    @Body() connectionDto: ConnectionDto,
+    //TODO:Remove any after testing
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    @Body() connectionDto: any,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
+    // eslint-disable-next-line no-console
+    console.log('🚀 ~ ConnectionController ~ connectionDto:::::', connectionDto);
     connectionDto.type = 'Connection';
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
   
@@ -302,6 +307,8 @@ export class ConnectionController {
             this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
         });
     } 
+    // eslint-disable-next-line no-console
+    console.log('🚀 ~ ConnectionController ~ finalResponse:::::', finalResponse);
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 

@@ -47,7 +47,6 @@ import {
   CredentialQuery,
   FileParameter,
   FileQuery,
-  IssuanceDto,
   OOBCredentialDtoWithEmail,
   OOBIssueCredentialDto,
   PreviewFileDetails,
@@ -745,15 +744,19 @@ async downloadBulkIssuanceCSVTemplate(
     description: 'Callback URL for issue credential'
   })
   async getIssueCredentialWebhook(
-    @Body() issueCredentialDto: IssuanceDto,
+    //TODO:Remove any after testing
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    @Body() issueCredentialDto: any,
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-issueCredentialDto.type = 'Issuance';
+    // eslint-disable-next-line no-console
+    console.log('🚀 ~ IssuanceController ~ issueCredentialDto:::::', issueCredentialDto);
+      issueCredentialDto.type = 'Issuance';
 
-if (id && 'default' === issueCredentialDto.contextCorrelationId) {
-  issueCredentialDto.orgId = id;
-}
+      if (id && 'default' === issueCredentialDto.contextCorrelationId) {
+        issueCredentialDto.orgId = id;
+      }
      
       const getCredentialDetails = await this.issueCredentialService.getIssueCredentialWebhook(issueCredentialDto, id).catch(error => {
         this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);
@@ -774,7 +777,9 @@ if (id && 'default' === issueCredentialDto.contextCorrelationId) {
             this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
           });
       
-    }
+        }
+        // eslint-disable-next-line no-console
+        console.log('🚀 ~ IssuanceController ~ finalResponse:::::', finalResponse);
     return res.status(HttpStatus.CREATED).json(finalResponse);
     }   
 

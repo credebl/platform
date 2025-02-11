@@ -26,7 +26,6 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { AuthGuard } from '@nestjs/passport';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { ImageServiceService } from '@credebl/image-service';
 import { User } from '../authz/decorators/user.decorator';
@@ -353,9 +352,13 @@ export class VerificationController {
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     async webhookProofPresentation(
         @Param('orgId') orgId: string,
-        @Body() proofPresentationPayload: WebhookPresentationProofDto,
+        //TODO:Remove any after testing
+        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+        @Body() proofPresentationPayload: any,
         @Res() res: Response
     ): Promise<Response> {
+        // eslint-disable-next-line no-console
+        console.log('🚀 ~ VerificationController ~ proofPresentationPayload::::', proofPresentationPayload);
         proofPresentationPayload.type = 'Verification';
        
         if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
@@ -383,6 +386,8 @@ export class VerificationController {
                 });
              
         }
+        // eslint-disable-next-line no-console
+        console.log('🚀 ~ VerificationController ~ finalResponse:::::', finalResponse);
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
 }

@@ -90,13 +90,13 @@ export class IssuanceController {
 
 
   @MessagePattern({ cmd: 'issue-bulk-credentials' })
-  async issueBulkCredentials(payload: { requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails }): Promise<string> {
-    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientDetails, payload.reqPayload);
+  async issueBulkCredentials(payload: { requestId: string, orgId: string, clientDetails: IClientDetails, reqPayload: ImportFileDetails, isValidateSchema: boolean }): Promise<string> {
+    return this.issuanceService.issueBulkCredential(payload.requestId, payload.orgId, payload.clientDetails, payload.reqPayload, payload.isValidateSchema);
   }
 
   @MessagePattern({ cmd: 'retry-bulk-credentials' })
-  async retryeBulkCredentials(payload: { fileId: string, orgId: string, clientDetails: IClientDetails }): Promise<string> {
-    return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientDetails);
+  async retryeBulkCredentials(payload: { fileId: string, orgId: string, clientDetails: IClientDetails, isValidateSchema?: boolean }): Promise<string> {
+    return this.issuanceService.retryBulkCredential(payload.fileId, payload.orgId, payload.clientDetails, payload.isValidateSchema);
   }
 
   @MessagePattern({ cmd: 'delete-issuance-records' })

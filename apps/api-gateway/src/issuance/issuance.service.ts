@@ -121,13 +121,14 @@ export class IssuanceService extends BaseService {
         return this.natsClient.sendNats(this.issuanceProxy, 'issued-file-data', payload);
     }
 
-    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: IReqPayload): Promise<object> {
-        const payload = { requestId, orgId, clientDetails, reqPayload };
+    async issueBulkCredential(requestId: string, orgId: string, clientDetails: ClientDetails, reqPayload: IReqPayload, isValidateSchema: boolean): Promise<object> {
+        const payload = { requestId, orgId, clientDetails, reqPayload, isValidateSchema };
+
         return this.natsClient.sendNatsMessage(this.issuanceProxy, 'issue-bulk-credentials', payload);
     }
 
-    async retryBulkCredential(fileId: string, orgId: string, clientDetails: ClientDetails): Promise<object> {
-        const payload = { fileId, orgId, clientDetails };
+    async retryBulkCredential(fileId: string, orgId: string, clientDetails: ClientDetails, isValidateSchema?: boolean): Promise<object> {
+        const payload = { fileId, orgId, clientDetails, isValidateSchema };
         return this.natsClient.sendNatsMessage(this.issuanceProxy, 'retry-bulk-credentials', payload);
     }
 

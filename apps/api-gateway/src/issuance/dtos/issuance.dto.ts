@@ -249,6 +249,8 @@ export class CredentialsIssuanceDto {
   reuseConnection?: boolean;
 
   orgId: string;
+
+  isValidateSchema?: boolean;
 }
 
 export class OOBIssueCredentialDto extends CredentialsIssuanceDto {

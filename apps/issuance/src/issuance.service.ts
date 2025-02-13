@@ -461,8 +461,11 @@ export class IssuanceService {
       let schemaIds;
       if (issuedCredentialsSearchCriteria?.search) {
         const schemaDetails = await this._getSchemaDetailsByName(issuedCredentialsSearchCriteria?.search);
-        schemaIds = schemaDetails?.map(item => item?.schemaLedgerId);
-      }
+    
+        if (schemaDetails && 0 < schemaDetails?.length) {
+            schemaIds = schemaDetails.map(item => item?.schemaLedgerId);
+        }
+    }
 
       const getIssuedCredentialsList = await this.issuanceRepository.getAllIssuedCredentials(
         user,

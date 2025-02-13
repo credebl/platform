@@ -32,7 +32,7 @@ import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum
     @IsNotEmpty({ message: 'isRequired property is required' })
     isRequired: boolean;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
       description: 'Array of objects with dynamic keys',
       isArray: true
     })

@@ -7,6 +7,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
 import { SchemaType, SortValue } from '@credebl/enum/enum';
 import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
+import { ISchemaId } from '../schema.interface';
 
 @Injectable()
 export class SchemaRepository {
@@ -154,6 +155,18 @@ export class SchemaRepository {
         description: error.message
       });
     }
+  }
+
+  async getSchemasDetailsBySchemaName(schemaName: string): Promise<ISchemaId[]> {
+    const schemaDetails = await this.prisma.schema.findMany({
+      where: {
+        name: { contains: schemaName, mode: 'insensitive' }
+      },
+
+      select: { schemaLedgerId: true }
+    });
+
+    return schemaDetails;
   }
 
   async getSchemasDetailsBySchemaIds(templateIds: string[]): Promise<schema[]> {

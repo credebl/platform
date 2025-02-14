@@ -9,7 +9,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { BulkPayloadDetails, CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
+import { BulkPayloadDetails, CredentialOffer, FileUpload, FileUploadData, IAttributes, IBulkPayloadObject, IClientDetails, ICreateOfferResponse, ICredentialPayload, IIssuance, IIssueData, IPattern, IQueuePayload, ISchemaAttributes, ISchemaId, ISendOfferNatsPayload, ImportFileDetails, IssueCredentialWebhookPayload, OutOfBandCredentialOfferPayload, PreviewRequest, SchemaDetails, SendEmailCredentialOffer, TemplateDetailsInterface } from '../interfaces/issuance.interfaces';
 import { AutoAccept, IssuanceProcessState, OrgAgentType, PromiseResult, SchemaType, TemplateIdentifier, W3CSchemaDataType} from '@credebl/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
@@ -457,10 +457,21 @@ export class IssuanceService {
     issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams
   ): Promise<IIssuedCredential> {
     try {
+
+      let schemaIds;
+      if (issuedCredentialsSearchCriteria?.search) {
+        const schemaDetails = await this._getSchemaDetailsByName(issuedCredentialsSearchCriteria?.search);
+    
+        if (schemaDetails && 0 < schemaDetails?.length) {
+            schemaIds = schemaDetails.map(item => item?.schemaLedgerId);
+        }
+    }
+
       const getIssuedCredentialsList = await this.issuanceRepository.getAllIssuedCredentials(
         user,
         orgId,
-        issuedCredentialsSearchCriteria
+        issuedCredentialsSearchCriteria,
+        schemaIds
       );
 
       const getSchemaIds = getIssuedCredentialsList?.issuedCredentialsList?.map((schema) => schema?.schemaId);
@@ -506,6 +517,26 @@ export class IssuanceService {
       this.logger.error(`Error in fetching issued credentials by org id: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
+  }
+
+  async _getSchemaDetailsByName(schemaName: string): Promise<ISchemaId[]> {
+    const pattern = { cmd: 'get-schemas-details-by-name' };
+
+    const schemaDetails = await this.natsClient
+      .send<ISchemaId[]>(this.issuanceServiceProxy, pattern, schemaName)
+      
+      .catch((error) => {
+        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.status,
+            error: error.message
+          },
+          error.status
+        );
+      });
+
+    return schemaDetails;
   }
 
   async getSchemaUrlDetails(schemaUrls: string[]): Promise<ISchemaObject[]> {

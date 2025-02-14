@@ -396,3 +396,7 @@ export interface BulkPayloadDetails {
   height?: string;
   width?: string;
 }
+
+export interface ISchemaId {
+  schemaLedgerId: string;
+}

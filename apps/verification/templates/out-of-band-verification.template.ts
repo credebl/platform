@@ -44,7 +44,7 @@ export class OutOfBandVerification {
 <a href="${process.env.IOS_DOWNLOAD_LINK}" target="_blank">iOS App Store.</a> (Skip, if already downloaded)
 </li>
                           <li>Complete the onboarding process in ${process.env.MOBILE_APP}.</li>
-                          <li>Open the “Share Credential” link below in this email <i>(This will open the link in the ${process.env.MOBILE_APP} App)</i></li>
+                          <li>Open the “Share Credential” link below in this email <i>(This will open the link in the ${process.env.MOBILE_APP})</i></li>
                           <li>Tap the <b>"Send Proof"</b>  button in ${process.env.MOBILE_APP} to share you credential data.</li>
                       </ul>
                       <div style="text-align: center; padding-bottom: 20px;">

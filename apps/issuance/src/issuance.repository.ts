@@ -108,7 +108,8 @@ export class IssuanceRepository {
   async getAllIssuedCredentials(
     user: IUserRequest,
     orgId: string,
-    issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams
+    issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams,
+    schemaIds?: string[]
   ): Promise<{
     issuedCredentialsCount: number;
     issuedCredentialsList: {
@@ -121,11 +122,12 @@ export class IssuanceRepository {
     }[];
   }> {
     try {
+       
       const issuedCredentialsList = await this.prisma.credentials.findMany({
         where: {
           orgId,
           OR: [
-            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { schemaId: { in: schemaIds } }, 
             { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
           ]
         },
@@ -150,7 +152,7 @@ export class IssuanceRepository {
         where: {
           orgId,
           OR: [
-            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { schemaId: { in: schemaIds } },
             { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
           ]
         }

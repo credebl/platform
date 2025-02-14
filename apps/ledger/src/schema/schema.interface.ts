@@ -1,5 +1,8 @@
-import { IUserRequestInterface } from "./interfaces/schema.interface";
+import { IUserRequestInterface } from './interfaces/schema.interface';
 
+export interface ISchemaId {
+    schemaLedgerId: string;
+}
 export interface SchemaSearchCriteria {
     schemaLedgerId: string;
     credentialDefinitionId: string;

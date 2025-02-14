@@ -13,7 +13,7 @@ import { Prisma, schema } from '@prisma/client';
 import { ISaveSchema, ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, W3CCreateSchema } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUserRequestInterface } from './interfaces/schema.interface';
-import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection } from './schema.interface';
+import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection, ISchemaId } from './schema.interface';
 import { map } from 'rxjs/operators';
 import { JSONSchemaType, LedgerLessConstant, LedgerLessMethods, OrgAgentType, SchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
 import { ICredDefWithPagination, ISchemaData, ISchemaDetails, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
@@ -713,6 +713,15 @@ export class SchemaService extends BaseService {
      return getSchemaData;
     } catch (error) {
         throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getSchemaDetailsBySchemaName(schemaName: string): Promise<ISchemaId[]> {   
+    try {  
+     const getSchemaDetails = await this.schemaRepository.getSchemasDetailsBySchemaName(schemaName);
+     return getSchemaDetails;
+    } catch (error) {
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 

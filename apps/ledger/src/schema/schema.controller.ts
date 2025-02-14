@@ -16,6 +16,7 @@ import {
   ISchemasWithPagination
 } from '@credebl/common/interfaces/schema.interface';
 import { IschemaPayload } from './interfaces/schema.interface';
+import { ISchemaId } from './schema.interface';
 
 @Controller('schema')
 export class SchemaController {
@@ -31,6 +32,11 @@ export class SchemaController {
   async getSchemasDetails(payload: {templateIds: string[]}): Promise<schema[]> {
     const { templateIds } = payload;
     return this.schemaService.getSchemaDetails(templateIds);
+  }
+
+  @MessagePattern({ cmd: 'get-schemas-details-by-name' })
+  async getSchemasDetailsBySchemaName(schemaName: string): Promise<ISchemaId[]> {
+    return this.schemaService.getSchemaDetailsBySchemaName(schemaName);
   }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })

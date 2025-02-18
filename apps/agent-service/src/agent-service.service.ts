@@ -1469,11 +1469,14 @@ export class AgentServiceService {
     url: string,
     orgId: string
   ): Promise<IAgentProofRequest> {
+    this.logger.debug("AgentServiceService ~ proofRequestPayload:", JSON.stringify(proofRequestPayload, null, 2));
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendProofRequest = await this.commonService
         .httpPost(url, proofRequestPayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
+        this.logger.debug("AgentServiceService ~ sendProofRequest:", JSON.stringify(sendProofRequest, null, 2));
+
       return sendProofRequest;
     } catch (error) {
       this.logger.error(`Error in send proof request in agent service : ${JSON.stringify(error)}`);
@@ -1575,11 +1578,14 @@ export class AgentServiceService {
     url: string,
     orgId: string
   ): Promise<object> {
+    this.logger.debug("AgentServiceService ~ proofRequestPayload:", JSON.stringify(proofRequestPayload, null, 2));
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendProofRequest = await this.commonService
         .httpPost(url, proofRequestPayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
+        this.logger.debug("🚀 ~ AgentServiceService ~ sendProofRequest:", JSON.stringify(sendProofRequest, null, 2));
+
       return sendProofRequest;
     } catch (error) {
       this.logger.error(`Error in send out of band proof request in agent service : ${JSON.stringify(error)}`);

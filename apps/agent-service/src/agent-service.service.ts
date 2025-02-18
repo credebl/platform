@@ -1405,11 +1405,13 @@ export class AgentServiceService {
   }
 
   async sendCredentialCreateOffer(issueData: IIssuanceCreateOffer, url: string, orgId: string): Promise<object> {
+    this.logger.debug("AgentServiceService ~ sendCredentialCreateOffer ~ issueData:", JSON.stringify(issueData, null, 2));
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const data = await this.commonService
         .httpPost(url, issueData, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
+        this.logger.debug("AgentServiceService - connection ~ sendCredentialCreateOffer ~ data:", JSON.stringify(data, null, 2));
       return data;
     } catch (error) {
       this.logger.error(`Error in sendCredentialCreateOffer in agent service : ${JSON.stringify(error)}`);
@@ -1578,13 +1580,13 @@ export class AgentServiceService {
     url: string,
     orgId: string
   ): Promise<object> {
-    this.logger.debug("AgentServiceService ~ proofRequestPayload:", JSON.stringify(proofRequestPayload, null, 2));
+    this.logger.debug("OOB - AgentServiceService ~ proofRequestPayload:", JSON.stringify(proofRequestPayload, null, 2));
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendProofRequest = await this.commonService
         .httpPost(url, proofRequestPayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
-        this.logger.debug("🚀 ~ AgentServiceService ~ sendProofRequest:", JSON.stringify(sendProofRequest, null, 2));
+        this.logger.debug("OOB - response - AgentServiceService ~ sendProofRequest:", JSON.stringify(sendProofRequest, null, 2));
 
       return sendProofRequest;
     } catch (error) {
@@ -1664,11 +1666,13 @@ export class AgentServiceService {
     url: string,
     orgId: string
   ): Promise<object> {
+    this.logger.debug("AgentServiceService ~ outOfBandIssuancePayload:", JSON.stringify(outOfBandIssuancePayload, null, 2));
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const sendOutOfbandCredentialOffer = await this.commonService
         .httpPost(url, outOfBandIssuancePayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
+        this.logger.debug("AgentServiceService ~ sendOutOfbandCredentialOffer:", JSON.stringify(sendOutOfbandCredentialOffer, null, 2));
       return sendOutOfbandCredentialOffer;
     } catch (error) {
       this.logger.error(`Error in out-of-band credential in agent service : ${JSON.stringify(error)}`);

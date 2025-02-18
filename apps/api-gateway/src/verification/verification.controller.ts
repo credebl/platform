@@ -186,7 +186,7 @@ export class VerificationController {
         @Body() requestProof: RequestProofDtoV1,
         @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
-        this.logger.debug('VerificationController ~ requestProof:', JSON.stringify(requestProof, null, 2));
+        this.logger.debug('Connection - VerificationController ~ requestProof:', JSON.stringify(requestProof, null, 2));
 
         if (requestType === ProofRequestType.INDY && !requestProof.proofFormats) {
                 throw new BadRequestException(`type: ${requestType} requires proofFormats`);
@@ -328,7 +328,7 @@ export class VerificationController {
         @Param('orgId') orgId: string,
         @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
-        this.logger.debug('VerificationController ~ outOfBandRequestProof:', JSON.stringify(outOfBandRequestProof, null, 2));
+        this.logger.debug('OOB - VerificationController ~ outOfBandRequestProof:', JSON.stringify(outOfBandRequestProof, null, 2));
         user.orgId = orgId;
         outOfBandRequestProof.type = requestType;
         const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
@@ -360,7 +360,7 @@ export class VerificationController {
         @Body() proofPresentationPayload: WebhookPresentationProofDto,
         @Res() res: Response
     ): Promise<Response> {
-        this.logger.debug('VerificationController ~ proofPresentationPayload:', JSON.stringify(proofPresentationPayload, null, 2));
+        this.logger.debug('Webhook - VerificationController ~ proofPresentationPayload:', JSON.stringify(proofPresentationPayload, null, 2));
         proofPresentationPayload.type = 'Verification';
        
         if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {

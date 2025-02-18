@@ -628,6 +628,7 @@ async downloadBulkIssuanceCSVTemplate(
    @Res() res: Response,
    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY
  ): Promise<Response> {
+   this.logger.debug('Connection - IssuanceController ~ issueCredentialDto::::', JSON.stringify(issueCredentialDto, null, 2));
    issueCredentialDto.orgId = orgId;
    issueCredentialDto.credentialType = credentialType;
 
@@ -748,6 +749,7 @@ async downloadBulkIssuanceCSVTemplate(
       @Body() issueCredentialDto: OOBIssueCredentialDto,
       @Res() res: Response
     ): Promise<Response> {
+      this.logger.debug('OOB offer - IssuanceController ~ issueCredentialDto:', JSON.stringify(issueCredentialDto, null, 2));
       issueCredentialDto.orgId = orgId;
       issueCredentialDto.credentialType = credentialType;
       issueCredentialDto.isValidateSchema = isValidateSchema;
@@ -776,6 +778,7 @@ async downloadBulkIssuanceCSVTemplate(
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
+    this.logger.debug('WebhookPayload -IssuanceController ~ issueCredentialDto::::', issueCredentialDto);
 issueCredentialDto.type = 'Issuance';
 
 if (id && 'default' === issueCredentialDto.contextCorrelationId) {

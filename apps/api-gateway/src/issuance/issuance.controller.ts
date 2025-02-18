@@ -628,7 +628,6 @@ async downloadBulkIssuanceCSVTemplate(
    @Res() res: Response,
    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY
  ): Promise<Response> {
-   this.logger.debug('Connection - IssuanceController ~ issueCredentialDto::::', JSON.stringify(issueCredentialDto, null, 2));
    issueCredentialDto.orgId = orgId;
    issueCredentialDto.credentialType = credentialType;
 

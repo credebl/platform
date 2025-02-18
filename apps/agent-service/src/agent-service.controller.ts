@@ -150,7 +150,6 @@ export class AgentServiceController {
   }): Promise<IAgentProofRequest> {
     return this.agentServiceService.sendProofRequest(payload.proofRequestPayload, payload.url, payload.orgId);
   }
-  
   //DONE
   @MessagePattern({ cmd: 'agent-verify-presentation' })
   async verifyPresentation(payload: { url: string, orgId: string }): Promise<object> {

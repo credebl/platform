@@ -1474,7 +1474,6 @@ export class AgentServiceService {
       const sendProofRequest = await this.commonService
         .httpPost(url, proofRequestPayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
-
       return sendProofRequest;
     } catch (error) {
       this.logger.error(`Error in send proof request in agent service : ${JSON.stringify(error)}`);
@@ -1581,7 +1580,6 @@ export class AgentServiceService {
       const sendProofRequest = await this.commonService
         .httpPost(url, proofRequestPayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
-
       return sendProofRequest;
     } catch (error) {
       this.logger.error(`Error in send out of band proof request in agent service : ${JSON.stringify(error)}`);

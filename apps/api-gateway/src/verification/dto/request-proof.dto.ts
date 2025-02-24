@@ -112,8 +112,7 @@ export class InputDescriptors {
   @IsOptional()
   @IsNotEmpty({ message: 'purpose is required' })
   purpose:string;
-
-
+  
   @ApiProperty({type: () => [Schema]})
   @IsNotEmpty({ message: 'schema is required' })
   @ValidateNested()
@@ -132,6 +131,7 @@ export class InputDescriptors {
 
 export class ProofRequestPresentationDefinition {
 
+  @ApiProperty()
   @IsString()
   @IsNotEmpty({ message: 'id is required' })
   id: string;
@@ -139,6 +139,11 @@ export class ProofRequestPresentationDefinition {
   @IsString()
   @IsOptional()
   name: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  purpose?: string;
 
   @ApiProperty({type: () => [InputDescriptors]})
   @IsArray({ message: 'inputDescriptors must be an array' })
@@ -223,6 +228,7 @@ export class RequestProofDtoBase extends ProofPayload {
         'example': 
             {
               id: '32f54163-7166-48f1-93d8-ff217bdb0653',
+              purpose: 'Used for KYC verification.',
                 // eslint-disable-next-line camelcase
                 input_descriptors: [
                     {
@@ -388,6 +394,7 @@ export class SendProofRequestPayload {
         'example': 
             {
                 id: '32f54163-7166-48f1-93d8-ff217bdb0653',
+                purpose: 'Used for KYC verification.',
                 inputDescriptors: [
                     {
                       'id': 'banking_input_1',

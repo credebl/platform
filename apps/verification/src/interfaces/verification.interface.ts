@@ -122,6 +122,7 @@ export interface IInputDescriptors {
 export interface IProofRequestPresentationDefinition {
     id:string;
     name: string;
+    purpose?: string;
     input_descriptors:IInputDescriptors[];
 }
 

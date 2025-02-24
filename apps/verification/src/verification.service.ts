@@ -491,6 +491,7 @@ export class VerificationService {
                 presentationDefinition: {
                   id: outOfBandRequestProof.presentationDefinition.id,
                   name: outOfBandRequestProof.presentationDefinition.name,
+                  purpose: outOfBandRequestProof?.presentationDefinition?.purpose,
                   input_descriptors: [...outOfBandRequestProof.presentationDefinition.input_descriptors]
                 }
               }

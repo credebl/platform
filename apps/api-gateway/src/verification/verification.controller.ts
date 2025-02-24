@@ -239,7 +239,6 @@ export class VerificationController {
         @Body() requestProof: RequestProofDtoV2,
         @Query('requestType') requestTypeV1:ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
-       
         if (requestTypeV1 === ProofRequestType.INDY && !requestProof.proofFormats) {
             throw new BadRequestException(`type: ${requestTypeV1} requires proofFormats`);
     }

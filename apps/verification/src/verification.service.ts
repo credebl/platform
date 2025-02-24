@@ -481,6 +481,7 @@ export class VerificationService {
           url,
           proofRequestPayload: {
             goalCode: outOfBandRequestProof.goalCode,
+            parentThreadId: outOfBandRequestProof?.parentThreadId,
             protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
             comment:outOfBandRequestProof.comment,
             label,
@@ -490,6 +491,7 @@ export class VerificationService {
                 presentationDefinition: {
                   id: outOfBandRequestProof.presentationDefinition.id,
                   name: outOfBandRequestProof.presentationDefinition.name,
+                  purpose: outOfBandRequestProof?.presentationDefinition?.purpose,
                   input_descriptors: [...outOfBandRequestProof.presentationDefinition.input_descriptors]
                 }
               }

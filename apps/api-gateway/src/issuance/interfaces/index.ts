@@ -70,7 +70,8 @@ export interface UploadedFileDetails {
     templateId: string;
     fileKey: string;
     fileName: string;
-    type: SchemaType
+    type: SchemaType;
+    isValidateSchema?: boolean;
 }
 export interface IIssuedCredentialSearchParams {
     pageNumber: number;

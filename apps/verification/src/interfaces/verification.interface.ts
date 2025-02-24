@@ -122,6 +122,7 @@ export interface IInputDescriptors {
 export interface IProofRequestPresentationDefinition {
     id:string;
     name: string;
+    purpose?: string;
     input_descriptors:IInputDescriptors[];
 }
 
@@ -136,6 +137,7 @@ export interface IPresentationExchangeProofFormats {
 export interface ISendPresentationExchangeProofRequestPayload {
     protocolVersion: string;
     comment: string;
+    parentThreadId?: string;
     proofFormats: IPresentationExchangeProofFormats;
     autoAcceptProof: string;
     label?: string;
@@ -207,6 +209,7 @@ export interface IWebhookProofPresentation {
     connectionId: string;
     presentationId: string;
     threadId: string;
+    parentThreadId?: string;
     autoAcceptProof: string;
     updatedAt: string;
     isVerified: boolean;

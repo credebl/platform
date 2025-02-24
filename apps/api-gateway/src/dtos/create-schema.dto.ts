@@ -5,6 +5,7 @@ import { Transform, Type } from 'class-transformer';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 
+
   class W3CAttributeValue {
     @ApiProperty()
     @IsString()
@@ -30,6 +31,14 @@ import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum
     @IsBoolean()
     @IsNotEmpty({ message: 'isRequired property is required' })
     isRequired: boolean;
+
+    @ApiPropertyOptional({
+      description: 'Array of objects with dynamic keys',
+      isArray: true
+    })
+    @IsArray()
+    @IsOptional()
+    nestedAttributes: Record<string, Record<string, string> | string>[];
   }
 class AttributeValue {
 

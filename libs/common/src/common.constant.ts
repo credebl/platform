@@ -89,7 +89,7 @@ export enum CommonConstants {
 
   // POLYGON BASED W3C SCHEMAS
   DEDICATED_CREATE_POLYGON_W3C_SCHEMA = '/polygon/create-schema',
-  SHARED_CREATE_POLYGON_W3C_SCHEMA = '/multi-tenancy/polygon-wc3/schema/',
+  SHARED_CREATE_POLYGON_W3C_SCHEMA = '/multi-tenancy/polygon-w3c/schema/',
 
   // SHARED AGENT
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',

@@ -96,7 +96,7 @@ export class ReceiveInvitationUrlDTO {
   }
 
   export class AcceptOfferDto {
-    @ApiPropertyOptional({ example: 'string', description: 'autoAcceptCredential' })
+    @ApiPropertyOptional({ example: 'always', description: 'autoAcceptCredential', enum: ['always', 'contentApproved', 'never'] })
     @Transform(({ value }) => trim(value))
     @IsString({ message: 'autoAcceptCredential must be a string' })
     autoAcceptCredential: string;
@@ -163,7 +163,7 @@ export class ReceiveInvitationUrlDTO {
     @IsString({ message: 'role must be in string format.' })
     role?: string;
 
-    @ApiPropertyOptional({example: ''})
+    @ApiPropertyOptional({example: '651727dab6dfdbb4f18afff5f368d13b0dca41fd26bd5e1c7953457524d645e6'})
     @IsOptional()
     @IsString({ message: 'private key must be in string format.' })
     @Transform(({ value }) => trim(value))

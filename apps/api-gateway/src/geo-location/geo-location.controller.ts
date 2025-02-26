@@ -17,7 +17,8 @@ export class GeoLocationController {
   ) {}
 
   /**
-   * @returns get all countries
+   * Retrieve a list of all countries
+   * @returns A list of all available countries
    */
   @Get('countries')
   @ApiOperation({ summary: 'Retrieve a list of all countries', description: 'Fetches and returns the details of all available countries.' })
@@ -33,13 +34,13 @@ export class GeoLocationController {
   }
 
   /**
-   * @returns get all states by countryId
+   * Retrieve a list of all states within a specified country
+   * @param countryId The ID of the country
+   * @returns A list of all states associated with the given countryId
    */
-
   @Get('countries/:countryId/states')
-  @ApiOperation({summary: 'Retrieve a list of all states within a specified country', description: 'Fetches and returns the details of all states associated with a given countryId. '
-  })
-  @ApiResponse({status: HttpStatus.OK, description: 'Success', type: ApiResponseDto})
+  @ApiOperation({ summary: 'Retrieve a list of all states within a specified country', description: 'Fetches and returns the details of all states associated with a given countryId.' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getStatesByCountryId(@Param('countryId') countryId: number, @Res() res: Response): Promise<Response> {
     const statesDetails = await this.geolocationService.getStatesByCountryId(countryId);
     const finalResponse: IResponseType = {
@@ -49,11 +50,15 @@ export class GeoLocationController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
   /**
-   * @returns get all cities by countryId and stateId
+   * Retrieve a list of all cities within a specified state and country
+   * @param countryId The ID of the country
+   * @param stateId The ID of the state
+   * @returns A list of all cities associated with the given countryId and stateId
    */
   @Get('countries/:countryId/states/:stateId/cities')
-  @ApiOperation({summary: 'Retrieve a list of all cities within a specified state and country', description: 'Fetches and returns the details of all cities associated with a given countryId and stateId'})
+  @ApiOperation({ summary: 'Retrieve a list of all cities within a specified state and country', description: 'Fetches and returns the details of all cities associated with a given countryId and stateId.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getCitiesByStateAndCountry(@Param('countryId') countryId: number, @Param('stateId') stateId: number, @Res() res: Response): Promise<Response> {
     const citiesDetails = await this.geolocationService.getCitiesByStateAndCountry(countryId, stateId);

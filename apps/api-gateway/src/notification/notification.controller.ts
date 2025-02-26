@@ -1,6 +1,6 @@
 import { CustomExceptionFilter } from '@credebl/common/exception-handler';
 import { Body, Controller, HttpStatus, Logger, Post, Res, UseFilters } from '@nestjs/common';
-import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -29,6 +29,7 @@ export class NotificationController {
      * @returns Stored notification data
      */
     @Post('/register/webhook-endpoint')
+    @ApiExcludeEndpoint()
     @ApiOperation({
         summary: `Register organization webhook endpoint for notification`,
         description: `Register organization webhook endpoint for notification`
@@ -58,6 +59,7 @@ export class NotificationController {
      * @returns Get notification details
      */
     @Post('/')
+    @ApiExcludeEndpoint()
     @ApiOperation({
         summary: `Send notification for holder`,
         description: `Send notification for holder`

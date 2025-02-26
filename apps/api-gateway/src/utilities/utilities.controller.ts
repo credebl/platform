@@ -21,11 +21,16 @@ export class UtilitiesController {
   constructor(
     private readonly utilitiesService: UtilitiesService
   ) { }
-  
 
+  /**
+   * Create a shortening URL
+   * @param shorteningUrlDto The details for the URL to be shortened
+   * @param res The response object
+   * @returns The created shortening URL details
+   */
   @Post('/')
-  @ApiOperation({ summary: 'Create a shorteningurl', description: 'Create a shortening url' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Create Shortening URL', description: 'Create a shortening URL for the provided details.' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Shortening URL created successfully', type: ApiResponseDto })
   async createShorteningUrl(@Body() shorteningUrlDto: UtilitiesDto, @Res() res: Response): Promise<Response> {
     const shorteningUrl = await this.utilitiesService.createShorteningUrl(shorteningUrlDto);
     const finalResponse: IResponse = {
@@ -36,11 +41,18 @@ export class UtilitiesController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  /**
+   * Store an object and return a short URL to it
+   * @param storeObjectDto The object details to be stored
+   * @param persist Whether the object should be persisted
+   * @param res The response object
+   * @returns The created short URL representing the object
+   */
   @Post('/store-object/:persist')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  @ApiOperation({ summary: 'Store an object and return a short url to it', description: 'Create a short url representing the object' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  @ApiOperation({ summary: 'Store Object and Create Short URL', description: 'Store an object and create a short URL representing the object.' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Object stored and short URL created successfully', type: ApiResponseDto })
   async storeObject(@Body() storeObjectDto: StoreObjectDto, @Param('persist') persist: boolean, @Res() res: Response): Promise<Response> {
     const shorteningUrl = await this.utilitiesService.storeObject(persist.valueOf(), storeObjectDto);
     const finalResponse: IResponse = {
@@ -50,6 +62,5 @@ export class UtilitiesController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-
 }
 

@@ -40,9 +40,11 @@ export class AuthzController {
     private readonly commonService: CommonService) { }
 
   /**
-   * @param email
-   * @param verificationcode
-   * @returns User's email verification status 
+   * Verify user’s email address.
+   * 
+   * @param email  The email address of the user.
+   * @param verificationcode The verification code sent to the user's email.
+   * @returns Returns the email verification status. 
    */
   @Get('/verify')
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -59,9 +61,11 @@ export class AuthzController {
   }
 
   /**
-  * @param email
-  * @returns User's verification email sent status
-  */
+ * Sends a verification email to the user.
+ * 
+ * @body UserEmailVerificationDto.
+ * @returns {IResponseType} - The status of the verification email.
+ */
   @Post('/verification-mail')
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @ApiOperation({ summary: 'Send verification email', description: 'Send verification email to new user' })
@@ -75,8 +79,9 @@ export class AuthzController {
   }
 
   /**
-  *
-  * @Body userInfo
+  * Registers a new user on the platform.
+  * 
+  * @Body AddUserDetailsDto
   * @returns User's registration status and user details
   */
   @Post('/signup')
@@ -93,7 +98,9 @@ export class AuthzController {
 
   }
   /**
-  * @Body loginUserDto
+  * Authenticates a user and returns an access token. 
+  * 
+  * @Body LoginUserDto
   * @returns User's access token details
   */
   @Post('/signin')
@@ -120,6 +127,13 @@ export class AuthzController {
     }
   }
 
+
+  /**
+ * Resets user's password.
+ * 
+ * @body ResetPasswordDto
+ * @returns The password reset status.
+ */
   @Post('/reset-password')
   @ApiOperation({
     summary: 'Reset password',
@@ -134,15 +148,19 @@ export class AuthzController {
         message: ResponseMessages.user.success.resetPassword,
         data: userData
       };
-
       return res.status(HttpStatus.OK).json(finalResponse);
-   
   }
 
+/**
+ * Initiates the password reset process by sending a reset link to the user's email.
+ *
+ * @body ForgotPasswordDto
+ * @returns Status message indicating whether the reset link was sent successfully.
+ */
   @Post('/forgot-password')
   @ApiOperation({
     summary: 'Forgot password',
-    description: 'Forgot Password of the user'
+    description: 'Forgot Password'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Res() res: Response): Promise<Response> {
@@ -156,10 +174,17 @@ export class AuthzController {
       return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+/**
+ * Resets the user's password using a verification token.
+ *
+ * @param email The email address of the user.
+ * @body ResetTokenPasswordDto
+ * @returns Status message indicating whether the password reset was successful.
+ */
   @Post('/password-reset/:email')
   @ApiOperation({
-    summary: 'Reset password with token',
-    description: 'Reset Password of the user using token'
+    summary: 'Reset password with verification token',
+    description: 'Reset Password using verification token'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async resetNewPassword(
@@ -173,11 +198,15 @@ export class AuthzController {
         message: ResponseMessages.user.success.resetPassword,
         data: userData
       };
-
       return res.status(HttpStatus.OK).json(finalResponse);
-   
   }
 
+/**
+ * Generates a new access token using a refresh token.
+ *
+ * @body RefreshTokenDto
+ * @returns New access token and its details.
+ */
   @Post('/refresh-token')
   @ApiOperation({
     summary: 'Token from refresh token',

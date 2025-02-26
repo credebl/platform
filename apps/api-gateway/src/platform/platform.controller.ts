@@ -22,6 +22,19 @@ export class PlatformController {
 
     private readonly logger = new Logger('PlatformController');
 
+    /**
+     * Retrieves all schemas available on the platform with optional filters and sorting.
+     *
+     * @param ledgerId The ID of the ledger.
+     * @param pageSize The number of results per page.
+     * @param searchByText A keyword to filter schemas.
+     * @param pageNumber The page number for pagination.
+     * @param sortField Field by which to sort results.
+     * @param sortByValue Sort order (e.g., 'asc' or 'desc'.
+     * @param schemaType Type of schema to filter results.
+     * 
+     * @returns A paginated list of schemas based on the provided criteria.
+     */
     @Get('/platform/schemas')
     @ApiTags('schemas')
     @ApiOperation({
@@ -94,7 +107,11 @@ export class PlatformController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-
+    /**
+     * Retrieves all available ledgers from the platform.
+     *
+     * @returns A list of ledgers and their details.
+     */
     @Get('/platform/ledgers')
     @ApiTags('ledgers')
     @ApiOperation({
@@ -117,6 +134,12 @@ export class PlatformController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
+    /**
+     * Retrieves the network URL associated with a specific ledger namespace.
+     *
+     * @param indyNamespace The namespace of the ledger.
+     * @returns The network URL for the specified ledger.
+     */
     @Get('/platform/network/url/:indyNamespace')
     @ApiTags('ledgers')
     @ApiOperation({

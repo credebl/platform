@@ -33,6 +33,14 @@ export class SchemaController {
   ) { }
   private readonly logger = new Logger('SchemaController');
 
+
+  /**
+   * Retrieves schema information from the ledger using its schema ID.
+   *
+   * @param orgId The organization ID.
+   * @param schemaId The unique schema ID.
+   * @returns The schema details retrieved from the ledger.
+   */
   @Get('/:orgId/schemas/:schemaId')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -59,6 +67,16 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+
+  /**
+   * Retrieves a list of credential definitions associated with a given schema ID.
+   * 
+   * @param orgId The organization ID.
+   * @param schemaId The unique schema ID.
+   * @param sortField The field by which to sort the results (optional).
+   * 
+   * @returns A list of credential definitions filtered by schema ID.
+   */
   @Get('/:orgId/schemas/:schemaId/cred-defs')
   @ApiOperation({
     summary: 'Credential definitions by schema Id',
@@ -96,6 +114,18 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  /**
+   * Retrieves a list of schemas associated with a given organization ID.
+   * 
+   * @param orgId The organization ID.
+   * @param sortField Field by which to sort results.
+   * @param pageSize The number of results per page.
+   * @param searchByText A keyword to filter schemas.
+   * @param pageNumber The page number for pagination.
+   * @param sortBy Sorting order (optional).
+   * 
+   * @returns A list of schemas filtered by organization ID.
+   */
   @Get('/:orgId/schemas')
   @ApiOperation({
     summary: 'Schemas by org id.',

@@ -127,6 +127,12 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+
+  /**
+   * Retrieves the profile details of the currently logged-in user.
+   *
+   * @returns The user profile details.
+   */
   @Get('/profile')
   @ApiOperation({
     summary: 'Fetch login user details',
@@ -146,8 +152,10 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  /**
-   * @returns platform settings
+ /**
+   * Retrieves all platform settings.
+   * 
+   * @returns  The platform settings.
    */
   @Get('/platform-settings')
   @ApiOperation({
@@ -169,6 +177,12 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  /**
+ * Fetch user activities.
+ * 
+ * @param limit - Number of activities to fetch.
+ * @returns A response containing user activity data.
+ */
   @Get('/activity')
   @ApiOperation({
     summary: 'users activity',
@@ -192,10 +206,18 @@ export class UserController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-  /**
-   * @returns Organization invitation data
-   */
 
+
+ /**
+ * Fetch organization invitations.
+ *
+ * @param pageNumber The page number for pagination.
+ * @param pageSize The number of results per page.
+ * @param search Keyword to filter invitations.
+ * @param status Filter invitations by status (e.g., 'pending', 'accepted').
+ *
+ * @returns A paginated list of organization invitations.
+ */
   @Get('/org-invitations')
   @ApiOperation({
     summary: 'organization invitations',
@@ -247,11 +269,12 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  /**
-   *
-   * @param email
-   * @returns User's email exist status
-   */
+ /**
+ * Checks if a user is registered and verifies email existence.
+ *
+ * @param email The email address to check.
+ * @returns Returns user registration and email verification status.
+ */
   @Get('/:email')
   @ApiOperation({ summary: 'Check user registration and email verification status', description: 'Check user registration and email verification status' })
   async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
@@ -267,10 +290,12 @@ export class UserController {
   }
 
   /**
-*
-   * @param acceptRejectInvitation
-   * @returns Organization invitation status
-   */
+ * Accept or reject an organization invitation.
+ *
+ * @param invitationId The ID of the organization invitation.
+ * @body AcceptRejectInvitationDto
+ * @returns The status of the organization invitation response.
+ */
   @Post('/org-invitations/:invitationId')
   @ApiOperation({
     summary: 'accept/reject organization invitation',
@@ -295,9 +320,11 @@ export class UserController {
   }
   
   /**
-   * @Body updateUserProfileDto
-   * @returns User details
-   */
+ * Updates the user profile.
+ *
+ * @body UpdateUserProfileDto
+ * @returns A response indicating the success of the update operation.
+ */
   @Put('/')
   @ApiOperation({
     summary: 'Update user profile',
@@ -321,6 +348,7 @@ export class UserController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
  /**
    * @Body userInfo
    * @returns User's profile update status
@@ -350,10 +378,10 @@ export class UserController {
  }
 
   /**
-   * @Body platformSettings
-   * @returns platform settings updated status
-   */
-  
+ * Updates platform settings.
+ * 
+ * @returns Status of the update operation.
+ */
   @Put('/platform-settings')
   @ApiOperation({
     summary: 'Update platform settings',

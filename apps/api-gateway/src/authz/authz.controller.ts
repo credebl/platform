@@ -64,7 +64,7 @@ export class AuthzController {
  * Sends a verification email to the user.
  * 
  * @body UserEmailVerificationDto.
- * @returns {IResponseType} - The status of the verification email.
+ * @returns The status of the verification email.
  */
   @Post('/verification-mail')
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })

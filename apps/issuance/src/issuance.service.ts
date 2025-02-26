@@ -901,7 +901,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
 
     const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
     const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
-    const deeplLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
+    const deepLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
 
     if (!invitationUrl) {
       errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
@@ -918,7 +918,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         this.emailData.emailTo = iterator?.emailId ?? emailId;
         const platform = platformName || process.env.PLATFORM_NAME;
         this.emailData.emailSubject = `${platform} Platform: Issuance of Your Credential`;
-        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deeplLinkURL, platformName, organizationLogoUrl);
+        this.emailData.emailHtml = this.outOfBandIssuance.outOfBandIssuance(emailId, organizationDetails.name, deepLinkURL, platformName, organizationLogoUrl);
         this.emailData.emailAttachments = [
           {
             filename: 'qrcode.png',

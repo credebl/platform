@@ -104,11 +104,17 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+    /**
+   * Get public profile details of a user by username.
+   * 
+   * @param username The username of the user.
+   * @returns Public profile information.
+   */
   @Get('public-profiles/:username')
   @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Fetch user details',
-    description: 'Fetch user details'
+    description: 'Retrieve publicly available details of a user using their username.'
   })
   @ApiParam({
     name: 'username',
@@ -186,7 +192,7 @@ export class UserController {
   @Get('/activity')
   @ApiOperation({
     summary: 'users activity',
-    description: 'Fetch users activity'
+    description: 'Fetch a list of recent activities performed by the user.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -221,7 +227,7 @@ export class UserController {
   @Get('/org-invitations')
   @ApiOperation({
     summary: 'organization invitations',
-    description: 'Fetch organization invitations'
+    description: 'Retrieve a list of invitations sent to the user to join organizations.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -276,7 +282,7 @@ export class UserController {
  * @returns Returns user registration and email verification status.
  */
   @Get('/:email')
-  @ApiOperation({ summary: 'Check user registration and email verification status', description: 'Check user registration and email verification status' })
+  @ApiOperation({ summary: 'Check user registration and email verification status', description: 'Check if a user is already registered and if their email already exists.' })
   async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
     const userDetails = await this.userService.checkUserExist(emailParam.email);
 
@@ -299,7 +305,7 @@ export class UserController {
   @Post('/org-invitations/:invitationId')
   @ApiOperation({
     summary: 'accept/reject organization invitation',
-    description: 'Accept or Reject organization invitations'
+    description: 'Accept or reject an invitation to join an organization.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -328,7 +334,7 @@ export class UserController {
   @Put('/')
   @ApiOperation({
     summary: 'Update user profile',
-    description: 'Update user profile'
+    description: 'Modify the user profile details such as name, email, or other information.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
@@ -356,7 +362,7 @@ export class UserController {
   
 
  @Put('/password/:email')
- @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
+ @ApiOperation({ summary: 'Store user password details', description: 'Securely store and update the user’s password details.' })
  @ApiExcludeEndpoint()
  @ApiBearerAuth()
  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
@@ -385,7 +391,7 @@ export class UserController {
   @Put('/platform-settings')
   @ApiOperation({
     summary: 'Update platform settings',
-    description: 'Update platform settings'
+    description: 'Modify platform settings. Only accessible by platform admins.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)

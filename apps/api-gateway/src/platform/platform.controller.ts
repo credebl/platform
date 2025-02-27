@@ -39,7 +39,7 @@ export class PlatformController {
     @ApiTags('schemas')
     @ApiOperation({
         summary: 'Get all schemas from platform.',
-        description: 'Get all schemas from platform.'
+        description: 'Retrieves all schemas available on the platform'
     })
     @ApiQuery({
         name: 'sortField',
@@ -78,12 +78,22 @@ export class PlatformController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-
+/**
+     * Retrieves all credential definitions available on the platform.
+     * @param pageNumber The page number for pagination.
+     * @param search A keyword to filter credential-definitions.
+     * @param pageSize The number of results per page.
+     * @param ledgerId The ID of the ledger.
+     * @param sortField Field by which to sort results.
+     * @param sortBy Sort order (e.g., 'asc' or 'desc'.
+     * 
+     * @returns A list of credential definitions and their details.
+     */
     @Get('/platform/cred-defs')
     @ApiTags('credential-definitions')
     @ApiOperation({
         summary: 'Get all credential-definitions from platform.',
-        description: 'Get all credential-definitions list from platform.'
+        description: 'Retrieves all credential definitions available on the platform'
     })
     @ApiQuery({
         name: 'sortField',
@@ -116,7 +126,7 @@ export class PlatformController {
     @ApiTags('ledgers')
     @ApiOperation({
         summary: 'Get all ledgers from platform.',
-        description: 'Get all ledgers from platform.'
+        description: 'Retrieves a list of all available ledgers on platform.'
     })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
@@ -144,7 +154,7 @@ export class PlatformController {
     @ApiTags('ledgers')
     @ApiOperation({
         summary: 'Get network url from platform.',
-        description: 'Get network url from platform.'
+        description: 'Retrieves the network URL for a specified ledger namespace.'
     })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))

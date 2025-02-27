@@ -48,7 +48,7 @@ export class AuthzController {
    */
   @Get('/verify')
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Verify user’s email', description: 'Verify user’s email' })
+  @ApiOperation({ summary: 'Verify user’s email', description: 'Checks if the provided verification code is valid for the given email.' })
   async verifyEmail(@Query() query: EmailVerificationDto, @Res() res: Response): Promise<Response> {
     await this.authzService.verifyEmail(query);
     const finalResponse: IResponseType = {
@@ -57,7 +57,6 @@ export class AuthzController {
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
-
   }
 
   /**
@@ -86,7 +85,7 @@ export class AuthzController {
   */
   @Post('/signup')
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform' })
+  @ApiOperation({ summary: 'Register new user to platform', description: 'Register new user to platform with the provided details.' })
   async addUserDetails(@Body() userInfo: AddUserDetailsDto, @Res() res: Response): Promise<Response> {
     const userData = await this.authzService.addUserDetails(userInfo);
       const finalResponse = {
@@ -137,7 +136,7 @@ export class AuthzController {
   @Post('/reset-password')
   @ApiOperation({
     summary: 'Reset password',
-    description: 'Reset Password of the user'
+    description: 'Allows users to reset their password.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto, @Res() res: Response): Promise<Response> {
@@ -160,7 +159,7 @@ export class AuthzController {
   @Post('/forgot-password')
   @ApiOperation({
     summary: 'Forgot password',
-    description: 'Forgot Password'
+    description: 'Sends a password reset link to the user’s email.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Res() res: Response): Promise<Response> {
@@ -184,7 +183,7 @@ export class AuthzController {
   @Post('/password-reset/:email')
   @ApiOperation({
     summary: 'Reset password with verification token',
-    description: 'Reset Password using verification token'
+    description: 'Resets a user’s password using a verification token.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async resetNewPassword(
@@ -210,7 +209,7 @@ export class AuthzController {
   @Post('/refresh-token')
   @ApiOperation({
     summary: 'Token from refresh token',
-    description: 'Get a new token from a refresh token'
+    description: 'Generates a new access token using a refresh token.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async refreshToken(

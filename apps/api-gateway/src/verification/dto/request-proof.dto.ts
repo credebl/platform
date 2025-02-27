@@ -440,11 +440,13 @@ export class SendProofRequestPayload {
     @IsString({ message: 'label must be in string' })
     label: string;
 
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsUUID()
-    @IsNotEmpty({ message: 'please provide valid parentThreadId' })
-    parentThreadId: string;
+    // TODO: [Credo-ts] Issue with parentThreadId in creating an OOB proof request.  
+    // This causes failures in OOB connection establishment.            
+    // @ApiPropertyOptional()
+    // @IsOptional()
+    // @IsUUID()
+    // @IsNotEmpty({ message: 'please provide valid parentThreadId' })
+    // parentThreadId: string;
 
     @ApiProperty({ example: true })
     @IsBoolean()

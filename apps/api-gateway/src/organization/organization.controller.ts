@@ -41,12 +41,12 @@ export class OrganizationController {
     private readonly imageServiceService: ImageServiceService,
     private readonly commonService: CommonService
   ) { }
-
-/**
- * @param orgId 
+  
+  /**
+ * Get organization profile details
+ * @param orgId The ID of the organization
  * @returns Organization logo image
  */
-
   @Get('/profile/:orgId')
   @ApiOperation({ summary: 'Organization Profile', description: 'Get organization profile details' })
   @ApiExcludeEndpoint()
@@ -63,11 +63,12 @@ export class OrganizationController {
   }
 
 /**
+ * Get all public profile organizations
  * @returns List of public organizations
  */
   @Get('/public-profile')
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Get all public profile organizations', description: 'Get all public profile organizations.' })
+  @ApiOperation({ summary: 'Get all public profile organizations', description: 'Retrieve a list of all public profile organizations. Supports pagination and search.' })
   @ApiQuery({
     name: 'pageNumber',
     type: Number,
@@ -95,14 +96,16 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-/**
- * @returns get organization roles
- */
 
+  /**
+ * Fetch org-roles details
+ * @param orgId The ID of the organization
+ * @returns Organization roles details
+ */
   @Get('/:orgId/roles')
   @ApiOperation({
     summary: 'Fetch org-roles details',
-    description: 'Fetch org-roles details'
+    description: 'Retrieve the roles details for a specific organization.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
@@ -121,13 +124,14 @@ export class OrganizationController {
 
   }
 /**
- * @param orgSlug 
- * @returns organization details
+ * Fetch organization details
+ * @param orgSlug The slug of the organization
+ * @returns Organization details
  */
   @Get('public-profiles/:orgSlug')
   @ApiOperation({
     summary: 'Fetch organization details',
-    description: 'Fetch organization details'
+    description: 'Retrieve the details of a specific organization using its slug.'
   })
 
   @ApiParam({
@@ -154,11 +158,11 @@ export class OrganizationController {
 
   }
 
-/**
- * @param orgId 
+  /**
+ * Get organization dashboard details
+ * @param orgId The ID of the organization
  * @returns Organization dashboard details
  */
-
   @Get('/dashboard/:orgId')
   @ApiOperation({ summary: 'Get dashboard details', description: 'Get organization dashboard details' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -177,9 +181,13 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
-
+  /**
+ * Get organization references count
+ * @param orgId The ID of the organization
+ * @returns Organization references count
+ */
   @Get('/activity-count/:orgId')
-  @ApiOperation({ summary: 'Get organization references count', description: 'Get organization references count by org Id' })
+  @ApiOperation({ summary: 'Get organization references count', description: 'Retrieve the count of references for a specific organization.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
@@ -196,9 +204,13 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
-
+/**
+ * Get all invitations
+ * @param orgId The ID of the organization
+ * @returns List of all invitations
+ */
   @Get('/:orgId/invitations')
-  @ApiOperation({ summary: 'Get all invitations', description: 'Get all invitations' })
+  @ApiOperation({ summary: 'Get all invitations', description: 'Retrieve a list of all invitations for a specific organization. Supports pagination and search.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
@@ -230,9 +242,12 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
-
+  /**
+   * Get all organizations
+   * @returns List of all organizations
+   */
   @Get('/')
-  @ApiOperation({ summary: 'Get all organizations', description: 'Get all organizations' })
+  @ApiOperation({ summary: 'Get all organizations', description: 'Retrieve a list of all organizations.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -250,10 +265,12 @@ export class OrganizationController {
   }
 
   /**
+   * Get an organization by ID
+   * @param orgId The ID of the organization
    * @returns Organization details
    */
   @Get('/:orgId')
-  @ApiOperation({ summary: 'Get an organization', description: 'Get an organization by id' })
+  @ApiOperation({ summary: 'Get an organization', description: 'Retrieve the details of a specific organization by its ID.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
@@ -270,7 +287,11 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
 
   }
-
+  /**
+ * Fetch client credentials for an organization
+ * @param orgId The ID of the organization
+ * @returns Client credentials
+ */
   @Get('/:orgId/client_credentials')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiOperation({ summary: 'Fetch client credentials for an organization', description: 'Fetch client id and secret for an organization' })
@@ -288,15 +309,17 @@ export class OrganizationController {
   }
 
   /**
-  * @returns Users list of organization
-  */
+ * Get organization users list
+ * @param orgId The ID of the organization
+ * @returns List of users in the organization
+ */
 
   @Get('/:orgId/users')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Get organization users list', description: 'Get organization users list.' })
+  @ApiOperation({ summary: 'Get organization users list', description: 'Retrieve a list of users in a specific organization. Supports pagination and search.' })
   @ApiQuery({
     name: 'pageNumber',
     type: Number,
@@ -324,15 +347,16 @@ export class OrganizationController {
   }
 
    /**
-  * @returns DID list of organization
-  */
-
+ * Fetch organization DIDs
+ * @param orgId The ID of the organization
+ * @returns List of DIDs in the organization
+ */
    @Get('/:orgId/dids')
    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.MEMBER)
    @ApiBearerAuth()
    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-   @ApiOperation({ summary: 'Fetch organization DIDs', description: 'Get all DIDs from organization' })
+   @ApiOperation({ summary: 'Fetch organization DIDs', description: 'Retrieve a list of all DIDs in a specific organization.' })
   
    async getAllDidByOrgId(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
      const users = await this.organizationService.getDidList(orgId);
@@ -345,12 +369,13 @@ export class OrganizationController {
      return res.status(HttpStatus.OK).json(finalResponse);
    }
 
-/**
- * @returns organization details
- */
-
+    /**
+   * Create a new organization
+   * @param createOrgDto The details of the organization to be created
+   * @returns Created organization details
+   */
   @Post('/')
-  @ApiOperation({ summary: 'Create a new Organization', description: 'Create an organization' })
+  @ApiOperation({ summary: 'Create a new Organization', description: 'Create a new organization with the provided details.' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -370,12 +395,14 @@ export class OrganizationController {
 
 
   /**
- * @returns success message
+ * Set primary DID for an organization
+ * @param orgId The ID of the organization
+ * @param primaryDidPayload The primary DID details
+ * @returns Success message
  */
-
   @Put('/:orgId/primary-did')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
-  @ApiOperation({ summary: 'Set primary DID', description: 'Set primary DID for an organization' })
+  @ApiOperation({ summary: 'Set primary DID', description: 'Set the primary DID for a specific organization.' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
@@ -396,7 +423,7 @@ export class OrganizationController {
    */
   @Post('/:orgId/client_credentials')
   @Roles(OrgRoles.OWNER)
-  @ApiOperation({ summary: 'Create credentials for an organization', description: 'Create client id and secret for an organization' })
+  @ApiOperation({ summary: 'Create credentials for an organization', description: 'Create client ID and secret for a specific organization.' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @ApiBearerAuth()
@@ -413,9 +440,14 @@ export class OrganizationController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-
+   /**
+ * Authenticate client for credentials
+ * @param clientId The client ID
+ * @param clientCredentialsDto The client credentials details
+ * @returns Authenticated client credentials
+ */
   @Post('/:clientId/token')
-  @ApiOperation({ summary: 'Authenticate client for credentials', description: 'Authenticate client for credentials' })
+  @ApiOperation({ summary: 'Authenticate client for credentials', description: 'Authenticate client using the provided credentials.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async clientLoginCredentials(
     @Param('clientId') clientId: string,
@@ -435,11 +467,14 @@ export class OrganizationController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
+    /**
+   * Register client and map users
+   * @returns Success message
+   */
   @Post('/register-org-map-users')
   @ApiOperation({
     summary: 'Register client and map users',
-    description: 'Register client and map users'
+    description: 'Register a new client and map users to the client.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)
@@ -457,11 +492,16 @@ export class OrganizationController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
-
+  /**
+ * Create organization invitation
+ * @param bulkInvitationDto The details of the invitation
+ * @param orgId The ID of the organization
+ * @returns Success message
+ */
   @Post('/:orgId/invitations')
   @ApiOperation({
     summary: 'Create organization invitation',
-    description: 'Create organization invitation'
+    description: 'Create an invitation for a specific organization.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
@@ -480,15 +520,19 @@ export class OrganizationController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
 
   }
-/**
- * @returns organization details
+   /**
+ * Update user roles
+ * @param updateUserDto The details of the user roles to be updated
+ * @param orgId The ID of the organization
+ * @param userId The ID of the user
+ * @returns Success message
  */
   @Put('/:orgId/user-roles/:userId')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Update user roles', description: 'update user roles' })
+  @ApiOperation({ summary: 'Update user roles', description: 'Update the roles of a user in a specific organization.' })
   async updateUserRoles(@Body() updateUserDto: UpdateUserRolesDto, @Param('orgId') orgId: string, @Param('userId') userId: string, @Res() res: Response): Promise<Response> {
 
     updateUserDto.orgId = orgId;  
@@ -510,11 +554,14 @@ export class OrganizationController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-/**
- * @returns organization details
+  /**
+ * Update an organization
+ * @param updateOrgDto The details of the organization to be updated
+ * @param orgId The ID of the organization
+ * @returns Success message
  */
   @Put('/:orgId')
-  @ApiOperation({ summary: 'Update Organization', description: 'Update an organization' })
+  @ApiOperation({ summary: 'Update Organization', description: 'Update the details of the organization.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -535,8 +582,10 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  /**
-   * @returns Organization
+    /**
+   * Delete an organization
+   * @param orgId The ID of the organization
+   * @returns Success message
    */
   @Delete('/:orgId')
   @ApiOperation({ summary: 'Delete Organization', description: 'Delete an organization' })
@@ -559,8 +608,13 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  /**
+ * Delete organization client credentials
+ * @param orgId The ID of the organization
+ * @returns Success message
+ */
   @Delete('/:orgId/client_credentials')
-  @ApiOperation({ summary: 'Delete Organization Client Credentials', description: 'Delete Organization Client Credentials' })
+  @ApiOperation({ summary: 'Delete Client Credentials', description: 'Delete Organization Client Credentials' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @ApiExcludeEndpoint()
@@ -576,8 +630,14 @@ export class OrganizationController {
     return res.status(HttpStatus.ACCEPTED).json(finalResponse);
   }
 
+  /**
+ * Delete organization invitation
+ * @param orgId The ID of the organization
+ * @param invitationId The ID of the invitation
+ * @returns Success message
+ */
   @Delete('/:orgId/invitations/:invitationId')
-  @ApiOperation({ summary: 'Delete organization invitation', description: 'Delete organization invitation' })
+  @ApiOperation({ summary: 'Delete invitation', description: 'Delete organization invitation' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)

@@ -4,7 +4,6 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { BadRequestErrorDto } from '../dtos/bad-request-error.dto';
 import { GenerateAuthenticationDto, GenerateRegistrationDto, UpdateFidoUserDetailsDto, VerifyRegistrationDto, VerifyAuthenticationDto } from '../dtos/fido-user.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { InternalServerErrorDto } from '../dtos/internal-server-error-res.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { FidoService } from './fido.service';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -25,22 +24,16 @@ export class FidoController {
     constructor(private readonly fidoService: FidoService) { }
 
     /**
-     *
-     * @param userName
-     * @param res
-     * @returns User get success
+     * Fetch fido user details
+     * @param email The email of the user
+     * @param res The response object
+     * @returns User details
      */
     @Get('/passkey/:email')
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
     @ApiBearerAuth()
-    @ApiResponse({
-        status: 500,
-        description: 'Internal server error',
-        type: InternalServerErrorDto
-    })
-
-    @ApiOperation({ summary: 'Fetch fido user details' })
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    @ApiOperation({ summary: 'Fetch fido user details', description: 'Retrieve the details of a FIDO user by their email address.' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
     @ApiBadRequestResponse({ status: 400, description: 'Bad Request', type: BadRequestErrorDto })
@@ -53,22 +46,22 @@ export class FidoController {
                 data: fidoUserDetails.response
             };
             return res.status(HttpStatus.OK).json(finalResponse);
-
         } catch (error) {
             this.logger.error(`Error::${error}`);
             throw error;
         }
     }
-    
+
     /**
-     *
-     * @param GenerateRegistrationDto
-     * @param res
-     * @returns Generate registration response
+     * Generate registration option
+     * @param GenerateRegistrationDto The registration details
+     * @param email The email of the user
+     * @param res The response object
+     * @returns Registration options
      */
     @Post('/passkey/generate-registration/:email')
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-    @ApiOperation({ summary: 'Generate registration option' })
+    @ApiExcludeEndpoint()
+    @ApiOperation({ summary: 'Generate registration option', description: 'Generate registration options for a FIDO user.' })
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     async generateRegistrationOption(@Body() body: GenerateRegistrationDto, @Param('email') email: string, @Res() res: Response): Promise<Response> {
         try {
@@ -85,16 +78,17 @@ export class FidoController {
         }
     }
 
-
- /**
-   *
-   * @param VerifyRegistrationDto
-   * @param res
-   * @returns User create success
-   */
+    /**
+     * Verify registration
+     * @param verifyRegistrationDto The registration verification details
+     * @param email The email of the user
+     * @param res The response object
+     * @returns Verification result
+     */
     @Post('/passkey/verify-registration/:email')
+    @ApiExcludeEndpoint()
+    @ApiOperation({ summary: 'Verify registration', description: 'Verify the registration of a FIDO user.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-    @ApiOperation({ summary: 'Verify registration' })
     async verifyRegistration(@Request() req, @Body() verifyRegistrationDto: VerifyRegistrationDto, @Param('email') email: string, @Res() res: Response): Promise<Response> {
         const verifyRegistration = await this.fidoService.verifyRegistration(verifyRegistrationDto, req.params.email.toLowerCase());
         const finalResponse: IResponseType = {
@@ -106,16 +100,16 @@ export class FidoController {
     }
 
     /**
-     *
-     * @param GenerateAuthenticationDto
-     * @param res
-     * @returns Generate authentication object
+     * Generate authentication option
+     * @param GenerateAuthenticationDto The authentication details
+     * @param res The response object
+     * @returns Authentication options
      */
     @Post('/passkey/authentication-options')
-    @ApiOperation({ summary: 'Generate authentication option' })
+    @ApiExcludeEndpoint()
+    @ApiOperation({ summary: 'Generate authentication option', description: 'Generate authentication options for a FIDO user.' })
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     async generateAuthenticationOption(@Body() body: GenerateAuthenticationDto, @Request() req, @Res() res: Response): Promise<Response> {
-
         const generateAuthentication = await this.fidoService.generateAuthenticationOption(body);
         const finalResponse: IResponseType = {
             statusCode: HttpStatus.OK,
@@ -126,13 +120,16 @@ export class FidoController {
     }
 
     /**
-   *
-   * @param verifyAuthenticationDto
-   * @param res
-   * @returns Verify authentication object
-   */
+     * Verify authentication
+     * @param verifyAuthenticationDto The authentication verification details
+     * @param email The email of the user
+     * @param res The response object
+     * @returns Verification result
+     */
     @Post('/passkey/verify-authentication/:email')
-    @ApiOperation({ summary: 'Verify authentication' })
+    @ApiExcludeEndpoint()
+    @ApiOperation({ summary: 'Verify authentication', description: 'Verify the authentication of a FIDO user.' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async verifyAuthentication(@Request() req, @Body() verifyAuthenticationDto: VerifyAuthenticationDto, @Param('email') email: string, @Res() res: Response): Promise<Response> {
         const verifyAuthentication = await this.fidoService.verifyAuthentication(verifyAuthenticationDto, req.params.email.toLowerCase());
         const finalResponse: IResponseType = {
@@ -143,16 +140,17 @@ export class FidoController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-/**
- *
- * @param updateFidoUserDetailsDto
- * @param res
- * @returns User update success
- */
+    /**
+     * Update fido user details
+     * @param updateFidoUserDetailsDto The user details to be updated
+     * @param credentialId The credential ID of the user
+     * @param res The response object
+     * @returns Updated user details
+     */
     @Put('/passkey/user-details/:credentialId')
     @ApiExcludeEndpoint()
+    @ApiOperation({ summary: 'Update fido user details', description: 'Update the details of a FIDO user.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-    @ApiOperation({ summary: 'Update fido user details' })
     async updateFidoUser(@Request() req, @Body() updateFidoUserDetailsDto: UpdateFidoUserDetailsDto, @Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
         const verifyRegistration = await this.fidoService.updateFidoUser(updateFidoUserDetailsDto, decodeURIComponent(credentialId));
         const finalResponse: IResponseType = {
@@ -162,21 +160,20 @@ export class FidoController {
         };
         return res.status(HttpStatus.OK).json(finalResponse);
     }
-    
 
+    /**
+     * Update fido user device name
+     * @param credentialId The credential ID of the user
+     * @param deviceName The new device name
+     * @param res The response object
+     * @returns Updated device name
+     */
     @Put('/passkey/:credentialId')
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
     @ApiBearerAuth()
-    @ApiResponse({
-        status: 500,
-        description: 'Internal server error',
-        type: InternalServerErrorDto
-    })
-    @ApiQuery(
-        { name: 'deviceName', required: true }
-    )
-    @ApiOperation({ summary: 'Update fido user device name' })
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    @ApiOperation({ summary: 'Update fido user device name', description: 'Update the device name of a FIDO user.' })
+    @ApiQuery({ name: 'deviceName', required: true })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async updateFidoUserDeviceName(@Param('credentialId') credentialId: string, @Query('deviceName') deviceName: string, @Res() res: Response): Promise<Response> {
         try {
             const updateDeviceName = await this.fidoService.updateFidoUserDeviceName(credentialId, deviceName);
@@ -192,19 +189,17 @@ export class FidoController {
         }
     }
 
+    /**
+     * Delete fido user device
+     * @param credentialId The credential ID of the user
+     * @param res The response object
+     * @returns Success message
+     */
     @Delete('/passkey/:credentialId')
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
     @ApiBearerAuth()
-    @ApiResponse({
-        status: 500,
-        description: 'Internal server error',
-        type: InternalServerErrorDto
-    })
-    @ApiQuery(
-        { name: 'credentialId', required: true }
-    )
-    @ApiOperation({ summary: 'Delete fido user device' })
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+    @ApiOperation({ summary: 'Delete fido user device', description: 'Delete a FIDO user device by its credential ID.' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async deleteFidoUserDevice(@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
         try {
             const deleteFidoUser = await this.fidoService.deleteFidoUserDevice(credentialId);
@@ -214,11 +209,9 @@ export class FidoController {
                 data: deleteFidoUser.response
             };
             return res.status(HttpStatus.OK).json(finalResponse);
-
         } catch (error) {
             this.logger.error(`Error::${error}`);
             throw error;
         }
     }
-
 }

@@ -86,7 +86,11 @@ export class IssuanceController {
   private readonly logger = new Logger('IssuanceController');
 
   /**
-   * @param orgId
+   * Get all issued credentials for a specific organization
+   * @param orgId The ID of the organization
+   * @param getAllIssuedCredentials The query parameters for pagination and search
+   * @param user The user making the request
+   * @param res The response object
    * @returns List of issued credentials for a specific organization
    */
 
@@ -95,7 +99,7 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: `Get all issued credentials for a specific organization`,
-    description: `Get all issued credentials for a specific organization`
+    description: `Retrieve all issued credentials for a specific organization. Supports pagination and search.`
   })
   @ApiQuery({
     name: 'pageNumber',
@@ -146,8 +150,11 @@ export class IssuanceController {
   }
 
   /**
-   * @param credentialRecordId
-   * @param orgId
+   * Fetch credentials by credentialRecordId
+   * @param credentialRecordId The ID of the credential record
+   * @param orgId The ID of the organization
+   * @param user The user making the request
+   * @param res The response object
    * @returns Details of specific credential
    */
 
@@ -155,7 +162,7 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: `Fetch credentials by credentialRecordId`,
-    description: `Fetch credentials credentialRecordId`
+    description: `Retrieve the details of a specific credential by its credentialRecordId.`
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -179,11 +186,18 @@ export class IssuanceController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
+  
+  /**
+   * Fetch all templates for bulk operation
+   * @param orgId The ID of the organization
+   * @param schemaType The type of schema
+   * @param res The response object
+   * @returns List of templates for bulk operation
+   */
   @Get('/orgs/:orgId/credentials/bulk/template')
   @ApiOperation({
-    summary: 'Fetch all templates for bulk opeartion',
-    description: 'Retrieve all templates for bulk operation'
+    summary: 'Fetch all templates for bulk operation',
+    description: 'Retrieve all templates for a specific organization for bulk operation.'
   })
   @ApiQuery({
     name:'schemaType',
@@ -207,6 +221,13 @@ export class IssuanceController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
+/**
+   * Download CSV template for bulk issuance
+   * @param orgId The ID of the organization
+   * @param templateDetails The details of the template
+   * @param res The response object
+   * @returns The CSV template for bulk issuance
+   */
 @Post('/orgs/:orgId/credentials/bulk/template')
 @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
 @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -218,7 +239,7 @@ export class IssuanceController {
 @Header('Content-Type', 'application/csv')
 @ApiOperation({
   summary: 'Download csv template for bulk-issuance',
-  description: 'Download csv template for bulk-issuance'
+  description: 'Download csv template for a specific organization bulk-issuance using template details.'
 })
 async downloadBulkIssuanceCSVTemplate(
   @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
@@ -237,14 +258,22 @@ async downloadBulkIssuanceCSVTemplate(
     return res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json(error.error);
   }
 }
-  
+   /**
+   * Upload file for bulk issuance
+   * @param orgId The ID of the organization
+   * @param query The query parameters
+   * @param file The uploaded file
+   * @param fileDetails The details of the file
+   * @param res The response object
+   * @returns The details of the uploaded file
+   */
   @Post('/orgs/:orgId/bulk/upload')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Upload file for bulk issuance',
-    description: 'Upload file for bulk issuance.'
+    description: 'Upload a filled CSV file for bulk issuance.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
@@ -321,6 +350,14 @@ async downloadBulkIssuanceCSVTemplate(
       }
 
   }
+  /**
+   * Preview uploaded file details
+   * @param orgId The ID of the organization
+   * @param query The query parameters
+   * @param previewFileDetails The details of the file to preview
+   * @param res The response object
+   * @returns The preview of the uploaded file details
+   */
 
   @Get('/orgs/:orgId/:requestId/preview')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER, OrgRoles.ISSUER)
@@ -338,8 +375,8 @@ async downloadBulkIssuanceCSVTemplate(
     type: ForbiddenErrorDto
   })
   @ApiOperation({
-    summary: 'Preview uploded file details',
-    description: 'Preview uploded file details'
+    summary: 'Preview uploaded file details',
+    description: 'Preview uploaded CSV file details for bulk issuance.'
   })
   @ApiQuery({
     name: 'pageNumber',
@@ -373,6 +410,18 @@ async downloadBulkIssuanceCSVTemplate(
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+ /**
+   * Bulk issue credentials
+   * @param orgId The ID of the organization
+   * @param requestId The ID of the request
+   * @param clientDetails The details of the client
+   * @param query The query parameters
+   * @param file The uploaded file
+   * @param fileDetails The details of the file
+   * @param user The user making the request
+   * @param res The response object
+   * @returns The details of the bulk issued credentials
+   */
   @Post('/orgs/:orgId/:requestId/bulk')
   @Roles(OrgRoles.ADMIN, OrgRoles.OWNER,  OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -389,7 +438,7 @@ async downloadBulkIssuanceCSVTemplate(
   })
   @ApiOperation({
     summary: 'bulk issue credential',
-    description: 'bulk issue credential'
+    description: 'Start bulk-issuance process for a specific requestId.'
   })
   @ApiQuery({
     name: 'isValidateSchema',
@@ -455,6 +504,13 @@ async downloadBulkIssuanceCSVTemplate(
       return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  /**
+ * Get all file list uploaded for bulk operation
+ * @param orgId The ID of the organization
+ * @param fileParameter The query parameters for file details
+ * @param res The response object
+ * @returns The list of all files uploaded for bulk operation
+ */
   @Get('/orgs/:orgId/bulk/files')
   @Roles(OrgRoles.OWNER,  OrgRoles.ISSUER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -472,7 +528,7 @@ async downloadBulkIssuanceCSVTemplate(
   })
   @ApiOperation({
     summary: 'Get all file list uploaded for bulk operation',
-    description: 'Get all file list uploaded for bulk operation'
+    description: 'Retrieve the list of all files uploaded for bulk operation for a specific organization.'
   })
   async issuedFileDetails(
     @Param('orgId') orgId: string,
@@ -487,6 +543,15 @@ async downloadBulkIssuanceCSVTemplate(
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
+  /**
+ * Get uploaded file details by file ID
+ * @param orgId The ID of the organization
+ * @param query The query parameters for file details
+ * @param fileParameter The query parameters for file details
+ * @param res The response object
+ * @returns The details of the uploaded file by file ID
+ */
 
   @Get('/orgs/:orgId/:fileId/bulk/file-data')
   @Roles(OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.OWNER)
@@ -504,8 +569,8 @@ async downloadBulkIssuanceCSVTemplate(
     type: ForbiddenErrorDto
   })
   @ApiOperation({
-    summary: 'Get uploaded file details by file id',
-    description: 'Get uploaded file details by file id'
+    summary: 'Get uploaded file details by file ID',
+    description: 'Retrieve the details of an uploaded file by its file ID for a specific organization.'
   })
   async getFileDetailsByFileId(
     @Param('orgId') orgId: string,
@@ -522,6 +587,14 @@ async downloadBulkIssuanceCSVTemplate(
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
+  /**
+ * Get all file details and file data by file ID
+ * @param orgId The ID of the organization
+ * @param query The query parameters for file details
+ * @param res The response object
+ * @returns The details and data of the uploaded file by file ID
+ */
   @Get('/orgs/:orgId/:fileId/bulk/file-details-and-file-data')
   @Roles(OrgRoles.ADMIN, OrgRoles.VERIFIER, OrgRoles.ISSUER, OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -538,8 +611,8 @@ async downloadBulkIssuanceCSVTemplate(
     type: ForbiddenErrorDto
   })
   @ApiOperation({
-    summary: 'Get all file details and file data by file id',
-    description: 'Get all file details and file data by file id'
+    summary: 'Get all file details and file data by file ID',
+    description: 'Retrieve all details and data of an uploaded file by its file ID for a specific organization.'
   })
   async getFileDetailsAndFileDataByFileId(
     @Param('orgId') orgId: string,
@@ -555,7 +628,15 @@ async downloadBulkIssuanceCSVTemplate(
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
+/**
+ * Retry bulk issue credential
+ * @param fileId The ID of the file
+ * @param orgId The ID of the organization
+ * @param isValidateSchema Whether to validate the schema
+ * @param res The response object
+ * @param clientDetails The details of the client
+ * @returns The details of the retried bulk issued credentials
+ */
   @Post('/orgs/:orgId/:fileId/retry/bulk')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -573,7 +654,7 @@ async downloadBulkIssuanceCSVTemplate(
   })
   @ApiOperation({
     summary: 'Retry bulk issue credential',
-    description: 'Retry bulk issue credential'
+    description: 'Retry the bulk issuance of credentials for a specific file ID and organization.'
   })
   @ApiQuery({
     name: 'isValidateSchema',
@@ -601,13 +682,15 @@ async downloadBulkIssuanceCSVTemplate(
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
- /**
-  * @param user 
-  * @param orgId 
-  * @param issueCredentialDto 
-  * @param res 
-  * @returns Issuer creates a credential offer and sends it to the holder
-  */
+/**
+ * Issuer create a credential offer
+ * @param user The user making the request
+ * @param orgId The ID of the organization
+ * @param issueCredentialDto The details of the credential to be issued
+ * @param res The response object
+ * @param credentialType The type of credential to be issued
+ * @returns The details of the created credential offer
+ */
  @Post('/orgs/:orgId/credentials/offer')
  @ApiBearerAuth()
  @ApiOperation({
@@ -664,13 +747,14 @@ async downloadBulkIssuanceCSVTemplate(
    return res.status(statusCode).json(finalResponse);
  }
   /**
-   * 
-   * @param user 
-   * @param outOfBandCredentialDto 
-   * @param orgId 
-   * @param res 
-   * @returns Issuer creates a out-of-band credential offers and sends them to holders via emails
-   */
+ * Creates a out-of-band credential offer and sends them via emails
+ * @param user The user making the request
+ * @param outOfBandCredentialDto The details of the out-of-band credential to be issued
+ * @param orgId The ID of the organization
+ * @param res The response object
+ * @param credentialType The type of credential to be issued
+ * @returns The details of the created out-of-band credential offer
+ */
   @Post('/orgs/:orgId/credentials/oob/email')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
@@ -719,10 +803,15 @@ async downloadBulkIssuanceCSVTemplate(
   }
 
     /**
-   * Description: Issuer create out-of-band credential
-   * @param user
-   * @param issueCredentialDto
-   */
+ * Create out-of-band credential offer
+ * @param user The user making the request
+ * @param issueCredentialDto The details of the out-of-band credential to be issued
+ * @param orgId The ID of the organization
+ * @param res The response object
+ * @param credentialType The type of credential to be issued
+ * @param isValidateSchema Whether to validate the schema
+ * @returns The details of the created out-of-band credential offer
+ */
     @Post('/orgs/:orgId/credentials/oob/offer')
     @ApiBearerAuth()
     @ApiOperation({
@@ -761,10 +850,12 @@ async downloadBulkIssuanceCSVTemplate(
     }
 
   /**
-   * Description: webhook Save issued credential details
-   * @param user
-   * @param issueCredentialDto
-   */
+ * Catch issue credential webhook responses
+ * @param issueCredentialDto The details of the issued credential
+ * @param id The ID of the organization
+ * @param res The response object
+ * @returns The details of the issued credential
+ */
   @Post('wh/:id/credentials')
   @ApiExcludeEndpoint()
   @ApiOperation({
@@ -803,8 +894,15 @@ if (id && 'default' === issueCredentialDto.contextCorrelationId) {
       
     }
     return res.status(HttpStatus.CREATED).json(finalResponse);
-    }   
+    } 
 
+    /**
+ * Delete issuance record
+ * @param orgId The ID of the organization
+ * @param user The user making the request
+ * @param res The response object
+ * @returns The status of the deletion operation
+ */
     @Delete('/orgs/:orgId/issuance-records')
     @ApiOperation({ summary: 'Delete issuance record', description: 'Delete issuance records by orgId' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })

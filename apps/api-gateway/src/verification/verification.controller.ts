@@ -50,15 +50,15 @@ export class VerificationController {
     private readonly logger = new Logger('VerificationController');
 
     /**
-     * 
-     * @param proofId 
-     * @param orgId 
+     * Get verified proof details
+     * @param proofId The ID of the proof
+     * @param orgId The ID of the organization
      * @returns Verified proof details
      */
     @Get('/orgs/:orgId/verified-proofs/:proofId')
     @ApiOperation({
-        summary: `Get verified proof details`,
-        description: `Get verified proof details`
+        summary: 'Get verified proof details',
+        description: 'Retrieve the details of a verified proof for a specific organization.'
     })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -83,14 +83,14 @@ export class VerificationController {
 
     /**
      * Get proof presentation details by proofId
-     * @param proofId 
-     * @param orgId 
+     * @param proofId The ID of the proof
+     * @param orgId The ID of the organization
      * @returns Proof presentation details by proofId
      */
     @Get('/orgs/:orgId/proofs/:proofId')
     @ApiOperation({
-        summary: `Get proof presentation by proof Id`,
-        description: `Get proof presentation by proof Id`
+        summary: 'Get proof presentation by proof Id',
+        description: 'Retrieve the details of a proof presentation by its proof ID for a specific organization.'
     })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -115,14 +115,14 @@ export class VerificationController {
 
     /**
     * Get all proof presentations
-    * @param user 
-    * @param orgId 
+    * @param user The user making the request
+    * @param orgId The ID of the organization
     * @returns All proof presentations details
     */
     @Get('/orgs/:orgId/proofs')
     @ApiOperation({
-        summary: `Get all proof presentations by orgId`,
-        description: `Get all proof presentations by orgId`
+        summary: 'Get all proof presentations by orgId',
+        description: 'Retrieve all proof presentations for a the organization. Supports pagination and sorting.'
     })
     @ApiQuery({
         name: 'sortField',
@@ -140,7 +140,7 @@ export class VerificationController {
         @Res() res: Response,
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string
-        ): Promise<Response> {
+    ): Promise<Response> {
         const { pageSize, search, pageNumber, sortField, sortBy } = getAllProofRequests;
         const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
             pageNumber,
@@ -161,21 +161,22 @@ export class VerificationController {
 
     /**
      * Send proof request
-     * @param orgId
+     * @param orgId The ID of the organization
      * @returns Requested proof presentation details
      */
     @Post('/orgs/:orgId/proofs')
     @ApiOperation({
-        summary: `Sends a proof request`,
-        description: `Sends a proof request`
+        summary: 'Sends a proof request',
+        description: 'Send a proof request to a specific organization.'
     })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: RequestProofDtoV1 })@ApiQuery({
+    @ApiBody({ type: RequestProofDtoV1 })
+    @ApiQuery({
         name: 'requestType',
         enum: ProofRequestType
-      })
+    })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
@@ -184,20 +185,20 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
         @Body() requestProof: RequestProofDtoV1,
-        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
+        @Query('requestType') requestType: ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
 
         if (requestType === ProofRequestType.INDY && !requestProof.proofFormats) {
-                throw new BadRequestException(`type: ${requestType} requires proofFormats`);
+            throw new BadRequestException(`type: ${requestType} requires proofFormats`);
         }
 
         if (requestType === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
-                throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
+            throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
         }
-        
-        if (requestType === ProofRequestType.INDY) {        
-                Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
-          }
+
+        if (requestType === ProofRequestType.INDY) {
+            Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
+        }
         const version = API_Version.version_neutral;
         requestProof.version = version;
         requestProof.orgId = orgId;
@@ -211,24 +212,25 @@ export class VerificationController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
 
-     /**
+    /**
      * Send proof request v1
-     * @param orgId
+     * @param orgId The ID of the organization
      * @returns Requested proof presentation details
      */
     @Version('2')
     @Post('/orgs/:orgId/proofs')
     @ApiOperation({
-        summary: `Sends a proof request`,
-        description: `Send a proof request on multiple connections`
+        summary: 'Sends a proof request',
+        description: 'Send a proof request on multiple connections for a the organization.'
     })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
     @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-    @ApiBody({ type: RequestProofDtoV2 })@ApiQuery({
+    @ApiBody({ type: RequestProofDtoV2 })
+    @ApiQuery({
         name: 'requestType',
         enum: ProofRequestType
-      })
+    })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
@@ -237,22 +239,21 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for orgId`); }})) orgId: string,
         @Body() requestProof: RequestProofDtoV2,
-        @Query('requestType') requestTypeV1:ProofRequestType = ProofRequestType.INDY
+        @Query('requestType') requestTypeV1: ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
         if (requestTypeV1 === ProofRequestType.INDY && !requestProof.proofFormats) {
             throw new BadRequestException(`type: ${requestTypeV1} requires proofFormats`);
-    }
+        }
 
-    if (requestTypeV1 === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
+        if (requestTypeV1 === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
             throw new BadRequestException(`type: ${requestTypeV1} requires presentationDefinition`);
-    }
+        }
 
-    
-    if (requestTypeV1 === ProofRequestType.INDY) {        
-        Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
-      }
+        if (requestTypeV1 === ProofRequestType.INDY) {
+            Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
+        }
 
-        const version = API_Version.VERSION_1; 
+        const version = API_Version.VERSION_1;
         requestProof.version = version;
         requestProof.orgId = orgId;
         requestProof.type = requestTypeV1;
@@ -267,14 +268,14 @@ export class VerificationController {
 
     /**
      * Verify proof presentation
-     * @param proofId 
-     * @param orgId 
+     * @param proofId The ID of the proof
+     * @param orgId The ID of the organization
      * @returns Verified proof presentation details
      */
     @Post('/orgs/:orgId/proofs/:proofId/verify')
     @ApiOperation({
-        summary: `Verify presentation`,
-        description: `Verify presentation`
+        summary: 'Verify presentation',
+        description: 'Verify the proof presentation for a the organization.'
     })
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -299,13 +300,13 @@ export class VerificationController {
 
     /**
      * Out-Of-Band Proof Presentation
-     * @param orgId 
+     * @param orgId The ID of the organization
      * @returns Out-of-band requested proof presentation details
      */
     @Post('/orgs/:orgId/proofs/oob')
     @ApiOperation({
-        summary: `Sends a out-of-band proof request`,
-        description: `Sends a out-of-band proof request`
+        summary: 'Sends a out-of-band proof request',
+        description: 'Send an out-of-band proof request for a specific organization.'
     })
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
     @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -314,7 +315,7 @@ export class VerificationController {
     @ApiQuery({
         name: 'requestType',
         enum: ProofRequestType
-      })
+    })
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -323,7 +324,7 @@ export class VerificationController {
         @User() user: IUserRequest,
         @Body() outOfBandRequestProof: SendProofRequestPayload,
         @Param('orgId') orgId: string,
-        @Query('requestType') requestType:ProofRequestType = ProofRequestType.INDY
+        @Query('requestType') requestType: ProofRequestType = ProofRequestType.INDY
     ): Promise<Response> {
         user.orgId = orgId;
         outOfBandRequestProof.type = requestType;
@@ -337,14 +338,14 @@ export class VerificationController {
     }
 
     /**
-     * 
-     * @param orgId 
+     * Receive webhook proof presentation
+     * @param orgId The ID of the organization
      * @returns Proof presentation details
      */
     @Post('wh/:orgId/proofs')
     @ApiOperation({
-        summary: `Receive webhook proof presentation`,
-        description: `Handle proof presentations for a specified organization via a webhook`
+        summary: 'Receive webhook proof presentation',
+        description: 'Handle proof presentations for a specified organization via a webhook.'
     })
     @ApiExcludeEndpoint()
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
@@ -356,38 +357,44 @@ export class VerificationController {
         @Res() res: Response
     ): Promise<Response> {
         proofPresentationPayload.type = 'Verification';
-       
+
         if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
             proofPresentationPayload.orgId = orgId;
-          }
-          
-            const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
-                this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
-            });
-            const finalResponse: IResponse = {
-                statusCode: HttpStatus.CREATED,
-                message: ResponseMessages.verification.success.create,
-                data: webhookProofPresentation
-            };
-           
-           
-             const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId).catch(error => {
-                this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-             });
-            
+        }
+
+        const webhookProofPresentation = await this.verificationService.webhookProofPresentation(orgId, proofPresentationPayload).catch(error => {
+            this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
+        });
+        const finalResponse: IResponse = {
+            statusCode: HttpStatus.CREATED,
+            message: ResponseMessages.verification.success.create,
+            data: webhookProofPresentation
+        };
+
+        const webhookUrl = await this.verificationService._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId).catch(error => {
+            this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        });
+
         if (webhookUrl) {
-            
-                await this.verificationService._postWebhookResponse(webhookUrl, {data:proofPresentationPayload}).catch(error => {
-                    this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-                });
-             
+            await this.verificationService._postWebhookResponse(webhookUrl, { data: proofPresentationPayload }).catch(error => {
+                this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
+            });
         }
         return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
 
-}
-
+/**
+ * Delete verification record
+ * @param orgId The ID of the organization
+ * @param user The user making the request
+ * @param res The response object
+ * @returns Success message
+ */
 @Delete('/orgs/:orgId/verification-records')
-@ApiOperation({ summary: 'Delete verification record', description: 'Delete verification records by orgId' })
+@ApiOperation({
+  summary: 'Delete verification record',
+  description: 'Delete all verification records associated with a specific organization by its orgId. This operation is restricted to users with the OWNER role.'
+})
 @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
 @ApiBearerAuth()
 @Roles(OrgRoles.OWNER)

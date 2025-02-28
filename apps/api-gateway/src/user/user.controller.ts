@@ -50,6 +50,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { AwsService } from '@credebl/aws/aws.service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -306,7 +307,7 @@ export class UserController {
   @ApiBearerAuth()
   async acceptRejectInvitaion(
       @Body() acceptRejectInvitation: AcceptRejectInvitationDto,
-      @Param('invitationId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for InvitationId`); }})) invitationId: string,
+      @Param('invitationId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for InvitationId`); }})) invitationId: string,
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {

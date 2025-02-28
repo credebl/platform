@@ -4,7 +4,7 @@ import { Transform } from 'class-transformer';
 import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class LoginUserDto {
-    @ApiProperty({ example: 'awqx@getnada.com' })
+    @ApiProperty({ example: 'awqx@yopmail.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })

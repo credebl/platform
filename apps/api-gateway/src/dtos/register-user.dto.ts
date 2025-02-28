@@ -8,7 +8,7 @@ export class RegisterUserDto {
     attribute: any;
 
 
-    @ApiProperty({ example: 'awqx@getnada.com' })
+    @ApiProperty({ example: 'awqx@yopmail.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })

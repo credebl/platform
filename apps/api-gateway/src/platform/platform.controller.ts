@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Logger, Param, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, Get, HttpStatus, Logger, Param, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { PlatformService } from './platform.service';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -14,6 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import * as QRCode from 'qrcode';
 import { CredDefSortFields, SchemaType, SortFields } from '@credebl/enum/enum';
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)
@@ -160,9 +161,12 @@ export class PlatformController {
     @UseGuards(AuthGuard('jwt'))
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getNetwrkUrl(
-        @Param('indyNamespace') indyNamespace: string,
+        @Param('indyNamespace', TrimStringParamPipe) indyNamespace: string,
         @Res() res: Response
     ): Promise<Response> {
+        if (!indyNamespace) {
+            throw new BadRequestException(ResponseMessages.ledger.error.indyNamespaceisRequired);
+        }
         const networksResponse = await this.platformService.getNetworkUrl(indyNamespace);
 
         const finalResponse: IResponse = {

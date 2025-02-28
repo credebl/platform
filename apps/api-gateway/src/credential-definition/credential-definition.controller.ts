@@ -90,13 +90,7 @@ export class CredentialDefinitionController {
      * Retrieves all credential definitions for a given organization.
      *
      * @param orgId The unique identifier of the organization.
-     * @param pageNumber The page number for pagination.
-     * @param searchByText A keyword to filter credential-definitions.
-     * @param pageSize The number of results per page.
-     * @param sorting Field by which to sort results.
-     * @param sortByValue Sort order (e.g., 'asc' or 'desc'.
-     * @param revocable flag for revocation status of credential definitions.
-   * @returns A paginated list of credential definitions for the organization.
+     * @returns A paginated list of credential definitions for the organization.
    */
   @Get('/orgs/:orgId/cred-defs')
   @ApiOperation({

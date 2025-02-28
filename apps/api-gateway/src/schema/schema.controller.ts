@@ -118,11 +118,6 @@ export class SchemaController {
    * Retrieves a list of schemas associated with a given organization ID.
    * 
    * @param orgId The organization ID.
-   * @param sortField Field by which to sort results.
-   * @param pageSize The number of results per page.
-   * @param searchByText A keyword to filter schemas.
-   * @param pageNumber The page number for pagination.
-   * @param sortBy Sorting order (optional).
    * 
    * @returns A list of schemas filtered by organization ID.
    */

@@ -217,11 +217,6 @@ export class UserController {
  /**
  * Fetch organization invitations.
  *
- * @param pageNumber The page number for pagination.
- * @param pageSize The number of results per page.
- * @param search Keyword to filter invitations.
- * @param status Filter invitations by status (e.g., 'pending', 'accepted').
- *
  * @returns A paginated list of organization invitations.
  */
   @Get('/org-invitations')

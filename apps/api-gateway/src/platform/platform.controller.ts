@@ -27,11 +27,6 @@ export class PlatformController {
      * Retrieves all schemas available on the platform with optional filters and sorting.
      *
      * @param ledgerId The ID of the ledger.
-     * @param pageSize The number of results per page.
-     * @param searchByText A keyword to filter schemas.
-     * @param pageNumber The page number for pagination.
-     * @param sortField Field by which to sort results.
-     * @param sortByValue Sort order (e.g., 'asc' or 'desc'.
      * @param schemaType Type of schema to filter results.
      * 
      * @returns A paginated list of schemas based on the provided criteria.
@@ -81,12 +76,6 @@ export class PlatformController {
 
 /**
      * Retrieves all credential definitions available on the platform.
-     * @param pageNumber The page number for pagination.
-     * @param search A keyword to filter credential-definitions.
-     * @param pageSize The number of results per page.
-     * @param ledgerId The ID of the ledger.
-     * @param sortField Field by which to sort results.
-     * @param sortBy Sort order (e.g., 'asc' or 'desc'.
      * 
      * @returns A list of credential definitions and their details.
      */

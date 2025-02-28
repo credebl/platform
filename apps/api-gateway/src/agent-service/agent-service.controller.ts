@@ -73,7 +73,7 @@ export class AgentController {
   })
   @UseGuards(AuthGuard('jwt'))
   async getAgentHealth(
-    @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
+    @Param('orgId') orgId: string,    
     @User() reqUser: user, 
     @Res() res: Response): Promise<Response> {
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);

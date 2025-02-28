@@ -131,7 +131,7 @@ export class UserRepository {
 
   /**
    *
-   * @Body updateUserProfile
+   * @body updateUserProfile
    * @returns Update user profile data
    */
   async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<user> {
@@ -664,7 +664,7 @@ export class UserRepository {
 
   /**
    *
-   * @Body updatePlatformSettings
+   * @body updatePlatformSettings
    * @returns Update platform settings
    */
   async updatePlatformSettings(updatePlatformSettings: PlatformSettings): Promise<object> {

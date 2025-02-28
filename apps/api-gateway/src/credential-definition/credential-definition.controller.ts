@@ -30,10 +30,17 @@ export class CredentialDefinitionController {
   constructor(private readonly credentialDefinitionService: CredentialDefinitionService) { }
   private readonly logger = new Logger('CredentialDefinitionController');
 
+  /**
+   * Retrieves the details of a specific credential definition.
+   *
+   * @param orgId The unique identifier of the organization.
+   * @param credDefId The unique identifier of the credential definition.
+   * @returns The credential definition details.
+   */
   @Get('/orgs/:orgId/cred-defs/:credDefId')
   @ApiOperation({
     summary: 'Get credential definition by credential definition Id',
-    description: 'Get credential definition details by credential definition Id'
+    description: 'Fetches the details of a specific credential definition using its ID available credential definitions on platform.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
@@ -52,10 +59,16 @@ export class CredentialDefinitionController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
+    /**
+   * Retrieves all credential definitions linked to a specific schema.
+   *
+   * @param schemaId The unique identifier of the schema.
+   * @returns A list of credential definitions associated with the schema.
+   */
   @Get('/verifiation/cred-defs/:schemaId')
   @ApiOperation({
     summary: 'Get all credential definitions by schema Id',
-    description: 'Get all credential definitions by schema Id for verification'
+    description: 'Fetches all credential definitions associated with a specific schema ID available credential definitions on platform.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
@@ -73,10 +86,16 @@ export class CredentialDefinitionController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
+      /**
+     * Retrieves all credential definitions for a given organization.
+     *
+     * @param orgId The unique identifier of the organization.
+     * @returns A paginated list of credential definitions for the organization.
+   */
   @Get('/orgs/:orgId/cred-defs')
   @ApiOperation({
     summary: 'Fetch all credential definitions by organization Id',
-    description: 'Fetch all credential definitions of provided organization Id with pagination'
+    description: 'Fetches all credential definitions belonging to a specific organization created on the platform.'
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -99,10 +118,17 @@ export class CredentialDefinitionController {
     return res.status(HttpStatus.OK).json(credDefResponse);
   }
 
+    /**
+   * Creates a new credential definition and submits it to the ledger.
+   *
+   * @param orgId The unique identifier of the organization.
+   * @body CreateCredentialDefinitionDto
+   * @returns The details of the newly created credential definition.
+   */
   @Post('/orgs/:orgId/cred-defs')
   @ApiOperation({
     summary: 'Sends a credential definition to ledger',
-    description: 'Sends a credential definition to ledger'
+    description: 'Creates a new credential definition and submits it to the ledger.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)

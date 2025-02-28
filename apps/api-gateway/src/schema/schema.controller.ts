@@ -33,12 +33,20 @@ export class SchemaController {
   ) { }
   private readonly logger = new Logger('SchemaController');
 
+
+  /**
+   * Retrieves schema information from the ledger using its schema ID.
+   *
+   * @param orgId The organization ID.
+   * @param schemaId The unique schema ID.
+   * @returns The schema details retrieved from the ledger.
+   */
   @Get('/:orgId/schemas/:schemaId')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiOperation({
     summary: 'Get schema information from the ledger using its schema ID.',
-    description: 'Get schema information from the ledger using its schema ID.'
+    description: 'Retrives schema information from the ledger using its schema ID.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
@@ -59,10 +67,20 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+
+  /**
+   * Retrieves a list of credential definitions associated with a given schema ID.
+   * 
+   * @param orgId The organization ID.
+   * @param schemaId The unique schema ID.
+   * @param sortField The field by which to sort the results (optional).
+   * 
+   * @returns A list of credential definitions filtered by schema ID.
+   */
   @Get('/:orgId/schemas/:schemaId/cred-defs')
   @ApiOperation({
     summary: 'Credential definitions by schema Id',
-    description: 'Get credential definition list by schema Id'
+    description: 'Retrives credential definition list by schema Id available on platform.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiQuery({
@@ -96,10 +114,17 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  /**
+   * Retrieves a list of schemas associated with a given organization ID.
+   * 
+   * @param orgId The organization ID.
+   * 
+   * @returns A list of schemas filtered by organization ID.
+   */
   @Get('/:orgId/schemas')
   @ApiOperation({
     summary: 'Schemas by org id.',
-    description: 'Get all schemas by org id.'
+    description: 'Retrieves all schemas belonging to a specific organization available on platform.'
   })
   @ApiQuery({
     name: 'sortField',
@@ -134,11 +159,18 @@ export class SchemaController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  
+
+/**
+ * Create and register various types of schemas.
+ * 
+ * @param orgId The organization ID.
+ * @param schemaDetails The schema details.
+ * @returns The created schema details.
+ */  
   @Post('/:orgId/schemas')
   @ApiOperation({
     summary: 'Create and register various types of schemas.',
-    description: 'Enables the creation and registration of schemas across different systems: the Indy ledger, the Polygon blockchain network, and W3C ledger-less standards.'
+    description: 'Create and register a schema for an organization. Supports multiple systems like Indy, Polygon, and W3C standards.'
   }
   )
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)

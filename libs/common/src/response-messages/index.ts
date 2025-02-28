@@ -200,7 +200,8 @@ export const ResponseMessages = {
       fetchNetworkUrl: 'Network url retrieved successfully'
     },
     error: {
-      NotFound: 'No ledgers found.'
+      NotFound: 'No ledgers found.',
+      indyNamespaceisRequired: 'indyNamespace is a required'
     }
   },
   agent: {

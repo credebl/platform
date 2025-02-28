@@ -6,7 +6,7 @@ import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class EmailValidator {
 
-  @ApiProperty({ example: 'awqx@getnada.com' })
+  @ApiProperty({ example: 'awqx@yopmail.com' })
   @IsEmail({}, { message: 'Please provide a valid email' })
   @IsNotEmpty({ message: 'Email is required' })
   @IsString({ message: 'Email should be a string' })

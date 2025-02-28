@@ -453,8 +453,8 @@ export class VerificationService {
       }
 
       if (emailId) {
-        await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);
-        return true;
+        const emailResponse = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);
+        return emailResponse;
       } else {
         const presentationProof: IInvitation = await this.generateOOBProofReq(payload);
         const proofRequestInvitationUrl: string = presentationProof.invitationUrl;
@@ -497,13 +497,15 @@ export class VerificationService {
 
 
   // Currently batch size is not used, as length of emails sent is restricted to '10'
-  async sendEmailInBatches(payload: IProofRequestPayload, emailIds: string[], getAgentDetails: org_agents, organizationDetails: organisation): Promise<void> {
+  async sendEmailInBatches(payload: IProofRequestPayload, emailIds: string[], getAgentDetails: org_agents, organizationDetails: organisation): Promise<object> {
     try {
     const accumulatedErrors = [];
+    const accumulatedResponse = [];
 
         for (const email of emailIds) {
           try {
-                await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
+                const response = await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
+                accumulatedResponse.push({email, ...response});                
                 await this.delay(500);
               } catch (error) {
                 this.logger.error(`Error sending email to ${email}::::::`, error);
@@ -516,6 +518,8 @@ export class VerificationService {
       throw new Error(ResponseMessages.verification.error.emailSend);
     }
 
+    return accumulatedResponse;
+
   } catch (error) {
     this.logger.error('[sendEmailInBatches] - error in sending email in batches');
     throw new Error(ResponseMessages.verification.error.batchEmailSend);
@@ -524,7 +528,7 @@ export class VerificationService {
 
 
   // This function is specifically for OOB verification using email
-  async sendOutOfBandProofRequest(payload: IProofRequestPayload, email: string, getAgentDetails: org_agents, organizationDetails: organisation): Promise<boolean> {
+  async sendOutOfBandProofRequest(payload: IProofRequestPayload, email: string, getAgentDetails: org_agents, organizationDetails: organisation): Promise<object> {
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
 
     if (!getProofPresentation) {
@@ -563,8 +567,12 @@ export class VerificationService {
       throw new Error(ResponseMessages.verification.error.emailSend);
     }
 
-    return isEmailSent;
-  }
+    return {
+      isEmailSent,
+      outOfBandRecordId: getProofPresentation?.response?.outOfBandRecord?.id,
+      proofRecordThId: getProofPresentation?.response?.proofRecordThId
+  };  
+}
 
 
   /**

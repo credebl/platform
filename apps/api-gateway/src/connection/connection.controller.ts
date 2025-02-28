@@ -23,6 +23,7 @@ import { ClientProxy} from '@nestjs/microservices';
 import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto} from './dtos/question-answer.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
@@ -52,8 +53,8 @@ export class ConnectionController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getConnectionsById(
         @User() user: IUserRequest,
-        @Param('connectionId') connectionId: string,
-        @Param('orgId') orgId: string,
+        @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+        @Param('connectionId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.connection.error.invalidConnectionId); }})) connectionId: string,
         @Res() res: Response
     ): Promise<Response> {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
@@ -149,16 +150,26 @@ export class ConnectionController {
      * @returns Question-answer record for a specific organization
      */
     @Get('orgs/:orgId/question-answer/question')
-    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
     @ApiOperation({
-        summary: `Get question-answer record`,
-        description: `Retrieve the question-answer record for a specific organization.`
+      summary: `Get question-answer record`,
+      description: `Retrieve the question-answer record for a specific organization.`
     })
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getQuestionAnswersRecord(
-        @Param('orgId') orgId: string,
-        @Res() res: Response
+      @Param(
+        'orgId',
+        TrimStringParamPipe,
+        new ParseUUIDPipe({
+          exceptionFactory: (): Error => {
+            throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+          }
+        })
+      )  
+      orgId: string,      
+      @Res() res: Response
     ): Promise<Response> {
         const record = await this.connectionService.getQuestionAnswersRecord(orgId);
         const finalResponse: IResponse = {
@@ -416,13 +427,14 @@ export class ConnectionController {
  * @returns The details of the sent basic message
  */
   @Post('/orgs/:orgId/basic-message/:connectionId')
-    @ApiOperation({ summary: 'Send basic message', description: 'Send a basic message to a specific connection for a specific organization.' })
-    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiOperation({ summary: 'Send basic message', description: 'Send a basic message to a specific connection for a specific organization.' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async sendBasicMessage(
-        @Param('orgId') orgId: string,
-        @Param('connectionId') connectionId: string,
+      @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
+      @Param('connectionId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.connection.error.invalidConnectionId); }})) connectionId: string,
         @Body() basicMessageDto: BasicMessageDto,
         @User() reqUser: IUserRequestInterface,
         @Res() res: Response

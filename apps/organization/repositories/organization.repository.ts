@@ -653,6 +653,11 @@ export class OrganizationRepository {
                   }
                 }
               }
+            },
+            org_agents: {
+              select : {
+                orgDid: true
+              }
             }
           },
           take: pageSize,

@@ -157,7 +157,9 @@ export interface ISendProofRequestPayload {
     autoAcceptProof?: AutoAccept;
     label?: string;
     goalCode?: string;
-    parentThreadId?: string;
+    // TODO: [Credo-ts] Issue with parentThreadId in creating an OOB proof request.  
+    // This causes failures in OOB connection establishment.            
+    // parentThreadId?: string;
     willConfirm?: boolean;
     imageUrl?: string;
     emailId?: string[]

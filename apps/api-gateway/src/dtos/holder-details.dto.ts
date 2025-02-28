@@ -15,7 +15,7 @@ export class HolderDetailsDto {
     @IsString({ message: 'lastName should be string' })
     lastName: string;
 
-    @ApiProperty({ example: 'awqx@getnada.com' })
+    @ApiProperty({ example: 'awqx@yopmail.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })

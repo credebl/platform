@@ -35,7 +35,7 @@ export class UserController {
     return this.userService.verifyEmail(payload.param);
   }
  /**
-  * @Body loginUserDto
+  * @body loginUserDto
   * @returns User's access token details
   */
 
@@ -152,7 +152,7 @@ export class UserController {
     return this.userService.checkUserExist(payload.userEmail);
   }
   /**
-  * @Body userInfo
+  * @body userInfo
   * @returns User's registration status
   */
   @MessagePattern({ cmd: 'add-user' })

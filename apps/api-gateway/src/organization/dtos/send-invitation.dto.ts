@@ -6,7 +6,7 @@ import { trim } from '@credebl/common/cast.helper';
 @ApiExtraModels()
 export class SendInvitationDto {
 
-    @ApiProperty({ example: 'awqx@getnada.com' })
+    @ApiProperty({ example: 'awqx@yopmail.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })
@@ -27,7 +27,7 @@ export class BulkSendInvitationDto {
     @ApiProperty({
         example: [
             {
-                email: 'awqx@getnada.com',
+                email: 'awqx@yopmail.com',
                 orgRoleId: ['1a7eac11-ff05-40d7-8351-4d7467687cad']
             }
         ]

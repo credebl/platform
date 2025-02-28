@@ -976,7 +976,7 @@ export class OrganizationService {
 
   /**
    *
-   * @Body sendInvitationDto
+   * @body sendInvitationDto
    * @returns createInvitation
    */
 
